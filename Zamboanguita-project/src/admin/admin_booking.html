@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zamboanguita Admin | Booking Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#1f201a",
+                        "secondary-dim": "#92e4d3",
+                        "surface-dim": "#0e0f0a",
+                        "outline-variant": "#484842",
+                        "outline": "#76766f",
+                        "on-primary-container": "#002a01",
+                        "surface-container": "#191a14",
+                        "on-surface-variant": "#acaba4",
+                        "background": "#0e0f0a",
+                        "on-secondary": "#005d51",
+                        "on-secondary-fixed-variant": "#00675b",
+                        "surface-variant": "#252620",
+                        "on-primary-fixed-variant": "#005f07",
+                        "inverse-primary": "#006f0a",
+                        "on-tertiary-container": "#5f453b",
+                        "secondary": "#a0f2e1",
+                        "on-background": "#fefcf4",
+                        "primary-dim": "#49e043",
+                        "surface-container-highest": "#252620",
+                        "surface-bright": "#2b2d25",
+                        "secondary-fixed-dim": "#92e4d3",
+                        "primary-fixed-dim": "#49e043",
+                        "outline": "#76766f",
+                        "outline-variant": "#484842",
+                        "on-primary": "#005406",
+                        "on-secondary-fixed": "#00483f",
+                        "inverse-on-surface": "#55554f",
+                        "surface-container-low": "#13140f",
+                        "error": "#ff7351",
+                        "tertiary": "#ffded4",
+                        "tertiary-fixed-dim": "#e7c1b4",
+                        "error-dim": "#d53d18",
+                        "surface": "#0e0f0a",
+                        "secondary-fixed": "#a0f2e1",
+                        "primary-container": "#0fba1e",
+                        "tertiary-fixed": "#f6cfc2",
+                        "tertiary-dim": "#e7c1b4",
+                        "surface-tint": "#59ee50",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary-fixed": "#4b3229",
+                        "on-tertiary-fixed-variant": "#6a4e44",
+                        "on-secondary-container": "#ddfff6",
+                        "primary-fixed": "#59ee50",
+                        "inverse-surface": "#fbf9f1",
+                        "on-tertiary": "#694d43",
+                        "on-error": "#450900",
+                        "on-error-container": "#ffd2c8",
+                        "surface-dim": "#0e0f0a",
+                        "primary": "#59ee50",
+                        "error-container": "#b92902",
+                        "tertiary-container": "#f6cfc2",
+                        "on-surface": "#fefcf4",
+                        "on-primary-fixed": "#003e03",
+                        "secondary-container": "#046b5e",
+                        "secondary-dim": "#92e4d3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+/* ===== SMOOTH TRANSITION ===== */
+body,
+main,
+header,
+aside,
+div,
+section,
+button,
+h1,
+h2,
+h3,
+h4,
+h5,
+p,
+span,
+a {
+    transition:
+        background-color 0.4s ease,
+        color 0.4s ease,
+        border-color 0.4s ease;
+}
+
+/* ===== LIGHT MODE ===== */
+.light-mode {
+    background: #f4f4f5 !important;
+    color: #0f0f13 !important;
+}
+
+/* MAIN CONTENT */
+.light-mode main {
+    background: #f8fafc !important;
+}
+
+/* SIDEBAR */
+.light-mode aside {
+    background: #ffffff !important;
+    border-color: #d4d4d8 !important;
+}
+
+/* HEADER */
+.light-mode header {
+    background: rgba(255,255,255,0.9) !important;
+    border-color: #d4d4d8 !important;
+}
+
+/* PANELS */
+.light-mode .bg-surface-container-low,
+.light-mode .bg-surface-container-lowest,
+.light-mode .bg-surface-container,
+.light-mode .bg-surface-container-high,
+.light-mode .bg-surface-container-highest {
+    background: #ffffff !important;
+    color: #2b2b30 !important;
+}
+
+/* DESTINATION SLIDER */
+.light-mode .bg-black\/40 {
+    background: #ffffff !important;
+}
+
+/* TEXT COLORS */
+.light-mode h1,
+.light-mode h2,
+.light-mode h3,
+.light-mode h4,
+.light-mode h5,
+.light-mode p,
+.light-mode span,
+.light-mode a,
+.light-mode div {
+    color: #2c2c30 !important;
+}
+
+/* KEEP CATEGORY COLORS */
+.light-mode .text-yellow-400 {
+    color: #ca8a04 !important;
+}
+
+.light-mode .text-purple-400 {
+    color: #9333ea !important;
+}
+
+.light-mode .text-primary {
+    color: #16a34a !important;
+}
+
+/* BUTTONS */
+.light-mode button {
+    color: #222227;
+}
+
+/* FILTER BUTTONS */
+.light-mode .bg-surface-container-high {
+    background: #f1f5f9 !important;
+}
+
+/* INPUTS + SELECT */
+.light-mode input,
+.light-mode select {
+    background: #ffffff !important;
+    color: #18181b !important;
+    border: 1px solid #d4d4d8 !important;
+}
+
+/* TABLE ROWS */
+.light-mode .border-zinc-800 {
+    border-color: #d4d4d8 !important;
+}
+
+/* SPECIAL TEXT */
+.light-mode .text-stone-400,
+.light-mode .text-zinc-500,
+.light-mode .text-stone-500 {
+    color: #52525b !important;
+}
+
+/* FIX WHITE TEXT */
+.light-mode .text-white {
+    color: #18181b !important;
+    text-shadow: none !important;
+}
+
+/* ICON BUTTON */
+.light-mode #themeIcon {
+    color: #f59e0b !important;
+}
+
+
+</style>
+</head>
+
+<!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1> <style> h1{
+              color: rgb(13, 206, 13);
+            }</style>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+                            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined">location_on</span>
+                <span>Manage Spots</span>
+            </a>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>-->>
+
+<!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+
+
+
+<!-- Main Content Canvas -->
+<main class="ml-[280px] pt-20 min-h-screen custom-scrollbar overflow-y-auto">
+<div class="p-10 max-w-[1400px] mx-auto space-y-12">
+
+
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-4xl font-black text-on-background tracking-tighter leading-none mb-2">Booking Management</h2>
+<p class="text-on-surface-variant text-lg max-w-xl"></p>
+</div>
+<div class="flex gap-4">
+
+
+<button class="px-6 py-3 rounded-full bg-surface-container-high border border-outline-variant/30 text-sm font-semibold hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+                        june 1 - june 30
+                    </button>
+</div>
+</div>
+
+
+<!-- Dashboard Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="col-span-1 p-8 rounded-full border border-outline-variant/10 bg-surface-container-low flex flex-col justify-between hover:border-primary/30 transition-all group">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-xl">confirmation_number</span>
+<span class="text-[10px] font-bold text-primary px-2 py-1 bg-primary/10 rounded-full">0%</span>
+</div>
+<div class="mt-8">
+<p class="text-4xl font-extrabold text-on-background tracking-tight">0</p>
+<p class="text-xs text-on-surface-variant font-medium tracking-widest mt-1">TOTAL BOOKINGS</p>
+</div>
+</div>
+<div class="col-span-1 p-8 rounded-full border border-outline-variant/10 bg-surface-container-low flex flex-col justify-between hover:border-primary/30 transition-all group">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-xl">payments</span>
+<span class="text-[10px] font-bold text-primary px-2 py-1 bg-primary/10 rounded-full">0%</span>
+</div>
+<div class="mt-8">
+<p class="text-4xl font-extrabold text-on-background tracking-tight">0</p>
+<p class="text-xs text-on-surface-variant font-medium tracking-widest mt-1">REVENUE</p>
+</div>
+</div>
+<div class="col-span-2 p-8 rounded-full border border-outline-variant/10 bg-surface-container-low flex items-center justify-between hover:border-primary/30 transition-all group relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<p class="text-xs text-on-surface-variant font-bold tracking-widest">ACTIVE NOW</p>
+</div>
+<p class="text-5xl font-black text-on-background tracking-tighter">0<span class="text-lg font-normal text-on-surface-variant ml-2">Reservations</span></p>
+</div>
+<div class="flex -space-x-4 pr-4 relative z-10">
+<img alt="Guest avatar" class="w-12 h-12 rounded-full border-2 border-surface-container-low" data-alt="Close up portrait of a young traveler with sunglasses, smiling in a tropical sunlit environment, wearing a light linen shirt, shallow depth of field with vibrant jungle foliage in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuGAq2lk2WobhajKY__8Qq7nYt8kYzYqsYCM2QE_SLFJONi2WS-E_44_82fe_e9_5GRxYy66CspcoE73spdi9UQ21yD6qPBNa47FzEu6nSbUnvoQrElOuZIxlLRwKVu0eryk_Njz_0PIvT2dekmqCvbFZM4jrVAS68jPbbdr1U-1k6NLEP9p4gZSrSALrImBqHrsODIIIrGvtQJVmtPsZFytmzCYRXCzBa7VbcqkFUH4zD34UM_5d-o9fxczMcPP7sdpsG_ilc3SRb"/>
+<img alt="Guest avatar" class="w-12 h-12 rounded-full border-2 border-surface-container-low" data-alt="Portrait of a smiling woman in her 30s with beachy hair, outdoors in tropical Zamboanguita, soft natural light, vibrant colors, premium travel atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRgqyciPSCPb_BYZxMwszOewgCal9zQdg0vdHOsCAigKzWc0JBKz46-bKT6GhXVhi8H-nzXf_oTWBjFQMdaZzUZgtV4I8_qKcnT3c-_61sA_iu1bLx8tlTaqnABCp4UG981THOmp_5YSMSRo-glpqBQbF-GswWZKSOAEKuFN8BPiCoaBNztlxnG2xAMNSIl6EerMf429Jrl5qJ5MsoIO3a5yYZT5DVpBbe5sKDbDPM6F9v50xnvJMi6YCHDJmBSyU1GemlAu0vSg30"/>
+<div class="w-12 h-12 rounded-full border-2 border-surface-container-low bg-surface-variant flex items-center justify-center text-xs font-bold text-primary">+81</div>
+</div>
+<!-- Background abstract pattern -->
+<div class="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+</div>
+</section>
+<!-- Bookings List Section -->
+<section class="space-y-6">
+<div class="flex items-center justify-between bg-surface-container-low p-4 rounded-full border border-outline-variant/10">
+<div class="flex gap-2">
+<button class="px-6 py-2 rounded-full text-sm font-bold bg-primary text-on-primary-container">All Bookings</button>
+<button class="px-6 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-background transition-colors">Confirmed</button>
+<button class="px-6 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-background transition-colors">Pending</button>
+<button class="px-6 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-background transition-colors">Cancelled</button>
+</div>
+<div class="pr-4">
+<p class="text-xs font-medium text-on-surface-variant">Showing <span class="text-on-background font-bold">1-10</span> of 1,284 entries</p>
+</div>
+</div>
+<!-- Booking Table -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase">
+<th class="px-8 py-5">Guest Detail</th>
+<th class="px-6 py-5">Destination Pod</th>
+<th class="px-6 py-5">Stay Period</th>
+<th class="px-6 py-5">Status</th>
+<th class="px-6 py-5">Amount</th>
+<th class="px-8 py-5 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Booking Item 1 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant overflow-hidden">
+<img alt="Guest photo" class="w-full h-full object-cover" data-alt="A portrait of a male adventurer in his late 20s, wearing hiking gear and a backpack, standing on a misty mountain trail in the Philippines. The lighting is cool and moody with heavy fog and deep green ferns framing the subject. High-end editorial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzY6ifOceQ_wV5gu7B7gJEWUaJfna5nZSFETiRxjC4wJJzNg4E_Cd0G3yM76i21qU4v1xV0TBkc5WDmZluVCJzfEoB8MblPAPfXBJCXIxfFc-xJFTZN_uwq76eZbBfmgH6mzFdBCn_4wU7ARerfZR8FbkTYq1wkIxTcbTQ0ghUFTW3qS0yReXVh9oDsLfTyUc_b9LKLUwCS5YequcQohJiO51o_6itgpD_VAK2BKUlK8_Fap0KsomBj1MEXcQmPfiOTJUI9KKY7FBY"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-background">Jezrel Austero</p>
+<p class="text-xs text-on-surface-variant">jaustero@gmail.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-sm font-medium">Najandig Peak Eco-Pod</span>
+</div>
+</td>
+<td class="px-6 py-6 text-sm text-on-surface-variant">
+                                    Jun 12 — Jun 15, 2026
+                                </td>
+<td class="px-6 py-6">
+<span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">Confirmed</span>
+</td>
+<td class="px-6 py-6 font-bold text-on-background">
+                                    0.00
+                                </td>
+<td class="px-8 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary" title="View Details">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary" title="Edit Status">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-error" title="Process Refund">
+<span class="material-symbols-outlined text-lg">payments</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Booking Item 2 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant overflow-hidden">
+<img alt="Guest photo" class="w-full h-full object-cover" data-alt="Close up portrait of a young woman with a vibrant floral crown, glowing skin under tropical sunlight, blurred turquoise ocean in the background. The aesthetic is bright, high-fashion travel editorial with vivid greens and blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF3-x5f3UqgPo3HBDODmMbKwdsd4IoPoGxn2kFFLEr8EmC8HldOq4l52vJSFZRfHefsC4pWKFgir5C4b04SiFGkvRPx_cjwqfPLVqPFt9B6DgyOEhZrPQ7aFvcLb1qRrXL6ypRAEPDb-FBwzCDGq-KYf3Mj5Sh9RZv3Jxu-osvjMdCTwYeWoo5LvUiRSpQG1iJmC8h8TNDPZ8rilp4tgccnyzr--gJrfm0An34I8gaXkkcQNNExhygQwR54GJPtZ6xr7e2IHI_vdqR"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-background">Janico Alaban</p>
+<p class="text-xs text-on-surface-variant">jalaban@gmail.co</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-sm font-medium">Turtle Island</span>
+</div>
+</td>
+<td class="px-6 py-6 text-sm text-on-surface-variant">
+                                    Jun 4 — Jun 5, 2026
+                                </td>
+<td class="px-6 py-6">
+<span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full uppercase">Pending</span>
+</td>
+<td class="px-6 py-6 font-bold text-on-background">
+                                    0.00
+                                </td>
+<td class="px-8 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-error">
+<span class="material-symbols-outlined text-lg">payments</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Booking Item 3 -->
+<tr class="hover:bg-surface-container/50 transition-colors group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant overflow-hidden">
+<img alt="Guest photo" class="w-full h-full object-cover" data-alt="A candid profile of a woman photographer in a tropical marketplace, holding a vintage camera. Warm ambient light of a morning market in Zamboanguita, with vibrant textiles and fruits in the blurred background. Earthy tones and premium editorial feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6m9DHR07m-vXpqgDcEDsijmflNboROWzahuiN6It-z6-5xQtp66HE_XQvvhdEjDiIb6nLOcaZIw8bc9qduBWdRWvd2XHydxg1dEPWc-zPALq6o90eQe4u6J-tK1fPqVtndZi8Wp3s7a5rSyGx6H-RFRYzKjsdHk1xqDBiXkCGvWNN9vrhRiWoBle6BlqU2yJa-4jkAZbPrgoHl40PFriDcsQKrgvKYHIs5BSwvhtpE8rvEv2hBTVj72d-Xw0khGRIJoanFUbaab6k"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-background">Loued Austero</p>
+<p class="text-xs text-on-surface-variant">lausterogwapo@email.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="text-sm font-medium">Thalatta Beachfront</span>
+</div>
+</td>
+<td class="px-6 py-6 text-sm text-on-surface-variant">
+                                    Sep 28 — Oct 02, 2026
+                                </td>
+<td class="px-6 py-6">
+<span class="px-3 py-1 bg-error/10 text-error text-[10px] font-bold rounded-full uppercase">Cancelled</span>
+</td>
+<td class="px-6 py-6 font-bold text-on-background">
+                                    0.00
+                                </td>
+<td class="px-8 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant hover:text-error">
+<span class="material-symbols-outlined text-lg">payments</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between px-8 py-4 bg-surface-container-low rounded-full border border-outline-variant/10">
+<button class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                        Previous
+                    </button>
+<div class="flex gap-4">
+<span class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary-container text-xs font-bold">1</span>
+<span class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-xs font-medium hover:bg-surface-variant cursor-pointer transition-colors">2</span>
+<span class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-xs font-medium hover:bg-surface-variant cursor-pointer transition-colors">3</span>
+<span class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-xs font-medium">...</span>
+<span class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-xs font-medium hover:bg-surface-variant cursor-pointer transition-colors">12</span>
+</div>
+<button class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2">
+                        Next
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Bottom Contextual Info -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="p-8 rounded-xl bg-surface-container border border-outline-variant/10 flex items-start gap-6">
+<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-3xl">insights</span>
+</div>
+<div>
+<h4 class="text-lg font-bold text-on-background mb-2">Booking Velocity</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Bookings are up by 24% compared to the same period last month. Demand for "Apo Island" excursions is reaching peak capacity for November. Consider adjusting premium pricing.</p>
+</div>
+</div>
+<div class="p-8 rounded-xl bg-surface-container border border-outline-variant/10 flex items-start gap-6">
+<div class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-3xl">verified</span>
+</div>
+<div>
+<h4 class="text-lg font-bold text-on-background mb-2">System Integrity</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Payment gateways are 100% operational. Average processing time for manual refunds has decreased to 4.2 hours. Automated confirmation emails are being delivered in under 3 seconds.</p>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script>
+
+/* =====================================================
+   BOOKING DATA
+===================================================== */
+
+const bookings = [
+
+{
+    name: "Jezrel Austero",
+    email: "jaustero@gmail.com",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300",
+    destination: "Najandig Peak Eco-Pod",
+    stay: "Jun 12 — Jun 15",
+    status: "CONFIRMED",
+    amount: "0.00"
+},
+
+{
+    name: "Janico Alaban",
+    email: "jalaban@gmail.com",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300",
+    destination: "Turtle Island",
+    stay: "Jun 4 — Jun 5",
+    status: "PENDING",
+    amount: "0.00"
+},
+
+{
+    name: "Loued Austero",
+    email: "loued@gmail.com",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300",
+    destination: "Thalatta Beachfront",
+    stay: "Sep 28 — Oct 02",
+    status: "CANCELLED",
+    amount: "0.00"
+},
+
+{
+    name: "Maria Santos",
+    email: "maria@gmail.com",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300",
+    destination: "Apo Island",
+    stay: "Jul 2 — Jul 5",
+    status: "CONFIRMED",
+    amount: "0.00"
+},
+
+{
+    name: "Carlo Reyes",
+    email: "carlo@gmail.com",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=300",
+    destination: "Sea Breeze Villa",
+    stay: "Aug 10 — Aug 14",
+    status: "PENDING",
+    amount: "0.00"
+},
+
+{
+    name: "Angelica Cruz",
+    email: "angelica@gmail.com",
+    image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=300",
+    destination: "Mountain Resort",
+    stay: "Sep 1 — Sep 4",
+    status: "CANCELLED",
+    amount: "0.00"
+}
+
+];
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+const tbody = document.querySelector("tbody");
+
+const filterButtons = document.querySelectorAll(".booking-filter");
+
+const pageContainer = document.querySelector(".flex.gap-3");
+
+const prevBtn = document.getElementById("prevPage");
+
+const nextBtn = document.getElementById("nextPage");
+
+let currentFilter = "ALL";
+
+let currentPage = 1;
+
+const rowsPerPage = 2;
+
+
+/* =====================================================
+   RENDER TABLE
+===================================================== */
+
+function renderTable() {
+
+    tbody.innerHTML = "";
+
+    let filteredBookings = bookings;
+
+    if(currentFilter !== "ALL") {
+
+        filteredBookings = bookings.filter(
+            booking => booking.status === currentFilter
+        );
+
+    }
+
+    const totalPages = Math.ceil(filteredBookings.length / rowsPerPage);
+
+    const start = (currentPage - 1) * rowsPerPage;
+
+    const end = start + rowsPerPage;
+
+    const paginatedBookings = filteredBookings.slice(start, end);
+
+    paginatedBookings.forEach(booking => {
+
+        let badgeColor = "";
+
+        if(booking.status === "CONFIRMED") {
+
+            badgeColor = "bg-green-500/10 text-green-400";
+
+        }
+
+        else if(booking.status === "PENDING") {
+
+            badgeColor = "bg-cyan-500/10 text-cyan-400";
+
+        }
+
+        else {
+
+            badgeColor = "bg-red-500/10 text-red-400";
+
+        }
+
+        tbody.innerHTML += `
+
+        <tr class="table-row border-t border-zinc-800 hover:bg-zinc-900/50">
+
+            <td class="px-8 py-6">
+
+                <div class="flex items-center gap-4">
+
+                    <img src="${booking.image}"
+                    class="w-14 h-14 rounded-xl object-cover">
+
+                    <div>
+
+                        <h4 class="font-bold">
+                            ${booking.name}
+                        </h4>
+
+                        <p class="text-sm text-zinc-500 muted">
+                            ${booking.email}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </td>
+
+            <td class="px-6 py-6">
+                ${booking.destination}
+            </td>
+
+            <td class="px-6 py-6 text-zinc-400 muted">
+                ${booking.stay}
+            </td>
+
+            <td class="px-6 py-6">
+
+                <span class="px-4 py-2 rounded-full ${badgeColor} text-xs font-bold">
+                    ${booking.status}
+                </span>
+
+            </td>
+
+            <td class="px-6 py-6">
+                ${booking.amount}
+            </td>
+
+            <td class="px-8 py-6">
+
+                <div class="flex justify-end gap-2">
+
+                    <button class="view-btn icon-btn p-2 rounded-xl hover:bg-zinc-800">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+
+                    <button class="edit-btn icon-btn p-2 rounded-xl hover:bg-zinc-800">
+                        <span class="material-symbols-outlined">edit</span>
+                    </button>
+
+                    <button class="refund-btn icon-btn p-2 rounded-xl hover:bg-zinc-800">
+                        <span class="material-symbols-outlined">payments</span>
+                    </button>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+    renderPagination(totalPages);
+
+    addActionEvents();
+
+}
+
+
+/* =====================================================
+   PAGINATION
+===================================================== */
+
+function renderPagination(totalPages) {
+
+    pageContainer.innerHTML = "";
+
+    for(let i = 1; i <= totalPages; i++) {
+
+        const button = document.createElement("button");
+
+        button.innerText = i;
+
+        button.className =
+        `page-btn w-10 h-10 rounded-full
+        ${currentPage === i
+        ? "active-page"
+        : "hover:bg-zinc-800"}`;
+
+        button.addEventListener("click", () => {
+
+            currentPage = i;
+
+            renderTable();
+
+        });
+
+        pageContainer.appendChild(button);
+
+    }
+
+}
+
+
+/* =====================================================
+   FILTER BUTTONS
+===================================================== */
+
+filterButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        filterButtons.forEach(btn => {
+
+            btn.classList.remove("active-filter");
+
+        });
+
+        button.classList.add("active-filter");
+
+        const text = button.innerText.toUpperCase();
+
+        if(text.includes("ALL")) {
+
+            currentFilter = "ALL";
+
+        }
+
+        else {
+
+            currentFilter = text;
+
+        }
+
+        currentPage = 1;
+
+        renderTable();
+
+    });
+
+});
+
+
+/* =====================================================
+   NEXT / PREVIOUS
+===================================================== */
+
+prevBtn.addEventListener("click", () => {
+
+    if(currentPage > 1) {
+
+        currentPage--;
+
+        renderTable();
+
+    }
+
+});
+
+nextBtn.addEventListener("click", () => {
+
+    let filteredBookings = bookings;
+
+    if(currentFilter !== "ALL") {
+
+        filteredBookings = bookings.filter(
+            booking => booking.status === currentFilter
+        );
+
+    }
+
+    const totalPages =
+    Math.ceil(filteredBookings.length / rowsPerPage);
+
+    if(currentPage < totalPages) {
+
+        currentPage++;
+
+        renderTable();
+
+    }
+
+});
+
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+function addActionEvents() {
+
+    document.querySelectorAll(".view-btn").forEach(btn => {
+
+        btn.addEventListener("click", () => {
+
+            alert("Viewing Booking Details");
+
+        });
+
+    });
+
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+
+        btn.addEventListener("click", () => {
+
+            alert("Editing Booking");
+
+        });
+
+    });
+
+    document.querySelectorAll(".refund-btn").forEach(btn => {
+
+        btn.addEventListener("click", () => {
+
+            alert("Processing Refund");
+
+        });
+
+    });
+
+}
+
+
+/* =====================================================
+   DARK MODE
+===================================================== */
+
+function toggleDarkMode(){
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+
+    if(body.classList.contains("light-mode")){
+
+        localStorage.setItem("theme", "light");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        localStorage.setItem("theme", "dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD THEME
+===================================================== */
+
+window.onload = function(){
+
+    const savedTheme = localStorage.getItem("theme");
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    if(savedTheme === "light"){
+
+        body.classList.add("light-mode");
+
+        html.classList.remove("dark");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        body.classList.remove("light-mode");
+
+        html.classList.add("dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+    renderTable();
+
+}
+
+</script>
+</body></html>

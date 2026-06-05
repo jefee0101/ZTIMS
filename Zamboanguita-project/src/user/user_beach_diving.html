@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Zamboanguita Explorer - Beach & Diving</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#005406",
+                      "surface": "#0e0f0a",
+                      "background": "#0e0f0a",
+                      "on-surface-variant": "#acaba4",
+                      "inverse-on-surface": "#55554f",
+                      "surface-container-highest": "#252620",
+                      "tertiary-container": "#f6cfc2",
+                      "on-tertiary-fixed": "#4b3229",
+                      "on-secondary": "#005d51",
+                      "surface-variant": "#252620",
+                      "surface-container-high": "#1f201a",
+                      "on-error": "#450900",
+                      "surface-tint": "#59ee50",
+                      "secondary-dim": "#92e4d3",
+                      "on-primary-fixed": "#003e03",
+                      "secondary-container": "#046b5e",
+                      "on-secondary-fixed-variant": "#00675b",
+                      "error-dim": "#d53d18",
+                      "tertiary-fixed-dim": "#e7c1b4",
+                      "on-surface": "#fefcf4",
+                      "on-tertiary": "#694d43",
+                      "surface-dim": "#0e0f0a",
+                      "primary-fixed-dim": "#49e043",
+                      "on-secondary-fixed": "#00483f",
+                      "tertiary": "#ffded4",
+                      "tertiary-dim": "#e7c1b4",
+                      "on-tertiary-fixed-variant": "#6a4e44",
+                      "surface-container-lowest": "#000000",
+                      "secondary": "#a0f2e1",
+                      "inverse-surface": "#fbf9f1",
+                      "tertiary-fixed": "#f6cfc2",
+                      "primary-dim": "#49e043",
+                      "inverse-primary": "#006f0a",
+                      "on-primary-container": "#002a01",
+                      "primary": "#59ee50",
+                      "primary-container": "#0fba1e",
+                      "on-tertiary-container": "#5f453b",
+                      "surface-container": "#191a14",
+                      "outline": "#76766f",
+                      "outline-variant": "#484842",
+                      "on-background": "#fefcf4",
+                      "surface-container-low": "#13140f",
+                      "error-container": "#b92902",
+                      "error": "#ff7351",
+                      "surface-bright": "#2b2d25",
+                      "on-error-container": "#ffd2c8",
+                      "primary-fixed": "#59ee50",
+                      "secondary-fixed-dim": "#92e4d3",
+                      "secondary-fixed": "#a0f2e1",
+                      "on-secondary-container": "#ddfff6",
+                      "on-primary-fixed-variant": "#005f07"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Manrope"],
+                      "label": ["Manrope"]
+              }
+            },
+          },
+        }
+      </script>
+       <style>
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
+.light-mode main { background: #f8fafc !important; }
+.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
+.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
+.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
+.light-mode .bg-black\/40 { background: #ffffff !important; }
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
+.light-mode .text-yellow-400 { color: #ca8a04 !important; }
+.light-mode .text-purple-400 { color: #9333ea !important; }
+.light-mode .text-primary { color: #16a34a !important; }
+.light-mode button { color: #18181b; }
+.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
+.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
+.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
+.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
+.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
+.light-mode #themeIcon { color: #f59e0b !important; }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+
+         <!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">explore</span>
+                <span>Destinations</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_reviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>
+
+
+        <!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+
+        <main class="sm:ml-64 pt-24 pb-12 px-6 md:px-8 min-h-screen tonal-shift-layering">
+            <div class="max-w-[1400px] mx-auto space-y-8">
+                
+                <div class="px-2">
+                    <h3 class="text-3xl font-black font-headline tracking-tight text-on-surface">Beach & Diving</h3>
+                    <p class="text-on-surface-variant text-sm mt-1">Discover pristine coastlines and rich underwater marine sanctuaries.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 bg-surface-container-low/50 p-4 rounded-2xl border border-outline-variant/5">
+                    <span class="text-xs font-bold text-stone-500 uppercase tracking-widest ml-2">Categories:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="user_dashboard.html" class="px-5 py-2 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">
+                            All
+                        </a>
+                        <a href="user_beach_diving.html" class="px-5 py-2 rounded-full bg-primary text-on-primary text-xs font-bold shadow-md transition-all">
+                            Beach / Diving
+                        </a>
+                        <a href="user_mountains.html" class="px-5 py-2 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">
+                            Mountain
+                        </a>
+                        <button class="px-5 py-2 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">
+                            Cultural
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    
+                    <div class="glass-card p-4 rounded-[2rem] flex flex-col sm:flex-row gap-6 items-center hover:bg-surface-container-high transition-colors">
+                        <img alt="Coastal destination" class="w-full sm:w-32 h-48 sm:h-32 rounded-2xl object-cover shadow-md" src="https://pix8.agoda.net/hotelImages/5883505/-1/16cfae2cbb8041b3db180a63c26267e6.jpg?ca=9&ce=1&s=1024x"/>
+                        <div class="flex-1 w-full text-center sm:text-left">
+                            <h4 class="text-xl font-bold font-headline text-on-surface">Lavanya Beach and Dive Resort</h4>
+                            <p class="text-on-surface-variant text-sm flex items-center justify-center sm:justify-start gap-1 mt-1">
+                                <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+                                Zamboanguita Coastline
+                            </p>
+                        </div>
+                        <button class="sm:mr-4 w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-primary hover:text-on-primary transition-all">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+
+                    <div class="glass-card p-4 rounded-[2rem] flex flex-col sm:flex-row gap-6 items-center hover:bg-surface-container-high transition-colors">
+                        <img alt="Mountain trail" class="w-full sm:w-32 h-48 sm:h-32 rounded-2xl object-cover shadow-md" src="https://dumaguete.com/wp-content/uploads/2014/02/Thalata-Beach-Resort-Pool.jpg"/>
+                        <div class="flex-1 w-full text-center sm:text-left">
+                            <h4 class="text-xl font-bold font-headline text-on-surface">Thalata Beach Resort</h4>
+                            <p class="text-on-surface-variant text-sm flex items-center justify-center sm:justify-start gap-1 mt-1">
+                                <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+                                Malatapay, Zamboanguita
+                            </p>
+                        </div>
+                        <button class="sm:mr-4 w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-primary hover:text-on-primary transition-all">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+                        /* =====================================================
+   DARK MODE
+===================================================== */
+
+function toggleDarkMode(){
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+
+    if(body.classList.contains("light-mode")){
+
+        localStorage.setItem("theme", "light");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        localStorage.setItem("theme", "dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD THEME
+===================================================== */
+
+window.onload = function(){
+
+    const savedTheme = localStorage.getItem("theme");
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    if(savedTheme === "light"){
+
+        body.classList.add("light-mode");
+
+        html.classList.remove("dark");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        body.classList.remove("light-mode");
+
+        html.classList.add("dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+    renderTable();
+
+}
+    </script>
+</body>
+</html>

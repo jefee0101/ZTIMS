@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Zamboanguita Explorer - Traveler Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#59ee50",
+                        "on-primary": "#005406",
+                        "surface": "#0e0f0a",
+                        "background": "#0e0f0a",
+                        "surface-variant": "#252620",
+                        "on-surface": "#fefcf4",
+                        "on-surface-variant": "#acaba4",
+                        "outline-variant": "#484842",
+                        "primary-container": "#0fba1e",
+                        "secondary-container": "#046b5e",
+                        "on-secondary-container": "#ddfff6",
+                    },
+                    fontFamily: {
+                        // All typography keys updated to use Plus Jakarta Sans exclusively
+                        headline: ["Plus Jakarta Sans", "sans-serif"],
+                        body: ["Plus Jakarta Sans", "sans-serif"],
+                    }
+                },
+            },
+        }
+    </script>
+    
+    <style>
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
+.light-mode main { background: #f8fafc !important; }
+.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
+.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
+.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
+.light-mode .bg-black\/40 { background: #ffffff !important; }
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
+.light-mode .text-yellow-400 { color: #ca8a04 !important; }
+.light-mode .text-purple-400 { color: #9333ea !important; }
+.light-mode .text-primary { color: #16a34a !important; }
+.light-mode button { color: #18181b; }
+.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
+.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
+.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
+.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
+.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
+.light-mode #themeIcon { color: #f59e0b !important; }
+</style>
+</head>
+
+    <!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">explore</span>
+                <span>Destinations</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_reviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full sm:ml-64 pt-24 pb-12 px-6 sm:px-10 tonal-shift-layering min-h-screen transition-colors duration-300 font-body">
+        
+        <section class="mb-12">
+            <h2 class="text-3xl font-extrabold font-headline mb-6 tracking-tight">Book Your Adventure</h2>
+            <style>
+                h2 {
+                    color: rgb(255, 253, 253);
+                    text-shadow: 
+                }
+            </style>
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="text-xs font-bold text-stone-500 uppercase tracking-widest ml-2">Categories:</span>
+                <div class="flex flex-wrap gap-2">
+                    <button class="px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20">All</a>
+                    
+                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
+                        <a href="user_beach_diving.html">Beach & Diving</a>
+                    </button>
+                    
+                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
+                        <a href="user_mountains.html">Mountains</a>
+                    </button> 
+                    
+                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
+                        <a href="user_cultural.html">Cultural</a>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold font-headline">Recommended for You</h3>
+                    <style>
+                        h3 {
+                            
+                                font-size: 48px;
+                                color: white;
+                                text-shadow: 
+                                    -1px -1px 0 black,
+                                    1px -1px 0 black,
+                                    -1px  1px 0 black,
+                                    1px  1px 0 black;
+                        }
+                    </style>
+                    <p class="text-stone-500 text-sm">Hand-picked destinations in Zamboanguita</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="p-2 rounded-full border border-stone-300 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-900 transition-all">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button class="p-2 rounded-full border border-stone-300 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-900 transition-all">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                
+                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
+                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/dwadd.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Turtle Island">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                    
+                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
+                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                        0 (0 Reviews)
+                    </div>
+
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Turtle Island</h4>
+                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Crystal clear waters and sanctuary for majestic sea turtles.</p>
+                        <a href="user_turtle.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
+                            Explore Now
+                        </a>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
+                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxa.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Jomao-as Hot Spring">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                    
+                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
+                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                        0 (0 Reviews)
+                    </div>
+
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Jomao-as Hot Spring</h4>
+                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Natural therapeutic volcanic springs nestled in the jungle.</p>
+                        <a href="" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
+                            Explore Now
+                        </a>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
+                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Najandig Peak">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                    
+                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
+                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                        0 (0 Reviews)
+                    </div>
+
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Najandig Peak</h4>
+                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Breathtaking panoramic views of the Apo Island strait.</p>
+                        <a href="user_najandig_peak.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
+                            Explore Now
+                        </a>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
+                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Jomao-as Falls">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                    
+                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
+                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                        0 (0 Reviews)
+                    </div>
+
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Jomao-as Falls</h4>
+                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Natural Scenic Falls.</p>
+                        <a href="user_jomaoasfallss.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
+                            Explore Now
+                        </a>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
+                    <img src="https://www.nopostcode.com/wp-content/uploads/2020/12/Malatapay-Market-37.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Malatapay Market">
+                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                    
+                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
+                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                        0 (0 Reviews)
+                    </div>
+
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Malatapay Market</h4>
+                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">A Flea Market where every merchant in Zamboanguita sells assorted goods.</p>
+                        <a href="user_malatapay.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
+                            Explore Now
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+                /* =====================================================
+   DARK MODE
+===================================================== */
+
+function toggleDarkMode(){
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+
+    if(body.classList.contains("light-mode")){
+
+        localStorage.setItem("theme", "light");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        localStorage.setItem("theme", "dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD THEME
+===================================================== */
+
+window.onload = function(){
+
+    const savedTheme = localStorage.getItem("theme");
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    if(savedTheme === "light"){
+
+        body.classList.add("light-mode");
+
+        html.classList.remove("dark");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        body.classList.remove("light-mode");
+
+        html.classList.add("dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+    renderTable();
+
+}
+    </script>
+</body>
+</html>

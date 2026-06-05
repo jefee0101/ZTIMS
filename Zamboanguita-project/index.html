@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ZAMBOANGUITA | The Veridian Narrative</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Manrope:wght@300;400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <script>
+        // Instantly checks localStorage before HTML renders to prevent white screen flash
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "light") {
+            document.documentElement.classList.remove("dark");
+        } else {
+            // Default to dark mode if nothing is set yet
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#2b2d25",
+                        "primary-fixed": "#59ee50",
+                        "on-tertiary-container": "#5f453b",
+                        "surface-container": "#191a14",
+                        "inverse-surface": "#fbf9f1",
+                        "error-dim": "#d53d18",
+                        "surface-container-low": "#13140f",
+                        "on-surface": "#fefcf4",
+                        "primary": "#59ee50",
+                        "on-tertiary-fixed": "#4b3229",
+                        "tertiary-fixed": "#f6cfc2",
+                        "on-background": "#fefcf4",
+                        "on-secondary-container": "#ddfff6",
+                        "inverse-on-surface": "#55554f",
+                        "primary-fixed-dim": "#49e043",
+                        "tertiary-container": "#f6cfc2",
+                        "surface-container-highest": "#252620",
+                        "primary-container": "#0fba1e",
+                        "surface-container-high": "#1f201a",
+                        "secondary-dim": "#92e4d3",
+                        "on-error-container": "#ffd2c8",
+                        "on-primary-container": "#002a01",
+                        "on-error": "#450900",
+                        "on-tertiary-fixed-variant": "#6a4e44",
+                        "on-secondary": "#005d51",
+                        "error-container": "#b92902",
+                        "outline-variant": "#484842",
+                        "surface-dim": "#0e0f0a",
+                        "background": "#0e0f0a",
+                        "on-tertiary": "#694d43",
+                        "tertiary-dim": "#e7c1b4",
+                        "error": "#ff7351",
+                        "tertiary-fixed-dim": "#e7c1b4",
+                        "outline": "#76766f",
+                        "on-primary-fixed-variant": "#005f07",
+                        "tertiary": "#ffded4",
+                        "surface-variant": "#252620",
+                        "surface": "#0e0f0a",
+                        "primary-dim": "#49e043",
+                        "on-primary-fixed": "#003e03",
+                        "secondary": "#a0f2e1",
+                        "on-surface-variant": "#acaba4",
+                        "secondary-fixed": "#a0f2e1",
+                        "on-secondary-fixed": "#00483f",
+                        "inverse-on-secondary-fixed-variant": "#00675b",
+                        "surface-tint": "#59ee50",
+                        "surface-container-lowest": "#000000",
+                        "secondary-fixed-dim": "#92e4d3",
+                        "secondary-container": "#046b5e",
+                        "on-primary": "#005406"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(14, 15, 10, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #59ee50, #0fba1e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #59ee50 0%, #0fba1e 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .mask-gradient {
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Light mode fallback adjustments */
+        html:not(.dark) body {
+            background-color: #ececec !important;
+            color: #0f172a !important;
+            text-shadow: 2px 2px 3px black;
+        }
+        html:not(.dark) nav {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+        }
+        html:not(.dark) .text-on-surface, html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3 {
+            color: #1d8a14 !important;
+        }
+        html:not(.dark) .text-on-surface-variant, html:not(.dark) p {
+            color: #eeeef0 !important;
+        }
+        html:not(.dark) .bg-surface-container-low {
+            background-color: #f1f5f9 !important;
+        }
+        html:not(.dark) .bg-surface {
+            background-color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+
+<nav class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/10 transition-colors duration-300">
+    <div class="flex justify-between items-center px-8 py-6 max-w-full mx-auto">
+        <a class="text-2xl font-display font-black tracking-tighter text-on-surface" href="#">EXPLORE &nbsp;&nbsp; &nbsp;ZAMBOANGUITA</a>
+        
+        <div class="flex items-center space-x-6">
+            <button id="themeToggleBtn" class="flex items-center justify-center p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-primary hover:bg-surface-bright transition-all" title="Toggle Dark/Light Mode">
+                <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">light_mode</span>
+            </button>
+
+            <button id="navAuthBtn" class="bg-primary text-on-primary px-8 py-3 rounded-full font-display font-bold uppercase tracking-widest text-sm scale-95 active:scale-90 transition-all hover:scale-105 btn-primary-gradient shadow-lg shadow-primary/20 flex items-center">
+                <span class="material-symbols-outlined mr-2 !text-lg">login</span>
+                Sign In
+            </button>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <section class="relative h-screen w-full flex items-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Najandig Peak"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
+            <div class="absolute inset-0 bg-black/20"></div>
+        </div>
+        <div class="relative z-10 px-8 md:px-20 max-w-5xl">
+            <span class="inline-block px-4 py-1 mb-6 border border-primary/30 rounded-full text-primary-fixed font-label text-xs tracking-widest uppercase bg-surface-container-low/40 backdrop-blur-sm">
+                EXPLORE ZAMBOANGUITA
+            </span>
+            <h1 class="text-7xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] text-on-surface mb-8">
+                DAYON MO <br/> <span class="text-gradient">DOY!.</span>
+            </h1>
+            <p class="text-lg md:text-2xl text-on-surface-variant max-w-2xl leading-relaxed mb-12 font-light">
+                Experience the beauty and the hidden Gems of Zamboanguita
+            </p>
+            <div class="flex items-center space-x-8">
+                <button id="heroExploreBtn" class="group flex items-center space-x-4 bg-primary text-on-primary pl-8 pr-8 py-5 rounded-full font-display font-extrabold uppercase tracking-widest transition-all btn-primary-gradient">
+                    <span>Click to see more</span>
+                </button>
+            </div>
+        </div>
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 opacity-50">
+            <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-on-surface-variant">Scroll</span>
+            <div class="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent"></div>
+        </div>
+    </section>
+
+    <section class="py-32 bg-surface-container-low overflow-hidden transition-colors duration-300">
+        <div class="px-8 md:px-20 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div class="max-w-2xl">
+                <h2 class="text-5xl font-display font-bold tracking-tight text-on-surface mb-4">Tourist Spots</h2>
+            </div>
+        </div>
+        <div class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar">
+            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
+                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
+                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://video.360cities.net/marytravelerp/01970039_5kVRM2-1024x512.jpg" alt="Najandig Peak View"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Mountain Adventure</span>
+                        <h3 class="text-3xl font-display font-bold text-white mb-2">Najandig Peak</h3>
+                        <p class="text-white/70 text-sm line-clamp-2">The highest altar of solitude, where the mountains meet the clouds in a dance of light and outlooking view of Apo Island.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
+                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
+                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://mindanao.politiko.com.ph/wp-content/uploads/2017/07/43-1.jpg" alt="Turtle Island"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Feel the vibes to unwind</span>
+                        <h3 class="text-3xl font-display font-bold text-white mb-2">Turtle Island</h3>
+                        <p class="text-white/70 text-sm line-clamp-2">Experience the beauty of Turtle Island</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
+                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
+                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://tse4.mm.bing.net/th/id/OIP.E-J7Kg_u_urHLf6uGZkWwQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Hot Spring"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="absolute bottom-8 left-8 right-8">
+                        <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Natural Hot Spring</span>
+                        <h3 class="text-3xl font-display font-bold text-white mb-2">Jomao-as Hot Spring</h3>
+                        <p class="text-white/70 text-sm line-clamp-2">A natural Hot Spring.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="relative py-40 bg-surface overflow-hidden transition-colors duration-300">
+        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10">
+            <span class="material-symbols-outlined !text-[500px] rotate-12 text-primary">eco</span>
+        </div>
+        <div class="px-8 md:px-20 grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
+            <div class="order-2 md:order-1">
+                <div class="inline-block w-20 h-1 bg-primary mb-12"></div>
+                <h2 class="text-5xl md:text-7xl font-display font-extrabold tracking-tighter text-on-surface mb-12 leading-none">
+                    A COMMITMENT <br/> TO THE <span class="text-primary">SOUL</span> OF LAND.
+                </h2>
+                <div class="space-y-8 text-on-surface-variant text-xl leading-relaxed font-light">
+                    <p>
+                        Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at approximately 9°6′N latitude and 123°12′E longitude, about 28 kilometers south of Dumaguete City.
+                    </p>
+                    <p>
+                        In Zamboanguita, we prioritize high-end experiences that leave no footprint, only memories. We partner with local guardians to ensure that the beauty we share today remains untainted for the narratives of tomorrow.
+                    </p>
+                </div>
+            </div>
+            <div class="order-1 md:order-2 relative">
+                <div class="aspect-[4/5] rounded-xl overflow-hidden shadow-2xl">
+                    <img class="w-full h-full object-cover" src="https://tse4.mm.bing.net/th/id/OIP.uYhx2hIRIvm1j9-0B02YIQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Local landscape Guide"/>
+                </div>
+                <div class="absolute -bottom-10 -left-10 glass-panel p-8 rounded-xl border border-outline-variant/20 max-w-xs hidden lg:block">
+                    <p class="text-on-surface italic font-light text-lg mb-4">"We don't inherit the land from our ancestors, we borrow it from our children."</p>
+                    <p class="text-primary font-bold uppercase tracking-widest text-xs">— Local Guardian Narrative</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-8 md:px-20 text-center relative">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-5xl md:text-7xl font-display font-extrabold tracking-tighter text-on-surface mb-8">Explore now the Hidden Gems of Zamboanguita</h2>
+            <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto justify-center">
+                <button id="ctaExploreBtn" class="bg-primary text-on-primary px-10 py-5 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient whitespace-nowrap">Click Here</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="w-full py-12 px-8 bg-surface-dim border-t border-outline-variant/10 transition-colors duration-300">
+    <div class="max-w-full mx-auto flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
+        <div class="flex flex-col items-center md:items-start space-y-4">
+            <a class="text-xl font-display font-bold text-on-surface" href="#">ZAMBOANGUITA NEGROS ORIENTAL</a>
+            <p class="font-body text-sm text-on-surface-variant max-w-xs text-center md:text-left">
+                © 2026 Zamboanguita Tourism Management System
+            </p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-8">
+            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Sustainability</a>
+            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Us</a>
+            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+<script type="module">
+    const navAuthBtn = document.getElementById('navAuthBtn');
+    const heroExploreBtn = document.getElementById('heroExploreBtn');
+    const ctaExploreBtn = document.getElementById('ctaExploreBtn');
+    
+    // Theme references
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+    // Central function straight paths to the main user entry login
+    function handleRouting() {
+        window.location.href = 'src/user/user_login.html';
+    }
+
+    // Theme Switch Click Action Logic
+    themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        
+        if (isDark) {
+            localStorage.setItem('theme', 'dark');
+            themeToggleIcon.innerHTML = 'light_mode';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggleIcon.innerHTML = 'dark_mode';
+        }
+    });
+
+    // Event listeners attached to your interactive elements
+    navAuthBtn.addEventListener('click', handleRouting);
+    heroExploreBtn.addEventListener('click', handleRouting);
+    ctaExploreBtn.addEventListener('click', handleRouting);
+
+    // Sync visual UI elements to match active theme once page structures are complete
+    window.addEventListener('DOMContentLoaded', () => {
+        const currentTheme = localStorage.getItem("theme");
+        if (currentTheme === "light") {
+            document.documentElement.classList.remove("dark");
+            themeToggleIcon.innerHTML = 'dark_mode';
+        } else {
+            document.documentElement.classList.add("dark");
+            themeToggleIcon.innerHTML = 'light_mode';
+        }
+    });
+</script>
+</body>
+</html>

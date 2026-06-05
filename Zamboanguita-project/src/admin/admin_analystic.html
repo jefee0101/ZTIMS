@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+
+<title>Zamboanguita Admin | Platform Analytics</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+}
+</script>
+
+<style>
+
+  
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
+.light-mode main { background: #f8fafc !important; }
+.light-mode aside { background: #ffffff !important; border-color: #010102 !important; }
+.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
+.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
+.light-mode .bg-black\/40 { background: #ffffff !important; }
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #000000 !important; }
+.light-mode .text-yellow-400 { color: #ca8a04 !important; }
+.light-mode .text-purple-400 { color: #9333ea !important; }
+.light-mode .text-primary { color: #0adf15 !important; }
+.light-mode button { color: #18181b; }
+.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
+.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
+.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
+.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
+.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
+.light-mode #themeIcon { color: #f59e0b !important; }
+
+
+/* GLOWING WAVE */
+.chart-line {
+    filter:
+        drop-shadow(0 0 8px #59ee50);
+        drop-shadow(0 0 16px #59ee50);
+
+    animation: glowPulse s ease-in-out infinite;
+}
+
+/* GLOW ANIMATION */
+@keyframes glowPulse {
+
+    0% {
+        filter:
+            drop-shadow(0 0 6px #59ee50)
+            drop-shadow(0 0 12px #59ee50);
+    }
+
+    50% {
+        filter:
+            drop-shadow(0 0 14px #59ee50)
+            drop-shadow(0 0 24px #59ee50);
+    }
+
+    100% {
+        filter:
+            drop-shadow(0 0 6px #59ee50)
+            drop-shadow(0 0 12px #59ee50);
+    }
+}
+/* GRID GLOW */
+.chart-grid {
+    opacity: 0.15;
+    animation: gridGlow 6s ease-in-out infinite;
+}
+
+@keyframes gridGlow {
+
+    0% {
+        opacity: 0.08;
+    }
+
+    50% {
+        opacity: 0.18;
+    }
+
+    100% {
+        opacity: 0.08;
+    }
+}
+/* PREMIUM CARD HOVER */
+.glass-panel:hover {
+    transform: translateY(-4px);
+    transition: all 0.4s ease;
+
+    box-shadow:
+        0 10px 30px rgba(89, 238, 80, 0.08);
+}
+
+</style>
+</head>
+ <!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1> <style> h1{
+              color: rgb(13, 206, 13);
+            }</style>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+                            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined">location_on</span>
+                <span>Manage Spots</span>
+            </a>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>
+
+<!-- Main Workspace -->
+<main class="ml-6 min-h-screen flex flex-col bg-surface-container-lowest">
+ <!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+<!-- Content Canvas -->
+<main class="ml-[280px] pt-20 min-h-screen custom-scrollbar overflow-y-auto">
+<div class="p-10 max-w-[1400px] mx-auto space-y-12">
+<span class="text-stone-400">Inventory</span>
+</nav>
+<h2 class="text-5xl font-black text-white font-headline tracking-tighter">Platform Analytics</h2>
+    
+    <style>
+        .text-white {
+    --tw-text-opacity: 1;
+    color: rgb(255, 255, 255);
+    
+}
+
+    
+    </style>
+    
+
+</div>
+<button class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary-container rounded-full font-bold text-sm hover:scale-102 active:scale-98 transition-all shadow-xl shadow-primary/20 group">
+<span class="material-symbols-outlined">add_circle</span>
+                    Add New Spot
+                </button>
+</div>
+
+
+
+
+<!-- KPI CARDS -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+
+<div class="glass-panel p-6 rounded-2xl">
+<p class="muted text-sm mb-2">Total Revenue</p>
+<h2 class="text-3xl font-bold">₱0.00</h2>
+</div>
+
+<div class="glass-panel p-6 rounded-2xl">
+<p class="muted text-sm mb-2">Active Bookings</p>
+<h2 class="text-3xl font-bold">0</h2>
+</div>
+
+<div class="glass-panel p-6 rounded-2xl">
+<p class="muted text-sm mb-2">New Travelers</p>
+<h2 class="text-3xl font-bold">0</h2>
+</div>
+
+<div class="glass-panel p-6 rounded-2xl">
+<p class="muted text-sm mb-2">Average Rating</p>
+<h2 class="text-3xl font-bold">0.0 / 5.0</h2>
+</div>
+
+</div>
+
+<!-- CHART SECTION -->
+<div class="glass-panel p-8 rounded-2xl mb-10">
+
+<div class="flex justify-between items-center mb-8">
+  <style>
+    .div{
+      border-radius: 5cm;
+      border-color: #0adf15;
+    }
+  </style>
+<h2 class="text-2xl font-bold">
+Booking Trends
+</h2>
+</div>
+
+<!-- Mock Line Chart Visualization -->
+<div class="relative h-64 flex items-end gap-1 chart-container">
+
+<!-- GRID LINES -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none chart-grid">
+<div class="border-t border-outline-variant/10 w-full h-px"></div>
+<div class="border-t border-outline-variant/10 w-full h-px"></div>
+<div class="border-t border-outline-variant/10 w-full h-px"></div>
+<div class="border-t border-outline-variant/10 w-full h-px"></div>
+</div>
+
+<!-- ANIMATED SVG -->
+<svg class="absolute bottom-0 left-0 w-full h-full"
+preserveAspectRatio="none"
+viewBox="0 0 1000 100">
+
+<defs>
+
+<linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+
+<stop offset="0%" stop-color="#59ee50" stop-opacity="0.35">
+
+<animate
+attributeName="stop-opacity"
+values="0.15;0.45;0.15"
+dur="10s"
+repeatCount="indefinite"
+/>
+
+</stop>
+
+<stop offset="100%" stop-color="#59ee50" stop-opacity="0"></stop>
+
+</linearGradient>
+
+</defs>
+
+<!-- GREEN AREA -->
+<path fill="url(#lineGrad)">
+
+<animate
+attributeName="d"
+dur="100s"
+repeatCount="indefinite"
+values="
+M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45 L1000,100 L0,100 Z;
+M0,72 Q100,45 200,68 T400,45 T600,25 T800,35 T1000,38 L1000,100 L0,100 Z;
+M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45 L1000,100 L0,100 Z
+"
+/>
+
+</path>
+
+<!-- MAIN WAVE -->
+<path
+class="chart-line"
+fill="none"
+stroke="#59ee50"
+stroke-width="1"
+stroke-linecap="round">
+
+<animate
+attributeName="d"
+dur="100s"
+repeatCount="indefinite"
+values="
+M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45;
+M0,72 Q100,45 200,68 T400,45 T600,25 T800,35 T1000,38;
+M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45
+"
+/>
+
+</path>
+</svg>
+
+</div>
+
+</div>
+
+<!-- DESTINATIONS -->
+<section>
+
+<h2 class="text-3xl font-extrabold mb-8">
+Destination Performance
+</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+<!-- CARD 1-->
+<div class="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] transition">
+
+<img
+src="https://www.jonnymelon.com/wp-content/uploads/2018/10/apo-island-18.jpg"
+class="w-full h-52 object-cover"
+/>
+
+<div class="p-6">
+
+<h3 class="text-2xl font-bold mb-3">
+Apo Island
+</h3>
+
+<p class="muted mb-4">
+0 Monthly Bookings
+</p>
+
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500">
+star
+</span>
+
+<span>0 Rating</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- CARD 2-->
+<div class="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] transition">
+
+<img
+src="https://tse2.mm.bing.net/th/id/OIP.bn-0gv2UwcEda8y9fk2G2QHaFj?pid=Api&P=0&h=180"
+class="w-full h-52 object-cover"
+/>
+
+<div class="p-6">
+
+<h3 class="text-2xl font-bold mb-3">
+Najandig Peak
+</h3>
+
+<p class="muted mb-4">
+ 0 Monthly Bookings
+</p>
+
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500">
+star
+</span>
+
+<span>0 Rating</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- CARD 3-->
+<div class="glass-panel rounded-2xl p-6">
+
+<h3 class="text-2xl font-bold mb-6">
+Emerging Spots
+</h3>
+
+<div class="space-y-4">
+
+<div class="flex justify-between">
+<span>Malatapay Market</span>
+<span class="green font-bold">0%</span>
+</div>
+
+<div class="flex justify-between">
+<span>Jomao-As Hot Spring</span>
+<span class="green font-bold">0%</span>
+</div>
+
+<div class="flex justify-between">
+<span>Turtle Island</span>
+<span class="green font-bold">0%</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+
+
+<!-- DARK/LIGHT MODE SCRIPT -->
+<script>
+
+/* =====================================================
+   DARK MODE
+===================================================== */
+
+function toggleDarkMode(){
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+
+    if(body.classList.contains("light-mode")){
+
+        localStorage.setItem("theme", "light");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        localStorage.setItem("theme", "dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD THEME
+===================================================== */
+
+window.onload = function(){
+
+    const savedTheme = localStorage.getItem("theme");
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    if(savedTheme === "light"){
+
+        body.classList.add("light-mode");
+
+        html.classList.remove("dark");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        body.classList.remove("light-mode");
+
+        html.classList.add("dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+    renderTable();
+
+}
+
+</script>
+
+</body>
+</html>

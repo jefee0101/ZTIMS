@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile Settings </title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#0e0f0a",
+                    "primary-fixed-dim": "#49e043",
+                    "on-tertiary": "#694d43",
+                    "tertiary-fixed-dim": "#e7c1b4",
+                    "on-surface": "#fefcf4",
+                    "background": "#0e0f0a",
+                    "on-error": "#450900",
+                    "secondary": "#a0f2e1",
+                    "on-tertiary-fixed-variant": "#6a4e44",
+                    "on-secondary-fixed": "#00483f",
+                    "on-error-container": "#ffd2c8",
+                    "surface-container-lowest": "#000000",
+                    "on-surface-variant": "#acaba4",
+                    "surface-dim": "#0e0f0a",
+                    "on-secondary-container": "#ddfff6",
+                    "primary-container": "#0fba1e",
+                    "on-tertiary-fixed": "#4b3229",
+                    "surface-container-low": "#13140f",
+                    "primary-fixed": "#59ee50",
+                    "on-secondary": "#005d51",
+                    "primary": "#59ee50",
+                    "error-dim": "#d53d18",
+                    "surface-container-highest": "#252620",
+                    "surface-container-high": "#1f201a",
+                    "secondary-fixed": "#a0f2e1",
+                    "secondary-container": "#046b5e",
+                    "secondary-fixed-dim": "#92e4d3",
+                    "tertiary-container": "#f6cfc2",
+                    "on-background": "#fefcf4",
+                    "tertiary": "#ffded4",
+                    "inverse-on-surface": "#55554f",
+                    "error-container": "#b92902",
+                    "secondary-dim": "#92e4d3",
+                    "on-primary-fixed": "#003e03",
+                    "error": "#ff7351",
+                    "on-tertiary-container": "#5f453b",
+                    "on-primary-fixed-variant": "#005f07",
+                    "on-primary": "#005406",
+                    "tertiary-fixed": "#f6cfc2",
+                    "surface-container": "#191a14",
+                    "surface-bright": "#2b2d25",
+                    "on-primary-container": "#002a01",
+                    "surface-tint": "#59ee50",
+                    "inverse-surface": "#fbf9f1",
+                    "inverse-primary": "#006f0a",
+                    "tertiary-dim": "#e7c1b4",
+                    "on-secondary-fixed-variant": "#00675b",
+                    "surface-variant": "#252620",
+                    "outline-variant": "#484842",
+                    "outline": "#76766f",
+                    "primary-dim": "#49e043"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
+.light-mode main { background: #f8fafc !important; }
+.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
+.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
+.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
+.light-mode .bg-black\/40 { background: #ffffff !important; }
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
+.light-mode .text-yellow-400 { color: #ca8a04 !important; }
+.light-mode .text-purple-400 { color: #9333ea !important; }
+.light-mode .text-primary { color: #16a34a !important; }
+.light-mode button { color: #18181b; }
+.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
+.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
+.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
+.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
+.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
+.light-mode #themeIcon { color: #f59e0b !important; }
+</style>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+  <!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined">explore</span>
+                <span>Destinations</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_reviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>
+
+<!-- Active Navigation Logic: Settings page -->
+<a href="profile.html" class="flex items-center gap-3 px-4 py-3 bg-green-900/20 text-green-400 font-semibold rounded-xl transition-all duration-300 scale-102 active:scale-95" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+<style>
+    .bg-green-900\/20{
+        background-color: #54e34d2f;
+    }
+    .text-green-400 {
+        color: rgba(255, 255, 255, 0.781);
+    }
+</style>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-stone-800/30">
+
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+<!-- Left Column: Personal Info & Preferences -->
+<div class="lg:col-span-7 space-y-8">
+<!-- Section 1: Personal Information -->
+<section class="glass-card rounded-xl p-8">
+<h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined">person</span> Personal Information
+                        </h3>
+<div class="flex flex-col md:flex-row gap-8 items-start mb-8">
+<div class="relative group">
+<div class="w-32 h-32 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a smiling young man in his late 20s with short hair, wearing a linen shirt" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF0hyeTgnLplEQH0Vvu0yLR0B2N3PNLx-lyNIZd5m18OS6tlU4S3w6hD1hdEMxb1PGu4aF16ZlhY8wef17QAuhSGKSakFLMxhHB4nTLj0cViPDTPuqZ9l63n3Uu1qKPIGnDV_Bfr9yPlCLhHegoxkjDHV1SzPQt6HXxkO9Q7CJmePAyoJDtQG8R0aW-6UbnkHzH4ftKxLyHiycyAXxCKKn6n1GWrKn5OMsDRCVsTZepo0YEYjXQECV5XimKvNxpVYk4U4Ub8IUdOVu"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary p-2 rounded-full text-on-primary hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</button>
+</div>
+<div class="flex-1 space-y-4 w-full">
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Full Name</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" type="text" value="John Lopez"/>
+</div>
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Email Address</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" type="email" value="jlopez.student@asiancollege.edu.ph."/>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Phone Number</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" type="tel" value="+63921579237"/>
+</div>
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Bio</label>
+<textarea class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors resize-none" rows="4">Wanderlust soul currently exploring the hidden gems of Negros Oriental. Passionate about sustainable tourism and local marine life conservation.</textarea>
+</div>
+</div>
+</section>
+<!-- Section 3: Preferences -->
+<section class="glass-card rounded-xl p-8">
+<h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined">tune</span> Preferences
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Language</label>
+<select class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors appearance-none">
+<option>English (US)</option>
+<option>Cebuano</option>
+<option>Tagalog</option>
+<option>Spanish</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Currency</label>
+<select class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors appearance-none">
+<option>PHP - Philippine Peso</option>
+<option>USD - US Dollar</option>
+<option>EUR - Euro</option>
+</select>
+</div>
+
+</div>
+</section>
+</div>
+<!-- Right Column: Security & Actions -->
+<div class="lg:col-span-5 space-y-8">
+<!-- Section 2: Security -->
+<section class="glass-card rounded-xl p-8">
+<h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined">security</span> Security
+                        </h3>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Current Password</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" placeholder="••••••••" type="password"/>
+</div>
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">New Password</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" placeholder="••••••••" type="password"/>
+</div>
+<div>
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2">Confirm New Password</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/15 rounded-xl px-4 py-3 focus:border-primary focus:ring-0 transition-colors" placeholder="••••••••" type="password"/>
+</div>
+</div>
+</section>
+<!-- Section 4: Account Actions -->
+<section class="space-y-4">
+<button class="w-full py-4 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary/10 transition-all flex items-center justify-center gap-2 group"> <a href="user_logout.html">
+<span class="material-symbols-outlined group-hover:rotate-12 transition-transform">logout</span>
+                            LOG OUT
+                        </a></button>
+
+</section>
+<!-- Immersive Visual Element -->
+<div class="relative h-64 rounded-xl overflow-hidden shadow-2xl">
+<img class="w-full h-full object-cover" data-alt="scenic view of Apo Island near Zamboanguita with turquoise water and volcanic rock formations under a clear blue sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBerCleA-yFojzoQSKAqBQHHqRxGUvqLL6GsBkSrBwNSgp2ST5MTW9hKp0AphPMMBtnvbJFTcxkoN0_xVckOUCFevVv4wor6IIzZvfnKO8V2rbovtiFV053QU0DdXeqFtNvIdLXWyh6b0w2_dqaae6aJDUF0Xzwc1NhNQTzmJFVzuDRbG6E-kLT8TsEthbjxk_9zANfFizJCzV6BLPYTyZO-1wdRk6TPtv45r4NTjoH6GTH0G_Lnbxr6Jrzrzw4jPW86FGrpTCm8WqG"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent opacity-60"></div>
+<div class="absolute bottom-4 left-6">
+<p class="text-primary font-headline font-extrabold text-lg uppercase tracking-tighter">Your Next Destination</p>
+<p class="text-on-surface text-sm">Apo Island Marine Sanctuary</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Save Bar -->
+<footer class="mt-12 flex justify-end gap-4">
+</footer>
+</div>
+</main>
+<script>
+        /* =====================================================
+   DARK MODE
+===================================================== */
+
+function toggleDarkMode(){
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+
+    if(body.classList.contains("light-mode")){
+
+        localStorage.setItem("theme", "light");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        localStorage.setItem("theme", "dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD THEME
+===================================================== */
+
+window.onload = function(){
+
+    const savedTheme = localStorage.getItem("theme");
+
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+
+    if(savedTheme === "light"){
+
+        body.classList.add("light-mode");
+
+        html.classList.remove("dark");
+
+        icon.innerHTML = "dark_mode";
+
+    } else {
+
+        body.classList.remove("light-mode");
+
+        html.classList.add("dark");
+
+        icon.innerHTML = "light_mode";
+
+    }
+
+    renderTable();
+
+}
+
+</script>
+    </script>
+</body></html>

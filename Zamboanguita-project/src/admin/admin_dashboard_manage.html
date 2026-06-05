@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#92e4d3",
+                    "secondary-dim": "#92e4d3",
+                    "surface-dim": "#0e0f0a",
+                    "outline-variant": "#484842",
+                    "outline": "#76766f",
+                    "on-surface": "#fefcf4",
+                    "primary-container": "#0fba1e",
+                    "tertiary-fixed-dim": "#e7c1b4",
+                    "surface": "#0e0f0a",
+                    "surface-bright": "#2b2d25",
+                    "on-primary": "#005406",
+                    "on-tertiary-fixed": "#4b3229",
+                    "inverse-primary": "#006f0a",
+                    "secondary-fixed": "#a0f2e1",
+                    "primary-fixed": "#59ee50",
+                    "secondary-container": "#046b5e",
+                    "surface-container": "#191a14",
+                    "on-secondary-fixed-variant": "#00675b",
+                    "on-secondary-fixed": "#00483f",
+                    "tertiary-container": "#f6cfc2",
+                    "surface-variant": "#252620",
+                    "on-tertiary-fixed-variant": "#6a4e44",
+                    "on-primary-fixed-variant": "#005f07",
+                    "on-background": "#fefcf4",
+                    "surface-tint": "#59ee50",
+                    "surface-container-high": "#1f201a",
+                    "surface-container-low": "#13140f",
+                    "tertiary-dim": "#e7c1b4",
+                    "on-secondary-container": "#ddfff6",
+                    "tertiary-fixed": "#f6cfc2",
+                    "error": "#ff7351",
+                    "on-error-container": "#ffd2c8",
+                    "surface-container-highest": "#252620",
+                    "error-dim": "#d53d18",
+                    "error-container": "#b92902",
+                    "background": "#0e0f0a",
+                    "on-tertiary-container": "#5f453b",
+                    "on-error": "#450900",
+                    "surface-container-lowest": "#000000",
+                    "secondary": "#a0f2e1",
+                    "on-secondary": "#005d51",
+                    "inverse-on-surface": "#55554f",
+                    "on-primary-fixed": "#003e03",
+                    "primary-dim": "#49e043",
+                    "inverse-surface": "#fbf9f1",
+                    "on-primary-container": "#002a01",
+                    "on-tertiary": "#694d43",
+                    "primary-fixed-dim": "#49e043",
+                    "on-surface-variant": "#acaba4",
+                    "primary": "#59ee50",
+                    "tertiary": "#ffded4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
+.light-mode main { background: #f8fafc !important; }
+.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
+.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
+.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
+.light-mode .bg-black\/40 { background: #ffffff !important; }
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
+.light-mode .text-yellow-400 { color: #ca8a04 !important; }
+.light-mode .text-purple-400 { color: #9333ea !important; }
+.light-mode .text-primary { color: #16a34a !important; }
+.light-mode button { color: #18181b; }
+.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
+.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
+.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
+.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
+.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
+.light-mode #themeIcon { color: #f59e0b !important; }
+</style>
+</head>>
+
+ <!--sideBar-->
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1> <style> h1{
+              color: rgb(13, 206, 13);
+            }</style>
+            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+        </div>
+
+        <nav class="flex-1 space-y-1 font-body">
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+                            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined">location_on</span>
+                <span>Manage Spots</span>
+            </a>
+            </a>
+<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_booking.html">
+                <span class="material-symbols-outlined">event_available</span>
+                <span>Bookings</span>
+            </a>
+
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span>Reviews</span>
+            </a>
+
+            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="capitalize">settings</span>
+            </a>
+        </nav>
+    </aside>
+
+<!--headermain-->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+        <div class="flex items-center gap-2"></div>
+        
+        <div class="flex items-center gap-4">
+            <button class="text-stone-400 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">account_circle</span>
+            </button>
+            
+            <button 
+                onclick="toggleDarkMode()"
+                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                aria-label="Toggle Dark Mode">
+                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
+                    dark_mode
+                </span>
+            </button>
+        </div>
+    </header>
+    <main class="w-full sm:ml-64 pt-24 pb-12 px-6 sm:px-10 tonal-shift-layering min-h-screen transition-colors duration-300 font-body">
+<div class="p-2max-w-[1400px] mx-auto space-y-12">
+
+<div class="flex justify-between items-end mb-12">
+<div class="space-y-1">
+<nav class="flex text-[10px] uppercase tracking-widest text-primary font-bold mb-2">
+<span class="text-stone-400">Inventory</span>
+</nav>
+<h2 class="text-5xl font-black text-white font-headline tracking-tighter">Manage Destinations</h2>
+<style>
+.text-white { --tw-text-opacity: 1; color: rgb(255, 255, 255); text-shadow: 2px 2px rgb(0, 0, 0); }
+</style>
+</div>
+<button class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary-container rounded-full font-bold text-sm hover:scale-102 active:scale-98 transition-all shadow-xl shadow-primary/20 group ">
+<span class="material-symbols-outlined">add_circle</span> Add New Spot
+</button>
+</div>
+
+<div class="bg-surface-container-low/50 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-6">
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-stone-500 uppercase tracking-widest ml-2">Categories:</span>
+<div class="flex gap-2">
+<button class="px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
+<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Beach / Diving</button>
+<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Mountain</button>
+<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Cultural</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-stone-500 uppercase tracking-widest">Status:</span>
+<select class="bg-surface-container-high border-none rounded-full text-xs font-bold text-stone-300 px-4 focus:ring-1 focus:ring-primary">
+<option>Active Listings</option>
+<option>Hidden</option>
+<option>Archived</option>
+</select>
+</div>
+</div>
+
+<div class="relative overflow-hidden rounded-[2rem] border border-zinc-800 bg-black/40">
+  <div id="slider" class="flex transition-transform duration-500 ease-in-out">
+    <div class="min-w-full">
+      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
+        <div class="flex items-center gap-4">
+          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <h3 class="text-2xl font-bold text-white">Najandig Peak</h3>
+            <p class="text-zinc-500">Highland Over Looking View</p>
+          </div>
+        </div>
+        <div class="text-white">Brgy. Najandig</div>
+        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
+      </div>
+      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
+        <div class="flex items-center gap-4">
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <h3 class="text-2xl font-bold text-white">Jomao-As Falls</h3>
+            <p class="text-zinc-500">Hidden Jungle Waterfall</p>
+          </div>
+        </div>
+        <div class="text-white">Malongcay Diot</div>
+        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
+      </div>
+    </div>
+    <div class="min-w-full">
+      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
+        <div class="flex items-center gap-4">
+          <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <h3 class="text-2xl font-bold text-white">Hot Spring</h3>
+            <p class="text-zinc-500">Relaxing Natural Pool</p>
+          </div>
+        </div>
+        <div class="text-white">Jomao-As</div>
+        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
+      </div>
+      <div class="grid grid-cols-3 items-center px-8 py-6">
+        <div class="flex items-center gap-4">
+          <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308" class="w-16 h-16 rounded-xl object-cover">
+          <div>
+            <h3 class="text-2xl font-bold text-white">Malatapay Market</h3>
+            <p class="text-zinc-500">Authentic Coastal Trade Hub</p>
+          </div>
+        </div>
+        <div class="text-white">Zamboanguita Proper</div>
+        <div><span class="bg-purple-900/40 text-purple-400 px-4 py-2 rounded-lg text-xs font-bold">CULTURAL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center px-8 py-6 border-t border-zinc-800">
+    <p class="text-zinc-500">Showing <span id="pageNumber">1</span>-2 of 4 destinations</p>
+    <div class="flex gap-3">
+      <button id="prevBtn" class="w-12 h-12 rounded-xl border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-900 transition">❮</button>
+      <button id="nextBtn" class="w-12 h-12 rounded-xl border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-900 transition">❯</button>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+<div class="bg-surface-container-low border-l-4 border-green-500 p-6 rounded-r-2xl">
+<p class="text-xs font-bold text-stone-500 uppercase tracking-widest mb-1">Most Visited</p>
+<h5 class="text-2xl font-black text-white">Najandig Peak</h5>
+<p class="text-xs text-primary font-bold mt-2">↑ 12% from last month</p>
+</div>
+<div class="bg-surface-container-low border-l-4 border-stone-700 p-6 rounded-r-2xl">
+<p class="text-xs font-bold text-stone-500 uppercase tracking-widest mb-1">Total Capacity</p>
+<h5 class="text-2xl font-black text-white">0 Guests</h5>
+<p class="text-xs text-stone-500 mt-2">Across 24 locations</p>
+</div>
+</div>
+</div>
+
+<script>
+/* ===== SLIDER ===== */
+const slider = document.getElementById("slider");
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const pageNumber = document.getElementById("pageNumber");
+let currentSlide = 0;
+const totalSlides = 2;
+
+function updateSlider() {
+  slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+  pageNumber.textContent = currentSlide + 1;
+}
+nextBtn.addEventListener("click", () => {
+  currentSlide++;
+  if(currentSlide >= totalSlides){ currentSlide = 0; }
+  updateSlider();
+});
+prevBtn.addEventListener("click", () => {
+  currentSlide--;
+  if(currentSlide < 0){ currentSlide = totalSlides - 1; }
+  updateSlider();
+});
+
+/* ===== DARK / LIGHT MODE ===== */
+function toggleDarkMode() {
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+    body.classList.toggle("light-mode");
+    html.classList.toggle("dark");
+    if(body.classList.contains("light-mode")) {
+        localStorage.setItem("theme", "light");
+        icon.innerHTML = "dark_mode";
+    } else {
+        localStorage.setItem("theme", "dark");
+        icon.innerHTML = "light_mode";
+    }
+}
+window.onload = function () {
+    const savedTheme = localStorage.getItem("theme");
+    const body = document.body;
+    const html = document.documentElement;
+    const icon = document.getElementById("themeIcon");
+    if(savedTheme === "light") {
+        body.classList.add("light-mode");
+        html.classList.remove("dark");
+        icon.innerHTML = "dark_mode";
+    } else {
+        body.classList.remove("light-mode");
+        html.classList.add("dark");
+        icon.innerHTML = "light_mode";
+    }
+}
+</script>
+</main>
+</body>
+</html>
