@@ -3,7 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import connectDB from './db.js';
-import Booking from './Booking.js'; // Ensure this file exists in the same folder
+import Booking from './booking.js'; // Ensure this file exists in the same folder
 
 // Load environment variables
 dotenv.config();
