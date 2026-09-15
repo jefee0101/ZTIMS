@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer'); // Added for handling Forgot Password emails
+require('dotenv').config();
 
 const app = express();
 
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 100
 /* ==========================================
    2. DATABASE CONFIGURATION & CONNECT
 ========================================== */
-const MONGO_URI = 'mongodb://127.0.0.1:27017/zamboanguita';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboanguita';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected safely to MongoDB database system.'))
@@ -596,7 +597,7 @@ app.post('/api/spots', async (req, res) => {
 /* ==========================================
    5. DEPLOYMENT PORT INITIALIZER
 ========================================== */
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, () => {
     console.log(`=================================================`);
     console.log(` 🚀 Server actively streaming data loops at:`);
