@@ -1,7 +1,7 @@
 {
   "name": "zamboanguita-backend",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.2",
-    "mongoose": "^9.6.3"
+    "mongoose": "^9.7.0",
+    "nodemailer": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

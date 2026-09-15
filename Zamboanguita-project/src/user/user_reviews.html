@@ -4,323 +4,586 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Explore Zamboanguita | Reviews</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem("theme") || "dark";
+            if (savedTheme === "light") {
+                document.documentElement.classList.remove("dark");
+                document.documentElement.classList.add("light");
+            } else {
+                document.documentElement.classList.add("dark");
+                document.documentElement.classList.remove("light");
+            }
+        })();
+    </script>
+
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "tertiary-container": "#f6cfc2",
-                        "inverse-surface": "#fbf9f1",
-                        "primary-container": "#0fba1e",
-                        "primary-fixed-dim": "#49e043",
-                        "on-surface-variant": "#acaba4",
-                        "on-error": "#450900",
-                        "error": "#ff7351",
-                        "surface-container-high": "#1f201a",
-                        "on-primary-container": "#002a01",
-                        "secondary": "#a0f2e1",
-                        "primary-fixed": "#59ee50",
-                        "on-secondary-fixed": "#00483f",
-                        "error-dim": "#d53d18",
-                        "error-container": "#b92902",
-                        "on-secondary-container": "#ddfff6",
-                        "on-tertiary-fixed": "#4b3229",
-                        "surface-container-highest": "#252620",
-                        "on-background": "#fefcf4",
-                        "secondary-fixed": "#a0f2e1",
-                        "on-error-container": "#ffd2c8",
-                        "on-secondary-fixed-variant": "#00675b",
-                        "surface-container": "#191a14",
-                        "on-secondary": "#005d51",
-                        "inverse-on-surface": "#55554f",
-                        "tertiary-dim": "#e7c1b4",
-                        "primary": "#59ee50",
-                        "on-surface": "#fefcf4",
-                        "inverse-primary": "#006f0a",
-                        "surface-container-lowest": "#000000",
-                        "secondary-dim": "#92e4d3",
-                        "tertiary-fixed": "#f6cfc2",
-                        "secondary-fixed-dim": "#92e4d3",
-                        "outline": "#76766f",
-                        "surface": "#0e0f0a",
-                        "surface-container-low": "#13140f",
-                        "secondary-container": "#046b5e",
-                        "surface-dim": "#0e0f0a",
-                        "surface-tint": "#59ee50",
-                        "tertiary-fixed-dim": "#e7c1b4",
-                        "primary-dim": "#49e043",
-                        "on-tertiary-fixed-variant": "#6a4e44",
-                        "on-primary-fixed": "#003e03",
-                        "on-tertiary": "#694d43",
-                        "on-primary-fixed-variant": "#005f07",
-                        "tertiary": "#ffded4",
-                        "surface-variant": "#252620",
-                        "outline-variant": "#484842",
-                        "on-tertiary-container": "#5f453b",
-                        "surface-bright": "#2b2d25",
-                        "background": "#0e0f0a",
-                        "on-primary": "#005406"
+                    colors: {
+                        "primary": "#2E7D32",                  // Vibrant Leaf Green
+                        "on-primary": "#FFFFFF",               // White text over green
+                        "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+                        "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+                        "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+                        "on-surface": "var(--color-on-surface, #FEFCF4)",
+                        "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+                        "outline-variant": "#1E3D6B",
+                        "primary-container": "#4CAF50",        // Sunset Light Green Accent
+                        "secondary-container": "#00838F",      // Pure Ocean Sea Blue
+                        "on-secondary-container": "#E0F7FA",
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "headline": ["Plus Jakarta Sans"],
-                        "display": ["Plus Jakarta Sans"],
-                        "body": ["Manrope"],
-                        "label": ["Manrope"]
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans", "sans-serif"],
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        body: ["Plus Jakarta Sans", "sans-serif"],
+                        label: ["Plus Jakarta Sans", "sans-serif"]
                     }
                 },
             },
         }
     </script>
+    
     <style>
-        body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
-    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
-            }
-            .light-mode { background: #f4f4f5 !important; color: #18181b !important; }
-            .light-mode main { background: #f8fafc !important; }
-            .light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
-            .light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
-            .light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
-            .light-mode .bg-black\/40 { background: #ffffff !important; }
-            .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
-            .light-mode .text-yellow-400 { color: #ca8a04 !important; }
-            .light-mode .text-purple-400 { color: #9333ea !important; }
-            .light-mode .text-primary { color: #16a34a !important; }
-            .light-mode button { color: #18181b; }
-            .light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
-            .light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
-            .light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
-            .light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
-            .light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
-            .light-mode #themeIcon { color: #f59e0b !important; }
+    /* ROOT DARK CONFIG */
+    :root {
+        --color-surface: #051D40; 
+        --color-background: #020F24; 
+        --color-surface-variant: #0B2954;
+        --color-on-surface: #FEFCF4;
+        --color-on-surface-variant: #A0B2C6;
+    }
+
+    /* LIGHT MODE HARMONY */
+    .light-mode, [class*="light-mode"] {
+        --color-surface: #FFFFFF !important;
+        --color-background: #F4F7FA !important;
+        --color-surface-variant: #E6EEF8 !important;
+        --color-on-surface: #020F24 !important;
+        --color-on-surface-variant: #4A5D73 !important;
+    }
+
+    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, label {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
+    /* Sidebar and Base Text Rules */
+    .light-mode { background: #3186dc !important; color: #020F24 !important; }
+    .light-mode main { background: #F4F7FA !important; }
+    .light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+    
+    .light-mode .bg-surface-container-low, 
+    .light-mode .bg-surface-container-lowest, 
+    .light-mode .bg-surface-container, 
+    .light-mode .bg-surface-container-high, 
+    .light-mode .bg-surface-container-highest { 
+        background: #FFFFFF !important; 
+        color: #020F24 !important; 
+    }
+
+    .light-mode .bg-black\/40, .bg-black\/40 { background-color: #FFB300 !important; opacity: 0.15 !important; }
+
+    /* Structural Text Enforcement */
+    .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+    .light-mode p:not(aside p), 
+    .light-mode span:not(aside span, .star-btn span), 
+    .light-mode a:not(aside a), 
+    .light-mode div:not(aside, aside *, #reviewModal, #reviewModal *) { 
+        color: #020F24 !important; 
+        text-shadow: none !important; 
+    }
+
+    .light-mode .text-yellow-400 { color: #E65100 !important; } /* Sunset Orange */
+    .light-mode .text-purple-400 { color: #00838F !important; } /* Coastal Teal */
+    .light-mode .text-primary { color: #2E7D32 !important; }   /* Lush Green */
+
+    .light-mode button:not(.bg-primary) { color: #020F24; }
+    .light-mode .bg-surface-container-high { background: #E6EEF8 !important; }
+    
+    .light-mode input, .light-mode select, .light-mode textarea { background: #FFFFFF !important; color: #020F24 !important; border: 1px solid #CBD5E1 !important; }
+    .light-mode .border-zinc-800, .light-mode .border-stone-800\/50, .light-mode .border-outline-variant\/15 { border-color: #E2E8F0 !important; }
+    .light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500, .light-mode .text-on-surface-variant { color: #4A5D73 !important; }
+    .light-mode .text-white { color: #020F24 !important; text-shadow: none !important; }
+
+    #themeIcon { color: #FFB300 !important; }
+
+    /* Sidebar text configurations */
+    .light-mode aside .text-zinc-500, .light-mode aside .text-stone-500 { color: #4A5D73 !important; }
+    .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+
+    /* Modal Layout Sync Wrappers */
+    .light-mode #reviewModal .bg-stone-900,
+    .light-mode #modalContent {
+        background-color: #FFFFFF !important;
+        border-color: #E2E8F0 !important;
+    }
+    .light-mode #reviewModal h3,
+    .light-mode #reviewModal label,
+    .light-mode #reviewModal p,
+    .light-mode #reviewModal span:not(.material-symbols-outlined) {
+        color: #020F24 !important;
+    }
+    .light-mode #reviewModal select option {
+        background-color: #FFFFFF !important;
+        color: #020F24 !important;
+    }
+    .light-mode #reviewModal input, 
+    .light-mode #reviewModal select, 
+    .light-mode #reviewModal textarea {
+        background-color: #FFFFFF !important;
+        color: #020F24 !important;
+        border: 1px solid #CBD5E1 !important;
+    }
+    .light-mode #reviewModal .bg-stone-950\/40 {
+        background-color: #F8FAFC !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+
+    .star-btn { font-variation-settings: 'FILL' 0; transition: transform 0.1s ease; }
+    .star-btn.filled { font-variation-settings: 'FILL' 1; }
+    
+    .light-mode .text-primary {
+        color: #2E7D32 !important;
+        text-shadow: none !important;
+    }
     </style>
 </head>
-    
 
-        
-    <!--sideBar-->
-<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#020F24] dark:text-[#FEFCF4] bg-[#FEFCF4] text-[#020F24] transition-colors duration-300">
 
-    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] dark:bg-[#051D40] max-sm:hidden border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1>
-            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline text-[#2E7D32] dark:text-[#2E7D32]">
+                EXPLORE <br><span class="text-[#FFB300]">ZAMBOANGUITA</span>
+            </h1>
         </div>
 
-        <nav class="flex-1 space-y-1 font-body">
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Dashboard</span>
-            </a>
-<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_booking.html">
-                <span class="material-symbols-outlined">event_available</span>
-                <span>Bookings</span>
-            </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
-                <span class="material-symbols-outlined">explore</span>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined text-[#FFB300]">dashboard</span>
                 <span>Destinations</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_reviews.html">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_booking.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
+                <span>Bookings</span>
+            </a>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_reviews.html">
+                <span class="material-symbols-outlined text-[#FFB300]" style="font-variation-settings: 'FILL' 1;">star</span>
                 <span>Reviews</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_profile.html">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="capitalize">settings</span>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_profile.html">
+                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+                <span class="capitalize">Settings</span>
             </a>
         </nav>
+
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="user_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
     </aside>
-        <!--headermain-->
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-40 bg-background/80 dark:bg-[#020F24]/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
         <div class="flex items-center gap-2"></div>
-        
         <div class="flex items-center gap-4">
-            <button class="text-stone-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">account_circle</span>
-            </button>
-            
             <button 
                 onclick="toggleDarkMode()"
-                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                class="p-2.5 rounded-full bg-surface-variant dark:bg-surface-variant hover:scale-110 flex items-center justify-center transition-all"
                 aria-label="Toggle Dark Mode">
-                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
-                    dark_mode
-                </span>
+                <span id="themeIcon" class="material-symbols-outlined">dark_mode</span>
             </button>
         </div>
     </header>
-        <main class="flex-1 sm:pl-64 min-h-screen">
-            <div class="px-6 py-10 md:px-12 max-w-[1400px] mx-auto space-y-1 pb-24 ">
-                <style>
-                    .py-10{
-                        padding-top: 5.5rem;
-                        padding-bottom: 6rem;
-                    }
-                </style>
-                
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div>
-                        <h1 class="text-4xl font-display font-black tracking-tight text-on-surface">Community Reviews</h1>
-                        <p class="text-on-surface-variant mt-1">See what other travelers experienced in Zamboanguita</p>
-                    </div>
-                    <button class="primary-gradient flex items-center justify-center gap-2 rounded-full px-8 py-4 text-on-primary font-bold shadow-lg transition-all hover:scale-[1.02] self-start sm:self-auto">
-                        <span class="material-symbols-outlined">rate_review</span>
-                        <span>Write a Review</span>
-                    </button>
+
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 pb-12 min-h-screen relative z-10 transition-colors duration-300">
+        <div class="px-6 py-6 md:px-12 max-w-[1400px] mx-auto space-y-6 pb-24">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-display font-black tracking-tight text-neutral-900 dark:text-white">Community Reviews</h1>
+                    <p class="text-on-surface-variant mt-1">See what other travelers experienced in Zamboanguita</p>
                 </div>
-
-                <div class="flex gap-8 border-b border-outline-variant/15">
-                    <button class="border-b-4 border-primary pb-4 text-sm font-bold tracking-wide text-on-surface">All Reviews (12)</button>
-                    <style>
-                        .text-sm {
-                            font-size: 12;
-                            line-height: 2.5rem;
-                            }
-                    </style>
-                </div>
-
-                <div class="grid gap-8">
-                    
-                    <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-container-low md:flex-row border border-outline-variant/5 transition-all hover:bg-surface-container-high">
-                        <div class="h-56 w-full shrink-0 md:h-auto md:w-80">
-                            <img alt="Apo Island Reserve" class="h-full w-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" src="https://dumaguete.com/wp-content/uploads/2016/04/Apo-Island.jpg"/>
-                        </div>
-                        <div class="flex flex-1 flex-col p-6 md:p-8">
-                            <div class="mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                <div>
-                                    <h3 class="font-display text-2xl font-bold text-on-surface">Apo Island Marine Reserve</h3>
-                                    <p class="text-sm text-on-surface-variant">Reviewed on October 14, 2023</p>
-                                </div>
-                                <div class="flex text-primary">
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                </div>
-                            </div>
-                            <blockquote class="mb-2 border-l-2 border-primary/30 pl-4">
-                                <p class="text-on-surface italic leading-relaxed">"Absolutely breathtaking diving experience. The sea turtles were everywhere! The guides were extremely knowledgeable about the local ecosystem. I highly recommend taking the early morning boat to catch the best visibility."</p>
-                            </blockquote>
-                        </div>
-                    </article>
-
-                    <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-container-low md:flex-row border border-outline-variant/5 transition-all hover:bg-surface-container-high">
-                        <div class="h-56 w-full shrink-0 md:h-auto md:w-80">
-                            <img alt="Malatapay Market" class="h-full w-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/qqqq.jpg"/>
-                        </div>
-                        <div class="flex flex-1 flex-col p-6 md:p-8">
-                            <div class="mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                <div>
-                                    <h3 class="font-display text-2xl font-bold text-on-surface">Malatapay Wednesday Market</h3>
-                                    <p class="text-sm text-on-surface-variant">Reviewed on October 28, 2023</p>
-                                </div>
-                                <div class="flex text-primary">
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined">star</span>
-                                </div>
-                            </div>
-                            <blockquote class="mb-2 border-l-2 border-secondary/30 pl-4">
-                                <p class="text-on-surface italic leading-relaxed">"The energy here is infectious! Make sure to try the local lechon and bring plenty of small change. It gets quite crowded after 9 AM, so arrive early if you want to see the livestock trade section."</p>
-                            </blockquote>
-                        </div>
-                    </article>
-
-                    <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-container-low md:flex-row border border-outline-variant/5 transition-all hover:bg-surface-container-high">
-                        <div class="h-56 w-full shrink-0 md:h-auto md:w-80">
-                            <img alt="Thalatta Resort" class="h-full w-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" src="https://dumaguete.com/wp-content/uploads/2014/02/Thalata-Beach-Resort-Pool.jpg"/>
-                        </div>
-                        <div class="flex flex-1 flex-col p-6 md:p-8">
-                            <div class="mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                <div>
-                                    <h3 class="font-display text-2xl font-bold text-on-surface">Thalatta Beach Resort</h3>
-                                    <p class="text-sm text-on-surface-variant">Reviewed on September 12, 2023</p>
-                                </div>
-                                <div class="flex text-primary">
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                                </div>
-                            </div>
-                            <blockquote class="mb-2 border-l-2 border-primary/30 pl-4">
-                                <p class="text-on-surface italic leading-relaxed">"The perfect base for exploring the region. The pool area is incredibly relaxing at night, and the restaurant serves some of the best French-Filipino fusion I've ever had. Impeccable service."</p>
-                            </blockquote>
-                        </div>
-                    </article>
-                </div>
+                <button onclick="openReviewModal()" class="bg-primary text-on-primary flex items-center justify-center gap-2 rounded-full px-8 py-4 font-bold shadow-lg transition-all hover:scale-[1.02] hover:bg-emerald-700 self-start sm:self-auto relative z-30">
+                    <span class="material-symbols-outlined">rate_review</span>
+                    <span>Write a Review</span>
+                </button>
             </div>
-        </main>
 
-        <footer class="sm:hidden glass-nav fixed bottom-0 left-0 right-0 z-50 flex justify-around p-4 border-t border-outline-variant/15">
-            <button class="flex flex-col items-center gap-1 text-on-surface-variant">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-[10px] font-bold">Dash</span>
-            </button>
-            <button class="flex flex-col items-center gap-1 text-primary">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
-                <span class="text-[10px] font-bold">Reviews</span>
-            </button>
-            <button class="flex size-12 -translate-y-6 items-center justify-center rounded-full primary-gradient text-on-primary shadow-xl">
-                <span class="material-symbols-outlined">add</span>
-            </button>
-            <button class="flex flex-col items-center gap-1 text-on-surface-variant">
-                <span class="material-symbols-outlined">favorite</span>
-                <span class="text-[10px] font-bold">Saved</span>
-            </button>
-            <button class="flex flex-col items-center gap-1 text-on-surface-variant">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="text-[10px] font-bold">Menu</span>
-            </button>
-        </footer>
+            <div class="flex gap-8 border-b border-outline-variant/20">
+                <button id="totalReviewsCountLabel" class="border-b-4 border-primary pb-4 text-sm font-bold tracking-wide text-neutral-900 dark:text-white">All Reviews (0)</button>
+            </div>
+
+            <div id="reviewsContainerWrapper" class="grid gap-8 pt-6"></div>
+        </div>
+    </main>
+
+    <div id="reviewModal" class="modal-bg fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+        <div class="bg-[#051D40] border border-outline-variant/40 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl scale-95 transition-all duration-300 transform" id="modalContent">
+            <div class="px-6 py-4 border-b border-outline-variant/30 flex justify-between items-center bg-[#020F24]/40">
+                <h3 class="text-xl font-bold font-display text-white">Share Your Experience</h3>
+                <button type="button" onclick="closeReviewModal()" class="text-on-surface-variant hover:text-white p-1 rounded-lg hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="reviewSubmitForm" onsubmit="handleReviewSubmission(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Select Destination/Resort</label>
+                    <style>
+                        .light-mode select option { color: #020F24 !important; background-color: #FFFFFF !important; }
+                    </style>
+                    <select id="formLocation" required class="w-full rounded-xl border border-outline-variant/30 bg-[#020F24]/60 text-neutral-900 dark:text-white p-3 focus:border-primary focus:ring-0 outline-none transition-all appearance-none">
+                        <option value="" disabled selected class="text-stone-600 bg-white dark:bg-[#020F24]">Choose a location...</option>
+                        <option value="Apo Island Marine Reserve" class="bg-white dark:bg-[#051D40]">Apo Island Marine Reserve</option>
+                        <option value="Malatapay Wednesday Market" class="bg-white dark:bg-[#051D40]">Malatapay Wednesday Market</option>
+                        <option value="Thalatta Beach Resort" class="bg-white dark:bg-[#051D40]">Thalatta Beach Resort</option>
+                        <option value="Najandig Peak" class="bg-white dark:bg-[#051D40]">Najandig Peak</option>
+                        <option value="Turtle Island" class="bg-white dark:bg-[#051D40]">Turtle Island</option>
+                        <option value="Jomao-as Hot Springs" class="bg-white dark:bg-[#051D40]">Jomao-as Hot Springs</option>
+                        <option value="Jomao-as Falls" class="bg-white dark:bg-[#051D40]">Jomao-as Falls</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Your Rating</label>
+                    <div class="flex items-center gap-1 text-on-surface-variant py-1">
+                        <input type="hidden" id="formRatingValue" value="5" required>
+                        <button type="button" onclick="setStarRatingValue(1)" onmouseover="highlightStarsPreview(1)" onmouseout="resetStarsHighlight()" class="star-btn text-3xl text-amber-500 hover:scale-110 transition-transform"><span class="material-symbols-outlined text-3xl">star</span></button>
+                        <button type="button" onclick="setStarRatingValue(2)" onmouseover="highlightStarsPreview(2)" onmouseout="resetStarsHighlight()" class="star-btn text-3xl text-amber-500 hover:scale-110 transition-transform"><span class="material-symbols-outlined text-3xl">star</span></button>
+                        <button type="button" onclick="setStarRatingValue(3)" onmouseover="highlightStarsPreview(3)" onmouseout="resetStarsHighlight()" class="star-btn text-3xl text-amber-500 hover:scale-110 transition-transform"><span class="material-symbols-outlined text-3xl">star</span></button>
+                        <button type="button" onclick="setStarRatingValue(4)" onmouseover="highlightStarsPreview(4)" onmouseout="resetStarsHighlight()" class="star-btn text-3xl text-amber-500 hover:scale-110 transition-transform"><span class="material-symbols-outlined text-3xl">star</span></button>
+                        <button type="button" onclick="setStarRatingValue(5)" onmouseover="highlightStarsPreview(5)" onmouseout="resetStarsHighlight()" class="star-btn text-3xl text-amber-500 hover:scale-110 transition-transform"><span class="material-symbols-outlined text-3xl">star</span></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Your Review Description</label>
+                    <textarea id="formComments" rows="4" required placeholder="Describe your genuine experiences here..." class="w-full rounded-xl border border-outline-variant/30 bg-[#020F24]/60 text-neutral-900 dark:text-white p-3 focus:border-primary focus:ring-0 outline-none transition-all resize-none font-body text-sm leading-normal"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Upload Resort/Destination Image Preview</label>
+                    <div class="relative border border-dashed border-outline-variant/50 hover:border-primary bg-[#020F24]/30 hover:bg-[#020F24]/60 rounded-xl p-4 transition-all flex flex-col items-center justify-center text-center group cursor-pointer">
+                        <input type="file" id="formImageFile" accept="image/*" onchange="processSelectedImageFile(this)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
+                        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-3xl mb-1 transition-colors">add_photo_alternate</span>
+                        <p id="uploadPlaceholderText" class="text-xs text-on-surface-variant font-medium group-hover:text-neutral-200 transition-colors">Click or drop here to upload high-res review image snapshot asset</p>
+                    </div>
+                    <div id="imagePreviewContainer" class="hidden mt-3 relative rounded-xl overflow-hidden border border-outline-variant/40 bg-[#020F24] h-32 w-full">
+                        <img id="imagePreviewTarget" src="" alt="Preview Visualizer" class="w-full h-full object-cover">
+                        <button type="button" onclick="clearSelectedImageAsset()" class="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md z-20">
+                            <span class="material-symbols-outlined text-sm block">close</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-outline-variant/30 bg-[#020F24]/20 -mx-6 -mb-6 p-6">
+                    <button type="button" onclick="closeReviewModal()" class="px-5 py-2.5 rounded-full border border-outline-variant/60 hover:border-outline-variant text-on-surface-variant font-bold text-xs uppercase tracking-wider transition-all">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-full bg-primary hover:bg-emerald-700 text-on-primary font-bold text-xs uppercase tracking-wider transition-all shadow-md transform hover:scale-[1.02]">Upload & Publish Review</button>
+                </div>
+            </form>
+        </div>
     </div>
 
+    <footer class="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around p-4 border-t border-outline-variant/20 bg-background/80 dark:bg-[#020F24]/80 backdrop-blur-md">
+        <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-[10px] font-bold">Dash</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-primary">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+            <span class="text-[10px] font-bold">Reviews</span>
+        </button>
+        <button onclick="openReviewModal()" class="flex size-12 -translate-y-6 items-center justify-center rounded-full bg-primary text-on-primary shadow-xl font-bold transform transition-transform active:scale-95">
+            <span class="material-symbols-outlined">add</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+            <span class="material-symbols-outlined">favorite</span>
+            <span class="text-[10px] font-bold">Saved</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[10px] font-bold">Menu</span>
+        </button>
+    </footer>
+
     <script>
-        /* ===== DARK / LIGHT MODE ===== */
-function toggleDarkMode() {
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
-    body.classList.toggle("light-mode");
-    html.classList.toggle("dark");
-    if(body.classList.contains("light-mode")) {
-        localStorage.setItem("theme", "light");
-        icon.innerHTML = "dark_mode";
-    } else {
-        localStorage.setItem("theme", "dark");
-        icon.innerHTML = "light_mode";
-    }
-}
-window.onload = function () {
-    const savedTheme = localStorage.getItem("theme");
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
-    if(savedTheme === "light") {
-        body.classList.add("light-mode");
-        html.classList.remove("dark");
-        icon.innerHTML = "dark_mode";
-    } else {
-        body.classList.remove("light-mode");
-        html.classList.add("dark");
-        icon.innerHTML = "light_mode";
-    }
-}
+        let globalSelectedImageBase64String = "";
+        const API_BASE_URL = "http://localhost:5000/api/reviews";
+
+        function checkSavedThemeState() {
+            const html = document.documentElement;
+            const body = document.body;
+            const icon = document.getElementById("themeIcon");
+            const savedTheme = localStorage.getItem("theme") || "dark";
+
+            if (savedTheme === "light") {
+                html.classList.remove("dark");
+                html.classList.add("light");
+                if (body) body.classList.add("light-mode");
+                if (icon) icon.innerText = "light_mode";
+            } else {
+                html.classList.add("dark");
+                html.classList.remove("light");
+                if (body) body.classList.remove("light-mode");
+                if (icon) icon.innerText = "dark_mode";
+            }
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            if (html.classList.contains("dark")) {
+                localStorage.setItem("theme", "light");
+            } else {
+                localStorage.setItem("theme", "dark");
+            }
+            checkSavedThemeState();
+        }
+
+        function openReviewModal() {
+            const modalElement = document.getElementById("reviewModal");
+            const modalContentElement = document.getElementById("modalContent");
+            
+            modalElement.classList.remove("hidden");
+            modalElement.classList.add("flex");
+            
+            setTimeout(() => {
+                modalContentElement.classList.remove("scale-95");
+                modalContentElement.classList.add("scale-100");
+            }, 20);
+            
+            setStarRatingValue(5);
+        }
+
+        function closeReviewModal() {
+            const modalElement = document.getElementById("reviewModal");
+            const modalContentElement = document.getElementById("modalContent");
+            
+            modalContentElement.classList.remove("scale-100");
+            modalContentElement.classList.add("scale-95");
+            
+            setTimeout(() => {
+                modalElement.classList.remove("flex");
+                modalElement.classList.add("hidden");
+                document.getElementById("reviewSubmitForm").reset();
+                clearSelectedImageAsset();
+            }, 200);
+        }
+
+        function setStarRatingValue(targetRatingScoreValue) {
+            const ratingInput = document.getElementById("formRatingValue");
+            if (ratingInput) ratingInput.value = targetRatingScoreValue;
+            const starButtons = document.querySelectorAll(".star-btn");
+            
+            starButtons.forEach((btn, index) => {
+                if (index < targetRatingScoreValue) {
+                    btn.classList.add("filled");
+                    btn.querySelector("span").style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    btn.classList.remove("filled");
+                    btn.querySelector("span").style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+        }
+
+        function highlightStarsPreview(hoverIndex) {
+            const starButtons = document.querySelectorAll(".star-btn");
+            starButtons.forEach((btn, index) => {
+                if (index < hoverIndex) {
+                    btn.querySelector("span").style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    btn.querySelector("span").style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+        }
+
+        function resetStarsHighlight() {
+            const ratingInput = document.getElementById("formRatingValue");
+            const currentSelectedValue = ratingInput ? (parseInt(ratingInput.value) || 5) : 5;
+            setStarRatingValue(currentSelectedValue);
+        }
+
+        function processSelectedImageFile(fileInputElementReference) {
+            const selectedImageFileObj = fileInputElementReference.files[0];
+            if (!selectedImageFileObj) return;
+
+            const fileReaderInstance = new FileReader();
+            fileReaderInstance.onload = function(eventPayload) {
+                globalSelectedImageBase64String = eventPayload.target.result;
+                document.getElementById("imagePreviewTarget").src = globalSelectedImageBase64String;
+                document.getElementById("imagePreviewContainer").classList.remove("hidden");
+                document.getElementById("uploadPlaceholderText").innerText = `Selected asset: ${selectedImageFileObj.name}`;
+            };
+            fileReaderInstance.readAsDataURL(selectedImageFileObj);
+        }
+
+        function clearSelectedImageAsset() {
+            globalSelectedImageBase64String = "";
+            document.getElementById("formImageFile").value = "";
+            document.getElementById("imagePreviewContainer").classList.add("hidden");
+            document.getElementById("imagePreviewTarget").src = "";
+            document.getElementById("uploadPlaceholderText").innerText = "Click or drop here to upload high-res review image snapshot asset";
+        }
+
+        async function loadAndRenderReviewsFeedRegistry() {
+            const wrapperElement = document.getElementById("reviewsContainerWrapper");
+            const counterElement = document.getElementById("totalReviewsCountLabel");
+            
+            let backendReviews = [];
+
+            try {
+                const response = await fetch(API_BASE_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    backendReviews = data.map(rev => ({
+                        destinationName: rev.destinationId || "Zamboanguita Destination",
+                        reviewDate: new Date(rev.createdAt || Date.now()).toLocaleDateString('en-US', {
+                            month: 'long', day: 'numeric', year: 'numeric'
+                        }),
+                        starsRating: rev.rating,
+                        imageURL: rev.imageURL || "", 
+                        reviewComments: rev.comment || ""
+                    }));
+                }
+            } catch (err) {
+                console.warn("Backend offline or unreachable.");
+            }
+            
+            let completeMergedTotalFeedList = [...backendReviews];
+            
+            if (counterElement) {
+                counterElement.innerText = `All Reviews (${completeMergedTotalFeedList.length})`;
+            }
+            
+            if (!wrapperElement) return;
+            wrapperElement.innerHTML = "";
+            
+            if (completeMergedTotalFeedList.length === 0) {
+                wrapperElement.innerHTML = `
+                    <div class="w-full text-center py-12 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant/50">
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">rate_review</span>
+                        <p class="text-on-surface-variant font-medium">No reviews posted yet. Be the first to share your experience!</p>
+                    </div>`;
+                return;
+            }
+            
+            completeMergedTotalFeedList.forEach(review => {
+                if(!review.destinationName && !review.reviewComments) return;
+
+                let ratingStarsHTMLCodeBlock = "";
+                for(let starCountIndex = 1; starCountIndex <= 5; starCountIndex++) {
+                    let configurationSettingsAttributes = starCountIndex <= review.starsRating ? "font-variation-settings: 'FILL' 1;" : "";
+                    ratingStarsHTMLCodeBlock += `<span class="material-symbols-outlined" style="${configurationSettingsAttributes}">star</span>`;
+                }
+
+                const articleCardLayoutStructureMarkup = `
+                    <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-surface-container-low md:flex-row border border-outline-variant/5 transition-all hover:bg-surface-container-high">
+                        <div class="h-56 w-full shrink-0 md:h-auto md:w-80 relative bg-stone-950 flex items-center justify-center overflow-hidden">
+                            <img alt="${review.destinationName}" class="h-full w-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" src="${review.imageURL || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'}"/>
+                        </div>
+                        <div class="flex flex-1 flex-col p-6 md:p-8">
+                            <div class="mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                <div>
+                                    <h3 class="font-display text-2xl font-bold text-on-surface">${review.destinationName}</h3>
+                                    <p class="text-sm text-on-surface-variant">${review.reviewDate}</p>
+                                </div>
+                                <div class="flex text-primary">
+                                    ${ratingStarsHTMLCodeBlock}
+                                </div>
+                            </div>
+                            <blockquote class="mb-2 border-l-2 border-primary/30 pl-4">
+                                <p class="text-on-surface italic leading-relaxed">"${review.reviewComments}"</p>
+                            </blockquote>
+                        </div>
+                    </article>
+                `;
+                wrapperElement.innerHTML += articleCardLayoutStructureMarkup;
+            });
+        }
+
+        async function handleReviewSubmission(formEventPayload) {
+            formEventPayload.preventDefault();
+            
+            const formElement = formEventPayload.target;
+            const submitButton = formElement.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerText = "Publishing...";
+            }
+            
+            const locationElement = document.getElementById("formLocation");
+            const commentsElement = document.getElementById("formComments");
+            
+            const destinationId = locationElement ? locationElement.value : "";
+            const rating = parseInt(document.getElementById("formRatingValue").value) || 5;
+            const comment = (commentsElement && commentsElement.value.trim() !== "") ? commentsElement.value.trim() : "";
+            
+            let detectedGuestName = "Anonymous Traveler";
+            const sessionUserRaw = localStorage.getItem("user");
+            if (sessionUserRaw) {
+                try {
+                    const parsedUser = JSON.parse(sessionUserRaw);
+                    detectedGuestName = parsedUser.fullName || parsedUser.name || parsedUser.email || "Anonymous Traveler";
+                } catch (e) {
+                    console.warn("Failed parsing local user data structure session wrapper.");
+                }
+            }
+            
+            const payload = {
+                guestName: detectedGuestName,
+                destinationId: destinationId,
+                rating: rating,
+                comment: comment,
+                imageURL: globalSelectedImageBase64String
+            };
+
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert("🎉 Review successfully published!");
+                    closeReviewModal(); 
+                    loadAndRenderReviewsFeedRegistry(); 
+                } else {
+                    const errorData = await response.json();
+                    console.error("Validation Error Details:", errorData);
+                    alert(`⚠️ Server error: ${errorData.message || 'Validation failed.'}`);
+                    
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerText = "Upload & Publish Review";
+                    }
+                }
+            } catch (err) {
+                console.error("Submission pipeline failure error details:", err);
+                alert("❌ Connection failed. Check if your backend server is online.");
+                
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = "Upload & Publish Review";
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            checkSavedThemeState();
+            loadAndRenderReviewsFeedRegistry();
+        });
     </script>
 </body>
 </html>

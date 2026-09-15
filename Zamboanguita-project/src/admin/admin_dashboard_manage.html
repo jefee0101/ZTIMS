@@ -1,334 +1,676 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<title>Explore Zamboanguita Admin | Manage Spots</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<script>
+    if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light-mode');
+    } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
+    }
+</script>
+
 <script id="tailwind-config">
-      tailwind.config = {
+    tailwind.config = {
         darkMode: "class",
         theme: {
-          extend: {
-            "colors": {
-                    "secondary-fixed-dim": "#92e4d3",
-                    "secondary-dim": "#92e4d3",
-                    "surface-dim": "#0e0f0a",
-                    "outline-variant": "#484842",
-                    "outline": "#76766f",
-                    "on-surface": "#fefcf4",
-                    "primary-container": "#0fba1e",
-                    "tertiary-fixed-dim": "#e7c1b4",
-                    "surface": "#0e0f0a",
-                    "surface-bright": "#2b2d25",
-                    "on-primary": "#005406",
-                    "on-tertiary-fixed": "#4b3229",
-                    "inverse-primary": "#006f0a",
-                    "secondary-fixed": "#a0f2e1",
-                    "primary-fixed": "#59ee50",
-                    "secondary-container": "#046b5e",
-                    "surface-container": "#191a14",
-                    "on-secondary-fixed-variant": "#00675b",
-                    "on-secondary-fixed": "#00483f",
-                    "tertiary-container": "#f6cfc2",
-                    "surface-variant": "#252620",
-                    "on-tertiary-fixed-variant": "#6a4e44",
-                    "on-primary-fixed-variant": "#005f07",
-                    "on-background": "#fefcf4",
-                    "surface-tint": "#59ee50",
-                    "surface-container-high": "#1f201a",
-                    "surface-container-low": "#13140f",
-                    "tertiary-dim": "#e7c1b4",
-                    "on-secondary-container": "#ddfff6",
-                    "tertiary-fixed": "#f6cfc2",
-                    "error": "#ff7351",
-                    "on-error-container": "#ffd2c8",
-                    "surface-container-highest": "#252620",
-                    "error-dim": "#d53d18",
-                    "error-container": "#b92902",
-                    "background": "#0e0f0a",
-                    "on-tertiary-container": "#5f453b",
-                    "on-error": "#450900",
-                    "surface-container-lowest": "#000000",
-                    "secondary": "#a0f2e1",
-                    "on-secondary": "#005d51",
-                    "inverse-on-surface": "#55554f",
-                    "on-primary-fixed": "#003e03",
-                    "primary-dim": "#49e043",
-                    "inverse-surface": "#fbf9f1",
-                    "on-primary-container": "#002a01",
-                    "on-tertiary": "#694d43",
-                    "primary-fixed-dim": "#49e043",
-                    "on-surface-variant": "#acaba4",
-                    "primary": "#59ee50",
-                    "tertiary": "#ffded4"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.125rem",
-                    "lg": "0.25rem",
-                    "xl": "0.5rem",
-                    "full": "0.75rem"
-            },
-            "fontFamily": {
-                    "headline": ["Plus Jakarta Sans"],
-                    "display": ["Plus Jakarta Sans"],
-                    "body": ["Manrope"],
-                    "label": ["Manrope"]
+            extend: {
+                colors: {
+                    /* Colors pulled directly from the Zamboanguita Tourism Logo Layering */
+                    "primary": "#2E7D32",                   // Vibrant Leaf Green
+                    "on-primary": "#FFFFFF",                // White text over green
+                    "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+                    "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+                    "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+                    "on-surface": "var(--color-on-surface, #FEFCF4)",
+                    "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+                    "outline-variant": "#1E3D6B",
+                    "primary-container": "#4CAF50",        // Sunset Light Green Accent
+                    "secondary-container": "#00838F",      // Pure Ocean Sea Blue
+                    "on-secondary-container": "#E0F7FA",
+                },
+                fontFamily: {
+                    headline: ["Plus Jakarta Sans", "sans-serif"],
+                    body: ["Plus Jakarta Sans", "sans-serif"],
+                }
             }
-          },
-        },
-      }
-    </script>
+        }
+    }
+</script>
+
 <style>
-body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+/* ROOT DARK CONFIG */
+:root {
+    --color-surface: #051D40; 
+    --color-background: #020F24; 
+    --color-surface-variant: #0B2954;
+    --color-on-surface: #FEFCF4;
+    --color-on-surface-variant: #A0B2C6;
+}
+
+/* LIGHT MODE HARMONY */
+.light-mode, [class*="light-mode"] {
+    --color-surface: #FFFFFF !important;
+    --color-background: #F4F7FA !important;
+    --color-surface-variant: #E6EEF8 !important;
+    --color-on-surface: #020F24 !important;
+    --color-on-surface-variant: #4A5D73 !important;
+}
+
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, input, select, textarea {
     transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
-.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
-.light-mode main { background: #f8fafc !important; }
-.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
-.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
-.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
-.light-mode .bg-black\/40 { background: #ffffff !important; }
-.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
-.light-mode .text-yellow-400 { color: #ca8a04 !important; }
-.light-mode .text-purple-400 { color: #9333ea !important; }
-.light-mode .text-primary { color: #16a34a !important; }
-.light-mode button { color: #18181b; }
-.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
-.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
-.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
-.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
-.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
-.light-mode #themeIcon { color: #f59e0b !important; }
+
+/* Base Override Rules */
+.light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+.light-mode main { background: #F4F7FA !important; }
+.light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+
+/* Dashboard UI Structure Elements */
+.glass-panel {
+    background: var(--color-surface);
+    border: 1px solid #1E3D6B;
+}
+.light-mode .glass-panel {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+}
+.glass-panel:hover {
+    transform: translateY(-2px);
+    border-color: #FFB300;
+    box-shadow: 0 12px 30px rgba(255, 179, 0, 0.1);
+}
+
+/* Global Light/Dark Element Maps */
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+.light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode div {
+    color: #020F24 !important;
+}
+.light-mode .text-stone-400, .light-mode .text-stone-500, .light-mode .text-zinc-500, .light-mode .text-on-surface-variant {
+    color: #4A5D73 !important;
+}
+.light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
+    border-color: #E2E8F0 !important;
+}
+.light-mode input, .light-mode select, .light-mode textarea {
+    background: #FFFFFF !important;
+    color: #020F24 !important;
+    border: 1px solid #CBD5E1 !important;
+}
+.light-mode #themeIcon { color: #FFB300 !important; }
+.light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+}
 </style>
-</head>>
+</head>
 
- <!--sideBar-->
-<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
 
-    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+    <!-- Left Sidebar Control Desk -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1> <style> h1{
-              color: rgb(13, 206, 13);
-            }</style>
-            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
         </div>
 
-        <nav class="flex-1 space-y-1 font-body">
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_analystic.html">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Dashboard</span>
-                            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_dashboard_manage.html">
-                <span class="material-symbols-outlined">location_on</span>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
+                <span>Analytics</span>
+            </a>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span>Manage Spots</span>
             </a>
-            </a>
-<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_booking.html">
-                <span class="material-symbols-outlined">event_available</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_booking.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
                 <span>Bookings</span>
             </a>
-
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="adminreviews.html">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined text-[#FFB300]">star</span>
                 <span>Reviews</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_profile.html">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="capitalize">settings</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+                <span>Settings</span>
             </a>
         </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
     </aside>
 
-<!--headermain-->
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
-        <div class="flex items-center gap-2"></div>
-        
+    <!-- Header Control Anchor -->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <div></div>
         <div class="flex items-center gap-4">
-            <button class="text-stone-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">account_circle</span>
-            </button>
             
-            <button 
-                onclick="toggleDarkMode()"
-                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
-                aria-label="Toggle Dark Mode">
-                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
-                    dark_mode
-                </span>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+                <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
             </button>
         </div>
     </header>
-    <main class="w-full sm:ml-64 pt-24 pb-12 px-6 sm:px-10 tonal-shift-layering min-h-screen transition-colors duration-300 font-body">
-<div class="p-2max-w-[1400px] mx-auto space-y-12">
 
-<div class="flex justify-between items-end mb-12">
-<div class="space-y-1">
-<nav class="flex text-[10px] uppercase tracking-widest text-primary font-bold mb-2">
-<span class="text-stone-400">Inventory</span>
-</nav>
-<h2 class="text-5xl font-black text-white font-headline tracking-tighter">Manage Destinations</h2>
-<style>
-.text-white { --tw-text-opacity: 1; color: rgb(255, 255, 255); text-shadow: 2px 2px rgb(0, 0, 0); }
-</style>
-</div>
-<button class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary-container rounded-full font-bold text-sm hover:scale-102 active:scale-98 transition-all shadow-xl shadow-primary/20 group ">
-<span class="material-symbols-outlined">add_circle</span> Add New Spot
-</button>
-</div>
+    <!-- Main Workspace Container -->
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-<div class="bg-surface-container-low/50 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-8 flex flex-wrap items-center justify-between gap-6">
-<div class="flex items-center gap-3">
-<span class="text-xs font-bold text-stone-500 uppercase tracking-widest ml-2">Categories:</span>
-<div class="flex gap-2">
-<button class="px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
-<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Beach / Diving</button>
-<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Mountain</button>
-<button class="px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all">Cultural</button>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<span class="text-xs font-bold text-stone-500 uppercase tracking-widest">Status:</span>
-<select class="bg-surface-container-high border-none rounded-full text-xs font-bold text-stone-300 px-4 focus:ring-1 focus:ring-primary">
-<option>Active Listings</option>
-<option>Hidden</option>
-<option>Archived</option>
-</select>
-</div>
-</div>
+            <div class="flex justify-between items-end">
+                <div class="space-y-1">
+                    <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                        <span class="text-on-surface-variant">Inventory</span>
+                    </nav>
+                    <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">Manage Destinations</h2>
+                </div>
+                <button onclick="toggleAddSpotModal(true)" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 group">
+                    <span class="material-symbols-outlined">add_circle</span> Add New Spot
+                </button>
+            </div>
 
-<div class="relative overflow-hidden rounded-[2rem] border border-zinc-800 bg-black/40">
-  <div id="slider" class="flex transition-transform duration-500 ease-in-out">
-    <div class="min-w-full">
-      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
-        <div class="flex items-center gap-4">
-          <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="w-16 h-16 rounded-xl object-cover">
-          <div>
-            <h3 class="text-2xl font-bold text-white">Najandig Peak</h3>
-            <p class="text-zinc-500">Highland Over Looking View</p>
-          </div>
+            <!-- Filter Controls Panel -->
+            <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-6">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Categories:</span>
+                    <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
+                        <button onclick="setCategoryFilter('ALL')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
+                        <button onclick="setCategoryFilter('BEACH / DIVING')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Beach / Diving</button>
+                        <button onclick="setCategoryFilter('MOUNTAIN')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Mountain</button>
+                        <button onclick="setCategoryFilter('CULTURAL')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Cultural</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status:</span>
+                    <select id="statusSelectFilter" onchange="renderAdminTableGrid()" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="active">Active Listings</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Slider Wrapper Workspace -->
+            <div class="relative overflow-hidden rounded-[2rem] glass-panel">
+                <div id="slider" class="flex transition-transform duration-500 ease-in-out">
+                </div>
+
+                <div class="flex justify-between items-center px-8 py-6 border-t border-outline-variant/30">
+                    <p class="text-on-surface-variant">Showing <span id="pageNumber" class="text-on-surface font-bold">1</span> of <span id="totalDisplayCount" class="text-on-surface font-bold">1</span> slider pages</p>
+                    <div class="flex gap-3">
+                        <button id="prevBtn" onclick="navigateSlider(-1)" class="w-12 h-12 rounded-xl border border-outline-variant/40 flex items-center justify-center text-on-surface bg-surface-variant hover:bg-outline-variant/60 active:scale-95 transition">❮</button>
+                        <button id="nextBtn" onclick="navigateSlider(1)" class="w-12 h-12 rounded-xl border border-outline-variant/40 flex items-center justify-center text-on-surface bg-surface-variant hover:bg-outline-variant/60 active:scale-95 transition">❯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Highlight Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                <div class="glass-panel border-l-4 border-primary p-6 rounded-r-2xl">
+                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Most Visited</p>
+                    <h5 class="text-2xl font-black text-on-surface" id="mostVisitedSpot">Najandig Peak</h5>
+                    <p class="text-xs text-primary-container font-bold mt-2">↑ 12% from last month</p>
+                </div>
+                <div class="glass-panel border-l-4 border-outline-variant p-6 rounded-r-2xl">
+                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Capacity</p>
+                    <h5 id="totalCapacityCounter" class="text-2xl font-black text-on-surface">4 Locations</h5>
+                    <p class="text-xs text-on-surface-variant mt-2">Across ecosystem matrix</p>
+                </div>
+            </div>
         </div>
-        <div class="text-white">Brgy. Najandig</div>
-        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
-      </div>
-      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
-        <div class="flex items-center gap-4">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" class="w-16 h-16 rounded-xl object-cover">
-          <div>
-            <h3 class="text-2xl font-bold text-white">Jomao-As Falls</h3>
-            <p class="text-zinc-500">Hidden Jungle Waterfall</p>
-          </div>
+
+        <!-- Add Spot Modal Structure Overlay -->
+        <div id="addSpotModal" class="fixed inset-0 bg-background/90 backdrop-blur-sm hidden items-center justify-center z-[200] p-4 transition-all">
+            <div class="bg-surface border border-outline-variant/60 rounded-[2rem] w-full max-w-lg p-8 space-y-6 relative text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
+                    <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+                        <span class="material-symbols-outlined text-2xl">close</span>
+                    </button>
+                </div>
+
+                <form id="addSpotForm" onsubmit="handleSpotPublish(event)" class="space-y-4 font-body">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Destination Name</label>
+                        <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Location Subtitle Address</label>
+                        <input type="text" id="spotLocation" placeholder="e.g., Brgy. Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Detailed Description</label>
+                        <textarea id="spotDescription" placeholder="Provide a narrative history or directions profile..." rows="3" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" required></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
+                            <select id="spotCategory" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+                                <option value="MOUNTAIN">Mountain</option>
+                                <option value="BEACH / DIVING">Beach / Diving</option>
+                                <option value="CULTURAL">Cultural</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Short Visual Label Tag</label>
+                            <input type="text" id="spotLabel" placeholder="e.g., Crystal Waters" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Days</label>
+                            <input type="text" id="spotWorkingDays" placeholder="e.g., Mondays - Fridays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Time</label>
+                            <input type="text" id="spotWorkingTime" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
+                            <input type="number" id="spotTravelFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Entrance Fee (₱)</label>
+                            <input type="number" id="spotEntranceFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Upload Gallery Images (Max 5)</label>
+                        <input type="file" id="spotImagesUpload" multiple accept="image/*" onchange="handleMultipleImagesUpload(event)" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-2 text-on-surface-variant focus:outline-none text-xs file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-outline-variant file:text-on-surface hover:file:bg-outline-variant/80" />
+                        <div id="imagePreviewsContainer" class="flex gap-2 mt-2 overflow-x-auto py-1"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Or Single Image URL Backup</label>
+                        <input type="url" id="spotImage" placeholder="https://images.unsplash.com/..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="toggleAddSpotModal(false)" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">
+                            Publish Spot
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="text-white">Malongcay Diot</div>
-        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
-      </div>
-    </div>
-    <div class="min-w-full">
-      <div class="grid grid-cols-3 items-center px-8 py-6 border-b border-zinc-800">
-        <div class="flex items-center gap-4">
-          <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e" class="w-16 h-16 rounded-xl object-cover">
-          <div>
-            <h3 class="text-2xl font-bold text-white">Hot Spring</h3>
-            <p class="text-zinc-500">Relaxing Natural Pool</p>
-          </div>
-        </div>
-        <div class="text-white">Jomao-As</div>
-        <div><span class="bg-yellow-900/40 text-yellow-400 px-4 py-2 rounded-lg text-xs font-bold">MOUNTAIN</span></div>
-      </div>
-      <div class="grid grid-cols-3 items-center px-8 py-6">
-        <div class="flex items-center gap-4">
-          <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308" class="w-16 h-16 rounded-xl object-cover">
-          <div>
-            <h3 class="text-2xl font-bold text-white">Malatapay Market</h3>
-            <p class="text-zinc-500">Authentic Coastal Trade Hub</p>
-          </div>
-        </div>
-        <div class="text-white">Zamboanguita Proper</div>
-        <div><span class="bg-purple-900/40 text-purple-400 px-4 py-2 rounded-lg text-xs font-bold">CULTURAL</span></div>
-      </div>
-    </div>
-  </div>
+    </main>
+    <script>
+        /* ===== BASELINE ADVENTURE DESTINATIONS DATA ===== */
+        let baselineDestinations = [
+            {
+                title: "Najandig Peak",
+                location: "Brgy. Najandig",
+                category: "MOUNTAIN",
+                label: "Highland Over Looking View",
+                description: "A panoramic trek route mapping raw ridge line view overlooking Apo Island strait.",
+                travelFee: 250,
+                entranceFee: 50,
+                workingDays: "Everyday",
+                workingTime: "5:00 AM - 6:00 PM",
+                image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg",
+                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg"]
+            },
+            {
+                title: "Jomao-As Falls",
+                location: "Malongcay Diot",
+                category: "MOUNTAIN",
+                label: "Hidden Jungle Waterfall",
+                description: "Deep valley spring running through pristine stone reservoirs, perfect for outdoor enthusiasts.",
+                travelFee: 150,
+                entranceFee: 35,
+                workingDays: "Everyday",
+                workingTime: "7:00 AM - 5:00 PM",
+                image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg",
+                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg"]
+            },
+            {
+                title: "Hot Spring",
+                location: "Jomao-As",
+                category: "MOUNTAIN",
+                label: "Relaxing Natural Pool",
+                description: "Geothermal heated structural streams filtering soothing warm minerals safely.",
+                travelFee: 150,
+                entranceFee: 40,
+                workingDays: "Everyday",
+                workingTime: "6:00 AM - 8:00 PM",
+                image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
+                images: ["https://images.unsplash.com/photo-1470770841072-f978cf4d019e"]
+            },
+            {
+                title: "Malatapay Market",
+                location: "Zamboanguita Proper",
+                category: "CULTURAL",
+                label: "Authentic Coastal Trade Hub",
+                description: "Famous Wednesday open air traditional marketplace layout for livestock barter and local seafood dishes.",
+                travelFee: 50,
+                entranceFee: 0,
+                workingDays: "Wednesdays Only",
+                workingTime: "5:00 AM - 6:00 PM",
+                image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
+                images: ["https://images.unsplash.com/photo-1519125323398-675f0ddb6308"]
+            }
+        ];
 
-  <div class="flex justify-between items-center px-8 py-6 border-t border-zinc-800">
-    <p class="text-zinc-500">Showing <span id="pageNumber">1</span>-2 of 4 destinations</p>
-    <div class="flex gap-3">
-      <button id="prevBtn" class="w-12 h-12 rounded-xl border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-900 transition">❮</button>
-      <button id="nextBtn" class="w-12 h-12 rounded-xl border border-zinc-800 flex items-center justify-center text-white hover:bg-zinc-900 transition">❯</button>
-    </div>
-  </div>
-</div>
+        let currentSlide = 0;
+        let totalSlides = 1;
+        let activeCategory = "ALL"; 
+        let uploadedImagesBase64 = [];
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-<div class="bg-surface-container-low border-l-4 border-green-500 p-6 rounded-r-2xl">
-<p class="text-xs font-bold text-stone-500 uppercase tracking-widest mb-1">Most Visited</p>
-<h5 class="text-2xl font-black text-white">Najandig Peak</h5>
-<p class="text-xs text-primary font-bold mt-2">↑ 12% from last month</p>
-</div>
-<div class="bg-surface-container-low border-l-4 border-stone-700 p-6 rounded-r-2xl">
-<p class="text-xs font-bold text-stone-500 uppercase tracking-widest mb-1">Total Capacity</p>
-<h5 class="text-2xl font-black text-white">0 Guests</h5>
-<p class="text-xs text-stone-500 mt-2">Across 24 locations</p>
-</div>
-</div>
-</div>
+        /* ===== DARK MODE TOGGLE ENGINE ===== */
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if(icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if(icon) icon.textContent = 'light_mode';
+            }
+        }
 
-<script>
-/* ===== SLIDER ===== */
-const slider = document.getElementById("slider");
-const nextBtn = document.getElementById("nextBtn");
-const prevBtn = document.getElementById("prevBtn");
-const pageNumber = document.getElementById("pageNumber");
-let currentSlide = 0;
-const totalSlides = 2;
+        /* ===== INITIALIZATION ON DOM LOAD ===== */
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if(icon) {
+                icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+            }
+            // Populate localStorage with baseline data if empty to keep consistency
+            if (!localStorage.getItem('globalDestinations')) {
+                localStorage.setItem('globalDestinations', JSON.stringify([]));
+            }
+            renderAdminTableGrid();
+        });
 
-function updateSlider() {
-  slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-  pageNumber.textContent = currentSlide + 1;
-}
-nextBtn.addEventListener("click", () => {
-  currentSlide++;
-  if(currentSlide >= totalSlides){ currentSlide = 0; }
-  updateSlider();
-});
-prevBtn.addEventListener("click", () => {
-  currentSlide--;
-  if(currentSlide < 0){ currentSlide = totalSlides - 1; }
-  updateSlider();
-});
+        /* ===== MODAL TOGGLE ROUTINE ===== */
+        function toggleAddSpotModal(show) {
+            const modal = document.getElementById('addSpotModal');
+            if(show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+                document.getElementById('addSpotForm').reset();
+                uploadedImagesBase64 = [];
+                document.getElementById('imagePreviewsContainer').innerHTML = '';
+            }
+        }
 
-/* ===== DARK / LIGHT MODE ===== */
-function toggleDarkMode() {
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
-    body.classList.toggle("light-mode");
-    html.classList.toggle("dark");
-    if(body.classList.contains("light-mode")) {
-        localStorage.setItem("theme", "light");
-        icon.innerHTML = "dark_mode";
-    } else {
-        localStorage.setItem("theme", "dark");
-        icon.innerHTML = "light_mode";
-    }
-}
-window.onload = function () {
-    const savedTheme = localStorage.getItem("theme");
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
-    if(savedTheme === "light") {
-        body.classList.add("light-mode");
-        html.classList.remove("dark");
-        icon.innerHTML = "dark_mode";
-    } else {
-        body.classList.remove("light-mode");
-        html.classList.add("dark");
-        icon.innerHTML = "light_mode";
-    }
-}
+        /* ===== FILE UPLOAD HANDLING ENGINE ===== */
+        function handleMultipleImagesUpload(event) {
+            const files = Array.from(event.target.files);
+            const container = document.getElementById('imagePreviewsContainer');
+            container.innerHTML = '';
+            uploadedImagesBase64 = [];
+
+            if (files.length > 5) {
+                alert("You can only upload up to 5 images max.");
+                event.target.value = '';
+                return;
+            }
+
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    uploadedImagesBase64.push(e.target.result);
+                    
+                    // Create preview UI element dynamically
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative w-14 h-14 rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 shrink-0';
+                    wrapper.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-center text-zinc-300 font-bold py-0.5">
+                            #${index + 1}
+                        </div>
+                    `;
+                    container.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /* ===== CATEGORY FILTER TRIGGER ENGINE ===== */
+        function setCategoryFilter(category) {
+            activeCategory = category.toUpperCase();
+            currentSlide = 0; 
+            
+            const buttons = document.querySelectorAll('.cat-filter-btn');
+            buttons.forEach(btn => {
+                const btnText = btn.textContent.trim().toUpperCase();
+                if ((btnText === "ALL" && activeCategory === "ALL") || 
+                    ((btnText === "BEACH / DIVING" || btnText === "BEACH & DIVING") && activeCategory === "BEACH / DIVING") ||
+                    (btnText === "MOUNTAIN" && activeCategory === "MOUNTAIN") ||
+                    (btnText === "CULTURAL" && activeCategory === "CULTURAL")) {
+                    btn.className = "cat-filter-btn px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all";
+                } else {
+                    btn.className = "cat-filter-btn px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all";
+                }
+            });
+
+            renderAdminTableGrid();
+        }
+
+        /* ===== CAROUSEL SLIDER NAVIGATION ===== */
+        function navigateSlider(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            
+            updateSliderPosition();
+        }
+
+        function updateSliderPosition() {
+            const sliderContainer = document.getElementById('slider');
+            sliderContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+            document.getElementById('pageNumber').textContent = totalSlides === 0 ? 0 : currentSlide + 1;
+        }
+
+        /* ===== POST ENGINE: PUBLISH NEW SPOT ===== */
+        async function handleSpotPublish(event) {
+            event.preventDefault();
+            
+            // Set first image as standard placeholder, or fall back to single URL field
+            const fallbackUrl = document.getElementById('spotImage').value.trim();
+            const primaryImage = uploadedImagesBase64.length > 0 ? uploadedImagesBase64[0] : fallbackUrl;
+            const finalImagesList = uploadedImagesBase64.length > 0 ? uploadedImagesBase64 : [fallbackUrl];
+
+            const newSpot = {
+                title: document.getElementById('spotTitle').value.trim(),
+                location: document.getElementById('spotLocation').value.trim(),
+                category: document.getElementById('spotCategory').value.toUpperCase(),
+                label: document.getElementById('spotLabel').value.trim(),
+                description: document.getElementById('spotDescription').value.trim(),
+                travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
+                entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
+                workingDays: document.getElementById('spotWorkingDays').value.trim() || "Everyday",
+                workingTime: document.getElementById('spotWorkingTime').value.trim() || "All Day",
+                image: primaryImage,
+                images: finalImagesList
+            };
+
+            // 1. Attempt API Delivery Loop
+            try {
+                const response = await fetch('http://localhost:5000/api/spots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSpot)
+                });
+                if (!response.ok) throw new Error("Fallback to Local Storage pipeline context execution.");
+            } catch (err) {
+                console.warn("Backend API Offline. Running local state pipeline engine.");
+            }
+
+            // 2. Commit seamlessly into LocalStorage buffer array regardless
+            const dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
+            dynamicSpots.push(newSpot);
+            localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
+
+            // UI System synchronization
+            toggleAddSpotModal(false);
+            renderAdminTableGrid();
+        }
+
+        /* ===== DELETE ENGINE ROUTINE ===== */
+        async function deleteDestinationSpot(uniqueTitle) {
+            if (!confirm(`Are you sure you want to delete "${uniqueTitle}"?`)) return;
+
+            // 1. Attempt Server-side sync drops
+            try {
+                const response = await fetch(`http://localhost:5000/api/destinations/${encodeURIComponent(uniqueTitle)}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.warn("API disconnect. Handling removal from client-side runtime values.");
+            }
+
+            // 2. Drop item from Baseline inventory
+            const baselineIdx = baselineDestinations.findIndex(item => item.title === uniqueTitle);
+            if (baselineIdx !== -1) {
+                baselineDestinations.splice(baselineIdx, 1);
+            }
+
+            // 3. Drop item from Dynamic LocalStorage tracking loop arrays
+            let dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
+            dynamicSpots = dynamicSpots.filter(item => item.title !== uniqueTitle);
+            localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
+
+            renderAdminTableGrid();
+        }
+
+        /* ===== RENDER ENGINE ENGINE GRID MATRIX ===== */
+        function renderAdminTableGrid() {
+            const dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
+            const fullInventory = [...baselineDestinations, ...dynamicSpots];
+            
+            // Filter inventory parameters matching exact criteria selection matches
+            const filteredInventory = fullInventory.filter(item => {
+                const categoryMatch = (activeCategory === "ALL" || item.category === activeCategory);
+                return categoryMatch;
+            });
+
+            // Update Metric Display Indicators
+            document.getElementById('totalCapacityCounter').textContent = `${filteredInventory.length} Locations`;
+            if(filteredInventory.length > 0) {
+                document.getElementById('mostVisitedSpot').textContent = filteredInventory[0].title;
+            } else {
+                document.getElementById('mostVisitedSpot').textContent = "None";
+            }
+
+            const sliderContainer = document.getElementById('slider');
+            sliderContainer.innerHTML = ''; 
+            
+            const itemsPerSlide = 2;
+            totalSlides = Math.ceil(filteredInventory.length / itemsPerSlide) || 0;
+            document.getElementById('totalDisplayCount').textContent = totalSlides === 0 ? 1 : totalSlides;
+            
+            if (currentSlide >= totalSlides && totalSlides > 0) {
+                currentSlide = totalSlides - 1;
+            }
+            if (currentSlide < 0) currentSlide = 0;
+
+            if (filteredInventory.length === 0) {
+                sliderContainer.innerHTML = `
+                    <div class="min-w-full text-center py-16 text-zinc-500 font-medium text-sm">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">travel_explore</span>
+                        Walay nakita nga destinasyon ubos sa kategoryang kini.
+                    </div>`;
+                updateSliderPosition();
+                return;
+            }
+            
+            for (let i = 0; i < totalSlides; i++) {
+                const slidePageElement = document.createElement('div');
+                slidePageElement.className = 'min-w-full flex flex-col split-rendering-block';
+                
+                const pageItems = filteredInventory.slice(i * itemsPerSlide, (i * itemsPerSlide) + itemsPerSlide);
+                
+                let slideHTML = '';
+                pageItems.forEach((spot, index) => {
+                    const borderClass = (index !== pageItems.length - 1) ? 'border-b border-zinc-800' : '';
+                    
+                    let colorBadgeClass = 'bg-yellow-900/40 text-yellow-400';
+                    if (spot.category === 'CULTURAL') colorBadgeClass = 'bg-purple-900/40 text-purple-400';
+                    if (spot.category === 'BEACH / DIVING') colorBadgeClass = 'bg-cyan-900/40 text-cyan-400';
+
+                    const displayDescription = spot.description || spot.label || 'No active details listed yet.';
+                    const tFee = spot.travelFee !== undefined ? spot.travelFee : 0;
+                    const eFee = spot.entranceFee !== undefined ? spot.entranceFee : 0;
+                    const wDays = spot.workingDays || "Everyday";
+                    const wTime = spot.workingTime || "All Day";
+                    const spotImageCount = spot.images ? spot.images.length : 1;
+
+                    slideHTML += `
+                      <div class="grid grid-cols-1 md:grid-cols-4 items-center px-8 py-6 ${borderClass} hover:bg-zinc-900/20 transition-all duration-150 gap-4">
+                        <div class="flex items-center gap-4 col-span-1 md:col-span-2">
+                          <div class="relative group shrink-0">
+                             <img src="${spot.image}" class="w-16 h-16 rounded-xl object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200'">
+                             <span class="absolute -top-1.5 -right-1.5 bg-black/80 border border-zinc-700 text-[9px] font-black rounded-full px-1.5 py-0.5 text-zinc-300">
+                               ${spotImageCount}P
+                             </span>
+                          </div>
+                          <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-xl font-bold text-white">${spot.title}</h3>
+                                <span class="${colorBadgeClass} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide h-fit">${spot.category}</span>
+                            </div>
+                            <p class="text-zinc-400 text-xs mt-1 line-clamp-2">${displayDescription}</p>
+                          </div>
+                        </div>
+                        <div class="text-white font-medium flex flex-col gap-1 justify-center">
+                            <div class="flex items-center gap-1.5 text-zinc-300 text-sm">
+                                <span class="material-symbols-outlined text-sm text-zinc-500">fmd_good</span>
+                                ${spot.location}
+                            </div>
+                            <div class="text-[11px] text-zinc-500 pl-5 mb-1">
+                                Travel: ₱${tFee} • Entrance: ₱${eFee}
+                            </div>
+                            <div class="text-[10px] text-primary/90 pl-5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">schedule</span>
+                                ${wDays} (${wTime})
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center justify-end w-full">
+                            <button onclick="deleteDestinationSpot('${spot.title.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">delete</span> Drop
+                            </button>
+                        </div>
+                      </div>`;
+                });
+                
+                slidePageElement.innerHTML = slideHTML;
+                sliderContainer.appendChild(slidePageElement);
+            }
+            
+            updateSliderPosition();
+        }
 </script>
-</main>
 </body>
 </html>

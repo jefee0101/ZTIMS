@@ -1,289 +1,348 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" id="htmlTag">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Login - ZAMBOANGUITA</title>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Login - ZAMBOANGUITA</title>
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2E7D32",         // Vibrant Leaf Green
+            primaryHover: "#1B5E20",    // Darker Forest Green for interactive hover states
+            background: "#020F24",     // Deep Midnight Blue (Dark Mode Background)
+            surface: "#051D40",        // Ocean Navy (Dark Mode Cards)
+            surfaceLight: "#F8FAFC",   // Warm Gray (Light Mode Cards)
+            textLight: "#0F172A",      // Dark Slate for Light Mode Text
+            textDark: "#FEFCF4",       // Off-White for Dark Mode Text
+            outline: "#1E3D6B"          // Deep Sea Border Tint
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans"],
+            body: ["Manrope"]
+          }
+        }
+      }
+    }
+  </script>
 
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-
-<script>
-tailwind.config = {
-darkMode: "class",
-theme: {
-extend: {
-colors: {
-primary: "#59ee50",
-background: "#0e0f0a",
-surface: "#191a14",
-surfaceLight: "#f5f5f5",
-textLight: "#111827",
-textDark: "#fefcf4",
-outline: "#484842"
-},
-fontFamily: {
-headline: ["Plus Jakarta Sans"],
-body: ["Manrope"]
-}
-}
-}
-}
-</script>
-
-<style>
-.material-symbols-outlined {
-font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
-}
-
-body {
-font-family: 'Manrope', sans-serif;
-transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-.bg-glass {
-backdrop-filter: blur(20px);
-background-color: rgba(0,0,0,0.75);
-}
-
-.light-mode {
-background: #f3f4f6;
-color: #111827;
-}
-
-.dark-mode {
-background: #0e0f0a;
-color: #fefcf4;
-}
-</style>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+    }
+    body {
+      font-family: 'Manrope', sans-serif;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+    .light-mode {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+    .dark-mode {
+      background: #020F24;
+      color: #FEFCF4;
+    }
+  </style>
 </head>
 
-<body id="body" class="dark-mode overflow-hidden">
+<body id="body" class="light-mode overflow-hidden">
 
-<button onclick="toggleTheme()"
-class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hover:scale-110 transition-all duration-300 shadow-lg">
-<span id="themeIcon" class="material-symbols-outlined">light_mode</span>
-</button>
-
-<main class="relative h-screen w-full flex items-center justify-center overflow-hidden">
-
-<div class="hidden lg:block lg:w-3/5 h-full relative">
-<div class="absolute inset-0">
-<img
-class="w-full h-full object-cover"
-src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg"
-alt="Zamboanguita"/>
-</div>
-
-<div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-between p-16">
-<div>
-<h1 class="text-4xl font-black text-white font-headline">EXPLORE ZAMBOANGUITA</h1>
-<div class="w-20 h-1 bg-primary mt-3"></div>
-</div>
-
-<div>
-<h2 class="text-6xl font-bold text-white leading-none">
-DAYON MO <br>
-<span class="text-primary italic">DOY!</span>
-</h2>
-<p class="text-white/80 mt-5 text-lg">The view is better when you have to walk for it.</p>
-</div>
-</div>
-</div>
-
-<div id="rightPanel" class="w-full lg:w-2/5 h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-8 overflow-y-auto">
-<div class="w-full max-w-md">
-
-<div class="lg:hidden mb-10 text-center">
-<h1 class="text-3xl font-black text-primary">ZAMBOANGUITA</h1>
-</div>
-
-<div class="mb-10">
-<h2 id="titleText" class="text-4xl font-bold mb-2 text-gray-900 dark:text-white">HELLO!</h2>
-<p class="text-gray-500 dark:text-gray-400">Enter your credentials to access your portal.</p>
-</div>
-
-<div class="mb-8 p-1 flex bg-gray-100 dark:bg-gray-800 rounded-xl">
-  <!-- USER PORTAL LINK -->
-  <!-- Keeps the user on the current login page -->
-  <a 
-    href="user_login.html"
-    id="travelerBtn" 
-    class="w-1/2 py-2.5 text-sm font-semibold rounded-lg bg-primary text-black text-center focus:outline-none transition-all duration-300 block">
-    User Portal
-  </a>
-  
-  <!-- ADMIN PORTAL LINK FIX -->
-  <!-- '../' exits the user folder, allowing entry into the admin folder -->
-  <a 
-    href="../admin/admin_login.html"
-    id="adminBtn" 
-    class="w-1/2 py-2.5 text-sm font-semibold rounded-lg text-gray-500 dark:text-gray-400 text-center focus:outline-none transition-all duration-300 block">
-    Admin Portal
-  </a>
-</div>
-
-<form id="loginForm" class="space-y-6">
-  <div>
-    <label class="block mb-2 text-sm text-gray-700 dark:text-gray-300">Email Address</label>
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
-      <input
-        id="emailInput"
-        type="email"
-        name="email"
-        required
-        placeholder="name@example.com"
-        class="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-2 focus:ring-primary outline-none transition"/>
-    </div>
-  </div>
-
-  <div>
-    <div class="flex justify-between mb-2">
-      <label class="text-sm text-gray-700 dark:text-gray-300">Password</label>
-      <a href="#" class="text-sm text-primary">Forgot Password?</a>
-    </div>
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
-      <input
-        id="passwordInput"
-        type="password"
-        name="password"
-        required
-        placeholder="••••••••"
-        class="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-2 focus:ring-primary outline-none transition"/>
-      
-      <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none hover:text-primary transition-colors">
-        <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
-      </button>
-    </div>
-  </div>
-
-  <button
-    type="submit"
-    class="w-full py-4 rounded-full bg-gradient-to-r from-primary to-green-600 text-black font-bold hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg">
-    SIGN IN
+  <button onclick="toggleTheme()" class="fixed top-5 right-5 z-50 p-3 rounded-full bg-white dark:bg-surface border border-gray-200 dark:border-outline/30 text-[#FFB300] hover:scale-110 transition-all duration-300 shadow-lg">
+    <span id="themeIcon" class="material-symbols-outlined">dark_mode</span>
   </button>
-</form>
 
-<div id="socialSection">
-<div class="relative my-10">
-<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300 dark:border-gray-700"></div></div>
-<div class="relative flex justify-center"><span class="bg-white dark:bg-surface px-4 text-sm text-gray-500">or connect with</span></div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<button class="py-3 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Google</button>
-<button class="py-3 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">GitHub</button>
-</div>
-</div>
+  <main class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+    <div class="hidden lg:block lg:w-3/5 h-full relative">
+      <div class="absolute inset-0">
+        <img class="w-full h-full object-cover brightness-[0.55]" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg" alt="Zamboanguita"/>
+        <div class="absolute inset-0 bg-[#020F24]/20 backdrop-blur-[2px]"></div>
+      </div>
+      
+      <div class="absolute inset-0 bg-gradient-to-r from-[#020F24]/80 via-[#020F24]/30 to-transparent flex flex-col justify-between p-16">
+        <div>
+          <h1 class="text-5xl font-extrabold text-white leading-tight tracking-tight headline-font">
+            Welcome to <br>
+            <span class="text-primary italic">Zamboanguita!</span>
+          </h1>
+          <div class="w-20 h-1.5 bg-primary mt-4 rounded-full"></div>
+        </div>
+        <div>
+          <p class="text-white/90 text-lg font-medium drop-shadow-sm max-w-md">Experience the natural wonders, rich culture, and coastal beauty of Zamboanguita like never before.</p>
+        </div>
+      </div>
 
-<div class="mt-10 text-center">
-<p class="text-gray-600 dark:text-gray-400">New to Zamboanguita? <a href="user_signup.html" class="text-primary font-bold hover:underline">Create an account</a></p>
-</div>
+      <div class="absolute top-16 right-16 z-20 flex items-center gap-4">
+        
+        <div class="flex items-center justify-center border-2 border-primary/30 bg-[#020F24]/80 backdrop-blur-md rounded-full w-24 h-24 hover:scale-105 hover:border-primary transition-all duration-300 overflow-hidden shadow-lg">
+          <img class="w-full h-full object-cover rounded-full" src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg" alt="Tourism Logo"/>
+        </div>
+        
+      </div>
+    </div>
 
-</div>
-</div>
-</main>
+    <div id="rightPanel" class="w-full lg:w-2/5 h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-8 overflow-y-auto border-l border-gray-200 dark:border-outline/20">
+      <div class="w-full max-w-md">
+        
+        <div class="mb-10">
+          <h2 id="titleText" class="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">HELLO &nbsp; USER!</h2>
+          <p class="text-gray-500 dark:text-on-surface-variant text-sm">Enter your credentials to access your portal.</p>
+        </div>
 
-<script>
-function togglePasswordVisibility() {
-  const passwordInput = document.getElementById("passwordInput");
-  const icon = document.getElementById("togglePasswordIcon");
-  if (passwordInput.type === "password") {
-    passwordInput.type = "text";
-    icon.innerHTML = "visibility_off";
-  } else {
-    passwordInput.type = "password";
-    icon.innerHTML = "visibility";
-  }
-}
+        <div class="mb-8 p-1 flex bg-gray-100 dark:bg-background rounded-xl border border-gray-200 dark:border-outline/20">
+          <a href="#" id="travelerBtn" class="w-1/2 py-2.5 text-sm font-bold rounded-lg bg-primary text-white text-center focus:outline-none transition-all duration-300 block shadow-sm">
+            User Portal
+          </a>
+          <a href="../admin/admin_login.html" id="adminBtn" class="w-1/2 py-2.5 text-sm font-semibold rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white text-center focus:outline-none transition-all duration-300 block">
+            Admin Portal
+          </a>
+        </div>
 
-function toggleTheme() {
-  const html = document.documentElement;
-  const body = document.getElementById("body");
-  const icon = document.getElementById("themeIcon");
-  html.classList.toggle("dark");
-  if(html.classList.contains("dark")) {
-    body.classList.remove("light-mode");
-    body.classList.add("dark-mode");
-    icon.innerHTML = "light_mode";
-    localStorage.setItem("theme", "dark");
-  } else {
-    body.classList.remove("dark-mode");
-    body.classList.add("light-mode");
-    icon.innerHTML = "dark_mode";
-    localStorage.setItem("theme", "light");
-  }
-}
+        <form id="loginForm" class="space-y-6">
+          <div>
+            <label class="block mb-2 text-sm text-gray-700 dark:text-gray-300 font-semibold">Email Address</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+              <input
+                id="emailInput"
+                type="email"
+                name="email"
+                required
+                placeholder="name@example.com"
+                class="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-2 focus:ring-primary outline-none transition"/>
+            </div>
+          </div>
 
-window.onload = () => {
-  const savedTheme = localStorage.getItem("theme");
-  if(savedTheme === "light") {
-    document.documentElement.classList.remove("dark");
-    document.getElementById("body").classList.remove("dark-mode");
-    document.getElementById("body").classList.add("light-mode");
-    document.getElementById("themeIcon").innerHTML = "dark_mode";
-  }
-}
+          <div>
+            <div class="flex justify-between mb-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
+              <button type="button" onclick="openForgotModal()" class="text-sm font-bold text-primary hover:text-primaryHover transition-colors focus:outline-none">Forgot Password?</button>
+            </div>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+              <input id="passwordInput" type="password" name="password" required placeholder="••••••••" class="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-outline bg-white dark:bg-background text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"/>
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none hover:text-primary transition-colors">
+                <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
+              </button>
+            </div>
+          </div>
 
-// --- FIXED BACKEND CONNECTION LOGIC ---
-document.getElementById('loginForm').addEventListener('submit', async (event) => {
-  event.preventDefault(); 
+          <button type="submit" class="w-full py-4 rounded-full bg-primary hover:bg-primaryHover text-white font-bold tracking-wide hover:scale-[1.01] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20">
+            SIGN IN
+          </button>
+        </form>
 
-  const email = document.getElementById('emailInput').value;
-  const password = document.getElementById('passwordInput').value;
+        <div id="socialSection">
+          <div class="relative my-10">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200 dark:border-outline/40"></div></div>
+            <div class="relative flex justify-center"><span class="bg-white dark:bg-surface px-4 text-sm text-gray-400">or connect with</span></div>
+          </div>
+          <div class="grid grid-cols-1">
+            <button class="py-3 font-semibold rounded-xl border border-gray-300 dark:border-outline text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-background transition flex items-center justify-center gap-2">
+               <span>Google</span>
+            </button>
+          </div>
+        </div>
 
-  // We are on user_login.html, but let's safely deduce role from email address pattern 
-  // or set default value to match what the backend authenticates.
-  const inferredRole = email.includes('admin') ? 'admin' : 'user';
+        <div class="mt-10 text-center">
+          <p class="text-gray-600 dark:text-gray-400">New to Zamboanguita? <a href="/Zamboanguita-project/src/user/user_create_account.html" class="text-primary font-bold hover:underline">Create an account</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
 
-  const credentials = {
-    email: email,
-    password: password,
-    role: inferredRole
-  };
+  <div id="forgotModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/60 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-white dark:bg-surface p-6 rounded-2xl border border-gray-200 dark:border-outline/30 shadow-2xl relative transform scale-95 transition-all duration-300">
+      <button onclick="closeForgotModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      
+      <div class="mb-6">
+        <h3 class="text-2xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">Reset Password</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Enter the email linked to your account, and we will send a password reset code.</p>
+      </div>
 
-  try {
-    const response = await fetch('http://localhost:5000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(credentials)
-    });
+      <form id="forgotForm" class="space-y-4">
+        <div>
+          <label class="block mb-2 text-sm text-gray-700 dark:text-gray-300 font-semibold">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+            <input
+              id="forgotEmailInput"
+              type="email"
+              required
+              placeholder="name@example.com"
+              class="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-2 focus:ring-primary outline-none transition"/>
+          </div>
+        </div>
 
-    const result = await response.json();
+        <button type="submit" class="w-full py-4 rounded-full bg-primary hover:bg-primaryHover text-white font-bold tracking-wide hover:scale-[1.01] transition-all duration-300 shadow-lg shadow-primary/20">
+          SEND RESET LINK
+        </button>
+      </form>
+    </div>
+  </div>
 
-    if (response.ok) {
-  alert(`Welcome back! Logging in.`);
+  <script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById("passwordInput");
+      const icon = document.getElementById("togglePasswordIcon");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.innerHTML = "visibility_off";
+      } else {
+        passwordInput.type = "password";
+        icon.innerHTML = "visibility";
+      }
+    }
 
-  localStorage.setItem('userRole', inferredRole);
-  localStorage.setItem('userEmail', email);
+    function toggleTheme() {
+      const html = document.documentElement;
+      const body = document.getElementById("body");
+      const icon = document.getElementById("themeIcon");
+      html.classList.toggle("dark");
+      
+      if(html.classList.contains("dark")) {
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+        icon.innerHTML = "light_mode";
+        localStorage.setItem("theme", "dark");
+      } else {
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+        icon.innerHTML = "dark_mode";
+        localStorage.setItem("theme", "light");
+      }
+    }
 
-  // Dynamically build the path using the current location to keep your live server port active
-  const currentPath = window.location.pathname;
-  const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
+    // Modal Operations
+    function openForgotModal() {
+      document.getElementById('forgotModal').classList.remove('hidden');
+    }
 
-  if (inferredRole === 'admin') {
-      // Safely navigate from the user login to the admin landing page
-      window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
-  } else {
-      // Safely navigate to the user dashboard panel
-      window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html"; 
-  }
-} else {
-  alert("Authentication failed: " + (result.message || "Invalid Credentials"));
-}
+    function closeForgotModal() {
+      document.getElementById('forgotModal').classList.add('hidden');
+    }
 
-  } catch (error) {
-    console.error("Network Error Details:", error);
-    alert("Could not connect to the authentication server. Ensure your backend is running.");
-  }
-});
-</script>
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      const html = document.documentElement;
+      const body = document.getElementById("body");
+      const icon = document.getElementById("themeIcon");
 
+      if(savedTheme === "dark") {
+        html.classList.add("dark");
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+        icon.innerHTML = "light_mode";
+      } else {
+        html.classList.remove("dark");
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+        icon.innerHTML = "dark_mode";
+      }
+    }
+
+    // Login Form Processing
+    const loginFormElement = document.getElementById('loginForm');
+    if (loginFormElement) {
+      loginFormElement.addEventListener('submit', async (event) => {
+        event.preventDefault(); 
+
+        let email = document.getElementById('emailInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        
+        if (email.toLowerCase() === 'desirose' || email.toLowerCase() === 'desirose@') {
+           email = 'desirose@gmail.com';
+        }
+        
+        const inferredRole = email.includes('admin') ? 'admin' : 'user';
+        const credentials = { email, password, role: inferredRole };
+
+        try {
+          const response = await fetch('http://localhost:5000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            alert(`Welcome back! Logging in.`);
+            localStorage.setItem('userRole', inferredRole);
+            localStorage.setItem('userEmail', email);
+
+            const serverUser = result.user || result.data || {};
+            let cleanEmail = serverUser.email || email;
+            let cleanPhone = serverUser.phone || serverUser.phoneNumber || serverUser.contact || "";
+            let cleanNationality = serverUser.nationality || serverUser.country || serverUser.citizen || "";
+
+            const resolvedName = serverUser.fullName || serverUser.name || cleanEmail.split('@')[0];
+            
+            const dynamicUserProfile = {
+              email: cleanEmail.toLowerCase().trim(),
+              name: resolvedName,      
+              fullName: resolvedName,   
+              phone: cleanPhone.trim(),
+              nationality: cleanNationality.trim()
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(dynamicUserProfile));
+            localStorage.setItem('userId', serverUser.id || serverUser._id || result.userId || "anonymous_guest");
+
+            const currentPath = window.location.pathname;
+            const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
+
+            if (inferredRole === 'admin') {
+                window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
+            } else {
+                window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html"; 
+            }
+          } else {
+            alert("Authentication failed: " + (result.message || "Invalid Credentials"));
+          }
+        } catch (error) {
+          console.error("Network Error:", error);
+          alert("Could not connect to the authentication server.");
+        }
+      });
+    }
+
+    // Forgot Password Form Handling
+    const forgotFormElement = document.getElementById('forgotForm');
+    if (forgotFormElement) {
+      forgotFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgotEmailInput').value.trim();
+
+        try {
+          const response = await fetch('http://localhost:5000/api/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success) {
+            alert("A password reset request has been dispatched. Please review your email inbox.");
+            closeForgotModal();
+          } else {
+            alert("Error: " + (result.message || "Something went wrong. Please check the email entered."));
+          }
+        } catch (error) {
+          console.error("Forgot password API error:", error);
+          alert("Could not connect to the server. Is your backend running?");
+        }
+      });
+    }
+  </script>
 </body>
-</html>
+</html>>

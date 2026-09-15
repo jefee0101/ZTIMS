@@ -1,75 +1,37 @@
 <!DOCTYPE html>
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Logged Out - Zamboanguita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&family=Manrope:wght=300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "on-primary-fixed": "#003e03",
-                        "primary-fixed-dim": "#49e043",
-                        "primary-dim": "#49e043",
-                        "tertiary": "#ffded4",
-                        "on-secondary-fixed-variant": "#00675b",
-                        "error-container": "#b92902",
-                        "inverse-primary": "#006f0a",
-                        "tertiary-container": "#f6cfc2",
-                        "surface-bright": "#2b2d25",
-                        "secondary": "#a0f2e1",
-                        "on-primary": "#005406",
-                        "surface-container-high": "#1f201a",
-                        "on-tertiary-container": "#5f453b",
-                        "outline-variant": "#484842",
-                        "surface-container": "#191a14",
-                        "secondary-container": "#046b5e",
-                        "on-surface-variant": "#acaba4",
-                        "tertiary-fixed": "#f6cfc2",
-                        "tertiary-fixed-dim": "#e7c1b4",
-                        "surface": "#0e0f0a",
-                        "inverse-on-surface": "#55554f",
-                        "surface-dim": "#0e0f0a",
-                        "primary-container": "#0fba1e",
-                        "on-error": "#450900",
-                        "secondary-fixed-dim": "#92e4d3",
-                        "error-dim": "#d53d18",
-                        "secondary-fixed": "#a0f2e1",
-                        "surface-container-lowest": "#000000",
-                        "on-secondary-container": "#ddfff6",
-                        "surface-tint": "#59ee50",
-                        "surface-container-low": "#13140f",
-                        "primary-fixed": "#59ee50",
-                        "on-secondary-fixed": "#00483f",
-                        "surface-variant": "#252620",
-                        "on-surface": "#fefcf4",
-                        "on-secondary": "#005d51",
-                        "on-background": "#fefcf4",
-                        "on-tertiary": "#694d43",
-                        "inverse-surface": "#fbf9f1",
-                        "error": "#ff7351",
-                        "on-primary-fixed-variant": "#005f07",
-                        "outline": "#76766f",
-                        "surface-container-highest": "#252620",
-                        "secondary-dim": "#92e4d3",
-                        "primary": "#59ee50",
-                        "background": "#0e0f0a",
-                        "on-tertiary-fixed": "#4b3229",
-                        "on-tertiary-fixed-variant": "#6a4e44",
-                        "on-primary-container": "#002a01",
-                        "on-error-container": "#ffd2c8",
-                        "tertiary-dim": "#e7c1b4"
+                    colors: {
+                        /* Synchronized with the Zamboanguita Tourism Dashboard Palette */
+                        "primary": "#2E7D32",                   // Vibrant Leaf Green
+                        "on-primary": "#FFFFFF",               // White text over green
+                        "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+                        "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+                        "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+                        "on-surface": "var(--color-on-surface, #FEFCF4)",
+                        "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+                        "outline-variant": "#1E3D6B",
+                        "primary-container": "#4CAF50",        // Light Green Accent
+                        "secondary-container": "#00838F",      // Pure Ocean Sea Blue
                     },
-                    "borderRadius": {
+                    borderRadius: {
                         "DEFAULT": "0.125rem",
                         "lg": "0.25rem",
                         "xl": "0.5rem",
                         "full": "0.75rem"
                     },
-                    "fontFamily": {
+                    fontFamily: {
                         "headline": ["Plus Jakarta Sans"],
                         "body": ["Manrope"],
                         "label": ["Manrope"]
@@ -78,95 +40,111 @@
             },
         }
     </script>
-<style>
+    <style>
+        /* COLOR CONFIG CHANNELS */
+        :root {
+            --color-surface: #051D40; 
+            --color-background: #020F24; 
+            --color-surface-variant: #0B2954;
+            --color-on-surface: #FEFCF4;
+            --color-on-surface-variant: #A0B2C6;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
         body {
             font-family: 'Manrope', sans-serif;
-            background-color: #0e0f0a;
+            background-color: #020F24;
         }
         .headline-font {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
     </style>
 </head>
-<body class="bg-background text-on-surface min-h-screen flex flex-col overflow-hidden">
+<body class="bg-background text-on-surface min-h-screen flex flex-col overflow-x-hidden">
 
-<main class="relative flex-grow flex items-center justify-center p-6 md:p-12 overflow-hidden">
-<div class="absolute inset-0 z-0">
-<img alt="Serene tropical beach at sunset" class="w-full h-full object-cover brightness-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0xaHQwdXGECh5rFDlmSaxL0DO3vyU6KIbjxd9IBoDILHTN5-o1CKxhZfF7EHOmZsQNNJT8CdeA5Ro8G-zetFmOp9IMdlPEjwnjY5GQHlmYHc2L-XhBtShZyc_fCpBX1QO6F6bev0LAOV4bxqaATpdnngTd9rpmzuWoLh_7MBtEV78nqmwZpotYO-7D7C9egVj-pDoKoCqT0rBzUytG19uBdU2hedQ_tYgVTQYrXjSgaBvXA80nWah06J7S8ab1sqbWkbWn_38pDae"/>
-<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent opacity-80"></div>
-</div>
+    <main class="relative flex-grow flex items-center justify-center p-6 md:p-12 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img alt="Zamboanguita" class="w-full h-full object-cover brightness-[0.25]" src="https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/maxresdefault%20(1).jpg"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-95"></div>
+        </div>
 
-<div class="relative z-10 w-full max-w-xl">
-<div class="bg-surface/40 backdrop-blur-2xl rounded-full border border-outline-variant/15 p-10 md:p-16 text-center shadow-2xl shadow-surface-container-lowest/50">
-<div class="mb-10">
-<span class="text-3xl font-black text-primary tracking-tighter headline-font uppercase">Zamboanguita</span>
-<div class="h-1 w-12 bg-primary mx-auto mt-2 rounded-full"></div>
-</div>
-<div class="mb-8">
-<div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 text-primary mb-6">
-<span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-</div>
-<h1 class="headline-font text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface mb-4">
+        <div class="relative z-10 w-full max-w-xl animate-fade-in">
+            <div class="bg-surface/50 backdrop-blur-2xl rounded-3xl border border-outline-variant/30 p-8 md:p-14 text-center shadow-2xl shadow-background/80">
+                
+                <div class="mb-8">
+                    <span class="text-3xl font-black text-primary tracking-tighter headline-font uppercase">
+                        Explore <br><span class="text-[#FFB300]">Zamboanguita</span>
+                    </span>
+                    <div class="h-1 w-12 bg-primary mx-auto mt-3 rounded-full"></div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary mb-6 border border-primary/20">
+                        <span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+                    <h1 class="headline-font text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
                         Safe Travels
                     </h1>
-<p class="text-on-surface-variant text-lg md:text-xl font-medium leading-relaxed max-w-sm mx-auto">
-                        You have been successfully logged out of your account. We hope to see you back soon. <br/> Balik - Balik!
+                    <p class="text-on-surface-variant text-base md:text-lg font-medium leading-relaxed max-w-sm mx-auto">
+                        You have been successfully logged out of your account. We hope to see you back soon. <br/> 
+                        <span class="text-[#FFB300] font-bold italic mt-2 inline-block tracking-wide">Balik - Balik!</span>
+                        <p class="text-on-surface-variant text-base md:text-lg font-medium leading-relaxed max-w-sm mx-auto">
+                            (Come Again!)
+                        </p>
                     </p>
-</div>
-<div class="flex flex-col md:flex-row gap-4 justify-center items-center">
-<a class="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary-container headline-font font-bold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 w-full md:w-auto" href="../../index.html">
-<span class="material-symbols-outlined mr-2 !text-xl">home</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a class="group relative inline-flex items-center justify-center px-6 py-3.5 bg-primary text-white headline-font font-bold rounded-xl transition-all duration-300 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 w-full sm:w-auto shadow-lg shadow-primary/20" href="../../index.html">
+                        <span class="material-symbols-outlined mr-2 !text-xl">home</span>
                         Return to Home
                     </a>
-<a class="inline-flex items-center justify-center px-8 py-4 text-primary headline-font font-bold transition-all duration-300 hover:text-primary-fixed-dim hover:underline underline-offset-8 w-full md:w-auto group" href="../admin/admin_login.html">
-<span class="material-symbols-outlined mr-2 !text-xl group-hover:-translate-x-1 transition-transform">login</span>
+                    <a class="inline-flex items-center justify-center px-6 py-3.5 text-on-surface-variant hover:text-white bg-surface-variant/40 hover:bg-surface-variant/80 border border-outline-variant/30 rounded-xl transition-all duration-300 w-full sm:w-auto group font-bold text-sm" href="/Zamboanguita-project/src/user/user_login.html">
+                        <span class="material-symbols-outlined mr-2 !text-xl group-hover:translate-x-0.5 transition-transform">login</span>
                         Sign In Again
                     </a>
-</div>
-</div>
-</div>
-</main>
+                </div>
+            </div>
+        </div>
+    </main>
 
-<footer class="bg-surface-container-low py-8 px-8 z-20">
-<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-<div class="flex items-center gap-2">
-<span class="text-sm font-bold text-on-surface uppercase tracking-widest headline-font">© 2026 ZTIMS.</span>
-</div>
-<nav class="flex gap-8">
-<a class="text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Privacy Policy</a>
-<a class="text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Local Guides</a>
-<a class="text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Sustainability</a>
-</nav>
-</div>
-</footer>
+    <footer class="bg-[#051D40]/40 backdrop-blur-md py-6 px-8 z-20 border-t border-outline-variant/20">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-on-surface-variant/70 uppercase tracking-widest headline-font">© 2026 zamboanguita tourism information management system.</span>
+            </div>
+            <nav class="flex flex-wrap justify-center gap-6">
+                <a class="text-on-surface-variant text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Privacy Policy</a>
+                <a class="text-on-surface-variant text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Local Guides</a>
+                <a class="text-on-surface-variant text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Sustainability</a>
+            </nav>
+        </div>
+    </footer>
 
-<script>
-    // 1. Clear session variables instantly
-    localStorage.clear();
-    sessionStorage.clear();
+    <script>
+        // 1. Immediately wipe client-side session states
+        localStorage.clear();
+        sessionStorage.clear();
 
-    // 2. Prevent back button navigation out of this page
-    function preventBack() {
-        window.history.forward();
-    }
-    
-    // Trigger immediately and handle window sequence binding
-    setTimeout(preventBack, 0);
-    
-    window.onunload = function () { 
-        null; 
-    };
+        // 2. Clear out history cache to interrupt normal back-button execution
+        function trapHistoryState() {
+            window.history.pushState(null, document.title, window.location.href);
+        }
 
-    // 3. Inject empty historical entries to overwrite history track mechanics
-    window.addEventListener('popstate', function (event) {
-        window.history.pushState(null, document.title, window.location.href);
-    });
-    
-    // Generate an initial fake state anchor so back clicks get trapped here
-    window.history.pushState(null, document.title, window.location.href);
-</script>
+        // Push initial fake state anchor context
+        trapHistoryState();
 
-</body></html>
+        // Trap future user attempts to cycle backwards
+        window.addEventListener('popstate', function (event) {
+            trapHistoryState();
+        });
+
+        // Suppress onunload fallback allocations
+        window.onunload = function () { 
+            return null; 
+        };
+    </script>
+</body>
+</html>

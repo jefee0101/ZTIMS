@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -8,482 +8,715 @@
 
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
 
 <script>
 tailwind.config = {
   darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        /* Colors pulled directly from the Zamboanguita Tourism Logo Layering */
+        "primary": "#2E7D32",                  // Vibrant Leaf Green
+        "on-primary": "#FFFFFF",               // White text over green
+        "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+        "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+        "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+        "on-surface": "var(--color-on-surface, #FEFCF4)",
+        "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+        "outline-variant": "#1E3D6B",
+        "primary-container": "#4CAF50",        // Sunset Light Green Accent
+        "secondary-container": "#00838F",      // Pure Ocean Sea Blue
+        "on-secondary-container": "#E0F7FA",
+      },
+      fontFamily: {
+        headline: ["Plus Jakarta Sans", "sans-serif"],
+        body: ["Plus Jakarta Sans", "sans-serif"],
+      }
+    }
+  }
 }
 </script>
 
 <style>
+/* ROOT DARK CONFIG */
+:root {
+    --color-surface: #051D40; 
+    --color-background: #020F24; 
+    --color-surface-variant: #0B2954;
+    --color-on-surface: #FEFCF4;
+    --color-on-surface-variant: #A0B2C6;
+}
 
-  
-body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+/* LIGHT MODE HARMONY */
+.light-mode, [class*="light-mode"] {
+    --color-surface: #FFFFFF !important;
+    --color-background: #F4F7FA !important;
+    --color-surface-variant: #E6EEF8 !important;
+    --color-on-surface: #020F24 !important;
+    --color-on-surface-variant: #4A5D73 !important;
+}
+
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th {
     transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
-.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
-.light-mode main { background: #f8fafc !important; }
-.light-mode aside { background: #ffffff !important; border-color: #010102 !important; }
-.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
-.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
-.light-mode .bg-black\/40 { background: #ffffff !important; }
-.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #000000 !important; }
-.light-mode .text-yellow-400 { color: #ca8a04 !important; }
-.light-mode .text-purple-400 { color: #9333ea !important; }
-.light-mode .text-primary { color: #0adf15 !important; }
-.light-mode button { color: #18181b; }
-.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
-.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
-.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
-.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
-.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
-.light-mode #themeIcon { color: #f59e0b !important; }
 
+/* Base Override Rules */
+.light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+.light-mode main { background: #F4F7FA !important; }
+.light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
 
-/* GLOWING WAVE */
-.chart-line {
-    filter:
-        drop-shadow(0 0 8px #59ee50);
-        drop-shadow(0 0 16px #59ee50);
-
-    animation: glowPulse s ease-in-out infinite;
+/* Dashboard UI Structure Elements */
+.glass-panel {
+    background: var(--color-surface);
+    border: 1px solid #1E3D6B;
 }
-
-/* GLOW ANIMATION */
-@keyframes glowPulse {
-
-    0% {
-        filter:
-            drop-shadow(0 0 6px #59ee50)
-            drop-shadow(0 0 12px #59ee50);
-    }
-
-    50% {
-        filter:
-            drop-shadow(0 0 14px #59ee50)
-            drop-shadow(0 0 24px #59ee50);
-    }
-
-    100% {
-        filter:
-            drop-shadow(0 0 6px #59ee50)
-            drop-shadow(0 0 12px #59ee50);
-    }
+.light-mode .glass-panel {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
 }
-/* GRID GLOW */
-.chart-grid {
-    opacity: 0.15;
-    animation: gridGlow 6s ease-in-out infinite;
-}
-
-@keyframes gridGlow {
-
-    0% {
-        opacity: 0.08;
-    }
-
-    50% {
-        opacity: 0.18;
-    }
-
-    100% {
-        opacity: 0.08;
-    }
-}
-/* PREMIUM CARD HOVER */
 .glass-panel:hover {
-    transform: translateY(-4px);
-    transition: all 0.4s ease;
-
-    box-shadow:
-        0 10px 30px rgba(89, 238, 80, 0.08);
+    transform: translateY(-2px);
+    border-color: #FFB300;
+    box-shadow: 0 12px 30px rgba(255, 179, 0, 0.1);
 }
 
+/* DYNAMIC MOON ICON STATES */
+/* Dark Mode Moon Style (Default) */
+#themeIcon { 
+    color: #FFB300 !important; 
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
+}
+
+/* Light Mode Moon Style Override */
+.light-mode #themeIcon { 
+    color: #020F24 !important; 
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24 !important;
+}
+
+
+/* Global Light/Dark Element Maps */
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+.light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
+    color: #020F24 !important;
+}
+.light-mode .text-stone-400, .light-mode .text-stone-500, .light-mode .text-zinc-500, .light-mode .text-on-surface-variant {
+    color: #4A5D73 !important;
+}
+.light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
+    border-color: #E2E8F0 !important;
+}
+.light-mode input, .light-mode select, .light-mode textarea {
+    background: #FFFFFF !important;
+    color: #020F24 !important;
+    border: 1px solid #CBD5E1 !important;
+}
+
+/* Premium Dynamic SVG Glowing Accent Trend Line */
+.chart-line {
+    filter: drop-shadow(0 0 6px #FFB300) drop-shadow(0 0 12px rgba(255, 179, 0, 0.4));
+    animation: glowPulse 4s ease-in-out infinite;
+}
+@keyframes glowPulse {
+    0%, 100% { filter: drop-shadow(0 0 5px #FFB300) drop-shadow(0 0 10px rgba(255, 179, 0, 0.3)); }
+    50% { filter: drop-shadow(0 0 12px #FFB300) drop-shadow(0 0 20px rgba(255, 179, 0, 0.6)); }
+}
+
+.light-mode #themeIcon { color: #FFB300 !important; }
+.light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
 </style>
 </head>
- <!--sideBar-->
-<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
 
-    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- Left Sidebar Control Desk -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1> <style> h1{
-              color: rgb(13, 206, 13);
-            }</style>
-            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            
         </div>
 
-        <nav class="flex-1 space-y-1 font-body">
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_analystic.html">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Dashboard</span>
-                            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_dashboard_manage.html">
-                <span class="material-symbols-outlined">location_on</span>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
+                <span>Analytics</span>
+            </a>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span>Manage Spots</span>
             </a>
-            </a>
-<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_booking.html">
-                <span class="material-symbols-outlined">event_available</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_booking.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
                 <span>Bookings</span>
             </a>
-
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="adminreviews.html">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined text-[#FFB300]">star</span>
                 <span>Reviews</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="admin_profile.html">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="capitalize">settings</span>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+                <span>Settings</span>
             </a>
         </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
     </aside>
 
-<!-- Main Workspace -->
-<main class="ml-6 min-h-screen flex flex-col bg-surface-container-lowest">
- <!--headermain-->
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
-        <div class="flex items-center gap-2"></div>
-        
-        <div class="flex items-center gap-4">
-            <button class="text-stone-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">account_circle</span>
-            </button>
-            
-            <button 
-                onclick="toggleDarkMode()"
-                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
-                aria-label="Toggle Dark Mode">
-                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
-                    dark_mode
-                </span>
-            </button>
+    <!-- Header Control Anchor -->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+    <div></div>
+    <div class="flex items-center gap-4">
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+            <span id="themeIcon" class="material-symbols-outlined transition-all duration-300">brightness_3</span>
+        </button>
+    </div>
+</header>
+
+    <!-- Main Workspace Container -->
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1400px] mx-auto space-y-8">
+
+            <!-- Operational System KPI Slots -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div onclick="switchMetricTab('revenue')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-revenue">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">payments</span> Total Revenue</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-revenue">₱0.00</h2>
+                </div>
+                <div onclick="switchMetricTab('bookings')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-bookings">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">confirmation_number</span> Active Bookings</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-bookings">0</h2>
+                </div>
+                <div onclick="switchMetricTab('travelers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-travelers">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">group</span> Registered Users</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-travelers">0</h2>
+                </div>
+                <div onclick="switchMetricTab('rating')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-rating">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">star</span> Average Rating</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-rating">0.0 / 5.0</h2>
+                </div>
+            </div>
+
+            <!-- Analytics Dynamic Timeline Grid Layout -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-on-surface" id="chart-title-heading">Booking Trends</h3>
+                    <span class="text-xs text-[#FFB300] font-mono bg-surface-variant px-3 py-1 rounded-full border border-outline-variant/30" id="chart-date-range">Last 7 Days</span>
+                </div>
+                <div class="relative h-48 flex items-end gap-1">
+                    <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
+                        <div class="border-t border-outline-variant w-full h-px"></div>
+                        <div class="border-t border-outline-variant w-full h-px"></div>
+                        <div class="border-t border-outline-variant w-full h-px"></div>
+                    </div>
+                    <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+                        <defs>
+                            <linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stop-color="#FFB300" stop-opacity="0.3"></stop>
+                                <stop offset="100%" stop-color="#FFB300" stop-opacity="0"></stop>
+                            </linearGradient>
+                        </defs>
+                        <path id="dynamic-chart-area" fill="url(#lineGrad)" d="M0,100 L1000,100 Z"></path>
+                        <path id="dynamic-chart-line" class="chart-line" fill="none" stroke="#FFB300" stroke-width="2.5" d="M0,100 L1000,100"></path>
+                    </svg>
+                </div>
+                <div class="flex justify-between text-xs text-on-surface-variant font-mono mt-3 px-1" id="chart-labels-axis">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+            </div>
+
+            <!-- Injected Database Tab Target Panel -->
+            <section class="glass-panel p-6 rounded-2xl">
+                <div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
+                    <h3 class="text-lg font-bold flex items-center gap-2 text-on-surface" id="tab-title-display">
+                        <span class="material-symbols-outlined text-[#FFB300]">analytics</span> System Metric Details
+                    </h3>
+                    <span class="text-xs text-on-surface-variant uppercase tracking-widest font-mono">Live Sync Logs</span>
+                </div>
+                <div class="overflow-x-auto max-h-64 overflow-y-auto pr-2" id="tab-results-container">
+                    <p class="text-sm text-on-surface-variant py-4 italic">Select any analytics card above to instantly break down registry details entries here.</p>
+                </div>
+            </section>
+
+            <!-- Grid Display Array for Registered Destination Points -->
+            <section>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-extrabold text-on-surface">Live System Destination Entries</h2>
+                    <button onclick="openAddSpotModal()" class="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-sm rounded-xl transition-all shadow-lg flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm font-bold">add</span> Add New Spot
+                    </button>
+                </div>
+                <div id="adminSpotsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
         </div>
-    </header>
-<!-- Content Canvas -->
-<main class="ml-[280px] pt-20 min-h-screen custom-scrollbar overflow-y-auto">
-<div class="p-10 max-w-[1400px] mx-auto space-y-12">
-<span class="text-stone-400">Inventory</span>
-</nav>
-<h2 class="text-5xl font-black text-white font-headline tracking-tighter">Platform Analytics</h2>
-    
-    <style>
-        .text-white {
-    --tw-text-opacity: 1;
-    color: rgb(255, 255, 255);
-    
-}
+    </main>
 
-    
-    </style>
-    
-
-</div>
-<button class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary-container rounded-full font-bold text-sm hover:scale-102 active:scale-98 transition-all shadow-xl shadow-primary/20 group">
-<span class="material-symbols-outlined">add_circle</span>
-                    Add New Spot
+    <!-- Destination Management Entry Form Shell Modal -->
+    <div id="addSpotModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+        <div class="bg-[#051D40] border border-outline-variant/40 w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl p-8 space-y-6" id="spotModalContent">
+            <div class="flex justify-between items-center border-b border-outline-variant/30 pb-4">
+                <h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#FFB300]">landscape</span>
+                    Publish New Destination Spot
+                </h3>
+                <button onclick="closeAddSpotModal()" class="text-on-surface-variant hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined">close</span>
                 </button>
-</div>
-
-
-
-
-<!-- KPI CARDS -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-
-<div class="glass-panel p-6 rounded-2xl">
-<p class="muted text-sm mb-2">Total Revenue</p>
-<h2 class="text-3xl font-bold">₱0.00</h2>
-</div>
-
-<div class="glass-panel p-6 rounded-2xl">
-<p class="muted text-sm mb-2">Active Bookings</p>
-<h2 class="text-3xl font-bold">0</h2>
-</div>
-
-<div class="glass-panel p-6 rounded-2xl">
-<p class="muted text-sm mb-2">New Travelers</p>
-<h2 class="text-3xl font-bold">0</h2>
-</div>
-
-<div class="glass-panel p-6 rounded-2xl">
-<p class="muted text-sm mb-2">Average Rating</p>
-<h2 class="text-3xl font-bold">0.0 / 5.0</h2>
-</div>
-
-</div>
-
-<!-- CHART SECTION -->
-<div class="glass-panel p-8 rounded-2xl mb-10">
-
-<div class="flex justify-between items-center mb-8">
-  <style>
-    .div{
-      border-radius: 5cm;
-      border-color: #0adf15;
-    }
-  </style>
-<h2 class="text-2xl font-bold">
-Booking Trends
-</h2>
-</div>
-
-<!-- Mock Line Chart Visualization -->
-<div class="relative h-64 flex items-end gap-1 chart-container">
-
-<!-- GRID LINES -->
-<div class="absolute inset-0 flex flex-col justify-between pointer-events-none chart-grid">
-<div class="border-t border-outline-variant/10 w-full h-px"></div>
-<div class="border-t border-outline-variant/10 w-full h-px"></div>
-<div class="border-t border-outline-variant/10 w-full h-px"></div>
-<div class="border-t border-outline-variant/10 w-full h-px"></div>
-</div>
-
-<!-- ANIMATED SVG -->
-<svg class="absolute bottom-0 left-0 w-full h-full"
-preserveAspectRatio="none"
-viewBox="0 0 1000 100">
-
-<defs>
-
-<linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
-
-<stop offset="0%" stop-color="#59ee50" stop-opacity="0.35">
-
-<animate
-attributeName="stop-opacity"
-values="0.15;0.45;0.15"
-dur="10s"
-repeatCount="indefinite"
-/>
-
-</stop>
-
-<stop offset="100%" stop-color="#59ee50" stop-opacity="0"></stop>
-
-</linearGradient>
-
-</defs>
-
-<!-- GREEN AREA -->
-<path fill="url(#lineGrad)">
-
-<animate
-attributeName="d"
-dur="100s"
-repeatCount="indefinite"
-values="
-M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45 L1000,100 L0,100 Z;
-M0,72 Q100,45 200,68 T400,45 T600,25 T800,35 T1000,38 L1000,100 L0,100 Z;
-M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45 L1000,100 L0,100 Z
-"
-/>
-
-</path>
-
-<!-- MAIN WAVE -->
-<path
-class="chart-line"
-fill="none"
-stroke="#59ee50"
-stroke-width="1"
-stroke-linecap="round">
-
-<animate
-attributeName="d"
-dur="100s"
-repeatCount="indefinite"
-values="
-M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45;
-M0,72 Q100,45 200,68 T400,45 T600,25 T800,35 T1000,38;
-M0,80 Q100,60 200,75 T400,30 T600,50 T800,20 T1000,45
-"
-/>
-
-</path>
-</svg>
-
-</div>
-
-</div>
-
-<!-- DESTINATIONS -->
-<section>
-
-<h2 class="text-3xl font-extrabold mb-8">
-Destination Performance
-</h2>
-
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-<!-- CARD 1-->
-<div class="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] transition">
-
-<img
-src="https://www.jonnymelon.com/wp-content/uploads/2018/10/apo-island-18.jpg"
-class="w-full h-52 object-cover"
-/>
-
-<div class="p-6">
-
-<h3 class="text-2xl font-bold mb-3">
-Apo Island
-</h3>
-
-<p class="muted mb-4">
-0 Monthly Bookings
-</p>
-
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-green-500">
-star
-</span>
-
-<span>0 Rating</span>
-</div>
-
-</div>
-
-</div>
-
-<!-- CARD 2-->
-<div class="glass-panel rounded-2xl overflow-hidden hover:scale-[1.02] transition">
-
-<img
-src="https://tse2.mm.bing.net/th/id/OIP.bn-0gv2UwcEda8y9fk2G2QHaFj?pid=Api&P=0&h=180"
-class="w-full h-52 object-cover"
-/>
-
-<div class="p-6">
-
-<h3 class="text-2xl font-bold mb-3">
-Najandig Peak
-</h3>
-
-<p class="muted mb-4">
- 0 Monthly Bookings
-</p>
-
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-green-500">
-star
-</span>
-
-<span>0 Rating</span>
-</div>
-
-</div>
-
-</div>
-
-<!-- CARD 3-->
-<div class="glass-panel rounded-2xl p-6">
-
-<h3 class="text-2xl font-bold mb-6">
-Emerging Spots
-</h3>
-
-<div class="space-y-4">
-
-<div class="flex justify-between">
-<span>Malatapay Market</span>
-<span class="green font-bold">0%</span>
-</div>
-
-<div class="flex justify-between">
-<span>Jomao-As Hot Spring</span>
-<span class="green font-bold">0%</span>
-</div>
-
-<div class="flex justify-between">
-<span>Turtle Island</span>
-<span class="green font-bold">0%</span>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-</main>
-
-
-
-
-<!-- DARK/LIGHT MODE SCRIPT -->
-<script>
-
-/* =====================================================
-   DARK MODE
-===================================================== */
-
-function toggleDarkMode(){
-
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
-
-    body.classList.toggle("light-mode");
-    html.classList.toggle("dark");
-
-    if(body.classList.contains("light-mode")){
-
-        localStorage.setItem("theme", "light");
-
-        icon.innerHTML = "dark_mode";
-
-    } else {
-
-        localStorage.setItem("theme", "dark");
-
-        icon.innerHTML = "light_mode";
-
-    }
-
+            </div>
+
+            <form id="addSpotForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Spot Title / Name</label>
+                    <input id="spotTitleInput" type="text" required placeholder="e.g., Apo Island Marine Sanctuary" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Exact Location</label>
+                        <input id="spotLocationInput" type="text" required placeholder="e.g., Poblacion, Zamboanguita" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Spot Category</label>
+                        <select id="spotCategorySelect" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
+                            <option value="Beach & Diving">Beach & Diving</option>
+                            <option value="Mountain Trekking">Mountain Trekking</option>
+                            <option value="Heritage & Culture">Heritage & Culture</option>
+                            <option value="Hot Springs & Nature">Hot Springs & Nature</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Display Image Media Link (URL)</label>
+                    <input id="spotImageUrlInput" type="url" placeholder="e.g., https://images.unsplash.com/... or leave blank" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Detailed Description Summary</label>
+                    <textarea id="spotDescriptionTextarea" required rows="4" placeholder="Describe the spectacular features of this tourist destination..." class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors resize-none"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
+                    <button type="button" onclick="closeAddSpotModal()" class="px-5 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-all font-semibold text-sm">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl font-bold text-sm transition-all shadow-lg">Publish Spot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Pipeline Synchronization Scripts Block -->
+    <script>
+        const BASE_API_URL = 'http://localhost:5000/api';
+        const SPOTS_URL = `${BASE_API_URL}/spots`;
+        const BOOKINGS_URL = `${BASE_API_URL}/bookings`;
+        const USERS_URL = `${BASE_API_URL}/users`;
+        const REVIEWS_URL = `${BASE_API_URL}/reviews`;
+
+        let systemBookings = [];
+        let systemUsers = [];
+        let systemReviews = [];
+
+        function toggleDarkMode() {
+    const isLight = document.documentElement.classList.toggle('light-mode');
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
+        /* ========================================================
+            DATABASE ENGINE INTEGRATION & METRICS AGGREGATION
+        ======================================================== */
+        async function fetchAndSyncPlatformMetrics() {
+            try {
+                const [bookingsRes, usersRes, reviewsRes] = await Promise.all([
+                    fetch(BOOKINGS_URL).catch(() => null),
+                    fetch(USERS_URL).catch(() => null),
+                    fetch(REVIEWS_URL).catch(() => null)
+                ]);
 
-/* =====================================================
-   LOAD THEME
-===================================================== */
+                systemBookings = bookingsRes && bookingsRes.ok ? await bookingsRes.json() : [];
+                systemUsers = usersRes && usersRes.ok ? await usersRes.json() : [];
+                systemReviews = reviewsRes && reviewsRes.ok ? await reviewsRes.json() : [];
 
-window.onload = function(){
+                calculateCalculatedFields();
+            } catch (err) {
+                console.error("Critical error mapping remote database entries:", err);
+            }
+        }
 
-    const savedTheme = localStorage.getItem("theme");
+        function calculateCalculatedFields() {
+            const totalRevenue = systemBookings
+                .filter(b => b.status !== "Cancelled" && b.status !== "cancelled")
+                .reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+            
+            document.getElementById('metric-revenue').innerText = "₱" + totalRevenue.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
 
-    const body = document.body;
-    const html = document.documentElement;
-    const icon = document.getElementById("themeIcon");
+            const activeBookings = systemBookings.filter(b => b.status === "Active" || b.status === "active" || b.status === "Pending" || b.status === "pending");
+            document.getElementById('metric-bookings').innerText = activeBookings.length;
 
-    if(savedTheme === "light"){
+            document.getElementById('metric-travelers').innerText = systemUsers.length;
 
-        body.classList.add("light-mode");
+            if (systemReviews.length > 0) {
+                const totalScore = systemReviews.reduce((sum, r) => sum + (Number(r.score || r.rating) || 0), 0);
+                const avgRating = (totalScore / systemReviews.length).toFixed(1);
+                document.getElementById('metric-rating').innerText = `${avgRating} / 5.0`;
+            } else {
+                document.getElementById('metric-rating').innerText = "0.0 / 5.0";
+            }
 
-        html.classList.remove("dark");
+            const currentTab = window.currentActiveTab || 'revenue';
+            switchMetricTab(currentTab);
+        }
 
-        icon.innerHTML = "dark_mode";
+        /* ========================================================
+            DYNAMIC WAVE CHART GENERATOR ALGORITHM ENGINE
+        ======================================================== */
+        function updateTrendsChart(metricType) {
+            const chartTitle = document.getElementById('chart-title-heading');
+            const chartRange = document.getElementById('chart-date-range');
+            const labelsAxis = document.getElementById('chart-labels-axis');
+            const pathLine = document.getElementById('dynamic-chart-line');
+            const pathArea = document.getElementById('dynamic-chart-area');
+            
+            if (!pathLine || !pathArea) return;
 
-    } else {
+            const daysArray = [];
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                daysArray.push({
+                    dateString: d.toISOString().substring(0, 10),
+                    label: dayNames[d.getDay()],
+                    value: 0
+                });
+            }
 
-        body.classList.remove("light-mode");
+            if (metricType === 'revenue') {
+                chartTitle.innerText = "Revenue Yield Growth";
+                chartRange.innerText = "Daily Earnings (PHP)";
+                
+                systemBookings.forEach(b => {
+                    if (b.status !== "Cancelled" && b.status !== "cancelled") {
+                        const bDate = (b.date || b.bookingDate || b.createdAt || "").substring(0, 10);
+                        const match = daysArray.find(d => d.dateString === bDate);
+                        if (match) match.value += (Number(b.amount) || 0);
+                    }
+                });
+            } else if (metricType === 'bookings') {
+                chartTitle.innerText = "Booking Volume Activity";
+                chartRange.innerText = "Total Reservations / Day";
 
-        html.classList.add("dark");
+                systemBookings.forEach(b => {
+                    const bDate = (b.date || b.bookingDate || b.createdAt || "").substring(0, 10);
+                    const match = daysArray.find(d => d.dateString === bDate);
+                    if (match) match.value += 1;
+                });
+            } else if (metricType === 'travelers') {
+                chartTitle.innerText = "User Registration Trajectory";
+                chartRange.innerText = "New Accounts Created";
 
-        icon.innerHTML = "light_mode";
+                systemUsers.forEach(u => {
+                    const uDate = (u.createdAt || u.date || "").substring(0, 10);
+                    const match = daysArray.find(d => d.dateString === uDate);
+                    if (match) match.value += 1;
+                });
+            } else if (metricType === 'rating') {
+                chartTitle.innerText = "Platform Evaluation Matrix";
+                chartRange.innerText = "Average Score Level Received";
 
-    }
+                const dailySums = {};
+                const dailyCounts = {};
 
-    renderTable();
+                systemReviews.forEach(r => {
+                    const rDate = (r.createdAt || r.date || "").substring(0, 10);
+                    const score = Number(r.score || r.rating || 0);
+                    if (score > 0) {
+                        dailySums[rDate] = (dailySums[rDate] || 0) + score;
+                        dailyCounts[rDate] = (dailyCounts[rDate] || 0) + 1;
+                    }
+                });
 
-}
+                daysArray.forEach(d => {
+                    if (dailyCounts[d.dateString]) {
+                        d.value = dailySums[d.dateString] / dailyCounts[d.dateString];
+                    } else {
+                        d.value = 4.5;
+                    }
+                });
+            }
 
-</script>
+            if (labelsAxis) {
+                labelsAxis.innerHTML = daysArray.map(d => `<span>${d.label}</span>`).join('');
+            }
 
+            const widthStep = 1000 / 6; 
+            const maxValue = Math.max(...daysArray.map(d => d.value), 1);
+            const coordinates = [];
+
+            daysArray.forEach((day, index) => {
+                const x = index * widthStep;
+                let y = 85 - ((day.value / maxValue) * 70);
+                if (isNaN(y)) y = 85; 
+                coordinates.push({ x, y });
+            });
+
+            let linePathString = `M ${coordinates[0].x} ${coordinates[0].y}`;
+            for (let i = 0; i < coordinates.length - 1; i++) {
+                const p0 = coordinates[i];
+                const p1 = coordinates[i + 1];
+                const cpX1 = p0.x + (widthStep / 2);
+                const cpY1 = p0.y;
+                const cpX2 = p1.x - (widthStep / 2);
+                const cpY2 = p1.y;
+                linePathString += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
+            }
+
+            pathLine.setAttribute('d', linePathString);
+            const areaPathString = `${linePathString} L 1000 100 L 0 100 Z`;
+            pathArea.setAttribute('d', areaPathString);
+        }
+
+        function switchMetricTab(metricType) {
+            window.currentActiveTab = metricType;
+
+            ['revenue', 'bookings', 'travelers', 'rating'].forEach(type => {
+                const card = document.getElementById(`card-${type}`);
+                if (card) card.classList.remove('border-[#eab308]/80', 'bg-[#eab308]/5');
+            });
+            
+            const activeCard = document.getElementById(`card-${metricType}`);
+            if (activeCard) activeCard.classList.add('border-[#eab308]/80', 'bg-[#eab308]/5');
+
+            updateTrendsChart(metricType);
+
+            const titleDisplay = document.getElementById('tab-title-display');
+            const resultsContainer = document.getElementById('tab-results-container');
+            let htmlPayload = "";
+
+            if (metricType === 'revenue') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">payments</span> Live Revenue Bookings Log`;
+                if (systemBookings.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active user account bookings found in database ledger.</p>`;
+                } else {
+                    htmlPayload = `<table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Booking ID</th><th>Traveler Account</th><th>Destination Spot</th><th class="text-right">Settled Amount</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/20">`;
+                    systemBookings.forEach(b => {
+                        const amt = Number(b.amount || 0).toFixed(2);
+                        const travelerName = b.travelerName || (b.user && b.user.name) || b.userId || "Registered User";
+                        const targetSpot = b.spotTitle || b.destination || (b.spot && b.spot.title) || "Zamboanguita Tour";
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-mono text-[#eab308]">${b._id || b.id || 'N/A'}</td><td class="font-medium text-stone-200">${travelerName}</td><td class="text-stone-300">${targetSpot}</td><td class="text-right font-bold text-white">₱${amt}</td></tr>`;
+                    });
+                    htmlPayload += `</tbody></table>`;
+                }
+            } 
+            else if (metricType === 'bookings') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">confirmation_number</span> Live Reservation Entries`;
+                if (systemBookings.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active system booking accounts matching index pipelines.</p>`;
+                } else {
+                    htmlPayload = `<table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">ID</th><th>Account Name</th><th>Spot Target</th><th>Schedule Date</th><th>State</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/20">`;
+                    systemBookings.forEach(b => {
+                        const travelerName = b.travelerName || (b.user && b.user.name) || b.userId || "Registered User";
+                        const targetSpot = b.spotTitle || b.destination || (b.spot && b.spot.title) || "Zamboanguita Tour";
+                        const bookingDate = b.date || b.bookingDate || b.createdAt || "N/A";
+                        const statusStr = b.status || "Pending";
+                        const statusColor = (statusStr.toLowerCase() === 'active' || statusStr.toLowerCase() === 'confirmed') ? 'text-[#eab308] bg-[#eab308]/10' : 
+                                            (statusStr.toLowerCase() === 'completed') ? 'text-green-400 bg-green-500/10' : 'text-stone-400 bg-zinc-800/40';
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-mono text-xs text-stone-400">${b._id || b.id || 'N/A'}</td><td class="font-bold text-stone-200">${travelerName}</td><td class="text-stone-300">${targetSpot}</td><td class="text-stone-400">${bookingDate.substring(0,10)}</td><td><span class="px-2 py-0.5 text-xs rounded ${statusColor}">${statusStr}</span></td></tr>`;
+                    });
+                    htmlPayload += `</tbody></table>`;
+                }
+            } 
+            else if (metricType === 'travelers') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">group</span> Live System Registered Accounts Directory`;
+                if (systemUsers.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active user registry files synchronized.</p>`;
+                } else {
+                    htmlPayload = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+                    systemUsers.forEach(u => {
+                        const name = u.name || u.username || "Registered Traveler";
+                        const email = u.email || "No email assigned";
+                        const location = u.location || u.origin || "Zamboanguita Platform User";
+                        htmlPayload += `<div class="p-4 rounded-xl bg-[#14160d]/60 border border-zinc-800/40 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-2xl text-[#eab308]">account_circle</span>
+                            <div>
+                                <h4 class="font-bold text-white text-base">${name}</h4>
+                                <p class="text-xs text-stone-400">${email} • Loc: <span class="text-stone-300">${location}</span></p>
+                            </div>
+                        </div>`;
+                    });
+                    htmlPayload += `</div>`;
+                }
+            } 
+            else if (metricType === 'rating') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">star</span> Real-time User Reviews & Evaluation Feed`;
+                if (systemReviews.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active user reviews published yet. Live review submittals will pop up here instantly.</p>`;
+                } else {
+                    htmlPayload = `<div class="space-y-3">`;
+                    systemReviews.forEach(r => {
+                        const author = r.userName || r.author || (r.user && r.user.name) || "Anonymous Traveler";
+                        const destination = r.spotTitle || r.target || (r.spot && r.spot.title) || "Platform Experience";
+                        const scoreNum = Number(r.score || r.rating || 5);
+                        const textContent = r.comments || r.comment || r.review || "No written text summary content provided.";
+                        const stars = "★".repeat(scoreNum) + "☆".repeat(Math.max(0, 5 - scoreNum));
+                        
+                        htmlPayload += `<div class="p-4 rounded-xl bg-[#14160d]/50 border border-zinc-800/40">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-white">${author} <span class="text-xs font-normal text-stone-400">reviewed</span> ${destination}</span>
+                                <span class="text-[#eab308] font-mono text-sm tracking-tight">${stars}</span>
+                            </div>
+                            <p class="text-sm italic text-stone-300">"${textContent}"</p>
+                        </div>`;
+                    });
+                    htmlPayload += `</div>`;
+                }
+            }
+
+            resultsContainer.innerHTML = htmlPayload;
+        }
+
+        /* ========================================================
+            SPOT DESTINATIONS MANAGER INTERFACE LIFECYCLES
+        ======================================================== */
+        function openAddSpotModal() {
+            document.getElementById('addSpotModal').classList.remove('hidden');
+        }
+        function closeAddSpotModal() {
+            document.getElementById('addSpotModal').classList.add('hidden');
+            document.getElementById('addSpotForm').reset();
+        }
+
+        async function loadSpotsPreview() {
+            const container = document.getElementById('adminSpotsContainer');
+            if (!container) return;
+
+            try {
+                const response = await fetch(SPOTS_URL);
+                if (!response.ok) throw new Error("Could not parse cluster database collection array.");
+                
+                const spots = await response.json();
+                container.innerHTML = ''; 
+
+                if (spots.length === 0) {
+                    container.innerHTML = `<p class="text-stone-500 col-span-3 text-center py-12 font-medium">No live system spots active. Use the button above to publish the first destination!</p>`;
+                    return;
+                }
+
+                spots.forEach(spot => {
+                    const fallbackImg = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80';
+                    const displayImg = spot.imageUrl || spot.image || fallbackImg;
+                    
+                    const cardMarkup = `
+                        <div class="glass-panel rounded-2xl overflow-hidden flex flex-col transition-all duration-300">
+                            <img src="${displayImg}" class="w-full h-52 object-cover" alt="${spot.title || 'Spot'}" onerror="this.src='${fallbackImg}'"/>
+                            <div class="p-6 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-[#eab308]/10 text-[#eab308] uppercase tracking-wider">${spot.category || 'General'}</span>
+                                    <h3 class="text-xl font-bold mt-2 text-white">${spot.title || 'Untitled Spot'}</h3>
+                                    <p class="text-stone-400 text-xs flex items-center mt-1">
+                                        <span class="material-symbols-outlined text-sm text-red-500 mr-1">location_on</span>${spot.location || 'Zamboanguita'}
+                                    </p>
+                                    <p class="text-stone-300 text-sm mt-3 line-clamp-3">${spot.description || 'No summary description mapped.'}</p>
+                                </div>
+                                <div class="border-t border-zinc-800/40 mt-4 pt-4 flex items-center justify-between text-xs text-stone-400">
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[#eab308] text-base">verified_user</span> Managed Active</span>
+                                    <span>Live Database Entry</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', cardMarkup);
+                });
+
+            } catch (err) {
+                console.error("Error drawing destination items profiles:", err);
+                container.innerHTML = `<p class="text-red-400 text-sm col-span-3 text-center py-6 font-mono">Failed loading destinations preview. Verify API cluster connection.</p>`;
+            }
+        }
+
+        document.getElementById('addSpotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('spotTitleInput').value.trim();
+            const location = document.getElementById('spotLocationInput').value.trim();
+            const category = document.getElementById('spotCategorySelect').value;
+            const imageUrl = document.getElementById('spotImageUrlInput').value.trim();
+            const description = document.getElementById('spotDescriptionTextarea').value.trim();
+
+            const newSpotPayload = { title, location, category, imageUrl, description };
+
+            try {
+                const response = await fetch(SPOTS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSpotPayload)
+                });
+
+                if (!response.ok) throw new Error("Server rejected cluster update parameters configuration execution.");
+
+                alert("🎯 New spot published and synchronized with destination servers successfully!");
+                closeAddSpotModal();
+                loadSpotsPreview(); 
+
+            } catch (err) {
+                console.error("Posting operation processing failed:", err);
+                alert("⚠️ Execution fault: Could not save location entry to backend cluster.");
+            }
+        });
+
+        /* ========================================================
+            THEME DISPLAY INTERACTION MANAGER
+        ======================================================== */
+        var currentActiveTab = 'revenue';
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById("themeIcon");
+            
+            html.classList.toggle("dark");
+            if (html.classList.contains("dark")) {
+                document.body.classList.remove("light-mode");
+                icon.innerHTML = "light_mode";
+                localStorage.setItem("theme", "dark");
+            } else {
+                document.body.classList.add("light-mode");
+                icon.innerHTML = "dark_mode";
+                localStorage.setItem("theme", "light");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                document.documentElement.classList.remove("dark");
+                document.body.classList.add("light-mode");
+                document.getElementById("themeIcon").innerHTML = "dark_mode";
+            } else {
+                document.documentElement.classList.add("dark");
+                document.body.classList.remove("light-mode");
+                document.getElementById("themeIcon").innerHTML = "light_mode";
+            }
+
+            await fetchAndSyncPlatformMetrics();
+            loadSpotsPreview();
+
+            setInterval(fetchAndSyncPlatformMetrics, 30000);
+        });
+    </script>
 </body>
 </html>

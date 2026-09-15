@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -15,20 +15,20 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#59ee50",
-                        "on-primary": "#005406",
-                        "surface": "#0e0f0a",
-                        "background": "#0e0f0a",
-                        "surface-variant": "#252620",
-                        "on-surface": "#fefcf4",
-                        "on-surface-variant": "#acaba4",
-                        "outline-variant": "#484842",
-                        "primary-container": "#0fba1e",
-                        "secondary-container": "#046b5e",
-                        "on-secondary-container": "#ddfff6",
+                        /* Colors pulled directly from the Zamboanguita Tourism Logo Layering */
+                        "primary": "#2E7D32",                  // Vibrant Leaf Green
+                        "on-primary": "#FFFFFF",               // White text over green
+                        "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+                        "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+                        "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+                        "on-surface": "var(--color-on-surface, #FEFCF4)",
+                        "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+                        "outline-variant": "#1E3D6B",
+                        "primary-container": "#4CAF50",        // Sunset Light Green Accent
+                        "secondary-container": "#00838F",      // Pure Ocean Sea Blue
+                        "on-secondary-container": "#E0F7FA",
                     },
                     fontFamily: {
-                        // All typography keys updated to use Plus Jakarta Sans exclusively
                         headline: ["Plus Jakarta Sans", "sans-serif"],
                         body: ["Plus Jakarta Sans", "sans-serif"],
                     }
@@ -38,246 +38,324 @@
     </script>
     
     <style>
-body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
-    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
-}
-.light-mode { background: #f4f4f5 !important; color: #18181b !important; }
-.light-mode main { background: #f8fafc !important; }
-.light-mode aside { background: #ffffff !important; border-color: #d4d4d8 !important; }
-.light-mode header { background: rgba(255,255,255,0.9) !important; border-color: #d4d4d8 !important; }
-.light-mode .bg-surface-container-low, .light-mode .bg-surface-container-lowest, .light-mode .bg-surface-container, .light-mode .bg-surface-container-high, .light-mode .bg-surface-container-highest { background: #ffffff !important; color: #18181b !important; }
-.light-mode .bg-black\/40 { background: #ffffff !important; }
-.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5, .light-mode p, .light-mode span, .light-mode a, .light-mode div { color: #18181b !important; }
-.light-mode .text-yellow-400 { color: #ca8a04 !important; }
-.light-mode .text-purple-400 { color: #9333ea !important; }
-.light-mode .text-primary { color: #16a34a !important; }
-.light-mode button { color: #18181b; }
-.light-mode .bg-surface-container-high { background: #f1f5f9 !important; }
-.light-mode input, .light-mode select { background: #ffffff !important; color: #18181b !important; border: 1px solid #d4d4d8 !important; }
-.light-mode .border-zinc-800 { border-color: #d4d4d8 !important; }
-.light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #52525b !important; }
-.light-mode .text-white { color: #18181b !important; text-shadow: none !important; }
-.light-mode #themeIcon { color: #f59e0b !important; }
-</style>
+    /* ROOT DARK CONFIG */
+    :root {
+        --color-surface: #051D40; 
+        --color-background: #020F24; 
+        --color-surface-variant: #0B2954;
+        --color-on-surface: #FEFCF4;
+        --color-on-surface-variant: #A0B2C6;
+    }
+
+    /* LIGHT MODE HARMONY (Ensures clean white backgrounds while locking requested typography rules) */
+    .light-mode, [class*="light-mode"] {
+        --color-surface: #FFFFFF !important;
+        --color-background: #F4F7FA !important;
+        --color-surface-variant: #E6EEF8 !important;
+        --color-on-surface: #020F24 !important;
+        --color-on-surface-variant: #4A5D73 !important;
+    }
+
+    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
+    /* Sidebar and Base Text Rules */
+    .light-mode { background: #3186dc !important; color: #020F24 !important; }
+    .light-mode main { background: #F4F7FA !important; }
+    .light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+    
+    /* Ensure custom surfaces respect the light mode theme switch */
+    .light-mode .bg-surface-container-low, 
+    .light-mode .bg-surface-container-lowest, 
+    .light-mode .bg-surface-container, 
+    .light-mode .bg-surface-container-high, 
+    .light-mode .bg-surface-container-highest { 
+        background: #FFFFFF !important; 
+        color: #020F24 !important; 
+    }
+
+    /* Fixed backdrop swap for the bright golden hour accent seen in the logo */
+    .light-mode .bg-black\/40, .bg-black\/40 { background-color: #FFB300 !important; opacity: 0.15 !important; }
+
+    /* Structural Text Enforcement */
+    .light-mode h1, .light-mode h2, .light-mode h3, 
+    .light-mode p:not(.group p, aside p), 
+    .light-mode span:not(.group span, aside span, #categoryButtonGroup span), 
+    .light-mode a:not(.group a, aside a), 
+    .light-mode div:not(.group, .group *, aside, aside *, #categoryButtonGroup, #categoryButtonGroup *) { 
+        color: #020F24 !important; 
+        text-shadow: none !important; 
+    }
+
+    /* Secondary brand color pills (Beaches/Diving) stay readable */
+    .light-mode .bg-secondary-container,
+    .light-mode .bg-secondary-container span,
+    .light-mode .bg-secondary-container p,
+    .light-mode div[class*="bg-secondary-container"] * {
+        color: #FFFFFF !important; 
+        background-color: #00838F !important;
+    }
+
+    /* Map highlighted branding accents */
+    .light-mode .text-yellow-400 { color: #E65100 !important; } /* Sunset Orange */
+    .light-mode .text-purple-400 { color: #00838F !important; } /* Coastal Teal */
+    .light-mode .text-primary { color: #2E7D32 !important; }   /* Lush Green */
+
+    .light-mode button:not(.category-btn) { color: #020F24; }
+
+    /* Pill Selection Buttons Dynamic UI States */
+    .light-mode .category-btn:not(.bg-primary) { color: #4A5D73 !important; background-color: #E6EEF8 !important; border-color: #CBD5E1 !important; }
+    .light-mode .category-btn.bg-primary { color: #FFFFFF !important; background-color: #2E7D32 !important; }
+
+    .light-mode .bg-surface-container-high { background: #E6EEF8 !important; }
+    .light-mode input, .light-mode select { background: #FFFFFF !important; color: #020F24 !important; border: 1px solid #CBD5E1 !important; }
+    .light-mode .border-zinc-800 { border-color: #E2E8F0 !important; }
+    .light-mode .text-stone-400, .light-mode .text-zinc-500, .light-mode .text-stone-500 { color: #64748B !important; }
+    .light-mode .text-white { color: #020F24 !important; text-shadow: none !important; }
+
+    .light-mode .group h4.text-white { color: #FFFFFF !important; }
+    .light-mode #themeIcon { color: #FFB300 !important; }
+
+    /* Sidebar light text alignments */
+    .light-mode aside .text-zinc-500 { color: #4A5D73 !important; }
+    .light-mode aside .bg-zinc-900\/80 { background-color: #F1F5F9 !important; }
+    .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+
+    /* Portal overlays & dialog specific overrides */
+    .light-mode div[class*="bg-surface"], 
+    div.light-mode div[class*="bg-surface"],
+    .light-mode [role="dialog"] div,
+    .light-mode .fixed div { 
+        background-color: var(--color-surface) !important;
+        color: var(--color-on-surface) !important;
+    }
+
+    .light-mode .fixed p, 
+    .light-mode .fixed span,
+    .light-mode .fixed h3,
+    .light-mode .fixed h4,
+    .light-mode .fixed div:not([class*="bg-primary"]):not([class*="bg-secondary-container"]) {
+        color: #020F24 !important;
+    }
+
+    .light-mode .fixed h2 {
+        color: #020F24 !important;
+        text-shadow: none !important;
+    }
+
+    .light-mode .fixed div[class*="bg-zinc-"], 
+    .light-mode .fixed div[class*="bg-neutral-"],
+    .light-mode .fixed div[class*="bg-black"]:not(.bg-black\/40) {
+        background-color: #F1F5F9 !important;
+    }
+
+    /* Modal layout spec wrappers */
+    .light-mode #spotModalContent, 
+    .light-mode #spotModalContent div:not([class*="bg-secondary-container"]), 
+    .light-mode #spotModalContent section {
+        background-color: #FFFFFF !important;
+    }
+    .light-mode #spotModalContent h3,
+    .light-mode #spotModalContent h4,
+    .light-mode #spotModalContent p,
+    .light-mode #spotModalContent span:not(.material-symbols-outlined) {
+        color: #020F24 !important;
+    }
+    .light-mode #spotModalContent .bg-surface-variant {
+        background-color: #F1F5F9 !important;
+    }
+    .light-mode #modalReviewsContainer > div {
+        background-color: #F8FAFC !important;
+        border-color: #E2E8F0 !important;
+    }
+
+    .light-mode #spotModalContent div.shrink-0,
+    .light-mode #spotModalContent div.shrink-0 div {
+        background-color: transparent !important;
+    }
+    </style>
 </head>
 
-    <!--sideBar-->
-<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#0e0f0a] dark:text-[#fefcf4] bg-[#fefcf4] text-[#0e0f0a] transition-colors duration-300">
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen dark:bg-[#020F24] dark:text-[#FEFCF4] bg-[#FEFCF4] text-[#020F24] transition-colors duration-300">
 
-    <aside class="fixed left-0 top-0 h-full w-64 bg-stone-950 dark:bg-stone-950 max-sm:hidden border-r border-stone-800/50 dark:border-stone-800/50 z-[100] flex flex-col p-6 transition-colors duration-300">
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] dark:bg-[#051D40] max-sm:hidden border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline">Explore <br>Zamboanguita</h1>
-            <p class="text-[10px] uppercase tracking-widest text-stone-500 font-bold font-body">Explorer <br>Dashboard</p>
+            <h1 class="text-xl font-extrabold text-primary tracking-tight font-headline text-[#2E7D32] dark:text-[#2E7D32]">
+                EXPLORE <br><span class="text-[#FFB300]">ZAMBOANGUITA</span>
+            </h1>
+            <style>
+                .light-mode .text-primary {
+                    color: #2E7D32 !important;
+                    text-shadow: none !important;
+                }
+            </style>
         </div>
 
-        <nav class="flex-1 space-y-1 font-body">
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Dashboard</span>
-            </a>
-<a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_booking.html">
-                <span class="material-symbols-outlined">event_available</span>
-                <span>Bookings</span>
-            </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_dashboard.html">
-                <span class="material-symbols-outlined">explore</span>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_dashboard.html">
+                <span class="material-symbols-outlined text-[#FFB300]">dashboard</span>
                 <span>Destinations</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_reviews.html">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_booking.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
+                <span>Bookings</span>
+            </a>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_reviews.html">
+                <span class="material-symbols-outlined text-[#FFB300]" style="font-variation-settings: 'FILL' 1;">star</span>
                 <span>Reviews</span>
             </a>
-
-            <a class="flex items-center gap-3 text-zinc-500 px-8 py-4 hover:text-zinc-200 transition-all duration-300 hover:bg-zinc-900/80 hover:translate-x-1" href="user_profile.html">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="capitalize">settings</span>
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_profile.html">
+                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+                <span class="capitalize">Settings</span>
             </a>
         </nav>
+
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="user_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
     </aside>
 
-    <!--headermain-->
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#0e0f0a]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-900 transition-colors duration-300">
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 dark:bg-[#020F24]/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
         <div class="flex items-center gap-2"></div>
-        
         <div class="flex items-center gap-4">
-            <button class="text-stone-400 hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">account_circle</span>
-            </button>
-            
             <button 
                 onclick="toggleDarkMode()"
-                class="p-2 rounded-full bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                class="p-2.5 rounded-full bg-surface-variant dark:bg-surface-variant text-amber-500 dark:text-yellow-400 hover:scale-110 flex items-center justify-center transition-all"
                 aria-label="Toggle Dark Mode">
-                <span id="themeIcon" class="material-symbols-outlined text-amber-500 dark:text-yellow-400">
-                    dark_mode
-                </span>
+                <span id="themeIcon" class="material-symbols-outlined">dark_mode</span>
             </button>
         </div>
     </header>
 
-    <main class="w-full sm:ml-64 pt-24 pb-12 px-6 sm:px-10 tonal-shift-layering min-h-screen transition-colors duration-300 font-body">
-        
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 pb-12 px-6 sm:px-10 min-h-screen transition-colors duration-300 font-body">
         <section class="mb-12">
-            <h2 class="text-3xl font-extrabold font-headline mb-6 tracking-tight">Book Your Adventure</h2>
-            <style>
-                h2 {
-                    color: rgb(255, 253, 253);
-                    text-shadow: 
-                }
-            </style>
+            <h2 class="text-3xl font-extrabold font-headline mb-6 tracking-tight text-neutral-900 dark:text-white">Book Your Adventure</h2>
             <div class="flex flex-wrap items-center gap-3">
-                <span class="text-xs font-bold text-stone-500 uppercase tracking-widest ml-2">Categories:</span>
-                <div class="flex flex-wrap gap-2">
-                    <button class="px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20">All</a>
-                    
-                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
-                        <a href="user_beach_diving.html">Beach & Diving</a>
-                    </button>
-                    
-                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
-                        <a href="user_mountains.html">Mountains</a>
-                    </button> 
-                    
-                    <button class="px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800">
-                        <a href="user_cultural.html">Cultural</a>
-                    </button>
+                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Categories:</span>
+                <div class="flex flex-wrap gap-2" id="categoryButtonGroup">
+                    <button onclick="filterCategory('all', this)" class="category-btn px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20 transition-all">All</button>
+                    <button onclick="filterCategory('coastal', this)" class="category-btn px-6 py-2 rounded-full bg-surface-variant text-on-surface-variant font-bold text-sm transition-all border border-outline-variant/30">Coastal</button>
+                    <button onclick="filterCategory('mountains', this)" class="category-btn px-6 py-2 rounded-full bg-surface-variant text-on-surface-variant font-bold text-sm transition-all border border-outline-variant/30">Mountains</button> 
+                    <button onclick="filterCategory('cultural_historical', this)" class="category-btn px-6 py-2 rounded-full bg-surface-variant text-on-surface-variant font-bold text-sm transition-all border border-outline-variant/30">Cultural & Historical Site</button>
+                    <button onclick="filterCategory('beach_diving', this)" class="category-btn px-6 py-2 rounded-full bg-surface-variant text-on-surface-variant font-bold text-sm transition-all border border-outline-variant/30">Beach & Diving</button>
                 </div>
             </div>
         </section>
 
-        <section>
+        <section class="mt-4">
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h3 class="text-2xl font-bold font-headline">Recommended for You</h3>
-                    <style>
-                        h3 {
-                            
-                                font-size: 48px;
-                                color: white;
-                                text-shadow: 
-                                    -1px -1px 0 black,
-                                    1px -1px 0 black,
-                                    -1px  1px 0 black,
-                                    1px  1px 0 black;
-                        }
-                    </style>
-                    <p class="text-stone-500 text-sm">Hand-picked destinations in Zamboanguita</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="p-2 rounded-full border border-stone-300 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-900 transition-all">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button class="p-2 rounded-full border border-stone-300 dark:border-stone-800 hover:bg-stone-200 dark:hover:bg-stone-900 transition-all">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
+                    <h3 class="text-4xl font-bold font-headline text-neutral-900 dark:text-white" id="sectionHeadingTitle">Recommended for You</h3>
+                    <p class="text-on-surface-variant text-sm mt-1" id="sectionHeadingSub">Hand-picked destinations in Zamboanguita</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                
-                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
-                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/dwadd.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Turtle Island">
-                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
-                    
-                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
-                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
-                        0 (0 Reviews)
-                    </div>
-
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Turtle Island</h4>
-                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Crystal clear waters and sanctuary for majestic sea turtles.</p>
-                        <a href="user_turtle.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
-                            Explore Now
-                        </a>
-                    </div>
+            <div id="destinationGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 </div>
-
-                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
-                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxa.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Jomao-as Hot Spring">
-                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
-                    
-                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
-                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
-                        0 (0 Reviews)
-                    </div>
-
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Jomao-as Hot Spring</h4>
-                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Natural therapeutic volcanic springs nestled in the jungle.</p>
-                        <a href="" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
-                            Explore Now
-                        </a>
-                    </div>
-                </div>
-
-                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
-                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Najandig Peak">
-                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
-                    
-                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
-                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
-                        0 (0 Reviews)
-                    </div>
-
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Najandig Peak</h4>
-                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Breathtaking panoramic views of the Apo Island strait.</p>
-                        <a href="user_najandig_peak.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
-                            Explore Now
-                        </a>
-                    </div>
-                </div>
-
-                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
-                    <img src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Jomao-as Falls">
-                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
-                    
-                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
-                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
-                        0 (0 Reviews)
-                    </div>
-
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Jomao-as Falls</h4>
-                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">Natural Scenic Falls.</p>
-                        <a href="user_jomaoasfallss.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
-                            Explore Now
-                        </a>
-                    </div>
-                </div>
-
-                <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] glass-card shadow-sm">
-                    <img src="https://www.nopostcode.com/wp-content/uploads/2020/12/Malatapay-Market-37.jpg" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Malatapay Market">
-                    <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
-                    
-                    <div class="absolute top-6 left-6 px-4 py-1.5 glass-card rounded-full flex items-center gap-2 text-xs font-bold text-white dark:text-white">
-                        <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
-                        0 (0 Reviews)
-                    </div>
-
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">Malatapay Market</h4>
-                        <p class="text-stone-300 text-sm mb-6 line-clamp-2">A Flea Market where every merchant in Zamboanguita sells assorted goods.</p>
-                        <a href="user_malatapay.html" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl">
-                            Explore Now
-                        </a>
-                    </div>
-                </div>
-
-            </div>
         </section>
     </main>
 
-    <script>
-                /* =====================================================
-   DARK MODE
+    <div id="spotDetailsModal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm transition-all duration-300">
+        <div id="spotModalContent" class="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-[#051D40] border border-outline-variant/40 text-on-surface shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            
+            <div class="relative h-64 sm:h-72 w-full shrink-0 bg-[#020F24]">
+                <img id="modalSpotImage" src="" alt="Spot Picture" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#051D40] via-transparent to-transparent"></div>
+                
+                <div class="absolute bottom-4 left-6 flex items-center gap-1.5 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-xs font-medium text-[#FFB300]">
+                    <span class="material-symbols-outlined text-sm">location_on</span>
+                    <span id="modalSpotLocation">Zamboanguita, Negros Oriental</span>
+                </div>
+
+                <button onclick="closeSpotModal()" class="absolute top-4 right-4 p-2 rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 hover:text-primary transition-all">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 bg-[#051D40]">
+                <div>
+                    <h3 id="modalSpotTitle" class="text-3xl font-extrabold font-headline text-white tracking-tight"></h3>
+                    <p id="modalSpotDescription" class="mt-2 text-on-surface-variant text-sm leading-relaxed"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs uppercase font-bold tracking-wider text-on-surface-variant">Image Gallery</h4>
+                    <div id="modalImageGallery" class="grid grid-cols-5 gap-2"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-b border-outline-variant/30 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-surface-variant text-[#FFB300] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-xl">payments</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Entrance Fee</p>
+                            <p id="modalEntranceFee" class="text-sm font-bold text-white"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-surface-variant text-[#FFB300] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-xl">commute</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Travel Fee</p>
+                            <p id="modalTravelFee" class="text-sm font-bold text-white"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-surface-variant text-[#FFB300] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-xl">schedule</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Operating Hours</p>
+                            <p id="modalOperatingHours" class="text-sm font-bold text-white"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-surface-variant text-[#FFB300] flex items-center justify-center">
+                            <span class="material-symbols-outlined text-xl">desk</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Rent Table</p>
+                            <p id="rentTable" class="text-sm font-bold text-white"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-xs uppercase font-bold tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm text-[#FFB300]" style="font-variation-settings: 'FILL' 1;">star</span>
+                        Top Guest Reviews
+                    </h4>
+                    <div id="modalReviewsContainer" class="space-y-2.5"></div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeSpotModal()" class="w-1/3 px-6 py-3 rounded-full border border-outline-variant text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-all">
+                        Close
+                    </button>
+                    <button id="modalBookNowBtn" class="w-2/3 px-6 py-3 rounded-full bg-primary text-on-primary font-bold text-sm shadow-xl shadow-primary/20 hover:bg-primary-container transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">event_available</span>
+                        Book Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+   <script>
+/* =====================================================
+    DARK MODE
 ===================================================== */
-
 function toggleDarkMode(){
-
     const body = document.body;
     const html = document.documentElement;
     const icon = document.getElementById("themeIcon");
@@ -286,55 +364,411 @@ function toggleDarkMode(){
     html.classList.toggle("dark");
 
     if(body.classList.contains("light-mode")){
-
         localStorage.setItem("theme", "light");
-
         icon.innerHTML = "dark_mode";
-
     } else {
-
         localStorage.setItem("theme", "dark");
-
         icon.innerHTML = "light_mode";
-
     }
-
 }
 
+/* =====================================================
+    GLOBAL STORAGE INVENTORY & FILTER SYSTEM
+===================================================== */
+let globalInventory = [];
+let displayedInventory = [];
+
+function loadDestinations() {
+    // Baseline spots
+    const baselineDestinations = [
+        {
+            title: "Turtle Island",
+            label: "Crystal clear waters and sanctuary for majestic sea turtles.",
+            image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/dwadd.jpg",
+            category: "coastal",
+            location: "Bgry. Lutoban, Zamboanguita",
+            entranceFee: "Free Entrance",
+            travelFee: "₱200.00 (Boat)",
+            operatingHours: "6:00 AM - 5:00 PM",
+            rentTable: "₱200.00",
+            images: [
+                "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/dwadd.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/558116222_10213405453967642_2777318785269634138_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/499224404_665855109941310_5319650036532901941_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/557636372_10213405455047669_6972789882011689438_n.jpg ",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/Turtle-Island26.jpg"
+            ],
+            fallbackReviews: [
+                { user: "Mark D.", rating: 5, text: "We rode a scooter from the highway up to the trailhead where you park and register your name in a book. Donations are welcome. Guide is not required. Snacks are available. The road was difficult on a scooter as it’s rocky with ruts and holes, but manageable if it’s dry and you have some experience. The walk from the parking area to the top is about 30min if you have reasonable fitness. Stunning views and well worth the effort. Pack water and allow enough time. Do not ride up there too late in the day, because if it gets dark you’ll have a tough time riding back down. Best done in the morning before it gets too hot. Apart from the terrible road we enjoyed it." },
+                { user: "Elena R.", rating: 5, text: "Super clean sanctuary. Worth every single peso." }
+            ]
+        },
+        {
+            title: "Najandig Peak",
+            label: "Breathtaking panoramic views of the Apo Island strait.",
+            image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg",
+            category: "mountains",
+            location: "Brgy. Najandig, Zamboanguita",
+            entranceFee: "₱15.00",
+            travelFee: "₱150.00 (Habal-habal)",
+            operatingHours: "4:00 AM - 6:00 PM",
+            rentTable: "none",
+            images: [
+                "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/Gemini_Generated_Image_8mgb0s8mgb0s8mgb.png",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/maxresdefault.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/718553858_1687640859119137_2524259684882519723_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/705194372_2029333435127728_6102703910629202046_n.jpg"
+            ],
+            fallbackReviews: [
+                { user: "Jay-M S.", rating: 5, text: "Catch the sunrise here! The view over Apo Island is magical." },
+                { user: "Sarah K.", rating: 4, text: "Steep climb but the panoramic breeze makes up for it entirely." }
+            ]
+        },
+        {
+            title: "Jomao-as Falls",
+            label: "Natural Scenic Falls nestled deep within lush tropical green canopies.",
+            image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg",
+            category: "mountains",
+            location: "Sitio. Jomao-as, Brgy. Malungcay Diot, Zamboanguita",
+            entranceFee: "₱30.00",
+            travelFee: "₱100.00",
+            operatingHours: "8:00 AM - 5:00 PM",
+            images: [
+                "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/725319503_2069005747300099_858451335178984526_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/724654297_999543909499834_7513823725369196073_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/528793183_758955069970296_6705882853937968395_n.jpg",
+                "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=500"
+            ],
+            fallbackReviews: [
+                { user: "Patricia G.", rating: 5, text: "Cold, crisp water. Perfect unwind after trekking." },
+                { user: "Vince L.", rating: 5, text: "Quiet spot hidden from big crowds. Kept very pristine." }
+            ]
+        },
+        {
+            title: "Malatapay Market",
+            label: "A dynamic flea market where merchants sell fresh livestock, seafood, and assorted goods.",
+            image: "https://www.nopostcode.com/wp-content/uploads/2020/12/Malatapay-Market-37.jpg",
+            category: "cultural_historical",
+            location: "Malatapay, Zamboanguita",
+            entranceFee: "Free Entry",
+            travelFee: "₱50.00",
+            operatingHours: "6:00 AM - 6:00 PM (Wednesdays)",
+            images: [
+                "https://www.nopostcode.com/wp-content/uploads/2020/12/Malatapay-Market-37.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/qeqe.JPG",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/Malatapay-Market-Zamboguita-Negros-Oriental-17.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/wwqwq.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/43tfasf9s/maxresdefault%20(3).jpg "
+            ],
+            fallbackReviews: [
+                { user: "Chef Roy", rating: 5, text: "The Wednesday lechon and fresh seafood marketplace is elite." },
+                { user: "Anya T.", rating: 4, text: "Intense, loud, traditional cultural experience. Loved it." }
+            ]
+        },
+        {
+            title: "Jomao-as Hot Spring",
+            label: "A natural thermal hot spring located in the peaceful Barangay of Malungcay Diot, Zamboanguita.",
+            image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxa.jpg",
+            category: "mountains",
+            location: "Malungcay Diot, Zamboanguita",
+            entranceFee: "₱20.00",
+            travelFee: "₱150.00",
+            operatingHours: "6:00 AM - 5:00 PM (Daily)",
+            images: [
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138517652/489868372_1212144590702642_4600503134500936486_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138507577/489804587_1212144477369320_5806857465352522026_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138500565/490474019_1212144490702652_6729096975383555659_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138525221/489830560_1212144487369319_2762053301277571015_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138500565/490474019_1212144490702652_6729096975383555659_n.jpg "
+            ],
+            fallbackReviews: [
+                { user: "Jane Engreso", rating: 5, text: "The Wednesday lechon and fresh seafood marketplace is elite." },
+                { user: "Horace Enjambre.", rating: 4, text: "Napaka gandang lugar para mag-relax kasama ang pamilya." }
+            ]
+        },
+        {
+            title: "Japanese Surrender Monument",
+            label: "The Surrender of Japanese Forces in Negros Oriental.",
+            image: "https://uploads.onecompiler.io/43fxe3kf9/1782139564818/73168107_1937170573096026_4985084835849568256_n.jpg",
+            category: "cultural_historical",
+            location: "Brgy. Basac, Zamboanguita",
+            entranceFee: "Free",
+            travelFee: "₱20.00",
+            operatingHours: "6:00 AM - 5:00 PM ",
+            images: [
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138965232/OIP%20(3).jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782139564818/73168107_1937170573096026_4985084835849568256_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782139570712/553036855_25258554477070402_2811754424072226689_n.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782139113414/373816_305223746178612_1865960147_n-753397.jpg",
+                "https://uploads.onecompiler.io/43fxe3kf9/1782138959648/NegrosOriental%20405.jpg"
+            ],
+            fallbackReviews: [
+                { user: "Jane Engreso", rating: 5, text: "The Wednesday lechon and fresh seafood marketplace is elite." },
+                { user: "Horace Enjambre.", rating: 4, text: "Napaka gandang lugar para mag-relax kasama ang pamilya." }
+            ]
+        }
+        
+    ];
+
+    // Read real-time destinations created by Admin
+    const dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
+    
+    const normalizedDynamics = dynamicSpots.map(spot => {
+        let fallbackPics = [
+            spot.image || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500",
+            "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500",
+            "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500",
+            "https://images.unsplash.com/photo-1432406186174-2b24f4865b07?w=500",
+            "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=500"
+        ];
+        
+        return {
+            title: spot.title,
+            label: spot.description || spot.label || "Newly approved destination entry.",
+            image: spot.image || fallbackPics[0],
+            category: spot.category || "beach_diving",
+            location: spot.location || "Zamboanguita, Negros Oriental",
+            entranceFee: spot.entranceFee || spot.entrancePrice || "₱50.00",
+            travelFee: spot.travelFee || spot.transportCost || "₱100.00",
+            operatingHours: spot.opereatingHours || spot.operatingHours || "8:00 AM - 5:00 PM",
+            images: spot.images && spot.images.length >= 5 ? spot.images : fallbackPics,
+            fallbackReviews: [
+                { user: "Verified Local", rating: 5, text: "Beautiful new destination added recently! High recommendations." }
+            ]
+        };
+    });
+
+    globalInventory = [...baselineDestinations, ...normalizedDynamics];
+    renderCards(globalInventory);
+}
+
+function renderCards(itemsToRender) {
+    const gridContainer = document.getElementById('destinationGrid');
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = ''; 
+    displayedInventory = [...itemsToRender]; 
+
+    if(itemsToRender.length === 0) {
+        gridContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-stone-500 text-sm font-semibold tracking-wide">
+                No spots listed under this category right now.
+            </div>`;
+        return;
+    }
+
+    const activeReviewsDb = JSON.parse(localStorage.getItem('globalReviews')) || [];
+
+    itemsToRender.forEach((spot, renderIndex) => {
+        const spotUserReviews = activeReviewsDb.filter(r => r.spotTitle?.toLowerCase() === spot.title.toLowerCase() || r.destination?.toLowerCase() === spot.title.toLowerCase());
+        let finalRatingText = "5.0 (Verified)";
+        
+        if (spotUserReviews.length > 0) {
+            const totalScore = spotUserReviews.reduce((sum, r) => sum + Number(r.rating || 5), 0);
+            const average = (totalScore / spotUserReviews.length).toFixed(1);
+            finalRatingText = `${average} (${spotUserReviews.length} Active Review${spotUserReviews.length > 1 ? 's' : ''})`;
+        }
+
+        const shortDesc = spot.label || "No description provided.";
+
+        gridContainer.innerHTML += `
+            <div class="group relative rounded-[2.5rem] overflow-hidden aspect-[4/5] bg-zinc-900 shadow-sm border border-zinc-800/20">
+                <img src="${spot.image}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 brightness-[0.85]" alt="${spot.title}">
+                <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent"></div>
+                
+                <div class="absolute top-6 left-6 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-full flex items-center gap-2 text-xs font-bold text-white">
+                    <span class="material-symbols-outlined text-sm text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                    ${finalRatingText}
+                </div>
+
+                <div class="absolute bottom-8 left-8 right-8">
+                    <div class="flex items-center gap-1 text-primary text-xs font-bold mb-1 uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-xs">location_on</span>
+                        <span>${spot.location}</span>
+                    </div>
+                    <h4 class="text-2xl font-extrabold text-white mb-2 drop-shadow-md font-headline">${spot.title}</h4>
+                    <p class="text-stone-300 text-sm mb-6 line-clamp-2">${shortDesc}</p>
+                    <button onclick="openSpotModal(${renderIndex})" class="inline-block bg-primary px-8 py-3 rounded-full text-on-primary font-bold text-sm transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 shadow-xl cursor-pointer">
+                        Explore Now
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
 
 /* =====================================================
-   LOAD THEME
+    INTERACTIVE POPUP MODAL ENGINE
 ===================================================== */
+function openSpotModal(index) {
+    const spot = displayedInventory[index];
+    if (!spot) return;
 
+    document.getElementById("modalSpotTitle").innerText = spot.title;
+    document.getElementById("modalSpotImage").src = spot.image;
+    document.getElementById("modalSpotDescription").innerText = spot.label;
+    document.getElementById("modalSpotLocation").innerText = spot.location;
+    document.getElementById("modalEntranceFee").innerText = spot.entranceFee;
+    document.getElementById("modalTravelFee").innerText = spot.travelFee;
+    document.getElementById("modalOperatingHours").innerText = spot.operatingHours;
+
+    const galleryContainer = document.getElementById("modalImageGallery");
+    galleryContainer.innerHTML = "";
+    if (spot.images && spot.images.length >= 5) {
+        spot.images.slice(0, 5).forEach(imgUrl => {
+            galleryContainer.innerHTML += `
+                <button onclick="document.getElementById('modalSpotImage').src='${imgUrl}'" class="aspect-video w-full rounded-xl overflow-hidden border border-stone-800 hover:border-primary active:scale-95 transition-all bg-stone-950">
+                    <img src="${imgUrl}" class="w-full h-full object-cover hover:opacity-80 transition-opacity" alt="Gallery preview">
+                </button>
+            `;
+        });
+    }
+
+    const activeReviewsDb = JSON.parse(localStorage.getItem('globalReviews')) || [];
+    
+    let targetReviews = activeReviewsDb.filter(r => 
+        r.spotTitle?.toLowerCase() === spot.title.toLowerCase() || 
+        r.destination?.toLowerCase() === spot.title.toLowerCase()
+    );
+
+    if (targetReviews.length === 0) {
+        targetReviews = spot.fallbackReviews || [];
+    }
+
+    const reviewsContainer = document.getElementById("modalReviewsContainer");
+    reviewsContainer.innerHTML = "";
+    
+    if (targetReviews.length > 0) {
+        targetReviews.forEach(rev => {
+            let starRow = "";
+            const starCount = Number(rev.rating || rev.stars || 5);
+            for(let i=0; i<starCount; i++) {
+                starRow += `<span class="material-symbols-outlined text-[14px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>`;
+            }
+            
+            const reviewerName = rev.user || rev.username || rev.author || "Active Explorer";
+            const reviewText = rev.text || rev.comment || rev.review || "No written text provided.";
+
+            reviewsContainer.innerHTML += `
+                <div class="p-3.5 rounded-2xl bg-stone-950 border border-stone-800/40">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-stone-200">${reviewerName}</span>
+                        <div class="flex">${starRow}</div>
+                    </div>
+                    <p class="text-xs text-stone-400 italic">"${reviewText}"</p>
+                </div>
+            `;
+        });
+    } else {
+        reviewsContainer.innerHTML = `<p class="text-xs text-stone-500">No community reviews submitted yet.</p>`;
+    }
+
+    /* === CONNECT TO PROFILE NEXT TRIP IMAGE UPDATE === */
+    const bookBtn = document.getElementById("modalBookNowBtn");
+    bookBtn.onclick = function() {
+        const theme = localStorage.getItem("theme") || "dark";
+        // Appended &image query tracking logic so the booking view gets the correct photo asset
+        const targetUrl = `user_booking.html?spot=${encodeURIComponent(spot.title)}&category=${encodeURIComponent(spot.category)}&image=${encodeURIComponent(spot.image)}&theme=${theme}`;
+        window.location.href = targetUrl;
+    };
+
+    const modal = document.getElementById("spotDetailsModal");
+    const content = document.getElementById("spotModalContent");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    setTimeout(() => {
+        content.classList.remove("scale-95");
+        content.classList.add("scale-100");
+    }, 20);
+}
+
+function closeSpotModal() {
+    const modal = document.getElementById("spotDetailsModal");
+    const content = document.getElementById("spotModalContent");
+
+    content.classList.remove("scale-100");
+    content.classList.add("scale-95");
+    setTimeout(() => {
+        modal.classList.remove("flex");
+        modal.classList.add("hidden");
+    }, 200);
+}
+
+/* =====================================================
+    FILTER INTERACTION HANDLER
+===================================================== */
+function filterCategory(categoryKey, element) {
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.className = "category-btn px-6 py-2 rounded-full bg-surface-variant text-stone-400 dark:text-stone-400 font-bold text-sm hover:bg-stone-800 transition-all border border-stone-300 dark:border-stone-800";
+    });
+
+    element.className = "category-btn px-6 py-2 rounded-full bg-primary text-on-primary font-bold text-sm shadow-lg shadow-primary/20 transition-all";
+
+    const sectionHeading = document.getElementById('sectionHeadingTitle');
+    const sectionSub = document.getElementById('sectionHeadingSub');
+
+    if (categoryKey === 'all') {
+        sectionHeading.textContent = "Recommended for You";
+        sectionSub.textContent = "Hand-picked destinations in Zamboanguita";
+        renderCards(globalInventory);
+    } else {
+        const titleMap = {
+            "coastal": "Coastal Destinations",
+            "beach_diving": "Beach & Diving Resorts",
+            "mountains": "Mountain Landscapes",
+            "cultural_historical": "Cultural & Historical Sites"
+        };
+        
+        const displayTitle = titleMap[categoryKey] || "Destinations";
+        sectionHeading.textContent = displayTitle;
+        sectionSub.textContent = `Displaying all ${displayTitle.toLowerCase()} available for booking.`;
+        
+        const filteredArray = globalInventory.filter(spot => spot.category === categoryKey);
+        renderCards(filteredArray);
+    }
+}
+
+/* =====================================================
+    WINDOW ONLOAD HANDLER
+===================================================== */
 window.onload = function(){
-
-    const savedTheme = localStorage.getItem("theme");
+    const urlParams = new URLSearchParams(window.location.search);
+    let savedTheme = urlParams.get('theme') || localStorage.getItem("theme");
+    
+    if (!savedTheme) {
+        savedTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    }
 
     const body = document.body;
     const html = document.documentElement;
     const icon = document.getElementById("themeIcon");
 
     if(savedTheme === "light"){
-
         body.classList.add("light-mode");
-
         html.classList.remove("dark");
-
         icon.innerHTML = "dark_mode";
-
+        localStorage.setItem("theme", "light");
     } else {
-
         body.classList.remove("light-mode");
-
         html.classList.add("dark");
-
         icon.innerHTML = "light_mode";
-
+        localStorage.setItem("theme", "dark");
     }
 
-    renderTable();
+    document.querySelectorAll("aside nav a").forEach(link => {
+        link.addEventListener("click", function(e) {
+            const currentTheme = localStorage.getItem("theme") || "dark";
+            const targetUrl = new URL(this.href, window.location.origin);
+            targetUrl.searchParams.set("theme", currentTheme);
+            this.href = targetUrl.toString();
+        });
+    });
 
+    loadDestinations();
 }
-    </script>
+</script>
 </body>
 </html>
