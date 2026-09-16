@@ -2,6 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer'); // Added for handling Forgot Password emails
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -9,14 +13,30 @@ const app = express();
 /* ==========================================
    1. MIDDLEWARE PIPELINES
 ========================================== */
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5500,http://localhost:5500')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET must be configured before starting the API.');
+}
+
+app.disable('x-powered-by');
+app.use(helmet());
 app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Origin is not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 150, standardHeaders: true, legacyHeaders: false }));
 
 // FORCE explicit body-parser rules across ALL incoming payload formats
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 100000 }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000 }));
 
 /* ==========================================
    2. DATABASE CONFIGURATION & CONNECT
@@ -57,16 +77,16 @@ const Booking = mongoose.model('Booking', BookingSchema);
 
 // 2. Admin Authentication Schema
 const AdminSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    password: { type: String, required: true }
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true, select: false }
 }, { collection: 'admins' }); 
 
 const Admin = mongoose.model('Admin', AdminSchema);
 
 // 3. User/Traveler Authentication Schema (🌟 UPGRADED TO ACCEPT AUTOFILL PROPERTIES)
 const UserSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    password: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true, select: false },
     fullName: { type: String, default: "" },      
     phone: { type: String, default: "" },         
     nationality: { type: String, default: "" }    
@@ -97,6 +117,30 @@ const SpotSchema = new mongoose.Schema({
 
 const Spot = mongoose.model('Spot', SpotSchema);
 
+const requireAuth = (req, res, next) => {
+    const authorization = req.get('authorization') || '';
+    const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
+    if (!token) return res.status(401).json({ success: false, message: 'Authentication required.' });
+
+    try {
+        req.auth = jwt.verify(token, process.env.JWT_SECRET);
+        return next();
+    } catch {
+        return res.status(401).json({ success: false, message: 'Invalid or expired session.' });
+    }
+};
+
+const requireAdmin = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Administrator access required.' });
+    return next();
+}];
+
+const createToken = (account, role) => jwt.sign(
+    { sub: account._id.toString(), role },
+    process.env.JWT_SECRET,
+    { expiresIn: '2h', issuer: 'ztims-api', audience: 'ztims-web' }
+);
+
 
 /* ==========================================
    4. API ROUTE HANDLERS
@@ -106,7 +150,7 @@ const Spot = mongoose.model('Spot', SpotSchema);
  * 🌟 POST: Add and register a brand new Admin into MongoDB
  * Target URL: http://localhost:5000/api/admin/create
  */
-app.post('/api/admin/create', async (req, res) => {
+app.post('/api/admin/create', requireAdmin, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -122,10 +166,10 @@ app.post('/api/admin/create', async (req, res) => {
             return res.status(409).json({ success: false, message: 'This email is already registered as an admin.' });
         }
 
-        // Save admin using plain-text strings to perfectly mirror your original /api/login logic
+        const passwordHash = await bcrypt.hash(password, 12);
         const newAdmin = new Admin({ 
             email: normalizedEmail, 
-            password: password 
+            password: passwordHash
         });
         
         await newAdmin.save();
@@ -142,7 +186,7 @@ app.post('/api/admin/create', async (req, res) => {
  * 🌟 GET: Fetch list of all system administrators from MongoDB
  * Target URL: http://localhost:5000/api/admin/list
  */
-app.get('/api/admin/list', async (req, res) => {
+app.get('/api/admin/list', requireAdmin, async (req, res) => {
     try {
         const adminList = await Admin.find({}, { password: 0 });
         return res.status(200).json(adminList);
@@ -173,9 +217,10 @@ app.post('/api/register', async (req, res) => {
         }
 
         // Create user with extended parameters map
+        const passwordHash = await bcrypt.hash(password, 12);
         const newUser = new User({ 
             email: normalizedEmail, 
-            password,
+            password: passwordHash,
             fullName: fullName || "",
             phone: phone || "",
             nationality: nationality || ""
@@ -194,7 +239,7 @@ app.post('/api/register', async (req, res) => {
  * POST: Dynamic Authentication for both Admin and User Portals (🌟 UPGRADED TO RETURN USER PROFILE DETAILS)
  * Target URL: http://localhost:5000/api/login
  */
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }), async (req, res) => {
     try {
         const { email, password, role } = req.body; 
         console.log(`➡️ Login attempt received for: ${email} | Role Context: ${role || 'user'}`);
@@ -207,12 +252,12 @@ app.post('/api/login', async (req, res) => {
         let account = null;
 
         if (role === 'admin') {
-            account = await Admin.findOne({ email: normalizedEmail });
+            account = await Admin.findOne({ email: normalizedEmail }).select('+password');
         } else {
-            account = await User.findOne({ email: normalizedEmail }); 
+            account = await User.findOne({ email: normalizedEmail }).select('+password');
         }
 
-        if (!account || account.password !== password) {
+        if (!account || !(await bcrypt.compare(password, account.password))) {
             return res.status(401).json({ 
                 success: false, 
                 message: `Authentication failed: Invalid ${role === 'admin' ? 'Admin' : 'User'} Credentials.` 
@@ -223,7 +268,8 @@ app.post('/api/login', async (req, res) => {
         const responseData = {
             success: true,
             message: `Login Successful! Welcome back.`,
-            token: 'mock-session-token-abcde12345',
+            token: createToken(account, role === 'admin' ? 'admin' : 'user'),
+            role: role === 'admin' ? 'admin' : 'user',
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
