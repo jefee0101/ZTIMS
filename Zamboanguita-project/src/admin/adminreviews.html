@@ -241,6 +241,152 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 })();
 </script>
 
+<script>
+/* ==========================================================
+   ACCOUNT AVATAR + MENU (upper right)
+   One button showing who is signed in, and a small menu under it. Built in
+   JavaScript rather than markup so every page mounts the same thing with its
+   own links, the way the toast module is shared.
+
+   mountAccountMenu({ container, name, email, imageUrl, items, signedOutLabel,
+                      signedOutHref })
+     name / email : shown in the menu's header; the initial becomes the avatar
+     imageUrl     : optional photo (Google accounts have one)
+     items        : [{ label, icon, href }] or [{ label, icon, onSelect }]
+     signedOut*   : when name and email are both empty, the avatar is replaced
+                    by this link, so a guest gets a way in rather than a
+                    meaningless blank circle
+   ========================================================== */
+(function () {
+    function initialFrom(name, email) {
+        var source = (name || email || '').trim();
+        return source ? source.charAt(0).toUpperCase() : '?';
+    }
+
+    window.mountAccountMenu = function (options) {
+        var container = options.container;
+        if (!container) return;
+        container.innerHTML = '';
+
+        var signedIn = Boolean((options.name || '').trim() || (options.email || '').trim());
+
+        if (!signedIn) {
+            var signIn = document.createElement('a');
+            signIn.href = options.signedOutHref || '#';
+            signIn.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current/30 text-sm font-bold hover:opacity-80 transition-opacity';
+            signIn.innerHTML = '<span class="material-symbols-outlined !text-lg">account_circle</span>' +
+                               '<span>' + (options.signedOutLabel || 'Sign in') + '</span>';
+            container.appendChild(signIn);
+            return;
+        }
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative';
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-haspopup', 'menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.title = options.name || options.email || 'Account';
+        button.style.cssText = [
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'width:2.5rem', 'height:2.5rem', 'border-radius:9999px',
+            'border:2px solid rgba(255,179,0,.55)', 'background:#0B2954', 'color:#FFB300',
+            'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
+            'transition:transform .15s ease'
+        ].join(';');
+
+        if (options.imageUrl) {
+            var photo = document.createElement('img');
+            photo.src = options.imageUrl;
+            photo.alt = '';
+            photo.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            // A broken photo link would otherwise leave an empty circle.
+            photo.addEventListener('error', function () {
+                photo.remove();
+                button.textContent = initialFrom(options.name, options.email);
+            });
+            button.appendChild(photo);
+        } else {
+            button.textContent = initialFrom(options.name, options.email);
+        }
+        button.addEventListener('mouseenter', function () { button.style.transform = 'scale(1.06)'; });
+        button.addEventListener('mouseleave', function () { button.style.transform = 'none'; });
+
+        var menu = document.createElement('div');
+        menu.setAttribute('role', 'menu');
+        menu.hidden = true;
+        menu.style.cssText = [
+            'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
+            'min-width:15rem', 'padding:.4rem',
+            'border-radius:1rem', 'background:rgba(10,25,47,.98)', 'color:#F4F6F9',
+            'box-shadow:0 18px 40px -18px rgba(0,0,0,.75)',
+            'font-size:.85rem'
+        ].join(';');
+
+        var header = document.createElement('div');
+        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgba(169,188,208,.18);margin-bottom:.3rem';
+        var nameLine = document.createElement('div');
+        nameLine.textContent = options.name || options.email;
+        nameLine.style.cssText = 'font-weight:800;word-break:break-word';
+        header.appendChild(nameLine);
+        if (options.email && options.name) {
+            var emailLine = document.createElement('div');
+            emailLine.textContent = options.email;
+            emailLine.style.cssText = 'font-size:.75rem;color:#A9BCD0;word-break:break-all;margin-top:.1rem';
+            header.appendChild(emailLine);
+        }
+        menu.appendChild(header);
+
+        function close() {
+            menu.hidden = true;
+            button.setAttribute('aria-expanded', 'false');
+        }
+
+        (options.items || []).forEach(function (item) {
+            var entry = document.createElement(item.href ? 'a' : 'button');
+            entry.setAttribute('role', 'menuitem');
+            if (item.href) entry.href = item.href; else entry.type = 'button';
+            entry.style.cssText = [
+                'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
+                'padding:.6rem .75rem', 'border:0', 'border-radius:.7rem',
+                'background:none', 'color:' + (item.danger ? '#FF8A80' : 'inherit'),
+                'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
+            ].join(';');
+            entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
+            var label = document.createElement('span');
+            label.textContent = item.label;   // text, never markup
+            entry.appendChild(label);
+
+            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgba(255,255,255,.07)'; });
+            entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
+            entry.addEventListener('click', function () {
+                close();
+                if (item.onSelect) item.onSelect();
+            });
+            menu.appendChild(entry);
+        });
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var opening = menu.hidden;
+            menu.hidden = !opening;
+            button.setAttribute('aria-expanded', String(opening));
+        });
+        document.addEventListener('click', function (event) {
+            if (!menu.hidden && !wrap.contains(event.target)) close();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') close();
+        });
+
+        wrap.appendChild(button);
+        wrap.appendChild(menu);
+        container.appendChild(wrap);
+    };
+})();
+</script>
+
     <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
@@ -288,6 +434,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
                 <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
             </button>
+            <div id="accountMenuSlot"></div>
         </div>
     </header>
 
@@ -610,6 +757,30 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             loadAdminReviewsData();
         }
 
+        // Shared with the sidebar's Log Out, so both doors behave identically.
+        function signOutStaff() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
+
+        // Who is signed in, in the corner, with the way out of the portal.
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: 'Tourist Officer',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
+
+
         function toggleDarkMode() {
             const body = document.body;
             const html = document.documentElement;
@@ -628,6 +799,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            mountPortalAccountMenu();
             const savedTheme = localStorage.getItem("theme");
             const body = document.body;
             const html = document.documentElement;
