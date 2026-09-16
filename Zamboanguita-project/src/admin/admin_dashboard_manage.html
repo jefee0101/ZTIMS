@@ -493,10 +493,28 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             document.getElementById('pageNumber').textContent = totalSlides === 0 ? 0 : currentSlide + 1;
         }
 
+        // The API sleeps on Render's free tier, so these writes can take most of a
+        // minute on a cold start. No region spinner on this page — its grid renders
+        // from localStorage, not from the network, so one would be misleading.
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
         /* ===== POST ENGINE: PUBLISH NEW SPOT ===== */
         async function handleSpotPublish(event) {
             event.preventDefault();
-            
+
+            const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'Publishing...');
+
             // Set first image as standard placeholder, or fall back to single URL field
             const fallbackUrl = document.getElementById('spotImage').value.trim();
             const primaryImage = uploadedImagesBase64.length > 0 ? uploadedImagesBase64[0] : fallbackUrl;
@@ -534,13 +552,16 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
 
             // UI System synchronization
+            restoreButton();
             toggleAddSpotModal(false);
             renderAdminTableGrid();
         }
 
         /* ===== DELETE ENGINE ROUTINE ===== */
-        async function deleteDestinationSpot(uniqueTitle) {
+        async function deleteDestinationSpot(uniqueTitle, button) {
             if (!confirm(`Are you sure you want to delete "${uniqueTitle}"?`)) return;
+
+            const restoreButton = setButtonLoading(button, 'Deleting...');
 
             // 1. Attempt Server-side sync drops
             try {
@@ -558,6 +579,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             }
 
             // 3. Drop item from Dynamic LocalStorage tracking loop arrays
+            restoreButton();
             let dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
             dynamicSpots = dynamicSpots.filter(item => item.title !== uniqueTitle);
             localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
@@ -658,7 +680,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                             </div>
                         </div>
                         <div class="flex gap-2 items-center justify-end w-full">
-                            <button onclick="deleteDestinationSpot('${spot.title.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <button onclick="deleteDestinationSpot('${spot.title.replace(/'/g, "\\'")}', this)" class="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl text-xs font-bold transition flex items-center gap-1">
                                 <span class="material-symbols-outlined text-sm">delete</span> Drop
                             </button>
                         </div>

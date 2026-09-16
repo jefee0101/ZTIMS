@@ -331,7 +331,52 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         /* ========================================================
             DATABASE ENGINE INTEGRATION & METRICS AGGREGATION
         ======================================================== */
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
+        // The tiles ship hardcoded zeros in the markup, which read as real figures
+        // while the request is still out — swap in a spinner until the data lands.
+        let hasLoadedMetricsOnce = false;
+        function showMetricSpinners() {
+            ['metric-revenue', 'metric-bookings', 'metric-travelers', 'metric-rating'].forEach(id => {
+                const tile = document.getElementById(id);
+                if (tile) {
+                    tile.innerHTML = '<span class="inline-block w-6 h-6 rounded-full border-[3px] border-current border-t-transparent animate-spin opacity-60 align-[-4px]"></span>';
+                }
+            });
+        }
+
         async function fetchAndSyncPlatformMetrics() {
+            // Skipped on the 30s refresh so the tiles don't blink every interval.
+            if (!hasLoadedMetricsOnce) showMetricSpinners();
+            hasLoadedMetricsOnce = true;
             try {
                 const [bookingsRes, usersRes, reviewsRes] = await Promise.all([
                     fetch(BOOKINGS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
@@ -346,6 +391,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 calculateCalculatedFields();
             } catch (err) {
                 console.error("Critical error mapping remote database entries:", err);
+                // Still render, or the tiles would spin forever on a failed load.
+                calculateCalculatedFields();
             }
         }
 
@@ -607,6 +654,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             const container = document.getElementById('adminSpotsContainer');
             if (!container) return;
 
+            const doneLoading = showLoading(container, 'Loading destinations...');
+
             try {
                 const response = await fetch(SPOTS_URL);
                 if (!response.ok) throw new Error("Could not parse cluster database collection array.");
@@ -647,6 +696,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             } catch (err) {
                 console.error("Error drawing destination items profiles:", err);
                 container.innerHTML = `<p class="text-red-400 text-sm col-span-3 text-center py-6 font-mono">Failed loading destinations preview. Verify API cluster connection.</p>`;
+            } finally {
+                doneLoading();
             }
         }
 
@@ -660,6 +711,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             const description = document.getElementById('spotDescriptionTextarea').value.trim();
 
             const newSpotPayload = { title, location, category, imageUrl, description };
+            const restoreButton = setButtonLoading(e.target.querySelector('button[type="submit"]'), 'Publishing...');
 
             try {
                 const response = await fetch(SPOTS_URL, {
@@ -677,6 +729,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             } catch (err) {
                 console.error("Posting operation processing failed:", err);
                 alert("⚠️ Execution fault: Could not save location entry to backend cluster.");
+            } finally {
+                restoreButton();
             }
         });
 

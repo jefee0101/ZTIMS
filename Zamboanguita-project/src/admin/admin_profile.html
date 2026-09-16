@@ -208,7 +208,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                                 <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Assign Account Password</label>
                                 <input id="newAdminPassword" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="••••••••" type="password">
                             </div>
-                            <button onclick="submitNewAdmin()" class="w-full mt-2 py-3.5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
+                            <button id="addAdminBtn" onclick="submitNewAdmin()" class="w-full mt-2 py-3.5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined">how_to_reg</span> ADD ADMIN
                             </button>
                         </div>
@@ -236,7 +236,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                                 <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Assign Account Password</label>
                                 <input id="newOwnerPassword" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="••••••••" type="password">
                             </div>
-                            <button onclick="submitNewResortOwner()" class="w-full mt-2 py-3.5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
+                            <button id="addResortOwnerBtn" onclick="submitNewResortOwner()" class="w-full mt-2 py-3.5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined">how_to_reg</span> CREATE RESORT OWNER
                             </button>
                         </div>
@@ -288,11 +288,6 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                                         </tr>
                                     </thead>
                                     <tbody id="adminListTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant">
-                                        <tr>
-                                            <td colspan="2" class="px-6 py-8 text-center">
-                                                Connecting to system registry...
-                                            </td>
-                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -313,11 +308,6 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                                         </tr>
                                     </thead>
                                     <tbody id="resortOwnerListTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant">
-                                        <tr>
-                                            <td colspan="2" class="px-6 py-8 text-center">
-                                                Connecting to system registry...
-                                            </td>
-                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -333,6 +323,36 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 let localAdminCache = [
     { email: "admin@zamboanguita.gov.ph" }
 ];
+
+// The API sleeps on Render's free tier, so a cold start can take most of a
+// minute — after 5s the spinner says so rather than looking frozen.
+function showLoading(target, message, colspan) {
+    const spinner =
+        '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+            '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+            '<p class="text-sm opacity-80">' + message + '</p>' +
+            '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+        '</div>';
+    target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+    const timer = setTimeout(() => {
+        const note = target.querySelector('[data-slow]');
+        if (note) note.classList.remove('hidden');
+    }, 5000);
+    return () => clearTimeout(timer);
+}
+
+function setButtonLoading(btn, label) {
+    if (!btn) return () => {};
+    const originalHTML = btn.innerHTML;
+    const wasDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.innerHTML =
+        '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = wasDisabled;
+    };
+}
 
 /* =====================================================
    FETCH ACTIVE ADMINS DIRECTORY
@@ -360,6 +380,7 @@ function renderTableRows(admins) {
 }
 
 function loadAdminDirectory() {
+    const doneLoading = showLoading(document.getElementById('adminListTableBody'), 'Loading administrators...', 2);
     fetch('https://ztims-api.onrender.com/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(admins => {
@@ -371,7 +392,8 @@ function loadAdminDirectory() {
     .catch(err => {
         console.warn("Backend disconnected. Running locally on LocalCache Engine fallback view mode.");
         renderTableRows(localAdminCache);
-    });
+    })
+    .finally(doneLoading);
 }
 
 /* =====================================================
@@ -387,6 +409,7 @@ function submitNewAdmin() {
     }
 
     const payload = { email, password };
+    const restoreButton = setButtonLoading(document.getElementById('addAdminBtn'), 'Creating...');
 
     fetch('https://ztims-api.onrender.com/api/admin/create', {
         method: 'POST',
@@ -413,7 +436,8 @@ function submitNewAdmin() {
         document.getElementById('newAdminEmail').value = '';
         document.getElementById('newAdminPassword').value = '';
         renderTableRows(localAdminCache);
-    });
+    })
+    .finally(restoreButton);
 }
 
 /* =====================================================
@@ -443,13 +467,15 @@ function renderResortOwnerRows(owners) {
 }
 
 function loadResortOwnerDirectory() {
+    const doneLoading = showLoading(document.getElementById('resortOwnerListTableBody'), 'Loading resort owners...', 2);
     fetch('https://ztims-api.onrender.com/api/resort-owners', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(owners => renderResortOwnerRows(owners))
     .catch(err => {
         console.warn("Could not load resort owner directory:", err);
         renderResortOwnerRows([]);
-    });
+    })
+    .finally(doneLoading);
 }
 
 /* =====================================================
@@ -465,6 +491,8 @@ function submitNewResortOwner() {
         alert("Please provide a resort name, email, and password to create the account.");
         return;
     }
+
+    const restoreButton = setButtonLoading(document.getElementById('addResortOwnerBtn'), 'Creating...');
 
     fetch('https://ztims-api.onrender.com/api/resort-owners', {
         method: 'POST',
@@ -487,7 +515,8 @@ function submitNewResortOwner() {
     .catch(err => {
         console.error("Networking connection error while creating resort owner:", err);
         alert("Could not reach the server. Please try again.");
-    });
+    })
+    .finally(restoreButton);
 }
 
 function autoUploadAdminPhoto(inputElement) {

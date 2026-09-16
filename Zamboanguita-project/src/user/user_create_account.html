@@ -201,6 +201,21 @@ function togglePasswordVisibility(inputId, iconId) {
   }
 }
 
+// The API sleeps on Render's free tier, so registering can take most of a minute
+// on a cold start. Both exit paths here redirect, so the button keeps spinning
+// until navigation; it is only restored when the user stays on this page.
+function setButtonLoading(btn, label) {
+  if (!btn) return () => {};
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML =
+    '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+  return () => {
+    btn.innerHTML = originalHTML;
+    btn.disabled = false;
+  };
+}
+
 document.getElementById('signupForm').addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -215,6 +230,8 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
     alert("Passwords do not match!");
     return;
   }
+
+  const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'Creating account...');
 
   const userData = { 
     email: email.toLowerCase().trim(), 
@@ -244,6 +261,7 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
 
       window.location.href = 'user_login.html' + window.location.search;
     } else {
+      restoreButton();
       alert("Registration failed: " + (result.message || "Unknown error occurred."));
     }
   } catch (error) {

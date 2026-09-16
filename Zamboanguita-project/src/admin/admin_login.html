@@ -240,12 +240,28 @@ window.onload = () => {
     }
 }
 
+// The API sleeps on Render's free tier, so signing in can take most of a minute
+// on a cold start. The button keeps spinning through the redirect on success and
+// is only restored when the user is left here to try again.
+function setButtonLoading(btn, label) {
+    if (!btn) return () => {};
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML =
+        '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    };
+}
+
 // --- SECURE AUTHENTICATION PROCESSING ---
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
     event.preventDefault(); // 🔥 This will now work perfectly and prevent erasing!
 
     const email = document.getElementById('emailInput').value.trim();
     const password = document.getElementById('passwordInput').value;
+    const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'SIGNING IN...');
 
     // Explicitly enforce 'admin' role context to tell backend what system to parse against
     const credentials = {
@@ -286,11 +302,13 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
             window.location.href = window.location.origin + projectRoot + "/src/admin/admin_analystic.html";
         } else {
             // Denied Entry Execution: Clear out field values and alert admin
+            restoreButton();
             alert("⚠️ " + (result.message || "Access Denied. Invalid Admin Credentials."));
             document.getElementById('passwordInput').value = ""; // Force purge the mis-input entry
         }
 
     } catch (error) {
+        restoreButton();
         console.error("Network Exception:", error);
         alert("Could not link with auth servers. Verify API backend is running on Port 5000.");
     }

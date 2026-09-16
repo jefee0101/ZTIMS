@@ -293,6 +293,36 @@
             }
         }
 
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full h-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
         async function initializeNextDestination() {
             const widget = document.getElementById('nextDestinationWidget');
             if (!widget) return;
@@ -308,6 +338,7 @@
             const activeUserId = localStorage.getItem('userId');
 
             if (activeUserId && activeUserId !== "anonymous_guest") {
+                const doneLoading = widget ? showLoading(widget, 'Finding your next trip...') : () => {};
                 try {
                     const response = await fetch(`https://ztims-api.onrender.com/api/bookings?userId=${activeUserId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
                     if (response.ok) {
@@ -316,6 +347,8 @@
                 } catch (err) {
                     console.error("❌ Failed to resolve upcoming itineraries:", err);
                     liveBookingsList = JSON.parse(localStorage.getItem('userBookings')) || [];
+                } finally {
+                    doneLoading();
                 }
             }
 
@@ -455,6 +488,8 @@
                     bio: document.getElementById('profileBio') ? document.getElementById('profileBio').value.trim() : ""
                 };
 
+                const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'Saving...');
+
                 try {
                     const response = await fetch(`https://ztims-api.onrender.com/api/users/${activeUserId}`, {
                         method: 'PATCH',
@@ -480,6 +515,8 @@
                     const mergedSession = { ...cachedSession, ...updatedPayload, name: updatedPayload.fullName };
                     localStorage.setItem('currentUser', JSON.stringify(mergedSession));
                     alert("Profile updated locally. Ensure your backend server is streaming data loops.");
+                } finally {
+                    restoreButton();
                 }
             });
         }

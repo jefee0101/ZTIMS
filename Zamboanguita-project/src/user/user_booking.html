@@ -570,8 +570,45 @@ function updateCompanionUI() {
 /* =====================================================
     FETCH MONGODB RECORDS & RENDER MANIFEST CARDS
 ===================================================== */
+// The API sleeps on Render's free tier, so a cold start can take most of a
+// minute — after 5s the spinner says so rather than looking frozen.
+function showLoading(target, message, colspan) {
+    const spinner =
+        '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+            '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+            '<p class="text-sm opacity-80">' + message + '</p>' +
+            '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+        '</div>';
+    target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+    const timer = setTimeout(() => {
+        const note = target.querySelector('[data-slow]');
+        if (note) note.classList.remove('hidden');
+    }, 5000);
+    return () => clearTimeout(timer);
+}
+
+function setButtonLoading(btn, label) {
+    if (!btn) return () => {};
+    const originalHTML = btn.innerHTML;
+    const wasDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.innerHTML =
+        '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = wasDisabled;
+    };
+}
+
 async function fetchAndRenderPermanentBookings(userId, isFirstLoad = false) {
     if (!userId || userId === "anonymous_guest") return;
+
+    // Only on first load — this also runs on a polling interval, and a spinner
+    // on every refresh would make the panel flash every few seconds.
+    const historyContainer = document.getElementById('bookingHistoryContainer');
+    const doneLoading = (isFirstLoad && historyContainer)
+        ? showLoading(historyContainer, 'Loading your bookings...')
+        : () => {};
 
     try {
         const response = await fetch(`https://ztims-api.onrender.com/api/bookings?userId=${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
@@ -649,7 +686,7 @@ async function fetchAndRenderPermanentBookings(userId, isFirstLoad = false) {
                     ${isPending ? `
                     <div class="pt-2 mt-2 border-t border-stone-200 dark:border-stone-800/20 flex justify-end">
                         <button type="button" 
-                                onclick="cancelActiveBooking('${item._id}')" 
+                                onclick="cancelActiveBooking('${item._id}', this)"
                                 class="text-[11px] font-bold tracking-wide text-red-500 hover:text-red-700 dark:hover:text-red-400 flex items-center gap-1 transition-colors bg-red-500/5 hover:bg-red-500/10 px-2.5 py-1 rounded-lg cursor-pointer">
                             <span class="material-symbols-outlined text-xs">block</span> Cancel Reservation
                         </button>
@@ -666,17 +703,22 @@ async function fetchAndRenderPermanentBookings(userId, isFirstLoad = false) {
                 targetContainer.innerHTML = `<p class="text-red-500 dark:text-red-400 text-xs text-center py-4">Unable to connect to active data stream pipeline.</p>`;
             }
         }
+    } finally {
+        doneLoading();
     }
 }
 
 /* =====================================================
     DISSOLVE RECORD STATUS IN PIPELINE (CANCEL RES)
 ===================================================== */
-async function cancelActiveBooking(bookingId) {
+async function cancelActiveBooking(bookingId, button) {
     if (!bookingId) return;
-    
+
     const confirmation = confirm("⚠️ Cancel Trip?\nAre you sure you want to cancel this adventure reservation? This layout adjustment cannot be undone.");
     if (!confirmation) return;
+
+    // Not restored on success — the list re-renders and this button goes with it.
+    const restoreButton = setButtonLoading(button, 'Cancelling...');
 
     try {
         const response = await fetch(`https://ztims-api.onrender.com/api/bookings/${bookingId}`, {
@@ -703,9 +745,11 @@ async function cancelActiveBooking(bookingId) {
                 fetchAndRenderPermanentBookings(activeUserId, false);
             }
         } else {
+            restoreButton();
             alert("⚠️ Update request failed: " + (data.error || data.message || "Unable to modify database record state."));
         }
     } catch (error) {
+        restoreButton();
         console.error("Network communication pipeline fault:", error);
         alert("❌ Operations Error: Connection refused by Node backend server on port 5000.");
     }
@@ -1015,12 +1059,9 @@ if (bookingForm) {
             paymentMethod: chosenPaymentMethod
         };
 
-        try {
-            const submitBtn = bookingForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Generating Secure Checkout Gateway Link...";
+        const restoreButton = setButtonLoading(bookingForm.querySelector('button[type="submit"]'), 'Confirming your booking...');
 
+        try {
             const response = await fetch('https://ztims-api.onrender.com/api/bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
@@ -1049,16 +1090,11 @@ if (bookingForm) {
             } else {
                 alert("⚠️ System Rejected Record: " + (result.error || result.message || "Failed to commit."));
             }
-            
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalBtnText;
-
         } catch (error) {
             console.error("Form transmission breakdown error:", error);
             alert("❌ Processing Server Offline: Unable to reach your Zamboanguita backend server at port 5000. Please verify your Node server instance is running.");
-            
-            const submitBtn = bookingForm.querySelector('button[type="submit"]');
-            if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Confirm Adventure Booking Request"; }
+        } finally {
+            restoreButton();
         }
     });
 }

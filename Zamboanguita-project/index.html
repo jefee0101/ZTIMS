@@ -213,9 +213,7 @@
                 <p class="text-on-surface-variant">Browse freely as a guest — sign in only when you're ready to book.</p>
             </div>
         </div>
-        <div id="spotsContainer" class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar">
-            <p id="spotsEmptyState" class="text-on-surface-variant px-2">Loading tourist spots...</p>
-        </div>
+        <div id="spotsContainer" class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar"></div>
     </section>
 
     <section class="relative py-40 bg-surface overflow-hidden transition-colors duration-300">
@@ -362,6 +360,23 @@
     // ==========================================
     const API_BASE = "https://ztims-api.onrender.com/api";
 
+    // The API sleeps on Render's free tier, so a cold start can take most of a
+    // minute — after 5s the spinner says so rather than looking frozen.
+    function showLoading(target, message, colspan) {
+        const spinner =
+            '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                '<p class="text-sm opacity-80">' + message + '</p>' +
+                '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+            '</div>';
+        target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+        const timer = setTimeout(() => {
+            const note = target.querySelector('[data-slow]');
+            if (note) note.classList.remove('hidden');
+        }, 5000);
+        return () => clearTimeout(timer);
+    }
+
     const spotsContainer = document.getElementById('spotsContainer');
     const spotModal = document.getElementById('spotModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
@@ -438,6 +453,7 @@
     });
 
     async function loadSpots() {
+        const doneLoading = showLoading(spotsContainer, 'Loading tourist spots and accommodations...');
         try {
             const response = await fetch(`${API_BASE}/spots`);
             if (!response.ok) throw new Error('Failed to load spots');
@@ -452,6 +468,8 @@
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
             spotsContainer.innerHTML = '<p class="text-on-surface-variant px-2">Unable to load tourist spots right now. Please try again later.</p>';
+        } finally {
+            doneLoading();
         }
     }
 

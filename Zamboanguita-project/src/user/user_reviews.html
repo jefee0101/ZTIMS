@@ -434,11 +434,44 @@
             document.getElementById("uploadPlaceholderText").innerText = "Click or drop here to upload high-res review image snapshot asset";
         }
 
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
         async function loadAndRenderReviewsFeedRegistry() {
             const wrapperElement = document.getElementById("reviewsContainerWrapper");
             const counterElement = document.getElementById("totalReviewsCountLabel");
-            
+
             let backendReviews = [];
+            const doneLoading = wrapperElement
+                ? showLoading(wrapperElement, 'Loading reviews...')
+                : () => {};
 
             try {
                 const response = await fetch(API_BASE_URL);
@@ -456,8 +489,10 @@
                 }
             } catch (err) {
                 console.warn("Backend offline or unreachable.");
+            } finally {
+                doneLoading();
             }
-            
+
             let completeMergedTotalFeedList = [...backendReviews];
             
             if (counterElement) {
@@ -514,12 +549,8 @@
             formEventPayload.preventDefault();
             
             const formElement = formEventPayload.target;
-            const submitButton = formElement.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.innerText = "Publishing...";
-            }
-            
+            const restoreButton = setButtonLoading(formElement.querySelector('button[type="submit"]'), 'Publishing...');
+
             const locationElement = document.getElementById("formLocation");
             const commentsElement = document.getElementById("formComments");
             
@@ -564,20 +595,14 @@
                     const errorData = await response.json();
                     console.error("Validation Error Details:", errorData);
                     alert(`⚠️ Server error: ${errorData.message || 'Validation failed.'}`);
-                    
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.innerText = "Upload & Publish Review";
-                    }
                 }
             } catch (err) {
                 console.error("Submission pipeline failure error details:", err);
                 alert("❌ Connection failed. Check if your backend server is online.");
-                
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.innerText = "Upload & Publish Review";
-                }
+            } finally {
+                // Restoring here (rather than only in the failure branches) keeps the
+                // button usable when the modal is reopened after a successful publish.
+                restoreButton();
             }
         }
 

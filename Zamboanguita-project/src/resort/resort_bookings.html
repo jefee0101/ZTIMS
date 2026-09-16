@@ -147,6 +147,36 @@
             return { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` };
         }
 
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin align-[-1px] mr-1.5"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
         function toggleDarkMode() {
             const html = document.documentElement;
             const icon = document.getElementById('themeIcon');
@@ -224,8 +254,10 @@
                     </td>
                 `;
                 if (isPending) {
-                    tr.querySelector('[data-action="approve"]').addEventListener('click', () => decideBooking(booking._id, 'approved'));
-                    tr.querySelector('[data-action="reject"]').addEventListener('click', () => decideBooking(booking._id, 'disapproved'));
+                    const approveBtn = tr.querySelector('[data-action="approve"]');
+                    const rejectBtn = tr.querySelector('[data-action="reject"]');
+                    approveBtn.addEventListener('click', () => decideBooking(booking._id, 'approved', approveBtn));
+                    rejectBtn.addEventListener('click', () => decideBooking(booking._id, 'disapproved', rejectBtn));
                 }
                 tbody.appendChild(tr);
             });
@@ -237,8 +269,9 @@
             document.getElementById('cardApprovedCount').textContent = bookings.filter(b => (b.status || '').toLowerCase() === 'approved').length;
         }
 
-        async function decideBooking(id, status) {
+        async function decideBooking(id, status, button) {
             if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            const restoreButton = setButtonLoading(button, status === 'approved' ? 'Approving...' : 'Rejecting...');
             try {
                 const response = await fetch(`${API_BASE}/bookings/status/${id}`, {
                     method: 'PUT',
@@ -249,10 +282,12 @@
                 await loadMyBookings();
             } catch (error) {
                 alert('⚠️ ' + error.message);
+                restoreButton();
             }
         }
 
         async function loadMyBookings() {
+            const doneLoading = showLoading(document.getElementById('bookingsTableBody'), 'Loading your bookings...', 6);
             try {
                 const response = await fetch(`${API_BASE}/bookings`, { headers: authHeaders() });
                 if (!response.ok) throw new Error('Failed to load bookings.');
@@ -260,6 +295,8 @@
             } catch (error) {
                 console.error('❌ Failed to load bookings:', error);
                 bookings = [];
+            } finally {
+                doneLoading();
             }
             recalculateCounters();
             renderTable();

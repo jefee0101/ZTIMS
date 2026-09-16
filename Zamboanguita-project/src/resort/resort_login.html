@@ -200,6 +200,21 @@ window.onload = () => {
     }
 }
 
+// The API sleeps on Render's free tier, so signing in can take most of a minute
+// on a cold start. The button stays spinning through the redirect on success and
+// is only restored when the user is left on this page to try again.
+function setButtonLoading(btn, label) {
+    if (!btn) return () => {};
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML =
+        '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    };
+}
+
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -207,6 +222,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     const password = document.getElementById('passwordInput').value;
 
     const credentials = { email, password, role: 'resort_owner' };
+    const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'SIGNING IN...');
 
     try {
         const response = await fetch('https://ztims-api.onrender.com/api/login', {
@@ -229,13 +245,15 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
 
             const currentPath = window.location.pathname;
             const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
-            window.location.href = window.location.origin + projectRoot + "/src/resort/resort_dashboard.html";
+            window.location.href = window.location.origin + projectRoot + "/src/resort/resort_spots.html";
         } else {
+            restoreButton();
             alert("⚠️ " + (result.message || "Access Denied. Invalid Resort Owner Credentials."));
             document.getElementById('passwordInput').value = "";
         }
 
     } catch (error) {
+        restoreButton();
         console.error("Network Exception:", error);
         alert("Could not link with auth servers. Please try again shortly.");
     }

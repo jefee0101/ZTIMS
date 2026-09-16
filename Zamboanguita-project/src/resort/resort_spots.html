@@ -212,6 +212,36 @@
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
         }
 
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-2px] mr-2"></span>' + label;
+            return () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = wasDisabled;
+            };
+        }
+
         function toggleDarkMode() {
             const html = document.documentElement;
             const icon = document.getElementById('themeIcon');
@@ -265,6 +295,7 @@
         async function handleSpotSubmit(event) {
             event.preventDefault();
             const editingId = document.getElementById('editingSpotId').value;
+            const restoreButton = setButtonLoading(document.getElementById('spotSubmitBtn'), editingId ? 'Saving...' : 'Publishing...');
             const payload = {
                 type: document.getElementById('spotType').value,
                 title: document.getElementById('spotTitle').value.trim(),
@@ -294,17 +325,21 @@
                 await loadMySpots();
             } catch (error) {
                 alert('⚠️ ' + error.message);
+            } finally {
+                restoreButton();
             }
         }
 
-        async function deleteSpot(id) {
+        async function deleteSpot(id, button) {
             if (!confirm('Delete this listing permanently? This cannot be undone.')) return;
+            const restoreButton = setButtonLoading(button, 'Deleting...');
             try {
                 const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
                 if (!response.ok) throw new Error((await response.json()).message || 'Failed to delete spot.');
                 await loadMySpots();
             } catch (error) {
                 alert('⚠️ ' + error.message);
+                restoreButton();
             }
         }
 
@@ -337,21 +372,24 @@
                         </div>
                     </div>
                 `;
+                const deleteButton = card.querySelectorAll('button')[1];
                 card.querySelectorAll('button')[0].addEventListener('click', () => toggleAddSpotModal(true, spot));
-                card.querySelectorAll('button')[1].addEventListener('click', () => deleteSpot(spot._id));
+                deleteButton.addEventListener('click', () => deleteSpot(spot._id, deleteButton));
                 grid.appendChild(card);
             });
         }
 
         async function loadMySpots() {
+            const doneLoading = showLoading(document.getElementById('spotsGrid'), 'Loading your listings...');
             try {
                 const response = await fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() });
                 if (!response.ok) throw new Error('Failed to load your spots.');
                 mySpots = await response.json();
-                renderSpotsGrid();
             } catch (error) {
                 console.error('❌ Failed to load spots:', error);
                 mySpots = [];
+            } finally {
+                doneLoading();
                 renderSpotsGrid();
             }
         }

@@ -252,6 +252,21 @@
     // Login Form Processing
     const loginFormElement = document.getElementById('loginForm');
     if (loginFormElement) {
+      // The API sleeps on Render's free tier, so signing in can take most of a
+      // minute on a cold start. The button keeps spinning through the redirect on
+      // success and is only restored when the user is left here to try again.
+      function setButtonLoading(btn, label) {
+        if (!btn) return () => {};
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML =
+          '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+        return () => {
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        };
+      }
+
       // Carry the "book this spot after signing in" context into registration too.
       const incomingParams = window.location.search;
       if (incomingParams) {
@@ -260,17 +275,18 @@
       }
 
       loginFormElement.addEventListener('submit', async (event) => {
-        event.preventDefault(); 
+        event.preventDefault();
 
         let email = document.getElementById('emailInput').value.trim();
         const password = document.getElementById('passwordInput').value;
-        
+
         if (email.toLowerCase() === 'desirose' || email.toLowerCase() === 'desirose@') {
            email = 'desirose@gmail.com';
         }
-        
+
         const inferredRole = 'user';
         const credentials = { email, password, role: inferredRole };
+        const restoreButton = setButtonLoading(loginFormElement.querySelector('button[type="submit"]'), 'Signing in...');
 
         try {
           const response = await fetch('https://ztims-api.onrender.com/api/login', {
@@ -320,9 +336,11 @@
                 window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html";
             }
           } else {
+            restoreButton();
             alert("Authentication failed: " + (result.message || "Invalid Credentials"));
           }
         } catch (error) {
+          restoreButton();
           console.error("Network Error:", error);
           alert("Could not connect to the authentication server.");
         }
@@ -335,6 +353,7 @@
       forgotFormElement.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('forgotEmailInput').value.trim();
+        const restoreButton = setButtonLoading(forgotFormElement.querySelector('button[type="submit"]'), 'Sending...');
 
         try {
           const response = await fetch('https://ztims-api.onrender.com/api/forgot-password', {
@@ -354,6 +373,8 @@
         } catch (error) {
           console.error("Forgot password API error:", error);
           alert("Could not connect to the server. Is your backend running?");
+        } finally {
+          restoreButton();
         }
       });
     }
