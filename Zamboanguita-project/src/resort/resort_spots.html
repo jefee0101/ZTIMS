@@ -284,14 +284,14 @@
            database itself — one phone photo is 2-5 MB, the API accepts 1 MB
            request bodies, and a MongoDB document caps out at 16 MB.
 
-           >>> PASTE YOUR TWO CLOUDINARY VALUES HERE <<<
-           Cloud name:    Cloudinary dashboard, top-left under your account name.
-           Upload preset: Settings -> Upload -> Upload presets -> add an
-                          *unsigned* preset, then paste its name here.
-           Until both are filled in, "Upload photos" says what is missing and
-           "Paste a link" keeps working. */
-        const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
-        const CLOUDINARY_UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
+           These two values identify the account's upload folder, nothing more.
+           An unsigned preset is designed to sit in the browser, so neither is a
+           secret — but the preset decides what may be uploaded, which is why it
+           should stay limited to images in the Cloudinary settings.
+           Cloud name:    Cloudinary dashboard, top-left under the account name.
+           Upload preset: Settings -> Upload -> Upload presets (unsigned). */
+        const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
+        const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
 
         const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
         const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
