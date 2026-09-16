@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Explore Zamboanguita Admin | Establishment Managers</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<script>
+    if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light-mode');
+    } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light-mode');
+    }
+</script>
+
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    /* Colors pulled directly from the Zamboanguita Tourism Logo Layering */
+                    "primary": "#2E7D32",                   // Vibrant Leaf Green
+                    "on-primary": "#FFFFFF",                // White text over green
+                    "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
+                    "background": "var(--color-background, #020F24)", // Rich Midnight Blue
+                    "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
+                    "on-surface": "var(--color-on-surface, #FEFCF4)",
+                    "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+                    "outline-variant": "#1E3D6B",
+                    "primary-container": "#4CAF50",        // Sunset Light Green Accent
+                    "secondary-container": "#00838F",      // Pure Ocean Sea Blue
+                    "on-secondary-container": "#E0F7FA",
+                },
+                fontFamily: {
+                    headline: ["Plus Jakarta Sans", "sans-serif"],
+                    body: ["Plus Jakarta Sans", "sans-serif"],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+/* ROOT DARK CONFIG */
+:root {
+    --color-surface: #051D40; 
+    --color-background: #020F24; 
+    --color-surface-variant: #0B2954;
+    --color-on-surface: #FEFCF4;
+    --color-on-surface-variant: #A0B2C6;
+}
+
+/* LIGHT MODE HARMONY */
+.light-mode, [class*="light-mode"] {
+    --color-surface: #FFFFFF !important;
+    --color-background: #F4F7FA !important;
+    --color-surface-variant: #E6EEF8 !important;
+    --color-on-surface: #020F24 !important;
+    --color-on-surface-variant: #4A5D73 !important;
+}
+
+body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, input, select, textarea {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+/* Base Override Rules */
+.light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+.light-mode main { background: #F4F7FA !important; }
+.light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+
+/* Dashboard UI Structure Elements */
+.glass-panel {
+    background: var(--color-surface);
+    border: 1px solid #1E3D6B;
+}
+.light-mode .glass-panel {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+}
+.glass-panel:hover {
+    transform: translateY(-2px);
+    border-color: #FFB300;
+    box-shadow: 0 12px 30px rgba(255, 179, 0, 0.1);
+}
+
+/* Global Light/Dark Element Maps */
+.light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+.light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode div {
+    color: #020F24 !important;
+}
+.light-mode .text-stone-400, .light-mode .text-stone-500, .light-mode .text-zinc-500, .light-mode .text-on-surface-variant {
+    color: #4A5D73 !important;
+}
+.light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
+    border-color: #E2E8F0 !important;
+}
+.light-mode input, .light-mode select, .light-mode textarea {
+    background: #FFFFFF !important;
+    color: #020F24 !important;
+    border: 1px solid #CBD5E1 !important;
+}
+.light-mode #themeIcon { color: #FFB300 !important; }
+.light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+}
+
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), margin-left .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity .2s ease .06s, max-width .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), color .2s ease, background-color .2s ease !important;
+    }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- Left Sidebar Control Desk -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
+        </div>
+
+        <nav class="flex-1 space-y-2 font-body">
+            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
+                <span class="sidebar-label">Analytics</span>
+            </a>
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+                <span class="sidebar-label">Destinations</span>
+            </a>
+            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
+                <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
+                <span class="sidebar-label">Managers</span>
+            </a>
+            <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
+                <span class="material-symbols-outlined text-[#FFB300]">star</span>
+                <span class="sidebar-label">Reviews</span>
+            </a>
+            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+                <span class="sidebar-label">Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="sidebar-label">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Header Control Anchor -->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <div></div>
+        <div class="flex items-center gap-4">
+            
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+                <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="p-2 max-w-[1400px] mx-auto space-y-8">
+
+            <div class="flex flex-wrap justify-between items-end gap-4">
+                <div class="space-y-1">
+                    <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                        <span class="text-on-surface-variant">Accounts</span>
+                    </nav>
+                    <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h2>
+                    <p class="text-on-surface-variant text-sm max-w-2xl">
+                        Managers do not sign themselves up — as Tourist Officer you issue each account here.
+                        A manager can then publish and edit only their own tourist spots and accommodations.
+                    </p>
+                </div>
+                <button id="openCreateModalBtn" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                    <span class="material-symbols-outlined">person_add</span> New manager account
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Manager accounts</p>
+                    <h5 id="statManagers" class="text-3xl font-black text-on-surface">—</h5>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Listings they publish</p>
+                    <h5 id="statListings" class="text-3xl font-black text-on-surface">—</h5>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Yet to publish anything</p>
+                    <h5 id="statIdle" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">accounts with no listing yet</p>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#FFB300] !text-lg">storefront</span> Manager directory
+                </h3>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
+                        <input id="searchInput" type="search" placeholder="Search establishment or email"
+                               class="w-72 max-w-full bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    </div>
+                    <button id="refreshBtn" class="flex items-center gap-2 px-5 py-2.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] glass-panel overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                                <th class="px-6 py-4">Establishment</th>
+                                <th class="px-6 py-4">Email</th>
+                                <th class="px-6 py-4">Phone</th>
+                                <th class="px-6 py-4 text-center">Listings</th>
+                                <th class="px-6 py-4 text-right">Account created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="managerTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
+                    <p class="text-on-surface-variant text-sm">
+                        Showing <span id="shownCount" class="text-on-surface font-bold">0</span>
+                        of <span id="totalCount" class="text-on-surface font-bold">0</span> manager accounts
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create account -->
+    <div id="createManagerModal" hidden class="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+        <div class="bg-surface border border-outline-variant/60 rounded-[2rem] w-full max-w-lg p-8 space-y-6 text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <h2 class="text-2xl font-black tracking-tight font-headline">New manager account</h2>
+                    <p class="text-xs text-on-surface-variant mt-1">
+                        Give the manager these details afterwards — they sign in through the staff sign-in page.
+                    </p>
+                </div>
+                <button id="closeCreateModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+
+            <form id="createManagerForm" class="space-y-4 font-body">
+                <div>
+                    <label for="newManagerEstablishmentName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
+                    <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager email address</label>
+                    <input id="newManagerEmail" type="email" required placeholder="manager@example.com" autocomplete="off"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label for="newManagerPhone" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
+                    <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing that has no booking website.</p>
+                </div>
+                <div>
+                    <label for="newManagerPassword" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Starting password</label>
+                    <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
+                </div>
+
+                <p id="createManagerError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+
+                <div class="flex gap-4 pt-2">
+                    <button type="button" id="cancelCreateBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">Cancel</button>
+                    <button type="submit" id="createManagerBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">Create account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://ztims-api.onrender.com/api";
+
+        let managers = [];
+        let listingCounts = {};     // manager id -> number of published listings
+
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message, colspan) {
+            const spinner =
+                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if (icon) icon.textContent = 'light_mode';
+            }
+        }
+
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.href = '../staff_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function nameOf(manager) {
+            // Accounts created before the rename stored the same field as resortName.
+            return manager.establishmentName || manager.resortName || '';
+        }
+
+        function formatDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? '—'
+                : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function visibleManagers() {
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!search) return managers;
+            return managers.filter(manager =>
+                [nameOf(manager), manager.email, manager.phone]
+                    .some(field => String(field || '').toLowerCase().includes(search))
+            );
+        }
+
+        function renderSummary() {
+            const listings = Object.values(listingCounts).reduce((sum, count) => sum + count, 0);
+            const idle = managers.filter(manager => !listingCounts[String(manager._id)]).length;
+
+            document.getElementById('statManagers').textContent = managers.length;
+            document.getElementById('statListings').textContent = listings;
+            document.getElementById('statIdle').textContent = idle;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('managerTableBody');
+            const rows = visibleManagers();
+
+            document.getElementById('shownCount').textContent = rows.length;
+            document.getElementById('totalCount').textContent = managers.length;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="5" class="px-6 py-16 text-center">
+                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">storefront</span>
+                        ${managers.length === 0
+                            ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
+                            : 'No account matches that search.'}
+                    </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(manager => {
+                const listings = listingCounts[String(manager._id)] || 0;
+                return `
+                <tr class="hover:bg-white/[0.03] transition-colors">
+                    <td class="px-6 py-4 font-bold text-on-surface">
+                        <span class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary !text-lg">storefront</span>
+                            ${escapeHtml(nameOf(manager) || 'Unnamed establishment')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">${escapeHtml(manager.email || '—')}</td>
+                    <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${
+                            listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant text-on-surface-variant ring-outline-variant/30'
+                        }">${listings}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right text-xs">${escapeHtml(formatDate(manager.createdAt))}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function render() {
+            renderSummary();
+            renderTable();
+        }
+
+        // A spot's owner arrives populated, so it can be an object or a plain id
+        // depending on the route that produced it.
+        function ownerIdOf(spot) {
+            const owner = spot.ownerId;
+            if (!owner) return '';
+            return String(typeof owner === 'object' ? (owner._id || '') : owner);
+        }
+
+        async function loadDirectory() {
+            const tbody = document.getElementById('managerTableBody');
+            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 5);
+
+            try {
+                const [managersResponse, spotsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/establishment-managers`, { headers: authHeaders() }),
+                    fetch(`${API_BASE}/spots`, { headers: authHeaders() }).catch(() => null)
+                ]);
+
+                if (!managersResponse.ok) throw new Error(`The server returned status ${managersResponse.status}.`);
+                const payload = await managersResponse.json();
+                managers = Array.isArray(payload) ? payload : [];
+
+                // Listing counts are a nice-to-have; losing them must not empty the table.
+                listingCounts = {};
+                if (spotsResponse && spotsResponse.ok) {
+                    const spots = await spotsResponse.json().catch(() => []);
+                    (Array.isArray(spots) ? spots : []).forEach(spot => {
+                        const id = ownerIdOf(spot);
+                        if (id) listingCounts[id] = (listingCounts[id] || 0) + 1;
+                    });
+                }
+
+                doneLoading();
+                render();
+            } catch (error) {
+                console.error('❌ Could not load manager accounts:', error);
+                doneLoading();
+                managers = [];
+                listingCounts = {};
+                renderSummary();
+                document.getElementById('shownCount').textContent = 0;
+                document.getElementById('totalCount').textContent = 0;
+                tbody.innerHTML = `
+                    <tr><td colspan="5" class="px-6 py-16 text-center">
+                        <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
+                        <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}
+                        Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
+                    </td></tr>`;
+            }
+        }
+
+        function setCreateError(message) {
+            const box = document.getElementById('createManagerError');
+            box.textContent = message || '';
+            box.hidden = !message;
+        }
+
+        function toggleCreateModal(show) {
+            const modal = document.getElementById('createManagerModal');
+            modal.hidden = !show;
+            if (show) {
+                setCreateError('');
+                document.getElementById('newManagerEstablishmentName').focus();
+            } else {
+                document.getElementById('createManagerForm').reset();
+            }
+        }
+
+        async function createManager(event) {
+            event.preventDefault();
+            setCreateError('');
+
+            const establishmentName = document.getElementById('newManagerEstablishmentName').value.trim();
+            const email = document.getElementById('newManagerEmail').value.trim();
+            const phone = document.getElementById('newManagerPhone').value.trim();
+            const password = document.getElementById('newManagerPassword').value;
+
+            if (!establishmentName || !email || !password) {
+                setCreateError('An establishment name, email and password are all needed.');
+                return;
+            }
+
+            const restoreButton = setButtonLoading(document.getElementById('createManagerBtn'), 'Creating...');
+
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ establishmentName, email, phone, password })
+                });
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `The server refused (status ${response.status}).`);
+                }
+
+                restoreButton();
+                toggleCreateModal(false);
+                await loadDirectory();
+                alert(`Account created for ${establishmentName}.\n\nSign-in email: ${email}\nPassword: ${password}\n\nPass these on — the password cannot be read again afterwards.`);
+            } catch (error) {
+                restoreButton();
+                setCreateError(error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+
+            if (!guardOfficerSession()) return;
+
+            document.getElementById('openCreateModalBtn').addEventListener('click', () => toggleCreateModal(true));
+            document.getElementById('closeCreateModalBtn').addEventListener('click', () => toggleCreateModal(false));
+            document.getElementById('cancelCreateBtn').addEventListener('click', () => toggleCreateModal(false));
+            document.getElementById('createManagerForm').addEventListener('submit', createManager);
+            document.getElementById('searchInput').addEventListener('input', renderTable);
+            document.getElementById('refreshBtn').addEventListener('click', loadDirectory);
+
+            document.getElementById('createManagerModal').addEventListener('click', event => {
+                if (event.target === document.getElementById('createManagerModal')) toggleCreateModal(false);
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('createManagerModal').hidden) toggleCreateModal(false);
+            });
+
+            loadDirectory();
+        });
+    </script>
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
+</body>
+</html>
