@@ -359,21 +359,36 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const resolvedRole = ['admin', 'resort_owner'].includes(role) ? role : 'user';
+        // 'staff' means the caller doesn't know which kind of staff account this is
+        // — the shared staff sign-in page. We work it out rather than making the
+        // person choose, since picking the wrong portal would reject a correct password.
+        const requestedRole = ['admin', 'resort_owner', 'staff'].includes(role) ? role : 'user';
         let account = null;
+        let resolvedRole = requestedRole;
 
-        if (resolvedRole === 'admin') {
+        if (requestedRole === 'staff') {
             account = await Admin.findOne({ email: normalizedEmail }).select('+password');
-        } else if (resolvedRole === 'resort_owner') {
+            resolvedRole = 'admin';
+
+            if (!account) {
+                account = await ResortOwner.findOne({ email: normalizedEmail }).select('+password');
+                resolvedRole = 'resort_owner';
+            }
+        } else if (requestedRole === 'admin') {
+            account = await Admin.findOne({ email: normalizedEmail }).select('+password');
+        } else if (requestedRole === 'resort_owner') {
             account = await ResortOwner.findOne({ email: normalizedEmail }).select('+password');
         } else {
             account = await User.findOne({ email: normalizedEmail }).select('+password');
         }
 
         if (!account || !(await bcrypt.compare(password, account.password))) {
+            // Deliberately the same wording whichever collection was searched, so the
+            // response can't be used to discover which emails are registered.
+            const audience = requestedRole === 'staff' ? 'staff' : resolvedRole === 'admin' ? 'Tourist Officer' : resolvedRole === 'resort_owner' ? 'Resort Owner' : 'User';
             return res.status(401).json({
                 success: false,
-                message: `Authentication failed: Invalid ${resolvedRole === 'admin' ? 'Tourist Officer' : resolvedRole === 'resort_owner' ? 'Resort Owner' : 'User'} Credentials.`
+                message: `Authentication failed: Invalid ${audience} credentials.`
                 });
         }
 

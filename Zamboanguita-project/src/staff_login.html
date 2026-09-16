@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Staff Sign In | Zamboanguita Tourism</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <script>
+    if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.remove("dark");
+    } else {
+        document.documentElement.classList.add("dark");
+    }
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2E7D32",
+            primaryHover: "#1B5E20",
+            accent: "#FFB300",
+            background: "var(--bg)",
+            surface: "var(--surface)",
+            "surface-high": "var(--surface-high)",
+            "on-surface": "var(--on-surface)",
+            "on-surface-variant": "var(--on-surface-variant)",
+            outline: "var(--outline)"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+        --bg: #F4F6F9; --surface: #FFFFFF; --surface-high: #E2E9F2;
+        --on-surface: #0A192F; --on-surface-variant: #46587A; --outline: #D7E0EC;
+    }
+    html.dark {
+        --bg: #020F24; --surface: #051D40; --surface-high: #0B2954;
+        --on-surface: #FEFCF4; --on-surface-variant: #A0B2C6; --outline: #1E3D6B;
+    }
+    body { background: var(--bg); color: var(--on-surface); font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+<button id="themeToggleBtn" title="Toggle theme"
+        class="fixed top-5 right-5 z-50 p-3 rounded-full bg-surface border border-outline/40 text-accent hover:scale-110 transition-all shadow-lg">
+  <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+</button>
+
+<main class="min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md">
+
+    <a href="../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-8">
+      <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the public site
+    </a>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Staff Sign In</h1>
+      <p class="text-on-surface-variant text-sm">
+        For <b class="text-on-surface">Tourist Officers</b> and <b class="text-on-surface">Resort Owners</b>.
+        Sign in with the account issued to you — we'll take you to the right portal automatically.
+      </p>
+    </div>
+
+    <form id="staffLoginForm" class="space-y-5 bg-surface border border-outline/30 rounded-2xl p-6">
+      <div>
+        <label for="emailInput" class="block mb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Email address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">mail</span>
+          <input id="emailInput" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
+            class="w-full pl-12 pr-4 py-3.5 rounded-xl border border-outline/40 bg-surface-high text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary outline-none transition"/>
+        </div>
+      </div>
+
+      <div>
+        <label for="passwordInput" class="block mb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Password</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">lock</span>
+          <input id="passwordInput" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+            class="w-full pl-12 pr-12 py-3.5 rounded-xl border border-outline/40 bg-surface-high text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary outline-none transition"/>
+          <button type="button" id="togglePasswordBtn" aria-label="Show password"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+            <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
+          </button>
+        </div>
+      </div>
+
+      <p id="loginError" hidden class="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+
+      <button type="submit" id="staffSignInBtn"
+              class="w-full py-3.5 rounded-full bg-primary hover:bg-primaryHover text-white font-bold tracking-wide transition-all shadow-lg shadow-primary/20 flex items-center justify-center">
+        SIGN IN
+      </button>
+    </form>
+
+    <div class="mt-8 space-y-3 text-center">
+      <p class="text-sm text-on-surface-variant">
+        Looking to browse or review destinations?
+        <a href="user/user_login.html" class="text-primary font-bold hover:underline">Tourist sign in</a>
+      </p>
+      <p class="text-xs text-on-surface-variant/80">
+        Resort owner accounts are issued by the Municipal Tourism Office. Contact them if you don't have one yet.
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const API_BASE = "https://ztims-api.onrender.com/api";
+
+  // Where each kind of staff account lands once signed in.
+  const PORTAL_HOME = {
+    admin: 'admin/admin_analystic.html',
+    resort_owner: 'resort/resort_spots.html'
+  };
+
+  const errorBox = document.getElementById('loginError');
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.hidden = false;
+  }
+
+  function setButtonLoading(btn, label) {
+    if (!btn) return () => {};
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => { btn.innerHTML = originalHTML; btn.disabled = false; };
+  }
+
+  document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+    const input = document.getElementById('passwordInput');
+    const icon = document.getElementById('togglePasswordIcon');
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    icon.textContent = showing ? 'visibility' : 'visibility_off';
+  });
+
+  const themeToggleIcon = document.getElementById('themeToggleIcon');
+  document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeToggleIcon.textContent = isDark ? 'dark_mode' : 'bedtime';
+  });
+  themeToggleIcon.textContent = document.documentElement.classList.contains('dark') ? 'dark_mode' : 'bedtime';
+
+  document.getElementById('staffLoginForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    errorBox.hidden = true;
+
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    // 'staff' asks the server to identify which kind of account this is, so nobody
+    // has to know in advance whether they are filed as an officer or an owner.
+    const restoreButton = setButtonLoading(document.getElementById('staffSignInBtn'), 'SIGNING IN...');
+
+    let response;
+    try {
+      response = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: 'staff' })
+      });
+    } catch (error) {
+      restoreButton();
+      console.error('Staff sign-in network error:', error);
+      showError('Could not reach the server. Please check your connection and try again.');
+      return;
+    }
+
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      restoreButton();
+      showError(`The server returned an unexpected response (status ${response.status}). Please try again in a moment.`);
+      return;
+    }
+
+    if (!response.ok || !result.success) {
+      restoreButton();
+      showError(result.message || 'Those credentials were not recognised.');
+      document.getElementById('passwordInput').value = '';
+      return;
+    }
+
+    const destination = PORTAL_HOME[result.role];
+    if (!destination) {
+      restoreButton();
+      showError('That account is not a staff account. Please use the tourist sign in instead.');
+      return;
+    }
+
+    localStorage.setItem('authToken', result.token);
+    localStorage.setItem('userRole', result.role);
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userId', result.userId || '');
+    if (result.user?.resortName) localStorage.setItem('resortName', result.user.resortName);
+
+    // Button keeps spinning through the redirect — restoring it would only flash.
+    window.location.href = destination;
+  });
+</script>
+</body>
+</html>
