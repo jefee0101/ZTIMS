@@ -73,6 +73,11 @@
 
         body { background: var(--bg); color: var(--on-surface); }
 
+        /* The hidden attribute only gets display:none from the browser default,
+           which any Tailwind display class (.flex here) outranks. Without this,
+           elements toggled via el.hidden stay on screen. */
+        [hidden] { display: none !important; }
+
         .text-gradient {
             background: linear-gradient(to right, #FFB300, #ff6811);
             background-clip: text;
@@ -90,6 +95,22 @@
         }
         .star-input { cursor: pointer; transition: transform .1s ease; }
         .star-input.filled { font-variation-settings: 'FILL' 1; }
+
+        /* Collapsed sidebar: desktop only, since on phones it is already a bottom
+           bar with no room to shrink. Driven by one class so the widths of the rail
+           and the content margin can never drift apart. */
+        @media (min-width: 768px) {
+            aside, .content-shell { transition: width .2s ease, margin-left .2s ease; }
+            body.sidebar-collapsed aside { width: 5rem; padding-left: .75rem; padding-right: .75rem; }
+            body.sidebar-collapsed .content-shell { margin-left: 5rem; }
+            body.sidebar-collapsed .sidebar-label,
+            body.sidebar-collapsed .sidebar-brand-full,
+            body.sidebar-collapsed #sidebarUser { display: none; }
+            body.sidebar-collapsed .nav-item,
+            body.sidebar-collapsed #authActionBtn { justify-content: center; padding-left: 0; padding-right: 0; }
+            body.sidebar-collapsed .sidebar-brand-short { display: block; }
+        }
+        .sidebar-brand-short { display: none; }
     </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
@@ -100,28 +121,35 @@
               md:left-0 md:top-0 md:h-full md:w-64 md:border-r md:flex md:flex-col md:p-6
               max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:border-t max-md:flex max-md:justify-around max-md:px-2 max-md:py-2">
 
-    <div class="mb-10 px-2 max-md:hidden">
-        <a href="index.html" class="text-xl font-extrabold tracking-tight font-headline text-primary block">
-            EXPLORE<br><span class="text-surface-bright">ZAMBOANGUITA</span>
+    <div class="mb-8 max-md:hidden flex items-start justify-between gap-2">
+        <a href="index.html" class="px-2 block">
+            <span class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary block leading-tight">
+                EXPLORE<br><span class="text-surface-bright">ZAMBOANGUITA</span>
+            </span>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span>
+            <span class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2 block">Tourism Portal</span>
         </a>
-        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourism Portal</p>
+        <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-surface-bright hover:bg-surface-container-high transition-all">
+            <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+        </button>
     </div>
 
     <nav class="md:flex-1 md:space-y-2 max-md:flex max-md:flex-1 max-md:justify-around">
-        <button data-nav="spots" class="nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="spots" title="Destinations" class="nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                         max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">location_on</span>
-            <span class="max-md:text-[10px]">Destinations</span>
+            <span class="sidebar-label max-md:text-[10px]">Destinations</span>
         </button>
-        <button data-nav="reviews" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="reviews" title="Reviews" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">star</span>
-            <span class="max-md:text-[10px]">Reviews</span>
+            <span class="sidebar-label max-md:text-[10px]">Reviews</span>
         </button>
-        <button data-nav="settings" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="settings" title="Settings" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                            max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">settings</span>
-            <span class="max-md:text-[10px]">Settings</span>
+            <span class="sidebar-label max-md:text-[10px]">Settings</span>
         </button>
     </nav>
 
@@ -130,12 +158,12 @@
         <button id="authActionBtn" class="w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1">
             <span id="authActionIcon" class="material-symbols-outlined">login</span>
-            <span id="authActionLabel" class="max-md:text-[10px]">Sign In</span>
+            <span id="authActionLabel" class="sidebar-label max-md:text-[10px]">Sign In</span>
         </button>
     </div>
 </aside>
 
-<div class="md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
+<div class="content-shell md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
 
     <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md border-b border-outline-variant/20">
         <h1 id="viewTitle" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
@@ -707,6 +735,28 @@
             window.location.href = 'src/user/user_login.html';
         }
     });
+
+    /* ---------------- sidebar collapse ---------------- */
+
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+
+    function applySidebarState(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        sidebarToggleIcon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        sidebarToggleBtn.title = label;
+        sidebarToggleBtn.setAttribute('aria-label', label);
+    }
+
+    sidebarToggleBtn.addEventListener('click', () => {
+        const collapsed = !document.body.classList.contains('sidebar-collapsed');
+        applySidebarState(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch { /* private browsing */ }
+    });
+
+    try { applySidebarState(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch { applySidebarState(false); }
 
     const themeToggleIcon = document.getElementById('themeToggleIcon');
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
