@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Establishment Manager | My Establishment</title>
+    <title>Establishment Manager | My Reviews</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -239,11 +239,11 @@
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span class="sidebar-label">My Spots</span>
             </a>
-            <a title="My Reviews" class="flex items-center gap-3 text-on-surface-variant hover:text-[#FFB300] duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_reviews.html">
+            <a title="My Reviews" class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_reviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
                 <span class="sidebar-label">My Reviews</span>
             </a>
-            <a title="My Establishment" class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+            <a title="My Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-[#FFB300] duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
                 <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
                 <span class="sidebar-label">My Establishment</span>
             </a>
@@ -264,118 +264,74 @@
     </header>
 
     <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1000px] mx-auto space-y-8">
+        <div class="max-w-[1200px] mx-auto space-y-8">
 
             <div class="space-y-1">
-                <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">My Establishment</h2>
+                <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">My Reviews</h2>
                 <p class="text-on-surface-variant">
-                    These details are yours to keep current. The name and contact details appear to visitors
-                    on listings that have no booking website.
+                    What visitors have written about your listings. These are the same reviews the public sees —
+                    only the Municipal Tourism Office can remove one.
                 </p>
             </div>
 
-            <div id="settingsLoading"></div>
-
-            <div id="settingsContent" hidden class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                <section class="glass-panel rounded-2xl p-8 space-y-5">
-                    <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#FFB300]">storefront</span> Details
-                    </h3>
-
-                    <form id="detailsForm" class="space-y-4">
-                        <div>
-                            <label for="establishmentNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
-                            <input id="establishmentNameInput" type="text" required
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                            <p class="text-[11px] text-on-surface-variant mt-1.5">Shown on your listings and in the tourism office's records.</p>
-                        </div>
-
-                        <div>
-                            <label for="managerNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
-                            <input id="managerNameInput" type="text" placeholder="The person visitors should ask for"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-
-                        <div>
-                            <label for="contactEmailInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email</label>
-                            <input id="contactEmailInput" type="email" placeholder="Leave blank to use your sign-in email"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                            <p class="text-[11px] text-on-surface-variant mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
-                        </div>
-
-                        <div>
-                            <label for="phoneInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone</label>
-                            <input id="phoneInput" type="text" placeholder="09XX XXX XXXX"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-
-                        <p id="detailsMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
-
-                        <button type="submit" id="saveDetailsBtn"
-                                class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.01]">
-                            Save details
-                        </button>
-                    </form>
-                </section>
-
-                <div class="space-y-8">
-                    <section class="glass-panel rounded-2xl p-8 space-y-5">
-                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[#FFB300]">lock</span> Password
-                        </h3>
-
-                        <form id="passwordForm" class="space-y-4">
-                            <div>
-                                <label for="currentPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Current password</label>
-                                <input id="currentPasswordInput" type="password" required autocomplete="current-password"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                            </div>
-                            <div>
-                                <label for="newPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">New password</label>
-                                <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                            </div>
-                            <div>
-                                <label for="confirmPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Repeat the new password</label>
-                                <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                            </div>
-
-                            <p id="passwordMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
-
-                            <button type="submit" id="savePasswordBtn"
-                                    class="w-full bg-surface-variant border border-outline-variant/40 text-on-surface font-bold py-3.5 rounded-full transition-all hover:bg-outline-variant/50">
-                                Change password
-                            </button>
-                        </form>
-                    </section>
-
-                    <section class="glass-panel rounded-2xl p-8 space-y-3">
-                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[#FFB300]">badge</span> Account
-                        </h3>
-                        <dl class="text-sm space-y-2">
-                            <div class="flex justify-between gap-4">
-                                <dt class="text-on-surface-variant">Sign-in email</dt>
-                                <dd id="signInEmail" class="text-on-surface font-bold text-right break-all"></dd>
-                            </div>
-                            <div class="flex justify-between gap-4">
-                                <dt class="text-on-surface-variant">Account issued</dt>
-                                <dd id="accountCreated" class="text-on-surface font-bold text-right"></dd>
-                            </div>
-                        </dl>
-                        <p class="text-[11px] text-on-surface-variant pt-2">
-                            Only the Municipal Tourism Office can change your sign-in email — ask them if it needs correcting.
-                        </p>
-                    </section>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Overall rating</p>
+                    <h5 id="statAverage" class="text-3xl font-black text-on-surface">—</h5>
+                    <div id="statStars" class="mt-1"></div>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Reviews</p>
+                    <h5 id="statTotal" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">across all your listings</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Best rated</p>
+                    <h5 id="statBest" class="text-xl font-black text-on-surface leading-tight">—</h5>
+                    <p id="statBestScore" class="text-xs text-on-surface-variant mt-1"></p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Not reviewed yet</p>
+                    <h5 id="statUnreviewed" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">listings with no review</p>
                 </div>
             </div>
+
+            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <label for="listingFilter" class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Listing</label>
+                    <select id="listingFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 py-2.5 focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="all">All my listings</option>
+                    </select>
+
+                    <label for="ratingFilter" class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Rating</label>
+                    <select id="ratingFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 py-2.5 focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="all">Any</option>
+                        <option value="5">5 stars</option>
+                        <option value="4">4 stars</option>
+                        <option value="3">3 stars</option>
+                        <option value="2">2 stars</option>
+                        <option value="1">1 star</option>
+                        <option value="low">Needs attention (1–2)</option>
+                    </select>
+                </div>
+
+                <button id="refreshBtn" class="flex items-center gap-2 px-5 py-2.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                    <span class="material-symbols-outlined !text-base">refresh</span> Refresh
+                </button>
+            </div>
+
+            <div id="reviewsList" class="space-y-4"></div>
+
+            <p id="reviewsCount" class="text-on-surface-variant text-sm text-center"></p>
         </div>
     </main>
 
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
+
+        let allReviews = [];
+        let myListings = [];
 
         function authHeaders(extra) {
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
@@ -401,16 +357,6 @@
                 if (note) note.classList.remove('hidden');
             }, 5000);
             return () => clearTimeout(timer);
-        }
-
-        function setButtonLoading(btn, label) {
-            if (!btn) return () => {};
-            const originalHTML = btn.innerHTML;
-            const wasDisabled = btn.disabled;
-            btn.disabled = true;
-            btn.innerHTML =
-                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-2px] mr-2"></span>' + label;
-            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
         }
 
         function toggleDarkMode() {
@@ -439,148 +385,180 @@
             return true;
         }
 
-        // A sign-in lasts two hours. When it runs out the server answers 401, and
-        // treating that as an ordinary failure would look like the account was
-        // emptied — so say what happened and send them back to sign in.
+        // A sign-in lasts two hours. Saying so beats showing an empty page that
+        // looks like every review disappeared.
         function handleExpiredSession() {
             localStorage.removeItem('authToken');
             showToast('Your sign-in has expired. Signing you back in — nothing has been lost.', 'info');
             window.location.href = '../staff_login.html?expired=1';
         }
 
-        function showMessage(id, message, tone) {
-            const box = document.getElementById(id);
-            box.textContent = message || '';
-            box.className = 'text-sm rounded-xl px-4 py-3 ' + (tone === 'error'
-                ? 'text-red-400 bg-red-500/10 border border-red-500/20'
-                : 'text-primary-container bg-primary/10 border border-primary/20');
-            box.hidden = !message;
+        function starRow(rating, size) {
+            const rounded = Math.round(Number(rating) || 0);
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<span class="material-symbols-outlined ${size || '!text-base'} ${i <= rounded ? 'text-[#FFB300]' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
+            }
+            return stars;
         }
 
         function formatDate(value) {
-            if (!value) return '—';
+            if (!value) return '';
             const date = new Date(value);
             return Number.isNaN(date.getTime())
-                ? '—'
+                ? ''
                 : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
-        function fillForm(manager) {
-            document.getElementById('establishmentNameInput').value = manager.establishmentName || '';
-            document.getElementById('managerNameInput').value = manager.managerName || '';
-            // Only show a contact address that was actually chosen, so the field's
-            // placeholder keeps telling the truth about what blank means.
-            document.getElementById('contactEmailInput').value =
-                manager.contactEmail && manager.contactEmail !== manager.email ? manager.contactEmail : '';
-            document.getElementById('phoneInput').value = manager.phone || '';
-            document.getElementById('signInEmail').textContent = manager.email || '';
-            document.getElementById('accountCreated').textContent = formatDate(manager.createdAt);
-
-            const label = document.getElementById('establishmentNameLabel');
-            if (label) label.textContent = manager.establishmentName || manager.email || '';
-            if (manager.establishmentName) localStorage.setItem('establishmentName', manager.establishmentName);
+        function averageOf(reviews) {
+            if (reviews.length === 0) return null;
+            return reviews.reduce((sum, review) => sum + (Number(review.rating) || 0), 0) / reviews.length;
         }
 
-        async function loadProfile() {
-            const doneLoading = showLoading(document.getElementById('settingsLoading'), 'Loading your details...');
+        function visibleReviews() {
+            const listing = document.getElementById('listingFilter').value;
+            const rating = document.getElementById('ratingFilter').value;
+
+            return allReviews.filter(review => {
+                if (listing !== 'all' && String(review.spotId) !== listing) return false;
+                if (rating === 'all') return true;
+                if (rating === 'low') return Number(review.rating) <= 2;
+                return Number(review.rating) === Number(rating);
+            });
+        }
+
+        function renderSummary() {
+            const average = averageOf(allReviews);
+            document.getElementById('statAverage').textContent = average === null ? '—' : average.toFixed(1);
+            document.getElementById('statStars').innerHTML = average === null ? '' : starRow(average, '!text-sm');
+            document.getElementById('statTotal').textContent = allReviews.length;
+
+            // Best rated only means something once a listing has been reviewed at all.
+            let best = null;
+            let unreviewed = 0;
+            myListings.forEach(listing => {
+                const forListing = allReviews.filter(review => String(review.spotId) === String(listing._id));
+                if (forListing.length === 0) { unreviewed += 1; return; }
+                const score = averageOf(forListing);
+                if (!best || score > best.score) best = { title: listing.title, score, count: forListing.length };
+            });
+
+            document.getElementById('statBest').textContent = best ? best.title : '—';
+            document.getElementById('statBestScore').textContent = best
+                ? `${best.score.toFixed(1)} from ${best.count} review${best.count === 1 ? '' : 's'}`
+                : 'no reviews yet';
+            document.getElementById('statUnreviewed').textContent = unreviewed;
+        }
+
+        function renderListingFilter() {
+            const select = document.getElementById('listingFilter');
+            const chosen = select.value;
+            select.innerHTML = '<option value="all">All my listings</option>' +
+                myListings.map(listing => {
+                    const count = allReviews.filter(review => String(review.spotId) === String(listing._id)).length;
+                    return `<option value="${escapeHtml(listing._id)}">${escapeHtml(listing.title)} (${count})</option>`;
+                }).join('');
+            // Keeps the chosen listing selected across a refresh.
+            if ([...select.options].some(option => option.value === chosen)) select.value = chosen;
+        }
+
+        function renderReviews() {
+            const list = document.getElementById('reviewsList');
+            const reviews = visibleReviews();
+            const counter = document.getElementById('reviewsCount');
+
+            if (myListings.length === 0) {
+                counter.textContent = '';
+                list.innerHTML = `
+                    <div class="glass-panel rounded-2xl p-12 text-center">
+                        <span class="material-symbols-outlined text-5xl block mb-3 opacity-40">location_off</span>
+                        <p class="text-on-surface font-bold mb-1">You have no listings yet</p>
+                        <p class="text-on-surface-variant text-sm">Publish a tourist spot or accommodation first — reviews arrive once visitors can find it.</p>
+                        <a href="resort_spots.html" class="inline-block mt-4 px-6 py-2.5 rounded-full bg-primary text-on-primary text-xs font-bold hover:scale-105 transition-transform">Go to My Spots</a>
+                    </div>`;
+                return;
+            }
+
+            if (reviews.length === 0) {
+                counter.textContent = '';
+                const filtered = allReviews.length > 0;
+                list.innerHTML = `
+                    <div class="glass-panel rounded-2xl p-12 text-center">
+                        <span class="material-symbols-outlined text-5xl block mb-3 opacity-40">reviews</span>
+                        <p class="text-on-surface font-bold mb-1">${filtered ? 'No review matches these filters' : 'No reviews yet'}</p>
+                        <p class="text-on-surface-variant text-sm">${filtered
+                            ? 'Try a different listing or rating.'
+                            : 'Visitors who sign in can review your listings from the destination page. Good photos and a booking link bring more of them.'}</p>
+                    </div>`;
+                return;
+            }
+
+            counter.textContent = `Showing ${reviews.length} of ${allReviews.length} review${allReviews.length === 1 ? '' : 's'}`;
+
+            list.innerHTML = reviews.map(review => {
+                const low = Number(review.rating) <= 2;
+                return `
+                <article class="glass-panel rounded-2xl p-6 ${low ? 'border-l-4 border-l-red-500/60' : ''}">
+                    <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-black text-on-surface">${escapeHtml(review.guestName || 'A visitor')}</h3>
+                                <span class="text-xs text-on-surface-variant">on</span>
+                                <span class="text-xs font-bold text-primary-container">${escapeHtml(review.spotTitle || '')}</span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                ${starRow(review.rating)}
+                                <span class="text-xs text-on-surface-variant">${escapeHtml(formatDate(review.createdAt))}</span>
+                            </div>
+                        </div>
+                        ${review.spotId ? `<a href="../spot.html?spotId=${encodeURIComponent(review.spotId)}" target="_blank" rel="noopener"
+                            class="text-xs font-bold text-on-surface-variant hover:text-[#FFB300] transition-colors flex items-center gap-1">
+                            <span class="material-symbols-outlined !text-base">open_in_new</span> View listing
+                        </a>` : ''}
+                    </div>
+
+                    <p class="text-on-surface-variant leading-relaxed">${escapeHtml(review.comment || '')}</p>
+
+                    ${review.imageURL ? `<img src="${escapeHtml(review.imageURL)}" alt="Photo from this review" loading="lazy"
+                        class="mt-4 rounded-xl max-h-64 object-cover"/>` : ''}
+                </article>`;
+            }).join('');
+        }
+
+        function render() {
+            renderSummary();
+            renderListingFilter();
+            renderReviews();
+        }
+
+        async function loadReviews() {
+            const doneLoading = showLoading(document.getElementById('reviewsList'), 'Loading your reviews...');
             try {
-                const response = await fetch(`${API_BASE}/establishment-managers/me`, { headers: authHeaders() });
-                if (response.status === 401) return handleExpiredSession();
+                const response = await fetch(`${API_BASE}/establishment-managers/me/reviews`, { headers: authHeaders() });
+                if (response.status === 401) { handleExpiredSession(); return; }
                 if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
 
                 const result = await response.json();
+                allReviews = Array.isArray(result.reviews) ? result.reviews : [];
+                myListings = Array.isArray(result.listings) ? result.listings : [];
+
                 doneLoading();
-                document.getElementById('settingsLoading').innerHTML = '';
-                document.getElementById('settingsContent').hidden = false;
-                fillForm(result.manager || {});
+                render();
             } catch (error) {
-                console.error('❌ Could not load your details:', error);
+                console.error('❌ Could not load reviews:', error);
                 doneLoading();
-                document.getElementById('settingsLoading').innerHTML = `
-                    <div class="glass-panel rounded-2xl p-8 text-center">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
-                        <p class="text-on-surface font-bold mb-1">Could not load your details</p>
-                        <p class="text-on-surface-variant text-sm">${escapeHtml(error.message)} Nothing has been changed — refresh to try again.</p>
+                allReviews = [];
+                myListings = [];
+                renderSummary();
+                document.getElementById('reviewsCount').textContent = '';
+                document.getElementById('reviewsList').innerHTML = `
+                    <div class="glass-panel rounded-2xl p-12 text-center">
+                        <span class="material-symbols-outlined text-5xl block mb-3 text-red-400/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not load your reviews</p>
+                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(error.message)}
+                        Nothing has been lost — the API sleeps when idle, so give it a moment and try again.</p>
+                        <button onclick="loadReviews()" class="mt-4 px-6 py-2.5 rounded-full bg-surface-variant border border-outline-variant/40 text-on-surface text-xs font-bold hover:bg-outline-variant/50 transition-all">Try again</button>
                     </div>`;
-            }
-        }
-
-        async function saveDetails(event) {
-            event.preventDefault();
-            showMessage('detailsMessage', '');
-
-            const payload = {
-                establishmentName: document.getElementById('establishmentNameInput').value.trim(),
-                managerName: document.getElementById('managerNameInput').value.trim(),
-                contactEmail: document.getElementById('contactEmailInput').value.trim(),
-                phone: document.getElementById('phoneInput').value.trim()
-            };
-
-            if (!payload.establishmentName) {
-                showMessage('detailsMessage', 'Your establishment needs a name.', 'error');
-                return;
-            }
-
-            const restoreButton = setButtonLoading(document.getElementById('saveDetailsBtn'), 'Saving...');
-            try {
-                const response = await fetch(`${API_BASE}/establishment-managers/me`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify(payload)
-                });
-                if (response.status === 401) return handleExpiredSession();
-
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) {
-                    throw new Error(result.message || `The server refused (status ${response.status}).`);
-                }
-
-                fillForm(result.manager || {});
-                showMessage('detailsMessage', result.message || 'Your details have been saved.');
-            } catch (error) {
-                showMessage('detailsMessage', error.message, 'error');
-            } finally {
-                restoreButton();
-            }
-        }
-
-        async function changePassword(event) {
-            event.preventDefault();
-            showMessage('passwordMessage', '');
-
-            const currentPassword = document.getElementById('currentPasswordInput').value;
-            const newPassword = document.getElementById('newPasswordInput').value;
-            const confirmation = document.getElementById('confirmPasswordInput').value;
-
-            if (newPassword.length < 8) {
-                showMessage('passwordMessage', 'Your new password must be at least 8 characters.', 'error');
-                return;
-            }
-            if (newPassword !== confirmation) {
-                showMessage('passwordMessage', 'Those two passwords do not match.', 'error');
-                return;
-            }
-
-            const restoreButton = setButtonLoading(document.getElementById('savePasswordBtn'), 'Changing...');
-            try {
-                const response = await fetch(`${API_BASE}/establishment-managers/me/password`, {
-                    method: 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ currentPassword, newPassword })
-                });
-                // 401 here means the current password was wrong, not an expired
-                // session, so it is reported rather than signing them out.
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) {
-                    throw new Error(result.message || `The server refused (status ${response.status}).`);
-                }
-
-                document.getElementById('passwordForm').reset();
-                showMessage('passwordMessage', 'Your password has been changed. Use the new one next time you sign in.');
-            } catch (error) {
-                showMessage('passwordMessage', error.message, 'error');
-            } finally {
-                restoreButton();
             }
         }
 
@@ -593,10 +571,11 @@
             const label = document.getElementById('establishmentNameLabel');
             if (label) label.textContent = localStorage.getItem('establishmentName') || localStorage.getItem('userEmail') || '';
 
-            document.getElementById('detailsForm').addEventListener('submit', saveDetails);
-            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            document.getElementById('listingFilter').addEventListener('change', renderReviews);
+            document.getElementById('ratingFilter').addEventListener('change', renderReviews);
+            document.getElementById('refreshBtn').addEventListener('click', loadReviews);
 
-            loadProfile();
+            loadReviews();
         });
     </script>
 <script>

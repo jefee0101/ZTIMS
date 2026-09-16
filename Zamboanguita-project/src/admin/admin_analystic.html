@@ -173,6 +173,113 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
 <body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
 
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing in the corner and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: '#2E7D32' },
+        error:   { icon: 'error',        accent: '#E53935' },
+        info:    { icon: 'info',         accent: '#FFB300' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            'position:fixed', 'top:1rem', 'right:1rem', 'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'gap:.6rem',
+            'width:min(24rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateX(1.5rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(1.5rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:.9rem',
+            'border-left:4px solid ' + settings.accent,
+            'background:rgba(10,25,47,.97)',
+            'color:#F4F6F9',
+            'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut .2s ease forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
     <!-- Left Sidebar Control Desk -->
     <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
@@ -207,7 +314,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
-            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="sidebar-label">Log Out</span>
             </a>
@@ -761,13 +868,13 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
                 if (!response.ok) throw new Error("Server rejected cluster update parameters configuration execution.");
 
-                alert("🎯 New spot published and synchronized with destination servers successfully!");
+                showToast('Destination published. It is live on the main page now.', 'success');
                 closeAddSpotModal();
                 loadSpotsPreview(); 
 
             } catch (err) {
                 console.error("Posting operation processing failed:", err);
-                alert("⚠️ Execution fault: Could not save location entry to backend cluster.");
+                showToast('Could not save that destination. Please try again in a moment.', 'error');
             } finally {
                 restoreButton();
             }
@@ -835,6 +942,28 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
     try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
     catch (e) { apply(false); }
+})();
+</script>
+
+<script>
+/* Signing out goes straight back to the public site: the session is cleared here
+   and the person lands on the main page, instead of stopping at a page whose only
+   purpose was to say they had left. */
+(function () {
+    var link = document.getElementById('logoutLink');
+    if (!link) return;
+
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+        } catch (e) { /* private browsing */ }
+
+        if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+        // replace(), not href: the portal must not come back with the back button.
+        setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+    });
 })();
 </script>
 </body>

@@ -55,6 +55,113 @@
 
 <body id="body" class="light-mode overflow-hidden">
 
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing in the corner and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: '#2E7D32' },
+        error:   { icon: 'error',        accent: '#E53935' },
+        info:    { icon: 'info',         accent: '#FFB300' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            'position:fixed', 'top:1rem', 'right:1rem', 'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'gap:.6rem',
+            'width:min(24rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateX(1.5rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(1.5rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:.9rem',
+            'border-left:4px solid ' + settings.accent,
+            'background:rgba(10,25,47,.97)',
+            'color:#F4F6F9',
+            'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut .2s ease forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
   <button onclick="toggleTheme()" class="fixed top-5 right-5 z-50 p-3 rounded-full bg-white dark:bg-surface border border-gray-200 dark:border-outline/30 text-[#FFB300] hover:scale-110 transition-all duration-300 shadow-lg">
     <span id="themeIcon" class="material-symbols-outlined">dark_mode</span>
   </button>
@@ -292,7 +399,7 @@
           const result = await response.json();
 
           if (response.ok && result.success) {
-            alert(`Welcome back! Logging in.`);
+            showToast('Welcome back! Signing you in...', 'success', { duration: 2500 });
             localStorage.setItem('authToken', result.token);
             localStorage.setItem('userRole', result.role || inferredRole);
             localStorage.setItem('userEmail', email);
@@ -322,19 +429,18 @@
             const returnParams = new URLSearchParams(window.location.search);
             const spotId = returnParams.get('spotId');
 
-            if (spotId) {
-                window.location.href = window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId);
-            } else {
-                window.location.href = window.location.origin + projectRoot + "/index.html";
-            }
+            const destination = spotId
+                ? window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId)
+                : window.location.origin + projectRoot + "/index.html";
+            setTimeout(() => { window.location.href = destination; }, 900);
           } else {
             restoreButton();
-            alert("Authentication failed: " + (result.message || "Invalid Credentials"));
+            showToast(result.message || "Those credentials were not recognised.", "error");
           }
         } catch (error) {
           restoreButton();
           console.error("Network Error:", error);
-          alert("Could not connect to the authentication server.");
+          showToast("Could not reach the server. Check your connection and try again.", "error");
         }
       });
     }
@@ -359,14 +465,14 @@
           if (response.ok && result.success) {
             // Deliberately the same wording whether or not that email is registered,
             // so this form can't be used to find out who has an account.
-            alert(result.message || "If that email has an account, a reset link is on its way. Check your inbox and spam folder.\n\nThe link works once and expires in 30 minutes.");
+            showToast(result.message || "If that email has an account, a reset link is on its way. Check your inbox and spam folder.\n\nThe link works once and expires in 30 minutes.", "info", { duration: 8000 });
             closeForgotModal();
           } else {
-            alert(result.message || "Something went wrong. Please try again in a moment.");
+            showToast(result.message || "Something went wrong. Please try again in a moment.", "error");
           }
         } catch (error) {
           console.error("Forgot password API error:", error);
-          alert("Could not connect to the server. Is your backend running?");
+          showToast("Could not reach the server. Check your connection and try again.", "error");
         } finally {
           restoreButton();
         }
@@ -394,7 +500,7 @@
         const result = await apiResponse.json();
 
         if (!apiResponse.ok || !result.success) {
-          alert("Google sign-in failed: " + (result.message || "Please try again."));
+          showToast("Google sign-in failed: " + (result.message || "Please try again."), "error");
           return;
         }
 

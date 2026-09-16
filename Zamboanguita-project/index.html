@@ -130,6 +130,113 @@
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing in the corner and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: '#2E7D32' },
+        error:   { icon: 'error',        accent: '#E53935' },
+        info:    { icon: 'info',         accent: '#FFB300' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            'position:fixed', 'top:1rem', 'right:1rem', 'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'gap:.6rem',
+            'width:min(24rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateX(1.5rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(1.5rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:.9rem',
+            'border-left:4px solid ' + settings.accent,
+            'background:rgba(10,25,47,.97)',
+            'color:#F4F6F9',
+            'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut .2s ease forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
 <!-- Sidebar: a rail on desktop, a bottom bar on phones. Visible to everyone —
      guests included — since the gate happens in the content area, not here. -->
 <aside class="fixed z-50 bg-surface transition-colors duration-300
@@ -216,6 +323,18 @@
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
                         <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
                             class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
+                    </div>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">category</span>
+                        <select id="spotCategoryFilter" aria-label="Filter by category"
+                            class="appearance-none bg-surface border border-outline-variant/30 rounded-full pl-11 pr-10 py-3 text-sm font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                            <option value="all">All categories</option>
+                            <option value="BEACH / DIVING">Beach / Diving</option>
+                            <option value="MOUNTAIN">Mountain</option>
+                            <option value="CULTURAL">Cultural</option>
+                            <option value="ACCOMMODATION">Accommodation</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
                     </div>
                     <div id="spotTypeFilters" class="flex gap-2 flex-wrap">
                         <button data-type="all" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary transition-all">All</button>
@@ -430,6 +549,7 @@
     // small enough that re-querying per keystroke would only add latency.
     let allSpots = [];
     let activeType = 'all';
+    let activeCategory = 'all';
 
     function renderSpotCard(spot) {
         const card = document.createElement('a');
@@ -471,6 +591,9 @@
         const query = (searchInput.value || '').trim().toLowerCase();
         const matches = allSpots.filter(spot => {
             if (activeType !== 'all' && (spot.type || 'spot') !== activeType) return false;
+            // Categories are stored upper case by every editor, but compared
+            // case-insensitively so an older spot typed by hand still matches.
+            if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
             if (!query) return true;
             return [spot.title, spot.location, spot.category, spot.label, spot.description]
                 .filter(Boolean)
@@ -483,7 +606,7 @@
             resultCount.textContent = '';
             spotsContainer.innerHTML = allSpots.length === 0
                 ? '<p class="text-on-surface-variant col-span-full py-8">No tourist spots have been published yet. Please check back soon.</p>'
-                : '<p class="text-on-surface-variant col-span-full py-8">Nothing matches that search. Try a different word or clear the filters.</p>';
+                : '<p class="text-on-surface-variant col-span-full py-8">Nothing matches that search or category. Try a different word, or set the category back to All.</p>';
             return;
         }
 
@@ -492,6 +615,11 @@
     }
 
     searchInput.addEventListener('input', applyFilters);
+
+    document.getElementById('spotCategoryFilter').addEventListener('change', event => {
+        activeCategory = event.target.value;
+        applyFilters();
+    });
 
     typeFilterButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -633,7 +761,7 @@
         event.preventDefault();
 
         const spot = allSpots.find(item => item._id === reviewSpotSelect.value);
-        if (!spot) { alert('Please choose a destination.'); return; }
+        if (!spot) { showToast('Please choose a destination first.', 'error'); return; }
 
         const profile = currentUser();
         const restoreButton = setButtonLoading(document.getElementById('submitReviewBtn'), 'Publishing...');
@@ -660,7 +788,7 @@
             reviewsLoaded = false;
             await loadReviews();
         } catch (error) {
-            alert('⚠️ ' + error.message);
+            showToast(error.message, 'error');
         } finally {
             restoreButton();
         }
@@ -713,7 +841,7 @@
         event.preventDefault();
 
         const userId = localStorage.getItem('userId');
-        if (!userId) { alert('Your session has expired. Please sign in again.'); return; }
+        if (!userId) { showToast('Your sign-in has expired. Please sign in again.', 'info'); return; }
 
         const payload = {
             fullName: document.getElementById('profileName').value.trim(),
@@ -733,9 +861,9 @@
 
             localStorage.setItem('currentUser', JSON.stringify(Object.assign(currentUser(), payload, { name: payload.fullName })));
             refreshAuthUI();
-            alert('✅ Your details have been saved.');
+            showToast('Your details have been saved.', 'success');
         } catch (error) {
-            alert('⚠️ ' + error.message);
+            showToast(error.message, 'error');
         } finally {
             restoreButton();
         }

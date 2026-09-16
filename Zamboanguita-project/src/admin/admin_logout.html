@@ -157,6 +157,10 @@
         localStorage.clear();
         sessionStorage.clear();
 
+        // 2. Nothing links here any more — signing out now returns straight to the
+        //    public site. Kept for old bookmarks, which land on the main page too.
+        window.location.replace('../../index.html');
+
         // 2. Prevent back button navigation out of this page
         function preventBack() {
             window.history.forward();

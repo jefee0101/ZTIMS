@@ -555,6 +555,67 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
     }
 });
 
+/**
+ * GET: every approved review across this manager's own listings, in one request.
+ * Scoped to req.auth.sub like the rest of /me, so a manager can never read
+ * another establishment's reviews. Approved only — what the manager sees is
+ * exactly what visitors see.
+ * Target URL: http://localhost:5000/api/establishment-managers/me/reviews
+ */
+app.get('/api/establishment-managers/me/reviews', requireEstablishmentManager, async (req, res) => {
+    try {
+        const spots = await Spot.find({ ownerId: req.auth.sub }).select('title type imageUrl');
+
+        if (spots.length === 0) {
+            return res.status(200).json({ success: true, listings: [], reviews: [], averageRating: null, total: 0 });
+        }
+
+        // Matched by reference and by name, because reviews written before reviews
+        // carried a reference still only know the listing by its title.
+        const reviews = await Review.find({
+            status: 'approved',
+            $or: [
+                { spotId: { $in: spots.map(spot => spot._id) } },
+                { destinationId: { $in: spots.map(spot => spot.title) } }
+            ]
+        }).sort({ createdAt: -1 });
+
+        const byId = new Map(spots.map(spot => [String(spot._id), spot]));
+        const byTitle = new Map(spots.map(spot => [spot.title, spot]));
+
+        // Each review carries the listing it belongs to, so the page can group and
+        // filter without matching titles again in the browser.
+        const answered = reviews.map(review => {
+            const spot = byId.get(String(review.spotId || '')) || byTitle.get(review.destinationId) || null;
+            return {
+                _id: review._id,
+                guestName: review.guestName,
+                rating: review.rating,
+                comment: review.comment,
+                imageURL: review.imageURL || '',
+                createdAt: review.createdAt,
+                spotId: spot ? spot._id : null,
+                spotTitle: spot ? spot.title : review.destinationId
+            };
+        });
+
+        const averageRating = answered.length
+            ? Number((answered.reduce((sum, review) => sum + (review.rating || 0), 0) / answered.length).toFixed(1))
+            : null;
+
+        return res.status(200).json({
+            success: true,
+            listings: spots.map(spot => ({ _id: spot._id, title: spot.title, type: spot.type, imageUrl: spot.imageUrl })),
+            reviews: answered,
+            averageRating,
+            total: answered.length
+        });
+    } catch (error) {
+        console.error('❌ Manager reviews fetch failure:', error);
+        return res.status(500).json({ success: false, message: 'Could not load your reviews just now.' });
+    }
+});
+
 /* ---- Officer-side account lifecycle ---------------------------------------- */
 
 /**
