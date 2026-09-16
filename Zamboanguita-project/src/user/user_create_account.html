@@ -242,7 +242,7 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
       localStorage.setItem('userEmail', email.toLowerCase().trim());
       localStorage.setItem('userRole', 'user');
 
-      window.location.href = 'user_login.html'; 
+      window.location.href = 'user_login.html' + window.location.search;
     } else {
       alert("Registration failed: " + (result.message || "Unknown error occurred."));
     }
@@ -266,7 +266,7 @@ document.getElementById('signupForm').addEventListener('submit', async (event) =
     localStorage.setItem('userRole', 'user');
     
     alert("Development Mode Notice: Authentication server offline. Local account fallback stored successfully.");
-    window.location.href = 'user_login.html'; 
+    window.location.href = 'user_login.html' + window.location.search;
   }
 });
 </script>

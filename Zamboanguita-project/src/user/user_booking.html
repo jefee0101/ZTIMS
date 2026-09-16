@@ -788,6 +788,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropdownIcon = document.getElementById("dropdownIcon");
     const items = document.querySelectorAll(".dropdown-item");
 
+    // Arrived here from a spot's "Book Now" button — pre-select that exact spot.
+    const preselectedSpotId = new URLSearchParams(window.location.search).get('spotId');
+    if (preselectedSpotId && hiddenInput) {
+        fetch(`https://ztims-api.onrender.com/api/spots/${preselectedSpotId}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(spot => {
+                if (!spot || !spot.title) return;
+                hiddenInput.value = spot.title;
+                hiddenInput.dataset.spotId = spot._id;
+                if (label) label.textContent = spot.title;
+            })
+            .catch(() => {});
+    }
+
     if (trigger && menu && dropdownIcon) {
         trigger.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -992,6 +1006,7 @@ if (bookingForm) {
             nationality: document.getElementById('bookingNationality').value,
             phone: document.getElementById('bookingPhone').value.trim(),
             destination: document.getElementById('destinationResort').value,
+            spotId: document.getElementById('destinationResort').dataset.spotId || undefined,
             tourGuide: chosenTourGuide, // Integrated guide parameters into transmission payload 
             checkInDate: document.getElementById('checkInDate').value,
             checkOutDate: document.getElementById('checkOutDate').value,
