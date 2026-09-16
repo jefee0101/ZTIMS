@@ -49,6 +49,11 @@
 
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+        /* The hidden attribute only gets display:none from the browser default,
+           which any Tailwind display class (.flex here) outranks. Without this,
+           elements toggled via el.hidden stay on screen. */
+        [hidden] { display: none !important; }
         .text-gradient {
             background: linear-gradient(to right, #FFB300, #ff6811);
             background-clip: text;
@@ -88,6 +93,35 @@
 <main id="spotContent" class="pt-16">
     <!-- Filled by the script below -->
 </main>
+
+<!-- Shown when a signed-out visitor taps Book Now. Kept on this page rather than
+     redirecting, so they don't lose the destination they were looking at. -->
+<div id="bookingAuthModal" hidden class="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-md p-7 text-center relative">
+        <button id="closeBookingAuthModal" aria-label="Close"
+                class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <span class="material-symbols-outlined !text-5xl text-surface-bright">lock_person</span>
+        <h3 class="text-2xl font-display font-bold text-on-surface mt-3 mb-2">Sign in to book</h3>
+        <p class="text-on-surface-variant text-sm mb-6">
+            Booking for <b id="bookingAuthSpotName" class="text-on-surface"></b> happens on the resort's own website.
+            Sign in first so the tourism office can keep track of visits — you'll come straight back here.
+        </p>
+
+        <div class="flex flex-col gap-3">
+            <a id="bookingAuthRegister" href="user/user_create_account.html"
+               class="bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform">
+                Create an account
+            </a>
+            <a id="bookingAuthLogin" href="user/user_login.html"
+               class="px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs border border-outline-variant/40 text-on-surface hover:border-primary transition-colors">
+                Sign in
+            </a>
+        </div>
+    </div>
+</div>
 
 <footer class="w-full py-10 px-8 bg-surface-container-low border-t border-outline-variant/10 mt-16 transition-colors duration-300">
     <p class="text-center text-sm text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
@@ -168,8 +202,11 @@
         const owner = spot.ownerId && typeof spot.ownerId === 'object' ? spot.ownerId : null;
 
         if (url) {
+            // The href is always the real destination so the link still works with
+            // middle-click, "open in new tab", and with JavaScript disabled. The
+            // click handler below is what gates it for signed-out visitors.
             return `
-                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+                <a id="bookNowBtn" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
                    class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
                     <span class="material-symbols-outlined">open_in_new</span> Book Now
                 </a>
@@ -299,6 +336,47 @@
         `).join('');
     }
 
+    /* ---------------- booking gate ---------------- */
+
+    const bookingAuthModal = document.getElementById('bookingAuthModal');
+
+    function closeBookingAuthModal() { bookingAuthModal.hidden = true; }
+
+    document.getElementById('closeBookingAuthModal').addEventListener('click', closeBookingAuthModal);
+    bookingAuthModal.addEventListener('click', event => {
+        if (event.target === bookingAuthModal) closeBookingAuthModal();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !bookingAuthModal.hidden) closeBookingAuthModal();
+    });
+
+    // Only a tourist account counts here. An officer or resort owner signed into
+    // their own portal is not a visitor booking a trip.
+    function signedInTourist() {
+        return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';
+    }
+
+    function wireBookingGate(spot, spotId) {
+        const bookBtn = document.getElementById('bookNowBtn');
+        if (!bookBtn) return;   // no booking link on this spot — nothing to gate
+
+        bookBtn.addEventListener('click', event => {
+            if (signedInTourist()) return;   // let the link through to the resort
+
+            event.preventDefault();
+
+            document.getElementById('bookingAuthSpotName').textContent = spot.title;
+
+            // Carrying the spot id means both paths return here rather than dumping
+            // them on a dashboard, so the booking they started is still in front of them.
+            const returnTo = `?spotId=${encodeURIComponent(spotId)}`;
+            document.getElementById('bookingAuthRegister').href = `user/user_create_account.html${returnTo}`;
+            document.getElementById('bookingAuthLogin').href = `user/user_login.html${returnTo}`;
+
+            bookingAuthModal.hidden = false;
+        });
+    }
+
     async function loadSpot() {
         const spotId = new URLSearchParams(window.location.search).get('spotId');
 
@@ -321,6 +399,7 @@
             doneLoading();
             renderSpot(spot);
             document.title = `${spot.title} | Zamboanguita`;
+            wireBookingGate(spot, spotId);
 
             // Reviews load after the page is already readable, so a slow review
             // query never holds back the destination details themselves.
