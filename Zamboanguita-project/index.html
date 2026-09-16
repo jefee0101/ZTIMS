@@ -336,11 +336,6 @@
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
                     </div>
-                    <div id="spotTypeFilters" class="flex gap-2 flex-wrap">
-                        <button data-type="all" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary transition-all">All</button>
-                        <button data-type="spot" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Tourist Spots</button>
-                        <button data-type="accommodation" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Accommodations</button>
-                    </div>
                 </div>
                 <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold"></p>
 
@@ -543,12 +538,10 @@
     const spotsContainer = document.getElementById('spotsContainer');
     const searchInput = document.getElementById('spotSearchInput');
     const resultCount = document.getElementById('spotsResultCount');
-    const typeFilterButtons = document.querySelectorAll('.type-filter');
 
     // Fetched once, then filtered in the browser — one municipality's catalogue is
     // small enough that re-querying per keystroke would only add latency.
     let allSpots = [];
-    let activeType = 'all';
     let activeCategory = 'all';
 
     function renderSpotCard(spot) {
@@ -590,7 +583,6 @@
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
         const matches = allSpots.filter(spot => {
-            if (activeType !== 'all' && (spot.type || 'spot') !== activeType) return false;
             // Categories are stored upper case by every editor, but compared
             // case-insensitively so an older spot typed by hand still matches.
             if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
@@ -619,22 +611,6 @@
     document.getElementById('spotCategoryFilter').addEventListener('change', event => {
         activeCategory = event.target.value;
         applyFilters();
-    });
-
-    typeFilterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            activeType = button.dataset.type;
-            typeFilterButtons.forEach(other => {
-                const isActive = other === button;
-                other.classList.toggle('bg-primary', isActive);
-                other.classList.toggle('text-on-primary', isActive);
-                other.classList.toggle('bg-surface', !isActive);
-                other.classList.toggle('border', !isActive);
-                other.classList.toggle('border-outline-variant/30', !isActive);
-                other.classList.toggle('text-on-surface-variant', !isActive);
-            });
-            applyFilters();
-        });
     });
 
     async function loadSpots() {
