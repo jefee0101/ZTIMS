@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Signed Out - Zamboanguita</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#59ee50",
+                        "on-primary": "#005406",
+                        background: "#0e0f0a",
+                        surface: "#191a14",
+                        "on-surface": "#fefcf4",
+                        "on-surface-variant": "#acaba4",
+                        "outline-variant": "#484842"
+                    },
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans"],
+                        body: ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { font-family: 'Manrope', sans-serif; background-color: #0e0f0a; }
+        .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col overflow-x-hidden">
+
+    <main class="relative flex-grow flex items-center justify-center p-6 md:p-12">
+        <div class="relative z-10 w-full max-w-xl">
+            <div class="bg-surface/50 backdrop-blur-2xl rounded-3xl border border-outline-variant/15 p-8 md:p-14 text-center shadow-2xl">
+                <div class="mb-8">
+                    <span class="text-3xl font-black text-primary tracking-tighter headline-font uppercase">Zamboanguita</span>
+                    <div class="h-1 w-12 bg-primary mx-auto mt-2 rounded-full"></div>
+                </div>
+                <div class="mb-8">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 text-primary mb-6">
+                        <span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+                    <h1 class="headline-font text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface mb-4">Signed Out</h1>
+                    <p class="text-on-surface-variant text-base md:text-lg font-medium leading-relaxed max-w-sm mx-auto">
+                        You have been successfully logged out of your Resort Owner account.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a class="group relative inline-flex items-center justify-center px-6 py-3.5 bg-primary text-on-primary headline-font font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 w-full sm:w-auto shadow-md" href="../../index.html">
+                        <span class="material-symbols-outlined mr-2 !text-xl">home</span>
+                        Return to Home
+                    </a>
+                    <a class="inline-flex items-center justify-center px-6 py-3.5 text-primary headline-font font-bold transition-all duration-300 hover:underline underline-offset-8 w-full sm:w-auto group" href="resort_login.html">
+                        <span class="material-symbols-outlined mr-2 !text-xl group-hover:-translate-x-1 transition-transform">login</span>
+                        Sign In Again
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        localStorage.clear();
+        sessionStorage.clear();
+
+        function preventBack() { window.history.forward(); }
+        setTimeout(preventBack, 0);
+        window.history.pushState(null, document.title, window.location.href);
+        window.addEventListener('popstate', function () {
+            window.history.pushState(null, document.title, window.location.href);
+        });
+    </script>
+</body>
+</html>

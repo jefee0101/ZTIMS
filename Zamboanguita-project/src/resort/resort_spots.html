@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Resort Owner | My Spots</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2E7D32",
+            "on-primary": "#FFFFFF",
+            "surface": "var(--color-surface, #051D40)",
+            "background": "var(--color-background, #020F24)",
+            "surface-variant": "var(--color-surface-variant, #0B2954)",
+            "on-surface": "var(--color-on-surface, #FEFCF4)",
+            "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+            "outline-variant": "#1E3D6B",
+            "primary-container": "#4CAF50",
+            "secondary-container": "#00838F",
+            "on-secondary-container": "#E0F7FA",
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <style>
+    :root {
+        --color-surface: #051D40;
+        --color-background: #020F24;
+        --color-surface-variant: #0B2954;
+        --color-on-surface: #FEFCF4;
+        --color-on-surface-variant: #A0B2C6;
+    }
+    .light-mode, [class*="light-mode"] {
+        --color-surface: #FFFFFF !important;
+        --color-background: #F4F7FA !important;
+        --color-surface-variant: #E6EEF8 !important;
+        --color-on-surface: #020F24 !important;
+        --color-on-surface-variant: #4A5D73 !important;
+    }
+    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th, input, select, textarea {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+    .light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+    .light-mode main { background: #F4F7FA !important; }
+    .light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+    .glass-panel { background: var(--color-surface); border: 1px solid #1E3D6B; }
+    .light-mode .glass-panel { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+    .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
+        color: #020F24 !important;
+    }
+    .light-mode input, .light-mode select, .light-mode textarea {
+        background: #FFFFFF !important;
+        color: #020F24 !important;
+        border: 1px solid #CBD5E1 !important;
+    }
+    .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Resort Owner Portal</p>
+        </div>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+                <span>My Spots</span>
+            </a>
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="resort_bookings.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
+                <span>My Bookings</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <p id="resortNameLabel" class="text-sm font-bold text-on-surface-variant"></p>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+            <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
+        </button>
+    </header>
+
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1400px] mx-auto space-y-8">
+            <div class="flex justify-between items-end">
+                <div class="space-y-1">
+                    <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">My Spots</h2>
+                    <p class="text-on-surface-variant">Only listings owned by your account are shown here.</p>
+                </div>
+                <button onclick="toggleAddSpotModal(true)" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                    <span class="material-symbols-outlined">add_circle</span> Add New Spot
+                </button>
+            </div>
+
+            <div id="spotsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+            <p id="spotsEmptyState" class="text-on-surface-variant hidden">You haven't published any spots yet. Click "Add New Spot" to get started.</p>
+        </div>
+
+        <!-- Add/Edit Spot Modal -->
+        <div id="addSpotModal" class="fixed inset-0 bg-background/90 backdrop-blur-sm hidden items-center justify-center z-[200] p-4 transition-all">
+            <div class="bg-surface border border-outline-variant/60 rounded-[2rem] w-full max-w-lg p-8 space-y-6 relative text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 id="spotModalTitle" class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
+                    <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+                        <span class="material-symbols-outlined text-2xl">close</span>
+                    </button>
+                </div>
+
+                <form id="addSpotForm" onsubmit="handleSpotSubmit(event)" class="space-y-4 font-body">
+                    <input type="hidden" id="editingSpotId" value=""/>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Listing Type</label>
+                        <select id="spotType" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+                            <option value="spot">Tourist Spot</option>
+                            <option value="accommodation">Accommodation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Name</label>
+                        <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Location</label>
+                        <input type="text" id="spotLocation" placeholder="e.g., Brgy. Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
+                        <textarea id="spotDescription" placeholder="Describe your spot or accommodation..." rows="3" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" required></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
+                            <select id="spotCategory" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+                                <option value="MOUNTAIN">Mountain</option>
+                                <option value="BEACH / DIVING">Beach / Diving</option>
+                                <option value="CULTURAL">Cultural</option>
+                                <option value="ACCOMMODATION">Accommodation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Label Tag</label>
+                            <input type="text" id="spotLabel" placeholder="e.g., Crystal Waters" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Days</label>
+                            <input type="text" id="spotWorkingDays" placeholder="e.g., Everyday" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Time</label>
+                            <input type="text" id="spotWorkingTime" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
+                            <input type="number" id="spotTravelFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Entrance Fee (₱)</label>
+                            <input type="number" id="spotEntranceFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Image URL</label>
+                        <input type="url" id="spotImage" placeholder="https://images.unsplash.com/..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="toggleAddSpotModal(false)" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit" id="spotSubmitBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">
+                            Publish Spot
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "https://ztims-api.onrender.com/api";
+        let mySpots = [];
+
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if (icon) icon.textContent = 'light_mode';
+            }
+        }
+
+        function guardResortOwnerSession() {
+            if (localStorage.getItem('userRole') !== 'resort_owner' || !localStorage.getItem('authToken')) {
+                window.location.href = 'resort_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function toggleAddSpotModal(show, spot) {
+            const modal = document.getElementById('addSpotModal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('spotModalTitle').textContent = spot ? 'Edit Spot' : 'Add New Spot';
+                document.getElementById('spotSubmitBtn').textContent = spot ? 'Save Changes' : 'Publish Spot';
+                document.getElementById('editingSpotId').value = spot ? spot._id : '';
+                document.getElementById('spotType').value = spot?.type || 'spot';
+                document.getElementById('spotTitle').value = spot?.title || '';
+                document.getElementById('spotLocation').value = spot?.location || '';
+                document.getElementById('spotDescription').value = spot?.description || '';
+                document.getElementById('spotCategory').value = spot?.category || 'MOUNTAIN';
+                document.getElementById('spotLabel').value = spot?.label || '';
+                document.getElementById('spotWorkingDays').value = spot?.workingDays || '';
+                document.getElementById('spotWorkingTime').value = spot?.workingTime || '';
+                document.getElementById('spotTravelFee').value = spot?.travelFee ?? '';
+                document.getElementById('spotEntranceFee').value = spot?.entranceFee ?? '';
+                document.getElementById('spotImage').value = spot?.imageUrl || '';
+            } else {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+                document.getElementById('addSpotForm').reset();
+            }
+        }
+
+        async function handleSpotSubmit(event) {
+            event.preventDefault();
+            const editingId = document.getElementById('editingSpotId').value;
+            const payload = {
+                type: document.getElementById('spotType').value,
+                title: document.getElementById('spotTitle').value.trim(),
+                location: document.getElementById('spotLocation').value.trim(),
+                description: document.getElementById('spotDescription').value.trim(),
+                category: document.getElementById('spotCategory').value,
+                label: document.getElementById('spotLabel').value.trim(),
+                workingDays: document.getElementById('spotWorkingDays').value.trim() || 'Everyday',
+                workingTime: document.getElementById('spotWorkingTime').value.trim() || 'All Day',
+                travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
+                entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
+                imageUrl: document.getElementById('spotImage').value.trim()
+            };
+
+            try {
+                const response = await fetch(
+                    editingId ? `${API_BASE}/spots/${editingId}` : `${API_BASE}/spots`,
+                    {
+                        method: editingId ? 'PUT' : 'POST',
+                        headers: authHeaders({ 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(payload)
+                    }
+                );
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to save spot.');
+
+                toggleAddSpotModal(false);
+                await loadMySpots();
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        async function deleteSpot(id) {
+            if (!confirm('Delete this listing permanently? This cannot be undone.')) return;
+            try {
+                const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to delete spot.');
+                await loadMySpots();
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        function renderSpotsGrid() {
+            const grid = document.getElementById('spotsGrid');
+            const emptyState = document.getElementById('spotsEmptyState');
+            grid.innerHTML = '';
+
+            if (mySpots.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            mySpots.forEach(spot => {
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl overflow-hidden flex flex-col';
+                card.innerHTML = `
+                    <div class="h-40 bg-surface-variant">
+                        <img src="${spot.imageUrl || 'https://placehold.co/400x200?text=No+Image'}" class="w-full h-full object-cover" alt="${spot.title}"/>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-primary-container">${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}</span>
+                        <h3 class="text-lg font-black text-on-surface leading-tight">${spot.title}</h3>
+                        <p class="text-xs text-on-surface-variant">${spot.location}</p>
+                        <p class="text-xs text-on-surface-variant line-clamp-2 flex-1">${spot.description}</p>
+                        <div class="flex gap-2 pt-3">
+                            <button class="flex-1 py-2 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">Edit</button>
+                            <button class="flex-1 py-2 rounded-full bg-error/10 text-error text-xs font-bold hover:bg-error/20 transition-all">Delete</button>
+                        </div>
+                    </div>
+                `;
+                card.querySelectorAll('button')[0].addEventListener('click', () => toggleAddSpotModal(true, spot));
+                card.querySelectorAll('button')[1].addEventListener('click', () => deleteSpot(spot._id));
+                grid.appendChild(card);
+            });
+        }
+
+        async function loadMySpots() {
+            try {
+                const response = await fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Failed to load your spots.');
+                mySpots = await response.json();
+                renderSpotsGrid();
+            } catch (error) {
+                console.error('❌ Failed to load spots:', error);
+                mySpots = [];
+                renderSpotsGrid();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+
+            if (!guardResortOwnerSession()) return;
+
+            const resortName = localStorage.getItem('resortName');
+            document.getElementById('resortNameLabel').textContent = resortName || localStorage.getItem('userEmail') || '';
+
+            loadMySpots();
+        });
+    </script>
+</body>
+</html>

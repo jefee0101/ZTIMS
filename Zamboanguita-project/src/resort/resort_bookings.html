@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Resort Owner | My Bookings</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2E7D32",
+            "on-primary": "#FFFFFF",
+            "surface": "var(--color-surface, #051D40)",
+            "background": "var(--color-background, #020F24)",
+            "surface-variant": "var(--color-surface-variant, #0B2954)",
+            "on-surface": "var(--color-on-surface, #FEFCF4)",
+            "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+            "outline-variant": "#1E3D6B",
+            "primary-container": "#4CAF50",
+            "secondary-container": "#00838F",
+            "on-secondary-container": "#E0F7FA",
+            "error": "#E53935",
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <style>
+    :root {
+        --color-surface: #051D40;
+        --color-background: #020F24;
+        --color-surface-variant: #0B2954;
+        --color-on-surface: #FEFCF4;
+        --color-on-surface-variant: #A0B2C6;
+    }
+    .light-mode, [class*="light-mode"] {
+        --color-surface: #FFFFFF !important;
+        --color-background: #F4F7FA !important;
+        --color-surface-variant: #E6EEF8 !important;
+        --color-on-surface: #020F24 !important;
+        --color-on-surface-variant: #4A5D73 !important;
+    }
+    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+    .light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+    .light-mode main { background: #F4F7FA !important; }
+    .light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+    .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+    .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
+        color: #020F24 !important;
+    }
+    .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Resort Owner Portal</p>
+        </div>
+        <nav class="flex-1 space-y-2 font-body">
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="resort_spots.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+                <span>My Spots</span>
+            </a>
+            <a class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_bookings.html">
+                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
+                <span>My Bookings</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <p id="resortNameLabel" class="text-sm font-bold text-on-surface-variant"></p>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+            <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
+        </button>
+    </header>
+
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1400px] mx-auto space-y-8">
+            <div>
+                <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface mb-1">My Bookings</h2>
+                <p class="text-on-surface-variant">Only reservations made for your own listings are shown here.</p>
+            </div>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 rounded-2xl border border-outline-variant/10 bg-surface-variant/20">
+                    <p id="cardTotalBookings" class="text-4xl font-extrabold text-on-background tracking-tight">0</p>
+                    <p class="text-xs text-on-surface-variant font-medium tracking-widest mt-1">TOTAL BOOKINGS</p>
+                </div>
+                <div class="p-6 rounded-2xl border border-outline-variant/10 bg-surface-variant/20">
+                    <p id="cardPendingCount" class="text-4xl font-extrabold text-on-background tracking-tight">0</p>
+                    <p class="text-xs text-on-surface-variant font-medium tracking-widest mt-1">AWAITING YOUR DECISION</p>
+                </div>
+                <div class="p-6 rounded-2xl border border-outline-variant/10 bg-surface-variant/20">
+                    <p id="cardApprovedCount" class="text-4xl font-extrabold text-on-background tracking-tight">0</p>
+                    <p class="text-xs text-on-surface-variant font-medium tracking-widest mt-1">APPROVED</p>
+                </div>
+            </section>
+
+            <div class="bg-surface rounded-2xl overflow-hidden border border-outline-variant/10 shadow-xl">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-variant/40 text-on-surface-variant text-[10px] font-bold tracking-widest uppercase border-b border-outline-variant/10">
+                            <th class="px-8 py-4">Guest</th>
+                            <th class="px-6 py-4">Listing</th>
+                            <th class="px-6 py-4">Stay Period</th>
+                            <th class="px-6 py-4">Guests</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-8 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTableBody" class="divide-y divide-outline-variant/10"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "https://ztims-api.onrender.com/api";
+        let bookings = [];
+
+        function authHeaders() {
+            return { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` };
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if (icon) icon.textContent = 'light_mode';
+            }
+        }
+
+        function guardResortOwnerSession() {
+            if (localStorage.getItem('userRole') !== 'resort_owner' || !localStorage.getItem('authToken')) {
+                window.location.href = 'resort_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function formatDateString(dateStr) {
+            if (!dateStr) return 'N/A';
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const parts = String(dateStr).split('-');
+            if (parts.length === 3) {
+                const monthIndex = parseInt(parts[1], 10) - 1;
+                return `${months[monthIndex]} ${parseInt(parts[2], 10)}`;
+            }
+            return dateStr;
+        }
+
+        function statusBadge(status) {
+            const normalized = (status || 'pending').toLowerCase();
+            if (normalized === 'approved') return { label: 'Approved', cls: 'bg-primary/10 text-primary border border-primary/20' };
+            if (normalized === 'disapproved' || normalized === 'cancelled') return { label: normalized === 'cancelled' ? 'Cancelled' : 'Disapproved', cls: 'bg-error/10 text-error border border-error/20' };
+            return { label: 'Pending', cls: 'bg-secondary-container/40 text-secondary-container border border-secondary-container/40' };
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '';
+
+            if (bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-8 py-12 text-center text-on-surface-variant text-sm">No bookings for your listings yet.</td></tr>`;
+                return;
+            }
+
+            bookings.forEach(booking => {
+                const badge = statusBadge(booking.status);
+                const isPending = (booking.status || 'pending').toLowerCase() === 'pending';
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-surface-variant/20 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-8 py-5">
+                        <p class="text-sm font-bold text-on-background">${booking.guestName}</p>
+                        <p class="text-xs text-on-surface-variant font-mono">${booking.guestEmail}</p>
+                    </td>
+                    <td class="px-6 py-5 text-sm font-medium text-on-background">${booking.destination}</td>
+                    <td class="px-6 py-5 text-xs font-semibold text-on-surface-variant">${formatDateString(booking.checkInDate)} — ${formatDateString(booking.checkOutDate)}</td>
+                    <td class="px-6 py-5 text-sm text-on-surface-variant">${booking.guestCount}</td>
+                    <td class="px-6 py-5">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${badge.cls}">${badge.label}</span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        ${isPending ? `
+                            <div class="flex items-center justify-end gap-2">
+                                <button data-action="approve" class="px-3 py-1.5 bg-primary text-on-primary text-[11px] font-extrabold rounded-full shadow-lg transition-all hover:scale-105">Approve</button>
+                                <button data-action="reject" class="px-3 py-1.5 bg-surface-variant border border-outline-variant/30 text-error hover:bg-error/20 text-[11px] font-bold rounded-full transition-all">Reject</button>
+                            </div>
+                        ` : ''}
+                    </td>
+                `;
+                if (isPending) {
+                    tr.querySelector('[data-action="approve"]').addEventListener('click', () => decideBooking(booking._id, 'approved'));
+                    tr.querySelector('[data-action="reject"]').addEventListener('click', () => decideBooking(booking._id, 'disapproved'));
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function recalculateCounters() {
+            document.getElementById('cardTotalBookings').textContent = bookings.length;
+            document.getElementById('cardPendingCount').textContent = bookings.filter(b => (b.status || 'pending').toLowerCase() === 'pending').length;
+            document.getElementById('cardApprovedCount').textContent = bookings.filter(b => (b.status || '').toLowerCase() === 'approved').length;
+        }
+
+        async function decideBooking(id, status) {
+            if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            try {
+                const response = await fetch(`${API_BASE}/bookings/status/${id}`, {
+                    method: 'PUT',
+                    headers: Object.assign(authHeaders(), { 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ status })
+                });
+                if (!response.ok) throw new Error((await response.json()).message || 'Failed to update booking.');
+                await loadMyBookings();
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        async function loadMyBookings() {
+            try {
+                const response = await fetch(`${API_BASE}/bookings`, { headers: authHeaders() });
+                if (!response.ok) throw new Error('Failed to load bookings.');
+                bookings = await response.json();
+            } catch (error) {
+                console.error('❌ Failed to load bookings:', error);
+                bookings = [];
+            }
+            recalculateCounters();
+            renderTable();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+
+            if (!guardResortOwnerSession()) return;
+
+            const resortName = localStorage.getItem('resortName');
+            document.getElementById('resortNameLabel').textContent = resortName || localStorage.getItem('userEmail') || '';
+
+            loadMyBookings();
+        });
+    </script>
+</body>
+</html>

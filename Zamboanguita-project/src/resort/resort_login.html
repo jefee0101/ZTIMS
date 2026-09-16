@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Login - ZAMBOANGUITA</title>
+  <title>Resort Owner Login - ZAMBOANGUITA</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -15,15 +15,14 @@
       theme: {
         extend: {
           colors: {
-            /* Synchronized with the Zamboanguita Tourism Dashboard Palette */
-            primary: "#2E7D32",         // Vibrant Leaf Green
-            primaryHover: "#1B5E20",    // Darker Forest Green for interactive hover states
-            background: "#020F24",     // Deep Midnight Blue (Dark Mode Background)
-            surface: "#051D40",        // Ocean Navy (Dark Mode Cards)
-            surfaceLight: "#F8FAFC",   // Warm Gray (Light Mode Cards)
-            textLight: "#0F172A",      // Dark Slate for Light Mode Text
-            textDark: "#FEFCF4",       // Off-White for Dark Mode Text
-            outline: "#1E3D6B"          // Deep Sea Border Tint
+            primary: "#2E7D32",
+            primaryHover: "#1B5E20",
+            background: "#020F24",
+            surface: "#051D40",
+            surfaceLight: "#F8FAFC",
+            textLight: "#0F172A",
+            textDark: "#FEFCF4",
+            outline: "#1E3D6B"
           },
           fontFamily: {
             headline: ["Plus Jakarta Sans"],
@@ -71,19 +70,17 @@ class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hov
 <div class="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent flex flex-col justify-between p-16">
         <div>
           <h1 class="text-5xl font-extrabold text-white leading-tight tracking-tight headline-font">
-            Welcome to <br>
-            <span class="text-primary italic">Zamboanguita!</span>
+            Welcome, <br>
+            <span class="text-primary italic">Resort Partner.</span>
           </h1>
           <div class="w-20 h-1.5 bg-primary mt-4 rounded-full"></div>
         </div>
         <div>
-          <p class="text-white/90 text-lg font-medium drop-shadow-sm max-w-md">Experience the natural wonders, rich culture, and coastal beauty of Zamboanguita like never before.</p>
+          <p class="text-white/90 text-lg font-medium drop-shadow-sm max-w-md">Manage your own listing and bookings within the Zamboanguita Tourism network.</p>
         </div>
       </div>
 
-<!-- 🌟 LOGO ROW INSERTS: Placed on the top-right over the hero graphic block -->
 <div class="absolute top-16 right-16 z-20 flex items-center gap-4">
-        
         <div class="flex items-center justify-center border-2 border-primary/30 bg-[#020F24]/80 backdrop-blur-md rounded-full w-24 h-24 hover:scale-105 hover:border-primary transition-all duration-300 overflow-hidden shadow-lg">
           <img class="w-full h-full object-cover rounded-full" src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg" alt="Tourism Logo"/>
         </div>
@@ -93,32 +90,22 @@ class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hov
  <div id="rightPanel" class="w-full lg:w-2/5 h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-8 overflow-y-auto border-l border-gray-200 dark:border-outline/20">
       <div class="w-full max-w-md">
 
-
-
 <div class="mb-10">
-<h2 id="titleText" class="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">HELLO &nbsp; ADMIN!</h2>
-<p class="text-gray-500 dark:text-on-surface-variant">Enter your credentials to access your portal.</p>
+<h2 class="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">RESORT OWNER PORTAL</h2>
+<p class="text-gray-500 dark:text-on-surface-variant">Sign in with the account issued to you by the Tourist Officer.</p>
 </div>
 
 <div class="mb-8 p-1 flex bg-gray-100 dark:bg-gray-800 rounded-xl">
-  <a 
+  <a
     href="../user/user_login.html"
-    id="travelerBtn" 
     class="w-1/2 py-2.5 text-sm font-semibold rounded-lg text-gray-500 dark:text-gray-400 text-center focus:outline-none transition-all duration-300 block">
-    User Portal
+    Tourist Portal
   </a>
-  <a 
-    href="admin_login.html"
-    id="adminBtn" 
+  <a
+    href="resort_login.html"
     class="w-1/2 py-2.5 text-sm font-semibold rounded-lg bg-primary text-black text-center focus:outline-none transition-all duration-300 block">
-    Admin Portal
+    Resort Owner Portal
   </a>
-  <style>
-  .bg-primary {
-    --tw-bg-opacity: 1;
-    background-color: rgb(249 115 10 / var(--tw-bg-opacity, 1));
-  }
-</style>
 </div>
 
 <form id="loginForm" class="space-y-6">
@@ -139,13 +126,6 @@ class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hov
   <div>
     <div class="flex justify-between mb-2">
       <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-              <a href="#" class="text-sm font-bold text-primary hover:text-primaryHover transition-colors">Forgot Password?</a>
-      <style>
-      a.text-primary {
-    --tw-text-opacity: 1;
-    color: rgb(249 115 10 / var(--tw-text-opacity, 1  ));
-}
-      </style>
     </div>
     <div class="relative">
       <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
@@ -156,10 +136,9 @@ class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hov
         required
         placeholder="••••••••"
         class="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-black dark:text-white focus:ring-2 focus:ring-primary outline-none transition"/>
-      
+
       <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none hover:text-primary transition-colors">
         <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
-      
       </button>
     </div>
   </div>
@@ -168,30 +147,11 @@ class="fixed top-5 right-5 z-50 p-3 rounded-full bg-gray-800 text-yellow-400 hov
     type="submit"
     class="w-full py-4 rounded-full bg-gradient-to-r from-primary to-green-600 text-black font-bold hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg">
     SIGN IN
-    <style>
-      .from-primary {
-    --tw-gradient-from: #e7650e var(--tw-gradient-from-position);
-    --tw-gradient-to: rgb(240, 75, 53) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-    </style>
-    
   </button>
 </form>
 
-<div id="socialSection">
-<div class="relative my-10">
-<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300 dark:border-gray-700"></div></div>
-<div class="relative flex justify-center"><span class="bg-white dark:bg-surface px-4 text-sm text-gray-500">Adminitrator LogIn</span></div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-
-</div>
-</div>
-
-<div class="mt-10 text-center space-y-2">
-<p class="text-gray-600 dark:text-gray-400">New to Zamboanguita? <a href="/Zamboanguita-project/src/user/user_create_account.html" class="text-primary font-bold hover:underline">Create an account</a></p>
-<p class="text-gray-500 dark:text-gray-500 text-sm">Managing your own resort listing? <a href="../resort/resort_login.html" class="text-primary font-bold hover:underline">Resort Owner Portal</a></p>
+<div class="mt-10 text-center">
+<p class="text-gray-600 dark:text-gray-400 text-sm">Don't have a resort owner account yet? Ask your Tourist Officer to create one for you.</p>
 </div>
 
 </div>
@@ -215,7 +175,7 @@ function toggleTheme() {
     const html = document.documentElement;
     const body = document.getElementById("body");
     const icon = document.getElementById("themeIcon");
-    
+
     html.classList.toggle("dark");
     if(html.classList.contains("dark")) {
         body.classList.remove("light-mode");
@@ -240,59 +200,44 @@ window.onload = () => {
     }
 }
 
-// --- SECURE AUTHENTICATION PROCESSING ---
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
-    event.preventDefault(); // 🔥 This will now work perfectly and prevent erasing!
+    event.preventDefault();
 
     const email = document.getElementById('emailInput').value.trim();
     const password = document.getElementById('passwordInput').value;
 
-    // Explicitly enforce 'admin' role context to tell backend what system to parse against
-    const credentials = {
-        email: email,
-        password: password,
-        role: 'admin' 
-    };
+    const credentials = { email, password, role: 'resort_owner' };
 
     try {
         const response = await fetch('https://ztims-api.onrender.com/api/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials)
         });
 
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert(result.message || "Welcome back, Admin!");
-
-            // Establish verified privilege flags in client storage
             localStorage.setItem('authToken', result.token);
-            localStorage.setItem('userRole', 'admin');
+            localStorage.setItem('userRole', 'resort_owner');
             localStorage.setItem('userEmail', email);
-            
-            // Extract and back up admin account properties from backend payload
-            const serverUser = result.user || result.data || {};
-            const backendId = serverUser.id || serverUser._id || result.userId;
-            if (backendId) {
-                localStorage.setItem('userId', backendId);
-            }
 
-            // Redirect to Analytics Panel safely
+            const serverUser = result.user || {};
+            const backendId = serverUser.id || serverUser._id || result.userId;
+            if (backendId) localStorage.setItem('userId', backendId);
+            localStorage.setItem('resortName', serverUser.resortName || '');
+
             const currentPath = window.location.pathname;
             const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
-            window.location.href = window.location.origin + projectRoot + "/src/admin/admin_analystic.html";
+            window.location.href = window.location.origin + projectRoot + "/src/resort/resort_dashboard.html";
         } else {
-            // Denied Entry Execution: Clear out field values and alert admin
-            alert("⚠️ " + (result.message || "Access Denied. Invalid Admin Credentials."));
-            document.getElementById('passwordInput').value = ""; // Force purge the mis-input entry
+            alert("⚠️ " + (result.message || "Access Denied. Invalid Resort Owner Credentials."));
+            document.getElementById('passwordInput').value = "";
         }
 
     } catch (error) {
         console.error("Network Exception:", error);
-        alert("Could not link with auth servers. Verify API backend is running on Port 5000.");
+        alert("Could not link with auth servers. Please try again shortly.");
     }
 });
 </script>
