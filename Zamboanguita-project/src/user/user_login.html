@@ -91,18 +91,13 @@
     <div id="rightPanel" class="w-full lg:w-2/5 h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-8 overflow-y-auto border-l border-gray-200 dark:border-outline/20">
       <div class="w-full max-w-md">
         
-        <div class="mb-10">
-          <h2 id="titleText" class="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">HELLO &nbsp; USER!</h2>
-          <p class="text-gray-500 dark:text-on-surface-variant text-sm">Enter your credentials to access your portal.</p>
-        </div>
+        <a href="../../index.html" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-on-surface-variant hover:text-primary transition-colors mb-8">
+          <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the main page
+        </a>
 
-        <div class="mb-8 p-1 flex bg-gray-100 dark:bg-background rounded-xl border border-gray-200 dark:border-outline/20">
-          <a href="#" id="travelerBtn" class="w-1/2 py-2.5 text-sm font-bold rounded-lg bg-primary text-white text-center focus:outline-none transition-all duration-300 block shadow-sm">
-            User Portal
-          </a>
-          <a href="../staff_login.html" id="adminBtn" class="w-1/2 py-2.5 text-sm font-semibold rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white text-center focus:outline-none transition-all duration-300 block">
-            Staff Portal
-          </a>
+        <div class="mb-10">
+          <h2 id="titleText" class="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white headline-font">WELCOME BACK!</h2>
+          <p class="text-gray-500 dark:text-on-surface-variant text-sm">Sign in to write reviews and manage your profile.</p>
         </div>
 
         <form id="loginForm" class="space-y-6">
@@ -329,8 +324,6 @@
 
             if (spotId) {
                 window.location.href = window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId);
-            } else if (inferredRole === 'admin') {
-                window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
             } else {
                 window.location.href = window.location.origin + projectRoot + "/index.html";
             }

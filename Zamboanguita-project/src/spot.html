@@ -123,6 +123,27 @@
     </div>
 </div>
 
+<!-- Full-size photo viewer. One element reused for every photo, so a spot with
+     30 photos still only ever holds one large image in the page. -->
+<div id="photoLightbox" hidden class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <button id="lightboxClose" aria-label="Close photo"
+            class="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+    </button>
+    <button id="lightboxPrev" aria-label="Previous photo"
+            class="absolute left-4 md:left-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+        <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <button id="lightboxNext" aria-label="Next photo"
+            class="absolute right-4 md:right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+        <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+    <figure class="max-w-5xl w-full text-center">
+        <img id="lightboxImage" src="" alt="" class="w-full max-h-[80vh] object-contain rounded-xl"/>
+        <figcaption id="lightboxCounter" class="text-white/70 text-xs mt-3 tracking-widest"></figcaption>
+    </figure>
+</div>
+
 <footer class="w-full py-10 px-8 bg-surface-container-low border-t border-outline-variant/10 mt-16 transition-colors duration-300">
     <p class="text-center text-sm text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
 </footer>
@@ -235,12 +256,47 @@
         `;
     }
 
+    // The cover plus every gallery photo, in order, with duplicates and anything
+    // that isn't an http(s) image link dropped. Older spots have only a cover.
+    function spotPhotos(spot) {
+        const candidates = [spot.imageUrl, ...(Array.isArray(spot.images) ? spot.images : [])];
+        const seen = new Set();
+        const photos = [];
+        for (const candidate of candidates) {
+            const url = safeExternalUrl(candidate);
+            if (!url || seen.has(url)) continue;
+            seen.add(url);
+            photos.push(url);
+        }
+        return photos;
+    }
+
+    function photoGallerySection(photos) {
+        if (photos.length < 2) return '';   // the cover is already the hero
+        return `
+            <div>
+                <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Photos <span class="text-on-surface-variant text-base font-normal">(${photos.length})</span></h2>
+                <div id="spotGallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    ${photos.map((url, index) => `
+                        <button type="button" data-photo="${index}"
+                                class="group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary">
+                            <img src="${escapeHtml(url)}" loading="lazy" alt="Photo ${index + 1}"
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
+                            <span class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors"></span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     function renderSpot(spot) {
         const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
+        const photos = spotPhotos(spot);
 
         content.innerHTML = `
             <section class="relative h-[45vh] min-h-[320px] w-full overflow-hidden">
-                <img class="w-full h-full object-cover" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
+                <img class="w-full h-full object-cover" src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
                 <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 px-6 md:px-12 pb-8">
                     <span class="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm mb-3">${escapeHtml(typeLabel)}</span>
@@ -258,6 +314,8 @@
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-3">About this destination</h2>
                         <p class="text-on-surface-variant leading-relaxed">${escapeHtml(spot.description)}</p>
                     </div>
+
+                    ${photoGallerySection(photos)}
 
                     <div>
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Know before you go</h2>
@@ -377,6 +435,54 @@
         });
     }
 
+    // Photo viewer. Wired once per spot; the thumbnails live inside content that
+    // renderSpot replaces, so the click handler sits on the grid itself.
+    function wirePhotoLightbox(photos) {
+        const grid = document.getElementById('spotGallery');
+        if (!grid || photos.length === 0) return;
+
+        const lightbox = document.getElementById('photoLightbox');
+        const image = document.getElementById('lightboxImage');
+        const counter = document.getElementById('lightboxCounter');
+        let index = 0;
+
+        function show(next) {
+            index = (next + photos.length) % photos.length;   // wraps both ways
+            image.src = photos[index];
+            image.alt = `Photo ${index + 1} of ${photos.length}`;
+            counter.textContent = `${index + 1} / ${photos.length}`;
+        }
+
+        function open(at) {
+            show(at);
+            lightbox.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close() {
+            lightbox.hidden = true;
+            document.body.style.overflow = '';
+            image.src = '';
+        }
+
+        grid.addEventListener('click', event => {
+            const thumb = event.target.closest('[data-photo]');
+            if (thumb) open(Number(thumb.dataset.photo));
+        });
+
+        document.getElementById('lightboxClose').addEventListener('click', close);
+        document.getElementById('lightboxPrev').addEventListener('click', () => show(index - 1));
+        document.getElementById('lightboxNext').addEventListener('click', () => show(index + 1));
+        lightbox.addEventListener('click', event => { if (event.target === lightbox) close(); });
+
+        document.addEventListener('keydown', event => {
+            if (lightbox.hidden) return;
+            if (event.key === 'Escape') close();
+            if (event.key === 'ArrowLeft') show(index - 1);
+            if (event.key === 'ArrowRight') show(index + 1);
+        });
+    }
+
     async function loadSpot() {
         const spotId = new URLSearchParams(window.location.search).get('spotId');
 
@@ -400,6 +506,7 @@
             renderSpot(spot);
             document.title = `${spot.title} | Zamboanguita`;
             wireBookingGate(spot, spotId);
+            wirePhotoLightbox(spotPhotos(spot));
 
             // Reviews load after the page is already readable, so a slow review
             // query never holds back the destination details themselves.

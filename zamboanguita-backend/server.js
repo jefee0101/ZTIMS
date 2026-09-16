@@ -123,6 +123,8 @@ const ReviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model('Review', ReviewSchema);
 
+const MAX_SPOT_IMAGES = 30;
+
 // 5. Spot Schema — covers both tourist spots and resort accommodations, owned either
 //    by the Tourist Officer (municipal-level, no owner) or by a Resort Owner account.
 const SpotSchema = new mongoose.Schema({
@@ -130,7 +132,20 @@ const SpotSchema = new mongoose.Schema({
     location: { type: String, required: true },
     category: { type: String, required: true },
     description: { type: String, required: true },
+    // Cover image, shown on cards and at the top of the detail page. Kept as its own
+    // field so spots created before galleries existed still display.
     imageUrl: { type: String },
+    // The full gallery. Only the links live here — the files themselves are hosted
+    // externally, since 30 photos inlined would exceed both the 1MB request limit
+    // and MongoDB's 16MB document cap many times over.
+    images: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: list => list.length <= MAX_SPOT_IMAGES,
+            message: `A spot can have at most ${MAX_SPOT_IMAGES} photos.`
+        }
+    },
     // Booking happens on the resort's own website — this is where "Book Now" sends
     // the visitor. Blank means the detail page shows contact details instead.
     bookingUrl: { type: String, default: "" },
@@ -792,10 +807,34 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
     }
 });
 
+/**
+ * Keeps the gallery and the cover image consistent no matter which editor sent the
+ * payload: blanks and duplicates are dropped, the list is capped, and the cover is
+ * always the first photo unless one was named explicitly.
+ */
+function normaliseSpotImages(payload) {
+    if (!('images' in payload) && !('imageUrl' in payload)) return payload;
+
+    const gallery = Array.isArray(payload.images) ? payload.images : [];
+    const cleaned = [...new Set(
+        gallery.map(url => String(url || '').trim()).filter(Boolean)
+    )].slice(0, MAX_SPOT_IMAGES);
+
+    const cover = String(payload.imageUrl || '').trim();
+
+    return {
+        ...payload,
+        images: cleaned,
+        // A cover that isn't in the gallery is still honoured — spots predating
+        // galleries have only a cover, and the quick-add form only sets one.
+        imageUrl: cover || cleaned[0] || ''
+    };
+}
+
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
         const ownerId = req.auth.role === 'resort_owner' ? req.auth.sub : (req.body.ownerId || null);
-        const newSpot = new Spot({ ...req.body, ownerId });
+        const newSpot = new Spot({ ...normaliseSpotImages(req.body), ownerId });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
     } catch (error) {
@@ -832,7 +871,7 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         }
 
         const { ownerId, ...updates } = req.body; // ownership cannot be reassigned from this route
-        Object.assign(spot, updates);
+        Object.assign(spot, normaliseSpotImages(updates));
         const savedSpot = await spot.save();
         return res.status(200).json(savedSpot);
     } catch (error) {

@@ -98,21 +98,37 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 [hidden] { display: none !important; }
 
 @media (min-width: 640px) {
-    aside, header, main { transition: width .2s ease, margin-left .2s ease; }
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), margin-left .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity .2s ease .06s, max-width .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), color .2s ease, background-color .2s ease !important;
+    }
     body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
     body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
     body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
-    body.sidebar-collapsed .sidebar-label,
-    body.sidebar-collapsed .sidebar-brand-full { display: none !important; }
-    body.sidebar-collapsed .sidebar-brand-short { display: block !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
     body.sidebar-collapsed aside a,
     body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
         justify-content: center !important;
+        gap: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
 }
 .sidebar-brand-short { display: none; }
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 </style>
 </head>
 

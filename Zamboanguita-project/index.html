@@ -98,28 +98,43 @@
 
         /* Collapsed sidebar: desktop only, since on phones it is already a bottom
            bar with no room to shrink. Driven by one class so the widths of the rail
-           and the content margin can never drift apart. */
+           and the content margin can never drift apart.
+
+           Labels collapse by width + opacity rather than display:none, because
+           display can't be animated — it would snap the text away a frame before
+           the rail finishes sliding. Selectors are prefixed with `aside` so they
+           outrank Tailwind's own .transition-all, which the CDN injects after
+           this block. */
         @media (min-width: 768px) {
-            aside, .content-shell { transition: width .2s ease, margin-left .2s ease; }
+            aside, .content-shell { transition: width .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), margin-left .3s cubic-bezier(.4, 0, .2, 1); }
+            aside .sidebar-label,
+            aside .sidebar-brand-full,
+            aside #sidebarUser {
+                opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+                transition: opacity .2s ease .06s, max-width .3s cubic-bezier(.4, 0, .2, 1);
+            }
+            aside .nav-item,
+            aside #authActionBtn { transition: gap .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), color .2s ease, background-color .2s ease; }
             body.sidebar-collapsed aside { width: 5rem; padding-left: .75rem; padding-right: .75rem; }
             body.sidebar-collapsed .content-shell { margin-left: 5rem; }
-            body.sidebar-collapsed .sidebar-label,
-            body.sidebar-collapsed .sidebar-brand-full,
-            body.sidebar-collapsed #sidebarUser { display: none; }
-            body.sidebar-collapsed .nav-item,
-            body.sidebar-collapsed #authActionBtn { justify-content: center; padding-left: 0; padding-right: 0; }
-            body.sidebar-collapsed .sidebar-brand-short { display: block; }
+            body.sidebar-collapsed aside .sidebar-label,
+            body.sidebar-collapsed aside .sidebar-brand-full,
+            body.sidebar-collapsed aside #sidebarUser { opacity: 0; max-width: 0; transition-delay: 0s; }
+            body.sidebar-collapsed aside .nav-item,
+            body.sidebar-collapsed aside #authActionBtn { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+            body.sidebar-collapsed .sidebar-brand-short { display: block; animation: railBrandIn .3s ease both; }
         }
         .sidebar-brand-short { display: none; }
+        @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
     </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
 <!-- Sidebar: a rail on desktop, a bottom bar on phones. Visible to everyone —
      guests included — since the gate happens in the content area, not here. -->
-<aside class="fixed z-50 bg-surface border-outline-variant/30 transition-colors duration-300
-              md:left-0 md:top-0 md:h-full md:w-64 md:border-r md:flex md:flex-col md:p-6
-              max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:border-t max-md:flex max-md:justify-around max-md:px-2 max-md:py-2">
+<aside class="fixed z-50 bg-surface transition-colors duration-300
+              md:left-0 md:top-0 md:h-full md:w-64 md:flex md:flex-col md:p-6
+              max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:flex max-md:justify-around max-md:px-2 max-md:py-2 max-md:shadow-[0_-8px_24px_-16px_rgba(0,0,0,.6)]">
 
     <div class="mb-8 max-md:hidden flex items-start justify-between gap-2">
         <a href="index.html" class="px-2 block">
@@ -153,7 +168,7 @@
         </button>
     </nav>
 
-    <div class="md:mt-auto md:pt-4 md:border-t md:border-outline-variant/30 max-md:flex max-md:items-center">
+    <div class="md:mt-auto md:pt-4 max-md:flex max-md:items-center">
         <p id="sidebarUser" class="text-xs text-on-surface-variant px-5 mb-2 truncate max-md:hidden"></p>
         <button id="authActionBtn" class="w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1">
@@ -165,7 +180,7 @@
 
 <div class="content-shell md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
 
-    <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md border-b border-outline-variant/20">
+    <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md">
         <h1 id="viewTitle" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
         <button id="themeToggleBtn" class="p-2 rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
             <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
@@ -237,7 +252,7 @@
 
     </main>
 
-    <footer class="py-8 px-6 md:px-12 bg-surface-container-low border-t border-outline-variant/10">
+    <footer class="py-8 px-6 md:px-12 bg-surface-container-low">
         <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-on-surface-variant">
             <p>© 2026 Zamboanguita Tourism Information Management System</p>
             <span class="hidden sm:inline opacity-40">·</span>
@@ -253,8 +268,8 @@
 
 <!-- Write-a-review dialog -->
 <div id="reviewModal" hidden class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center p-5 border-b border-outline-variant/20">
+    <div class="bg-surface shadow-2xl rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-5">
             <h3 class="text-xl font-display font-bold text-on-surface">Write a review</h3>
             <button id="closeReviewModal" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
                 <span class="material-symbols-outlined">close</span>
@@ -360,7 +375,7 @@
     // Shown in place of reviews or settings when a visitor isn't signed in.
     function authGate(action) {
         return `
-            <div class="flex flex-col items-center justify-center text-center gap-4 py-20 px-6 bg-surface border border-outline-variant/20 rounded-2xl">
+            <div class="flex flex-col items-center justify-center text-center gap-4 py-20 px-6 bg-surface shadow-sm rounded-2xl">
                 <span class="material-symbols-outlined !text-5xl text-surface-bright">lock_person</span>
                 <h3 class="text-2xl font-display font-bold text-on-surface">Sign in to ${escapeHtml(action)}</h3>
                 <p class="text-on-surface-variant max-w-sm">Browsing spots and accommodations is open to everyone. Creating a free tourist account lets you write reviews and save your details.</p>
@@ -419,7 +434,10 @@
     function renderSpotCard(spot) {
         const card = document.createElement('a');
         card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        card.className = 'group block rounded-2xl overflow-hidden bg-surface border border-outline-variant/20 hover:border-primary/50 transition-all hover:-translate-y-1';
+        card.className = 'group block rounded-2xl overflow-hidden bg-surface shadow-sm hover:shadow-xl transition-all hover:-translate-y-1';
+        const photoCount = Array.isArray(spot.images) && spot.images.length
+            ? spot.images.length
+            : (spot.imageUrl ? 1 : 0);
         card.innerHTML = `
             <div class="relative h-[200px] overflow-hidden">
                 <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
@@ -427,6 +445,9 @@
                 <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
                     ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
                 </span>
+                ${photoCount > 1 ? `<span class="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
+                    <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
+                </span>` : ''}
             </div>
             <div class="p-5">
                 <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${escapeHtml(spot.label || spot.category || '')}</span>
@@ -435,7 +456,7 @@
                     <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '')}
                 </p>
                 <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
-                <div class="flex items-center justify-between pt-3 border-t border-outline-variant/20">
+                <div class="flex items-center justify-between pt-3">
                     <span class="text-xs text-on-surface-variant">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
                     <span class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-1">
                         View details <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -550,7 +571,7 @@
         reviewsContent.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + reviews.map(review => {
             const mine = myName && review.guestName === myName;
             return `
-                <div class="bg-surface border ${mine ? 'border-primary/40' : 'border-outline-variant/20'} rounded-2xl p-5">
+                <div class="bg-surface shadow-sm ${mine ? 'ring-1 ring-primary/40' : ''} rounded-2xl p-5">
                     <div class="flex items-start justify-between gap-3 mb-2">
                         <div>
                             <p class="font-bold text-on-surface text-sm">
@@ -657,7 +678,7 @@
 
         const profile = currentUser();
         settingsContent.innerHTML = `
-            <form id="profileForm" class="max-w-xl space-y-5 bg-surface border border-outline-variant/20 rounded-2xl p-6">
+            <form id="profileForm" class="max-w-xl space-y-5 bg-surface shadow-sm rounded-2xl p-6">
                 <div>
                     <label for="profileEmail" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Email</label>
                     <input id="profileEmail" type="email" disabled value="${escapeHtml(profile.email || localStorage.getItem('userEmail') || '')}"
