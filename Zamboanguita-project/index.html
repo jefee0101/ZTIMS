@@ -249,15 +249,6 @@
         </div>
     </section>
 
-    <section class="py-32 px-8 md:px-20 text-center relative bg-surface-container-low">
-        <div class="max-w-4xl mx-auto">
-            <h2 class="text-5xl md:text-7xl font-display font-extrabold tracking-tighter text-on-surface mb-8">Explore &nbsp; now &nbsp; the &nbsp; Hidden &nbsp; Gems &nbsp; of &nbsp; Zamboanguita.</h2>
-            <div class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto justify-center">
-                <button id="ctaExploreBtn" class="bg-primary text-on-primary px-10 py-5 rounded-full font-display font-bold uppercase tracking-widest btn-secondary-gradient whitespace-nowrap shadow-lg shadow-secondary/40">Click Here</button>
-            </div>
-        </div>
-    </section>
-
     <!-- Modal Pop-up Container for Travel Information & Map Elements -->
     <div id="spotModal" class="fixed inset-0 z-50 invisible opacity-0 transition-all duration-300 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="bg-[#0A192F] border border-[#264653]/30 max-w-4xl w-full rounded-xl overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col text-white">
@@ -320,7 +311,6 @@
 <script type="module">
     const navAuthBtn = document.getElementById('navAuthBtn');
     const heroExploreBtn = document.getElementById('heroExploreBtn');
-    const ctaExploreBtn = document.getElementById('ctaExploreBtn');
     
     // Theme references
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -353,7 +343,6 @@
     // Event listeners attached to your interactive elements
     navAuthBtn.addEventListener('click', handleRouting);
     heroExploreBtn.addEventListener('click', scrollToSpots);
-    ctaExploreBtn.addEventListener('click', scrollToSpots);
 
     // Sync visual UI elements to match active theme once page structures are complete
     window.addEventListener('DOMContentLoaded', () => {
