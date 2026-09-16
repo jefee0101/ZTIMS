@@ -70,26 +70,57 @@
         border: 1px solid #CBD5E1 !important;
     }
     .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
-    </style>
+    
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    aside, header, main { transition: width .2s ease, margin-left .2s ease; }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed .sidebar-label,
+    body.sidebar-collapsed .sidebar-brand-full { display: none !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+</style>
 </head>
 
 <body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
 
     <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
-        <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
-            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Resort Owner Portal</p>
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Resort Owner Portal</p>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="My Spots" class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
-                <span>My Spots</span>
+                <span class="sidebar-label">My Spots</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
                 <span class="material-symbols-outlined">logout</span>
-                <span>Log Out</span>
+                <span class="sidebar-label">Log Out</span>
             </a>
         </div>
     </aside>
@@ -410,5 +441,31 @@
             loadMySpots();
         });
     </script>
+
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
 </body>
 </html>

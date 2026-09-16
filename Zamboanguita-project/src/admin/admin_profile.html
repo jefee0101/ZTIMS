@@ -109,6 +109,32 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
 .light-mode #themeIcon { color: #FFB300 !important; }
 .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    aside, header, main { transition: width .2s ease, margin-left .2s ease; }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed .sidebar-label,
+    body.sidebar-collapsed .sidebar-brand-full { display: none !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
 </style>
 </head>
 
@@ -116,31 +142,36 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
     <!-- Sidebar Navigation -->
     <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6">
-        <div class="mb-10 px-2">
-            <h1 class="text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_analystic.html">
+            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_analystic.html">
                 <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
-                <span>Analytics</span>
+                <span class="sidebar-label">Analytics</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_dashboard_manage.html">
+            <a title="Manage Spots" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_dashboard_manage.html">
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
-                <span>Manage Spots</span>
+                <span class="sidebar-label">Manage Spots</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="adminreviews.html">
+            <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="adminreviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
-                <span>Reviews</span>
+                <span class="sidebar-label">Reviews</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_profile.html">
+            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_profile.html">
                 <span class="material-symbols-outlined text-[#FFB300]">settings</span>
-                <span>Settings</span>
+                <span class="sidebar-label">Settings</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
-            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" href="admin_logout.html">
                 <span class="material-symbols-outlined">logout</span>
-                <span>Log Out</span>
+                <span class="sidebar-label">Log Out</span>
             </a>
         </div>
     </aside>
@@ -559,6 +590,32 @@ window.onload = function(){
     loadAdminDirectory();
     loadResortOwnerDirectory();
 }
+</script>
+
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
 </script>
 </body>
 </html>
