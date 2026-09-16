@@ -141,12 +141,14 @@ EstablishmentManagerSchema.virtual('displayName').get(function () {
     return this.establishmentName || this.resortName || '';
 });
 
-EstablishmentManagerSchema.pre('validate', function (next) {
+// Written async rather than with a next() callback: Mongoose 9 — which this
+// project installs — removed callback-style document middleware, and a hook
+// declaring next there throws "next is not a function" on every single save.
+EstablishmentManagerSchema.pre('validate', async function () {
     if (!this.establishmentName && this.resortName) this.establishmentName = this.resortName;
     if (!this.establishmentName) {
-        return next(new Error('An establishment name is required.'));
+        throw new Error('An establishment name is required.');
     }
-    return next();
 });
 
 const EstablishmentManager = mongoose.model('EstablishmentManager', EstablishmentManagerSchema);
@@ -401,8 +403,7 @@ async function createEstablishmentManager(req, res) {
         console.log(`🏨 New Tourist Establishment Manager account created by Tourist Officer: ${normalizedEmail}`);
         return res.status(201).json({ success: true, message: 'Establishment manager account created!' });
     } catch (error) {
-        console.error("❌ Create Establishment Manager Endpoint Failure:", error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+        return reportWriteFailure(res, error, '❌ Create Establishment Manager Endpoint Failure:');
     }
 }
 
@@ -435,6 +436,30 @@ app.get('/api/establishment-managers', requireAdmin, listEstablishmentManagers);
    routes existed, an account was issued once and could never be corrected: a
    phone number that changed was wrong forever, and a forgotten password meant
    the account was gone for good. */
+
+/**
+ * Turns a failed write into an answer the officer can act on. "Internal Server
+ * Error" is what hid a broken validate hook here until somebody reported it:
+ * the reason existed, it just never left the server. These routes are all
+ * staff-authenticated, so the real message is worth more than the little it
+ * reveals.
+ */
+function reportWriteFailure(res, error, context) {
+    console.error(context, error);
+
+    if (error && error.name === 'ValidationError') {
+        const detail = Object.values(error.errors || {}).map(one => one.message).join(' ');
+        return res.status(400).json({ success: false, message: detail || 'Some of those details are not valid.' });
+    }
+    if (error && error.code === 11000) {
+        const field = Object.keys(error.keyPattern || error.keyValue || {})[0] || 'value';
+        return res.status(409).json({ success: false, message: `That ${field} is already registered.` });
+    }
+    return res.status(500).json({
+        success: false,
+        message: `The server could not complete that: ${(error && error.message) || 'unknown error'}`
+    });
+}
 
 // Shape sent to whoever is allowed to see an account. Never includes the hash.
 function managerProfile(manager) {
@@ -495,8 +520,7 @@ app.patch('/api/establishment-managers/me', requireEstablishmentManager, async (
         await applyManagerDetails(manager, req.body);
         return res.status(200).json({ success: true, message: 'Your details have been saved.', manager: managerProfile(manager) });
     } catch (error) {
-        console.error('❌ Manager profile update failure:', error);
-        return res.status(400).json({ success: false, message: error.message || 'Could not save those details.' });
+        return reportWriteFailure(res, error, '❌ Manager profile update failure:');
     }
 });
 
@@ -527,8 +551,7 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
         console.log(`🔑 Establishment manager changed their own password: ${manager.email}`);
         return res.status(200).json({ success: true, message: 'Your password has been changed.' });
     } catch (error) {
-        console.error('❌ Manager password change failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+        return reportWriteFailure(res, error, '❌ Manager password change failure:');
     }
 });
 
@@ -566,8 +589,7 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
             manager: managerProfile(manager)
         });
     } catch (error) {
-        console.error('❌ Officer manager update failure:', error);
-        return res.status(400).json({ success: false, message: error.message || 'Could not update that account.' });
+        return reportWriteFailure(res, error, '❌ Officer manager update failure:');
     }
 });
 
@@ -599,8 +621,7 @@ app.post('/api/establishment-managers/:id/password', requireAdmin, async (req, r
             newPassword
         });
     } catch (error) {
-        console.error('❌ Officer password issue failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+        return reportWriteFailure(res, error, '❌ Officer password issue failure:');
     }
 });
 
