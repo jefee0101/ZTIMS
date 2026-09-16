@@ -4,6 +4,7 @@ const cors = require('cors');
 const nodemailer = require('nodemailer'); // Added for handling Forgot Password emails
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { OAuth2Client } = require('google-auth-library');
@@ -95,7 +96,13 @@ const UserSchema = new mongoose.Schema({
     avatar: { type: String, default: "" },
     fullName: { type: String, default: "" },
     phone: { type: String, default: "" },
-    nationality: { type: String, default: "" }
+    nationality: { type: String, default: "" },
+    // Password reset. Only the SHA-256 hash of the token is kept, so a leaked
+    // database still cannot be used to reset anybody's password — the plain
+    // token exists solely inside the email that was sent. select: false keeps
+    // both fields out of every ordinary read.
+    resetTokenHash: { type: String, default: null, select: false },
+    resetTokenExpires: { type: Date, default: null, select: false }
 }, { collection: 'users', timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
@@ -112,6 +119,11 @@ const EstablishmentManagerSchema = new mongoose.Schema({
     // before the rename keep reading correctly even if the migration below has
     // not run yet; new accounts never write it.
     resortName: { type: String, trim: true },
+    // The person who actually runs the place, and the address visitors should
+    // write to. The email above is the sign-in address and is never shown
+    // publicly; this one is, on listings that have no booking website.
+    managerName: { type: String, default: "", trim: true },
+    contactEmail: { type: String, default: "", lowercase: true, trim: true },
     phone: { type: String, default: "" }
 }, { collection: 'resortOwners', timestamps: true });
 
@@ -331,7 +343,7 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
  */
 async function createEstablishmentManager(req, res) {
     try {
-        const { email, password, phone } = req.body;
+        const { email, password, phone, managerName } = req.body;
         // Either spelling is accepted so a page that has not been redeployed since
         // the rename still creates accounts correctly.
         const establishmentName = req.body.establishmentName || req.body.resortName;
@@ -351,6 +363,10 @@ async function createEstablishmentManager(req, res) {
             email: normalizedEmail,
             password: passwordHash,
             establishmentName: establishmentName.trim(),
+            managerName: (managerName || "").trim(),
+            // Left blank, the sign-in address doubles as the public one, so a
+            // listing never ends up with no way to reach anybody.
+            contactEmail: (req.body.contactEmail || normalizedEmail).toLowerCase().trim(),
             phone: phone || ""
         });
         await newManager.save();
@@ -374,7 +390,8 @@ async function listEstablishmentManagers(req, res) {
         // caller has to know which spelling it was saved under.
         return res.status(200).json(managers.map(manager => ({
             ...manager.toObject(),
-            establishmentName: manager.displayName
+            establishmentName: manager.displayName,
+            contactEmail: manager.contactEmail || manager.email
         })));
     } catch (error) {
         console.error("❌ Get Establishment Manager List Endpoint Failure:", error);
@@ -594,12 +611,42 @@ if (!mailConfigured) {
     console.warn('⚠️  MAIL_USER / MAIL_PASSWORD are not set — password reset emails are disabled.');
 }
 
+/* ==========================================
+   PASSWORD RESET
+   A reset must prove the person can read the account's inbox. The link carries
+   a one-time token; only its hash is stored, it expires, and it is destroyed
+   the moment it is used. Before this, /api/reset-password took an email and a
+   new password and nothing else, so anyone who knew a registered address could
+   take over that account.
+========================================== */
+
+const RESET_TOKEN_TTL_MINUTES = 30;
+const MIN_PASSWORD_LENGTH = 8;
+
+const hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');
+
+// Both reset routes answer the same way whether or not the email is registered,
+// so neither can be used to discover who has an account here.
+const GENERIC_RESET_REPLY = 'If that email has an account, a reset link is on its way. Check your inbox and spam folder.';
+
+// Password reset is a high-value target, so it gets a tighter limit than login.
+const resetRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many password reset attempts. Please wait a few minutes and try again.' }
+});
+
 /**
- * 🌟 NEW HANDLER - POST: Handle Forgot Password Email Despatches
+ * POST: Send a password reset link
  * Target URL: http://localhost:5000/api/forgot-password
  */
-app.post('/api/forgot-password', async (req, res) => {
+app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
     try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: 'Email required.' });
+
         // Say so plainly rather than appearing to send an email that never arrives.
         if (!mailConfigured) {
             return res.status(503).json({
@@ -608,68 +655,103 @@ app.post('/api/forgot-password', async (req, res) => {
             });
         }
 
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ success: false, message: "Email required." });
-
         const normalizedEmail = email.toLowerCase().trim();
         const user = await User.findOne({ email: normalizedEmail });
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: "No user account found with that email." });
+        // A Google account has no password here to reset, and an unknown address
+        // gets the same answer as a known one.
+        if (!user || user.provider === 'google') {
+            return res.status(200).json({ success: true, message: GENERIC_RESET_REPLY });
         }
 
-        // Pointing to Live Server environments folder trees
+        const token = crypto.randomBytes(32).toString('hex');
+        user.resetTokenHash = hashResetToken(token);
+        user.resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
+        await user.save();
+
         // Must point at the deployed site, not a local dev server, or the link in
         // the email is useless to everyone but the developer.
         const siteUrl = (process.env.PUBLIC_SITE_URL || allowedOrigins[0] || '').replace(/\/$/, '');
-        const resetLink = `${siteUrl}/src/user/reset_password.html?email=${encodeURIComponent(normalizedEmail)}`;
+        const resetLink = `${siteUrl}/src/user/reset_password.html?email=${encodeURIComponent(normalizedEmail)}&token=${token}`;
 
-        const mailOptions = {
-            from: `"Zamboanguita Tourism" <${process.env.MAIL_USER}>`,
-            to: normalizedEmail,
-            subject: 'Reset Password Request - Zamboanguita Tourism',
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #2E7D32;">Zamboanguita Tourism Portal</h2>
-                    <p>Hello,</p>
-                    <p>We received a request to change the password for your account.</p>
-                    <p>Click the link below to securely create a new password:</p>
-                    <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: white; background-color: #2E7D32; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 15px 0;">Reset Password</a>
-                    <p>If you didn't ask to change your password, you can safely ignore this email.</p>
-                </div>
-            `
-        };
+        try {
+            await transporter.sendMail({
+                from: `"Zamboanguita Tourism" <${process.env.MAIL_USER}>`,
+                to: normalizedEmail,
+                subject: 'Reset Password Request - Zamboanguita Tourism',
+                html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <h2 style="color: #2E7D32;">Zamboanguita Tourism Portal</h2>
+                        <p>Hello,</p>
+                        <p>We received a request to change the password for your account.</p>
+                        <p>Click the button below to create a new password. This link works once and expires in ${RESET_TOKEN_TTL_MINUTES} minutes.</p>
+                        <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: white; background-color: #2E7D32; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 15px 0;">Reset Password</a>
+                        <p style="font-size: 12px; color: #666;">If the button doesn't work, paste this into your browser:<br>${resetLink}</p>
+                        <p>If you didn't ask to change your password, you can ignore this email — your password stays as it is.</p>
+                    </div>
+                `
+            });
+        } catch (mailError) {
+            // The token is useless if the email never left, so don't leave it live.
+            user.resetTokenHash = null;
+            user.resetTokenExpires = null;
+            await user.save();
+            console.error('Reset email failed to send:', mailError);
+            return res.status(502).json({ success: false, message: 'Could not send the reset email just now. Please try again in a moment.' });
+        }
 
-        await transporter.sendMail(mailOptions);
-        return res.status(200).json({ success: true, message: "Reset link emailed successfully." });
-
+        return res.status(200).json({ success: true, message: GENERIC_RESET_REPLY });
     } catch (error) {
-        console.error("Forgot password error:", error);
-        return res.status(500).json({ success: false, message: "Server error sending email link." });
+        console.error('Forgot password error:', error);
+        return res.status(500).json({ success: false, message: 'Server error sending email link.' });
     }
 });
 
 /**
- * 🌟 NEW HANDLER - POST: Commit Password Reset changes safely to Database
+ * POST: Set a new password, proving ownership with the emailed token
  * Target URL: http://localhost:5000/api/reset-password
  */
-app.post('/api/reset-password', async (req, res) => {
+app.post('/api/reset-password', resetRateLimit, async (req, res) => {
     try {
-        const { email, newPassword } = req.body;
-        if (!email || !newPassword) return res.status(400).json({ success: false, message: "Missing data payload." });
+        const { email, token, newPassword } = req.body;
 
-        const passwordHash = await bcrypt.hash(newPassword, 12);
-        const updatedUser = await User.findOneAndUpdate(
-            { email: email.toLowerCase().trim() },
-            { $set: { password: passwordHash } },
-            { new: true }
-        );
+        if (!email || !token || !newPassword) {
+            return res.status(400).json({ success: false, message: 'The reset link, your email and a new password are all required.' });
+        }
 
-        if (!updatedUser) return res.status(404).json({ success: false, message: "User profile record not found." });
+        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+        }
 
-        return res.status(200).json({ success: true, message: "Password updated completely!" });
+        const user = await User.findOne({ email: String(email).toLowerCase().trim() })
+            .select('+resetTokenHash +resetTokenExpires');
+
+        // One message for every way this can fail — a wrong token, an expired one,
+        // an already-used one or an unknown email are indistinguishable from outside.
+        const refuse = () => res.status(400).json({
+            success: false,
+            message: 'That reset link is invalid or has expired. Please request a new one.'
+        });
+
+        if (!user || !user.resetTokenHash || !user.resetTokenExpires) return refuse();
+        if (user.resetTokenExpires.getTime() < Date.now()) return refuse();
+
+        const provided = Buffer.from(hashResetToken(String(token)), 'utf8');
+        const stored = Buffer.from(user.resetTokenHash, 'utf8');
+        // Compared in constant time so the comparison itself reveals nothing.
+        if (provided.length !== stored.length || !crypto.timingSafeEqual(provided, stored)) return refuse();
+
+        user.password = await bcrypt.hash(newPassword, 12);
+        // Spent immediately, so the same link cannot be replayed.
+        user.resetTokenHash = null;
+        user.resetTokenExpires = null;
+        await user.save();
+
+        console.log(`🔑 Password reset completed for ${user.email}`);
+        return res.status(200).json({ success: true, message: 'Your password has been changed. You can sign in with it now.' });
     } catch (error) {
-        return res.status(500).json({ success: false, message: "Internal server update error." });
+        console.error('Reset password error:', error);
+        return res.status(500).json({ success: false, message: 'Internal server update error.' });
     }
 });
 
@@ -878,7 +960,7 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
         // The manager's public-facing details come along so the officer's oversight
         // page can show who is responsible for each listing without a request per row.
         const activeSpots = await Spot.find(query)
-            .populate('ownerId', 'establishmentName resortName phone')
+            .populate('ownerId', 'establishmentName resortName managerName contactEmail phone')
             .sort({ createdAt: -1 });
 
         return res.status(200).json(activeSpots.map(spot => {
@@ -888,6 +970,8 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
                 ...plain,
                 // Null manager means the Tourism Office keeps this listing itself.
                 managerName: manager ? (manager.establishmentName || manager.resortName || '') : '',
+                managerContact: manager ? (manager.managerName || '') : '',
+                managerEmail: manager ? (manager.contactEmail || '') : '',
                 managerPhone: manager ? (manager.phone || '') : ''
             };
         }));
@@ -939,7 +1023,7 @@ app.get('/api/spots/:id', async (req, res) => {
     try {
         // Only the owner's public-facing contact details — never their email or
         // password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName phone');
+        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName managerName contactEmail phone');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
         return res.status(200).json(spot);
     } catch (error) {

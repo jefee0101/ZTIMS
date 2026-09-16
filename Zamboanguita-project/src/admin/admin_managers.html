@@ -269,7 +269,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                         <thead>
                             <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
                                 <th class="px-6 py-4">Establishment</th>
-                                <th class="px-6 py-4">Email</th>
+                                <th class="px-6 py-4">Manager</th>
+                                <th class="px-6 py-4">Sign-in email</th>
+                                <th class="px-6 py-4">Public contact</th>
                                 <th class="px-6 py-4">Phone</th>
                                 <th class="px-6 py-4 text-center">Listings</th>
                                 <th class="px-6 py-4 text-right">Account created</th>
@@ -310,9 +312,22 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                            class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
                 </div>
                 <div>
-                    <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager email address</label>
-                    <input id="newManagerEmail" type="email" required placeholder="manager@example.com" autocomplete="off"
+                    <label for="newManagerName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
+                    <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
                            class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">The person who actually runs the establishment.</p>
+                </div>
+                <div>
+                    <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Sign-in email</label>
+                    <input id="newManagerEmail" type="email" required placeholder="manager@gmail.com" autocomplete="off"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">What they type to sign in. Never shown to visitors.</p>
+                </div>
+                <div>
+                    <label for="newManagerContactEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
+                    <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
                 </div>
                 <div>
                     <label for="newManagerPhone" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
@@ -409,6 +424,12 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             return manager.establishmentName || manager.resortName || '';
         }
 
+        // Blank means the account never got its own public address, so the sign-in
+        // one stands in — that is what the server falls back to as well.
+        function contactEmailOf(manager) {
+            return manager.contactEmail || manager.email || '—';
+        }
+
         function formatDate(value) {
             if (!value) return '—';
             const date = new Date(value);
@@ -421,7 +442,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!search) return managers;
             return managers.filter(manager =>
-                [nameOf(manager), manager.email, manager.phone]
+                [nameOf(manager), manager.managerName, manager.email, contactEmailOf(manager), manager.phone]
                     .some(field => String(field || '').toLowerCase().includes(search))
             );
         }
@@ -444,7 +465,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             if (rows.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="5" class="px-6 py-16 text-center">
+                    <tr><td colspan="7" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">storefront</span>
                         ${managers.length === 0
                             ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
@@ -463,7 +484,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                             ${escapeHtml(nameOf(manager) || 'Unnamed establishment')}
                         </span>
                     </td>
+                    <td class="px-6 py-4">${escapeHtml(manager.managerName || '—')}</td>
                     <td class="px-6 py-4">${escapeHtml(manager.email || '—')}</td>
+                    <td class="px-6 py-4">${escapeHtml(contactEmailOf(manager))}</td>
                     <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
                     <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${
@@ -490,7 +513,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
         async function loadDirectory() {
             const tbody = document.getElementById('managerTableBody');
-            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 5);
+            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 7);
 
             try {
                 const [managersResponse, spotsResponse] = await Promise.all([
@@ -523,7 +546,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 document.getElementById('shownCount').textContent = 0;
                 document.getElementById('totalCount').textContent = 0;
                 tbody.innerHTML = `
-                    <tr><td colspan="5" class="px-6 py-16 text-center">
+                    <tr><td colspan="7" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
                         <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
                         <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}
@@ -554,7 +577,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             setCreateError('');
 
             const establishmentName = document.getElementById('newManagerEstablishmentName').value.trim();
+            const managerName = document.getElementById('newManagerName').value.trim();
             const email = document.getElementById('newManagerEmail').value.trim();
+            const contactEmail = document.getElementById('newManagerContactEmail').value.trim();
             const phone = document.getElementById('newManagerPhone').value.trim();
             const password = document.getElementById('newManagerPassword').value;
 
@@ -569,7 +594,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 const response = await fetch(`${API_BASE}/establishment-managers`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ establishmentName, email, phone, password })
+                    body: JSON.stringify({ establishmentName, managerName, email, contactEmail, phone, password })
                 });
 
                 const result = await response.json().catch(() => ({}));

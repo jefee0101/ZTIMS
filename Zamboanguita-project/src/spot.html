@@ -246,9 +246,19 @@
         // instead of a button that goes nowhere.
         const contactLines = [];
         if (managerName(owner)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(owner))}</p>`);
+        // The person to ask for, when the office recorded one.
+        if (owner?.managerName) {
+            contactLines.push(`<p class="text-xs text-on-surface-variant">Managed by ${escapeHtml(owner.managerName)}</p>`);
+        }
         if (owner?.phone) {
             contactLines.push(`<a href="tel:${escapeHtml(owner.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
                 <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(owner.phone)}
+            </a>`);
+        }
+        // Only the public address ever reaches this page; the sign-in email stays private.
+        if (owner?.contactEmail) {
+            contactLines.push(`<a href="mailto:${escapeHtml(owner.contactEmail)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline break-all">
+                <span class="material-symbols-outlined !text-base">mail</span>${escapeHtml(owner.contactEmail)}
             </a>`);
         }
 

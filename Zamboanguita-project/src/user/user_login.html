@@ -357,10 +357,12 @@
           const result = await response.json();
 
           if (response.ok && result.success) {
-            alert("A password reset request has been dispatched. Please review your email inbox.");
+            // Deliberately the same wording whether or not that email is registered,
+            // so this form can't be used to find out who has an account.
+            alert(result.message || "If that email has an account, a reset link is on its way. Check your inbox and spam folder.\n\nThe link works once and expires in 30 minutes.");
             closeForgotModal();
           } else {
-            alert("Error: " + (result.message || "Something went wrong. Please check the email entered."));
+            alert(result.message || "Something went wrong. Please try again in a moment.");
           }
         } catch (error) {
           console.error("Forgot password API error:", error);
