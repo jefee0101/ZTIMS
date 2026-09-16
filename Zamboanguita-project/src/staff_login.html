@@ -135,8 +135,17 @@
 
   const errorBox = document.getElementById('loginError');
 
+  // The portals send people here with ?expired=1 when their two-hour sign-in runs
+  // out, so the trip back is explained rather than looking like a random logout.
+  if (new URLSearchParams(window.location.search).get('expired') === '1') {
+    errorBox.textContent = 'Your sign-in expired, so you were signed out. Please sign in again — nothing has been lost.';
+    errorBox.className = 'text-sm text-on-surface-variant bg-surface-high border border-outline/40 rounded-xl px-4 py-3';
+    errorBox.hidden = false;
+  }
+
   function showError(message) {
     errorBox.textContent = message;
+    errorBox.className = 'text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3';
     errorBox.hidden = false;
   }
 

@@ -74,7 +74,10 @@ mongoose.connect(MONGO_URI)
 // 2. Admin Authentication Schema
 const AdminSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false }
+    password: { type: String, required: true, select: false },
+    // See the password reset section: only the token's hash is ever stored.
+    resetTokenHash: { type: String, default: null, select: false },
+    resetTokenExpires: { type: Date, default: null, select: false }
 }, { collection: 'admins' }); 
 
 const Admin = mongoose.model('Admin', AdminSchema);
@@ -124,7 +127,13 @@ const EstablishmentManagerSchema = new mongoose.Schema({
     // publicly; this one is, on listings that have no booking website.
     managerName: { type: String, default: "", trim: true },
     contactEmail: { type: String, default: "", lowercase: true, trim: true },
-    phone: { type: String, default: "" }
+    phone: { type: String, default: "" },
+    // Suspended accounts cannot sign in, and their listings drop off the public
+    // site until the Tourist Officer restores them. Nothing is deleted, so a
+    // seasonal closure or a change of ownership is reversible.
+    active: { type: Boolean, default: true },
+    resetTokenHash: { type: String, default: null, select: false },
+    resetTokenExpires: { type: Date, default: null, select: false }
 }, { collection: 'resortOwners', timestamps: true });
 
 // One field, two possible spellings on disk. Everything downstream reads this.
@@ -281,6 +290,24 @@ const createToken = (account, role) => jwt.sign(
 );
 
 
+const RESET_TOKEN_TTL_MINUTES = 30;
+const MIN_PASSWORD_LENGTH = 8;
+
+const hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');
+
+// Both reset routes answer the same way whether or not the email is registered,
+// so neither can be used to discover who has an account here.
+const GENERIC_RESET_REPLY = 'If that email has an account, a reset link is on its way. Check your inbox and spam folder.';
+
+// Password reset is a high-value target, so it gets a tighter limit than login.
+const resetRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many password reset attempts. Please wait a few minutes and try again.' }
+});
+
 /* ==========================================
    4. API ROUTE HANDLERS
 ========================================== */
@@ -402,6 +429,208 @@ async function listEstablishmentManagers(req, res) {
 app.post('/api/establishment-managers', requireAdmin, createEstablishmentManager);
 app.get('/api/establishment-managers', requireAdmin, listEstablishmentManagers);
 
+/* ---- The manager's own account ---------------------------------------------
+   Everything here is scoped to req.auth.sub, so a manager can only ever read or
+   change their own record — the id never comes from the request. Before these
+   routes existed, an account was issued once and could never be corrected: a
+   phone number that changed was wrong forever, and a forgotten password meant
+   the account was gone for good. */
+
+// Shape sent to whoever is allowed to see an account. Never includes the hash.
+function managerProfile(manager) {
+    return {
+        _id: manager._id,
+        establishmentName: manager.displayName,
+        managerName: manager.managerName || '',
+        email: manager.email,
+        contactEmail: manager.contactEmail || manager.email,
+        phone: manager.phone || '',
+        active: manager.active !== false,
+        createdAt: manager.createdAt
+    };
+}
+
+app.get('/api/establishment-managers/me', requireEstablishmentManager, async (req, res) => {
+    try {
+        const manager = await EstablishmentManager.findById(req.auth.sub);
+        if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
+        return res.status(200).json({ success: true, manager: managerProfile(manager) });
+    } catch (error) {
+        console.error('❌ Manager profile read failure:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * The details a manager maintains themselves. The sign-in email is deliberately
+ * not among them: changing it would lock them out of the account they are
+ * currently using if they mistype it, so only the Tourist Officer may do that.
+ */
+async function applyManagerDetails(manager, body) {
+    if (typeof body.establishmentName === 'string') {
+        const name = body.establishmentName.trim();
+        if (!name) throw new Error('The establishment needs a name.');
+        manager.establishmentName = name;
+        manager.resortName = undefined;     // the pre-rename copy would go stale
+    }
+    if (typeof body.managerName === 'string') manager.managerName = body.managerName.trim();
+    if (typeof body.phone === 'string') manager.phone = body.phone.trim();
+    if (typeof body.contactEmail === 'string') {
+        const contact = body.contactEmail.trim().toLowerCase();
+        if (contact && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+            throw new Error('That contact email does not look like an email address.');
+        }
+        // Blank means "use the sign-in address", which is what the public side reads.
+        manager.contactEmail = contact || manager.email;
+    }
+    await manager.save();
+    return manager;
+}
+
+app.patch('/api/establishment-managers/me', requireEstablishmentManager, async (req, res) => {
+    try {
+        const manager = await EstablishmentManager.findById(req.auth.sub);
+        if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
+
+        await applyManagerDetails(manager, req.body);
+        return res.status(200).json({ success: true, message: 'Your details have been saved.', manager: managerProfile(manager) });
+    } catch (error) {
+        console.error('❌ Manager profile update failure:', error);
+        return res.status(400).json({ success: false, message: error.message || 'Could not save those details.' });
+    }
+});
+
+app.post('/api/establishment-managers/me/password', requireEstablishmentManager, resetRateLimit, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
+        }
+        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+        }
+
+        const manager = await EstablishmentManager.findById(req.auth.sub).select('+password');
+        if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
+
+        // Proving the current password is what stops a borrowed, still-signed-in
+        // browser from being used to lock the real manager out.
+        if (!(await bcrypt.compare(currentPassword, manager.password))) {
+            return res.status(401).json({ success: false, message: 'That current password is not right.' });
+        }
+
+        manager.password = await bcrypt.hash(newPassword, 12);
+        manager.resetTokenHash = null;      // any reset link in flight is now void
+        manager.resetTokenExpires = null;
+        await manager.save();
+
+        console.log(`🔑 Establishment manager changed their own password: ${manager.email}`);
+        return res.status(200).json({ success: true, message: 'Your password has been changed.' });
+    } catch (error) {
+        console.error('❌ Manager password change failure:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/* ---- Officer-side account lifecycle ---------------------------------------- */
+
+/**
+ * PATCH: correct an account's details, or suspend and restore it.
+ * Suspending blocks sign-in and takes the manager's listings off the public site
+ * without deleting anything, so a closure or a change of ownership is reversible.
+ */
+app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
+    try {
+        const manager = await EstablishmentManager.findById(req.params.id);
+        if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
+
+        if (typeof req.body.email === 'string' && req.body.email.trim()) {
+            const email = req.body.email.trim().toLowerCase();
+            if (email !== manager.email) {
+                const taken = await EstablishmentManager.findOne({ email });
+                if (taken) return res.status(409).json({ success: false, message: 'Another establishment already signs in with that email.' });
+                manager.email = email;
+            }
+        }
+        if (typeof req.body.active === 'boolean') manager.active = req.body.active;
+
+        await applyManagerDetails(manager, req.body);
+
+        const listings = await Spot.countDocuments({ ownerId: manager._id });
+        console.log(`🏨 Officer updated ${manager.email} (active: ${manager.active !== false})`);
+        return res.status(200).json({
+            success: true,
+            message: manager.active === false
+                ? `Account suspended. Its ${listings} listing${listings === 1 ? '' : 's'} are hidden from the public site.`
+                : 'Account updated.',
+            manager: managerProfile(manager)
+        });
+    } catch (error) {
+        console.error('❌ Officer manager update failure:', error);
+        return res.status(400).json({ success: false, message: error.message || 'Could not update that account.' });
+    }
+});
+
+/**
+ * POST: the Tourist Officer issues a new password for a manager who is locked out.
+ * The new password is returned once so the officer can pass it on — it is stored
+ * only as a hash and cannot be read back afterwards.
+ */
+app.post('/api/establishment-managers/:id/password', requireAdmin, async (req, res) => {
+    try {
+        const manager = await EstablishmentManager.findById(req.params.id);
+        if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
+
+        const newPassword = String(req.body.newPassword || '').trim() || crypto.randomBytes(6).toString('base64url');
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+        }
+
+        manager.password = await bcrypt.hash(newPassword, 12);
+        manager.resetTokenHash = null;
+        manager.resetTokenExpires = null;
+        await manager.save();
+
+        console.log(`🔑 Officer issued a new password for ${manager.email}`);
+        return res.status(200).json({
+            success: true,
+            message: 'A new password has been set. Pass it on — it cannot be read again.',
+            email: manager.email,
+            newPassword
+        });
+    } catch (error) {
+        console.error('❌ Officer password issue failure:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * DELETE: remove an account outright. Refused while listings still point at it,
+ * because deleting would leave those listings owned by nobody — suspend instead,
+ * or take the listings down first, deliberately.
+ */
+app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
+    try {
+        const manager = await EstablishmentManager.findById(req.params.id);
+        if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
+
+        const listings = await Spot.countDocuments({ ownerId: manager._id });
+        if (listings > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `This account still has ${listings} listing${listings === 1 ? '' : 's'}. Suspend it instead, or take those listings down first.`
+            });
+        }
+
+        await manager.deleteOne();
+        console.log(`🗑️ Officer deleted establishment manager account ${manager.email}`);
+        return res.status(200).json({ success: true, message: 'Account deleted.' });
+    } catch (error) {
+        console.error('❌ Officer manager delete failure:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
 // Pre-rename paths, kept so any page or bookmark still pointing at them keeps working.
 app.post('/api/resort-owners', requireAdmin, createEstablishmentManager);
 app.get('/api/resort-owners', requireAdmin, listEstablishmentManagers);
@@ -481,6 +710,15 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
             resolvedRole = 'establishment_manager';
         } else {
             account = await User.findOne({ email: normalizedEmail }).select('+password');
+        }
+
+        // A suspended account is told plainly, rather than being left to think
+        // they are mistyping a password that is in fact correct.
+        if (account && isEstablishmentManager(resolvedRole) && account.active === false) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been suspended by the Municipal Tourism Office. Please contact them to have it restored.'
+            });
         }
 
         if (!account || !(await bcrypt.compare(password, account.password))) {
@@ -620,23 +858,24 @@ if (!mailConfigured) {
    take over that account.
 ========================================== */
 
-const RESET_TOKEN_TTL_MINUTES = 30;
-const MIN_PASSWORD_LENGTH = 8;
+/**
+ * Reset covers every account type that signs in with a password, so staff are not
+ * left with an account that dies the moment its password is forgotten. Tourists
+ * who signed up through Google are skipped — they have no password here — and a
+ * suspended manager cannot reset their way back in.
+ * Returns the account document, or null.
+ */
+async function findResettableAccount(email, withResetFields) {
+    const withFields = query => (withResetFields ? query.select('+resetTokenHash +resetTokenExpires') : query);
 
-const hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');
+    const user = await withFields(User.findOne({ email }));
+    if (user) return user.provider === 'google' ? null : user;
 
-// Both reset routes answer the same way whether or not the email is registered,
-// so neither can be used to discover who has an account here.
-const GENERIC_RESET_REPLY = 'If that email has an account, a reset link is on its way. Check your inbox and spam folder.';
+    const manager = await withFields(EstablishmentManager.findOne({ email }));
+    if (manager) return manager.active === false ? null : manager;
 
-// Password reset is a high-value target, so it gets a tighter limit than login.
-const resetRateLimit = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, message: 'Too many password reset attempts. Please wait a few minutes and try again.' }
-});
+    return withFields(Admin.findOne({ email }));
+}
 
 /**
  * POST: Send a password reset link
@@ -656,11 +895,11 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const user = await User.findOne({ email: normalizedEmail });
+        const user = await findResettableAccount(normalizedEmail, false);
 
-        // A Google account has no password here to reset, and an unknown address
-        // gets the same answer as a known one.
-        if (!user || user.provider === 'google') {
+        // An address with no resettable account gets exactly the same answer as
+        // one that has, so this cannot be used to find out who is registered.
+        if (!user) {
             return res.status(200).json({ success: true, message: GENERIC_RESET_REPLY });
         }
 
@@ -723,8 +962,7 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
             return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
         }
 
-        const user = await User.findOne({ email: String(email).toLowerCase().trim() })
-            .select('+resetTokenHash +resetTokenExpires');
+        const user = await findResettableAccount(String(email).toLowerCase().trim(), true);
 
         // One message for every way this can fail — a wrong token, an expired one,
         // an already-used one or an unknown email are indistinguishable from outside.
@@ -959,9 +1197,16 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
         }
         // The manager's public-facing details come along so the officer's oversight
         // page can show who is responsible for each listing without a request per row.
-        const activeSpots = await Spot.find(query)
-            .populate('ownerId', 'establishmentName resortName managerName contactEmail phone')
+        const foundSpots = await Spot.find(query)
+            .populate('ownerId', 'establishmentName resortName managerName contactEmail phone active')
             .sort({ createdAt: -1 });
+
+        // A suspended manager's listings leave the public site, but the Tourist
+        // Officer still sees them — otherwise the listings they just hid would
+        // vanish from the very page they manage them on.
+        const activeSpots = req.auth?.role === 'admin'
+            ? foundSpots
+            : foundSpots.filter(spot => !spot.ownerId || spot.ownerId.active !== false);
 
         return res.status(200).json(activeSpots.map(spot => {
             const plain = spot.toObject();
@@ -1023,8 +1268,12 @@ app.get('/api/spots/:id', async (req, res) => {
     try {
         // Only the owner's public-facing contact details — never their email or
         // password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName managerName contactEmail phone');
+        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName managerName contactEmail phone active');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
+        // Same rule as the listing page: a suspended establishment is not public.
+        if (spot.ownerId && spot.ownerId.active === false) {
+            return res.status(404).json({ message: 'This destination is not available right now.' });
+        }
         return res.status(200).json(spot);
     } catch (error) {
         return res.status(404).json({ message: 'Spot not found.' });

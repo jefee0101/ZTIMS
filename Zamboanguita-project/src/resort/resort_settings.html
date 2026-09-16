@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Establishment Manager | My Establishment</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2E7D32",
+            "on-primary": "#FFFFFF",
+            "surface": "var(--color-surface, #051D40)",
+            "background": "var(--color-background, #020F24)",
+            "surface-variant": "var(--color-surface-variant, #0B2954)",
+            "on-surface": "var(--color-on-surface, #FEFCF4)",
+            "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
+            "outline-variant": "#1E3D6B",
+            "primary-container": "#4CAF50",
+            "secondary-container": "#00838F",
+            "on-secondary-container": "#E0F7FA",
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <style>
+    :root {
+        --color-surface: #051D40;
+        --color-background: #020F24;
+        --color-surface-variant: #0B2954;
+        --color-on-surface: #FEFCF4;
+        --color-on-surface-variant: #A0B2C6;
+    }
+    .light-mode, [class*="light-mode"] {
+        --color-surface: #FFFFFF !important;
+        --color-background: #F4F7FA !important;
+        --color-surface-variant: #E6EEF8 !important;
+        --color-on-surface: #020F24 !important;
+        --color-on-surface-variant: #4A5D73 !important;
+    }
+    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th, input, select, textarea {
+        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+    .light-mode { background: #F4F7FA !important; color: #020F24 !important; }
+    .light-mode main { background: #F4F7FA !important; }
+    .light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+    .glass-panel { background: var(--color-surface); border: 1px solid #1E3D6B; }
+    .light-mode .glass-panel { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
+    .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
+    .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
+        color: #020F24 !important;
+    }
+    .light-mode input, .light-mode select, .light-mode textarea {
+        background: #FFFFFF !important;
+        color: #020F24 !important;
+        border: 1px solid #CBD5E1 !important;
+    }
+    .light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+    
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), margin-left .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity .2s ease .06s, max-width .3s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), color .2s ease, background-color .2s ease !important;
+    }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
+            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourist Establishment Manager Portal</p>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
+        </div>
+        <nav class="flex-1 space-y-2 font-body">
+            <a title="My Spots" class="flex items-center gap-3 text-on-surface-variant hover:text-[#FFB300] duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+                <span class="sidebar-label">My Spots</span>
+            </a>
+            <a title="My Establishment" class="flex items-center gap-3 bg-primary/10 text-[#FFB300] px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+                <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
+                <span class="sidebar-label">My Establishment</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="sidebar-label">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <p id="establishmentNameLabel" class="text-sm font-bold text-on-surface-variant"></p>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+            <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
+        </button>
+    </header>
+
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1000px] mx-auto space-y-8">
+
+            <div class="space-y-1">
+                <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">My Establishment</h2>
+                <p class="text-on-surface-variant">
+                    These details are yours to keep current. The name and contact details appear to visitors
+                    on listings that have no booking website.
+                </p>
+            </div>
+
+            <div id="settingsLoading"></div>
+
+            <div id="settingsContent" hidden class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <section class="glass-panel rounded-2xl p-8 space-y-5">
+                    <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#FFB300]">storefront</span> Details
+                    </h3>
+
+                    <form id="detailsForm" class="space-y-4">
+                        <div>
+                            <label for="establishmentNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
+                            <input id="establishmentNameInput" type="text" required
+                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                            <p class="text-[11px] text-on-surface-variant mt-1.5">Shown on your listings and in the tourism office's records.</p>
+                        </div>
+
+                        <div>
+                            <label for="managerNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
+                            <input id="managerNameInput" type="text" placeholder="The person visitors should ask for"
+                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+
+                        <div>
+                            <label for="contactEmailInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email</label>
+                            <input id="contactEmailInput" type="email" placeholder="Leave blank to use your sign-in email"
+                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                            <p class="text-[11px] text-on-surface-variant mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
+                        </div>
+
+                        <div>
+                            <label for="phoneInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone</label>
+                            <input id="phoneInput" type="text" placeholder="09XX XXX XXXX"
+                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+
+                        <p id="detailsMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+
+                        <button type="submit" id="saveDetailsBtn"
+                                class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.01]">
+                            Save details
+                        </button>
+                    </form>
+                </section>
+
+                <div class="space-y-8">
+                    <section class="glass-panel rounded-2xl p-8 space-y-5">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#FFB300]">lock</span> Password
+                        </h3>
+
+                        <form id="passwordForm" class="space-y-4">
+                            <div>
+                                <label for="currentPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Current password</label>
+                                <input id="currentPasswordInput" type="password" required autocomplete="current-password"
+                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                            </div>
+                            <div>
+                                <label for="newPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">New password</label>
+                                <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"
+                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                            </div>
+                            <div>
+                                <label for="confirmPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Repeat the new password</label>
+                                <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password"
+                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                            </div>
+
+                            <p id="passwordMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+
+                            <button type="submit" id="savePasswordBtn"
+                                    class="w-full bg-surface-variant border border-outline-variant/40 text-on-surface font-bold py-3.5 rounded-full transition-all hover:bg-outline-variant/50">
+                                Change password
+                            </button>
+                        </form>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-8 space-y-3">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#FFB300]">badge</span> Account
+                        </h3>
+                        <dl class="text-sm space-y-2">
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-on-surface-variant">Sign-in email</dt>
+                                <dd id="signInEmail" class="text-on-surface font-bold text-right break-all"></dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-on-surface-variant">Account issued</dt>
+                                <dd id="accountCreated" class="text-on-surface font-bold text-right"></dd>
+                            </div>
+                        </dl>
+                        <p class="text-[11px] text-on-surface-variant pt-2">
+                            Only the Municipal Tourism Office can change your sign-in email — ask them if it needs correcting.
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "https://ztims-api.onrender.com/api";
+
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message) {
+            target.innerHTML =
+                '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-2px] mr-2"></span>' + label;
+            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if (icon) icon.textContent = 'light_mode';
+            }
+        }
+
+        function guardEstablishmentManagerSession() {
+            const role = localStorage.getItem('userRole');
+            // 'resort_owner' is the pre-rename spelling of the same role.
+            if (!['establishment_manager', 'resort_owner'].includes(role) || !localStorage.getItem('authToken')) {
+                window.location.href = '../staff_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // A sign-in lasts two hours. When it runs out the server answers 401, and
+        // treating that as an ordinary failure would look like the account was
+        // emptied — so say what happened and send them back to sign in.
+        function handleExpiredSession() {
+            localStorage.removeItem('authToken');
+            alert('Your sign-in has expired. Please sign in again — nothing has been lost.');
+            window.location.href = '../staff_login.html?expired=1';
+        }
+
+        function showMessage(id, message, tone) {
+            const box = document.getElementById(id);
+            box.textContent = message || '';
+            box.className = 'text-sm rounded-xl px-4 py-3 ' + (tone === 'error'
+                ? 'text-red-400 bg-red-500/10 border border-red-500/20'
+                : 'text-primary-container bg-primary/10 border border-primary/20');
+            box.hidden = !message;
+        }
+
+        function formatDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? '—'
+                : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function fillForm(manager) {
+            document.getElementById('establishmentNameInput').value = manager.establishmentName || '';
+            document.getElementById('managerNameInput').value = manager.managerName || '';
+            // Only show a contact address that was actually chosen, so the field's
+            // placeholder keeps telling the truth about what blank means.
+            document.getElementById('contactEmailInput').value =
+                manager.contactEmail && manager.contactEmail !== manager.email ? manager.contactEmail : '';
+            document.getElementById('phoneInput').value = manager.phone || '';
+            document.getElementById('signInEmail').textContent = manager.email || '';
+            document.getElementById('accountCreated').textContent = formatDate(manager.createdAt);
+
+            const label = document.getElementById('establishmentNameLabel');
+            if (label) label.textContent = manager.establishmentName || manager.email || '';
+            if (manager.establishmentName) localStorage.setItem('establishmentName', manager.establishmentName);
+        }
+
+        async function loadProfile() {
+            const doneLoading = showLoading(document.getElementById('settingsLoading'), 'Loading your details...');
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me`, { headers: authHeaders() });
+                if (response.status === 401) return handleExpiredSession();
+                if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
+
+                const result = await response.json();
+                doneLoading();
+                document.getElementById('settingsLoading').innerHTML = '';
+                document.getElementById('settingsContent').hidden = false;
+                fillForm(result.manager || {});
+            } catch (error) {
+                console.error('❌ Could not load your details:', error);
+                doneLoading();
+                document.getElementById('settingsLoading').innerHTML = `
+                    <div class="glass-panel rounded-2xl p-8 text-center">
+                        <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not load your details</p>
+                        <p class="text-on-surface-variant text-sm">${escapeHtml(error.message)} Nothing has been changed — refresh to try again.</p>
+                    </div>`;
+            }
+        }
+
+        async function saveDetails(event) {
+            event.preventDefault();
+            showMessage('detailsMessage', '');
+
+            const payload = {
+                establishmentName: document.getElementById('establishmentNameInput').value.trim(),
+                managerName: document.getElementById('managerNameInput').value.trim(),
+                contactEmail: document.getElementById('contactEmailInput').value.trim(),
+                phone: document.getElementById('phoneInput').value.trim()
+            };
+
+            if (!payload.establishmentName) {
+                showMessage('detailsMessage', 'Your establishment needs a name.', 'error');
+                return;
+            }
+
+            const restoreButton = setButtonLoading(document.getElementById('saveDetailsBtn'), 'Saving...');
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload)
+                });
+                if (response.status === 401) return handleExpiredSession();
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `The server refused (status ${response.status}).`);
+                }
+
+                fillForm(result.manager || {});
+                showMessage('detailsMessage', result.message || 'Your details have been saved.');
+            } catch (error) {
+                showMessage('detailsMessage', error.message, 'error');
+            } finally {
+                restoreButton();
+            }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            showMessage('passwordMessage', '');
+
+            const currentPassword = document.getElementById('currentPasswordInput').value;
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmation = document.getElementById('confirmPasswordInput').value;
+
+            if (newPassword.length < 8) {
+                showMessage('passwordMessage', 'Your new password must be at least 8 characters.', 'error');
+                return;
+            }
+            if (newPassword !== confirmation) {
+                showMessage('passwordMessage', 'Those two passwords do not match.', 'error');
+                return;
+            }
+
+            const restoreButton = setButtonLoading(document.getElementById('savePasswordBtn'), 'Changing...');
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me/password`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                // 401 here means the current password was wrong, not an expired
+                // session, so it is reported rather than signing them out.
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `The server refused (status ${response.status}).`);
+                }
+
+                document.getElementById('passwordForm').reset();
+                showMessage('passwordMessage', 'Your password has been changed. Use the new one next time you sign in.');
+            } catch (error) {
+                showMessage('passwordMessage', error.message, 'error');
+            } finally {
+                restoreButton();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+
+            if (!guardEstablishmentManagerSession()) return;
+
+            const label = document.getElementById('establishmentNameLabel');
+            if (label) label.textContent = localStorage.getItem('establishmentName') || localStorage.getItem('userEmail') || '';
+
+            document.getElementById('detailsForm').addEventListener('submit', saveDetails);
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+
+            loadProfile();
+        });
+    </script>
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
+</body>
+</html>

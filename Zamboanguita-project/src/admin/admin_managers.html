@@ -274,7 +274,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                                 <th class="px-6 py-4">Public contact</th>
                                 <th class="px-6 py-4">Phone</th>
                                 <th class="px-6 py-4 text-center">Listings</th>
+                                <th class="px-6 py-4 text-center">Status</th>
                                 <th class="px-6 py-4 text-right">Account created</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="managerTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
@@ -465,7 +467,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             if (rows.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="7" class="px-6 py-16 text-center">
+                    <tr><td colspan="9" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">storefront</span>
                         ${managers.length === 0
                             ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
@@ -476,8 +478,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             tbody.innerHTML = rows.map(manager => {
                 const listings = listingCounts[String(manager._id)] || 0;
+                const suspended = manager.active === false;
                 return `
-                <tr class="hover:bg-white/[0.03] transition-colors">
+                <tr class="hover:bg-white/[0.03] transition-colors ${suspended ? 'opacity-60' : ''}">
                     <td class="px-6 py-4 font-bold text-on-surface">
                         <span class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary !text-lg">storefront</span>
@@ -493,7 +496,35 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                             listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant text-on-surface-variant ring-outline-variant/30'
                         }">${listings}</span>
                     </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                            suspended ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary-container'
+                        }">
+                            <span class="material-symbols-outlined !text-xs">${suspended ? 'pause_circle' : 'check_circle'}</span>
+                            ${suspended ? 'Suspended' : 'Active'}
+                        </span>
+                    </td>
                     <td class="px-6 py-4 text-right text-xs">${escapeHtml(formatDate(manager.createdAt))}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-end gap-1.5">
+                            <button data-edit="${escapeHtml(manager._id)}" title="Correct these details"
+                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-on-surface transition-colors flex">
+                                <span class="material-symbols-outlined !text-lg">edit</span>
+                            </button>
+                            <button data-password="${escapeHtml(manager._id)}" title="Issue a new password"
+                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-[#FFB300] transition-colors flex">
+                                <span class="material-symbols-outlined !text-lg">key</span>
+                            </button>
+                            <button data-suspend="${escapeHtml(manager._id)}" title="${suspended ? 'Restore this account' : 'Suspend this account'}"
+                                    class="p-2 rounded-lg bg-surface-variant ${suspended ? 'text-primary-container' : 'text-on-surface-variant hover:text-red-400'} transition-colors flex">
+                                <span class="material-symbols-outlined !text-lg">${suspended ? 'play_circle' : 'pause_circle'}</span>
+                            </button>
+                            <button data-delete="${escapeHtml(manager._id)}" title="Delete this account"
+                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-red-400 transition-colors flex">
+                                <span class="material-symbols-outlined !text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -513,7 +544,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
         async function loadDirectory() {
             const tbody = document.getElementById('managerTableBody');
-            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 7);
+            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 9);
 
             try {
                 const [managersResponse, spotsResponse] = await Promise.all([
@@ -546,12 +577,143 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 document.getElementById('shownCount').textContent = 0;
                 document.getElementById('totalCount').textContent = 0;
                 tbody.innerHTML = `
-                    <tr><td colspan="7" class="px-6 py-16 text-center">
+                    <tr><td colspan="9" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
                         <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
                         <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}
                         Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
                     </td></tr>`;
+            }
+        }
+
+        /* ---- Account lifecycle --------------------------------------------
+           Every one of these asks first and says exactly what it will do, since
+           suspending takes an establishment's listings off the public site and
+           issuing a password locks the manager out of the one they are using. */
+
+        function managerById(id) {
+            return managers.find(manager => String(manager._id) === String(id));
+        }
+
+        async function callManagerRoute(url, options, button, label) {
+            const restoreButton = setButtonLoading(button, label || '');
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.success === false) {
+                    throw new Error(result.message || `The server refused (status ${response.status}).`);
+                }
+                return result;
+            } finally {
+                restoreButton();
+            }
+        }
+
+        async function toggleSuspension(id, button) {
+            const manager = managerById(id);
+            if (!manager) return;
+
+            const suspended = manager.active === false;
+            const listings = listingCounts[String(id)] || 0;
+            const name = nameOf(manager) || manager.email;
+
+            const question = suspended
+                ? `Restore ${name}?\n\nThey will be able to sign in again, and their ${listings} listing${listings === 1 ? '' : 's'} will return to the public site.`
+                : `Suspend ${name}?\n\nThey will not be able to sign in, and their ${listings} listing${listings === 1 ? '' : 's'} will be hidden from the public site.\n\nNothing is deleted — you can restore the account at any time.`;
+            if (!confirm(question)) return;
+
+            try {
+                const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ active: suspended })
+                }, button, '');
+                await loadDirectory();
+                alert(result.message || 'Account updated.');
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        async function issueNewPassword(id, button) {
+            const manager = managerById(id);
+            if (!manager) return;
+            const name = nameOf(manager) || manager.email;
+
+            const typed = prompt(
+                `Issue a new password for ${name}?\n\n` +
+                `Their current password stops working immediately. Leave this blank to have one generated, ` +
+                `or type one of at least 8 characters.`, '');
+            if (typed === null) return;
+            if (typed.trim() && typed.trim().length < 8) {
+                alert('⚠️ A password must be at least 8 characters.');
+                return;
+            }
+
+            try {
+                const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}/password`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ newPassword: typed.trim() })
+                }, button, '');
+                // Shown once — the server keeps only a hash of it.
+                alert(`New password for ${name}\n\nSign-in email: ${result.email}\nPassword: ${result.newPassword}\n\nPass this on now. It cannot be read again.`);
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        async function editManager(id, button) {
+            const manager = managerById(id);
+            if (!manager) return;
+
+            const establishmentName = prompt('Establishment name', nameOf(manager));
+            if (establishmentName === null) return;
+            const managerName = prompt("Manager's name", manager.managerName || '');
+            if (managerName === null) return;
+            const contactEmail = prompt('Public contact email (blank uses the sign-in email)', manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''));
+            if (contactEmail === null) return;
+            const phone = prompt('Phone', manager.phone || '');
+            if (phone === null) return;
+
+            try {
+                await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ establishmentName, managerName, contactEmail, phone })
+                }, button, '');
+                await loadDirectory();
+            } catch (error) {
+                alert('⚠️ ' + error.message);
+            }
+        }
+
+        async function deleteManager(id, button) {
+            const manager = managerById(id);
+            if (!manager) return;
+
+            const listings = listingCounts[String(id)] || 0;
+            const name = nameOf(manager) || manager.email;
+
+            if (listings > 0) {
+                alert(
+                    `${name} still has ${listings} listing${listings === 1 ? '' : 's'}.\n\n` +
+                    `Deleting the account would leave ${listings === 1 ? 'it' : 'them'} belonging to nobody. ` +
+                    `Suspend the account instead, which hides the listings and can be undone, or take the listings down from Destinations first.`
+                );
+                return;
+            }
+
+            if (!confirm(`Delete ${name} permanently?\n\nThe account and its sign-in are removed for good. This cannot be undone.`)) return;
+
+            try {
+                await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                }, button, '');
+                await loadDirectory();
+            } catch (error) {
+                alert('⚠️ ' + error.message);
             }
         }
 
@@ -624,6 +786,17 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             document.getElementById('createManagerForm').addEventListener('submit', createManager);
             document.getElementById('searchInput').addEventListener('input', renderTable);
             document.getElementById('refreshBtn').addEventListener('click', loadDirectory);
+
+            // Delegated so the buttons survive every re-render of the table.
+            document.getElementById('managerTableBody').addEventListener('click', event => {
+                const button = event.target.closest('[data-edit], [data-password], [data-suspend], [data-delete]');
+                if (!button) return;
+                const { edit, password, suspend, delete: remove } = button.dataset;
+                if (edit) editManager(edit, button);
+                else if (password) issueNewPassword(password, button);
+                else if (suspend) toggleSuspension(suspend, button);
+                else if (remove) deleteManager(remove, button);
+            });
 
             document.getElementById('createManagerModal').addEventListener('click', event => {
                 if (event.target === document.getElementById('createManagerModal')) toggleCreateModal(false);

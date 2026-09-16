@@ -132,6 +132,10 @@
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span class="sidebar-label">My Spots</span>
             </a>
+            <a title="My Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-[#FFB300] duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+                <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
+                <span class="sidebar-label">My Establishment</span>
+            </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
             <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
@@ -277,6 +281,8 @@
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
         let mySpots = [];
+        let loadFailed = false;
+        let loadError = '';
 
         /* ---- Photo gallery ---------------------------------------------------
            Photos go straight from the browser to Cloudinary; MongoDB only ever
@@ -521,6 +527,17 @@
             return true;
         }
 
+        // A sign-in lasts two hours. When it runs out the server answers 401, and
+        // the old code treated that like any other failure — it emptied the list
+        // and showed "You haven't published any spots yet", so an expired session
+        // looked exactly like every listing having been deleted.
+        function handleExpiredSession() {
+            localStorage.removeItem('authToken');
+            alert('Your sign-in has expired. Please sign in again — none of your listings have been lost.');
+            window.location.href = '../staff_login.html?expired=1';
+            return true;
+        }
+
         function toggleAddSpotModal(show, spot) {
             const modal = document.getElementById('addSpotModal');
             if (show) {
@@ -587,7 +604,8 @@
                         body: JSON.stringify(payload)
                     }
                 );
-                if (!response.ok) throw new Error((await response.json()).message || 'Failed to save spot.');
+                if (response.status === 401) { handleExpiredSession(); return; }
+                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || 'Failed to save spot.');
 
                 toggleAddSpotModal(false);
                 await loadMySpots();
@@ -603,7 +621,8 @@
             const restoreButton = setButtonLoading(button, 'Deleting...');
             try {
                 const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
-                if (!response.ok) throw new Error((await response.json()).message || 'Failed to delete spot.');
+                if (response.status === 401) { handleExpiredSession(); return; }
+                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || 'Failed to delete spot.');
                 await loadMySpots();
             } catch (error) {
                 alert('⚠️ ' + error.message);
@@ -615,6 +634,19 @@
             const grid = document.getElementById('spotsGrid');
             const emptyState = document.getElementById('spotsEmptyState');
             grid.innerHTML = '';
+
+            if (loadFailed) {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = `
+                    <div class="glass-panel rounded-2xl p-8 text-center md:col-span-2 xl:col-span-3">
+                        <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not load your listings</p>
+                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(loadError)}
+                        Your listings are safe — this is only a problem reaching the server. The API sleeps when idle, so give it a moment and refresh.</p>
+                        <button onclick="loadMySpots()" class="mt-4 px-6 py-2.5 rounded-full bg-surface-variant border border-outline-variant/40 text-on-surface text-xs font-bold hover:bg-outline-variant/50 transition-all">Try again</button>
+                    </div>`;
+                return;
+            }
 
             if (mySpots.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -657,11 +689,17 @@
             const doneLoading = showLoading(document.getElementById('spotsGrid'), 'Loading your listings...');
             try {
                 const response = await fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() });
-                if (!response.ok) throw new Error('Failed to load your spots.');
+                if (response.status === 401) { handleExpiredSession(); return; }
+                if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
                 mySpots = await response.json();
+                loadFailed = false;
             } catch (error) {
                 console.error('❌ Failed to load spots:', error);
                 mySpots = [];
+                // Told apart from an account with nothing in it, so a failure can
+                // never be mistaken for an empty portfolio.
+                loadFailed = true;
+                loadError = error.message;
             } finally {
                 doneLoading();
                 renderSpotsGrid();
