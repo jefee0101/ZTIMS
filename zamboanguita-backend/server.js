@@ -169,6 +169,15 @@ const requireResortOwner = [requireAuth, (req, res, next) => {
     return next();
 }];
 
+// Reviewing is a visitor's act. Without this, a resort owner could post glowing
+// reviews of their own listing, which is the one thing the ratings must not allow.
+const requireTourist = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'user') {
+        return res.status(403).json({ success: false, message: 'Only tourist accounts can do this.' });
+    }
+    return next();
+}];
+
 // Tourist Officer or Resort Owner — used on routes both manage, each scoped to their own data.
 const requireStaff = [requireAuth, (req, res, next) => {
     if (req.auth.role !== 'admin' && req.auth.role !== 'resort_owner') {
@@ -605,7 +614,7 @@ app.get('/api/spots/:id/reviews', async (req, res) => {
  * 🌟 POST: Submit a new review into MongoDB 
  * Target URL: http://localhost:5000/api/reviews
  */
-app.post('/api/reviews', requireAuth, async (req, res) => {
+app.post('/api/reviews', requireTourist, async (req, res) => {
     try {
         console.log("➡️ Received Incoming Review Payload Data:", req.body);
         const { guestName, rating, destinationId, comment, imageURL, spotId } = req.body;
@@ -694,6 +703,13 @@ app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
 app.patch('/api/users/:id', requireAuth, async (req, res) => {
     try {
         const userId = req.params.id;
+        // This edits the tourist directory, so only a tourist editing themselves or
+        // the Tourist Officer may touch it. A resort owner was already refused by
+        // the ownership check below, but only as a side effect of their id never
+        // matching a tourist's — saying so explicitly keeps that intentional.
+        if (req.auth.role !== 'admin' && req.auth.role !== 'user') {
+            return res.status(403).json({ error: 'Only tourist accounts have a profile here.' });
+        }
         if (req.auth.role !== 'admin' && req.auth.sub !== userId) {
             return res.status(403).json({ error: 'You may only update your own profile.' });
         }
