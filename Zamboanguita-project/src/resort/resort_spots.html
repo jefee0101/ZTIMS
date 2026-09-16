@@ -85,10 +85,6 @@
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span>My Spots</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="resort_bookings.html">
-                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
-                <span>My Bookings</span>
-            </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
             <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 transition-all duration-300 hover:translate-x-1" href="resort_logout.html">
@@ -191,6 +187,12 @@
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Image URL</label>
                         <input type="url" id="spotImage" placeholder="https://images.unsplash.com/..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking Website</label>
+                        <input type="url" id="spotBookingUrl" placeholder="https://your-resort.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        <p class="text-[11px] text-on-surface-variant mt-1.5">Where "Book Now" sends visitors. Leave blank to show your phone number instead.</p>
+                    </div>
                     <div class="flex gap-4 pt-4">
                         <button type="button" onclick="toggleAddSpotModal(false)" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">
                             Cancel
@@ -285,6 +287,7 @@
                 document.getElementById('spotTravelFee').value = spot?.travelFee ?? '';
                 document.getElementById('spotEntranceFee').value = spot?.entranceFee ?? '';
                 document.getElementById('spotImage').value = spot?.imageUrl || '';
+                document.getElementById('spotBookingUrl').value = spot?.bookingUrl || '';
             } else {
                 modal.classList.remove('flex');
                 modal.classList.add('hidden');
@@ -307,7 +310,8 @@
                 workingTime: document.getElementById('spotWorkingTime').value.trim() || 'All Day',
                 travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
                 entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
-                imageUrl: document.getElementById('spotImage').value.trim()
+                imageUrl: document.getElementById('spotImage').value.trim(),
+                bookingUrl: document.getElementById('spotBookingUrl').value.trim()
             };
 
             try {

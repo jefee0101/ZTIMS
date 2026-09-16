@@ -198,10 +198,6 @@
                 <span class="material-symbols-outlined text-[#FFB300]">dashboard</span>
                 <span>Destinations</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_booking.html">
-                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
-                <span>Bookings</span>
-            </a>
             <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:translate-x-1" href="user_reviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]" style="font-variation-settings: 'FILL' 1;">star</span>
                 <span>Reviews</span>
@@ -525,6 +521,7 @@ function loadDestinations() {
         ];
         
         return {
+            _id: spot._id,
             title: spot.title,
             label: spot.description || spot.label || "Newly approved destination entry.",
             image: spot.image || fallbackPics[0],
@@ -666,13 +663,18 @@ function openSpotModal(index) {
     }
 
     /* === CONNECT TO PROFILE NEXT TRIP IMAGE UPDATE === */
+    // Booking now happens on the resort's own site, reached from the spot's public
+    // detail page. Spots without an _id are the hardcoded local samples, which have
+    // no page of their own.
     const bookBtn = document.getElementById("modalBookNowBtn");
-    bookBtn.onclick = function() {
-        const theme = localStorage.getItem("theme") || "dark";
-        // Appended &image query tracking logic so the booking view gets the correct photo asset
-        const targetUrl = `user_booking.html?spot=${encodeURIComponent(spot.title)}&category=${encodeURIComponent(spot.category)}&image=${encodeURIComponent(spot.image)}&theme=${theme}`;
-        window.location.href = targetUrl;
-    };
+    if (spot._id) {
+        bookBtn.textContent = "View destination & book";
+        bookBtn.onclick = function() {
+            window.location.href = `../spot.html?spotId=${encodeURIComponent(spot._id)}`;
+        };
+    } else {
+        bookBtn.style.display = "none";
+    }
 
     const modal = document.getElementById("spotDetailsModal");
     const content = document.getElementById("spotModalContent");

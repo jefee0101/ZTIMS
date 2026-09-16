@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Zamboanguita | Destination Details</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <script>
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "light") {
+            document.documentElement.classList.remove("dark");
+        } else {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#E65100",
+                        "secondary": "#00838F",
+                        "surface-bright": "#FFB300",
+                        "surface-container": "#0A192F",
+                        "surface-container-low": "#0D253F",
+                        "surface-container-high": "#102A43",
+                        "on-surface": "#FFFFFF",
+                        "on-surface-variant": "#A9BCD0",
+                        "on-primary": "#FFFFFF",
+                        "outline-variant": "#264653",
+                        "background": "#0A192F",
+                        "surface": "#0D253F",
+                        "error": "#E53935"
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans", "sans-serif"],
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        body: ["Plus Jakarta Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .text-gradient {
+            background: linear-gradient(to right, #FFB300, #ff6811);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary-gradient { background: linear-gradient(135deg, #E65100 0%, #FFB300 100%); }
+
+        html:not(.dark) body { background-color: #F4F6F9 !important; color: #0A192F !important; }
+        html:not(.dark) .bg-surface { background-color: #FFFFFF !important; }
+        html:not(.dark) .bg-surface-container-low { background-color: #EAEFF5 !important; }
+        html:not(.dark) .bg-surface-container-high { background-color: #E2E9F2 !important; }
+        html:not(.dark) .text-on-surface { color: #0A192F !important; }
+        html:not(.dark) .text-on-surface-variant { color: #46587A !important; }
+        html:not(.dark) nav { background-color: rgba(255,255,255,0.85) !important; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen transition-colors duration-300">
+
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/20 transition-colors duration-300">
+    <div class="flex justify-between items-center px-6 md:px-12 py-4">
+        <a class="text-lg md:text-xl font-display font-black tracking-tighter text-on-surface flex items-center gap-2" href="../index.html">
+            <span class="material-symbols-outlined !text-xl">arrow_back</span>
+            EXPLORE ZAMBOANGUITA
+        </a>
+        <div class="flex items-center gap-3">
+            <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-primary hover:bg-surface-bright transition-all" title="Toggle theme">
+                <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
+            </button>
+            <a id="navAuthBtn" href="user/user_login.html" class="bg-primary text-on-primary px-5 py-2.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient transition-all hover:scale-105">
+                Sign In
+            </a>
+        </div>
+    </div>
+</nav>
+
+<main id="spotContent" class="pt-16">
+    <!-- Filled by the script below -->
+</main>
+
+<footer class="w-full py-10 px-8 bg-surface-container-low border-t border-outline-variant/10 mt-16 transition-colors duration-300">
+    <p class="text-center text-sm text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
+</footer>
+
+<script type="module">
+    const API_BASE = "https://ztims-api.onrender.com/api";
+    const content = document.getElementById('spotContent');
+
+    // The API sleeps on Render's free tier, so a cold start can take most of a
+    // minute — after 5s the spinner says so rather than looking frozen.
+    function showLoading(target, message) {
+        target.innerHTML =
+            '<div class="flex flex-col items-center justify-center gap-3 py-32 w-full text-center">' +
+                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                '<p class="text-sm opacity-80">' + message + '</p>' +
+                '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+            '</div>';
+        const timer = setTimeout(() => {
+            const note = target.querySelector('[data-slow]');
+            if (note) note.classList.remove('hidden');
+        }, 5000);
+        return () => clearTimeout(timer);
+    }
+
+    function formatPeso(amount) {
+        const value = Number(amount) || 0;
+        return `₱${value.toFixed(2)}`;
+    }
+
+    // Spot text comes from resort owners and admins, so it is escaped before it
+    // reaches innerHTML rather than trusted as markup.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    }
+
+    // Only http(s) links are allowed through to an href, so a stored value like
+    // "javascript:..." can never become a clickable link.
+    function safeExternalUrl(value) {
+        if (!value) return null;
+        let candidate = String(value).trim();
+        if (!candidate) return null;
+        if (!/^https?:\/\//i.test(candidate)) candidate = 'https://' + candidate;
+        try {
+            const parsed = new URL(candidate);
+            return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function starRow(rating) {
+        const rounded = Math.round(Number(rating) || 0);
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            stars += `<span class="material-symbols-outlined !text-base ${i <= rounded ? 'text-surface-bright' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
+        }
+        return stars;
+    }
+
+    function renderNotFound(message) {
+        content.innerHTML = `
+            <div class="flex flex-col items-center justify-center gap-4 py-32 px-8 text-center">
+                <span class="material-symbols-outlined !text-6xl text-on-surface-variant/40">travel_explore</span>
+                <h1 class="text-3xl font-display font-bold text-on-surface">${escapeHtml(message)}</h1>
+                <p class="text-on-surface-variant max-w-md">The destination you're looking for may have been removed, or the link is incorrect.</p>
+                <a href="../index.html" class="mt-2 bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient">
+                    Back to all spots
+                </a>
+            </div>
+        `;
+    }
+
+    function bookingPanel(spot) {
+        const url = safeExternalUrl(spot.bookingUrl);
+        const owner = spot.ownerId && typeof spot.ownerId === 'object' ? spot.ownerId : null;
+
+        if (url) {
+            return `
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+                   class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+                    <span class="material-symbols-outlined">open_in_new</span> Book Now
+                </a>
+                <p class="text-[11px] text-on-surface-variant text-center mt-3">
+                    Booking is handled on ${escapeHtml(owner?.resortName || 'the resort')}'s own website. This opens in a new tab.
+                </p>
+            `;
+        }
+
+        // No booking link on file — give the visitor a way to reach the resort
+        // instead of a button that goes nowhere.
+        const contactLines = [];
+        if (owner?.resortName) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(owner.resortName)}</p>`);
+        if (owner?.phone) {
+            contactLines.push(`<a href="tel:${escapeHtml(owner.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
+                <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(owner.phone)}
+            </a>`);
+        }
+
+        return `
+            <div class="w-full bg-surface-container-high border border-outline-variant/30 rounded-2xl py-5 px-4 text-center space-y-2">
+                <span class="material-symbols-outlined !text-2xl text-on-surface-variant">info</span>
+                <p class="text-sm text-on-surface-variant">Online booking isn't set up for this destination yet.</p>
+                ${contactLines.length ? contactLines.join('') : '<p class="text-xs text-on-surface-variant">Contact the Zamboanguita tourism office for arrangements.</p>'}
+            </div>
+        `;
+    }
+
+    function renderSpot(spot) {
+        const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
+
+        content.innerHTML = `
+            <section class="relative h-[45vh] min-h-[320px] w-full overflow-hidden">
+                <img class="w-full h-full object-cover" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 right-0 px-6 md:px-12 pb-8">
+                    <span class="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm mb-3">${escapeHtml(typeLabel)}</span>
+                    <h1 class="text-4xl md:text-6xl font-display font-black tracking-tighter text-white mb-2">${escapeHtml(spot.title)}</h1>
+                    <p class="text-white/80 flex items-center gap-1.5 text-sm">
+                        <span class="material-symbols-outlined !text-lg">location_on</span>${escapeHtml(spot.location || '')}
+                    </p>
+                </div>
+            </section>
+
+            <div class="px-6 md:px-12 py-10 grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+                <div class="lg:col-span-2 space-y-8">
+                    <div>
+                        <span class="text-primary text-xs font-bold uppercase tracking-widest block mb-2">${escapeHtml(spot.label || spot.category || '')}</span>
+                        <h2 class="text-2xl font-display font-bold text-on-surface mb-3">About this destination</h2>
+                        <p class="text-on-surface-variant leading-relaxed">${escapeHtml(spot.description)}</p>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Know before you go</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
+                                <span class="material-symbols-outlined text-surface-bright !text-2xl mb-2">schedule</span>
+                                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Open</p>
+                                <p class="text-on-surface font-bold">${escapeHtml(spot.workingDays || 'Everyday')}</p>
+                                <p class="text-on-surface-variant text-sm">${escapeHtml(spot.workingTime || 'All Day')}</p>
+                            </div>
+                            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
+                                <span class="material-symbols-outlined text-surface-bright !text-2xl mb-2">category</span>
+                                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Category</p>
+                                <p class="text-on-surface font-bold">${escapeHtml(spot.category || '—')}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="reviewsBlock">
+                        <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Visitor reviews</h2>
+                        <div id="reviewsList"></div>
+                    </div>
+                </div>
+
+                <aside class="lg:col-span-1">
+                    <div class="bg-surface border border-outline-variant/30 rounded-2xl p-6 sticky top-24">
+                        <h3 class="font-display font-bold text-lg text-surface-bright mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined !text-xl">payments</span> Estimated fees
+                        </h3>
+                        <div class="space-y-3 mb-6">
+                            <div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+                                <span class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined !text-lg">directions_bus</span>Travel</span>
+                                <span class="font-bold text-sm text-primary">${formatPeso(spot.travelFee)}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined !text-lg">door_open</span>Entrance</span>
+                                <span class="font-bold text-sm text-primary">${formatPeso(spot.entranceFee)}</span>
+                            </div>
+                        </div>
+                        ${bookingPanel(spot)}
+                    </div>
+                </aside>
+            </div>
+        `;
+    }
+
+    function renderReviews(data) {
+        const list = document.getElementById('reviewsList');
+        if (!list) return;
+
+        const reviews = Array.isArray(data.reviews) ? data.reviews : [];
+
+        if (reviews.length === 0) {
+            list.innerHTML = `<p class="text-on-surface-variant text-sm bg-surface border border-outline-variant/20 rounded-xl p-5">No reviews yet — be the first to share your experience.</p>`;
+            return;
+        }
+
+        const heading = document.querySelector('#reviewsBlock h2');
+        if (heading && data.averageRating) {
+            heading.innerHTML = `Visitor reviews
+                <span class="inline-flex items-center gap-1.5 ml-2 align-middle text-base font-body font-normal">
+                    ${starRow(data.averageRating)}
+                    <span class="text-on-surface-variant text-sm">${data.averageRating} · ${data.total} review${data.total === 1 ? '' : 's'}</span>
+                </span>`;
+        }
+
+        list.innerHTML = reviews.map(review => `
+            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-bold text-on-surface text-sm">${escapeHtml(review.guestName)}</p>
+                    <div class="flex items-center">${starRow(review.rating)}</div>
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed">${escapeHtml(review.comment)}</p>
+                <p class="text-[11px] text-on-surface-variant/70 mt-2">${new Date(review.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            </div>
+        `).join('');
+    }
+
+    async function loadSpot() {
+        const spotId = new URLSearchParams(window.location.search).get('spotId');
+
+        if (!spotId) {
+            renderNotFound('No destination selected');
+            return;
+        }
+
+        const doneLoading = showLoading(content, 'Loading destination...');
+
+        try {
+            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}`);
+            if (!response.ok) {
+                doneLoading();
+                renderNotFound('Destination not found');
+                return;
+            }
+
+            const spot = await response.json();
+            doneLoading();
+            renderSpot(spot);
+            document.title = `${spot.title} | Zamboanguita`;
+
+            // Reviews load after the page is already readable, so a slow review
+            // query never holds back the destination details themselves.
+            try {
+                const reviewsResponse = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/reviews`);
+                if (reviewsResponse.ok) renderReviews(await reviewsResponse.json());
+                else renderReviews({ reviews: [] });
+            } catch {
+                renderReviews({ reviews: [] });
+            }
+        } catch (error) {
+            console.error('❌ Failed to load destination:', error);
+            doneLoading();
+            renderNotFound('Unable to load this destination');
+        }
+    }
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+
+    themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeToggleIcon.textContent = isDark ? 'dark_mode' : 'bedtime';
+    });
+    themeToggleIcon.textContent = document.documentElement.classList.contains('dark') ? 'dark_mode' : 'bedtime';
+
+    // Signed-in visitors shouldn't be told to sign in.
+    if (localStorage.getItem('authToken')) {
+        const authBtn = document.getElementById('navAuthBtn');
+        authBtn.textContent = 'My Account';
+        authBtn.href = 'user/user_dashboard.html';
+    }
+
+    loadSpot();
+</script>
+</body>
+</html>

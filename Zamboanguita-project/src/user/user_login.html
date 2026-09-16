@@ -6,6 +6,7 @@
   <title>Login - ZAMBOANGUITA</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -143,11 +144,9 @@
             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200 dark:border-outline/40"></div></div>
             <div class="relative flex justify-center"><span class="bg-white dark:bg-surface px-4 text-sm text-gray-400">or connect with</span></div>
           </div>
-          <div class="grid grid-cols-1">
-            <button class="py-3 font-semibold rounded-xl border border-gray-300 dark:border-outline text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-background transition flex items-center justify-center gap-2">
-               <span>Google</span>
-            </button>
-          </div>
+          <!-- Google renders its own button here once the script below initializes. -->
+          <div id="googleButtonContainer" class="flex justify-center"></div>
+          <p id="googleSetupNotice" class="hidden text-xs text-center text-gray-500 dark:text-gray-400 mt-2"></p>
         </div>
 
         <div class="mt-10 text-center">
@@ -324,12 +323,12 @@
             const currentPath = window.location.pathname;
             const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
 
-            // If they arrived here from "Book Now" on a spot, send them straight back to that booking.
+            // If they came here from a specific destination, return them to it.
             const returnParams = new URLSearchParams(window.location.search);
             const spotId = returnParams.get('spotId');
 
-            if (returnParams.get('next') === 'book' && spotId) {
-                window.location.href = window.location.origin + projectRoot + "/src/user/user_booking.html?spotId=" + encodeURIComponent(spotId);
+            if (spotId) {
+                window.location.href = window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId);
             } else if (inferredRole === 'admin') {
                 window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
             } else {
@@ -378,6 +377,93 @@
         }
       });
     }
+
+    /* ==========================================================
+       GOOGLE SIGN-IN
+       Paste your Client ID below. Create it at:
+       Google Cloud Console -> APIs & Services -> Credentials ->
+       Create credentials -> OAuth client ID -> Web application,
+       and add this site's address under "Authorized JavaScript origins".
+       The same value must also be set as GOOGLE_CLIENT_ID on the API server.
+       ========================================================== */
+    const GOOGLE_CLIENT_ID = "";  // <-- paste your Client ID here
+
+    async function handleGoogleCredential(response) {
+      const notice = document.getElementById('googleSetupNotice');
+      try {
+        const apiResponse = await fetch('https://ztims-api.onrender.com/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const result = await apiResponse.json();
+
+        if (!apiResponse.ok || !result.success) {
+          alert("Google sign-in failed: " + (result.message || "Please try again."));
+          return;
+        }
+
+        // Same session shape the password login stores, so every other page works
+        // without knowing which method was used.
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('userRole', 'user');
+        localStorage.setItem('userEmail', result.user.email);
+        localStorage.setItem('userId', result.userId);
+        localStorage.setItem('currentUser', JSON.stringify({
+          email: result.user.email,
+          name: result.user.name,
+          fullName: result.user.fullName,
+          phone: result.user.phone,
+          nationality: result.user.nationality
+        }));
+
+        const currentPath = window.location.pathname;
+        const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
+        const spotId = new URLSearchParams(window.location.search).get('spotId');
+        window.location.href = spotId
+          ? window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId)
+          : window.location.origin + projectRoot + "/src/user/user_dashboard.html";
+      } catch (error) {
+        console.error("Google sign-in error:", error);
+        if (notice) {
+          notice.textContent = "Could not reach the server to complete Google sign-in.";
+          notice.classList.remove('hidden');
+        }
+      }
+    }
+
+    function initGoogleSignIn() {
+      const container = document.getElementById('googleButtonContainer');
+      const notice = document.getElementById('googleSetupNotice');
+      if (!container) return;
+
+      if (!GOOGLE_CLIENT_ID) {
+        if (notice) {
+          notice.textContent = "Google sign-in isn't set up yet — use your email and password below.";
+          notice.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // The GSI script is async, so it may not have defined window.google yet.
+      if (!window.google?.accounts?.id) {
+        setTimeout(initGoogleSignIn, 300);
+        return;
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential
+      });
+      window.google.accounts.id.renderButton(container, {
+        theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+        size: 'large',
+        width: 320,
+        text: 'continue_with'
+      });
+    }
+
+    initGoogleSignIn();
   </script>
 </body>
 </html>>

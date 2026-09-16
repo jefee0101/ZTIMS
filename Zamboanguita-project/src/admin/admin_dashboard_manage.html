@@ -132,10 +132,6 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span>Manage Spots</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_booking.html">
-                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
-                <span>Bookings</span>
-            </a>
             <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
                 <span>Reviews</span>
@@ -302,6 +298,12 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Or Single Image URL Backup</label>
                         <input type="url" id="spotImage" placeholder="https://images.unsplash.com/..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking Website</label>
+                        <input type="url" id="spotBookingUrl" placeholder="https://resort-site.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        <p class="text-[11px] text-on-surface-variant mt-1.5">Where "Book Now" sends visitors. Leave blank if the resort has no booking site.</p>
                     </div>
 
                     <div class="flex gap-4 pt-4">
@@ -530,6 +532,10 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
                 workingDays: document.getElementById('spotWorkingDays').value.trim() || "Everyday",
                 workingTime: document.getElementById('spotWorkingTime').value.trim() || "All Day",
+                bookingUrl: document.getElementById('spotBookingUrl').value.trim(),
+                // The schema field is imageUrl. Sending `image`/`images` meant Mongoose
+                // silently dropped both and every spot published here saved with no image.
+                imageUrl: primaryImage,
                 image: primaryImage,
                 images: finalImagesList
             };

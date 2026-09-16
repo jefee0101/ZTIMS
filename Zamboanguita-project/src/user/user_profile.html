@@ -114,10 +114,6 @@
                     <span class="material-symbols-outlined text-[#FFB300]">dashboard</span>
                     <span>Destinations</span>
                 </a>
-                <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/50 hover:translate-x-1" href="user_booking.html">
-                    <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
-                    <span>Bookings</span>
-                </a>
                 <a class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl transition-all duration-300 hover:bg-surface-variant/50 dark:hover:bg-surface-variant/50 hover:translate-x-1" href="user_reviews.html">
                     <span class="material-symbols-outlined text-[#FFB300]" style="font-variation-settings: 'FILL' 1;">star</span>
                     <span>Reviews</span>
@@ -323,84 +319,24 @@
             };
         }
 
-        async function initializeNextDestination() {
+        // Bookings now happen on each resort's own website, so there is no itinerary
+        // to read back. This panel points the tourist at the destinations instead.
+        function initializeNextDestination() {
             const widget = document.getElementById('nextDestinationWidget');
             if (!widget) return;
 
-            const fallbackImages = {
-                "apo island": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80",
-                "malatapay": "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=800&q=80",
-                "thalatta": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80",
-                "najandig": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
-            };
-
-            let liveBookingsList = [];
-            const activeUserId = localStorage.getItem('userId');
-
-            if (activeUserId && activeUserId !== "anonymous_guest") {
-                const doneLoading = widget ? showLoading(widget, 'Finding your next trip...') : () => {};
-                try {
-                    const response = await fetch(`https://ztims-api.onrender.com/api/bookings?userId=${activeUserId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
-                    if (response.ok) {
-                        liveBookingsList = await response.json();
-                    }
-                } catch (err) {
-                    console.error("❌ Failed to resolve upcoming itineraries:", err);
-                    liveBookingsList = JSON.parse(localStorage.getItem('userBookings')) || [];
-                } finally {
-                    doneLoading();
-                }
-            }
-
-            const rightNow = new Date();
-            let upcomingTrip = null;
-
-            if (liveBookingsList && liveBookingsList.length > 0) {
-                const sortedTrips = liveBookingsList.map(b => {
-                    const targetDateStr = b.checkInDate || b.date || b.checkIn;
-                    return { ...b, parsedDate: new Date(targetDateStr) };
-                }).sort((x, y) => x.parsedDate - y.parsedDate);
-
-                upcomingTrip = sortedTrips.find(t => t.parsedDate >= rightNow.setHours(0,0,0,0));
-            }
-
-            if (upcomingTrip) {
-                const destLower = (upcomingTrip.destination || "").toLowerCase();
-                let matchingHeroBanner = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
-                
-                for (const key in fallbackImages) {
-                    if (destLower.includes(key)) {
-                        matchingHeroBanner = fallbackImages[key];
-                        break;
-                    }
-                }
-
-                const displayLocationName = upcomingTrip.destination || "Zamboanguita Getaway";
-                const displayScheduleDate = upcomingTrip.parsedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-                widget.innerHTML = `
-                    <img class="w-full h-full object-cover" alt="${displayLocationName}" src="${matchingHeroBanner}"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-90"></div>
-                    <div class="absolute bottom-4 left-6 right-6">
-                        <span class="bg-primary/20 text-primary border border-primary/30 text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full mb-2 inline-block">
-                            Confirmed Next Trip
-                        </span>
-                        <p class="text-white font-headline font-extrabold text-xl uppercase tracking-tight mt-1 truncate">${displayLocationName}</p>
-                        <p class="text-stone-300 text-xs mt-0.5 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm text-primary">calendar_month</span> ${displayScheduleDate}
-                        </p>
+            widget.innerHTML = `
+                <a href="../../index.html" class="group block relative h-full w-full">
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80"
+                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Zamboanguita" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-5">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#FFB300] mb-1">Plan your next trip</p>
+                        <h4 class="text-xl font-extrabold text-white mb-1">Explore Zamboanguita</h4>
+                        <p class="text-xs text-white/70">Browse every tourist spot and accommodation, then book directly with the resort.</p>
                     </div>
-                `;
-            } else {
-                widget.innerHTML = `
-                    <img class="w-full h-full object-cover" alt="Scenic Zamboanguita" src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80"></div>
-                    <div class="absolute bottom-4 left-6">
-                        <p class="text-primary font-headline font-extrabold text-lg uppercase tracking-tighter">Your Next Destination</p>
-                        <p class="text-stone-300 text-sm">Apo Island Marine Sanctuary</p>
-                    </div>
-                `;
-            }
+                </a>
+            `;
         }
 
         window.addEventListener('DOMContentLoaded', () => {

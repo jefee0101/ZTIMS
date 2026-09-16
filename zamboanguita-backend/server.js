@@ -6,7 +6,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
+
+// Verifies Google ID tokens against Google's own public keys.
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 
@@ -18,16 +22,28 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5500,http:/
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+// Vercel gives every branch and every redeploy its own preview hostname, so the
+// production origin alone would break previews on each push.
+const previewOriginPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+
+const isAllowedOrigin = (origin) => allowedOrigins.includes(origin) || previewOriginPattern.test(origin);
+
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET must be configured before starting the API.');
 }
+
+// Render terminates TLS at its edge proxy. Without this, every request looks like
+// it comes from that one proxy IP and the rate limiters below bucket the entire
+// internet together — 10 shared login attempts per 15 minutes for all visitors.
+app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({
     origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Origin is not allowed by CORS'));
+        // No Origin header means a non-browser client (curl, Postman, health checks).
+        if (!origin || isAllowedOrigin(origin)) return callback(null, true);
+        return callback(new Error(`Origin ${origin} is not allowed by CORS`));
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -51,33 +67,6 @@ mongoose.connect(MONGO_URI)
    3. DATA SCHEMA & MODELS
 ========================================== */
 
-// 1. Booking Schema (Linked explicitly via userId)
-const BookingSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
-    guestName: { type: String, required: true },
-    guestEmail: { type: String, required: true },
-    nationality: { type: String, required: true },
-    phone: { type: String, required: true },
-    destination: { type: String, required: true },
-    // References the booked Spot so a Resort Owner can see only bookings made for their own listings.
-    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', default: null },
-    resortOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'ResortOwner', default: null },
-    checkInDate: { type: String, required: true },
-    checkOutDate: { type: String, required: true },
-    guestCount: { type: Number, required: true }, 
-    amount: { type: Number, default: 500 }, // Added default amount field for computing live analytical revenue
-    status: { type: String, default: 'pending' },   
-    // COMPANIONS SUB-ARRAY MAP WITHOUT ALTERING ORIGINAL FIELDS
-    companions: [
-        {
-            name: { type: String, required: true },
-            age: { type: Number, required: true }
-        }
-    ]
-}, { timestamps: true });
-
-const Booking = mongoose.model('Booking', BookingSchema);
-
 // 2. Admin Authentication Schema
 const AdminSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -89,7 +78,18 @@ const Admin = mongoose.model('Admin', AdminSchema);
 // 3. User/Traveler Authentication Schema (🌟 UPGRADED TO ACCEPT AUTOFILL PROPERTIES)
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
+    // Google accounts have no password of their own, so this is only required for
+    // accounts that actually sign in with one.
+    password: {
+        type: String,
+        required: function () { return this.provider !== 'google'; },
+        select: false
+    },
+    provider: { type: String, enum: ['local', 'google'], default: 'local' },
+    // sparse: only documents that actually have a googleId take part in the unique
+    // index, so the many password-only users don't collide on null.
+    googleId: { type: String, default: null, unique: true, sparse: true },
+    avatar: { type: String, default: "" },
     fullName: { type: String, default: "" },
     phone: { type: String, default: "" },
     nationality: { type: String, default: "" }
@@ -112,6 +112,10 @@ const ReviewSchema = new mongoose.Schema({
     guestName: { type: String, required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
     destinationId: { type: String, required: true }, // Holds selected location text
+    // Reviews were originally matched to a spot by its name alone, which breaks as
+    // soon as a spot is renamed. New reviews carry the real reference; the older
+    // name-only ones still resolve through destinationId.
+    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', default: null },
     comment: { type: String, required: true },
     imageURL: { type: String, required: false }, // Stores uploaded Base64 image snapshot strings
     status: { type: String, default: 'approved' } // 🌟 Support status transitions for moderation
@@ -127,6 +131,9 @@ const SpotSchema = new mongoose.Schema({
     category: { type: String, required: true },
     description: { type: String, required: true },
     imageUrl: { type: String },
+    // Booking happens on the resort's own website — this is where "Book Now" sends
+    // the visitor. Blank means the detail page shows contact details instead.
+    bookingUrl: { type: String, default: "" },
     type: { type: String, enum: ['spot', 'accommodation'], default: 'spot' },
     label: { type: String, default: "" },
     workingDays: { type: String, default: "Everyday" },
@@ -385,14 +392,93 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
     }
 });
 
-// Configure Nodemailer for Email Transports
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'your-tourism-email@gmail.com', // Change to your project email account
-    pass: 'your-app-password'             // App Password generated via Google Account Security settings
-  }
+/**
+ * 🌟 POST: Sign in (or register) a tourist with a Google account
+ * The browser gets an ID token from Google and sends it here; this verifies that
+ * token with Google directly, so a forged one can't get through.
+ * Target URL: http://localhost:5000/api/auth/google
+ */
+app.post('/api/auth/google', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false }), async (req, res) => {
+    try {
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            return res.status(503).json({ success: false, message: 'Google sign-in is not configured on the server yet.' });
+        }
+
+        const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({ success: false, message: 'Missing Google credential.' });
+        }
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+
+        if (!payload?.email_verified) {
+            return res.status(401).json({ success: false, message: 'This Google account has no verified email address.' });
+        }
+
+        const email = payload.email.toLowerCase().trim();
+
+        // Someone who already registered with a password keeps that one account —
+        // signing in with the same Google email links the two rather than creating
+        // a second account they'd never be able to find.
+        let account = await User.findOne({ email });
+
+        if (account) {
+            if (!account.googleId) {
+                account.googleId = payload.sub;
+                account.avatar = account.avatar || payload.picture || "";
+                if (!account.fullName) account.fullName = payload.name || "";
+                await account.save();
+            }
+        } else {
+            account = await new User({
+                email,
+                provider: 'google',
+                googleId: payload.sub,
+                avatar: payload.picture || "",
+                fullName: payload.name || ""
+            }).save();
+        }
+
+        console.log(`🔐 Google sign-in for ${email}`);
+        return res.status(200).json({
+            success: true,
+            message: 'Signed in with Google.',
+            token: createToken(account, 'user'),
+            role: 'user',
+            userId: account._id,
+            user: {
+                email: account.email,
+                name: account.fullName || account.email.split('@')[0],
+                fullName: account.fullName || "",
+                phone: account.phone || "",
+                nationality: account.nationality || "",
+                avatar: account.avatar || ""
+            }
+        });
+    } catch (error) {
+        console.error("❌ Google Sign-In Failure:", error);
+        return res.status(401).json({ success: false, message: 'Could not verify that Google account. Please try again.' });
+    }
 });
+
+// Configure Nodemailer for Email Transports. Credentials come from the environment
+// — the address and Gmail App Password must never be committed.
+const mailConfigured = Boolean(process.env.MAIL_USER && process.env.MAIL_PASSWORD);
+
+const transporter = mailConfigured
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASSWORD }
+    })
+    : null;
+
+if (!mailConfigured) {
+    console.warn('⚠️  MAIL_USER / MAIL_PASSWORD are not set — password reset emails are disabled.');
+}
 
 /**
  * 🌟 NEW HANDLER - POST: Handle Forgot Password Email Despatches
@@ -400,6 +486,14 @@ const transporter = nodemailer.createTransport({
  */
 app.post('/api/forgot-password', async (req, res) => {
     try {
+        // Say so plainly rather than appearing to send an email that never arrives.
+        if (!mailConfigured) {
+            return res.status(503).json({
+                success: false,
+                message: "Password reset email isn't set up yet. Please contact the tourism office to have your password reset."
+            });
+        }
+
         const { email } = req.body;
         if (!email) return res.status(400).json({ success: false, message: "Email required." });
 
@@ -411,10 +505,13 @@ app.post('/api/forgot-password', async (req, res) => {
         }
 
         // Pointing to Live Server environments folder trees
-        const resetLink = `http://127.0.0.1:5500/src/user/reset_password.html?email=${encodeURIComponent(normalizedEmail)}`;
+        // Must point at the deployed site, not a local dev server, or the link in
+        // the email is useless to everyone but the developer.
+        const siteUrl = (process.env.PUBLIC_SITE_URL || allowedOrigins[0] || '').replace(/\/$/, '');
+        const resetLink = `${siteUrl}/src/user/reset_password.html?email=${encodeURIComponent(normalizedEmail)}`;
 
         const mailOptions = {
-            from: '"Zamboanguita Tourism" <your-tourism-email@gmail.com>',
+            from: `"Zamboanguita Tourism" <${process.env.MAIL_USER}>`,
             to: normalizedEmail,
             subject: 'Reset Password Request - Zamboanguita Tourism',
             html: `
@@ -463,129 +560,6 @@ app.post('/api/reset-password', async (req, res) => {
 });
 
 /**
- * POST: Create and insert new booking document record
- */
-app.post('/api/bookings', requireAuth, async (req, res) => {
-    try {
-        console.log("➡️ Received Incoming Booking Payload Data:", req.body);
-        
-        const { guestName, destination, guestCount, spotId } = req.body;
-        if (!guestName || !destination || !guestCount) {
-            return res.status(400).json({
-                error: 'Bad Request',
-                message: 'Validation failed: Missing mandatory parameter keys.'
-            });
-        }
-
-        // Linking to the actual Spot lets its Resort Owner see this booking scoped to their own listing.
-        let resortOwnerId = null;
-        if (spotId) {
-            const spot = await Spot.findById(spotId);
-            if (spot) resortOwnerId = spot.ownerId;
-        }
-
-        const newBooking = new Booking({ ...req.body, userId: req.auth.sub, resortOwnerId });
-        const savedRecord = await newBooking.save();
-        
-        console.log("🚀 Booking Record Committed Successfully:", savedRecord._id);
-        return res.status(201).json({ 
-            message: 'Success', 
-            bookingId: savedRecord._id 
-        });
-
-    } catch (error) {
-        console.error("❌ Database Write Failure Details:", error);
-        return res.status(500).json({ 
-            error: 'Server Error: Failed to commit record entry.', 
-            message: error.message 
-        });
-    }
-});
-
-/**
- * GET: Retrieve booking list (Optional ?userId filter)
- */
-app.get('/api/bookings', requireAuth, async (req, res) => {
-    try {
-        const requestedUserId = req.query.userId;
-        let query;
-        if (req.auth.role === 'admin') {
-            query = requestedUserId ? { userId: requestedUserId } : {};
-        } else if (req.auth.role === 'resort_owner') {
-            query = { resortOwnerId: req.auth.sub };
-        } else {
-            query = { userId: req.auth.sub };
-        }
-
-        const records = await Booking.find(query).sort({ createdAt: -1 });
-        return res.json(records);
-
-    } catch (error) {
-        console.error("❌ Database Query Error:", error);
-        return res.status(500).json({ 
-            error: 'Failed to download user booking manifestation matrix.',
-            message: error.message 
-        });
-    }
-});
-
-/**
- * PUT: user cancel or update booking status (e.g., 'cancelled') in MongoDB
- */
-app.patch('/api/bookings/:id', requireAuth, async (req, res) => {
-    try {
-        const { status } = req.body; // e.g., 'cancelled'
-        if (req.auth.role !== 'admin' && status !== 'cancelled') {
-            return res.status(403).json({ error: 'Travelers may only cancel their own bookings.' });
-        }
-        const ownershipQuery = req.auth.role === 'admin'
-            ? { _id: req.params.id }
-            : { _id: req.params.id, userId: req.auth.sub };
-        const updatedBooking = await Booking.findOneAndUpdate(
-            ownershipQuery,
-            { status },
-            { new: true }
-        );
-        if (!updatedBooking) return res.status(404).json({ error: 'Booking not found.' });
-        res.status(200).json(updatedBooking);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-/**
- * PUT: Tourist Officer (any booking) or Resort Owner (their own resort's bookings only)
- * approves or rejects a booking status inside MongoDB
- */
-app.put('/api/bookings/status/:id', requireStaff, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        if (!['approved', 'disapproved'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid target status type parameter.' });
-        }
-
-        const booking = await Booking.findById(id);
-        if (!booking) {
-            return res.status(404).json({ message: 'Booking reference entry not found.' });
-        }
-        if (req.auth.role === 'resort_owner' && String(booking.resortOwnerId) !== req.auth.sub) {
-            return res.status(403).json({ message: 'You may only manage bookings made for your own resort.' });
-        }
-
-        booking.status = status;
-        const updatedBooking = await booking.save();
-
-        console.log(`📢 Booking ${id} status state updated to: ${status.toUpperCase()}`);
-        return res.status(200).json({ success: true, data: updatedBooking });
-    } catch (error) {
-        console.error("❌ Admin Status PUT Failure:", error);
-        return res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-});
-
-/**
  * 🌟 GET: Fetch all user reviews from MongoDB
  * Target URL: http://localhost:5000/api/reviews
  */
@@ -601,14 +575,41 @@ app.get('/api/reviews', optionalAuth, async (req, res) => {
 });
 
 /**
+ * 🌟 GET: Approved reviews for one spot, for its public detail page.
+ * Matches on the spot reference and on the spot's name, so reviews written before
+ * reviews carried a reference still show up.
+ * Target URL: http://localhost:5000/api/spots/:id/reviews
+ */
+app.get('/api/spots/:id/reviews', async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ message: 'Spot not found.' });
+
+        const reviews = await Review.find({
+            status: 'approved',
+            $or: [{ spotId: spot._id }, { destinationId: spot.title }]
+        }).sort({ createdAt: -1 });
+
+        const averageRating = reviews.length
+            ? Number((reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length).toFixed(1))
+            : null;
+
+        return res.status(200).json({ reviews, averageRating, total: reviews.length });
+    } catch (error) {
+        console.error("❌ Spot Reviews Fetch Failure:", error);
+        return res.status(500).json({ reviews: [], averageRating: null, total: 0 });
+    }
+});
+
+/**
  * 🌟 POST: Submit a new review into MongoDB 
  * Target URL: http://localhost:5000/api/reviews
  */
 app.post('/api/reviews', requireAuth, async (req, res) => {
     try {
         console.log("➡️ Received Incoming Review Payload Data:", req.body);
-        const { guestName, rating, destinationId, comment, imageURL } = req.body;
-        
+        const { guestName, rating, destinationId, comment, imageURL, spotId } = req.body;
+
         // Exact validation criteria aligning with frontend payload structures
         if (!guestName || !rating || !destinationId || !comment) {
             return res.status(400).json({ message: 'Validation failed: Missing mandatory review payload keys.' });
@@ -618,6 +619,7 @@ app.post('/api/reviews', requireAuth, async (req, res) => {
             guestName,
             rating: Number(rating),
             destinationId,
+            spotId: spotId || null,
             comment,
             imageURL: imageURL || "",
             status: 'approved' // Automatically default to approved state on submission
@@ -776,7 +778,9 @@ app.post('/api/spots', requireStaff, async (req, res) => {
  */
 app.get('/api/spots/:id', async (req, res) => {
     try {
-        const spot = await Spot.findById(req.params.id);
+        // Only the owner's public-facing contact details — never their email or
+        // password hash, since this route is open to anyone.
+        const spot = await Spot.findById(req.params.id).populate('ownerId', 'resortName phone');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
         return res.status(200).json(spot);
     } catch (error) {
@@ -821,7 +825,34 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
 });
 
 /* ==========================================
-   5. DEPLOYMENT PORT INITIALIZER
+   5. ERROR HANDLER
+========================================== */
+
+/**
+ * Without this, a rejected CORS origin falls through to Express's default handler,
+ * which answers with an HTML 500 carrying no CORS headers — so the browser reports
+ * a confusing "no Access-Control-Allow-Origin" error instead of the real reason,
+ * and the frontend's response.json() throws on the HTML body.
+ */
+app.use((err, req, res, next) => {
+    if (res.headersSent) return next(err);
+
+    const isCorsRejection = err && typeof err.message === 'string' && err.message.includes('not allowed by CORS');
+    if (isCorsRejection) {
+        console.warn(`🚫 Blocked request from disallowed origin: ${req.get('origin')}`);
+        return res.status(403).json({
+            success: false,
+            message: `This site's address is not on the API's allowed list. Add it to the CORS_ORIGIN environment variable.`,
+            origin: req.get('origin') || null
+        });
+    }
+
+    console.error('❌ Unhandled server error:', err);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+});
+
+/* ==========================================
+   6. DEPLOYMENT PORT INITIALIZER
 ========================================== */
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, () => {

@@ -147,10 +147,6 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
                 <span>Manage Spots</span>
             </a>
-            <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_booking.html">
-                <span class="material-symbols-outlined text-[#FFB300]">event_available</span>
-                <span>Bookings</span>
-            </a>
             <a class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
                 <span>Reviews</span>
@@ -184,13 +180,13 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             <!-- Operational System KPI Slots -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div onclick="switchMetricTab('revenue')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-revenue">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">payments</span> Total Revenue</p>
-                    <h2 class="text-3xl font-bold text-on-surface" id="metric-revenue">₱0.00</h2>
+                <div onclick="switchMetricTab('spots')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-spots">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">location_on</span> Published Spots</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-spots">0</h2>
                 </div>
-                <div onclick="switchMetricTab('bookings')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-bookings">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">confirmation_number</span> Active Bookings</p>
-                    <h2 class="text-3xl font-bold text-on-surface" id="metric-bookings">0</h2>
+                <div onclick="switchMetricTab('owners')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-owners">
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">storefront</span> Resort Owners</p>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-owners">0</h2>
                 </div>
                 <div onclick="switchMetricTab('travelers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-travelers">
                     <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">group</span> Registered Users</p>
@@ -298,6 +294,11 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 </div>
 
                 <div>
+                    <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Booking Website (URL)</label>
+                    <input id="spotBookingUrlInput" type="url" placeholder="https://resort-site.com/book — leave blank if none" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                </div>
+
+                <div>
                     <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Detailed Description Summary</label>
                     <textarea id="spotDescriptionTextarea" required rows="4" placeholder="Describe the spectacular features of this tourist destination..." class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors resize-none"></textarea>
                 </div>
@@ -314,11 +315,12 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     <script>
         const BASE_API_URL = 'https://ztims-api.onrender.com/api';
         const SPOTS_URL = `${BASE_API_URL}/spots`;
-        const BOOKINGS_URL = `${BASE_API_URL}/bookings`;
+        const OWNERS_URL = `${BASE_API_URL}/resort-owners`;
         const USERS_URL = `${BASE_API_URL}/users`;
         const REVIEWS_URL = `${BASE_API_URL}/reviews`;
 
-        let systemBookings = [];
+        let systemSpots = [];
+        let systemOwners = [];
         let systemUsers = [];
         let systemReviews = [];
 
@@ -365,7 +367,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         // while the request is still out — swap in a spinner until the data lands.
         let hasLoadedMetricsOnce = false;
         function showMetricSpinners() {
-            ['metric-revenue', 'metric-bookings', 'metric-travelers', 'metric-rating'].forEach(id => {
+            ['metric-spots', 'metric-owners', 'metric-travelers', 'metric-rating'].forEach(id => {
                 const tile = document.getElementById(id);
                 if (tile) {
                     tile.innerHTML = '<span class="inline-block w-6 h-6 rounded-full border-[3px] border-current border-t-transparent animate-spin opacity-60 align-[-4px]"></span>';
@@ -378,13 +380,15 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             if (!hasLoadedMetricsOnce) showMetricSpinners();
             hasLoadedMetricsOnce = true;
             try {
-                const [bookingsRes, usersRes, reviewsRes] = await Promise.all([
-                    fetch(BOOKINGS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
+                const [spotsRes, ownersRes, usersRes, reviewsRes] = await Promise.all([
+                    fetch(SPOTS_URL).catch(() => null),
+                    fetch(OWNERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
                     fetch(USERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
                     fetch(REVIEWS_URL).catch(() => null)
                 ]);
 
-                systemBookings = bookingsRes && bookingsRes.ok ? await bookingsRes.json() : [];
+                systemSpots = spotsRes && spotsRes.ok ? await spotsRes.json() : [];
+                systemOwners = ownersRes && ownersRes.ok ? await ownersRes.json() : [];
                 systemUsers = usersRes && usersRes.ok ? await usersRes.json() : [];
                 systemReviews = reviewsRes && reviewsRes.ok ? await reviewsRes.json() : [];
 
@@ -397,17 +401,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         }
 
         function calculateCalculatedFields() {
-            const totalRevenue = systemBookings
-                .filter(b => b.status !== "Cancelled" && b.status !== "cancelled")
-                .reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
-            
-            document.getElementById('metric-revenue').innerText = "₱" + totalRevenue.toLocaleString('en-US', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
-            });
+            document.getElementById('metric-spots').innerText = systemSpots.length;
 
-            const activeBookings = systemBookings.filter(b => b.status === "Active" || b.status === "active" || b.status === "Pending" || b.status === "pending");
-            document.getElementById('metric-bookings').innerText = activeBookings.length;
+            document.getElementById('metric-owners').innerText = systemOwners.length;
 
             document.getElementById('metric-travelers').innerText = systemUsers.length;
 
@@ -419,7 +415,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 document.getElementById('metric-rating').innerText = "0.0 / 5.0";
             }
 
-            const currentTab = window.currentActiveTab || 'revenue';
+            const currentTab = window.currentActiveTab || 'spots';
             switchMetricTab(currentTab);
         }
 
@@ -447,24 +443,22 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 });
             }
 
-            if (metricType === 'revenue') {
-                chartTitle.innerText = "Revenue Yield Growth";
-                chartRange.innerText = "Daily Earnings (PHP)";
-                
-                systemBookings.forEach(b => {
-                    if (b.status !== "Cancelled" && b.status !== "cancelled") {
-                        const bDate = (b.date || b.bookingDate || b.createdAt || "").substring(0, 10);
-                        const match = daysArray.find(d => d.dateString === bDate);
-                        if (match) match.value += (Number(b.amount) || 0);
-                    }
-                });
-            } else if (metricType === 'bookings') {
-                chartTitle.innerText = "Booking Volume Activity";
-                chartRange.innerText = "Total Reservations / Day";
+            if (metricType === 'spots') {
+                chartTitle.innerText = "Destinations Published";
+                chartRange.innerText = "New Listings / Day";
 
-                systemBookings.forEach(b => {
-                    const bDate = (b.date || b.bookingDate || b.createdAt || "").substring(0, 10);
-                    const match = daysArray.find(d => d.dateString === bDate);
+                systemSpots.forEach(spot => {
+                    const created = (spot.createdAt || "").substring(0, 10);
+                    const match = daysArray.find(d => d.dateString === created);
+                    if (match) match.value += 1;
+                });
+            } else if (metricType === 'owners') {
+                chartTitle.innerText = "Resort Owner Accounts";
+                chartRange.innerText = "New Accounts Issued / Day";
+
+                systemOwners.forEach(owner => {
+                    const created = (owner.createdAt || "").substring(0, 10);
+                    const match = daysArray.find(d => d.dateString === created);
                     if (match) match.value += 1;
                 });
             } else if (metricType === 'travelers') {
@@ -535,7 +529,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         function switchMetricTab(metricType) {
             window.currentActiveTab = metricType;
 
-            ['revenue', 'bookings', 'travelers', 'rating'].forEach(type => {
+            ['spots', 'owners', 'travelers', 'rating'].forEach(type => {
                 const card = document.getElementById(`card-${type}`);
                 if (card) card.classList.remove('border-[#eab308]/80', 'bg-[#eab308]/5');
             });
@@ -549,43 +543,37 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             const resultsContainer = document.getElementById('tab-results-container');
             let htmlPayload = "";
 
-            if (metricType === 'revenue') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">payments</span> Live Revenue Bookings Log`;
-                if (systemBookings.length === 0) {
-                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active user account bookings found in database ledger.</p>`;
+            if (metricType === 'spots') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">location_on</span> Published Destinations`;
+                if (systemSpots.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No destinations published yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full text-left text-sm">
                         <thead>
-                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Booking ID</th><th>Traveler Account</th><th>Destination Spot</th><th class="text-right">Settled Amount</th></tr>
+                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th>Type</th><th class="text-right">Entrance</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
-                    systemBookings.forEach(b => {
-                        const amt = Number(b.amount || 0).toFixed(2);
-                        const travelerName = b.travelerName || (b.user && b.user.name) || b.userId || "Registered User";
-                        const targetSpot = b.spotTitle || b.destination || (b.spot && b.spot.title) || "Zamboanguita Tour";
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-mono text-[#eab308]">${b._id || b.id || 'N/A'}</td><td class="font-medium text-stone-200">${travelerName}</td><td class="text-stone-300">${targetSpot}</td><td class="text-right font-bold text-white">₱${amt}</td></tr>`;
+                    systemSpots.forEach(spot => {
+                        const kind = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
+                        const fee = Number(spot.entranceFee || 0).toFixed(2);
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${spot.title || 'Untitled'}</td><td class="text-stone-300">${spot.location || '—'}</td><td class="text-stone-400">${spot.category || '—'}</td><td class="text-stone-400">${kind}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
             } 
-            else if (metricType === 'bookings') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">confirmation_number</span> Live Reservation Entries`;
-                if (systemBookings.length === 0) {
-                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No active system booking accounts matching index pipelines.</p>`;
+            else if (metricType === 'owners') {
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">storefront</span> Registered Resort Owners`;
+                if (systemOwners.length === 0) {
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No resort owner accounts created yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full text-left text-sm">
                         <thead>
-                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">ID</th><th>Account Name</th><th>Spot Target</th><th>Schedule Date</th><th>State</th></tr>
+                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
-                    systemBookings.forEach(b => {
-                        const travelerName = b.travelerName || (b.user && b.user.name) || b.userId || "Registered User";
-                        const targetSpot = b.spotTitle || b.destination || (b.spot && b.spot.title) || "Zamboanguita Tour";
-                        const bookingDate = b.date || b.bookingDate || b.createdAt || "N/A";
-                        const statusStr = b.status || "Pending";
-                        const statusColor = (statusStr.toLowerCase() === 'active' || statusStr.toLowerCase() === 'confirmed') ? 'text-[#eab308] bg-[#eab308]/10' : 
-                                            (statusStr.toLowerCase() === 'completed') ? 'text-green-400 bg-green-500/10' : 'text-stone-400 bg-zinc-800/40';
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-mono text-xs text-stone-400">${b._id || b.id || 'N/A'}</td><td class="font-bold text-stone-200">${travelerName}</td><td class="text-stone-300">${targetSpot}</td><td class="text-stone-400">${bookingDate.substring(0,10)}</td><td><span class="px-2 py-0.5 text-xs rounded ${statusColor}">${statusStr}</span></td></tr>`;
+                    systemOwners.forEach(owner => {
+                        const listings = systemSpots.filter(spot => String(spot.ownerId) === String(owner._id)).length;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${owner.resortName || 'Unnamed resort'}</td><td class="text-stone-300">${owner.email || '—'}</td><td class="text-stone-400">${owner.phone || '—'}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -710,7 +698,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             const imageUrl = document.getElementById('spotImageUrlInput').value.trim();
             const description = document.getElementById('spotDescriptionTextarea').value.trim();
 
-            const newSpotPayload = { title, location, category, imageUrl, description };
+            const bookingUrl = document.getElementById('spotBookingUrlInput').value.trim();
+            const newSpotPayload = { title, location, category, imageUrl, description, bookingUrl };
             const restoreButton = setButtonLoading(e.target.querySelector('button[type="submit"]'), 'Publishing...');
 
             try {
@@ -737,7 +726,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         /* ========================================================
             THEME DISPLAY INTERACTION MANAGER
         ======================================================== */
-        var currentActiveTab = 'revenue';
+        var currentActiveTab = 'spots';
         function toggleDarkMode() {
             const html = document.documentElement;
             const icon = document.getElementById("themeIcon");

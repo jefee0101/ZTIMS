@@ -181,39 +181,47 @@
 </nav>
 
 <main>
-    <section class="relative h-screen w-full flex items-center overflow-hidden">
+    <section class="relative h-[52vh] min-h-[380px] w-full flex items-center overflow-hidden">
         <div class="absolute inset-0 z-0">
             <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Najandig Peak"/>
             <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
             <div class="absolute inset-0 bg-black/40"></div>
         </div>
-        <div class="relative z-10 px-8 md:px-20 max-w-5xl">
-            <h1 class="text-7xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] text-on-surface mb-8">
-                Welcome to <br/> <span class="text-gradient">ZAMBOANGUITA.</span>
+        <div class="relative z-10 px-8 md:px-20 max-w-4xl pt-16">
+            <h1 class="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[0.9] text-on-surface mb-4">
+                Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
             </h1>
-            <p class="text-lg md:text-2xl text-on-surface-variant max-w-2xl leading-relaxed mb-12 font-medium">
+            <p class="text-base md:text-xl text-on-surface-variant max-w-2xl leading-relaxed mb-6 font-medium">
                 Experience the beauty and the hidden Gems of Zamboanguita
             </p>
-            <div class="flex items-center space-x-8">
-                <button id="heroExploreBtn" class="group flex items-center space-x-4 bg-primary text-on-primary pl-8 pr-8 py-5 rounded-full font-display font-extrabold uppercase tracking-widest transition-all btn-primary-gradient">
-                    <span>Click to see more</span>
-                </button>
-            </div>
-        </div>
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 opacity-50">
-            <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-on-surface-variant">Scroll</span>
-            <div class="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent"></div>
+            <button id="heroExploreBtn" class="group inline-flex items-center gap-3 bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-extrabold uppercase tracking-widest text-sm transition-all btn-primary-gradient">
+                <span>Browse all spots</span>
+                <span class="material-symbols-outlined !text-lg">arrow_downward</span>
+            </button>
         </div>
     </section>
 
-    <section id="spotsSection" class="py-32 bg-surface-container-low overflow-hidden transition-colors duration-300">
-        <div class="px-8 md:px-20 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div class="max-w-2xl">
-                <h2 class="text-5xl font-display font-bold tracking-tight text-on-surface mb-4">Tourist Spots &amp; Accommodations</h2>
-                <p class="text-on-surface-variant">Browse freely as a guest — sign in only when you're ready to book.</p>
+    <section id="spotsSection" class="py-16 md:py-20 bg-surface-container-low min-h-screen transition-colors duration-300">
+        <div class="px-8 md:px-20 mb-10">
+            <h2 class="text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-3">Tourist Spots &amp; Accommodations</h2>
+            <p class="text-on-surface-variant mb-8">Browse everything Zamboanguita has to offer — no account needed.</p>
+
+            <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                <div class="relative flex-1 max-w-md">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
+                    <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
+                        class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
+                </div>
+                <div id="spotTypeFilters" class="flex gap-2 flex-wrap">
+                    <button data-type="all" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary transition-all">All</button>
+                    <button data-type="spot" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Tourist Spots</button>
+                    <button data-type="accommodation" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Accommodations</button>
+                </div>
             </div>
+            <p id="spotsResultCount" class="text-xs text-on-surface-variant mt-4 uppercase tracking-widest font-bold"></p>
         </div>
-        <div id="spotsContainer" class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar"></div>
+
+        <div id="spotsContainer" class="px-8 md:px-20 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8"></div>
     </section>
 
     <section class="relative py-40 bg-surface overflow-hidden transition-colors duration-300">
@@ -247,47 +255,6 @@
         </div>
     </section>
 
-    <!-- Modal Pop-up Container for Travel Information & Map Elements -->
-    <div id="spotModal" class="fixed inset-0 z-50 invisible opacity-0 transition-all duration-300 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="bg-[#0A192F] border border-[#264653]/30 max-w-4xl w-full rounded-xl overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col text-white">
-            <div class="p-6 border-b border-[#264653]/20 flex justify-between items-center bg-[#102A43]">
-                <div>
-                    <span id="modalCategory" class="text-xs font-bold uppercase tracking-widest text-[#E65100] block mb-1">Category</span>
-                    <h2 id="modalTitle" class="text-3xl font-display font-black text-white">Spot Name</h2>
-                </div>
-                <button id="closeModalBtn" class="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
-                    <span class="material-symbols-outlined !text-2xl">close</span>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-6 flex-1 bg-[#0A192F]">
-                <p id="modalDescription" class="text-sm md:text-base text-gray-300 leading-relaxed">Description goes here...</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-[#0D253F] p-5 rounded-xl border border-[#264653]/20">
-                        <h4 class="font-display font-bold text-lg text-[#FFB300] mb-3 flex items-center">
-                            <span class="material-symbols-outlined mr-2 !text-xl">payments</span> Estimated Fees
-                        </h4>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center border-b border-[#264653]/10 pb-2">
-                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">directions_bus</span> Travel Fee</span>
-                                <span id="feeTravel" class="font-bold text-sm text-[#E65100]">₱0.00</span>
-                            </div>
-                            <div class="flex justify-between items-center pb-1">
-                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">door_open</span> Entrance Fee</span>
-                                <span id="feeEntrance" class="font-bold text-sm text-[#E65100]">₱0.00</span>
-                            </div>
-                        </div>
-                        <p id="modalHours" class="text-[11px] text-gray-400 mt-4 italic">Open Everyday · All Day</p>
-                    </div>
-                    <div class="rounded-xl overflow-hidden border border-[#264653]/20 min-h-[220px] relative bg-black">
-                        <img id="modalImage" class="w-full h-full object-cover" src="" alt="" />
-                    </div>
-                </div>
-                <button id="modalBookNowBtn" class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined">event_available</span> Book Now
-                </button>
-            </div>
-        </div>
-    </div>
 </main>
 
 <footer class="w-full py-12 px-8 bg-surface-dim border-t border-outline-variant/10 transition-colors duration-300">
@@ -378,78 +345,94 @@
     }
 
     const spotsContainer = document.getElementById('spotsContainer');
-    const spotModal = document.getElementById('spotModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalCategory = document.getElementById('modalCategory');
-    const modalDescription = document.getElementById('modalDescription');
-    const modalImage = document.getElementById('modalImage');
-    const modalHours = document.getElementById('modalHours');
-    const feeTravel = document.getElementById('feeTravel');
-    const feeEntrance = document.getElementById('feeEntrance');
-    const modalBookNowBtn = document.getElementById('modalBookNowBtn');
+    const searchInput = document.getElementById('spotSearchInput');
+    const resultCount = document.getElementById('spotsResultCount');
+    const typeFilterButtons = document.querySelectorAll('.type-filter');
 
-    let currentSpotId = null;
+    // Fetched once, then filtered in the browser — the catalogue for one
+    // municipality is small enough that re-querying the API per keystroke
+    // would only add latency.
+    let allSpots = [];
+    let activeType = 'all';
 
     function formatPeso(amount) {
         const value = Number(amount) || 0;
         return `₱${value.toFixed(2)}`;
     }
 
+    function typeLabel(spot) {
+        return spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
+    }
+
     function renderSpotCard(spot) {
-        const card = document.createElement('div');
-        card.className = 'flex-none w-[350px] md:w-[450px] group cursor-pointer';
-        card.dataset.spotId = spot._id;
+        const card = document.createElement('a');
+        card.href = `src/spot.html?spotId=${spot._id}`;
+        card.className = 'group cursor-pointer block rounded-2xl overflow-hidden bg-surface border border-outline-variant/20 hover:border-primary/50 transition-all hover:-translate-y-1';
         card.innerHTML = `
-            <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
-                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${spot.imageUrl || 'https://placehold.co/450x600?text=Zamboanguita'}" alt="${spot.title}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                <div class="absolute bottom-8 left-8 right-8">
-                    <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">${spot.label || spot.category || (spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot')}</span>
-                    <h3 class="text-3xl font-display font-bold text-white mb-2">${spot.title}</h3>
-                    <p class="text-white/70 text-sm line-clamp-2">${spot.description}</p>
+            <div class="relative h-[220px] overflow-hidden">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita'}" alt="${spot.title}"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <span class="absolute top-4 left-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">${typeLabel(spot)}</span>
+            </div>
+            <div class="p-5">
+                <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${spot.label || spot.category || ''}</span>
+                <h3 class="text-xl font-display font-bold text-on-surface mb-1.5">${spot.title}</h3>
+                <p class="text-on-surface-variant text-xs flex items-center gap-1 mb-3">
+                    <span class="material-symbols-outlined !text-sm">location_on</span>${spot.location || ''}
+                </p>
+                <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${spot.description}</p>
+                <div class="flex items-center justify-between pt-3 border-t border-outline-variant/20">
+                    <span class="text-xs text-on-surface-variant">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
+                    <span class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-1">
+                        View details <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </span>
                 </div>
             </div>
         `;
-        card.addEventListener('click', () => openSpotModal(spot));
         return card;
     }
 
-    function openSpotModal(spot) {
-        currentSpotId = spot._id;
-        modalTitle.textContent = spot.title;
-        modalCategory.textContent = spot.label || spot.category || '';
-        modalDescription.textContent = spot.description;
-        modalImage.src = spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita';
-        modalHours.textContent = `Open ${spot.workingDays || 'Everyday'} · ${spot.workingTime || 'All Day'}`;
-        feeTravel.textContent = formatPeso(spot.travelFee);
-        feeEntrance.textContent = formatPeso(spot.entranceFee);
+    function applyFilters() {
+        const query = (searchInput.value || '').trim().toLowerCase();
 
-        spotModal.classList.remove('invisible', 'opacity-0');
-        spotModal.classList.add('visible', 'opacity-100');
-    }
+        const matches = allSpots.filter(spot => {
+            if (activeType !== 'all' && (spot.type || 'spot') !== activeType) return false;
+            if (!query) return true;
+            return [spot.title, spot.location, spot.category, spot.label, spot.description]
+                .filter(Boolean)
+                .some(field => String(field).toLowerCase().includes(query));
+        });
 
-    function handleCloseModal() {
-        spotModal.classList.remove('visible', 'opacity-100');
-        spotModal.classList.add('invisible', 'opacity-0');
-        currentSpotId = null;
-    }
+        spotsContainer.innerHTML = '';
 
-    closeModalBtn.addEventListener('click', handleCloseModal);
-    spotModal.addEventListener('click', (e) => {
-        if (e.target === spotModal) handleCloseModal();
-    });
-
-    // Booking is the one action that requires an account: send the guest to
-    // login/register if needed, then straight back to booking this exact spot.
-    modalBookNowBtn.addEventListener('click', () => {
-        if (!currentSpotId) return;
-        const authToken = localStorage.getItem('authToken');
-        if (authToken) {
-            window.location.href = `src/user/user_booking.html?spotId=${currentSpotId}`;
-        } else {
-            window.location.href = `src/user/user_login.html?next=book&spotId=${currentSpotId}`;
+        if (matches.length === 0) {
+            resultCount.textContent = '';
+            spotsContainer.innerHTML = allSpots.length === 0
+                ? '<p class="text-on-surface-variant col-span-full py-8">No tourist spots have been published yet. Please check back soon.</p>'
+                : '<p class="text-on-surface-variant col-span-full py-8">Nothing matches that search. Try a different word or clear the filters.</p>';
+            return;
         }
+
+        resultCount.textContent = `Showing ${matches.length} of ${allSpots.length}`;
+        matches.forEach(spot => spotsContainer.appendChild(renderSpotCard(spot)));
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+
+    typeFilterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            activeType = button.dataset.type;
+            typeFilterButtons.forEach(other => {
+                const isActive = other === button;
+                other.classList.toggle('bg-primary', isActive);
+                other.classList.toggle('text-on-primary', isActive);
+                other.classList.toggle('bg-surface', !isActive);
+                other.classList.toggle('border', !isActive);
+                other.classList.toggle('border-outline-variant/30', !isActive);
+                other.classList.toggle('text-on-surface-variant', !isActive);
+            });
+            applyFilters();
+        });
     });
 
     async function loadSpots() {
@@ -458,18 +441,13 @@
             const response = await fetch(`${API_BASE}/spots`);
             if (!response.ok) throw new Error('Failed to load spots');
             const spots = await response.json();
-
-            spotsContainer.innerHTML = '';
-            if (!Array.isArray(spots) || spots.length === 0) {
-                spotsContainer.innerHTML = '<p class="text-on-surface-variant px-2">No tourist spots have been published yet. Please check back soon.</p>';
-                return;
-            }
-            spots.forEach(spot => spotsContainer.appendChild(renderSpotCard(spot)));
+            allSpots = Array.isArray(spots) ? spots : [];
+            doneLoading();
+            applyFilters();
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
-            spotsContainer.innerHTML = '<p class="text-on-surface-variant px-2">Unable to load tourist spots right now. Please try again later.</p>';
-        } finally {
             doneLoading();
+            spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8">Unable to load tourist spots right now. Please try again later.</p>';
         }
     }
 
