@@ -173,7 +173,7 @@
         return `₱${value.toFixed(2)}`;
     }
 
-    // Spot text comes from resort owners and admins, so it is escaped before it
+    // Spot text comes from establishment managers and admins, so it is escaped before it
     // reaches innerHTML rather than trusted as markup.
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -218,6 +218,11 @@
         `;
     }
 
+    // The establishment's name, whichever spelling the account was saved under.
+    function managerName(owner) {
+        return owner?.establishmentName || owner?.resortName || '';
+    }
+
     function bookingPanel(spot) {
         const url = safeExternalUrl(spot.bookingUrl);
         const owner = spot.ownerId && typeof spot.ownerId === 'object' ? spot.ownerId : null;
@@ -232,7 +237,7 @@
                     <span class="material-symbols-outlined">open_in_new</span> Book Now
                 </a>
                 <p class="text-[11px] text-on-surface-variant text-center mt-3">
-                    Booking is handled on ${escapeHtml(owner?.resortName || 'the resort')}'s own website. This opens in a new tab.
+                    Booking is handled on ${escapeHtml(managerName(owner) || 'the establishment')}'s own website. This opens in a new tab.
                 </p>
             `;
         }
@@ -240,7 +245,7 @@
         // No booking link on file — give the visitor a way to reach the resort
         // instead of a button that goes nowhere.
         const contactLines = [];
-        if (owner?.resortName) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(owner.resortName)}</p>`);
+        if (managerName(owner)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(owner))}</p>`);
         if (owner?.phone) {
             contactLines.push(`<a href="tel:${escapeHtml(owner.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
                 <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(owner.phone)}
@@ -408,7 +413,7 @@
         if (event.key === 'Escape' && !bookingAuthModal.hidden) closeBookingAuthModal();
     });
 
-    // Only a tourist account counts here. An officer or resort owner signed into
+    // Only a tourist account counts here. An officer or establishment manager signed into
     // their own portal is not a visitor booking a trip.
     function signedInTourist() {
         return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';

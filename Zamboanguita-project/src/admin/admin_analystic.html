@@ -189,9 +189,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
                 <span class="sidebar-label">Analytics</span>
             </a>
-            <a title="Manage Spots" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
-                <span class="sidebar-label">Manage Spots</span>
+                <span class="sidebar-label">Destinations</span>
             </a>
             <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
@@ -231,7 +231,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                     <h2 class="text-3xl font-bold text-on-surface" id="metric-spots">0</h2>
                 </div>
                 <div onclick="switchMetricTab('owners')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-owners">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">storefront</span> Resort Owners</p>
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">storefront</span> Tourist Establishment Managers</p>
                     <h2 class="text-3xl font-bold text-on-surface" id="metric-owners">0</h2>
                 </div>
                 <div onclick="switchMetricTab('travelers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-travelers">
@@ -361,7 +361,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     <script>
         const BASE_API_URL = 'https://ztims-api.onrender.com/api';
         const SPOTS_URL = `${BASE_API_URL}/spots`;
-        const OWNERS_URL = `${BASE_API_URL}/resort-owners`;
+        const OWNERS_URL = `${BASE_API_URL}/establishment-managers`;
         const USERS_URL = `${BASE_API_URL}/users`;
         const REVIEWS_URL = `${BASE_API_URL}/reviews`;
 
@@ -499,7 +499,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                     if (match) match.value += 1;
                 });
             } else if (metricType === 'owners') {
-                chartTitle.innerText = "Resort Owner Accounts";
+                chartTitle.innerText = "Tourist Establishment Manager Accounts";
                 chartRange.innerText = "New Accounts Issued / Day";
 
                 systemOwners.forEach(owner => {
@@ -608,9 +608,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 }
             } 
             else if (metricType === 'owners') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">storefront</span> Registered Resort Owners`;
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">storefront</span> Registered Tourist Establishment Managers`;
                 if (systemOwners.length === 0) {
-                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No resort owner accounts created yet.</p>`;
+                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No establishment manager accounts created yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full text-left text-sm">
                         <thead>
@@ -619,7 +619,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                         <tbody class="divide-y divide-zinc-800/20">`;
                     systemOwners.forEach(owner => {
                         const listings = systemSpots.filter(spot => String(spot.ownerId) === String(owner._id)).length;
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${owner.resortName || 'Unnamed resort'}</td><td class="text-stone-300">${owner.email || '—'}</td><td class="text-stone-400">${owner.phone || '—'}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${owner.establishmentName || owner.resortName || 'Unnamed establishment'}</td><td class="text-stone-300">${owner.email || '—'}</td><td class="text-stone-400">${owner.phone || '—'}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }

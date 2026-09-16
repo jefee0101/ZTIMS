@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Resort Owner | My Spots</title>
+    <title>Tourist Establishment Manager | My Spots</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -120,7 +120,7 @@
     <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
-            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Resort Owner Portal</p>
+            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourist Establishment Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                     class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
@@ -142,7 +142,7 @@
     </aside>
 
     <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
-        <p id="resortNameLabel" class="text-sm font-bold text-on-surface-variant"></p>
+        <p id="establishmentNameLabel" class="text-sm font-bold text-on-surface-variant"></p>
         <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
             <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
         </button>
@@ -511,8 +511,10 @@
             }
         }
 
-        function guardResortOwnerSession() {
-            if (localStorage.getItem('userRole') !== 'resort_owner' || !localStorage.getItem('authToken')) {
+        function guardEstablishmentManagerSession() {
+            const role = localStorage.getItem('userRole');
+            // 'resort_owner' is the pre-rename spelling of the same role.
+            if (!['establishment_manager', 'resort_owner'].includes(role) || !localStorage.getItem('authToken')) {
                 window.location.href = '../staff_login.html';
                 return false;
             }
@@ -670,13 +672,13 @@
             const icon = document.getElementById('themeIcon');
             if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
 
-            if (!guardResortOwnerSession()) return;
+            if (!guardEstablishmentManagerSession()) return;
 
             wirePhotoControls();
             renderPhotoGallery();
 
-            const resortName = localStorage.getItem('resortName');
-            document.getElementById('resortNameLabel').textContent = resortName || localStorage.getItem('userEmail') || '';
+            const establishmentName = localStorage.getItem('establishmentName') || localStorage.getItem('resortName');
+            document.getElementById('establishmentNameLabel').textContent = establishmentName || localStorage.getItem('userEmail') || '';
 
             loadMySpots();
         });

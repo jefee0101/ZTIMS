@@ -256,11 +256,11 @@
         <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-on-surface-variant">
             <p>© 2026 Zamboanguita Tourism Information Management System</p>
             <span class="hidden sm:inline opacity-40">·</span>
-            <!-- Quiet on purpose: findable by the officers and resort owners who need
+            <!-- Quiet on purpose: findable by the officers and establishment managers who need
                  it, without putting a staff-only door in front of every tourist. -->
             <a href="src/staff_login.html" class="inline-flex items-center gap-1 hover:text-primary transition-colors">
                 <span class="material-symbols-outlined !text-sm">badge</span>
-                Staff &amp; Resort Owner Sign In
+                Staff &amp; Tourist Establishment Manager Sign In
             </a>
         </div>
     </footer>
@@ -311,7 +311,7 @@
 
     /* ---------------- shared helpers ---------------- */
 
-    // Spot and review text is written by resort owners and tourists, so it is
+    // Spot and review text is written by establishment managers and tourists, so it is
     // escaped before ever reaching innerHTML.
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({

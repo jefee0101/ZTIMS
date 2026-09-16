@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Manage Spots</title>
+<title>Explore Zamboanguita Admin | Destinations</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -175,9 +175,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
                 <span class="sidebar-label">Analytics</span>
             </a>
-            <a title="Manage Spots" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
                 <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
-                <span class="sidebar-label">Manage Spots</span>
+                <span class="sidebar-label">Destinations</span>
             </a>
             <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="adminreviews.html">
                 <span class="material-symbols-outlined text-[#FFB300]">star</span>
@@ -211,16 +211,68 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-            <div class="flex justify-between items-end">
+            <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
                     <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
-                        <span class="text-on-surface-variant">Inventory</span>
+                        <span class="text-on-surface-variant">Oversight</span>
                     </nav>
-                    <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">Manage Destinations</h2>
+                    <h2 class="text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h2>
+                    <p class="text-on-surface-variant text-sm max-w-2xl">
+                        Everything published to the public site — tourist spots and accommodations alike,
+                        whether the Tourism Office keeps them or an establishment manager does.
+                        Listings are edited by whoever manages them; take one down here when it is no longer available.
+                    </p>
                 </div>
-                <button onclick="toggleAddSpotModal(true)" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20 group">
-                    <span class="material-symbols-outlined">add_circle</span> Add New Spot
+                <button id="refreshBtn" class="flex items-center gap-2 px-6 py-3.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-sm hover:bg-outline-variant/50 transition-all">
+                    <span class="material-symbols-outlined !text-lg">refresh</span> Refresh
                 </button>
+            </div>
+
+            <!-- One-time import of the destinations the office already documented.
+                 Hidden as soon as they are all in the database. -->
+            <div id="starterImportPanel" hidden class="glass-panel rounded-2xl p-6 border-l-4 border-[#FFB300]">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#FFB300]">cloud_upload</span>
+                            Publish the municipality's destinations
+                        </h3>
+                        <p class="text-sm text-on-surface-variant mt-1">
+                            <span id="starterMissingCount">0</span> of the destinations the office already documented
+                            are not in the database yet, so the public site cannot show them.
+                            Publishing adds only the missing ones — nothing is duplicated or overwritten.
+                        </p>
+                        <p id="starterMissingNames" class="text-xs text-on-surface-variant/80 mt-1"></p>
+                    </div>
+                    <button id="importStarterBtn" class="shrink-0 flex items-center gap-2 px-7 py-3.5 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                        <span class="material-symbols-outlined">publish</span> Publish them now
+                    </button>
+                </div>
+                <p id="starterImportStatus" hidden class="text-xs mt-3"></p>
+            </div>
+
+            <!-- Summary of what is live -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Published</p>
+                    <h5 id="statTotal" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1"><span id="statSpots">0</span> spots · <span id="statStays">0</span> accommodations</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Kept by the office</p>
+                    <h5 id="statOffice" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1"><span id="statManaged">0</span> run by managers</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Average rating</p>
+                    <h5 id="statRating" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1"><span id="statReviews">0</span> reviews in total</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Need attention</p>
+                    <h5 id="statIncomplete" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">missing a photo, details or a booking link</p>
+                </div>
             </div>
 
             <!-- Filter Controls Panel -->
@@ -228,241 +280,50 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Categories:</span>
                     <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
-                        <button onclick="setCategoryFilter('ALL')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
-                        <button onclick="setCategoryFilter('BEACH / DIVING')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Beach / Diving</button>
-                        <button onclick="setCategoryFilter('MOUNTAIN')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Mountain</button>
-                        <button onclick="setCategoryFilter('CULTURAL')" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Cultural</button>
+                        <button data-category="ALL" class="cat-filter-btn px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
+                        <button data-category="BEACH / DIVING" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Beach / Diving</button>
+                        <button data-category="MOUNTAIN" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Mountain</button>
+                        <button data-category="CULTURAL" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Cultural</button>
+                        <button data-category="ACCOMMODATION" class="cat-filter-btn px-5 py-1.5 rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Accommodation</button>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status:</span>
-                    <select id="statusSelectFilter" onchange="renderAdminTableGrid()" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 focus:ring-1 focus:ring-primary focus:border-primary">
-                        <option value="active">Active Listings</option>
-                        <option value="hidden">Hidden</option>
-                        <option value="archived">Archived</option>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
+                        <input id="searchInput" type="search" placeholder="Search name, location or manager"
+                               class="w-72 max-w-full bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    </div>
+                    <select id="managerFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 py-2.5 focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="all">Everyone</option>
+                        <option value="office">Kept by the office</option>
+                        <option value="manager">Run by a manager</option>
+                        <option value="incomplete">Needs attention</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Slider Wrapper Workspace -->
-            <div class="relative overflow-hidden rounded-[2rem] glass-panel">
-                <div id="slider" class="flex transition-transform duration-500 ease-in-out">
+            <!-- The listings themselves -->
+            <div id="listingsPanel" class="rounded-[2rem] glass-panel overflow-hidden">
+                <div id="listings" class="divide-y divide-outline-variant/20"></div>
+                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
+                    <p class="text-on-surface-variant text-sm">
+                        Showing <span id="shownCount" class="text-on-surface font-bold">0</span>
+                        of <span id="totalCount" class="text-on-surface font-bold">0</span> published listings
+                    </p>
                 </div>
-
-                <div class="flex justify-between items-center px-8 py-6 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant">Showing <span id="pageNumber" class="text-on-surface font-bold">1</span> of <span id="totalDisplayCount" class="text-on-surface font-bold">1</span> slider pages</p>
-                    <div class="flex gap-3">
-                        <button id="prevBtn" onclick="navigateSlider(-1)" class="w-12 h-12 rounded-xl border border-outline-variant/40 flex items-center justify-center text-on-surface bg-surface-variant hover:bg-outline-variant/60 active:scale-95 transition">❮</button>
-                        <button id="nextBtn" onclick="navigateSlider(1)" class="w-12 h-12 rounded-xl border border-outline-variant/40 flex items-center justify-center text-on-surface bg-surface-variant hover:bg-outline-variant/60 active:scale-95 transition">❯</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Highlight Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-                <div class="glass-panel border-l-4 border-primary p-6 rounded-r-2xl">
-                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Most Visited</p>
-                    <h5 class="text-2xl font-black text-on-surface" id="mostVisitedSpot">Najandig Peak</h5>
-                    <p class="text-xs text-primary-container font-bold mt-2">↑ 12% from last month</p>
-                </div>
-                <div class="glass-panel border-l-4 border-outline-variant p-6 rounded-r-2xl">
-                    <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Capacity</p>
-                    <h5 id="totalCapacityCounter" class="text-2xl font-black text-on-surface">4 Locations</h5>
-                    <p class="text-xs text-on-surface-variant mt-2">Across ecosystem matrix</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Spot Modal Structure Overlay -->
-        <div id="addSpotModal" class="fixed inset-0 bg-background/90 backdrop-blur-sm hidden items-center justify-center z-[200] p-4 transition-all">
-            <div class="bg-surface border border-outline-variant/60 rounded-[2rem] w-full max-w-lg p-8 space-y-6 relative text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
-                    <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
-                        <span class="material-symbols-outlined text-2xl">close</span>
-                    </button>
-                </div>
-
-                <form id="addSpotForm" onsubmit="handleSpotPublish(event)" class="space-y-4 font-body">
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Destination Name</label>
-                        <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Location Subtitle Address</label>
-                        <input type="text" id="spotLocation" placeholder="e.g., Brgy. Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Detailed Description</label>
-                        <textarea id="spotDescription" placeholder="Provide a narrative history or directions profile..." rows="3" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" required></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
-                            <select id="spotCategory" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
-                                <option value="MOUNTAIN">Mountain</option>
-                                <option value="BEACH / DIVING">Beach / Diving</option>
-                                <option value="CULTURAL">Cultural</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Short Visual Label Tag</label>
-                            <input type="text" id="spotLabel" placeholder="e.g., Crystal Waters" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Days</label>
-                            <input type="text" id="spotWorkingDays" placeholder="e.g., Mondays - Fridays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Time</label>
-                            <input type="text" id="spotWorkingTime" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
-                            <input type="number" id="spotTravelFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Entrance Fee (₱)</label>
-                            <input type="number" id="spotEntranceFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Photos</label>
-                            <span id="photoCounter" class="text-[11px] font-bold text-on-surface-variant">0 / 30</span>
-                        </div>
-
-                        <div id="photoGallery" class="grid grid-cols-4 gap-2"></div>
-
-                        <p id="photoEmptyHint" class="text-[11px] text-on-surface-variant">
-                            No photos yet. The first one becomes the cover shown on listing cards.
-                        </p>
-
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <label id="photoUploadLabel" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                                <span class="material-symbols-outlined !text-base">add_photo_alternate</span>
-                                <span id="photoUploadText">Upload photos</span>
-                                <input type="file" id="spotPhotoInput" accept="image/*" multiple class="hidden"/>
-                            </label>
-                            <button type="button" id="addPhotoUrlBtn" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                                <span class="material-symbols-outlined !text-base">link</span> Paste a link
-                            </button>
-                        </div>
-
-                        <p id="photoStatus" hidden class="text-[11px] mt-2 text-on-surface-variant"></p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking Website</label>
-                        <input type="url" id="spotBookingUrl" placeholder="https://resort-site.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        <p class="text-[11px] text-on-surface-variant mt-1.5">Where "Book Now" sends visitors. Leave blank if the resort has no booking site.</p>
-                    </div>
-
-                    <div class="flex gap-4 pt-4">
-                        <button type="button" onclick="toggleAddSpotModal(false)" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">
-                            Cancel
-                        </button>
-                        <button type="submit" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">
-                            Publish Spot
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </main>
+
     <script>
-        /* ===== BASELINE ADVENTURE DESTINATIONS DATA ===== */
-        let baselineDestinations = [
-            {
-                title: "Najandig Peak",
-                location: "Brgy. Najandig",
-                category: "MOUNTAIN",
-                label: "Highland Over Looking View",
-                description: "A panoramic trek route mapping raw ridge line view overlooking Apo Island strait.",
-                travelFee: 250,
-                entranceFee: 50,
-                workingDays: "Everyday",
-                workingTime: "5:00 AM - 6:00 PM",
-                image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg",
-                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg"]
-            },
-            {
-                title: "Jomao-As Falls",
-                location: "Malongcay Diot",
-                category: "MOUNTAIN",
-                label: "Hidden Jungle Waterfall",
-                description: "Deep valley spring running through pristine stone reservoirs, perfect for outdoor enthusiasts.",
-                travelFee: 150,
-                entranceFee: 35,
-                workingDays: "Everyday",
-                workingTime: "7:00 AM - 5:00 PM",
-                image: "https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg",
-                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg"]
-            },
-            {
-                title: "Hot Spring",
-                location: "Jomao-As",
-                category: "MOUNTAIN",
-                label: "Relaxing Natural Pool",
-                description: "Geothermal heated structural streams filtering soothing warm minerals safely.",
-                travelFee: 150,
-                entranceFee: 40,
-                workingDays: "Everyday",
-                workingTime: "6:00 AM - 8:00 PM",
-                image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
-                images: ["https://images.unsplash.com/photo-1470770841072-f978cf4d019e"]
-            },
-            {
-                title: "Malatapay Market",
-                location: "Zamboanguita Proper",
-                category: "CULTURAL",
-                label: "Authentic Coastal Trade Hub",
-                description: "Famous Wednesday open air traditional marketplace layout for livestock barter and local seafood dishes.",
-                travelFee: 50,
-                entranceFee: 0,
-                workingDays: "Wednesdays Only",
-                workingTime: "5:00 AM - 6:00 PM",
-                image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
-                images: ["https://images.unsplash.com/photo-1519125323398-675f0ddb6308"]
-            }
-        ];
+        const API_BASE = "https://ztims-api.onrender.com/api";
 
-        let currentSlide = 0;
-        let totalSlides = 1;
-        let activeCategory = "ALL"; 
-        /* ---- Photo gallery ---------------------------------------------------
-           Photos go straight from the browser to Cloudinary; MongoDB only ever
-           stores the resulting links. Photos are far too large to keep in the
-           database itself — one phone photo is 2-5 MB, the API accepts 1 MB
-           request bodies, and a MongoDB document caps out at 16 MB.
+        let allSpots = [];          // straight from the database
+        let reviewStats = {};       // spot id and title -> { count, total }
+        let activeCategory = "ALL";
 
-           >>> PASTE YOUR TWO CLOUDINARY VALUES HERE <<<
-           Cloud name:    Cloudinary dashboard, top-left under your account name.
-           Upload preset: Settings -> Upload -> Upload presets -> add an
-                          *unsigned* preset, then paste its name here.
-           Until both are filled in, "Upload photos" says what is missing and
-           "Paste a link" keeps working. */
-        const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
-        const CLOUDINARY_UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
-
-        const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
-        const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-
-        // Photo links for the spot currently open in the modal. Index 0 is the cover.
-        let spotImages = [];
-
-        function cloudinaryConfigured() {
-            return !CLOUDINARY_CLOUD_NAME.startsWith('YOUR_') && !CLOUDINARY_UPLOAD_PRESET.startsWith('YOUR_');
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
         }
 
         function escapeHtml(value) {
@@ -471,246 +332,26 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             ));
         }
 
-        function setPhotoStatus(message, tone) {
-            const status = document.getElementById('photoStatus');
-            if (!status) return;
-            status.textContent = message || '';
-            status.className = 'text-[11px] mt-2 ' + (tone === 'error' ? 'text-error' : 'text-on-surface-variant');
-            status.hidden = !message;
+        function formatPeso(amount) {
+            return `₱${(Number(amount) || 0).toFixed(2)}`;
         }
 
-        function renderPhotoGallery() {
-            const gallery = document.getElementById('photoGallery');
-            if (!gallery) return;
-            document.getElementById('photoCounter').textContent = `${spotImages.length} / ${MAX_SPOT_IMAGES}`;
-            document.getElementById('photoEmptyHint').hidden = spotImages.length > 0;
-
-            gallery.innerHTML = spotImages.map((url, index) => `
-                <figure class="relative group aspect-square rounded-xl overflow-hidden bg-surface-variant ring-1 ${index === 0 ? 'ring-primary' : 'ring-outline-variant/40'}">
-                    <img src="${escapeHtml(url)}" alt="Photo ${index + 1}" class="w-full h-full object-cover"/>
-                    ${index === 0 ? '<figcaption class="absolute bottom-0 inset-x-0 bg-primary text-on-primary text-[9px] font-bold tracking-widest text-center py-0.5">COVER</figcaption>' : ''}
-                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                        ${index === 0 ? '' : `<button type="button" data-cover="${index}" title="Make this the cover" class="p-1 rounded-full bg-white text-black hover:scale-110 transition-transform flex"><span class="material-symbols-outlined !text-base">star</span></button>`}
-                        <button type="button" data-remove="${index}" title="Remove this photo" class="p-1 rounded-full bg-white text-error hover:scale-110 transition-transform flex"><span class="material-symbols-outlined !text-base">delete</span></button>
-                    </div>
-                </figure>
-            `).join('');
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message) {
+            target.innerHTML =
+                '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '</div>';
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
         }
 
-        // Keeps the list unique and inside the limit, and reports what it dropped
-        // so photos never disappear without explanation.
-        function addPhotos(urls) {
-            const added = [];
-            let duplicates = 0;
-            for (const raw of urls) {
-                const url = String(raw || '').trim();
-                if (!url) continue;
-                if (spotImages.includes(url)) { duplicates += 1; continue; }
-                if (spotImages.length >= MAX_SPOT_IMAGES) {
-                    renderPhotoGallery();
-                    setPhotoStatus(`Only ${MAX_SPOT_IMAGES} photos are allowed, so the rest were not added.`, 'error');
-                    return added;
-                }
-                spotImages.push(url);
-                added.push(url);
-            }
-            renderPhotoGallery();
-            if (duplicates) setPhotoStatus(`${duplicates} photo${duplicates > 1 ? 's were' : ' was'} already in the gallery.`);
-            return added;
-        }
-
-        async function uploadPhotoToCloudinary(file) {
-            const form = new FormData();
-            form.append('file', file);
-            form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: form
-            });
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok || !result.secure_url) {
-                throw new Error(result?.error?.message || 'Cloudinary rejected the upload.');
-            }
-            return result.secure_url;
-        }
-
-        async function handlePhotoFiles(event) {
-            const input = event.target;
-            const files = Array.from(input.files || []);
-            input.value = '';   // so picking the same file twice still fires change
-            if (files.length === 0) return;
-
-            if (!cloudinaryConfigured()) {
-                setPhotoStatus('Photo uploads are not set up yet — add your Cloudinary cloud name and upload preset in this page, or use "Paste a link".', 'error');
-                return;
-            }
-
-            const room = MAX_SPOT_IMAGES - spotImages.length;
-            if (room <= 0) {
-                setPhotoStatus(`You already have the maximum of ${MAX_SPOT_IMAGES} photos.`, 'error');
-                return;
-            }
-
-            const queue = files.slice(0, room);
-            const skippedForLimit = files.length - queue.length;
-            const failed = [];
-            const label = document.getElementById('photoUploadText');
-            const originalLabel = label.textContent;
-            document.getElementById('spotPhotoInput').disabled = true;
-
-            for (let i = 0; i < queue.length; i++) {
-                const file = queue[i];
-                label.textContent = `Uploading ${i + 1} of ${queue.length}...`;
-                setPhotoStatus(`Uploading ${escapeHtml(file.name)} (${i + 1} of ${queue.length})...`);
-                if (file.size > MAX_PHOTO_BYTES) {
-                    failed.push(`${file.name} (over 10 MB)`);
-                    continue;
-                }
-                try {
-                    const url = await uploadPhotoToCloudinary(file);
-                    spotImages.push(url);
-                    renderPhotoGallery();
-                } catch (error) {
-                    console.error('Cloudinary upload failed:', error);
-                    failed.push(`${file.name} (${error.message})`);
-                }
-            }
-
-            label.textContent = originalLabel;
-            document.getElementById('spotPhotoInput').disabled = false;
-            renderPhotoGallery();
-
-            const notes = [];
-            if (failed.length) notes.push(`Could not upload: ${failed.join(', ')}.`);
-            if (skippedForLimit) notes.push(`${skippedForLimit} photo${skippedForLimit > 1 ? 's were' : ' was'} skipped — the limit is ${MAX_SPOT_IMAGES}.`);
-            setPhotoStatus(notes.join(' ') || `${queue.length - failed.length} photo${queue.length - failed.length === 1 ? '' : 's'} uploaded.`, failed.length ? 'error' : '');
-        }
-
-        function wirePhotoControls() {
-            document.getElementById('spotPhotoInput').addEventListener('change', handlePhotoFiles);
-
-            document.getElementById('addPhotoUrlBtn').addEventListener('click', () => {
-                const url = prompt('Paste the photo link (it must start with http:// or https://)');
-                if (url === null) return;
-                if (!/^https?:\/\//i.test(url.trim())) {
-                    setPhotoStatus('That does not look like a photo link. It should start with http:// or https://.', 'error');
-                    return;
-                }
-                setPhotoStatus('');
-                addPhotos([url]);
-            });
-
-            // Delegated so the buttons survive every re-render of the gallery.
-            document.getElementById('photoGallery').addEventListener('click', event => {
-                const removeBtn = event.target.closest('[data-remove]');
-                const coverBtn = event.target.closest('[data-cover]');
-                if (removeBtn) {
-                    spotImages.splice(Number(removeBtn.dataset.remove), 1);
-                } else if (coverBtn) {
-                    const index = Number(coverBtn.dataset.cover);
-                    spotImages.unshift(spotImages.splice(index, 1)[0]);
-                } else {
-                    return;
-                }
-                setPhotoStatus('');
-                renderPhotoGallery();
-            });
-
-            if (!cloudinaryConfigured()) {
-                document.getElementById('photoUploadLabel').title =
-                    'Add your Cloudinary cloud name and upload preset in this page to enable uploads.';
-            }
-        }
-
-        /* ===== DARK MODE TOGGLE ENGINE ===== */
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIcon');
-            
-            if (html.classList.contains('light-mode')) {
-                html.classList.remove('light-mode');
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                if(icon) icon.textContent = 'dark_mode';
-            } else {
-                html.classList.remove('dark');
-                html.classList.add('light-mode');
-                localStorage.setItem('theme', 'light');
-                if(icon) icon.textContent = 'light_mode';
-            }
-        }
-
-        /* ===== INITIALIZATION ON DOM LOAD ===== */
-        document.addEventListener('DOMContentLoaded', () => {
-            const icon = document.getElementById('themeIcon');
-            if(icon) {
-                icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
-            }
-            // Populate localStorage with baseline data if empty to keep consistency
-            if (!localStorage.getItem('globalDestinations')) {
-                localStorage.setItem('globalDestinations', JSON.stringify([]));
-            }
-            wirePhotoControls();
-            renderPhotoGallery();
-            renderAdminTableGrid();
-        });
-
-        /* ===== MODAL TOGGLE ROUTINE ===== */
-        function toggleAddSpotModal(show) {
-            const modal = document.getElementById('addSpotModal');
-            if(show) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } else {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-                document.getElementById('addSpotForm').reset();
-                spotImages = [];
-                setPhotoStatus('');
-                renderPhotoGallery();
-            }
-        }
-
-        /* ===== CATEGORY FILTER TRIGGER ENGINE ===== */
-        function setCategoryFilter(category) {
-            activeCategory = category.toUpperCase();
-            currentSlide = 0; 
-            
-            const buttons = document.querySelectorAll('.cat-filter-btn');
-            buttons.forEach(btn => {
-                const btnText = btn.textContent.trim().toUpperCase();
-                if ((btnText === "ALL" && activeCategory === "ALL") || 
-                    ((btnText === "BEACH / DIVING" || btnText === "BEACH & DIVING") && activeCategory === "BEACH / DIVING") ||
-                    (btnText === "MOUNTAIN" && activeCategory === "MOUNTAIN") ||
-                    (btnText === "CULTURAL" && activeCategory === "CULTURAL")) {
-                    btn.className = "cat-filter-btn px-5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all";
-                } else {
-                    btn.className = "cat-filter-btn px-5 py-1.5 rounded-full bg-surface-container-high text-stone-400 text-xs font-bold hover:bg-stone-800 transition-all";
-                }
-            });
-
-            renderAdminTableGrid();
-        }
-
-        /* ===== CAROUSEL SLIDER NAVIGATION ===== */
-        function navigateSlider(direction) {
-            currentSlide += direction;
-            if (currentSlide < 0) currentSlide = 0;
-            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
-            
-            updateSliderPosition();
-        }
-
-        function updateSliderPosition() {
-            const sliderContainer = document.getElementById('slider');
-            sliderContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
-            document.getElementById('pageNumber').textContent = totalSlides === 0 ? 0 : currentSlide + 1;
-        }
-
-        // The API sleeps on Render's free tier, so these writes can take most of a
-        // minute on a cold start. No region spinner on this page — its grid renders
-        // from localStorage, not from the network, so one would be misleading.
         function setButtonLoading(btn, label) {
             if (!btn) return () => {};
             const originalHTML = btn.innerHTML;
@@ -718,200 +359,457 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             btn.disabled = true;
             btn.innerHTML =
                 '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-            return () => {
-                btn.innerHTML = originalHTML;
-                btn.disabled = wasDisabled;
-            };
+            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
         }
 
-        /* ===== POST ENGINE: PUBLISH NEW SPOT ===== */
-        async function handleSpotPublish(event) {
-            event.preventDefault();
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('light-mode');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                if (icon) icon.textContent = 'dark_mode';
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light-mode');
+                localStorage.setItem('theme', 'light');
+                if (icon) icon.textContent = 'light_mode';
+            }
+        }
 
-            const restoreButton = setButtonLoading(event.target.querySelector('button[type="submit"]'), 'Publishing...');
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.href = '../staff_login.html';
+                return false;
+            }
+            return true;
+        }
 
-            // Photo one is the cover; `image` is kept only for this page's own
-            // localStorage mirror, which renders from it.
-            const primaryImage = spotImages[0] || '';
+        /* ===== THE DESTINATIONS THE OFFICE ALREADY DOCUMENTED =====
+           Written in exactly the shape every other spot uses — same fields, same
+           category wording, fees as numbers, a photo gallery — so an imported
+           destination and one created by an establishment manager are identical
+           in the database. They carry no ownerId, which marks them as kept by the
+           Tourism Office rather than run by a manager. */
+        const STARTER_DESTINATIONS = [
+            {
+                type: "spot",
+                title: "Najandig Peak",
+                location: "Brgy. Najandig",
+                category: "MOUNTAIN",
+                label: "Highland Overlooking View",
+                description: "A panoramic trek route mapping raw ridge line view overlooking Apo Island strait.",
+                workingDays: "Everyday",
+                workingTime: "5:00 AM - 6:00 PM",
+                travelFee: 250,
+                entranceFee: 50,
+                bookingUrl: "",
+                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg"]
+            },
+            {
+                type: "spot",
+                title: "Jomao-As Falls",
+                location: "Malongcay Diot",
+                category: "MOUNTAIN",
+                label: "Hidden Jungle Waterfall",
+                description: "Deep valley spring running through pristine stone reservoirs, perfect for outdoor enthusiasts.",
+                workingDays: "Everyday",
+                workingTime: "7:00 AM - 5:00 PM",
+                travelFee: 150,
+                entranceFee: 35,
+                bookingUrl: "",
+                images: ["https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/jomaoasfalls.jpg"]
+            },
+            {
+                type: "spot",
+                title: "Hot Spring",
+                location: "Jomao-As",
+                category: "MOUNTAIN",
+                label: "Relaxing Natural Pool",
+                description: "Geothermal heated structural streams filtering soothing warm minerals safely.",
+                workingDays: "Everyday",
+                workingTime: "6:00 AM - 8:00 PM",
+                travelFee: 150,
+                entranceFee: 40,
+                bookingUrl: "",
+                images: ["https://images.unsplash.com/photo-1470770841072-f978cf4d019e"]
+            },
+            {
+                type: "spot",
+                title: "Malatapay Market",
+                location: "Zamboanguita Proper",
+                category: "CULTURAL",
+                label: "Authentic Coastal Trade Hub",
+                description: "Famous Wednesday open air traditional marketplace layout for livestock barter and local seafood dishes.",
+                workingDays: "Wednesdays Only",
+                workingTime: "5:00 AM - 6:00 PM",
+                travelFee: 50,
+                entranceFee: 0,
+                bookingUrl: "",
+                images: ["https://images.unsplash.com/photo-1519125323398-675f0ddb6308"]
+            }
+        ];
 
-            const newSpot = {
-                title: document.getElementById('spotTitle').value.trim(),
-                location: document.getElementById('spotLocation').value.trim(),
-                category: document.getElementById('spotCategory').value.toUpperCase(),
-                label: document.getElementById('spotLabel').value.trim(),
-                description: document.getElementById('spotDescription').value.trim(),
-                travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
-                entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
-                workingDays: document.getElementById('spotWorkingDays').value.trim() || "Everyday",
-                workingTime: document.getElementById('spotWorkingTime').value.trim() || "All Day",
-                bookingUrl: document.getElementById('spotBookingUrl').value.trim(),
-                // The schema field is imageUrl. Sending `image`/`images` meant Mongoose
-                // silently dropped both and every spot published here saved with no image.
-                imageUrl: primaryImage,
-                image: primaryImage,
-                images: [...spotImages]
-            };
+        function normalisedTitle(value) {
+            return String(value || '').trim().toLowerCase();
+        }
 
-            // 1. Attempt API Delivery Loop
-            try {
-                const response = await fetch('https://ztims-api.onrender.com/api/spots', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
-                    body: JSON.stringify(newSpot)
-                });
-                if (!response.ok) throw new Error("Fallback to Local Storage pipeline context execution.");
-            } catch (err) {
-                console.warn("Backend API Offline. Running local state pipeline engine.");
+        function missingStarters() {
+            const published = new Set(allSpots.map(spot => normalisedTitle(spot.title)));
+            return STARTER_DESTINATIONS.filter(spot => !published.has(normalisedTitle(spot.title)));
+        }
+
+        function renderStarterPanel() {
+            const panel = document.getElementById('starterImportPanel');
+            const missing = missingStarters();
+
+            panel.hidden = missing.length === 0;
+            document.getElementById('starterMissingCount').textContent = missing.length;
+            document.getElementById('starterMissingNames').textContent =
+                missing.length ? missing.map(spot => spot.title).join(' · ') : '';
+        }
+
+        function setStarterStatus(message, tone) {
+            const status = document.getElementById('starterImportStatus');
+            status.textContent = message || '';
+            status.className = 'text-xs mt-3 ' + (tone === 'error' ? 'text-red-400' : 'text-primary-container');
+            status.hidden = !message;
+        }
+
+        async function importStarterDestinations() {
+            const missing = missingStarters();
+            if (missing.length === 0) return;
+
+            const restoreButton = setButtonLoading(document.getElementById('importStarterBtn'), 'Publishing...');
+            const failed = [];
+
+            for (const destination of missing) {
+                try {
+                    const response = await fetch(`${API_BASE}/spots`, {
+                        method: 'POST',
+                        headers: authHeaders({ 'Content-Type': 'application/json' }),
+                        // The cover is photo one, matching what every editor sends.
+                        body: JSON.stringify({ ...destination, imageUrl: destination.images[0] || '' })
+                    });
+                    if (!response.ok) {
+                        const detail = await response.json().catch(() => ({}));
+                        throw new Error(detail.message || detail.error || `server said ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Could not publish', destination.title, error);
+                    failed.push(`${destination.title} (${error.message})`);
+                }
             }
 
-            // 2. Commit seamlessly into LocalStorage buffer array regardless
-            const dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
-            dynamicSpots.push(newSpot);
-            localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
-
-            // UI System synchronization
             restoreButton();
-            toggleAddSpotModal(false);
-            renderAdminTableGrid();
+            await loadEverything();
+
+            if (failed.length) {
+                setStarterStatus(`Could not publish: ${failed.join('; ')}.`, 'error');
+            } else {
+                setStarterStatus(`Published ${missing.length} destination${missing.length === 1 ? '' : 's'}. They are live on the main page now.`);
+            }
         }
 
-        /* ===== DELETE ENGINE ROUTINE ===== */
-        async function deleteDestinationSpot(uniqueTitle, button) {
-            if (!confirm(`Are you sure you want to delete "${uniqueTitle}"?`)) return;
-
-            const restoreButton = setButtonLoading(button, 'Deleting...');
-
-            // 1. Attempt Server-side sync drops
-            try {
-                const response = await fetch(`https://ztims-api.onrender.com/api/destinations/${encodeURIComponent(uniqueTitle)}`, {
-                    method: 'DELETE'
+        /* ===== REVIEW TOTALS =====
+           Reviews point at a spot by reference when they are new, and by the spot's
+           name when they predate that reference, so both are indexed here. */
+        function indexReviews(reviews) {
+            const stats = {};
+            // Keyed by review id so a review filed under both its spot reference and
+            // the spot's name is still only ever counted once.
+            const add = (key, review) => {
+                if (!key) return;
+                stats[key] = stats[key] || new Map();
+                stats[key].set(String(review._id), Number(review.rating) || 0);
+            };
+            reviews
+                // The officer's figures should match what visitors see, and visitors
+                // only ever see approved reviews.
+                .filter(review => (review.status || 'approved') === 'approved')
+                .forEach(review => {
+                    add(String(review.spotId || ''), review);
+                    add(normalisedTitle(review.destinationId), review);
                 });
-            } catch (err) {
-                console.warn("API disconnect. Handling removal from client-side runtime values.");
-            }
-
-            // 2. Drop item from Baseline inventory
-            const baselineIdx = baselineDestinations.findIndex(item => item.title === uniqueTitle);
-            if (baselineIdx !== -1) {
-                baselineDestinations.splice(baselineIdx, 1);
-            }
-
-            // 3. Drop item from Dynamic LocalStorage tracking loop arrays
-            restoreButton();
-            let dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
-            dynamicSpots = dynamicSpots.filter(item => item.title !== uniqueTitle);
-            localStorage.setItem('globalDestinations', JSON.stringify(dynamicSpots));
-
-            renderAdminTableGrid();
+            return stats;
         }
 
-        /* ===== RENDER ENGINE ENGINE GRID MATRIX ===== */
-        function renderAdminTableGrid() {
-            const dynamicSpots = JSON.parse(localStorage.getItem('globalDestinations')) || [];
-            const fullInventory = [...baselineDestinations, ...dynamicSpots];
-            
-            // Filter inventory parameters matching exact criteria selection matches
-            const filteredInventory = fullInventory.filter(item => {
-                const categoryMatch = (activeCategory === "ALL" || item.category === activeCategory);
-                return categoryMatch;
+        function ratingFor(spot) {
+            const merged = new Map([
+                ...(reviewStats[String(spot._id)] || new Map()),
+                ...(reviewStats[normalisedTitle(spot.title)] || new Map())
+            ]);
+            if (merged.size === 0) return { count: 0, average: 0 };
+
+            let total = 0;
+            merged.forEach(rating => { total += rating; });
+            return { count: merged.size, average: total / merged.size };
+        }
+
+        function photoCount(spot) {
+            if (Array.isArray(spot.images) && spot.images.length) return spot.images.length;
+            return spot.imageUrl ? 1 : 0;
+        }
+
+        // What an officer would chase the manager about.
+        function completenessIssues(spot) {
+            const issues = [];
+            if (photoCount(spot) === 0) issues.push('No photo');
+            if (!String(spot.description || '').trim()) issues.push('No description');
+            if (!String(spot.bookingUrl || '').trim()) issues.push('No booking link');
+            return issues;
+        }
+
+        function starRow(rating) {
+            const rounded = Math.round(rating);
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<span class="material-symbols-outlined !text-sm ${i <= rounded ? 'text-[#FFB300]' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
+            }
+            return stars;
+        }
+
+        function managerOf(spot) {
+            return String(spot.managerName || '').trim();
+        }
+
+        function visibleSpots() {
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            const managerFilter = document.getElementById('managerFilter').value;
+
+            return allSpots.filter(spot => {
+                if (activeCategory !== 'ALL' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
+
+                if (managerFilter === 'office' && managerOf(spot)) return false;
+                if (managerFilter === 'manager' && !managerOf(spot)) return false;
+                if (managerFilter === 'incomplete' && completenessIssues(spot).length === 0) return false;
+
+                if (!search) return true;
+                return [spot.title, spot.location, managerOf(spot), spot.category, spot.label]
+                    .some(field => String(field || '').toLowerCase().includes(search));
+            });
+        }
+
+        function renderSummary() {
+            const stays = allSpots.filter(spot => spot.type === 'accommodation').length;
+            const managed = allSpots.filter(spot => managerOf(spot)).length;
+            const incomplete = allSpots.filter(spot => completenessIssues(spot).length > 0).length;
+
+            let reviewTotal = 0;
+            let ratingSum = 0;
+            allSpots.forEach(spot => {
+                const { count, average } = ratingFor(spot);
+                reviewTotal += count;
+                ratingSum += average * count;
             });
 
-            // Update Metric Display Indicators
-            document.getElementById('totalCapacityCounter').textContent = `${filteredInventory.length} Locations`;
-            if(filteredInventory.length > 0) {
-                document.getElementById('mostVisitedSpot').textContent = filteredInventory[0].title;
-            } else {
-                document.getElementById('mostVisitedSpot').textContent = "None";
-            }
+            document.getElementById('statTotal').textContent = allSpots.length;
+            document.getElementById('statSpots').textContent = allSpots.length - stays;
+            document.getElementById('statStays').textContent = stays;
+            document.getElementById('statOffice').textContent = allSpots.length - managed;
+            document.getElementById('statManaged').textContent = managed;
+            document.getElementById('statRating').textContent = reviewTotal ? (ratingSum / reviewTotal).toFixed(1) : '—';
+            document.getElementById('statReviews').textContent = reviewTotal;
+            document.getElementById('statIncomplete').textContent = incomplete;
+        }
 
-            const sliderContainer = document.getElementById('slider');
-            sliderContainer.innerHTML = ''; 
-            
-            const itemsPerSlide = 2;
-            totalSlides = Math.ceil(filteredInventory.length / itemsPerSlide) || 0;
-            document.getElementById('totalDisplayCount').textContent = totalSlides === 0 ? 1 : totalSlides;
-            
-            if (currentSlide >= totalSlides && totalSlides > 0) {
-                currentSlide = totalSlides - 1;
-            }
-            if (currentSlide < 0) currentSlide = 0;
+        function renderListings() {
+            const container = document.getElementById('listings');
+            const spots = visibleSpots();
 
-            if (filteredInventory.length === 0) {
-                sliderContainer.innerHTML = `
-                    <div class="min-w-full text-center py-16 text-zinc-500 font-medium text-sm">
-                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-50">travel_explore</span>
-                        Walay nakita nga destinasyon ubos sa kategoryang kini.
+            document.getElementById('shownCount').textContent = spots.length;
+            document.getElementById('totalCount').textContent = allSpots.length;
+
+            if (spots.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 px-6">
+                        <span class="material-symbols-outlined text-5xl block mb-3 opacity-40">travel_explore</span>
+                        <p class="text-on-surface-variant text-sm">
+                            ${allSpots.length === 0
+                                ? 'Nothing is published yet. Establishment managers publish their own listings from their portal.'
+                                : 'No listing matches these filters.'}
+                        </p>
                     </div>`;
-                updateSliderPosition();
                 return;
             }
-            
-            for (let i = 0; i < totalSlides; i++) {
-                const slidePageElement = document.createElement('div');
-                slidePageElement.className = 'min-w-full flex flex-col split-rendering-block';
-                
-                const pageItems = filteredInventory.slice(i * itemsPerSlide, (i * itemsPerSlide) + itemsPerSlide);
-                
-                let slideHTML = '';
-                pageItems.forEach((spot, index) => {
-                    const borderClass = (index !== pageItems.length - 1) ? 'border-b border-zinc-800' : '';
-                    
-                    let colorBadgeClass = 'bg-yellow-900/40 text-yellow-400';
-                    if (spot.category === 'CULTURAL') colorBadgeClass = 'bg-purple-900/40 text-purple-400';
-                    if (spot.category === 'BEACH / DIVING') colorBadgeClass = 'bg-cyan-900/40 text-cyan-400';
 
-                    const displayDescription = spot.description || spot.label || 'No active details listed yet.';
-                    const tFee = spot.travelFee !== undefined ? spot.travelFee : 0;
-                    const eFee = spot.entranceFee !== undefined ? spot.entranceFee : 0;
-                    const wDays = spot.workingDays || "Everyday";
-                    const wTime = spot.workingTime || "All Day";
-                    const spotImageCount = spot.images ? spot.images.length : 1;
+            container.innerHTML = spots.map(spot => {
+                const { count, average } = ratingFor(spot);
+                const issues = completenessIssues(spot);
+                const photos = photoCount(spot);
+                const manager = managerOf(spot);
+                const categoryColour = spot.category === 'CULTURAL' ? 'bg-purple-900/40 text-purple-300'
+                    : spot.category === 'BEACH / DIVING' ? 'bg-cyan-900/40 text-cyan-300'
+                    : spot.category === 'ACCOMMODATION' ? 'bg-emerald-900/40 text-emerald-300'
+                    : 'bg-yellow-900/40 text-yellow-300';
 
-                    slideHTML += `
-                      <div class="grid grid-cols-1 md:grid-cols-4 items-center px-8 py-6 ${borderClass} hover:bg-zinc-900/20 transition-all duration-150 gap-4">
-                        <div class="flex items-center gap-4 col-span-1 md:col-span-2">
-                          <div class="relative group shrink-0">
-                             <img src="${spot.image}" class="w-16 h-16 rounded-xl object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200'">
-                             <span class="absolute -top-1.5 -right-1.5 bg-black/80 border border-zinc-700 text-[9px] font-black rounded-full px-1.5 py-0.5 text-zinc-300">
-                               ${spotImageCount}P
-                             </span>
-                          </div>
-                          <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="text-xl font-bold text-white">${spot.title}</h3>
-                                <span class="${colorBadgeClass} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide h-fit">${spot.category}</span>
-                            </div>
-                            <p class="text-zinc-400 text-xs mt-1 line-clamp-2">${displayDescription}</p>
-                          </div>
+                return `
+                <div class="p-6 flex flex-col lg:flex-row gap-5 hover:bg-white/[0.02] transition-colors">
+                    <div class="relative w-full lg:w-40 h-28 shrink-0 rounded-xl overflow-hidden bg-surface-variant">
+                        ${photos
+                            ? `<img src="${escapeHtml(spot.imageUrl)}" alt="${escapeHtml(spot.title)}" class="w-full h-full object-cover"/>`
+                            : `<div class="w-full h-full flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined">no_photography</span></div>`}
+                        ${photos > 1 ? `<span class="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 text-white text-[10px] font-bold">
+                            <span class="material-symbols-outlined !text-xs">photo_library</span>${photos}
+                        </span>` : ''}
+                    </div>
+
+                    <div class="flex-1 min-w-0 space-y-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-xl font-black text-on-surface">${escapeHtml(spot.title)}</h3>
+                            <span class="px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${categoryColour}">${escapeHtml(spot.category || 'General')}</span>
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-surface-variant text-on-surface-variant uppercase tracking-wider">
+                                ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
+                            </span>
                         </div>
-                        <div class="text-white font-medium flex flex-col gap-1 justify-center">
-                            <div class="flex items-center gap-1.5 text-zinc-300 text-sm">
-                                <span class="material-symbols-outlined text-sm text-zinc-500">fmd_good</span>
-                                ${spot.location}
-                            </div>
-                            <div class="text-[11px] text-zinc-500 pl-5 mb-1">
-                                Travel: ₱${tFee} • Entrance: ₱${eFee}
-                            </div>
-                            <div class="text-[10px] text-primary/90 pl-5 flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[12px]">schedule</span>
-                                ${wDays} (${wTime})
-                            </div>
+
+                        <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                            <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '—')}
+                        </p>
+                        <p class="text-sm text-on-surface-variant line-clamp-2">${escapeHtml(spot.description || '')}</p>
+
+                        <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-on-surface-variant pt-1">
+                            <span class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined !text-sm">${manager ? 'storefront' : 'account_balance'}</span>
+                                ${manager ? escapeHtml(manager) : 'Tourism Office'}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                ${count ? `${starRow(average)}<b class="text-on-surface ml-1">${average.toFixed(1)}</b> (${count})` : '<span class="opacity-60">No reviews yet</span>'}
+                            </span>
+                            <span>Travel <b class="text-on-surface">${formatPeso(spot.travelFee)}</b></span>
+                            <span>Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined !text-sm">schedule</span>
+                                ${escapeHtml(spot.workingDays || 'Everyday')} · ${escapeHtml(spot.workingTime || 'All Day')}
+                            </span>
                         </div>
-                        <div class="flex gap-2 items-center justify-end w-full">
-                            <button onclick="deleteDestinationSpot('${spot.title.replace(/'/g, "\\'")}', this)" class="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/50 rounded-xl text-xs font-bold transition flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">delete</span> Drop
-                            </button>
-                        </div>
-                      </div>`;
-                });
-                
-                slidePageElement.innerHTML = slideHTML;
-                sliderContainer.appendChild(slidePageElement);
-            }
-            
-            updateSliderPosition();
+
+                        ${issues.length ? `<div class="flex flex-wrap gap-1.5 pt-1">
+                            ${issues.map(issue => `<span class="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-bold">${escapeHtml(issue)}</span>`).join('')}
+                        </div>` : ''}
+                    </div>
+
+                    <div class="flex lg:flex-col gap-2 shrink-0 lg:w-40">
+                        <a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener"
+                           class="flex-1 text-center py-2.5 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">
+                            View public page
+                        </a>
+                        <button data-takedown="${escapeHtml(spot._id)}"
+                                class="flex-1 py-2.5 rounded-full bg-red-500/10 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-all">
+                            Take down
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
         }
-</script>
+
+        function render() {
+            renderSummary();
+            renderStarterPanel();
+            renderListings();
+        }
+
+        async function takeDownListing(id, button) {
+            const spot = allSpots.find(item => String(item._id) === String(id));
+            const name = spot ? spot.title : 'this listing';
+            const manager = spot ? managerOf(spot) : '';
+
+            if (!confirm(
+                `Take down "${name}"?\n\n` +
+                (manager ? `It is run by ${manager}, who will lose the listing too.\n\n` : '') +
+                `It disappears from the public site immediately. This cannot be undone.`
+            )) return;
+
+            const restoreButton = setButtonLoading(button, 'Removing...');
+            try {
+                const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(id)}`, {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                });
+                if (!response.ok) {
+                    const detail = await response.json().catch(() => ({}));
+                    throw new Error(detail.message || `The server refused (status ${response.status}).`);
+                }
+                await loadEverything();
+            } catch (error) {
+                restoreButton();
+                alert('⚠️ Could not take that listing down: ' + error.message);
+            }
+        }
+
+        async function loadEverything() {
+            const container = document.getElementById('listings');
+            const doneLoading = showLoading(container, 'Loading published destinations...');
+
+            try {
+                const [spotsResponse, reviewsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/spots`, { headers: authHeaders() }),
+                    fetch(`${API_BASE}/reviews`, { headers: authHeaders() }).catch(() => null)
+                ]);
+
+                if (!spotsResponse.ok) throw new Error(`The server returned status ${spotsResponse.status}.`);
+                allSpots = await spotsResponse.json();
+
+                // Ratings are a nice-to-have; a failure there must not empty the page.
+                let reviews = [];
+                if (reviewsResponse && reviewsResponse.ok) {
+                    const payload = await reviewsResponse.json().catch(() => []);
+                    reviews = Array.isArray(payload) ? payload : [];
+                }
+                reviewStats = indexReviews(reviews);
+
+                doneLoading();
+                render();
+            } catch (error) {
+                console.error('❌ Could not load destinations:', error);
+                doneLoading();
+                allSpots = [];
+                reviewStats = {};
+                renderSummary();
+                container.innerHTML = `
+                    <div class="text-center py-20 px-6">
+                        <span class="material-symbols-outlined text-5xl block mb-3 text-red-400/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
+                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(error.message)}
+                        Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
+                    </div>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const icon = document.getElementById('themeIcon');
+            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+
+            if (!guardOfficerSession()) return;
+
+            document.getElementById('categoryFilterContainer').addEventListener('click', event => {
+                const button = event.target.closest('[data-category]');
+                if (!button) return;
+                activeCategory = button.dataset.category;
+                document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                    const isActive = btn.dataset.category === activeCategory;
+                    btn.className = 'cat-filter-btn px-5 py-1.5 rounded-full text-xs font-bold transition-all ' +
+                        (isActive ? 'bg-secondary-container text-on-secondary-container'
+                                  : 'bg-surface-variant text-on-surface-variant hover:bg-outline-variant');
+                });
+                renderListings();
+            });
+
+            document.getElementById('searchInput').addEventListener('input', renderListings);
+            document.getElementById('managerFilter').addEventListener('change', renderListings);
+            document.getElementById('refreshBtn').addEventListener('click', loadEverything);
+            document.getElementById('importStarterBtn').addEventListener('click', importStarterDestinations);
+
+            // Delegated so the buttons survive every re-render of the list.
+            document.getElementById('listings').addEventListener('click', event => {
+                const button = event.target.closest('[data-takedown]');
+                if (button) takeDownListing(button.dataset.takedown, button);
+            });
+
+            loadEverything();
+        });
+    </script>
 
 <script>
 /* Collapsed sidebar state, shared across every portal page via one key. */

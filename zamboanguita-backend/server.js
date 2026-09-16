@@ -60,7 +60,10 @@ app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboanguita';
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ Connected safely to MongoDB database system.'))
+    .then(() => {
+        console.log('✅ Connected safely to MongoDB database system.');
+        return migrateEstablishmentNames();
+    })
     .catch(err => console.error('❌ MongoDB Connection Error Encountered:', err));
 
 /* ==========================================
@@ -97,15 +100,54 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-// 3b. Resort Owner Authentication Schema (manages their own tourist spots/accommodations only)
-const ResortOwnerSchema = new mongoose.Schema({
+// 3b. Tourist Establishment Manager account (manages only their own tourist spots
+//     and accommodations). Formerly called "Resort Owner" — the stored collection
+//     keeps its original name on purpose: renaming it would orphan every account
+//     already registered in Atlas. Only the wording and the code changed.
+const EstablishmentManagerSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
-    resortName: { type: String, required: true, trim: true },
+    establishmentName: { type: String, trim: true },
+    // The pre-rename name of the same field. Still declared so accounts created
+    // before the rename keep reading correctly even if the migration below has
+    // not run yet; new accounts never write it.
+    resortName: { type: String, trim: true },
     phone: { type: String, default: "" }
 }, { collection: 'resortOwners', timestamps: true });
 
-const ResortOwner = mongoose.model('ResortOwner', ResortOwnerSchema);
+// One field, two possible spellings on disk. Everything downstream reads this.
+EstablishmentManagerSchema.virtual('displayName').get(function () {
+    return this.establishmentName || this.resortName || '';
+});
+
+EstablishmentManagerSchema.pre('validate', function (next) {
+    if (!this.establishmentName && this.resortName) this.establishmentName = this.resortName;
+    if (!this.establishmentName) {
+        return next(new Error('An establishment name is required.'));
+    }
+    return next();
+});
+
+const EstablishmentManager = mongoose.model('EstablishmentManager', EstablishmentManagerSchema);
+
+/**
+ * One-time, idempotent rename of resortName -> establishmentName on existing
+ * accounts. Runs at startup, costs nothing once there is nothing left to move,
+ * and never blocks boot: if it fails, the schema above still reads the old field.
+ */
+async function migrateEstablishmentNames() {
+    try {
+        const result = await EstablishmentManager.collection.updateMany(
+            { resortName: { $exists: true }, establishmentName: { $in: [null, ''] } },
+            [{ $set: { establishmentName: '$resortName' } }]
+        );
+        if (result.modifiedCount) {
+            console.log(`🔤 Renamed resortName -> establishmentName on ${result.modifiedCount} account(s).`);
+        }
+    } catch (error) {
+        console.warn('⚠️ establishmentName migration skipped:', error.message);
+    }
+}
 
 // 4. 🌟 UPDATED: Review Schema perfectly paired with frontend assets & text fields
 const ReviewSchema = new mongoose.Schema({
@@ -125,8 +167,9 @@ const Review = mongoose.model('Review', ReviewSchema);
 
 const MAX_SPOT_IMAGES = 30;
 
-// 5. Spot Schema — covers both tourist spots and resort accommodations, owned either
-//    by the Tourist Officer (municipal-level, no owner) or by a Resort Owner account.
+// 5. Spot Schema — covers both tourist spots and accommodations, managed either by
+//    the Tourist Officer (municipal-level, no manager) or by a Tourist Establishment
+//    Manager account.
 const SpotSchema = new mongoose.Schema({
     title: { type: String, required: true },
     location: { type: String, required: true },
@@ -146,7 +189,7 @@ const SpotSchema = new mongoose.Schema({
             message: `A spot can have at most ${MAX_SPOT_IMAGES} photos.`
         }
     },
-    // Booking happens on the resort's own website — this is where "Book Now" sends
+    // Booking happens on the establishment's own website — this is where "Book Now" sends
     // the visitor. Blank means the detail page shows contact details instead.
     bookingUrl: { type: String, default: "" },
     type: { type: String, enum: ['spot', 'accommodation'], default: 'spot' },
@@ -155,8 +198,9 @@ const SpotSchema = new mongoose.Schema({
     workingTime: { type: String, default: "All Day" },
     travelFee: { type: Number, default: 0 },
     entranceFee: { type: Number, default: 0 },
-    // Null/absent = managed directly by the Tourist Officer. Set = owned by a Resort Owner.
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'ResortOwner', default: null }
+    // Null/absent = managed directly by the Tourist Officer. Set = managed by a
+    // Tourist Establishment Manager account.
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null }
 }, { timestamps: true });
 
 const Spot = mongoose.model('Spot', SpotSchema);
@@ -179,12 +223,19 @@ const requireAdmin = [requireAuth, (req, res, next) => {
     return next();
 }];
 
-const requireResortOwner = [requireAuth, (req, res, next) => {
-    if (req.auth.role !== 'resort_owner') return res.status(403).json({ success: false, message: 'Resort Owner access required.' });
+// Sessions issued before the rename carry role 'resort_owner'; both spellings mean
+// the same account type, so nobody is signed out by the rename.
+const MANAGER_ROLES = ['establishment_manager', 'resort_owner'];
+const isEstablishmentManager = role => MANAGER_ROLES.includes(role);
+
+const requireEstablishmentManager = [requireAuth, (req, res, next) => {
+    if (!isEstablishmentManager(req.auth.role)) {
+        return res.status(403).json({ success: false, message: 'Tourist Establishment Manager access required.' });
+    }
     return next();
 }];
 
-// Reviewing is a visitor's act. Without this, a resort owner could post glowing
+// Reviewing is a visitor's act. Without this, an establishment manager could post glowing
 // reviews of their own listing, which is the one thing the ratings must not allow.
 const requireTourist = [requireAuth, (req, res, next) => {
     if (req.auth.role !== 'user') {
@@ -193,9 +244,10 @@ const requireTourist = [requireAuth, (req, res, next) => {
     return next();
 }];
 
-// Tourist Officer or Resort Owner — used on routes both manage, each scoped to their own data.
+// Tourist Officer or Tourist Establishment Manager — used on routes both manage,
+// each scoped to their own data.
 const requireStaff = [requireAuth, (req, res, next) => {
-    if (req.auth.role !== 'admin' && req.auth.role !== 'resort_owner') {
+    if (req.auth.role !== 'admin' && !isEstablishmentManager(req.auth.role)) {
         return res.status(403).json({ success: false, message: 'Staff access required.' });
     }
     return next();
@@ -272,54 +324,70 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
 });
 
 /**
- * POST: Tourist Officer creates a Resort Owner account (owners do not self-register —
- * the Tourist Officer oversees the whole system and issues these accounts directly)
- * Target URL: http://localhost:5000/api/resort-owners
+ * POST: Tourist Officer creates a Tourist Establishment Manager account (managers do
+ * not self-register — the Tourist Officer oversees the whole system and issues these
+ * accounts directly)
+ * Target URL: http://localhost:5000/api/establishment-managers
  */
-app.post('/api/resort-owners', requireAdmin, async (req, res) => {
+async function createEstablishmentManager(req, res) {
     try {
-        const { email, password, resortName, phone } = req.body;
+        const { email, password, phone } = req.body;
+        // Either spelling is accepted so a page that has not been redeployed since
+        // the rename still creates accounts correctly.
+        const establishmentName = req.body.establishmentName || req.body.resortName;
 
-        if (!email || !password || !resortName) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or resort name.' });
+        if (!email || !password || !establishmentName) {
+            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or establishment name.' });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const existingOwner = await ResortOwner.findOne({ email: normalizedEmail });
-        if (existingOwner) {
-            return res.status(409).json({ success: false, message: 'This email is already registered as a resort owner.' });
+        const existingManager = await EstablishmentManager.findOne({ email: normalizedEmail });
+        if (existingManager) {
+            return res.status(409).json({ success: false, message: 'This email is already registered as an establishment manager.' });
         }
 
         const passwordHash = await bcrypt.hash(password, 12);
-        const newOwner = new ResortOwner({
+        const newManager = new EstablishmentManager({
             email: normalizedEmail,
             password: passwordHash,
-            resortName: resortName.trim(),
+            establishmentName: establishmentName.trim(),
             phone: phone || ""
         });
-        await newOwner.save();
+        await newManager.save();
 
-        console.log(`🏨 New Resort Owner account created by Tourist Officer: ${normalizedEmail}`);
-        return res.status(201).json({ success: true, message: 'Resort owner account created!' });
+        console.log(`🏨 New Tourist Establishment Manager account created by Tourist Officer: ${normalizedEmail}`);
+        return res.status(201).json({ success: true, message: 'Establishment manager account created!' });
     } catch (error) {
-        console.error("❌ Create Resort Owner Endpoint Failure:", error);
+        console.error("❌ Create Establishment Manager Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-});
+}
 
 /**
- * GET: Tourist Officer lists all resort owner accounts
- * Target URL: http://localhost:5000/api/resort-owners
+ * GET: Tourist Officer lists all establishment manager accounts
+ * Target URL: http://localhost:5000/api/establishment-managers
  */
-app.get('/api/resort-owners', requireAdmin, async (req, res) => {
+async function listEstablishmentManagers(req, res) {
     try {
-        const owners = await ResortOwner.find({}, { password: 0 });
-        return res.status(200).json(owners);
+        const managers = await EstablishmentManager.find({}, { password: 0 });
+        // Always answer with establishmentName, whatever the document holds, so no
+        // caller has to know which spelling it was saved under.
+        return res.status(200).json(managers.map(manager => ({
+            ...manager.toObject(),
+            establishmentName: manager.displayName
+        })));
     } catch (error) {
-        console.error("❌ Get Resort Owner List Endpoint Failure:", error);
+        console.error("❌ Get Establishment Manager List Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-});
+}
+
+app.post('/api/establishment-managers', requireAdmin, createEstablishmentManager);
+app.get('/api/establishment-managers', requireAdmin, listEstablishmentManagers);
+
+// Pre-rename paths, kept so any page or bookmark still pointing at them keeps working.
+app.post('/api/resort-owners', requireAdmin, createEstablishmentManager);
+app.get('/api/resort-owners', requireAdmin, listEstablishmentManagers);
 
 /**
  * POST: Register new traveler accounts into MongoDB (🌟 UPGRADED TO CAPTURE INPUT VALUES)
@@ -377,7 +445,7 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         // 'staff' means the caller doesn't know which kind of staff account this is
         // — the shared staff sign-in page. We work it out rather than making the
         // person choose, since picking the wrong portal would reject a correct password.
-        const requestedRole = ['admin', 'resort_owner', 'staff'].includes(role) ? role : 'user';
+        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'staff'].includes(role) ? role : 'user';
         let account = null;
         let resolvedRole = requestedRole;
 
@@ -386,13 +454,14 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
             resolvedRole = 'admin';
 
             if (!account) {
-                account = await ResortOwner.findOne({ email: normalizedEmail }).select('+password');
-                resolvedRole = 'resort_owner';
+                account = await EstablishmentManager.findOne({ email: normalizedEmail }).select('+password');
+                resolvedRole = 'establishment_manager';
             }
         } else if (requestedRole === 'admin') {
             account = await Admin.findOne({ email: normalizedEmail }).select('+password');
-        } else if (requestedRole === 'resort_owner') {
-            account = await ResortOwner.findOne({ email: normalizedEmail }).select('+password');
+        } else if (isEstablishmentManager(requestedRole)) {
+            account = await EstablishmentManager.findOne({ email: normalizedEmail }).select('+password');
+            resolvedRole = 'establishment_manager';
         } else {
             account = await User.findOne({ email: normalizedEmail }).select('+password');
         }
@@ -400,7 +469,10 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         if (!account || !(await bcrypt.compare(password, account.password))) {
             // Deliberately the same wording whichever collection was searched, so the
             // response can't be used to discover which emails are registered.
-            const audience = requestedRole === 'staff' ? 'staff' : resolvedRole === 'admin' ? 'Tourist Officer' : resolvedRole === 'resort_owner' ? 'Resort Owner' : 'User';
+            const audience = requestedRole === 'staff' ? 'staff'
+                : resolvedRole === 'admin' ? 'Tourist Officer'
+                : isEstablishmentManager(resolvedRole) ? 'Tourist Establishment Manager'
+                : 'User';
             return res.status(401).json({
                 success: false,
                 message: `Authentication failed: Invalid ${audience} credentials.`
@@ -416,11 +488,14 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
-                name: account.fullName || account.resortName || account.email.split('@')[0],
+                name: account.fullName || account.displayName || account.email.split('@')[0],
                 fullName: account.fullName || "",
                 phone: account.phone || "",
                 nationality: account.nationality || "",
-                resortName: account.resortName || ""
+                establishmentName: account.displayName || "",
+                // Pre-rename key, still sent so a page cached from before the rename
+                // keeps showing the establishment's name instead of a blank.
+                resortName: account.displayName || ""
             }
         };
 
@@ -734,7 +809,7 @@ app.patch('/api/users/:id', requireAuth, async (req, res) => {
     try {
         const userId = req.params.id;
         // This edits the tourist directory, so only a tourist editing themselves or
-        // the Tourist Officer may touch it. A resort owner was already refused by
+        // the Tourist Officer may touch it. An establishment manager was already refused by
         // the ownership check below, but only as a side effect of their id never
         // matching a tourist's — saying so explicitly keeps that intentional.
         if (req.auth.role !== 'admin' && req.auth.role !== 'user') {
@@ -792,16 +867,30 @@ app.get('/api/users', requireAdmin, async (req, res) => {
  * Target URL: http://localhost:5000/api/spots
  *
  * GET stays public — guests browse tourist spots/accommodations without logging in.
- * Pass ?mine=true (Resort Owner) to scope results to the caller's own listings.
+ * Pass ?mine=true (Tourist Establishment Manager) to scope results to their own listings.
  */
 app.get('/api/spots', optionalAuth, async (req, res) => {
     try {
         const query = {};
-        if (req.query.mine === 'true' && req.auth?.role === 'resort_owner') {
+        if (req.query.mine === 'true' && isEstablishmentManager(req.auth?.role)) {
             query.ownerId = req.auth.sub;
         }
-        const activeSpots = await Spot.find(query).sort({ createdAt: -1 });
-        return res.status(200).json(activeSpots);
+        // The manager's public-facing details come along so the officer's oversight
+        // page can show who is responsible for each listing without a request per row.
+        const activeSpots = await Spot.find(query)
+            .populate('ownerId', 'establishmentName resortName phone')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json(activeSpots.map(spot => {
+            const plain = spot.toObject();
+            const manager = plain.ownerId;
+            return {
+                ...plain,
+                // Null manager means the Tourism Office keeps this listing itself.
+                managerName: manager ? (manager.establishmentName || manager.resortName || '') : '',
+                managerPhone: manager ? (manager.phone || '') : ''
+            };
+        }));
     } catch (error) {
         return res.status(500).json([]);
     }
@@ -833,7 +922,7 @@ function normaliseSpotImages(payload) {
 
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
-        const ownerId = req.auth.role === 'resort_owner' ? req.auth.sub : (req.body.ownerId || null);
+        const ownerId = isEstablishmentManager(req.auth.role) ? req.auth.sub : (req.body.ownerId || null);
         const newSpot = new Spot({ ...normaliseSpotImages(req.body), ownerId });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
@@ -850,7 +939,7 @@ app.get('/api/spots/:id', async (req, res) => {
     try {
         // Only the owner's public-facing contact details — never their email or
         // password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('ownerId', 'resortName phone');
+        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName phone');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
         return res.status(200).json(spot);
     } catch (error) {
@@ -859,14 +948,14 @@ app.get('/api/spots/:id', async (req, res) => {
 });
 
 /**
- * PUT/DELETE: Resort Owners manage only their own spot; the Tourist Officer manages any.
+ * PUT/DELETE: Establishment Managers manage only their own spot; the Tourist Officer manages any.
  * Target URL: http://localhost:5000/api/spots/:id
  */
 app.put('/api/spots/:id', requireStaff, async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
-        if (req.auth.role === 'resort_owner' && String(spot.ownerId) !== req.auth.sub) {
+        if (isEstablishmentManager(req.auth.role) && String(spot.ownerId) !== req.auth.sub) {
             return res.status(403).json({ message: 'You may only edit your own listing.' });
         }
 
@@ -883,7 +972,7 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
-        if (req.auth.role === 'resort_owner' && String(spot.ownerId) !== req.auth.sub) {
+        if (isEstablishmentManager(req.auth.role) && String(spot.ownerId) !== req.auth.sub) {
             return res.status(403).json({ message: 'You may only delete your own listing.' });
         }
 
