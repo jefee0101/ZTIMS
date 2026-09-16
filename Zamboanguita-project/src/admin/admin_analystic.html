@@ -167,7 +167,53 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     }
 }
 .sidebar-brand-short { display: none; }
+
+/* ==========================================================
+   MOBILE NAVIGATION (below 640px)
+   The rail is fixed and 16rem wide at every size, so on a phone it simply sat
+   on top of the page: the content began underneath it and could not be read.
+   Below 640px it becomes a drawer that slides in from the left, opened by the
+   button in the header and closed by the scrim, the Escape key, or choosing a
+   destination. The collapse rules above are desktop-only, so the two never meet.
+   ========================================================== */
+@media (max-width: 639px) {
+    aside {
+        width: 17rem !important;
+        max-width: 86vw !important;
+        transform: translateX(-100%);
+        transition: transform .28s cubic-bezier(.4, 0, .2, 1) !important;
+    }
+    body.nav-open aside {
+        transform: none;
+        box-shadow: 0 0 45px rgba(0, 0, 0, .55);
+    }
+    header, main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    #navScrim {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        background: rgba(2, 15, 36, .6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .28s ease;
+    }
+    body.nav-open #navScrim { opacity: 1; pointer-events: auto; }
+    body.nav-open { overflow: hidden; }
+}
+@media (min-width: 640px) {
+    #navScrim, #navOpenBtn { display: none !important; }
+}
+
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an establishment name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
 </style>
 </head>
 
@@ -498,12 +544,13 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 </script>
 
     <!-- Left Sidebar Control Desk -->
-    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-6 transition-colors duration-300">
+    <div id="navScrim" aria-hidden="true"></div>
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
-                    class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
                 <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
             </button>
         </div>
@@ -539,8 +586,11 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     </aside>
 
     <!-- Header Control Anchor -->
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center px-8 py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
-    <div></div>
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+        <button id="navOpenBtn" type="button" aria-label="Open navigation" aria-expanded="false"
+                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-white/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
     <div class="flex items-center gap-4">
         <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
             <span id="themeIcon" class="material-symbols-outlined transition-all duration-300">brightness_3</span>
@@ -550,7 +600,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 </header>
 
     <!-- Main Workspace Container -->
-    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-24 px-10 pb-12 min-h-screen transition-colors duration-300">
+    <main class="w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="max-w-[1400px] mx-auto space-y-8">
 
             <!-- Operational System KPI Slots -->
@@ -941,7 +991,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 if (systemSpots.length === 0) {
                     htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No destinations published yet.</p>`;
                 } else {
-                    htmlPayload = `<table class="w-full text-left text-sm">
+                    htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
                             <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th>Type</th><th class="text-right">Entrance</th></tr>
                         </thead>
@@ -959,7 +1009,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                 if (systemOwners.length === 0) {
                     htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No establishment manager accounts created yet.</p>`;
                 } else {
-                    htmlPayload = `<table class="w-full text-left text-sm">
+                    htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
                             <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
                         </thead>
@@ -1184,6 +1234,40 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
         // replace(), not href: the portal must not come back with the back button.
         setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+    });
+})();
+</script>
+
+<script>
+/* The drawer's open state. Only ever active below 640px, where the CSS above
+   turns the rail into one; above that the button and scrim are hidden and this
+   does nothing. */
+(function () {
+    var openBtn = document.getElementById('navOpenBtn');
+    var scrim = document.getElementById('navScrim');
+    var aside = document.querySelector('aside');
+    if (!openBtn || !scrim || !aside) return;
+
+    function setOpen(open) {
+        document.body.classList.toggle('nav-open', open);
+        openBtn.setAttribute('aria-expanded', String(open));
+    }
+
+    openBtn.addEventListener('click', function () {
+        setOpen(!document.body.classList.contains('nav-open'));
+    });
+    scrim.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+    // Choosing a destination should take you there, not leave the drawer over it.
+    aside.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+
+    // Rotating to landscape or resizing past the breakpoint must not leave the
+    // body locked by a drawer that is no longer on screen.
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 640) setOpen(false);
     });
 })();
 </script>

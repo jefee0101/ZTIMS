@@ -142,7 +142,13 @@
         @media (prefers-reduced-motion: reduce) {
             .rise { animation: none; opacity: 1; }
         }
-    </style>
+    
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an establishment name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+</style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
@@ -485,24 +491,24 @@
             <span class="sidebar-label rise text-[10px] uppercase tracking-widest text-on-surface-variant mt-2 block" style="--rise-delay:.08s">Tourism Portal</span>
         </a>
         <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
-                class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-surface-bright hover:bg-surface-container-high transition-all">
+                class="shrink-0 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-on-surface-variant hover:text-surface-bright hover:bg-surface-container-high transition-all">
             <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
         </button>
     </div>
 
     <nav class="md:flex-1 md:space-y-2 max-md:flex max-md:flex-1 max-md:justify-around">
         <button data-nav="spots" title="Destinations" style="--rise-delay:.16s" class="rise nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
-                                        max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+                                        max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px] max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">location_on</span>
             <span class="sidebar-label max-md:text-[10px]">Destinations</span>
         </button>
         <button data-nav="reviews" title="Reviews" style="--rise-delay:.22s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
-                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px] max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">star</span>
             <span class="sidebar-label max-md:text-[10px]">Reviews</span>
         </button>
         <button data-nav="settings" title="Settings" style="--rise-delay:.28s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
-                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px] max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">settings</span>
             <span class="sidebar-label max-md:text-[10px]">Settings</span>
         </button>
@@ -510,7 +516,7 @@
 
     <div class="md:mt-auto md:pt-4 max-md:flex max-md:items-center">
         <button id="authActionBtn" style="--rise-delay:.34s" class="rise w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
-                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1">
+                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px]">
             <span id="authActionIcon" class="material-symbols-outlined">login</span>
             <span id="authActionLabel" class="sidebar-label max-md:text-[10px]">Sign In</span>
         </button>
@@ -520,9 +526,9 @@
 <div class="content-shell md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
 
     <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md">
-        <h1 id="viewTitle" class="rise text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
+        <h1 id="viewTitle" class="rise text-xs sm:text-sm font-bold uppercase tracking-widest text-on-surface-variant truncate pr-2">Tourist Spots &amp; Accommodations</h1>
         <div class="flex items-center gap-3">
-            <button id="themeToggleBtn" class="p-2 rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
+            <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
             </button>
             <div id="accountMenuSlot"></div>
@@ -533,14 +539,14 @@
 
         <!-- ============ DESTINATIONS ============ -->
         <div data-view="spots">
-            <section class="relative h-[42vh] min-h-[300px] w-full flex items-center overflow-hidden">
+            <section class="relative h-[38vh] sm:h-[42vh] min-h-[260px] sm:min-h-[300px] w-full flex items-center overflow-hidden">
                 <div class="absolute inset-0 z-0">
                     <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Zamboanguita coastline"/>
                     <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
                     <div class="absolute inset-0 bg-black/30"></div>
                 </div>
-                <div class="relative z-10 px-6 md:px-12 max-w-3xl">
-                    <h2 class="rise text-4xl md:text-6xl font-display font-black tracking-tighter leading-[0.95] text-white mb-3" style="--rise-delay:.12s">
+                <div class="relative z-10 px-5 sm:px-6 md:px-12 max-w-3xl w-full">
+                    <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
                         Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
                     </h2>
                     <p class="rise text-base md:text-lg text-white/80 max-w-xl leading-relaxed" style="--rise-delay:.26s">
@@ -549,20 +555,20 @@
                 </div>
             </section>
 
-            <section class="px-6 md:px-12 py-10 bg-surface-container-low">
+            <section class="px-5 sm:px-6 md:px-12 py-8 sm:py-10 bg-surface-container-low">
                 <h2 class="rise text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2" style="--rise-delay:.34s">Tourist Spots &amp; Accommodations</h2>
                 <p class="rise text-on-surface-variant mb-6" style="--rise-delay:.42s">Browse everything the municipality has to offer.</p>
 
-                <div class="flex flex-col md:flex-row gap-4 md:items-center mb-4">
-                    <div class="relative flex-1 max-w-md">
+                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center mb-4">
+                    <div class="relative w-full sm:flex-1 sm:max-w-md">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
                         <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
                             class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
                     </div>
-                    <div class="relative">
+                    <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">category</span>
                         <select id="spotCategoryFilter" aria-label="Filter by category"
-                            class="appearance-none bg-surface border border-outline-variant/30 rounded-full pl-11 pr-10 py-3 text-sm font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                            class="w-full sm:w-auto appearance-none bg-surface border border-outline-variant/30 rounded-full pl-11 pr-10 py-3 text-sm font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all">
                             <option value="all">All categories</option>
                             <option value="BEACH / DIVING">Beach / Diving</option>
                             <option value="MOUNTAIN">Mountain</option>
@@ -574,7 +580,7 @@
                 </div>
                 <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold"></p>
 
-                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
             </section>
         </div>
 
@@ -607,7 +613,7 @@
             <span class="hidden sm:inline opacity-40">·</span>
             <!-- Quiet on purpose: findable by the officers and establishment managers who need
                  it, without putting a staff-only door in front of every tourist. -->
-            <a href="src/staff_login.html" class="inline-flex items-center gap-1 hover:text-primary transition-colors">
+            <a href="src/staff_login.html" class="inline-flex items-center gap-1 py-2 hover:text-primary transition-colors">
                 <span class="material-symbols-outlined !text-sm">badge</span>
                 Staff &amp; Tourist Establishment Manager Sign In
             </a>
@@ -616,8 +622,8 @@
 </div>
 
 <!-- Write-a-review dialog -->
-<div id="reviewModal" hidden class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface shadow-2xl rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+<div id="reviewModal" hidden class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-surface shadow-2xl rounded-2xl w-full max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-5">
             <h3 class="text-xl font-display font-bold text-on-surface">Write a review</h3>
             <button id="closeReviewModal" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">

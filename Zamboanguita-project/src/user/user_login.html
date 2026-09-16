@@ -50,10 +50,16 @@
       background: #020F24;
       color: #FEFCF4;
     }
-  </style>
+  
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an establishment name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+</style>
 </head>
 
-<body id="body" class="overflow-hidden">
+<body id="body" class="lg:overflow-hidden">
 
 <script>
 /* ==========================================================
@@ -237,7 +243,7 @@
     <span id="themeIcon" class="material-symbols-outlined">dark_mode</span>
   </button>
 
-  <main class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+  <main class="relative min-h-screen lg:h-screen w-full flex items-center justify-center lg:overflow-hidden">
     <div class="hidden lg:block lg:w-3/5 h-full relative">
       <div class="absolute inset-0">
         <img class="w-full h-full object-cover brightness-[0.55]" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/najandig%20peakess.jpg" alt="Zamboanguita"/>
@@ -266,10 +272,10 @@
       </div>
     </div>
 
-    <div id="rightPanel" class="w-full lg:w-2/5 h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-8 overflow-y-auto border-l border-gray-200 dark:border-outline/20">
+    <div id="rightPanel" class="w-full lg:w-2/5 min-h-screen lg:h-full bg-white dark:bg-surface transition-all duration-500 flex items-center justify-center p-5 sm:p-8 lg:overflow-y-auto border-l border-gray-200 dark:border-outline/20">
       <div class="w-full max-w-md">
         
-        <a href="../../index.html" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-on-surface-variant hover:text-primary transition-colors mb-8">
+        <a href="../../index.html" class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-on-surface-variant hover:text-primary transition-colors mb-8 py-2.5 min-h-[44px]">
           <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the main page
         </a>
 
@@ -296,12 +302,12 @@
           <div>
             <div class="flex justify-between mb-2">
               <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
-              <button type="button" onclick="openForgotModal()" class="text-sm font-bold text-primary hover:text-primaryHover transition-colors focus:outline-none">Forgot Password?</button>
+              <button type="button" onclick="openForgotModal()" class="text-sm font-bold text-primary hover:text-primaryHover transition-colors focus:outline-none py-2.5 min-h-[44px]">Forgot Password?</button>
             </div>
             <div class="relative">
               <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
               <input id="passwordInput" type="password" name="password" required placeholder="••••••••" class="w-full pl-12 pr-12 py-4 rounded-xl border border-gray-300 dark:border-outline bg-white dark:bg-background text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"/>
-              <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none hover:text-primary transition-colors">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 focus:outline-none hover:text-primary transition-colors">
                 <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
               </button>
             </div>

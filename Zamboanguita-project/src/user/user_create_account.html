@@ -45,7 +45,13 @@
         body {
             font-family: 'Manrope', sans-serif;
         }
-    </style>
+    
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an establishment name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+</style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary selection:text-white">
 
@@ -243,17 +249,17 @@
         </div>
     </div>
 
-    <div class="w-full lg:w-1/2 lg:ml-auto min-h-screen flex items-center justify-center p-8 md:p-16 relative z-10 bg-background lg:bg-background/95 backdrop-blur-md border-l border-outline/20">
+    <div class="w-full lg:w-1/2 lg:ml-auto min-h-screen flex items-center justify-center p-5 sm:p-8 md:p-16 relative z-10 bg-background lg:bg-background/95 backdrop-blur-md border-l border-outline/20">
         <div class="absolute top-8 left-8 lg:hidden">
             <span class="text-primary font-display font-black text-2xl tracking-tighter">ZAMBOANGUITA</span>
         </div>
         
         <div class="w-full max-w-md space-y-8">
             <header class="space-y-2">
-                <a href="../../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-4">
+                <a href="../../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-4 py-2.5 min-h-[44px]">
                     <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the main page
                 </a>
-                <h1 class="text-4xl font-display font-extrabold tracking-tight text-white">Begin your journey</h1>
+                <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-white">Begin your journey</h1>
                 <p class="text-on-surface-variant text-sm">Create an account to access premium guides and itineraries.</p>
             </header>
 
@@ -318,7 +324,7 @@
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">lock</span>
                                 <input class="w-full bg-surface-container-low border border-outline/40 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-4 pl-12 pr-12 text-white placeholder:text-on-surface-variant/40 outline-none transition-all" id="password" placeholder="••••••••" type="password" required/>
-                                <button type="button" onclick="togglePasswordVisibility('password', 'togglePasswordIcon')" class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+                                <button type="button" onclick="togglePasswordVisibility('password', 'togglePasswordIcon')" class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
                                     <span id="togglePasswordIcon" class="material-symbols-outlined text-lg">visibility_off</span>
                                 </button>
                             </div>
@@ -328,7 +334,7 @@
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">verified_user</span>
                                 <input class="w-full bg-surface-container-low border border-outline/40 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-4 pl-12 pr-12 text-white placeholder:text-on-surface-variant/40 outline-none transition-all" id="confirm-password" placeholder="••••••••" type="password" required/>
-                                <button type="button" onclick="togglePasswordVisibility('confirm-password', 'toggleConfirmPasswordIcon')" class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+                                <button type="button" onclick="togglePasswordVisibility('confirm-password', 'toggleConfirmPasswordIcon')" class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
                                     <span id="toggleConfirmPasswordIcon" class="material-symbols-outlined text-lg">visibility_off</span>
                                 </button>
                             </div>
@@ -336,7 +342,7 @@
                     </div>
 
                     <div class="flex items-start gap-3 py-2">
-                        <input class="mt-1 rounded bg-surface-container-low border-outline/40 text-primary focus:ring-primary/20 focus:ring-offset-background" id="terms" type="checkbox" required/>
+                        <input class="mt-1 h-5 w-5 min-h-[20px] min-w-[20px] shrink-0 appearance-none checked:bg-primary border rounded bg-surface-container-low border-outline/40 text-primary focus:ring-primary/20 focus:ring-offset-background" id="terms" type="checkbox" required/>
                         <label class="text-xs text-on-surface-variant font-label leading-relaxed" for="terms">
                             I agree to the <a class="text-primary hover:underline font-semibold" href="#">Terms of Service</a> and <a class="text-primary hover:underline font-semibold" href="#">Privacy Policy</a>, including the sustainable travel charter.
                         </label>
