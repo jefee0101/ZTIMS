@@ -99,6 +99,27 @@
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
 </style>
 </head>
 <body class="bg-background text-on-surface min-h-screen flex flex-col overflow-x-hidden">
