@@ -352,7 +352,7 @@
     if (localStorage.getItem('authToken')) {
         const authBtn = document.getElementById('navAuthBtn');
         authBtn.textContent = 'My Account';
-        authBtn.href = 'user/user_dashboard.html';
+        authBtn.href = '../index.html?view=settings';
     }
 
     loadSpot();

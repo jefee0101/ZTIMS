@@ -332,7 +332,7 @@
             } else if (inferredRole === 'admin') {
                 window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
             } else {
-                window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html";
+                window.location.href = window.location.origin + projectRoot + "/index.html";
             }
           } else {
             restoreButton();
@@ -422,7 +422,7 @@
         const spotId = new URLSearchParams(window.location.search).get('spotId');
         window.location.href = spotId
           ? window.location.origin + projectRoot + "/src/spot.html?spotId=" + encodeURIComponent(spotId)
-          : window.location.origin + projectRoot + "/src/user/user_dashboard.html";
+          : window.location.origin + projectRoot + "/index.html";
       } catch (error) {
         console.error("Google sign-in error:", error);
         if (notice) {

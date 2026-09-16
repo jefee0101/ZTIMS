@@ -3,17 +3,15 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>ZAMBOANGUITA | The Veridian Narrative</title>
+    <title>Explore Zamboanguita</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
+
     <script>
-        // Instantly checks localStorage before HTML renders to prevent white screen flash
-        const savedTheme = localStorage.getItem("theme");
-        if (savedTheme === "light") {
+        // Applied before first paint so the page never flashes the wrong theme.
+        if (localStorage.getItem("theme") === "light") {
             document.documentElement.classList.remove("dark");
         } else {
-            // Default to dark mode if nothing is set yet
             document.documentElement.classList.add("dark");
         }
     </script>
@@ -23,320 +21,261 @@
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        // Inspired by the logo's deep sea blue, vibrant orange, yellow sunset, and lush greens
-                        "primary": "#E65100",               // Vibrant Sunset Orange
-                        "secondary": "#E65100",             // Deep Sea Teal/Blue
-                        "tertiary": "#E65100",              // Lush Nature Green
-                        "surface-bright": "#FFB300",        // Sun Yellow
-                        "primary-fixed": "#FF6F00",
-                        "on-tertiary-container": "#1B5E20",
-                        "surface-container": "#0A192F",     // Deep Blue-Black for Dark Mode
-                        "inverse-surface": "#F4F6F9",       // Light background gray
-                        "error-dim": "#C62828",
-                        "surface-container-low": "#0D253F", // Slightly lighter deep blue
-                        "on-surface": "#",            // Yellow text highlights
-                        "on-tertiary-fixed": "#0E2F11",
-                        "tertiary-fixed": "#A5D6A7",
-                        "on-background": "#FFFFFF",
-                        "on-secondary-container": "#E0F7FA",
-                        "inverse-on-surface": "#333333",
-                        "primary-fixed-dim": "#FF8F00",
-                        "tertiary-container": "#C8E6C9",
-                        "surface-container-highest": "#173A5E",
-                        "primary-container": "#FFE082",
-                        "surface-container-high": "#102A43",
-                        "secondary-dim": "#4DD0E1",
-                        "on-error-container": "#FFCDD2",
-                        "on-primary-container": "#5D4037",
-                        "on-error": "#FFFFFF",
-                        "on-tertiary-fixed-variant": "#1B5E20",
-                        "on-secondary": "#FFFFFF",
-                        "error-container": "#B71C1C",
-                        "outline-variant": "#264653",
-                        "surface-dim": "#050C1A",
-                        "background": "#0A192F",            // Main dark mode background
-                        "on-tertiary": "#FFFFFF",
-                        "tertiary-dim": "#81C784",
-                        "error": "#E53935",
-                        "tertiary-fixed-dim": "#81C784",
-                        "outline": "#4A6572",
-                        "on-primary-fixed-variant": "#E65100",
-                        "surface-variant": "#004D40",
-                        "surface": "#0A192F",
-                        "primary-dim": "#FFB74D",
-                        "on-primary-fixed": "#FFFFFF",
-                        "on-surface-variant": "#E0E0E0",
-                        "secondary-fixed": "#00838F",
-                        "on-secondary-fixed": "#FFFFFF",
-                        "inverse-on-secondary-fixed-variant": "#004D40",
-                        "surface-tint": "#00838F",
-                        "surface-container-lowest": "#020C1B",
-                        "secondary-fixed-dim": "#4DD0E1",
-                        "secondary-container": "#006064",
-                        "on-primary": "#FFFFFF"
+                    colors: {
+                        // Drawn from the municipal logo: sunset orange, sun yellow, deep sea navy.
+                        "primary": "#E65100",
+                        "primary-dim": "#FF8F3C",
+                        "surface-bright": "#FFB300",
+                        "secondary": "#00838F",
+                        "background": "var(--bg)",
+                        "surface": "var(--surface)",
+                        "surface-container-low": "var(--surface-low)",
+                        "surface-container-high": "var(--surface-high)",
+                        "on-surface": "var(--on-surface)",
+                        "on-surface-variant": "var(--on-surface-variant)",
+                        "outline-variant": "var(--outline)",
+                        "on-primary": "#FFFFFF",
+                        "error": "#E53935"
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "headline": ["Plus Jakarta Sans", "sans-serif"],
-                        "display": ["Plus Jakarta Sans", "sans-serif"],
-                        "body": ["Plus Jakarta Sans", "sans-serif"],
-                        "label": ["Plus Jakarta Sans", "sans-serif"]
+                    borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+                    fontFamily: {
+                        headline: ["Plus Jakarta Sans", "sans-serif"],
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        body: ["Plus Jakarta Sans", "sans-serif"],
+                        label: ["Plus Jakarta Sans", "sans-serif"]
                     }
-                },
-            },
+                }
+            }
         }
     </script>
+
     <style>
-        /* Base Global Design Tokens based on the Logo Colors */
-        .glass-panel {
-            background: rgba(10, 25, 47, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+        /* Both themes are defined as tokens so every component follows automatically,
+           rather than each one carrying its own light-mode override. */
+        :root {
+            --bg: #F4F6F9;
+            --surface: #FFFFFF;
+            --surface-low: #EAEFF5;
+            --surface-high: #E2E9F2;
+            --on-surface: #0A192F;
+            --on-surface-variant: #46587A;
+            --outline: #D7E0EC;
         }
+        html.dark {
+            --bg: #0A192F;
+            --surface: #0D253F;
+            --surface-low: #0A1E36;
+            --surface-high: #102A43;
+            --on-surface: #F4F6F9;
+            --on-surface-variant: #A9BCD0;
+            --outline: #264653;
+        }
+
+        body { background: var(--bg); color: var(--on-surface); }
+
         .text-gradient {
-            background: linear-gradient(to right, #FFB300, #ff6811, #b3b6b3);
+            background: linear-gradient(to right, #FFB300, #ff6811);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-primary-gradient {
-            background: linear-gradient(135deg, #E65100 0%, #FFB300 100%);
+        .btn-primary-gradient { background: linear-gradient(135deg, #E65100 0%, #FFB300 100%); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .nav-item.active {
+            background: rgba(230, 81, 0, 0.12);
+            color: #FFB300;
         }
-        .btn-secondary-gradient {
-            background: linear-gradient(135deg, #00838F 0%, #d1d2d1 100%);
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-        .mask-gradient {
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .text-on-surface-variant {
-            color: white !important;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8) !important;
-        }
-        
-        /* ==========================================
-           LIGHT MODE DESIGN SYSTEM OVERRIDES 
-           ========================================== */
-        html:not(.dark) body {
-            background-color: #F4F6F9 !important;
-            color: #0A192F !important;
-        }
-        html:not(.dark) nav {
-            background-color: #00838F !important;
-            border-color: rgba(25, 26, 20, 0.1) !important;
-        }
-        html:not(.dark) nav a, html:not(.dark) nav span {
-            color: #FFFFFF !important;
-        }
-        html:not(.dark) .bg-surface-container-low {
-            background-color: #23a59f !important; 
-        }
-        html:not(.dark) .bg-surface {
-            background-color: #ffffff !important;
-        }
-        html:not(.dark) h1,  html:not(.dark) h3 {
-            color: #fdfdfd !important;
-        }
-        html:not(.dark) p {
-            color: #e7eaec !important;
-        }
-        html:not(.dark) h2 {
-            color: #2b2424 !important;
-        }
-        
+        .star-input { cursor: pointer; transition: transform .1s ease; }
+        .star-input.filled { font-variation-settings: 'FILL' 1; }
     </style>
 </head>
-<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+<body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
-<nav class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/10 transition-colors duration-300">
-    <div class="flex justify-between items-center px-8 py-6 max-w-full mx-auto">
-        <a class="text-2xl font-display font-black tracking-tighter text-on-surface" href="#">EXPLORE &nbsp;&nbsp; &nbsp;ZAMBOANGUITA</a>
-        
-        <div class="flex items-center space-x-6">
-            <button id="themeToggleBtn" class="flex items-center justify-center p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-primary hover:bg-surface-bright transition-all" title="Toggle Dark/Light Mode">
-                <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
-            </button>
+<!-- Sidebar: a rail on desktop, a bottom bar on phones. Visible to everyone —
+     guests included — since the gate happens in the content area, not here. -->
+<aside class="fixed z-50 bg-surface border-outline-variant/30 transition-colors duration-300
+              md:left-0 md:top-0 md:h-full md:w-64 md:border-r md:flex md:flex-col md:p-6
+              max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:border-t max-md:flex max-md:justify-around max-md:px-2 max-md:py-2">
 
-            <button id="navAuthBtn" class="bg-primary text-on-primary px-8 py-3 rounded-full font-display font-bold uppercase tracking-widest text-sm scale-95 active:scale-90 transition-all hover:scale-105 btn-primary-gradient shadow-lg shadow-primary/20 flex items-center">
-                <span class="material-symbols-outlined mr-2 !text-lg">login</span>
-                Sign In
-            </button>
-        </div>
+    <div class="mb-10 px-2 max-md:hidden">
+        <a href="index.html" class="text-xl font-extrabold tracking-tight font-headline text-primary block">
+            EXPLORE<br><span class="text-surface-bright">ZAMBOANGUITA</span>
+        </a>
+        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourism Portal</p>
     </div>
-</nav>
 
-<main>
-    <section class="relative h-[52vh] min-h-[380px] w-full flex items-center overflow-hidden">
-        <div class="absolute inset-0 z-0">
-            <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Najandig Peak"/>
-            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
-            <div class="absolute inset-0 bg-black/40"></div>
+    <nav class="md:flex-1 md:space-y-2 max-md:flex max-md:flex-1 max-md:justify-around">
+        <button data-nav="spots" class="nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+                                        max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+            <span class="material-symbols-outlined text-surface-bright">location_on</span>
+            <span class="max-md:text-[10px]">Destinations</span>
+        </button>
+        <button data-nav="reviews" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+            <span class="material-symbols-outlined text-surface-bright">star</span>
+            <span class="max-md:text-[10px]">Reviews</span>
+        </button>
+        <button data-nav="settings" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
+            <span class="material-symbols-outlined text-surface-bright">settings</span>
+            <span class="max-md:text-[10px]">Settings</span>
+        </button>
+    </nav>
+
+    <div class="md:mt-auto md:pt-4 md:border-t md:border-outline-variant/30 max-md:flex max-md:items-center">
+        <p id="sidebarUser" class="text-xs text-on-surface-variant px-5 mb-2 truncate max-md:hidden"></p>
+        <button id="authActionBtn" class="w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
+                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1">
+            <span id="authActionIcon" class="material-symbols-outlined">login</span>
+            <span id="authActionLabel" class="max-md:text-[10px]">Sign In</span>
+        </button>
+    </div>
+</aside>
+
+<div class="md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
+
+    <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md border-b border-outline-variant/20">
+        <h1 id="viewTitle" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
+        <button id="themeToggleBtn" class="p-2 rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
+            <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+        </button>
+    </header>
+
+    <main class="flex-1">
+
+        <!-- ============ DESTINATIONS ============ -->
+        <div data-view="spots">
+            <section class="relative h-[42vh] min-h-[300px] w-full flex items-center overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Zamboanguita coastline"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+                    <div class="absolute inset-0 bg-black/30"></div>
+                </div>
+                <div class="relative z-10 px-6 md:px-12 max-w-3xl">
+                    <h2 class="text-4xl md:text-6xl font-display font-black tracking-tighter leading-[0.95] text-white mb-3">
+                        Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
+                    </h2>
+                    <p class="text-base md:text-lg text-white/80 max-w-xl leading-relaxed">
+                        Experience the beauty and the hidden gems of Zamboanguita.
+                    </p>
+                </div>
+            </section>
+
+            <section class="px-6 md:px-12 py-10 bg-surface-container-low">
+                <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2">Tourist Spots &amp; Accommodations</h2>
+                <p class="text-on-surface-variant mb-6">Browse everything the municipality has to offer — no account needed.</p>
+
+                <div class="flex flex-col md:flex-row gap-4 md:items-center mb-4">
+                    <div class="relative flex-1 max-w-md">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
+                        <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
+                            class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
+                    </div>
+                    <div id="spotTypeFilters" class="flex gap-2 flex-wrap">
+                        <button data-type="all" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary transition-all">All</button>
+                        <button data-type="spot" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Tourist Spots</button>
+                        <button data-type="accommodation" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Accommodations</button>
+                    </div>
+                </div>
+                <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold"></p>
+
+                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+            </section>
         </div>
-        <div class="relative z-10 px-8 md:px-20 max-w-4xl pt-16">
-            <h1 class="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[0.9] text-on-surface mb-4">
-                Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
-            </h1>
-            <p class="text-base md:text-xl text-on-surface-variant max-w-2xl leading-relaxed mb-6 font-medium">
-                Experience the beauty and the hidden Gems of Zamboanguita
-            </p>
-            <button id="heroExploreBtn" class="group inline-flex items-center gap-3 bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-extrabold uppercase tracking-widest text-sm transition-all btn-primary-gradient">
-                <span>Browse all spots</span>
-                <span class="material-symbols-outlined !text-lg">arrow_downward</span>
+
+        <!-- ============ REVIEWS ============ -->
+        <div data-view="reviews" hidden class="px-6 md:px-12 py-10">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-1">Visitor Reviews</h2>
+                    <p class="text-on-surface-variant" id="reviewsSubtitle">What travellers are saying about Zamboanguita.</p>
+                </div>
+                <button id="writeReviewBtn" hidden class="bg-primary text-on-primary px-6 py-3 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center gap-2 hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined !text-lg">rate_review</span> Write a review
+                </button>
+            </div>
+            <div id="reviewsContent"></div>
+        </div>
+
+        <!-- ============ SETTINGS ============ -->
+        <div data-view="settings" hidden class="px-6 md:px-12 py-10">
+            <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-1">Account Settings</h2>
+            <p class="text-on-surface-variant mb-8">Your details, used to fill in forms across the portal.</p>
+            <div id="settingsContent"></div>
+        </div>
+
+    </main>
+
+    <footer class="py-8 px-6 md:px-12 bg-surface-container-low border-t border-outline-variant/10">
+        <p class="text-center text-xs text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
+    </footer>
+</div>
+
+<!-- Write-a-review dialog -->
+<div id="reviewModal" hidden class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-5 border-b border-outline-variant/20">
+            <h3 class="text-xl font-display font-bold text-on-surface">Write a review</h3>
+            <button id="closeReviewModal" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-    </section>
-
-    <section id="spotsSection" class="py-16 md:py-20 bg-surface-container-low min-h-screen transition-colors duration-300">
-        <div class="px-8 md:px-20 mb-10">
-            <h2 class="text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-3">Tourist Spots &amp; Accommodations</h2>
-            <p class="text-on-surface-variant mb-8">Browse everything Zamboanguita has to offer — no account needed.</p>
-
-            <div class="flex flex-col md:flex-row gap-4 md:items-center">
-                <div class="relative flex-1 max-w-md">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
-                    <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
-                        class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
-                </div>
-                <div id="spotTypeFilters" class="flex gap-2 flex-wrap">
-                    <button data-type="all" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-on-primary transition-all">All</button>
-                    <button data-type="spot" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Tourist Spots</button>
-                    <button data-type="accommodation" class="type-filter px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-all">Accommodations</button>
-                </div>
+        <form id="reviewForm" class="p-5 space-y-4">
+            <div>
+                <label for="reviewSpot" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Destination</label>
+                <select id="reviewSpot" required class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" disabled selected>Choose a destination...</option>
+                </select>
             </div>
-            <p id="spotsResultCount" class="text-xs text-on-surface-variant mt-4 uppercase tracking-widest font-bold"></p>
-        </div>
-
-        <div id="spotsContainer" class="px-8 md:px-20 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8"></div>
-    </section>
-
-    <section class="relative py-40 bg-surface overflow-hidden transition-colors duration-300">
-        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10">
-            <span class="material-symbols-outlined !text-[500px] rotate-12 text-secondary">eco</span>
-        </div>
-        <div class="px-8 md:px-20 grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
-            <div class="order-2 md:order-1">
-                <div class="inline-block w-20 h-1 bg-primary mb-12"></div>
-                <h2 class="text-5xl md:text-7xl font-display font-extrabold tracking-tighter text-on-surface mb-12 leading-none">
-                    A COMMITMENT <br/> TO THE <span class="text-primary">SOUL</span> OF LAND.
-                </h2>
-                <div class="space-y-8 text-on-surface-variant text-xl leading-relaxed font-light">
-                    <h2 class="!text-white dark:!text-white">
-                        Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at approximately 9°6′N latitude and 123°12′E longitude, about 28 kilometers south of Dumaguete City.
-                    </h2>
-                    <h2 class="!text-white dark:!text-white">
-                        In Zamboanguita, we prioritize high-end experiences that leave no footprint, only memories. We partner with local guardians to ensure that the beauty we share today remains untainted for the narratives of tomorrow.
-                    </h2>
+            <div>
+                <span class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Rating</span>
+                <div id="reviewStars" class="flex gap-1 text-surface-bright">
+                    <span class="material-symbols-outlined star-input !text-3xl" data-value="1">star</span>
+                    <span class="material-symbols-outlined star-input !text-3xl" data-value="2">star</span>
+                    <span class="material-symbols-outlined star-input !text-3xl" data-value="3">star</span>
+                    <span class="material-symbols-outlined star-input !text-3xl" data-value="4">star</span>
+                    <span class="material-symbols-outlined star-input !text-3xl" data-value="5">star</span>
                 </div>
+                <input type="hidden" id="reviewRating" value="5" />
             </div>
-            <div class="relative order-1 md:order-2">
-                <div class="aspect-[4/5] rounded-xl overflow-hidden shadow-2xl border-4 border-secondary">
-                    <img class="w-full h-full object-cover" src="https://tse4.mm.bing.net/th/id/OIP.uYhx2hIRIvm1j9-0B02YIQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Local landscape Guide"/>
-                </div>
-                <div class="absolute hidden p-8 border -bottom-10 -left-10 glass-panel rounded-xl border-outline-variant/20 max-w-xs lg:block">
-                    <p class="text-white italic font-light text-lg mb-4">"We don't inherit the land from our ancestors, we borrow it from our children."</p>
-                    <p class="text-primary font-bold uppercase tracking-widest text-xs">— Local Guardian Narrative</p>
-                </div>
+            <div>
+                <label for="reviewComment" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Your experience</label>
+                <textarea id="reviewComment" rows="4" required placeholder="What stood out about this place?"
+                    class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
             </div>
-        </div>
-    </section>
-
-</main>
-
-<footer class="w-full py-12 px-8 bg-surface-dim border-t border-outline-variant/10 transition-colors duration-300">
-    <div class="max-w-full mx-auto flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
-        <div class="flex flex-col items-center md:items-start space-y-4">
-            <p class="font-body text-sm text-on-surface-variant max-w-xs text-center md:text-left">
-                © 2026 Zamboanguita Tourism Information Management System
-            </p>
-        </div>
-        <div class="flex flex-wrap justify-center gap-8">
-            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Sustainability</a>
-            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Us</a>
-            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
-            <a class="font-body text-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
-        </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" id="cancelReviewBtn" class="w-1/2 bg-surface-container-high text-on-surface font-bold py-3 rounded-full transition-all hover:opacity-80">Cancel</button>
+                <button type="submit" id="submitReviewBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3 rounded-full btn-primary-gradient transition-all hover:scale-[1.02]">Publish</button>
+            </div>
+        </form>
     </div>
-</footer>
+</div>
 
 <script type="module">
-    const navAuthBtn = document.getElementById('navAuthBtn');
-    const heroExploreBtn = document.getElementById('heroExploreBtn');
-    
-    // Theme references
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const themeToggleIcon = document.getElementById('themeToggleIcon');
-
-    // Central function straight paths to the main user entry login
-    function handleRouting() {
-        window.location.href = 'src/user/user_login.html';
-    }
-
-    // "Explore" actions stay on the public landing page and scroll to the spots —
-    // guests browse freely here; login is only requested when they try to book.
-    function scrollToSpots() {
-        document.getElementById('spotsSection').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Theme Switch Click Action Logic
-    themeToggleBtn.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        
-        if (isDark) {
-            localStorage.setItem('theme', 'dark');
-            themeToggleIcon.innerHTML = 'dark_mode';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeToggleIcon.innerHTML = 'bedtime';
-        }
-    });
-
-    // Event listeners attached to your interactive elements
-    navAuthBtn.addEventListener('click', handleRouting);
-    heroExploreBtn.addEventListener('click', scrollToSpots);
-
-    // Sync visual UI elements to match active theme once page structures are complete
-    window.addEventListener('DOMContentLoaded', () => {
-        const currentTheme = localStorage.getItem("theme");
-        if (currentTheme === "light") {
-            document.documentElement.classList.remove("dark");
-            themeToggleIcon.innerHTML = 'bedtime';
-        } else {
-            document.documentElement.classList.add("dark");
-            themeToggleIcon.innerHTML = 'dark_mode';
-        }
-    });
-
-    // ==========================================
-    // Guests browse tourist spots/accommodations here with no login required.
-    // Only clicking "Book Now" gates them behind register/login (redirect-with-return).
-    // ==========================================
     const API_BASE = "https://ztims-api.onrender.com/api";
+
+    /* ---------------- shared helpers ---------------- */
+
+    // Spot and review text is written by resort owners and tourists, so it is
+    // escaped before ever reaching innerHTML.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    }
 
     // The API sleeps on Render's free tier, so a cold start can take most of a
     // minute — after 5s the spinner says so rather than looking frozen.
-    function showLoading(target, message, colspan) {
-        const spinner =
-            '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
-                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+    function showLoading(target, message) {
+        target.innerHTML =
+            '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
+                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-70"></div>' +
                 '<p class="text-sm opacity-80">' + message + '</p>' +
                 '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
             '</div>';
-        target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
         const timer = setTimeout(() => {
             const note = target.querySelector('[data-slow]');
             if (note) note.classList.remove('hidden');
@@ -344,43 +283,121 @@
         return () => clearTimeout(timer);
     }
 
+    function setButtonLoading(btn, label) {
+        if (!btn) return () => {};
+        const originalHTML = btn.innerHTML;
+        const wasDisabled = btn.disabled;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+        return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
+    }
+
+    function formatPeso(amount) {
+        return `₱${(Number(amount) || 0).toFixed(2)}`;
+    }
+
+    function authHeaders(extra) {
+        return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+    }
+
+    // Only a tourist account unlocks reviews and settings. Officers and resort
+    // owners have their own portals, so signing in there doesn't apply here.
+    function signedInTourist() {
+        return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';
+    }
+
+    function currentUser() {
+        try { return JSON.parse(localStorage.getItem('currentUser')) || {}; }
+        catch { return {}; }
+    }
+
+    function starRow(rating) {
+        const rounded = Math.round(Number(rating) || 0);
+        let out = '';
+        for (let i = 1; i <= 5; i++) {
+            out += `<span class="material-symbols-outlined !text-base ${i <= rounded ? 'text-surface-bright' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
+        }
+        return out;
+    }
+
+    // Shown in place of reviews or settings when a visitor isn't signed in.
+    function authGate(action) {
+        return `
+            <div class="flex flex-col items-center justify-center text-center gap-4 py-20 px-6 bg-surface border border-outline-variant/20 rounded-2xl">
+                <span class="material-symbols-outlined !text-5xl text-surface-bright">lock_person</span>
+                <h3 class="text-2xl font-display font-bold text-on-surface">Sign in to ${escapeHtml(action)}</h3>
+                <p class="text-on-surface-variant max-w-sm">Browsing spots and accommodations is open to everyone. Creating a free tourist account lets you write reviews and save your details.</p>
+                <div class="flex flex-col sm:flex-row gap-3 mt-2">
+                    <a href="src/user/user_create_account.html" class="bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-105 transition-transform">
+                        Create an account
+                    </a>
+                    <a href="src/user/user_login.html" class="px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs border border-outline-variant/40 text-on-surface hover:border-primary transition-colors">
+                        Sign in
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    /* ---------------- view switching ---------------- */
+
+    const viewTitles = {
+        spots: 'Tourist Spots & Accommodations',
+        reviews: 'Visitor Reviews',
+        settings: 'Account Settings'
+    };
+    let activeView = 'spots';
+
+    function switchView(name) {
+        activeView = name;
+        document.querySelectorAll('[data-view]').forEach(section => {
+            section.hidden = section.dataset.view !== name;
+        });
+        document.querySelectorAll('.nav-item').forEach(button => {
+            button.classList.toggle('active', button.dataset.nav === name);
+        });
+        document.getElementById('viewTitle').textContent = viewTitles[name];
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (name === 'reviews') renderReviewsView();
+        if (name === 'settings') renderSettingsView();
+    }
+
+    document.querySelectorAll('.nav-item').forEach(button => {
+        button.addEventListener('click', () => switchView(button.dataset.nav));
+    });
+
+    /* ---------------- destinations ---------------- */
+
     const spotsContainer = document.getElementById('spotsContainer');
     const searchInput = document.getElementById('spotSearchInput');
     const resultCount = document.getElementById('spotsResultCount');
     const typeFilterButtons = document.querySelectorAll('.type-filter');
 
-    // Fetched once, then filtered in the browser — the catalogue for one
-    // municipality is small enough that re-querying the API per keystroke
-    // would only add latency.
+    // Fetched once, then filtered in the browser — one municipality's catalogue is
+    // small enough that re-querying per keystroke would only add latency.
     let allSpots = [];
     let activeType = 'all';
 
-    function formatPeso(amount) {
-        const value = Number(amount) || 0;
-        return `₱${value.toFixed(2)}`;
-    }
-
-    function typeLabel(spot) {
-        return spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
-    }
-
     function renderSpotCard(spot) {
         const card = document.createElement('a');
-        card.href = `src/spot.html?spotId=${spot._id}`;
-        card.className = 'group cursor-pointer block rounded-2xl overflow-hidden bg-surface border border-outline-variant/20 hover:border-primary/50 transition-all hover:-translate-y-1';
+        card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
+        card.className = 'group block rounded-2xl overflow-hidden bg-surface border border-outline-variant/20 hover:border-primary/50 transition-all hover:-translate-y-1';
         card.innerHTML = `
-            <div class="relative h-[220px] overflow-hidden">
-                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita'}" alt="${spot.title}"/>
+            <div class="relative h-[200px] overflow-hidden">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <span class="absolute top-4 left-4 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">${typeLabel(spot)}</span>
+                <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
+                    ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
+                </span>
             </div>
             <div class="p-5">
-                <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${spot.label || spot.category || ''}</span>
-                <h3 class="text-xl font-display font-bold text-on-surface mb-1.5">${spot.title}</h3>
+                <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${escapeHtml(spot.label || spot.category || '')}</span>
+                <h3 class="text-lg font-display font-bold text-on-surface mb-1.5">${escapeHtml(spot.title)}</h3>
                 <p class="text-on-surface-variant text-xs flex items-center gap-1 mb-3">
-                    <span class="material-symbols-outlined !text-sm">location_on</span>${spot.location || ''}
+                    <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '')}
                 </p>
-                <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${spot.description}</p>
+                <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
                 <div class="flex items-center justify-between pt-3 border-t border-outline-variant/20">
                     <span class="text-xs text-on-surface-variant">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
                     <span class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-1">
@@ -394,7 +411,6 @@
 
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
-
         const matches = allSpots.filter(spot => {
             if (activeType !== 'all' && (spot.type || 'spot') !== activeType) return false;
             if (!query) return true;
@@ -451,7 +467,263 @@
         }
     }
 
+    /* ---------------- reviews ---------------- */
+
+    const reviewsContent = document.getElementById('reviewsContent');
+    const writeReviewBtn = document.getElementById('writeReviewBtn');
+    let reviewsLoaded = false;
+
+    function renderReviewsView() {
+        if (!signedInTourist()) {
+            writeReviewBtn.hidden = true;
+            document.getElementById('reviewsSubtitle').textContent = 'What travellers are saying about Zamboanguita.';
+            reviewsContent.innerHTML = authGate('write and manage reviews');
+            return;
+        }
+        writeReviewBtn.hidden = false;
+        if (!reviewsLoaded) loadReviews();
+    }
+
+    async function loadReviews() {
+        const doneLoading = showLoading(reviewsContent, 'Loading reviews...');
+        try {
+            const response = await fetch(`${API_BASE}/reviews`);
+            if (!response.ok) throw new Error('Failed to load reviews');
+            const reviews = await response.json();
+            doneLoading();
+            reviewsLoaded = true;
+            renderReviews(Array.isArray(reviews) ? reviews : []);
+        } catch (error) {
+            console.error('❌ Failed to load reviews:', error);
+            doneLoading();
+            reviewsContent.innerHTML = '<p class="text-on-surface-variant py-8">Unable to load reviews right now. Please try again later.</p>';
+        }
+    }
+
+    function renderReviews(reviews) {
+        const myName = currentUser().fullName || currentUser().name || '';
+
+        if (reviews.length === 0) {
+            reviewsContent.innerHTML = '<p class="text-on-surface-variant py-8">No reviews yet — be the first to share your experience.</p>';
+            return;
+        }
+
+        document.getElementById('reviewsSubtitle').textContent = `${reviews.length} review${reviews.length === 1 ? '' : 's'} from travellers.`;
+
+        reviewsContent.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + reviews.map(review => {
+            const mine = myName && review.guestName === myName;
+            return `
+                <div class="bg-surface border ${mine ? 'border-primary/40' : 'border-outline-variant/20'} rounded-2xl p-5">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                            <p class="font-bold text-on-surface text-sm">
+                                ${escapeHtml(review.guestName)}
+                                ${mine ? '<span class="text-[10px] uppercase tracking-widest text-primary ml-1.5">You</span>' : ''}
+                            </p>
+                            <p class="text-xs text-on-surface-variant">${escapeHtml(review.destinationId || '')}</p>
+                        </div>
+                        <div class="flex shrink-0">${starRow(review.rating)}</div>
+                    </div>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">${escapeHtml(review.comment)}</p>
+                    <p class="text-[11px] text-on-surface-variant/70 mt-3">${new Date(review.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                </div>
+            `;
+        }).join('') + `</div>`;
+    }
+
+    /* ----- write a review ----- */
+
+    const reviewModal = document.getElementById('reviewModal');
+    const reviewForm = document.getElementById('reviewForm');
+    const reviewSpotSelect = document.getElementById('reviewSpot');
+    const reviewRating = document.getElementById('reviewRating');
+
+    function paintStars(value) {
+        document.querySelectorAll('.star-input').forEach(star => {
+            star.classList.toggle('filled', Number(star.dataset.value) <= value);
+        });
+    }
+
+    document.querySelectorAll('.star-input').forEach(star => {
+        star.addEventListener('click', () => {
+            reviewRating.value = star.dataset.value;
+            paintStars(Number(star.dataset.value));
+        });
+    });
+
+    function openReviewModal() {
+        // The destination list comes from the published spots already loaded for
+        // this page, so a tourist can only review somewhere that actually exists.
+        reviewSpotSelect.innerHTML = '<option value="" disabled selected>Choose a destination...</option>' +
+            allSpots.map(spot => `<option value="${escapeHtml(spot._id)}">${escapeHtml(spot.title)}</option>`).join('');
+        reviewRating.value = '5';
+        paintStars(5);
+        reviewModal.hidden = false;
+    }
+
+    function closeReviewModal() {
+        reviewModal.hidden = true;
+        reviewForm.reset();
+    }
+
+    writeReviewBtn.addEventListener('click', openReviewModal);
+    document.getElementById('closeReviewModal').addEventListener('click', closeReviewModal);
+    document.getElementById('cancelReviewBtn').addEventListener('click', closeReviewModal);
+    reviewModal.addEventListener('click', event => { if (event.target === reviewModal) closeReviewModal(); });
+
+    reviewForm.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const spot = allSpots.find(item => item._id === reviewSpotSelect.value);
+        if (!spot) { alert('Please choose a destination.'); return; }
+
+        const profile = currentUser();
+        const restoreButton = setButtonLoading(document.getElementById('submitReviewBtn'), 'Publishing...');
+
+        try {
+            const response = await fetch(`${API_BASE}/reviews`, {
+                method: 'POST',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    guestName: profile.fullName || profile.name || 'Anonymous Traveller',
+                    rating: Number(reviewRating.value) || 5,
+                    // Both are sent: the id links the review to the spot permanently,
+                    // the title keeps it readable if the spot is ever removed.
+                    spotId: spot._id,
+                    destinationId: spot.title,
+                    comment: document.getElementById('reviewComment').value.trim()
+                })
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Your review could not be published.');
+
+            closeReviewModal();
+            reviewsLoaded = false;
+            await loadReviews();
+        } catch (error) {
+            alert('⚠️ ' + error.message);
+        } finally {
+            restoreButton();
+        }
+    });
+
+    /* ---------------- settings ---------------- */
+
+    const settingsContent = document.getElementById('settingsContent');
+
+    function renderSettingsView() {
+        if (!signedInTourist()) {
+            settingsContent.innerHTML = authGate('manage your account');
+            return;
+        }
+
+        const profile = currentUser();
+        settingsContent.innerHTML = `
+            <form id="profileForm" class="max-w-xl space-y-5 bg-surface border border-outline-variant/20 rounded-2xl p-6">
+                <div>
+                    <label for="profileEmail" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Email</label>
+                    <input id="profileEmail" type="email" disabled value="${escapeHtml(profile.email || localStorage.getItem('userEmail') || '')}"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface-variant cursor-not-allowed" />
+                    <p class="text-[11px] text-on-surface-variant mt-1.5">Your email is how you sign in and can't be changed here.</p>
+                </div>
+                <div>
+                    <label for="profileName" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Full name</label>
+                    <input id="profileName" type="text" value="${escapeHtml(profile.fullName || profile.name || '')}"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <div>
+                    <label for="profilePhone" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Phone</label>
+                    <input id="profilePhone" type="tel" value="${escapeHtml(profile.phone || '')}"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <div>
+                    <label for="profileNationality" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Nationality</label>
+                    <input id="profileNationality" type="text" value="${escapeHtml(profile.nationality || '')}"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
+                </div>
+                <button type="submit" id="saveProfileBtn" class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-full btn-primary-gradient hover:scale-[1.01] transition-transform">
+                    Save changes
+                </button>
+            </form>
+        `;
+
+        document.getElementById('profileForm').addEventListener('submit', saveProfile);
+    }
+
+    async function saveProfile(event) {
+        event.preventDefault();
+
+        const userId = localStorage.getItem('userId');
+        if (!userId) { alert('Your session has expired. Please sign in again.'); return; }
+
+        const payload = {
+            fullName: document.getElementById('profileName').value.trim(),
+            phone: document.getElementById('profilePhone').value.trim(),
+            nationality: document.getElementById('profileNationality').value.trim()
+        };
+        const restoreButton = setButtonLoading(document.getElementById('saveProfileBtn'), 'Saving...');
+
+        try {
+            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || result.message || 'Could not save your details.');
+
+            localStorage.setItem('currentUser', JSON.stringify(Object.assign(currentUser(), payload, { name: payload.fullName })));
+            refreshAuthUI();
+            alert('✅ Your details have been saved.');
+        } catch (error) {
+            alert('⚠️ ' + error.message);
+        } finally {
+            restoreButton();
+        }
+    }
+
+    /* ---------------- session + theme ---------------- */
+
+    const authActionBtn = document.getElementById('authActionBtn');
+
+    function refreshAuthUI() {
+        const signedIn = signedInTourist();
+        document.getElementById('authActionIcon').textContent = signedIn ? 'logout' : 'login';
+        document.getElementById('authActionLabel').textContent = signedIn ? 'Log Out' : 'Sign In';
+        const profile = currentUser();
+        document.getElementById('sidebarUser').textContent = signedIn
+            ? (profile.fullName || profile.name || localStorage.getItem('userEmail') || '')
+            : '';
+    }
+
+    authActionBtn.addEventListener('click', () => {
+        if (signedInTourist()) {
+            ['authToken', 'userRole', 'userEmail', 'userId', 'currentUser'].forEach(key => localStorage.removeItem(key));
+            reviewsLoaded = false;
+            refreshAuthUI();
+            switchView('spots');
+        } else {
+            window.location.href = 'src/user/user_login.html';
+        }
+    });
+
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeToggleIcon.textContent = isDark ? 'dark_mode' : 'bedtime';
+    });
+    themeToggleIcon.textContent = document.documentElement.classList.contains('dark') ? 'dark_mode' : 'bedtime';
+
+    /* ---------------- start ---------------- */
+
+    refreshAuthUI();
     loadSpots();
+
+    // Lets the login page hand someone straight back to a chosen view.
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    if (requestedView && viewTitles[requestedView]) switchView(requestedView);
 </script>
 </body>
 </html>

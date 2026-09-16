@@ -322,7 +322,7 @@ async function handleGoogleCredential(response) {
     const spotId = new URLSearchParams(window.location.search).get('spotId');
     window.location.href = spotId
       ? `../spot.html?spotId=${encodeURIComponent(spotId)}`
-      : 'user_dashboard.html';
+      : '../../index.html';
   } catch (error) {
     console.error("Google sign-up error:", error);
     if (notice) {
