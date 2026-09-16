@@ -347,7 +347,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             try {
                 const response = await fetch(`${API_URL}/${id}/status`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                     body: JSON.stringify({ status: nextState })
                 });
 
@@ -365,7 +365,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             if (!confirm("Are you sure you want to permanently delete this user review from the database?")) return;
 
             try {
-                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
                 if (response.ok) {
                     await loadAdminReviewsData();
                 } else {

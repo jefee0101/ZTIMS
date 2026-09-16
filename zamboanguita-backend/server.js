@@ -440,7 +440,7 @@ app.patch('/api/bookings/:id', async (req, res) => {
 /**
  * PUT: Admin route to approve or reject a booking status inside MongoDB
  */
-app.put('/api/bookings/status/:id', async (req, res) => {
+app.put('/api/bookings/status/:id', requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body; 
@@ -518,7 +518,7 @@ app.post('/api/reviews', async (req, res) => {
  * 🌟 NEW HANDLER - PUT: Update review status filters (Approve/Hide)
  * Target URL: http://localhost:5000/api/reviews/:id/status
  */
-app.put('/api/reviews/:id/status', async (req, res) => {
+app.put('/api/reviews/:id/status', requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -549,7 +549,7 @@ app.put('/api/reviews/:id/status', async (req, res) => {
  * 🌟 NEW HANDLER - DELETE: Drop review entry records entirely from database
  * Target URL: http://localhost:5000/api/reviews/:id
  */
-app.delete('/api/reviews/:id', async (req, res) => {
+app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const droppedRecord = await Review.findByIdAndDelete(id);
@@ -630,7 +630,7 @@ app.get('/api/spots', async (req, res) => {
     }
 });
 
-app.post('/api/spots', async (req, res) => {
+app.post('/api/spots', requireAdmin, async (req, res) => {
     try {
         const newSpot = new Spot(req.body);
         const savedSpot = await newSpot.save();
