@@ -309,7 +309,7 @@
 
             if (activeUserId && activeUserId !== "anonymous_guest") {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/bookings?userId=${activeUserId}`);
+                    const response = await fetch(`http://localhost:5000/api/bookings?userId=${activeUserId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
                     if (response.ok) {
                         liveBookingsList = await response.json();
                     }
@@ -458,7 +458,7 @@
                 try {
                     const response = await fetch(`http://localhost:5000/api/users/${activeUserId}`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                         body: JSON.stringify(updatedPayload)
                     });
 

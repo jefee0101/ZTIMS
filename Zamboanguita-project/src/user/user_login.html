@@ -262,7 +262,7 @@
            email = 'desirose@gmail.com';
         }
         
-        const inferredRole = email.includes('admin') ? 'admin' : 'user';
+        const inferredRole = 'user';
         const credentials = { email, password, role: inferredRole };
 
         try {
@@ -276,7 +276,8 @@
 
           if (response.ok && result.success) {
             alert(`Welcome back! Logging in.`);
-            localStorage.setItem('userRole', inferredRole);
+            localStorage.setItem('authToken', result.token);
+            localStorage.setItem('userRole', result.role || inferredRole);
             localStorage.setItem('userEmail', email);
 
             const serverUser = result.user || result.data || {};

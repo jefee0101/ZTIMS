@@ -420,7 +420,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                     // 2. Automatically update the permanent User Account Profile structure in MongoDB
                     const profileResponse = await fetch(`http://localhost:5000/api/users/${activeUserId}`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                         body: JSON.stringify({
                             fullName: typedName,
                             phone: typedPhone,
@@ -460,7 +460,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         /* 🌟 MONGODB DATABASE DATA-STREAM PIPELINE */
         async function fetchLiveUserBookings() {
             try {
-                const response = await fetch('http://localhost:5000/api/bookings');
+                const response = await fetch('http://localhost:5000/api/bookings', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
                 if (!response.ok) throw new Error("API stream connection broken");
                 
                 const mongoData = await response.json();

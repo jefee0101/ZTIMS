@@ -135,6 +135,15 @@ const requireAdmin = [requireAuth, (req, res, next) => {
     return next();
 }];
 
+const optionalAuth = (req, res, next) => {
+    const authorization = req.get('authorization') || '';
+    const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
+    if (token) {
+        try { req.auth = jwt.verify(token, process.env.JWT_SECRET); } catch { /* Public access remains available. */ }
+    }
+    return next();
+};
+
 const createToken = (account, role) => jwt.sign(
     { sub: account._id.toString(), role },
     process.env.JWT_SECRET,
@@ -366,19 +375,19 @@ app.post('/api/reset-password', async (req, res) => {
 /**
  * POST: Create and insert new booking document record
  */
-app.post('/api/bookings', async (req, res) => {
+app.post('/api/bookings', requireAuth, async (req, res) => {
     try {
         console.log("➡️ Received Incoming Booking Payload Data:", req.body);
         
-        const { userId, guestName, destination, guestCount } = req.body;
-        if (!userId || !guestName || !destination || !guestCount) {
+        const { guestName, destination, guestCount } = req.body;
+        if (!guestName || !destination || !guestCount) {
             return res.status(400).json({ 
                 error: 'Bad Request', 
                 message: 'Validation failed: Missing mandatory parameter keys.' 
             });
         }
 
-        const newBooking = new Booking(req.body);
+        const newBooking = new Booking({ ...req.body, userId: req.auth.sub });
         const savedRecord = await newBooking.save();
         
         console.log("🚀 Booking Record Committed Successfully:", savedRecord._id);
@@ -399,14 +408,12 @@ app.post('/api/bookings', async (req, res) => {
 /**
  * GET: Retrieve booking list (Optional ?userId filter)
  */
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', requireAuth, async (req, res) => {
     try {
-        const { userId } = req.query;
-        
-        let query = {};
-        if (userId) {
-            query = { userId };
-        }
+        const requestedUserId = req.query.userId;
+        const query = req.auth.role === 'admin'
+            ? (requestedUserId ? { userId: requestedUserId } : {})
+            : { userId: req.auth.sub };
 
         const records = await Booking.find(query).sort({ createdAt: -1 });
         return res.json(records);
@@ -423,14 +430,21 @@ app.get('/api/bookings', async (req, res) => {
 /**
  * PUT: user cancel or update booking status (e.g., 'cancelled') in MongoDB
  */
-app.patch('/api/bookings/:id', async (req, res) => {
+app.patch('/api/bookings/:id', requireAuth, async (req, res) => {
     try {
         const { status } = req.body; // e.g., 'cancelled'
-        const updatedBooking = await Booking.findByIdAndUpdate(
-            req.params.id, 
-            { status: status }, 
+        if (req.auth.role !== 'admin' && status !== 'cancelled') {
+            return res.status(403).json({ error: 'Travelers may only cancel their own bookings.' });
+        }
+        const ownershipQuery = req.auth.role === 'admin'
+            ? { _id: req.params.id }
+            : { _id: req.params.id, userId: req.auth.sub };
+        const updatedBooking = await Booking.findOneAndUpdate(
+            ownershipQuery,
+            { status },
             { new: true }
         );
+        if (!updatedBooking) return res.status(404).json({ error: 'Booking not found.' });
         res.status(200).json(updatedBooking);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -471,9 +485,10 @@ app.put('/api/bookings/status/:id', requireAdmin, async (req, res) => {
  * 🌟 GET: Fetch all user reviews from MongoDB
  * Target URL: http://localhost:5000/api/reviews
  */
-app.get('/api/reviews', async (req, res) => {
+app.get('/api/reviews', optionalAuth, async (req, res) => {
     try {
-        const reviews = await Review.find({}).sort({ createdAt: -1 });
+        const query = req.auth?.role === 'admin' ? {} : { status: 'approved' };
+        const reviews = await Review.find(query).sort({ createdAt: -1 });
         return res.status(200).json(reviews);
     } catch (error) {
         console.error("❌ Review GET Fetch Failure:", error);
@@ -485,7 +500,7 @@ app.get('/api/reviews', async (req, res) => {
  * 🌟 POST: Submit a new review into MongoDB 
  * Target URL: http://localhost:5000/api/reviews
  */
-app.post('/api/reviews', async (req, res) => {
+app.post('/api/reviews', requireAuth, async (req, res) => {
     try {
         console.log("➡️ Received Incoming Review Payload Data:", req.body);
         const { guestName, rating, destinationId, comment, imageURL } = req.body;
@@ -570,9 +585,12 @@ app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
  * 🌟 NEW HANDLER - PATCH: Update a user's structural profile fields directly from booking form submissions
  * Target URL: http://localhost:5000/api/users/:id
  */
-app.patch('/api/users/:id', async (req, res) => {
+app.patch('/api/users/:id', requireAuth, async (req, res) => {
     try {
         const userId = req.params.id;
+        if (req.auth.role !== 'admin' && req.auth.sub !== userId) {
+            return res.status(403).json({ error: 'You may only update your own profile.' });
+        }
         const { fullName, phone, nationality } = req.body;
 
         // Find user by route identifier and update fields dynamically
@@ -608,7 +626,7 @@ app.patch('/api/users/:id', async (req, res) => {
  * 🌟 GET: Fetch all active users for analytics tracking
  * Target URL: http://localhost:5000/api/users
  */
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', requireAdmin, async (req, res) => {
     try {
         const usersList = await User.find({}, { password: 0 });
         return res.status(200).json(usersList);

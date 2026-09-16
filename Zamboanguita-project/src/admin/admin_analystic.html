@@ -334,8 +334,8 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         async function fetchAndSyncPlatformMetrics() {
             try {
                 const [bookingsRes, usersRes, reviewsRes] = await Promise.all([
-                    fetch(BOOKINGS_URL).catch(() => null),
-                    fetch(USERS_URL).catch(() => null),
+                    fetch(BOOKINGS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
+                    fetch(USERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
                     fetch(REVIEWS_URL).catch(() => null)
                 ]);
 

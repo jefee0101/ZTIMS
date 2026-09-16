@@ -574,7 +574,7 @@ async function fetchAndRenderPermanentBookings(userId, isFirstLoad = false) {
     if (!userId || userId === "anonymous_guest") return;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/bookings?userId=${userId}`);
+        const response = await fetch(`http://localhost:5000/api/bookings?userId=${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
         if (!response.ok) throw new Error("Manifest processing error connection.");
         
         const historyData = await response.json();
@@ -681,7 +681,7 @@ async function cancelActiveBooking(bookingId) {
     try {
         const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
             body: JSON.stringify({ status: 'cancelled' })
         });
 
@@ -1008,7 +1008,7 @@ if (bookingForm) {
 
             const response = await fetch('http://localhost:5000/api/bookings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                 body: JSON.stringify(bookingPayload)
             });
 
