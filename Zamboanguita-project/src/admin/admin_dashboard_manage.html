@@ -518,9 +518,9 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             // 1. Attempt API Delivery Loop
             try {
-                const response = await fetch('http://localhost:5000/api/spots', {
+                const response = await fetch('https://ztims-api.onrender.com/api/spots', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                     body: JSON.stringify(newSpot)
                 });
                 if (!response.ok) throw new Error("Fallback to Local Storage pipeline context execution.");
@@ -544,7 +544,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
             // 1. Attempt Server-side sync drops
             try {
-                const response = await fetch(`http://localhost:5000/api/destinations/${encodeURIComponent(uniqueTitle)}`, {
+                const response = await fetch(`https://ztims-api.onrender.com/api/destinations/${encodeURIComponent(uniqueTitle)}`, {
                     method: 'DELETE'
                 });
             } catch (err) {

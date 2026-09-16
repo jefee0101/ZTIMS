@@ -309,7 +309,7 @@ function renderTableRows(admins) {
 }
 
 function loadAdminDirectory() {
-    fetch('http://localhost:5000/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
+    fetch('https://ztims-api.onrender.com/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(admins => {
         if(admins && admins.length > 0) {
@@ -337,7 +337,7 @@ function submitNewAdmin() {
 
     const payload = { email, password };
 
-    fetch('http://localhost:5000/api/admin/create', {
+    fetch('https://ztims-api.onrender.com/api/admin/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
         body: JSON.stringify(payload)

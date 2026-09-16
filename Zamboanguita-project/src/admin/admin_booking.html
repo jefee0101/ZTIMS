@@ -406,7 +406,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
                 try {
                     // 1. Post to your booking records collection
-                    const bookingResponse = await fetch('http://localhost:5000/api/bookings', {
+                    const bookingResponse = await fetch('https://ztims-api.onrender.com/api/bookings', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                         body: JSON.stringify(bookingPayload)
@@ -418,7 +418,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                     }
 
                     // 2. Automatically update the permanent User Account Profile structure in MongoDB
-                    const profileResponse = await fetch(`http://localhost:5000/api/users/${activeUserId}`, {
+                    const profileResponse = await fetch(`https://ztims-api.onrender.com/api/users/${activeUserId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                         body: JSON.stringify({
@@ -460,7 +460,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         /* 🌟 MONGODB DATABASE DATA-STREAM PIPELINE */
         async function fetchLiveUserBookings() {
             try {
-                const response = await fetch('http://localhost:5000/api/bookings', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
+                const response = await fetch('https://ztims-api.onrender.com/api/bookings', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } });
                 if (!response.ok) throw new Error("API stream connection broken");
                 
                 const mongoData = await response.json();
@@ -669,7 +669,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
             
             if (confirm(`Are you sure you want to ${trackingKeyword} this booking request from ${dataRow.name}?`)) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/bookings/status/${dataRow._id}`, {
+                    const response = await fetch(`https://ztims-api.onrender.com/api/bookings/status/${dataRow._id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
                         body: JSON.stringify({ status: apiStatusValue })
