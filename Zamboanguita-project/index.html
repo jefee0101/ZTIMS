@@ -124,9 +124,94 @@
         }
         .sidebar-brand-short { display: none; }
         @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+        /* Text arrives instead of simply being there: each line lifts into place
+           a beat after the one above it. The delay is set per element with
+           --rise-delay, so one rule covers the sidebar, the hero and the section
+           headings. Anyone who has asked their system for less motion gets the
+           text immediately and still, rather than a stripped-down version. */
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(0.7rem); }
+            to   { opacity: 1; transform: none; }
+        }
+        .rise {
+            opacity: 0;
+            animation: riseIn .55s cubic-bezier(.16, .84, .44, 1) both;
+            animation-delay: var(--rise-delay, 0s);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .rise { animation: none; opacity: 1; }
+        }
     </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+
+<script>
+/* ==========================================================
+   THEME (dark / light)
+   Every page used to do this its own way — three different class names, four
+   different toggle functions, and the sign-in page following none of them, so
+   choosing light on one page did nothing on the next. This is the single
+   implementation: it stores one choice and applies every class convention the
+   pages' stylesheets rely on, so all of them respond to it.
+
+   window.toggleTheme()            flips and remembers the choice
+   window.toggleDarkMode()         the same, under the name inline onclick uses
+   window.applyTheme('dark'|'light')
+   ========================================================== */
+(function () {
+    var STORAGE_KEY = 'theme';
+
+    function apply(theme) {
+        var dark = theme !== 'light';
+        var root = document.documentElement;
+
+        // Pages define their palette against one of these three, depending on
+        // when they were written. Setting all of them keeps every page correct
+        // without rewriting each stylesheet.
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light-mode', !dark);
+        if (document.body) {
+            document.body.classList.toggle('light-mode', !dark);
+            document.body.classList.toggle('dark-mode', dark);
+        }
+
+        // A moon while dark, a sun while light — the same way round everywhere.
+        var glyph = dark ? 'dark_mode' : 'light_mode';
+        ['themeIcon', 'themeToggleIcon'].forEach(function (id) {
+            var icon = document.getElementById(id);
+            if (icon) icon.textContent = glyph;
+        });
+
+        var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
+        ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
+            var button = document.getElementById(id);
+            if (button) { button.title = label; button.setAttribute('aria-label', label); }
+        });
+    }
+
+    function current() {
+        try { return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'; }
+        catch (e) { return 'dark'; }   // private browsing
+    }
+
+    window.applyTheme = apply;
+
+    window.toggleTheme = function () {
+        var next = current() === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem(STORAGE_KEY, next); } catch (e) { /* private browsing */ }
+        apply(next);
+    };
+
+    // Pages written earlier call this name from an inline onclick.
+    window.toggleDarkMode = window.toggleTheme;
+
+    apply(current());
+    // The body classes cannot be set before the body exists, so they are applied
+    // again once it does. The html class above already prevents the flash.
+    document.addEventListener('DOMContentLoaded', function () { apply(current()); });
+})();
+</script>
 
 <script>
 /* ==========================================================
@@ -389,11 +474,11 @@
 
     <div class="mb-8 max-md:hidden flex items-start justify-between gap-2">
         <a href="index.html" class="px-2 block">
-            <span class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary block leading-tight">
+            <span class="sidebar-brand-full rise text-xl font-extrabold tracking-tight font-headline text-primary block leading-tight">
                 EXPLORE<br><span class="text-surface-bright">ZAMBOANGUITA</span>
             </span>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span>
-            <span class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2 block">Tourism Portal</span>
+            <span class="sidebar-label rise text-[10px] uppercase tracking-widest text-on-surface-variant mt-2 block" style="--rise-delay:.08s">Tourism Portal</span>
         </a>
         <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                 class="shrink-0 p-1.5 rounded-lg text-on-surface-variant hover:text-surface-bright hover:bg-surface-container-high transition-all">
@@ -402,17 +487,17 @@
     </div>
 
     <nav class="md:flex-1 md:space-y-2 max-md:flex max-md:flex-1 max-md:justify-around">
-        <button data-nav="spots" title="Destinations" class="nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="spots" title="Destinations" style="--rise-delay:.16s" class="rise nav-item active w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                         max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">location_on</span>
             <span class="sidebar-label max-md:text-[10px]">Destinations</span>
         </button>
-        <button data-nav="reviews" title="Reviews" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="reviews" title="Reviews" style="--rise-delay:.22s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">star</span>
             <span class="sidebar-label max-md:text-[10px]">Reviews</span>
         </button>
-        <button data-nav="settings" title="Settings" class="nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
+        <button data-nav="settings" title="Settings" style="--rise-delay:.28s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
                                            max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1 max-md:text-[10px]">
             <span class="material-symbols-outlined text-surface-bright">settings</span>
             <span class="sidebar-label max-md:text-[10px]">Settings</span>
@@ -420,7 +505,7 @@
     </nav>
 
     <div class="md:mt-auto md:pt-4 max-md:flex max-md:items-center">
-        <button id="authActionBtn" class="w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
+        <button id="authActionBtn" style="--rise-delay:.34s" class="rise w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-1">
             <span id="authActionIcon" class="material-symbols-outlined">login</span>
             <span id="authActionLabel" class="sidebar-label max-md:text-[10px]">Sign In</span>
@@ -431,7 +516,7 @@
 <div class="content-shell md:ml-64 max-md:pb-20 min-h-screen flex flex-col">
 
     <header class="sticky top-0 z-40 flex justify-between items-center px-6 md:px-10 py-3 bg-background/85 backdrop-blur-md">
-        <h1 id="viewTitle" class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
+        <h1 id="viewTitle" class="rise text-sm font-bold uppercase tracking-widest text-on-surface-variant">Tourist Spots &amp; Accommodations</h1>
         <div class="flex items-center gap-3">
             <button id="themeToggleBtn" class="p-2 rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
@@ -451,18 +536,18 @@
                     <div class="absolute inset-0 bg-black/30"></div>
                 </div>
                 <div class="relative z-10 px-6 md:px-12 max-w-3xl">
-                    <h2 class="text-4xl md:text-6xl font-display font-black tracking-tighter leading-[0.95] text-white mb-3">
+                    <h2 class="rise text-4xl md:text-6xl font-display font-black tracking-tighter leading-[0.95] text-white mb-3" style="--rise-delay:.12s">
                         Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
                     </h2>
-                    <p class="text-base md:text-lg text-white/80 max-w-xl leading-relaxed">
+                    <p class="rise text-base md:text-lg text-white/80 max-w-xl leading-relaxed" style="--rise-delay:.26s">
                         Experience the beauty and the hidden gems of Zamboanguita.
                     </p>
                 </div>
             </section>
 
             <section class="px-6 md:px-12 py-10 bg-surface-container-low">
-                <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2">Tourist Spots &amp; Accommodations</h2>
-                <p class="text-on-surface-variant mb-6">Browse everything the municipality has to offer.</p>
+                <h2 class="rise text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2" style="--rise-delay:.34s">Tourist Spots &amp; Accommodations</h2>
+                <p class="rise text-on-surface-variant mb-6" style="--rise-delay:.42s">Browse everything the municipality has to offer.</p>
 
                 <div class="flex flex-col md:flex-row gap-4 md:items-center mb-4">
                     <div class="relative flex-1 max-w-md">
@@ -690,10 +775,13 @@
     let allSpots = [];
     let activeCategory = 'all';
 
-    function renderSpotCard(spot) {
+    function renderSpotCard(spot, index) {
         const card = document.createElement('a');
         card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        card.className = 'group block rounded-2xl overflow-hidden bg-surface shadow-sm hover:shadow-xl transition-all hover:-translate-y-1';
+        card.className = 'rise group block rounded-2xl overflow-hidden bg-surface shadow-sm hover:shadow-xl transition-all hover:-translate-y-1';
+        // Cards arrive one after another, capped so a long list doesn't leave the
+        // last few waiting noticeably.
+        card.style.setProperty('--rise-delay', `${Math.min(index || 0, 8) * 0.05}s`);
         const photoCount = Array.isArray(spot.images) && spot.images.length
             ? spot.images.length
             : (spot.imageUrl ? 1 : 0);
@@ -749,7 +837,7 @@
         }
 
         resultCount.textContent = `Showing ${matches.length} of ${allSpots.length}`;
-        matches.forEach(spot => spotsContainer.appendChild(renderSpotCard(spot)));
+        matches.forEach((spot, index) => spotsContainer.appendChild(renderSpotCard(spot, index)));
     }
 
     searchInput.addEventListener('input', applyFilters);
@@ -1057,13 +1145,8 @@
     try { applySidebarState(localStorage.getItem('sidebarCollapsed') === '1'); }
     catch { applySidebarState(false); }
 
-    const themeToggleIcon = document.getElementById('themeToggleIcon');
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        themeToggleIcon.textContent = isDark ? 'dark_mode' : 'bedtime';
-    });
-    themeToggleIcon.textContent = document.documentElement.classList.contains('dark') ? 'dark_mode' : 'bedtime';
+    // Theme is the shared module's job, including the icon it shows.
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
 
     /* ---------------- start ---------------- */
 

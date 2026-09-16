@@ -53,7 +53,74 @@
   </style>
 </head>
 
-<body id="body" class="light-mode overflow-hidden">
+<body id="body" class="overflow-hidden">
+
+<script>
+/* ==========================================================
+   THEME (dark / light)
+   Every page used to do this its own way — three different class names, four
+   different toggle functions, and the sign-in page following none of them, so
+   choosing light on one page did nothing on the next. This is the single
+   implementation: it stores one choice and applies every class convention the
+   pages' stylesheets rely on, so all of them respond to it.
+
+   window.toggleTheme()            flips and remembers the choice
+   window.toggleDarkMode()         the same, under the name inline onclick uses
+   window.applyTheme('dark'|'light')
+   ========================================================== */
+(function () {
+    var STORAGE_KEY = 'theme';
+
+    function apply(theme) {
+        var dark = theme !== 'light';
+        var root = document.documentElement;
+
+        // Pages define their palette against one of these three, depending on
+        // when they were written. Setting all of them keeps every page correct
+        // without rewriting each stylesheet.
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light-mode', !dark);
+        if (document.body) {
+            document.body.classList.toggle('light-mode', !dark);
+            document.body.classList.toggle('dark-mode', dark);
+        }
+
+        // A moon while dark, a sun while light — the same way round everywhere.
+        var glyph = dark ? 'dark_mode' : 'light_mode';
+        ['themeIcon', 'themeToggleIcon'].forEach(function (id) {
+            var icon = document.getElementById(id);
+            if (icon) icon.textContent = glyph;
+        });
+
+        var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
+        ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
+            var button = document.getElementById(id);
+            if (button) { button.title = label; button.setAttribute('aria-label', label); }
+        });
+    }
+
+    function current() {
+        try { return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'; }
+        catch (e) { return 'dark'; }   // private browsing
+    }
+
+    window.applyTheme = apply;
+
+    window.toggleTheme = function () {
+        var next = current() === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem(STORAGE_KEY, next); } catch (e) { /* private browsing */ }
+        apply(next);
+    };
+
+    // Pages written earlier call this name from an inline onclick.
+    window.toggleDarkMode = window.toggleTheme;
+
+    apply(current());
+    // The body classes cannot be set before the body exists, so they are applied
+    // again once it does. The html class above already prevents the flash.
+    document.addEventListener('DOMContentLoaded', function () { apply(current()); });
+})();
+</script>
 
 <script>
 /* ==========================================================
@@ -300,25 +367,6 @@
       } else {
         passwordInput.type = "password";
         icon.innerHTML = "visibility";
-      }
-    }
-
-    function toggleTheme() {
-      const html = document.documentElement;
-      const body = document.getElementById("body");
-      const icon = document.getElementById("themeIcon");
-      html.classList.toggle("dark");
-      
-      if(html.classList.contains("dark")) {
-        body.classList.remove("light-mode");
-        body.classList.add("dark-mode");
-        icon.innerHTML = "light_mode";
-        localStorage.setItem("theme", "dark");
-      } else {
-        body.classList.remove("dark-mode");
-        body.classList.add("light-mode");
-        icon.innerHTML = "dark_mode";
-        localStorage.setItem("theme", "light");
       }
     }
 
