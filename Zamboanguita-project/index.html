@@ -206,46 +206,15 @@
         </div>
     </section>
 
-    <section class="py-32 bg-surface-container-low overflow-hidden transition-colors duration-300">
+    <section id="spotsSection" class="py-32 bg-surface-container-low overflow-hidden transition-colors duration-300">
         <div class="px-8 md:px-20 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div class="max-w-2xl">
-                <h2 class="text-5xl font-display font-bold tracking-tight text-on-surface mb-4">Tourist Spots</h2>
+                <h2 class="text-5xl font-display font-bold tracking-tight text-on-surface mb-4">Tourist Spots &amp; Accommodations</h2>
+                <p class="text-on-surface-variant">Browse freely as a guest — sign in only when you're ready to book.</p>
             </div>
         </div>
-        <div class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar">
-            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
-                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
-                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://video.360cities.net/marytravelerp/01970039_5kVRM2-1024x512.jpg" alt="Najandig Peak View"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Mountain Adventure</span>
-                        <h3 class="text-3xl font-display font-bold text-white mb-2">Najandig Peak</h3>
-                        <p class="text-white/70 text-sm line-clamp-2">The highest altar of solitude, where the mountains meet the clouds in a dance of light and outlooking view of Apo Island.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
-                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
-                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://mindanao.politiko.com.ph/wp-content/uploads/2017/07/43-1.jpg" alt="Turtle Island"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <span class="text-secondary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Feel the vibes to unwind</span>
-                        <h3 class="text-3xl font-display font-bold text-white mb-2">Turtle Island</h3>
-                        <p class="text-white/70 text-sm line-clamp-2">Experience the beauty of Turtle Island</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex-none w-[350px] md:w-[450px] group cursor-pointer">
-                <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
-                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://tse4.mm.bing.net/th/id/OIP.E-J7Kg_u_urHLf6uGZkWwQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Hot Spring"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-                    <div class="absolute bottom-8 left-8 right-8">
-                        <span class="text-tertiary font-label text-xs font-bold uppercase tracking-widest mb-2 block">Natural Hot Spring</span>
-                        <h3 class="text-3xl font-display font-bold text-white mb-2">Jomao-as Hot Spring</h3>
-                        <p class="text-white/70 text-sm line-clamp-2">A natural Hot Spring.</p>
-                    </div>
-                </div>
-            </div>
+        <div id="spotsContainer" class="flex flex-nowrap space-x-8 px-8 md:px-20 overflow-x-auto pb-12 no-scrollbar">
+            <p id="spotsEmptyState" class="text-on-surface-variant px-2">Loading tourist spots...</p>
         </div>
     </section>
 
@@ -306,24 +275,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-[#0D253F] p-5 rounded-xl border border-[#264653]/20">
                         <h4 class="font-display font-bold text-lg text-[#FFB300] mb-3 flex items-center">
-                            <span class="material-symbols-outlined mr-2 !text-xl">payments</span> Estimated Travel Fees
+                            <span class="material-symbols-outlined mr-2 !text-xl">payments</span> Estimated Fees
                         </h4>
                         <div class="space-y-3">
                             <div class="flex justify-between items-center border-b border-[#264653]/10 pb-2">
-                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">directions_bus</span> Ceres Bus Fare</span>
-                                <span id="feeBus" class="font-bold text-sm text-[#E65100]">₱0.00</span>
+                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">directions_bus</span> Travel Fee</span>
+                                <span id="feeTravel" class="font-bold text-sm text-[#E65100]">₱0.00</span>
                             </div>
                             <div class="flex justify-between items-center pb-1">
-                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">two_wheeler</span> Motorcycle (Habal-Habal)</span>
-                                <span id="feeMotor" class="font-bold text-sm text-[#E65100]">₱0.00</span>
+                                <span class="text-sm text-gray-300 flex items-center"><span class="material-symbols-outlined mr-2 !text-lg">door_open</span> Entrance Fee</span>
+                                <span id="feeEntrance" class="font-bold text-sm text-[#E65100]">₱0.00</span>
                             </div>
                         </div>
-                        <p class="text-[11px] text-gray-400 mt-4 italic">* Estimated rates from nearby transport hubs.</p>
+                        <p id="modalHours" class="text-[11px] text-gray-400 mt-4 italic">Open Everyday · All Day</p>
                     </div>
                     <div class="rounded-xl overflow-hidden border border-[#264653]/20 min-h-[220px] relative bg-black">
-                        <iframe id="modalMap" class="w-full h-full border-0 min-h-[220px]" src="" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <img id="modalImage" class="w-full h-full object-cover" src="" alt="" />
                     </div>
                 </div>
+                <button id="modalBookNowBtn" class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">event_available</span> Book Now
+                </button>
             </div>
         </div>
     </div>
@@ -359,6 +331,12 @@
         window.location.href = 'src/user/user_login.html';
     }
 
+    // "Explore" actions stay on the public landing page and scroll to the spots —
+    // guests browse freely here; login is only requested when they try to book.
+    function scrollToSpots() {
+        document.getElementById('spotsSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
     // Theme Switch Click Action Logic
     themeToggleBtn.addEventListener('click', () => {
         const isDark = document.documentElement.classList.toggle('dark');
@@ -374,8 +352,8 @@
 
     // Event listeners attached to your interactive elements
     navAuthBtn.addEventListener('click', handleRouting);
-    heroExploreBtn.addEventListener('click', handleRouting);
-    ctaExploreBtn.addEventListener('click', handleRouting);
+    heroExploreBtn.addEventListener('click', scrollToSpots);
+    ctaExploreBtn.addEventListener('click', scrollToSpots);
 
     // Sync visual UI elements to match active theme once page structures are complete
     window.addEventListener('DOMContentLoaded', () => {
@@ -389,72 +367,106 @@
         }
     });
 
-    // Dynamic Pop-up Data & View Controller logic for local tourist spots
-    const spotsData = {
-        "Najandig Peak": {
-            category: "Mountain Adventure",
-            description: "The highest altar of solitude, where the mountains meet the clouds in a dance of light and outlooking view of Apo Island. Great for hiking, mountaineering, and panoramic photography.",
-            bus: "₱75.00",
-            motor: "₱150.00",
-            mapUrl: "https://www.google.com/maps/place/Najandig+Peak/@9.1974428,123.1388166,1113m/data=!3m2!1e3!4b1!4m6!3m5!1s0x33ab5f7c25f2fb4f:0xf028ec2128ecf1fe!8m2!3d9.1974375!4d123.1436875!16s%2Fg%2F11t5wyxs75?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D"
-        },
-        "Turtle Island": {
-            category: "Feel the vibes to unwind",
-            description: "Experience the vibrant and beautiful coastal sea vibes of Zamboanguita. Crystal clear waters, rich marine sanctuaries, and beautiful views perfect for snorkeling and beach lovers.",
-            bus: "₱70.00",
-            motor: "₱100.00",
-            mapUrl: "https://www.google.com/maps/place/Turtle+Island,+Polo+Lutoban,+Zamboanguita/@9.0694708,123.1483946,1113m/data=!3m2!1e3!4b1!4m6!3m5!1s0x33ab57006ba619b7:0x7025b87d01b4cdf6!8m2!3d9.0694655!4d123.1509695!16s%2Fg%2F11yfd2zqfv?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D"
-        },
-        "Jomao-as Hot Spring": {
-            category: "Natural Hot Spring",
-            description: "A natural thermal hot spring located in the peaceful countryside regions of Zamboanguita. Perfect for relaxing baths, muscle recovery, and soothing weekend getaways.",
-            bus: "₱70.00",
-            motor: "₱120.00",
-            mapUrl: "https://www.google.com/maps/place/Jumao-as+Hot+Spring/@9.2071016,123.1791458,1113m/data=!3m2!1e3!4b1!4m6!3m5!1s0x33ab5d001d461c8f:0x7cc28d626b08d1b7!8m2!3d9.2070963!4d123.1817207!16s%2Fg%2F11w2gx5twb?hl=en-GB&entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D"
-        }
-    };
+    // ==========================================
+    // Guests browse tourist spots/accommodations here with no login required.
+    // Only clicking "Book Now" gates them behind register/login (redirect-with-return).
+    // ==========================================
+    const API_BASE = "https://ztims-api.onrender.com/api";
 
+    const spotsContainer = document.getElementById('spotsContainer');
     const spotModal = document.getElementById('spotModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const modalTitle = document.getElementById('modalTitle');
     const modalCategory = document.getElementById('modalCategory');
     const modalDescription = document.getElementById('modalDescription');
-    const feeBus = document.getElementById('feeBus');
-    const feeMotor = document.getElementById('feeMotor');
-    const modalMap = document.getElementById('modalMap');
+    const modalImage = document.getElementById('modalImage');
+    const modalHours = document.getElementById('modalHours');
+    const feeTravel = document.getElementById('feeTravel');
+    const feeEntrance = document.getElementById('feeEntrance');
+    const modalBookNowBtn = document.getElementById('modalBookNowBtn');
 
-    document.querySelectorAll('main section h3').forEach(titleElement => {
-        const card = titleElement.closest('.group.cursor-pointer');
-        if (!card) return;
+    let currentSpotId = null;
 
-        card.addEventListener('click', () => {
-            const spotName = titleElement.textContent.trim();
-            const data = spotsData[spotName];
+    function formatPeso(amount) {
+        const value = Number(amount) || 0;
+        return `₱${value.toFixed(2)}`;
+    }
 
-            if (data) {
-                modalTitle.textContent = spotName;
-                modalCategory.textContent = data.category;
-                modalDescription.textContent = data.description;
-                feeBus.textContent = data.bus;
-                feeMotor.textContent = data.motor;
-                modalMap.src = data.mapUrl;
+    function renderSpotCard(spot) {
+        const card = document.createElement('div');
+        card.className = 'flex-none w-[350px] md:w-[450px] group cursor-pointer';
+        card.dataset.spotId = spot._id;
+        card.innerHTML = `
+            <div class="relative h-[600px] rounded-xl overflow-hidden mb-6">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${spot.imageUrl || 'https://placehold.co/450x600?text=Zamboanguita'}" alt="${spot.title}"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                <div class="absolute bottom-8 left-8 right-8">
+                    <span class="text-primary font-label text-xs font-bold uppercase tracking-widest mb-2 block">${spot.label || spot.category || (spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot')}</span>
+                    <h3 class="text-3xl font-display font-bold text-white mb-2">${spot.title}</h3>
+                    <p class="text-white/70 text-sm line-clamp-2">${spot.description}</p>
+                </div>
+            </div>
+        `;
+        card.addEventListener('click', () => openSpotModal(spot));
+        return card;
+    }
 
-                spotModal.classList.remove('invisible', 'opacity-0');
-                spotModal.classList.add('visible', 'opacity-100');
-            }
-        });
-    });
+    function openSpotModal(spot) {
+        currentSpotId = spot._id;
+        modalTitle.textContent = spot.title;
+        modalCategory.textContent = spot.label || spot.category || '';
+        modalDescription.textContent = spot.description;
+        modalImage.src = spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita';
+        modalHours.textContent = `Open ${spot.workingDays || 'Everyday'} · ${spot.workingTime || 'All Day'}`;
+        feeTravel.textContent = formatPeso(spot.travelFee);
+        feeEntrance.textContent = formatPeso(spot.entranceFee);
+
+        spotModal.classList.remove('invisible', 'opacity-0');
+        spotModal.classList.add('visible', 'opacity-100');
+    }
 
     function handleCloseModal() {
         spotModal.classList.remove('visible', 'opacity-100');
         spotModal.classList.add('invisible', 'opacity-0');
-        modalMap.src = "";
+        currentSpotId = null;
     }
 
     closeModalBtn.addEventListener('click', handleCloseModal);
     spotModal.addEventListener('click', (e) => {
         if (e.target === spotModal) handleCloseModal();
     });
+
+    // Booking is the one action that requires an account: send the guest to
+    // login/register if needed, then straight back to booking this exact spot.
+    modalBookNowBtn.addEventListener('click', () => {
+        if (!currentSpotId) return;
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+            window.location.href = `src/user/user_booking.html?spotId=${currentSpotId}`;
+        } else {
+            window.location.href = `src/user/user_login.html?next=book&spotId=${currentSpotId}`;
+        }
+    });
+
+    async function loadSpots() {
+        try {
+            const response = await fetch(`${API_BASE}/spots`);
+            if (!response.ok) throw new Error('Failed to load spots');
+            const spots = await response.json();
+
+            spotsContainer.innerHTML = '';
+            if (!Array.isArray(spots) || spots.length === 0) {
+                spotsContainer.innerHTML = '<p class="text-on-surface-variant px-2">No tourist spots have been published yet. Please check back soon.</p>';
+                return;
+            }
+            spots.forEach(spot => spotsContainer.appendChild(renderSpotCard(spot)));
+        } catch (error) {
+            console.error('❌ Failed to load tourist spots:', error);
+            spotsContainer.innerHTML = '<p class="text-on-surface-variant px-2">Unable to load tourist spots right now. Please try again later.</p>';
+        }
+    }
+
+    loadSpots();
 </script>
 </body>
 </html>

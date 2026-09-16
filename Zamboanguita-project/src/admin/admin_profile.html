@@ -213,6 +213,34 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                             </button>
                         </div>
                     </section>
+
+                    <section class="glass-panel rounded-2xl p-8">
+                        <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined">storefront</span> Create Resort Owner Account
+                        </h3>
+                        <p class="text-xs text-on-surface-variant mb-4">Resort owners don't self-register — as Tourist Officer you issue their login here. They'll only be able to manage their own spot listings and their own bookings.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Resort / Business Name</label>
+                                <input id="newOwnerResortName" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g., Najandig Peak Eco-Resort" type="text">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Owner Email Address</label>
+                                <input id="newOwnerEmail" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="owner@example.com" type="email">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Phone (optional)</label>
+                                <input id="newOwnerPhone" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="09XX XXX XXXX" type="text">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Assign Account Password</label>
+                                <input id="newOwnerPassword" class="w-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface font-semibold rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="••••••••" type="password">
+                            </div>
+                            <button onclick="submitNewResortOwner()" class="w-full mt-2 py-3.5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">how_to_reg</span> CREATE RESORT OWNER
+                            </button>
+                        </div>
+                    </section>
                 </div>
 
                 <!-- Right Security Column -->
@@ -271,7 +299,30 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
                         </div>
                     </section>
 
-                   
+                    <section class="glass-panel rounded-2xl p-8">
+                        <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
+                            <span class="material-symbols-outlined">storefront</span> Resort Owner Directory
+                        </h3>
+                        <div class="overflow-hidden rounded-xl border border-outline-variant/30 bg-background/40">
+                            <div class="max-h-[260px] overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                                            <th class="px-6 py-4">Resort</th>
+                                            <th class="px-6 py-4 text-right">Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resortOwnerListTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant">
+                                        <tr>
+                                            <td colspan="2" class="px-6 py-8 text-center">
+                                                Connecting to system registry...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -365,6 +416,80 @@ function submitNewAdmin() {
     });
 }
 
+/* =====================================================
+   FETCH RESORT OWNER DIRECTORY
+===================================================== */
+function renderResortOwnerRows(owners) {
+    const tbody = document.getElementById('resortOwnerListTableBody');
+    tbody.innerHTML = '';
+
+    if (!owners || owners.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="2" class="px-6 py-8 text-center">No resort owner accounts yet.</td></tr>`;
+        return;
+    }
+
+    owners.forEach(owner => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-surface-container-highest transition-colors";
+        tr.innerHTML = `
+            <td class="px-6 py-4 font-medium text-on-surface flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-lg">storefront</span>
+                ${owner.resortName}
+            </td>
+            <td class="px-6 py-4 text-right text-xs">${owner.email}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function loadResortOwnerDirectory() {
+    fetch('https://ztims-api.onrender.com/api/resort-owners', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
+    .then(res => res.json())
+    .then(owners => renderResortOwnerRows(owners))
+    .catch(err => {
+        console.warn("Could not load resort owner directory:", err);
+        renderResortOwnerRows([]);
+    });
+}
+
+/* =====================================================
+   SAVE NEW RESORT OWNER VIA SUBMIT
+===================================================== */
+function submitNewResortOwner() {
+    const resortName = document.getElementById('newOwnerResortName').value.trim();
+    const email = document.getElementById('newOwnerEmail').value.trim();
+    const phone = document.getElementById('newOwnerPhone').value.trim();
+    const password = document.getElementById('newOwnerPassword').value.trim();
+
+    if (!resortName || !email || !password) {
+        alert("Please provide a resort name, email, and password to create the account.");
+        return;
+    }
+
+    fetch('https://ztims-api.onrender.com/api/resort-owners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+        body: JSON.stringify({ resortName, email, phone, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Success! Resort owner account created for ${resortName}.`);
+            document.getElementById('newOwnerResortName').value = '';
+            document.getElementById('newOwnerEmail').value = '';
+            document.getElementById('newOwnerPhone').value = '';
+            document.getElementById('newOwnerPassword').value = '';
+            loadResortOwnerDirectory();
+        } else {
+            alert("Could not create resort owner account: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Networking connection error while creating resort owner:", err);
+        alert("Could not reach the server. Please try again.");
+    });
+}
+
 function autoUploadAdminPhoto(inputElement) {
     if (inputElement.files && inputElement.files[0]) {
         const fileObj = inputElement.files[0];
@@ -407,6 +532,7 @@ window.onload = function(){
     }
     
     loadAdminDirectory();
+    loadResortOwnerDirectory();
 }
 </script>
 </body>

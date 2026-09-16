@@ -53,12 +53,15 @@ mongoose.connect(MONGO_URI)
 
 // 1. Booking Schema (Linked explicitly via userId)
 const BookingSchema = new mongoose.Schema({
-    userId: { type: String, required: true }, 
+    userId: { type: String, required: true },
     guestName: { type: String, required: true },
     guestEmail: { type: String, required: true },
     nationality: { type: String, required: true },
-    phone: { type: String, required: true }, 
+    phone: { type: String, required: true },
     destination: { type: String, required: true },
+    // References the booked Spot so a Resort Owner can see only bookings made for their own listings.
+    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', default: null },
+    resortOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'ResortOwner', default: null },
     checkInDate: { type: String, required: true },
     checkOutDate: { type: String, required: true },
     guestCount: { type: Number, required: true }, 
@@ -87,12 +90,22 @@ const Admin = mongoose.model('Admin', AdminSchema);
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
-    fullName: { type: String, default: "" },      
-    phone: { type: String, default: "" },         
-    nationality: { type: String, default: "" }    
-}, { collection: 'users', timestamps: true }); 
+    fullName: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    nationality: { type: String, default: "" }
+}, { collection: 'users', timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
+
+// 3b. Resort Owner Authentication Schema (manages their own tourist spots/accommodations only)
+const ResortOwnerSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true, select: false },
+    resortName: { type: String, required: true, trim: true },
+    phone: { type: String, default: "" }
+}, { collection: 'resortOwners', timestamps: true });
+
+const ResortOwner = mongoose.model('ResortOwner', ResortOwnerSchema);
 
 // 4. 🌟 UPDATED: Review Schema perfectly paired with frontend assets & text fields
 const ReviewSchema = new mongoose.Schema({
@@ -106,13 +119,22 @@ const ReviewSchema = new mongoose.Schema({
 
 const Review = mongoose.model('Review', ReviewSchema);
 
-// 5. Minimalistic Spot Schema to fix visual layout parser errors 
+// 5. Spot Schema — covers both tourist spots and resort accommodations, owned either
+//    by the Tourist Officer (municipal-level, no owner) or by a Resort Owner account.
 const SpotSchema = new mongoose.Schema({
     title: { type: String, required: true },
     location: { type: String, required: true },
     category: { type: String, required: true },
     description: { type: String, required: true },
-    imageUrl: { type: String }
+    imageUrl: { type: String },
+    type: { type: String, enum: ['spot', 'accommodation'], default: 'spot' },
+    label: { type: String, default: "" },
+    workingDays: { type: String, default: "Everyday" },
+    workingTime: { type: String, default: "All Day" },
+    travelFee: { type: Number, default: 0 },
+    entranceFee: { type: Number, default: 0 },
+    // Null/absent = managed directly by the Tourist Officer. Set = owned by a Resort Owner.
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'ResortOwner', default: null }
 }, { timestamps: true });
 
 const Spot = mongoose.model('Spot', SpotSchema);
@@ -131,7 +153,20 @@ const requireAuth = (req, res, next) => {
 };
 
 const requireAdmin = [requireAuth, (req, res, next) => {
-    if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Administrator access required.' });
+    if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Tourist Officer access required.' });
+    return next();
+}];
+
+const requireResortOwner = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'resort_owner') return res.status(403).json({ success: false, message: 'Resort Owner access required.' });
+    return next();
+}];
+
+// Tourist Officer or Resort Owner — used on routes both manage, each scoped to their own data.
+const requireStaff = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'admin' && req.auth.role !== 'resort_owner') {
+        return res.status(403).json({ success: false, message: 'Staff access required.' });
+    }
     return next();
 }];
 
@@ -206,6 +241,56 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
 });
 
 /**
+ * POST: Tourist Officer creates a Resort Owner account (owners do not self-register —
+ * the Tourist Officer oversees the whole system and issues these accounts directly)
+ * Target URL: http://localhost:5000/api/resort-owners
+ */
+app.post('/api/resort-owners', requireAdmin, async (req, res) => {
+    try {
+        const { email, password, resortName, phone } = req.body;
+
+        if (!email || !password || !resortName) {
+            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or resort name.' });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingOwner = await ResortOwner.findOne({ email: normalizedEmail });
+        if (existingOwner) {
+            return res.status(409).json({ success: false, message: 'This email is already registered as a resort owner.' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 12);
+        const newOwner = new ResortOwner({
+            email: normalizedEmail,
+            password: passwordHash,
+            resortName: resortName.trim(),
+            phone: phone || ""
+        });
+        await newOwner.save();
+
+        console.log(`🏨 New Resort Owner account created by Tourist Officer: ${normalizedEmail}`);
+        return res.status(201).json({ success: true, message: 'Resort owner account created!' });
+    } catch (error) {
+        console.error("❌ Create Resort Owner Endpoint Failure:", error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * GET: Tourist Officer lists all resort owner accounts
+ * Target URL: http://localhost:5000/api/resort-owners
+ */
+app.get('/api/resort-owners', requireAdmin, async (req, res) => {
+    try {
+        const owners = await ResortOwner.find({}, { password: 0 });
+        return res.status(200).json(owners);
+    } catch (error) {
+        console.error("❌ Get Resort Owner List Endpoint Failure:", error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
  * POST: Register new traveler accounts into MongoDB (🌟 UPGRADED TO CAPTURE INPUT VALUES)
  * Target URL: http://localhost:5000/api/register
  */
@@ -258,18 +343,21 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+        const resolvedRole = ['admin', 'resort_owner'].includes(role) ? role : 'user';
         let account = null;
 
-        if (role === 'admin') {
+        if (resolvedRole === 'admin') {
             account = await Admin.findOne({ email: normalizedEmail }).select('+password');
+        } else if (resolvedRole === 'resort_owner') {
+            account = await ResortOwner.findOne({ email: normalizedEmail }).select('+password');
         } else {
             account = await User.findOne({ email: normalizedEmail }).select('+password');
         }
 
         if (!account || !(await bcrypt.compare(password, account.password))) {
-            return res.status(401).json({ 
-                success: false, 
-                message: `Authentication failed: Invalid ${role === 'admin' ? 'Admin' : 'User'} Credentials.` 
+            return res.status(401).json({
+                success: false,
+                message: `Authentication failed: Invalid ${resolvedRole === 'admin' ? 'Tourist Officer' : resolvedRole === 'resort_owner' ? 'Resort Owner' : 'User'} Credentials.`
                 });
         }
 
@@ -277,15 +365,16 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         const responseData = {
             success: true,
             message: `Login Successful! Welcome back.`,
-            token: createToken(account, role === 'admin' ? 'admin' : 'user'),
-            role: role === 'admin' ? 'admin' : 'user',
+            token: createToken(account, resolvedRole),
+            role: resolvedRole,
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
-                name: account.fullName || account.email.split('@')[0],
+                name: account.fullName || account.resortName || account.email.split('@')[0],
                 fullName: account.fullName || "",
                 phone: account.phone || "",
-                nationality: account.nationality || ""
+                nationality: account.nationality || "",
+                resortName: account.resortName || ""
             }
         };
 
@@ -358,9 +447,10 @@ app.post('/api/reset-password', async (req, res) => {
         const { email, newPassword } = req.body;
         if (!email || !newPassword) return res.status(400).json({ success: false, message: "Missing data payload." });
 
+        const passwordHash = await bcrypt.hash(newPassword, 12);
         const updatedUser = await User.findOneAndUpdate(
             { email: email.toLowerCase().trim() },
-            { $set: { password: newPassword } },
+            { $set: { password: passwordHash } },
             { new: true }
         );
 
@@ -379,15 +469,22 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
     try {
         console.log("➡️ Received Incoming Booking Payload Data:", req.body);
         
-        const { guestName, destination, guestCount } = req.body;
+        const { guestName, destination, guestCount, spotId } = req.body;
         if (!guestName || !destination || !guestCount) {
-            return res.status(400).json({ 
-                error: 'Bad Request', 
-                message: 'Validation failed: Missing mandatory parameter keys.' 
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'Validation failed: Missing mandatory parameter keys.'
             });
         }
 
-        const newBooking = new Booking({ ...req.body, userId: req.auth.sub });
+        // Linking to the actual Spot lets its Resort Owner see this booking scoped to their own listing.
+        let resortOwnerId = null;
+        if (spotId) {
+            const spot = await Spot.findById(spotId);
+            if (spot) resortOwnerId = spot.ownerId;
+        }
+
+        const newBooking = new Booking({ ...req.body, userId: req.auth.sub, resortOwnerId });
         const savedRecord = await newBooking.save();
         
         console.log("🚀 Booking Record Committed Successfully:", savedRecord._id);
@@ -411,9 +508,14 @@ app.post('/api/bookings', requireAuth, async (req, res) => {
 app.get('/api/bookings', requireAuth, async (req, res) => {
     try {
         const requestedUserId = req.query.userId;
-        const query = req.auth.role === 'admin'
-            ? (requestedUserId ? { userId: requestedUserId } : {})
-            : { userId: req.auth.sub };
+        let query;
+        if (req.auth.role === 'admin') {
+            query = requestedUserId ? { userId: requestedUserId } : {};
+        } else if (req.auth.role === 'resort_owner') {
+            query = { resortOwnerId: req.auth.sub };
+        } else {
+            query = { userId: req.auth.sub };
+        }
 
         const records = await Booking.find(query).sort({ createdAt: -1 });
         return res.json(records);
@@ -452,26 +554,28 @@ app.patch('/api/bookings/:id', requireAuth, async (req, res) => {
 });
 
 /**
- * PUT: Admin route to approve or reject a booking status inside MongoDB
+ * PUT: Tourist Officer (any booking) or Resort Owner (their own resort's bookings only)
+ * approves or rejects a booking status inside MongoDB
  */
-app.put('/api/bookings/status/:id', requireAdmin, async (req, res) => {
+app.put('/api/bookings/status/:id', requireStaff, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; 
+        const { status } = req.body;
 
         if (!['approved', 'disapproved'].includes(status)) {
             return res.status(400).json({ message: 'Invalid target status type parameter.' });
         }
 
-        const updatedBooking = await Booking.findByIdAndUpdate(
-            id,
-            { status: status },
-            { new: true }
-        );
-
-        if (!updatedBooking) {
+        const booking = await Booking.findById(id);
+        if (!booking) {
             return res.status(404).json({ message: 'Booking reference entry not found.' });
         }
+        if (req.auth.role === 'resort_owner' && String(booking.resortOwnerId) !== req.auth.sub) {
+            return res.status(403).json({ message: 'You may only manage bookings made for your own resort.' });
+        }
+
+        booking.status = status;
+        const updatedBooking = await booking.save();
 
         console.log(`📢 Booking ${id} status state updated to: ${status.toUpperCase()}`);
         return res.status(200).json({ success: true, data: updatedBooking });
@@ -638,21 +742,79 @@ app.get('/api/users', requireAdmin, async (req, res) => {
 /**
  * 🌟 GET & POST: Destination system endpoints to prevent dashboard client parsing error loops
  * Target URL: http://localhost:5000/api/spots
+ *
+ * GET stays public — guests browse tourist spots/accommodations without logging in.
+ * Pass ?mine=true (Resort Owner) to scope results to the caller's own listings.
  */
-app.get('/api/spots', async (req, res) => {
+app.get('/api/spots', optionalAuth, async (req, res) => {
     try {
-        const activeSpots = await Spot.find({}).sort({ createdAt: -1 });
+        const query = {};
+        if (req.query.mine === 'true' && req.auth?.role === 'resort_owner') {
+            query.ownerId = req.auth.sub;
+        }
+        const activeSpots = await Spot.find(query).sort({ createdAt: -1 });
         return res.status(200).json(activeSpots);
     } catch (error) {
         return res.status(500).json([]);
     }
 });
 
-app.post('/api/spots', requireAdmin, async (req, res) => {
+app.post('/api/spots', requireStaff, async (req, res) => {
     try {
-        const newSpot = new Spot(req.body);
+        const ownerId = req.auth.role === 'resort_owner' ? req.auth.sub : (req.body.ownerId || null);
+        const newSpot = new Spot({ ...req.body, ownerId });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * GET: Fetch a single spot by id (public — used to pre-fill a booking from the landing page)
+ * Target URL: http://localhost:5000/api/spots/:id
+ */
+app.get('/api/spots/:id', async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ message: 'Spot not found.' });
+        return res.status(200).json(spot);
+    } catch (error) {
+        return res.status(404).json({ message: 'Spot not found.' });
+    }
+});
+
+/**
+ * PUT/DELETE: Resort Owners manage only their own spot; the Tourist Officer manages any.
+ * Target URL: http://localhost:5000/api/spots/:id
+ */
+app.put('/api/spots/:id', requireStaff, async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ message: 'Spot not found.' });
+        if (req.auth.role === 'resort_owner' && String(spot.ownerId) !== req.auth.sub) {
+            return res.status(403).json({ message: 'You may only edit your own listing.' });
+        }
+
+        const { ownerId, ...updates } = req.body; // ownership cannot be reassigned from this route
+        Object.assign(spot, updates);
+        const savedSpot = await spot.save();
+        return res.status(200).json(savedSpot);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/spots/:id', requireStaff, async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ message: 'Spot not found.' });
+        if (req.auth.role === 'resort_owner' && String(spot.ownerId) !== req.auth.sub) {
+            return res.status(403).json({ message: 'You may only delete your own listing.' });
+        }
+
+        await spot.deleteOne();
+        return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

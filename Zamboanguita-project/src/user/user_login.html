@@ -151,7 +151,7 @@
         </div>
 
         <div class="mt-10 text-center">
-          <p class="text-gray-600 dark:text-gray-400">New to Zamboanguita? <a href="/Zamboanguita-project/src/user/user_create_account.html" class="text-primary font-bold hover:underline">Create an account</a></p>
+          <p class="text-gray-600 dark:text-gray-400">New to Zamboanguita? <a id="createAccountLink" href="/Zamboanguita-project/src/user/user_create_account.html" class="text-primary font-bold hover:underline">Create an account</a></p>
         </div>
       </div>
     </div>
@@ -252,6 +252,13 @@
     // Login Form Processing
     const loginFormElement = document.getElementById('loginForm');
     if (loginFormElement) {
+      // Carry the "book this spot after signing in" context into registration too.
+      const incomingParams = window.location.search;
+      if (incomingParams) {
+        const createAccountLink = document.getElementById('createAccountLink');
+        if (createAccountLink) createAccountLink.href += incomingParams;
+      }
+
       loginFormElement.addEventListener('submit', async (event) => {
         event.preventDefault(); 
 
@@ -301,10 +308,16 @@
             const currentPath = window.location.pathname;
             const projectRoot = currentPath.substring(0, currentPath.indexOf('/src/'));
 
-            if (inferredRole === 'admin') {
+            // If they arrived here from "Book Now" on a spot, send them straight back to that booking.
+            const returnParams = new URLSearchParams(window.location.search);
+            const spotId = returnParams.get('spotId');
+
+            if (returnParams.get('next') === 'book' && spotId) {
+                window.location.href = window.location.origin + projectRoot + "/src/user/user_booking.html?spotId=" + encodeURIComponent(spotId);
+            } else if (inferredRole === 'admin') {
                 window.location.href = window.location.origin + projectRoot + "/src/admin/admin_dashboard.html";
             } else {
-                window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html"; 
+                window.location.href = window.location.origin + projectRoot + "/src/user/user_dashboard.html";
             }
           } else {
             alert("Authentication failed: " + (result.message || "Invalid Credentials"));
