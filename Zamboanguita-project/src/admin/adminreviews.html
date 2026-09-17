@@ -615,6 +615,28 @@ body { overflow-x: hidden; }
     </main>
 
     <script>
+        /* ==========================================================
+           ESCAPING
+           Everything below this line renders text that came from the public:
+           a visitor's name and review, an establishment's own description.
+           Dropping that into innerHTML let a review containing markup run as
+           code in the officer's browser — where the officer's own session
+           token lives. Every interpolation is escaped now.
+           ========================================================== */
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+
+        // An image address is only ever used if it really is one: a stored
+        // "javascript:" or "data:text/html" value never reaches a src.
+        function safeImageUrl(value, fallback) {
+            const candidate = String(value || '').trim();
+            if (/^https?:\/\//i.test(candidate)) return escapeHtml(candidate);
+            return escapeHtml(fallback || '');
+        }
+
         const API_URL = 'https://ztims-api.onrender.com/api/reviews';
         let currentTabFilter = 'all';
         let fullCachedReviewsArray = [];
@@ -744,33 +766,33 @@ body { overflow-x: hidden; }
                     <div class="glass-card p-4 sm:p-6 rounded-xl hover:bg-surface-variant/40 transition-all duration-300">
                         <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
                             <div class="flex-1 flex gap-4">
-                                <img class="w-12 h-12 rounded-full object-cover border border-zinc-800" src="${userAvatar}" alt="User Avatar"/>
+                                <img class="w-12 h-12 rounded-full object-cover border border-zinc-800" src="${safeImageUrl(userAvatar, 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde')}" alt=""/>
                                 <div class="space-y-1.5 flex-1">
                                     <div class="flex items-center gap-3">
-                                        <h4 class="font-bold text-on-surface font-headline">${userName}</h4>
-                                        <span class="px-2.5 py-0.5 ${badgeStyle} text-[10px] uppercase font-black rounded tracking-widest">${reviewStatus}</span>
+                                        <h4 class="font-bold text-on-surface font-headline">${escapeHtml(userName)}</h4>
+                                        <span class="px-2.5 py-0.5 ${badgeStyle} text-[10px] uppercase font-black rounded tracking-widest">${escapeHtml(reviewStatus)}</span>
                                     </div>
                                     <div class="flex items-center gap-1 text-primary">
                                         ${dynamicStars}
-                                        <span class="ml-2 text-xs text-on-surface-variant font-medium">${dateString}</span>
+                                        <span class="ml-2 text-xs text-on-surface-variant font-medium">${escapeHtml(dateString)}</span>
                                     </div>
-                                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-3xl sm:pr-4 mt-1 font-medium break-words">"${reviewText}"</p>
+                                    <p class="text-on-surface-variant text-sm leading-relaxed max-w-3xl sm:pr-4 mt-1 font-medium break-words">"${escapeHtml(reviewText)}"</p>
                                     <div class="flex items-center gap-1.5 pt-1 text-xs font-bold text-primary">
                                         <span class="material-symbols-outlined text-sm">location_on</span>
-                                        ${spotName}
+                                        ${escapeHtml(spotName)}
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="flex flex-row flex-wrap lg:flex-col justify-end gap-2 lg:min-w-[140px] h-fit w-full lg:w-auto self-stretch lg:self-center">
                                 ${reviewStatus !== 'approved' ? `
-                                    <button onclick="updateStatusHandler('${review._id}', 'approved', this)" class="flex-1 min-h-[40px] py-2.5 px-3 text-xs font-bold text-on-surface bg-surface-container-high rounded-lg hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center gap-1.5">
+                                    <button onclick="updateStatusHandler('${escapeHtml(review._id)}', 'approved', this)" class="flex-1 min-h-[40px] py-2.5 px-3 text-xs font-bold text-on-surface bg-surface-container-high rounded-lg hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center gap-1.5">
                                         <span class="material-symbols-outlined text-sm">check_circle</span> Approve
                                     </button>
                                 ` : ''}
                                 
                                 ${reviewStatus !== 'hidden' ? `
-                                    <button onclick="updateStatusHandler('${review._id}', 'hidden', this)" class="flex-1 min-h-[40px] py-2.5 px-3 text-xs font-bold text-on-surface bg-surface-container-high rounded-lg hover:bg-stone-700 transition-all flex items-center justify-center gap-1.5">
+                                    <button onclick="updateStatusHandler('${escapeHtml(review._id)}', 'hidden', this)" class="flex-1 min-h-[40px] py-2.5 px-3 text-xs font-bold text-on-surface bg-surface-container-high rounded-lg hover:bg-stone-700 transition-all flex items-center justify-center gap-1.5">
                                         <span class="material-symbols-outlined text-sm">visibility_off</span> Hide
                                     </button>
                                 ` : ''}
@@ -899,6 +921,18 @@ body { overflow-x: hidden; }
             loadAdminReviewsData();
         }
 
+
+        // Only the Tourist Officer belongs here. Without this the page's whole
+        // shell loaded for anyone with the address — the API refused the data,
+        // so it looked broken rather than protected.
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.replace('../staff_login.html');
+                return false;
+            }
+            return true;
+        }
+
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
@@ -924,6 +958,8 @@ body { overflow-x: hidden; }
 
 
         window.addEventListener('DOMContentLoaded', () => {
+            if (!guardOfficerSession()) return;
+
             mountPortalAccountMenu();
             const savedTheme = localStorage.getItem("theme");
             const body = document.body;

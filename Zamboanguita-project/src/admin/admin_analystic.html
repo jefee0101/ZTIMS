@@ -759,6 +759,24 @@ body { overflow-x: hidden; }
 
     <!-- Core Pipeline Synchronization Scripts Block -->
     <script>
+        /* ==========================================================
+           ESCAPING
+           These lists render text written by establishment managers and
+           visitors. Anything that reaches innerHTML is escaped, so a title or
+           a description containing markup is shown rather than run.
+           ========================================================== */
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+
+        function safeImageUrl(value, fallback) {
+            const candidate = String(value || '').trim();
+            if (/^https?:\/\//i.test(candidate)) return escapeHtml(candidate);
+            return escapeHtml(fallback || '');
+        }
+
         const BASE_API_URL = 'https://ztims-api.onrender.com/api';
         const SPOTS_URL = `${BASE_API_URL}/spots`;
         const OWNERS_URL = `${BASE_API_URL}/establishment-managers`;
@@ -769,6 +787,18 @@ body { overflow-x: hidden; }
         let systemOwners = [];
         let systemUsers = [];
         let systemReviews = [];
+
+
+        // Only the Tourist Officer belongs here. Without this the page's whole
+        // shell loaded for anyone with the address — the API refused the data,
+        // so it looked broken rather than protected.
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.replace('../staff_login.html');
+                return false;
+            }
+            return true;
+        }
 
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
@@ -1020,7 +1050,7 @@ body { overflow-x: hidden; }
                     systemSpots.forEach(spot => {
                         const kind = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
                         const fee = Number(spot.entranceFee || 0).toFixed(2);
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${spot.title || 'Untitled'}</td><td class="text-stone-300">${spot.location || '—'}</td><td class="text-stone-400">${spot.category || '—'}</td><td class="text-stone-400">${kind}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-stone-400">${escapeHtml(spot.category || '—')}</td><td class="text-stone-400">${escapeHtml(kind)}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -1037,7 +1067,7 @@ body { overflow-x: hidden; }
                         <tbody class="divide-y divide-zinc-800/20">`;
                     systemOwners.forEach(owner => {
                         const listings = systemSpots.filter(spot => String(spot.ownerId) === String(owner._id)).length;
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${owner.establishmentName || owner.resortName || 'Unnamed establishment'}</td><td class="text-stone-300">${owner.email || '—'}</td><td class="text-stone-400">${owner.phone || '—'}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(owner.establishmentName || owner.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(owner.email || '—')}</td><td class="text-stone-400">${escapeHtml(owner.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -1126,15 +1156,15 @@ body { overflow-x: hidden; }
                     
                     const cardMarkup = `
                         <div class="glass-panel rounded-2xl overflow-hidden flex flex-col transition-all duration-300">
-                            <img src="${displayImg}" class="w-full h-52 object-cover" alt="${spot.title || 'Spot'}" onerror="this.src='${fallbackImg}'"/>
+                            <img src="${safeImageUrl(displayImg, fallbackImg)}" class="w-full h-52 object-cover" alt="${escapeHtml(spot.title || 'Spot')}" onerror="this.src='${fallbackImg}'"/>
                             <div class="p-6 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-[#eab308]/10 text-[#eab308] uppercase tracking-wider">${spot.category || 'General'}</span>
-                                    <h3 class="text-xl font-bold mt-2 text-white">${spot.title || 'Untitled Spot'}</h3>
+                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-[#eab308]/10 text-[#eab308] uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
+                                    <h3 class="text-xl font-bold mt-2 text-white">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
                                     <p class="text-stone-400 text-xs flex items-center mt-1">
-                                        <span class="material-symbols-outlined text-sm text-red-500 mr-1">location_on</span>${spot.location || 'Zamboanguita'}
+                                        <span class="material-symbols-outlined text-sm text-red-500 mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
                                     </p>
-                                    <p class="text-stone-300 text-sm mt-3 line-clamp-3">${spot.description || 'No summary description mapped.'}</p>
+                                    <p class="text-stone-300 text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
                                 </div>
                                 <div class="border-t border-zinc-800/40 mt-4 pt-4 flex items-center justify-between text-xs text-stone-400">
                                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[#eab308] text-base">verified_user</span> Managed Active</span>
@@ -1192,6 +1222,8 @@ body { overflow-x: hidden; }
         ======================================================== */
         var currentActiveTab = 'spots';
         window.addEventListener('DOMContentLoaded', async () => {
+            if (!guardOfficerSession()) return;
+
             mountPortalAccountMenu();
             const savedTheme = localStorage.getItem("theme");
             if (savedTheme === "light") {

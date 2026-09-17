@@ -717,9 +717,28 @@ body { overflow-x: hidden; }
 
 <script>
 // Mock array setup to handle runtime view update if local microservice is offline
-let localAdminCache = [
-    { email: "admin@zamboanguita.gov.ph" }
-];
+/* ==========================================================
+   ESCAPING
+   These lists render text written by establishment managers and
+   visitors. Anything that reaches innerHTML is escaped, so a title or
+   a description containing markup is shown rather than run.
+   ========================================================== */
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => (
+{ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+}
+
+function safeImageUrl(value, fallback) {
+    const candidate = String(value || '').trim();
+    if (/^https?:\/\//i.test(candidate)) return escapeHtml(candidate);
+    return escapeHtml(fallback || '');
+}
+
+// The administrators the server last told us about — nothing is ever invented
+// here. A hardcoded row used to sit in this list, so the page showed an
+// administrator whether or not one existed.
+let knownAdmins = [];
 
 // The API sleeps on Render's free tier, so a cold start can take most of a
 // minute — after 5s the spinner says so rather than looking frozen.
@@ -757,6 +776,11 @@ function setButtonLoading(btn, label) {
 function renderTableRows(admins) {
     const tbody = document.getElementById('adminListTableBody');
     tbody.innerHTML = '';
+
+    if (!admins || admins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-8 text-center text-on-surface-variant">No administrator accounts found.</td></tr>';
+        return;
+    }
     
     admins.forEach(admin => {
         const tr = document.createElement('tr');
@@ -764,7 +788,7 @@ function renderTableRows(admins) {
         tr.innerHTML = `
             <td class="px-6 py-4 font-medium text-on-surface flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary text-lg">verified_user</span>
-                ${admin.email}
+                ${escapeHtml(admin.email)}
             </td>
             <td class="px-6 py-4 text-right">
                 <span class="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
@@ -781,14 +805,15 @@ function loadAdminDirectory() {
     fetch('https://ztims-api.onrender.com/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(admins => {
-        if(admins && admins.length > 0) {
-            localAdminCache = admins;
-        }
-        renderTableRows(localAdminCache);
+        knownAdmins = Array.isArray(admins) ? admins : [];
+        renderTableRows(knownAdmins);
     })
     .catch(err => {
-        console.warn("Backend disconnected. Running locally on LocalCache Engine fallback view mode.");
-        renderTableRows(localAdminCache);
+        console.error("Could not load the administrator directory:", err);
+        knownAdmins = [];
+        document.getElementById('adminListTableBody').innerHTML =
+            '<tr><td colspan="2" class="px-6 py-8 text-center text-on-surface-variant">' +
+            'Could not reach the server, so this list is not available right now.</td></tr>';
     })
     .finally(doneLoading);
 }
@@ -817,7 +842,6 @@ function submitNewAdmin() {
     .then(data => {
         if(data.success) {
             showToast(`Administrator account created for ${email}.`, 'success');
-            localAdminCache.push({ email: email });
             document.getElementById('newAdminEmail').value = '';
             document.getElementById('newAdminPassword').value = '';
             loadAdminDirectory();
@@ -826,13 +850,10 @@ function submitNewAdmin() {
         }
     })
     .catch(err => {
-        console.error("Networking connection error. Appending locally to test view layer:");
-        // Appends to local storage cache so it populates immediately for your view file
-        localAdminCache.push({ email: email });
+        // Nothing is added to the list: the account does not exist, and showing
+        // it would tell the officer someone can sign in who cannot.
+        console.error("Could not reach the server while creating an administrator:", err);
         showToast('Could not reach the server, so that administrator was not created.', 'error');
-        document.getElementById('newAdminEmail').value = '';
-        document.getElementById('newAdminPassword').value = '';
-        renderTableRows(localAdminCache);
     })
     .finally(restoreButton);
 }
@@ -850,6 +871,18 @@ function autoUploadAdminPhoto(inputElement) {
         fileReader.readAsDataURL(fileObj);
     }
 }
+
+
+        // Only the Tourist Officer belongs here. Without this the page's whole
+        // shell loaded for anyone with the address — the API refused the data,
+        // so it looked broken rather than protected.
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.replace('../staff_login.html');
+                return false;
+            }
+            return true;
+        }
 
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
@@ -876,6 +909,8 @@ function autoUploadAdminPhoto(inputElement) {
 
 
 window.onload = function(){
+            if (!guardOfficerSession()) return;
+
             mountPortalAccountMenu();
     const savedTheme = localStorage.getItem("theme");
     const body = document.body;
