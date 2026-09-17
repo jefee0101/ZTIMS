@@ -7,11 +7,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
-
-// Verifies Google ID tokens against Google's own public keys.
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const app = express();
 
@@ -82,33 +78,7 @@ const AdminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', AdminSchema);
 
-// 3. User/Traveler Authentication Schema (🌟 UPGRADED TO ACCEPT AUTOFILL PROPERTIES)
-const UserSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    // Google accounts have no password of their own, so this is only required for
-    // accounts that actually sign in with one.
-    password: {
-        type: String,
-        required: function () { return this.provider !== 'google'; },
-        select: false
-    },
-    provider: { type: String, enum: ['local', 'google'], default: 'local' },
-    // sparse: only documents that actually have a googleId take part in the unique
-    // index, so the many password-only users don't collide on null.
-    googleId: { type: String, default: null, unique: true, sparse: true },
-    avatar: { type: String, default: "" },
-    fullName: { type: String, default: "" },
-    phone: { type: String, default: "" },
-    nationality: { type: String, default: "" },
-    // Password reset. Only the SHA-256 hash of the token is kept, so a leaked
-    // database still cannot be used to reset anybody's password — the plain
-    // token exists solely inside the email that was sent. select: false keeps
-    // both fields out of every ordinary read.
-    resetTokenHash: { type: String, default: null, select: false },
-    resetTokenExpires: { type: Date, default: null, select: false }
-}, { collection: 'users', timestamps: true });
 
-const User = mongoose.model('User', UserSchema);
 
 // 3b. Tourist Establishment Manager account (manages only their own tourist spots
 //     and accommodations). Formerly called "Resort Owner" — the stored collection
@@ -132,6 +102,29 @@ const EstablishmentManagerSchema = new mongoose.Schema({
     // site until the Tourist Officer restores them. Nothing is deleted, so a
     // seasonal closure or a change of management is reversible.
     active: { type: Boolean, default: true },
+
+    // Whether the business is trading, which the establishment reports itself.
+    // Deliberately separate from `active` above: that is the office's switch over
+    // the account, this is the establishment's statement about its own operations.
+    // Keeping them apart lets a place report that it has closed without that
+    // reading as a sanction, and lets the office suspend an account that is
+    // trading perfectly well.
+    //   active   - operating normally
+    //   inactive - temporarily not operating (off season, repairs)
+    //   closed   - permanently stopped
+    // A closure is recorded, never erased: the account and its listings remain.
+    operationalStatus: {
+        type: String,
+        enum: ['active', 'inactive', 'closed'],
+        default: 'active',
+        index: true
+    },
+    // Raised when the establishment reports its own change, cleared once the
+    // officer has acted. This is the queue that drives municipal oversight - it is
+    // how a closure reaches the office instead of sitting unnoticed.
+    statusNeedsReview: { type: Boolean, default: false },
+    statusNote: { type: String, default: "" },
+    statusUpdatedAt: { type: Date, default: null },
     resetTokenHash: { type: String, default: null, select: false },
     resetTokenExpires: { type: Date, default: null, select: false }
 }, { collection: 'resortOwners', timestamps: true });
@@ -203,21 +196,7 @@ async function migrateSpotManagement() {
     }
 }
 
-// 4. 🌟 UPDATED: Review Schema perfectly paired with frontend assets & text fields
-const ReviewSchema = new mongoose.Schema({
-    guestName: { type: String, required: true },
-    rating: { type: Number, required: true, min: 1, max: 5 },
-    destinationId: { type: String, required: true }, // Holds selected location text
-    // Reviews were originally matched to a spot by its name alone, which breaks as
-    // soon as a spot is renamed. New reviews carry the real reference; the older
-    // name-only ones still resolve through destinationId.
-    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', default: null },
-    comment: { type: String, required: true },
-    imageURL: { type: String, required: false }, // Stores uploaded Base64 image snapshot strings
-    status: { type: String, default: 'approved' } // 🌟 Support status transitions for moderation
-}, { timestamps: true });
 
-const Review = mongoose.model('Review', ReviewSchema);
 
 const MAX_SPOT_IMAGES = 30;
 
@@ -279,7 +258,20 @@ const SpotSchema = new mongoose.Schema({
     // listing accurate, and that is all this field means — which is why it is not
     // called an owner. The municipality's authority over the public listing does
     // not pass to whoever is assigned to it.
-    managedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null, index: true }
+    managedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null, index: true },
+
+    // Whether the public sees this listing. Municipal tourism records are taken
+    // down by changing this, never by deleting them: a spot closed for a season,
+    // or a festival site between years, has to be restorable, and the record has
+    // to survive either way.
+    //   published   - live on the public site
+    //   unpublished - hidden for now, fully restorable
+    //   archived    - retired; kept for the record
+    // Only the Tourism Officer may change it; an establishment manages its
+    // listing's information, not whether the municipality publishes it.
+    status: { type: String, enum: ['published', 'unpublished', 'archived'], default: 'published', index: true },
+    statusNote: { type: String, default: "" },
+    statusUpdatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
 const Spot = mongoose.model('Spot', SpotSchema);
@@ -316,14 +308,6 @@ const requireEstablishmentManager = [requireAuth, (req, res, next) => {
     return next();
 }];
 
-// Reviewing is a visitor's act. Without this, an establishment manager could post glowing
-// reviews of their own listing, which is the one thing the ratings must not allow.
-const requireTourist = [requireAuth, (req, res, next) => {
-    if (req.auth.role !== 'user') {
-        return res.status(403).json({ success: false, message: 'Only tourist accounts can do this.' });
-    }
-    return next();
-}];
 
 // Tourist Officer or Tourist Establishment Manager — used on routes both manage,
 // each scoped to their own data.
@@ -529,6 +513,10 @@ function managerProfile(manager) {
         contactEmail: manager.contactEmail || manager.email,
         phone: manager.phone || '',
         active: manager.active !== false,
+        operationalStatus: manager.operationalStatus || 'active',
+        statusNeedsReview: Boolean(manager.statusNeedsReview),
+        statusNote: manager.statusNote || '',
+        statusUpdatedAt: manager.statusUpdatedAt || null,
         createdAt: manager.createdAt
     };
 }
@@ -541,6 +529,48 @@ app.get('/api/establishment-managers/me', requireEstablishmentManager, async (re
     } catch (error) {
         console.error('❌ Manager profile read failure:', error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+/**
+ * PATCH: the establishment reports whether it is operating.
+ *
+ * This is the establishment speaking about its own business, so it is theirs to
+ * set. It deliberately cannot touch `active` — suspending an account is the
+ * office's decision, and a place must not be able to lift its own suspension.
+ *
+ * Reporting a change raises statusNeedsReview, which is how a closure reaches the
+ * Tourism Office rather than sitting unnoticed on a listing.
+ */
+app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, async (req, res) => {
+    try {
+        const status = String(req.body.operationalStatus || '').trim();
+        if (!['active', 'inactive', 'closed'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Choose whether the establishment is operating, temporarily closed, or permanently closed.' });
+        }
+
+        const manager = await EstablishmentManager.findById(req.auth.sub);
+        if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
+
+        const changed = manager.operationalStatus !== status;
+        manager.operationalStatus = status;
+        manager.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
+        manager.statusUpdatedAt = new Date();
+        if (changed) manager.statusNeedsReview = true;
+        await manager.save();
+
+        const listings = await Spot.countDocuments({ managedBy: manager._id });
+        console.log(`🏷️ ${manager.email} reported operationalStatus=${status}`);
+
+        return res.status(200).json({
+            success: true,
+            message: status === 'active'
+                ? 'Recorded as operating. Your listings are public again.'
+                : `Recorded. Your ${listings} listing${listings === 1 ? '' : 's'} ${listings === 1 ? 'is' : 'are'} hidden from the public site, and the Tourism Office has been notified for review. Nothing has been deleted.`,
+            manager: managerProfile(manager)
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Establishment status update failure:');
     }
 });
 
@@ -613,66 +643,6 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
     }
 });
 
-/**
- * GET: every approved review across this manager's own listings, in one request.
- * Scoped to req.auth.sub like the rest of /me, so a manager can never read
- * another establishment's reviews. Approved only — what the manager sees is
- * exactly what visitors see.
- * Target URL: http://localhost:5000/api/establishment-managers/me/reviews
- */
-app.get('/api/establishment-managers/me/reviews', requireEstablishmentManager, async (req, res) => {
-    try {
-        const spots = await Spot.find({ managedBy: req.auth.sub }).select('title type imageUrl');
-
-        if (spots.length === 0) {
-            return res.status(200).json({ success: true, listings: [], reviews: [], averageRating: null, total: 0 });
-        }
-
-        // Matched by reference and by name, because reviews written before reviews
-        // carried a reference still only know the listing by its title.
-        const reviews = await Review.find({
-            status: 'approved',
-            $or: [
-                { spotId: { $in: spots.map(spot => spot._id) } },
-                { destinationId: { $in: spots.map(spot => spot.title) } }
-            ]
-        }).sort({ createdAt: -1 });
-
-        const byId = new Map(spots.map(spot => [String(spot._id), spot]));
-        const byTitle = new Map(spots.map(spot => [spot.title, spot]));
-
-        // Each review carries the listing it belongs to, so the page can group and
-        // filter without matching titles again in the browser.
-        const answered = reviews.map(review => {
-            const spot = byId.get(String(review.spotId || '')) || byTitle.get(review.destinationId) || null;
-            return {
-                _id: review._id,
-                guestName: review.guestName,
-                rating: review.rating,
-                comment: review.comment,
-                imageURL: review.imageURL || '',
-                createdAt: review.createdAt,
-                spotId: spot ? spot._id : null,
-                spotTitle: spot ? spot.title : review.destinationId
-            };
-        });
-
-        const averageRating = answered.length
-            ? Number((answered.reduce((sum, review) => sum + (review.rating || 0), 0) / answered.length).toFixed(1))
-            : null;
-
-        return res.status(200).json({
-            success: true,
-            listings: spots.map(spot => ({ _id: spot._id, title: spot.title, type: spot.type, imageUrl: spot.imageUrl })),
-            reviews: answered,
-            averageRating,
-            total: answered.length
-        });
-    } catch (error) {
-        console.error('❌ Manager reviews fetch failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not load your reviews just now.' });
-    }
-});
 
 /* ---- Officer-side account lifecycle ---------------------------------------- */
 
@@ -695,6 +665,14 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
             }
         }
         if (typeof req.body.active === 'boolean') manager.active = req.body.active;
+
+        // Municipal oversight: the officer can set the operating status too, and
+        // acting on a reported change clears it from the review queue.
+        if (['active', 'inactive', 'closed'].includes(req.body.operationalStatus)) {
+            manager.operationalStatus = req.body.operationalStatus;
+            manager.statusUpdatedAt = new Date();
+        }
+        if (req.body.statusReviewed === true) manager.statusNeedsReview = false;
 
         await applyManagerDetails(manager, req.body);
 
@@ -772,53 +750,16 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
 });
 
 
-/**
- * POST: Register new traveler accounts into MongoDB (🌟 UPGRADED TO CAPTURE INPUT VALUES)
- * Target URL: http://localhost:5000/api/register
- */
-app.post('/api/register', async (req, res) => {
-    try {
-        const { email, password, fullName, phone, nationality } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory email or password keys.' });
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-
-        // Prevent duplicate account registrations
-        const existingUser = await User.findOne({ email: normalizedEmail });
-        if (existingUser) {
-            return res.status(409).json({ success: false, message: 'This email account is already registered.' });
-        }
-
-        // Create user with extended parameters map
-        const passwordHash = await bcrypt.hash(password, 12);
-        const newUser = new User({ 
-            email: normalizedEmail, 
-            password: passwordHash,
-            fullName: fullName || "",
-            phone: phone || "",
-            nationality: nationality || ""
-        });
-        await newUser.save();
-
-        console.log(`👤 New user saved directly to MongoDB collection with profile properties: ${normalizedEmail}`);
-        return res.status(201).json({ success: true, message: 'Registration complete!' });
-    } catch (error) {
-        console.error("❌ Registration Endpoint Failure:", error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-});
 
 /**
- * POST: Dynamic Authentication for both Admin and User Portals (🌟 UPGRADED TO RETURN USER PROFILE DETAILS)
+ * POST: Sign in. ZTIMS has two kinds of account: Tourism Officer and Tourist
+ * Establishment Manager. Visitors browse without one.
  * Target URL: http://localhost:5000/api/login
  */
 app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }), async (req, res) => {
     try {
         const { email, password, role } = req.body; 
-        console.log(`➡️ Login attempt received for: ${email} | Role Context: ${role || 'user'}`);
+        console.log(`➡️ Login attempt received for: ${email} | Role Context: ${role || 'staff'}`);
 
         if (!email || !password) {
             return res.status(400).json({ success: false, message: 'Missing email or password.' });
@@ -828,7 +769,12 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
         // 'staff' means the caller doesn't know which kind of staff account this is
         // — the shared staff sign-in page. We work it out rather than making the
         // person choose, since picking the wrong portal would reject a correct password.
-        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'staff'].includes(role) ? role : 'user';
+        // ZTIMS has exactly two kinds of account. Anything else is refused here
+        // rather than quietly searched for in a collection that no longer exists.
+        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'staff'].includes(role) ? role : null;
+        if (!requestedRole) {
+            return res.status(400).json({ success: false, message: 'Unknown sign-in type.' });
+        }
         let account = null;
         let resolvedRole = requestedRole;
 
@@ -842,11 +788,9 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
             }
         } else if (requestedRole === 'admin') {
             account = await Admin.findOne({ email: normalizedEmail }).select('+password');
-        } else if (isEstablishmentManager(requestedRole)) {
+        } else {
             account = await EstablishmentManager.findOne({ email: normalizedEmail }).select('+password');
             resolvedRole = 'establishment_manager';
-        } else {
-            account = await User.findOne({ email: normalizedEmail }).select('+password');
         }
 
         // A suspended account is told plainly, rather than being left to think
@@ -863,8 +807,7 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
                 : resolvedRole === 'admin' ? 'Tourist Officer'
-                : isEstablishmentManager(resolvedRole) ? 'Tourist Establishment Manager'
-                : 'User';
+                : 'Tourist Establishment Manager';
             return res.status(401).json({
                 success: false,
                 message: `Authentication failed: Invalid ${audience} credentials.`
@@ -898,78 +841,6 @@ app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standard
     }
 });
 
-/**
- * 🌟 POST: Sign in (or register) a tourist with a Google account
- * The browser gets an ID token from Google and sends it here; this verifies that
- * token with Google directly, so a forged one can't get through.
- * Target URL: http://localhost:5000/api/auth/google
- */
-app.post('/api/auth/google', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false }), async (req, res) => {
-    try {
-        if (!process.env.GOOGLE_CLIENT_ID) {
-            return res.status(503).json({ success: false, message: 'Google sign-in is not configured on the server yet.' });
-        }
-
-        const { credential } = req.body;
-        if (!credential) {
-            return res.status(400).json({ success: false, message: 'Missing Google credential.' });
-        }
-
-        const ticket = await googleClient.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-        const payload = ticket.getPayload();
-
-        if (!payload?.email_verified) {
-            return res.status(401).json({ success: false, message: 'This Google account has no verified email address.' });
-        }
-
-        const email = payload.email.toLowerCase().trim();
-
-        // Someone who already registered with a password keeps that one account —
-        // signing in with the same Google email links the two rather than creating
-        // a second account they'd never be able to find.
-        let account = await User.findOne({ email });
-
-        if (account) {
-            if (!account.googleId) {
-                account.googleId = payload.sub;
-                account.avatar = account.avatar || payload.picture || "";
-                if (!account.fullName) account.fullName = payload.name || "";
-                await account.save();
-            }
-        } else {
-            account = await new User({
-                email,
-                provider: 'google',
-                googleId: payload.sub,
-                avatar: payload.picture || "",
-                fullName: payload.name || ""
-            }).save();
-        }
-
-        console.log(`🔐 Google sign-in for ${email}`);
-        return res.status(200).json({
-            success: true,
-            message: 'Signed in with Google.',
-            token: createToken(account, 'user'),
-            role: 'user',
-            userId: account._id,
-            user: {
-                email: account.email,
-                name: account.fullName || account.email.split('@')[0],
-                fullName: account.fullName || "",
-                phone: account.phone || "",
-                nationality: account.nationality || "",
-                avatar: account.avatar || ""
-            }
-        });
-    } catch (error) {
-        console.error("❌ Google Sign-In Failure:", error);
-        return res.status(401).json({ success: false, message: 'Could not verify that Google account. Please try again.' });
-    }
-});
 
 // Configure Nodemailer for Email Transports. Credentials come from the environment
 // — the address and Gmail App Password must never be committed.
@@ -1004,9 +875,6 @@ if (!mailConfigured) {
  */
 async function findResettableAccount(email, withResetFields) {
     const withFields = query => (withResetFields ? query.select('+resetTokenHash +resetTokenExpires') : query);
-
-    const user = await withFields(User.findOne({ email }));
-    if (user) return user.provider === 'google' ? null : user;
 
     const manager = await withFields(EstablishmentManager.findOne({ email }));
     if (manager) return manager.active === false ? null : manager;
@@ -1130,194 +998,16 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
     }
 });
 
-/**
- * 🌟 GET: Fetch all user reviews from MongoDB
- * Target URL: http://localhost:5000/api/reviews
- */
-app.get('/api/reviews', optionalAuth, async (req, res) => {
-    try {
-        const query = req.auth?.role === 'admin' ? {} : { status: 'approved' };
-        const reviews = await Review.find(query).sort({ createdAt: -1 });
-        return res.status(200).json(reviews);
-    } catch (error) {
-        console.error("❌ Review GET Fetch Failure:", error);
-        return res.status(500).json({ error: 'Failed to fetch reviews matrix.', message: error.message });
-    }
-});
 
-/**
- * 🌟 GET: Approved reviews for one spot, for its public detail page.
- * Matches on the spot reference and on the spot's name, so reviews written before
- * reviews carried a reference still show up.
- * Target URL: http://localhost:5000/api/spots/:id/reviews
- */
-app.get('/api/spots/:id/reviews', async (req, res) => {
-    try {
-        const spot = await Spot.findById(req.params.id);
-        if (!spot) return res.status(404).json({ message: 'Spot not found.' });
 
-        const reviews = await Review.find({
-            status: 'approved',
-            $or: [{ spotId: spot._id }, { destinationId: spot.title }]
-        }).sort({ createdAt: -1 });
 
-        const averageRating = reviews.length
-            ? Number((reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length).toFixed(1))
-            : null;
 
-        return res.status(200).json({ reviews, averageRating, total: reviews.length });
-    } catch (error) {
-        console.error("❌ Spot Reviews Fetch Failure:", error);
-        return res.status(500).json({ reviews: [], averageRating: null, total: 0 });
-    }
-});
 
-/**
- * 🌟 POST: Submit a new review into MongoDB 
- * Target URL: http://localhost:5000/api/reviews
- */
-app.post('/api/reviews', requireTourist, async (req, res) => {
-    try {
-        console.log("➡️ Received Incoming Review Payload Data:", req.body);
-        const { guestName, rating, destinationId, comment, imageURL, spotId } = req.body;
-
-        // Exact validation criteria aligning with frontend payload structures
-        if (!guestName || !rating || !destinationId || !comment) {
-            return res.status(400).json({ message: 'Validation failed: Missing mandatory review payload keys.' });
-        }
-
-        const newReview = new Review({
-            guestName,
-            rating: Number(rating),
-            destinationId,
-            spotId: spotId || null,
-            comment,
-            imageURL: imageURL || "",
-            status: 'approved' // Automatically default to approved state on submission
-        });
-        
-        const savedReview = await newReview.save();
-        
-        console.log(`💬 New review committed safely from user: ${guestName} for location: ${destinationId}`);
-        return res.status(201).json(savedReview);
-    } catch (error) {
-        console.error("❌ Review POST Submission Failure:", error);
-        return res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-});
-
-/**
- * 🌟 NEW HANDLER - PUT: Update review status filters (Approve/Hide)
- * Target URL: http://localhost:5000/api/reviews/:id/status
- */
-app.put('/api/reviews/:id/status', requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        if (!['approved', 'pending', 'hidden', 'reported'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid target status property.' });
-        }
-
-        const updatedReview = await Review.findByIdAndUpdate(
-            id,
-            { status: status },
-            { new: true }
-        );
-
-        if (!updatedReview) {
-            return res.status(404).json({ message: 'Review documentation tracker not found.' });
-        }
-
-        console.log(`🛡️ Review state toggled manually: ${id} changed to ${status}`);
-        return res.status(200).json(updatedReview);
-    } catch (error) {
-        console.error("❌ Review Status PUT Failure:", error);
-        return res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-});
-
-/**
- * 🌟 NEW HANDLER - DELETE: Drop review entry records entirely from database
- * Target URL: http://localhost:5000/api/reviews/:id
- */
-app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const droppedRecord = await Review.findByIdAndDelete(id);
-
-        if (!droppedRecord) {
-            return res.status(404).json({ success: false, message: 'Review item identifier not found.' });
-        }
-
-        console.log(`🗑️ Review dropped from database completely: ${id}`);
-        return res.status(200).json({ success: true, message: 'Review successfully deleted.' });
-    } catch (error) {
-        console.error("❌ Review Deletion System Interrupt:", error);
-        return res.status(500).json({ success: false, error: 'Internal Server Error', message: error.message });
-    }
-});
-
-/**
- * 🌟 NEW HANDLER - PATCH: Update a user's structural profile fields directly from booking form submissions
- * Target URL: http://localhost:5000/api/users/:id
- */
-app.patch('/api/users/:id', requireAuth, async (req, res) => {
-    try {
-        const userId = req.params.id;
-        // This edits the tourist directory, so only a tourist editing themselves or
-        // the Tourist Officer may touch it. An establishment manager was already refused by
-        // the identity check below, but only as a side effect of their id never
-        // matching a tourist's — saying so explicitly keeps that intentional.
-        if (req.auth.role !== 'admin' && req.auth.role !== 'user') {
-            return res.status(403).json({ error: 'Only tourist accounts have a profile here.' });
-        }
-        if (req.auth.role !== 'admin' && req.auth.sub !== userId) {
-            return res.status(403).json({ error: 'You may only update your own profile.' });
-        }
-        const { fullName, phone, nationality } = req.body;
-
-        // Find user by route identifier and update fields dynamically
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { 
-                $set: { 
-                    fullName: fullName,
-                    phone: phone,
-                    nationality: nationality 
-                } 
-            },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedUser) {
-            return res.status(404).json({ error: "User account document location not found." });
-        }
-
-        console.log(`👤 Profile updated for user ID: ${userId} [Name: ${fullName}, Phone: ${phone}, Nationality: ${nationality}]`);
-        return res.status(200).json({ message: "User profile synchronized successfully.", user: updatedUser });
-    } catch (err) {
-        console.error("❌ Failed to run profile document amendment:", err);
-        return res.status(500).json({ error: "Internal server update pipeline failure.", message: err.message });
-    }
-});
 
 /* ==========================================
    ADDED: LIVE ANALYTICS MAPPER LINKS
 ========================================== */
 
-/**
- * 🌟 GET: Fetch all active users for analytics tracking
- * Target URL: http://localhost:5000/api/users
- */
-app.get('/api/users', requireAdmin, async (req, res) => {
-    try {
-        const usersList = await User.find({}, { password: 0 });
-        return res.status(200).json(usersList);
-    } catch (error) {
-        return res.status(500).json([]);
-    }
-});
 
 /**
  * 🌟 GET & POST: Destination system endpoints to prevent dashboard client parsing error loops
@@ -1337,7 +1027,7 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
         // The establishment's public-facing details come along so the officer's
         // oversight page can show who maintains each listing without a request per row.
         const foundSpots = await Spot.find(query)
-            .populate('managedBy', 'establishmentName resortName managerName contactEmail phone active')
+            .populate('managedBy', 'establishmentName resortName managerName contactEmail phone active operationalStatus')
             .sort({ createdAt: -1 });
 
         // A suspended establishment's listings leave the public site, but the
@@ -1466,9 +1156,16 @@ function scopeSpotPayload(payload, scope) {
  * make that happen.
  */
 function isPubliclyVisible(spot) {
+    // The office's decision comes first and applies to every listing.
+    if (spot.status && spot.status !== 'published') return false;
+
     const manager = spot.managedBy && typeof spot.managedBy === 'object' ? spot.managedBy : null;
     if (!manager) return true;              // maintained by the office; no account behind it
-    return manager.active !== false;
+
+    if (manager.active === false) return false;     // account suspended by the office
+    // A visitor should not be sent to a place that has told us it is shut, whether
+    // or not the office has got round to reviewing it yet.
+    return !['inactive', 'closed'].includes(manager.operationalStatus);
 }
 
 /**
@@ -1593,7 +1290,7 @@ app.get('/api/spots/:id', async (req, res) => {
     try {
         // Only the establishment's public-facing contact details — never the
         // sign-in email or password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('managedBy', 'establishmentName resortName managerName contactEmail phone active');
+        const spot = await Spot.findById(req.params.id).populate('managedBy', 'establishmentName resortName managerName contactEmail phone active operationalStatus');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
         // The same single rule the listing page uses, so the two cannot disagree.
         if (!isPubliclyVisible(spot)) {
@@ -1602,6 +1299,46 @@ app.get('/api/spots/:id', async (req, res) => {
         return res.status(200).json(spot);
     } catch (error) {
         return res.status(404).json({ message: 'Spot not found.' });
+    }
+});
+
+/**
+ * PATCH: the Tourism Office decides whether a listing is public.
+ *
+ * Officer-only, on every listing including those a private establishment
+ * maintains — that is what municipal oversight means, and it is the reason this
+ * is separate from editing the listing's information. An establishment keeps its
+ * own details accurate; the municipality decides what the public sees.
+ *
+ * Nothing is deleted. Archiving retires a listing while keeping the record.
+ */
+app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
+    try {
+        const status = String(req.body.status || '').trim();
+        if (!['published', 'unpublished', 'archived'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Choose published, unpublished, or archived.' });
+        }
+
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ success: false, message: 'Listing not found.' });
+
+        spot.status = status;
+        spot.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
+        spot.statusUpdatedAt = new Date();
+        await spot.save();
+
+        console.log(`📋 Officer set ${spot.title} to ${status}`);
+        return res.status(200).json({
+            success: true,
+            message: status === 'published'
+                ? `${spot.title} is public again.`
+                : status === 'unpublished'
+                    ? `${spot.title} is hidden from the public site. The record is kept and can be restored.`
+                    : `${spot.title} is archived. The record is kept for the municipality's files.`,
+            spot
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Listing status update failure:');
     }
 });
 

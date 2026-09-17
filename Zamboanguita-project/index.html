@@ -354,151 +354,6 @@ body { overflow-x: hidden; }
 })();
 </script>
 
-<script>
-/* ==========================================================
-   ACCOUNT AVATAR + MENU (upper right)
-   One button showing who is signed in, and a small menu under it. Built in
-   JavaScript rather than markup so every page mounts the same thing with its
-   own links, the way the toast module is shared.
-
-   mountAccountMenu({ container, name, email, imageUrl, items, signedOutLabel,
-                      signedOutHref })
-     name / email : shown in the menu's header; the initial becomes the avatar
-     imageUrl     : optional photo (Google accounts have one)
-     items        : [{ label, icon, href }] or [{ label, icon, onSelect }]
-     signedOut*   : when name and email are both empty, the avatar is replaced
-                    by this link, so a guest gets a way in rather than a
-                    meaningless blank circle
-   ========================================================== */
-(function () {
-    function initialFrom(name, email) {
-        var source = (name || email || '').trim();
-        return source ? source.charAt(0).toUpperCase() : '?';
-    }
-
-    window.mountAccountMenu = function (options) {
-        var container = options.container;
-        if (!container) return;
-        container.innerHTML = '';
-
-        var signedIn = Boolean((options.name || '').trim() || (options.email || '').trim());
-
-        if (!signedIn) {
-            var signIn = document.createElement('a');
-            signIn.href = options.signedOutHref || '#';
-            signIn.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current/30 text-sm font-bold hover:opacity-80 transition-opacity';
-            signIn.innerHTML = '<span class="material-symbols-outlined !text-lg">account_circle</span>' +
-                               '<span>' + (options.signedOutLabel || 'Sign in') + '</span>';
-            container.appendChild(signIn);
-            return;
-        }
-
-        var wrap = document.createElement('div');
-        wrap.style.cssText = 'position:relative';
-
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.setAttribute('aria-haspopup', 'menu');
-        button.setAttribute('aria-expanded', 'false');
-        button.title = options.name || options.email || 'Account';
-        button.style.cssText = [
-            'display:flex', 'align-items:center', 'justify-content:center',
-            'width:2.5rem', 'height:2.5rem', 'border-radius:9999px',
-            'border:2px solid rgba(255,179,0,.55)', 'background:#0B2954', 'color:#FFB300',
-            'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
-            'transition:transform .15s ease'
-        ].join(';');
-
-        if (options.imageUrl) {
-            var photo = document.createElement('img');
-            photo.src = options.imageUrl;
-            photo.alt = '';
-            photo.style.cssText = 'width:100%;height:100%;object-fit:cover';
-            // A broken photo link would otherwise leave an empty circle.
-            photo.addEventListener('error', function () {
-                photo.remove();
-                button.textContent = initialFrom(options.name, options.email);
-            });
-            button.appendChild(photo);
-        } else {
-            button.textContent = initialFrom(options.name, options.email);
-        }
-        button.addEventListener('mouseenter', function () { button.style.transform = 'scale(1.06)'; });
-        button.addEventListener('mouseleave', function () { button.style.transform = 'none'; });
-
-        var menu = document.createElement('div');
-        menu.setAttribute('role', 'menu');
-        menu.hidden = true;
-        menu.style.cssText = [
-            'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
-            'min-width:15rem', 'padding:.4rem',
-            'border-radius:1rem', 'background:rgba(10,25,47,.98)', 'color:#F4F6F9',
-            'box-shadow:0 18px 40px -18px rgba(0,0,0,.75)',
-            'font-size:.85rem'
-        ].join(';');
-
-        var header = document.createElement('div');
-        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgba(169,188,208,.18);margin-bottom:.3rem';
-        var nameLine = document.createElement('div');
-        nameLine.textContent = options.name || options.email;
-        nameLine.style.cssText = 'font-weight:800;word-break:break-word';
-        header.appendChild(nameLine);
-        if (options.email && options.name) {
-            var emailLine = document.createElement('div');
-            emailLine.textContent = options.email;
-            emailLine.style.cssText = 'font-size:.75rem;color:#A9BCD0;word-break:break-all;margin-top:.1rem';
-            header.appendChild(emailLine);
-        }
-        menu.appendChild(header);
-
-        function close() {
-            menu.hidden = true;
-            button.setAttribute('aria-expanded', 'false');
-        }
-
-        (options.items || []).forEach(function (item) {
-            var entry = document.createElement(item.href ? 'a' : 'button');
-            entry.setAttribute('role', 'menuitem');
-            if (item.href) entry.href = item.href; else entry.type = 'button';
-            entry.style.cssText = [
-                'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
-                'padding:.6rem .75rem', 'border:0', 'border-radius:.7rem',
-                'background:none', 'color:' + (item.danger ? '#FF8A80' : 'inherit'),
-                'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
-            ].join(';');
-            entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
-            var label = document.createElement('span');
-            label.textContent = item.label;   // text, never markup
-            entry.appendChild(label);
-
-            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgba(255,255,255,.07)'; });
-            entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
-            entry.addEventListener('click', function () {
-                close();
-                if (item.onSelect) item.onSelect();
-            });
-            menu.appendChild(entry);
-        });
-
-        button.addEventListener('click', function (event) {
-            event.stopPropagation();
-            var opening = menu.hidden;
-            menu.hidden = !opening;
-            button.setAttribute('aria-expanded', String(opening));
-        });
-        document.addEventListener('click', function (event) {
-            if (!menu.hidden && !wrap.contains(event.target)) close();
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') close();
-        });
-
-        wrap.appendChild(button);
-        wrap.appendChild(menu);
-        container.appendChild(wrap);
-    };
-})();
-</script>
 
 <!-- Sidebar: a rail on desktop, a bottom bar on phones. Visible to everyone —
      guests included — since the gate happens in the content area, not here. -->
@@ -526,24 +381,16 @@ body { overflow-x: hidden; }
             <span class="material-symbols-outlined text-surface-bright">location_on</span>
             <span class="sidebar-label max-md:text-[10px]">Destinations</span>
         </button>
-        <button data-nav="reviews" title="Reviews" style="--rise-delay:.22s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
-                                          max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px] max-md:text-[10px]">
-            <span class="material-symbols-outlined text-surface-bright">star</span>
-            <span class="sidebar-label max-md:text-[10px]">Reviews</span>
-        </button>
-        <button data-nav="settings" title="Settings" style="--rise-delay:.28s" class="rise nav-item w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-surface-bright transition-all
-                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px] max-md:text-[10px]">
-            <span class="material-symbols-outlined text-surface-bright">settings</span>
-            <span class="sidebar-label max-md:text-[10px]">Settings</span>
-        </button>
     </nav>
 
     <div class="md:mt-auto md:pt-4 max-md:flex max-md:items-center">
-        <button id="authActionBtn" style="--rise-delay:.34s" class="rise w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
+        <!-- Visitors need no account here. This is the way in for the Tourism
+             Office and for establishments that manage their own listing. -->
+        <a id="authActionBtn" href="src/staff_login.html" title="Staff sign in" style="--rise-delay:.34s" class="rise w-full flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-primary transition-all
                                           max-md:flex-col max-md:gap-0.5 max-md:px-2 max-md:py-2 max-md:min-h-[52px]">
-            <span id="authActionIcon" class="material-symbols-outlined">login</span>
-            <span id="authActionLabel" class="sidebar-label max-md:text-[10px]">Sign In</span>
-        </button>
+            <span class="material-symbols-outlined">badge</span>
+            <span class="sidebar-label max-md:text-[10px]">Staff sign in</span>
+        </a>
     </div>
 </aside>
 
@@ -555,7 +402,6 @@ body { overflow-x: hidden; }
             <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
             </button>
-            <div id="accountMenuSlot"></div>
         </div>
     </header>
 
@@ -685,26 +531,6 @@ body { overflow-x: hidden; }
             </section>
         </div>
 
-        <!-- ============ REVIEWS ============ -->
-        <div data-view="reviews" hidden class="px-6 md:px-12 py-10">
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-                <div>
-                    <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-1">Visitor Reviews</h2>
-                    <p class="text-on-surface-variant" id="reviewsSubtitle">What travellers are saying about Zamboanguita.</p>
-                </div>
-                <button id="writeReviewBtn" hidden class="bg-primary text-on-primary px-6 py-3 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center gap-2 hover:scale-105 transition-transform">
-                    <span class="material-symbols-outlined !text-lg">rate_review</span> Write a review
-                </button>
-            </div>
-            <div id="reviewsContent"></div>
-        </div>
-
-        <!-- ============ SETTINGS ============ -->
-        <div data-view="settings" hidden class="px-6 md:px-12 py-10">
-            <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-1">Account Settings</h2>
-            <p class="text-on-surface-variant mb-8">Your details, used to fill in forms across the portal.</p>
-            <div id="settingsContent"></div>
-        </div>
 
     </main>
 
@@ -723,44 +549,6 @@ body { overflow-x: hidden; }
 </div>
 
 <!-- Write-a-review dialog -->
-<div id="reviewModal" hidden class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-surface shadow-2xl rounded-2xl w-full max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center p-5">
-            <h3 class="text-xl font-display font-bold text-on-surface">Write a review</h3>
-            <button id="closeReviewModal" class="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <form id="reviewForm" class="p-5 space-y-4">
-            <div>
-                <label for="reviewSpot" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Destination</label>
-                <select id="reviewSpot" required class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
-                    <option value="" disabled selected>Choose a destination...</option>
-                </select>
-            </div>
-            <div>
-                <span class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Rating</span>
-                <div id="reviewStars" class="flex gap-1 text-surface-bright">
-                    <span class="material-symbols-outlined star-input !text-3xl" data-value="1">star</span>
-                    <span class="material-symbols-outlined star-input !text-3xl" data-value="2">star</span>
-                    <span class="material-symbols-outlined star-input !text-3xl" data-value="3">star</span>
-                    <span class="material-symbols-outlined star-input !text-3xl" data-value="4">star</span>
-                    <span class="material-symbols-outlined star-input !text-3xl" data-value="5">star</span>
-                </div>
-                <input type="hidden" id="reviewRating" value="5" />
-            </div>
-            <div>
-                <label for="reviewComment" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Your experience</label>
-                <textarea id="reviewComment" rows="4" required placeholder="What stood out about this place?"
-                    class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
-            </div>
-            <div class="flex gap-3 pt-2">
-                <button type="button" id="cancelReviewBtn" class="w-1/2 bg-surface-container-high text-on-surface font-bold py-3 rounded-full transition-all hover:opacity-80">Cancel</button>
-                <button type="submit" id="submitReviewBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3 rounded-full btn-primary-gradient transition-all hover:scale-[1.02]">Publish</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script type="module">
     const API_BASE = "https://ztims-api.onrender.com/api";
@@ -810,50 +598,12 @@ body { overflow-x: hidden; }
 
     // Only a tourist account unlocks reviews and settings. Officers and resort
     // establishment managers have their own portals, so signing in there doesn't apply here.
-    function signedInTourist() {
-        return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';
-    }
-
-    function currentUser() {
-        try { return JSON.parse(localStorage.getItem('currentUser')) || {}; }
-        catch { return {}; }
-    }
-
-    function starRow(rating) {
-        const rounded = Math.round(Number(rating) || 0);
-        let out = '';
-        for (let i = 1; i <= 5; i++) {
-            out += `<span class="material-symbols-outlined !text-base ${i <= rounded ? 'text-surface-bright' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
-        }
-        return out;
-    }
-
     // Shown in place of reviews or settings when a visitor isn't signed in.
-    function authGate(action) {
-        return `
-            <div class="flex flex-col items-center justify-center text-center gap-4 py-20 px-6 bg-surface shadow-sm rounded-2xl">
-                <span class="material-symbols-outlined !text-5xl text-surface-bright">lock_person</span>
-                <h3 class="text-2xl font-display font-bold text-on-surface">Sign in to ${escapeHtml(action)}</h3>
-                <p class="text-on-surface-variant max-w-sm">Browsing spots and accommodations is open to everyone. Creating a free tourist account lets you write reviews and save your details.</p>
-                <div class="flex flex-col sm:flex-row gap-3 mt-2">
-                    <a href="src/user/user_create_account.html" class="bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-105 transition-transform">
-                        Create an account
-                    </a>
-                    <a href="src/user/user_login.html" class="px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs border border-outline-variant/40 text-on-surface hover:border-primary transition-colors">
-                        Sign in
-                    </a>
-                </div>
-            </div>
-        `;
-    }
-
     /* ---------------- view switching ---------------- */
 
-    const viewTitles = {
-        spots: 'Tourist Spots & Accommodations',
-        reviews: 'Visitor Reviews',
-        settings: 'Account Settings'
-    };
+    // One view remains: browsing. Visitors need no account, so there is nothing
+    // else here for them to switch to.
+    const viewTitles = { spots: 'Tourist Spots & Accommodations' };
     let activeView = 'spots';
 
     function switchView(name) {
@@ -866,9 +616,6 @@ body { overflow-x: hidden; }
         });
         document.getElementById('viewTitle').textContent = viewTitles[name];
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        if (name === 'reviews') renderReviewsView();
-        if (name === 'settings') renderSettingsView();
     }
 
     document.querySelectorAll('.nav-item').forEach(button => {
@@ -974,266 +721,6 @@ body { overflow-x: hidden; }
         }
     }
 
-    /* ---------------- reviews ---------------- */
-
-    const reviewsContent = document.getElementById('reviewsContent');
-    const writeReviewBtn = document.getElementById('writeReviewBtn');
-    let reviewsLoaded = false;
-
-    function renderReviewsView() {
-        if (!signedInTourist()) {
-            writeReviewBtn.hidden = true;
-            document.getElementById('reviewsSubtitle').textContent = 'What travellers are saying about Zamboanguita.';
-            reviewsContent.innerHTML = authGate('write and manage reviews');
-            return;
-        }
-        writeReviewBtn.hidden = false;
-        if (!reviewsLoaded) loadReviews();
-    }
-
-    async function loadReviews() {
-        const doneLoading = showLoading(reviewsContent, 'Loading reviews...');
-        try {
-            const response = await fetch(`${API_BASE}/reviews`);
-            if (!response.ok) throw new Error('Failed to load reviews');
-            const reviews = await response.json();
-            doneLoading();
-            reviewsLoaded = true;
-            renderReviews(Array.isArray(reviews) ? reviews : []);
-        } catch (error) {
-            console.error('❌ Failed to load reviews:', error);
-            doneLoading();
-            reviewsContent.innerHTML = '<p class="text-on-surface-variant py-8">Unable to load reviews right now. Please try again later.</p>';
-        }
-    }
-
-    function renderReviews(reviews) {
-        const myName = currentUser().fullName || currentUser().name || '';
-
-        if (reviews.length === 0) {
-            reviewsContent.innerHTML = '<p class="text-on-surface-variant py-8">No reviews yet — be the first to share your experience.</p>';
-            return;
-        }
-
-        document.getElementById('reviewsSubtitle').textContent = `${reviews.length} review${reviews.length === 1 ? '' : 's'} from travellers.`;
-
-        reviewsContent.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + reviews.map(review => {
-            const mine = myName && review.guestName === myName;
-            return `
-                <div class="bg-surface shadow-sm ${mine ? 'ring-1 ring-primary/40' : ''} rounded-2xl p-5">
-                    <div class="flex items-start justify-between gap-3 mb-2">
-                        <div>
-                            <p class="font-bold text-on-surface text-sm">
-                                ${escapeHtml(review.guestName)}
-                                ${mine ? '<span class="text-[10px] uppercase tracking-widest text-primary ml-1.5">You</span>' : ''}
-                            </p>
-                            <p class="text-xs text-on-surface-variant">${escapeHtml(review.destinationId || '')}</p>
-                        </div>
-                        <div class="flex shrink-0">${starRow(review.rating)}</div>
-                    </div>
-                    <p class="text-on-surface-variant text-sm leading-relaxed">${escapeHtml(review.comment)}</p>
-                    <p class="text-[11px] text-on-surface-variant/70 mt-3">${new Date(review.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                </div>
-            `;
-        }).join('') + `</div>`;
-    }
-
-    /* ----- write a review ----- */
-
-    const reviewModal = document.getElementById('reviewModal');
-    const reviewForm = document.getElementById('reviewForm');
-    const reviewSpotSelect = document.getElementById('reviewSpot');
-    const reviewRating = document.getElementById('reviewRating');
-
-    function paintStars(value) {
-        document.querySelectorAll('.star-input').forEach(star => {
-            star.classList.toggle('filled', Number(star.dataset.value) <= value);
-        });
-    }
-
-    document.querySelectorAll('.star-input').forEach(star => {
-        star.addEventListener('click', () => {
-            reviewRating.value = star.dataset.value;
-            paintStars(Number(star.dataset.value));
-        });
-    });
-
-    function openReviewModal() {
-        // The destination list comes from the published spots already loaded for
-        // this page, so a tourist can only review somewhere that actually exists.
-        reviewSpotSelect.innerHTML = '<option value="" disabled selected>Choose a destination...</option>' +
-            allSpots.map(spot => `<option value="${escapeHtml(spot._id)}">${escapeHtml(spot.title)}</option>`).join('');
-        reviewRating.value = '5';
-        paintStars(5);
-        reviewModal.hidden = false;
-    }
-
-    function closeReviewModal() {
-        reviewModal.hidden = true;
-        reviewForm.reset();
-    }
-
-    writeReviewBtn.addEventListener('click', openReviewModal);
-    document.getElementById('closeReviewModal').addEventListener('click', closeReviewModal);
-    document.getElementById('cancelReviewBtn').addEventListener('click', closeReviewModal);
-    reviewModal.addEventListener('click', event => { if (event.target === reviewModal) closeReviewModal(); });
-
-    reviewForm.addEventListener('submit', async event => {
-        event.preventDefault();
-
-        const spot = allSpots.find(item => item._id === reviewSpotSelect.value);
-        if (!spot) { showToast('Please choose a destination first.', 'error'); return; }
-
-        const profile = currentUser();
-        const restoreButton = setButtonLoading(document.getElementById('submitReviewBtn'), 'Publishing...');
-
-        try {
-            const response = await fetch(`${API_BASE}/reviews`, {
-                method: 'POST',
-                headers: authHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({
-                    guestName: profile.fullName || profile.name || 'Anonymous Traveller',
-                    rating: Number(reviewRating.value) || 5,
-                    // Both are sent: the id links the review to the spot permanently,
-                    // the title keeps it readable if the spot is ever removed.
-                    spotId: spot._id,
-                    destinationId: spot.title,
-                    comment: document.getElementById('reviewComment').value.trim()
-                })
-            });
-
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(result.message || 'Your review could not be published.');
-
-            closeReviewModal();
-            reviewsLoaded = false;
-            await loadReviews();
-        } catch (error) {
-            showToast(error.message, 'error');
-        } finally {
-            restoreButton();
-        }
-    });
-
-    /* ---------------- settings ---------------- */
-
-    const settingsContent = document.getElementById('settingsContent');
-
-    function renderSettingsView() {
-        if (!signedInTourist()) {
-            settingsContent.innerHTML = authGate('manage your account');
-            return;
-        }
-
-        const profile = currentUser();
-        settingsContent.innerHTML = `
-            <form id="profileForm" class="max-w-xl space-y-5 bg-surface shadow-sm rounded-2xl p-6">
-                <div>
-                    <label for="profileEmail" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Email</label>
-                    <input id="profileEmail" type="email" disabled value="${escapeHtml(profile.email || localStorage.getItem('userEmail') || '')}"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface-variant cursor-not-allowed" />
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Your email is how you sign in and can't be changed here.</p>
-                </div>
-                <div>
-                    <label for="profileName" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Full name</label>
-                    <input id="profileName" type="text" value="${escapeHtml(profile.fullName || profile.name || '')}"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
-                </div>
-                <div>
-                    <label for="profilePhone" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Phone</label>
-                    <input id="profilePhone" type="tel" value="${escapeHtml(profile.phone || '')}"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
-                </div>
-                <div>
-                    <label for="profileNationality" class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1.5">Nationality</label>
-                    <input id="profileNationality" type="text" value="${escapeHtml(profile.nationality || '')}"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary" />
-                </div>
-                <button type="submit" id="saveProfileBtn" class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-full btn-primary-gradient hover:scale-[1.01] transition-transform">
-                    Save changes
-                </button>
-            </form>
-        `;
-
-        document.getElementById('profileForm').addEventListener('submit', saveProfile);
-    }
-
-    async function saveProfile(event) {
-        event.preventDefault();
-
-        const userId = localStorage.getItem('userId');
-        if (!userId) { showToast('Your sign-in has expired. Please sign in again.', 'info'); return; }
-
-        const payload = {
-            fullName: document.getElementById('profileName').value.trim(),
-            phone: document.getElementById('profilePhone').value.trim(),
-            nationality: document.getElementById('profileNationality').value.trim()
-        };
-        const restoreButton = setButtonLoading(document.getElementById('saveProfileBtn'), 'Saving...');
-
-        try {
-            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(userId)}`, {
-                method: 'PATCH',
-                headers: authHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(result.error || result.message || 'Could not save your details.');
-
-            localStorage.setItem('currentUser', JSON.stringify(Object.assign(currentUser(), payload, { name: payload.fullName })));
-            refreshAuthUI();
-            showToast('Your details have been saved.', 'success');
-        } catch (error) {
-            showToast(error.message, 'error');
-        } finally {
-            restoreButton();
-        }
-    }
-
-    /* ---------------- session + theme ---------------- */
-
-    const authActionBtn = document.getElementById('authActionBtn');
-
-    function signOutTourist() {
-        ['authToken', 'userRole', 'userEmail', 'userId', 'currentUser'].forEach(key => localStorage.removeItem(key));
-        reviewsLoaded = false;
-        refreshAuthUI();
-        switchView('spots');
-        showToast('Signed out.', 'success', { duration: 2000 });
-    }
-
-    function refreshAuthUI() {
-        const signedIn = signedInTourist();
-        document.getElementById('authActionIcon').textContent = signedIn ? 'logout' : 'login';
-        document.getElementById('authActionLabel').textContent = signedIn ? 'Log Out' : 'Sign In';
-
-        // Who is signed in now lives with the avatar in the corner rather than
-        // in the sidebar, so it reads the same on every page and stays visible
-        // when the rail is collapsed.
-        const profile = currentUser();
-        mountAccountMenu({
-            container: document.getElementById('accountMenuSlot'),
-            name: signedIn ? (profile.fullName || profile.name || '') : '',
-            email: signedIn ? (profile.email || localStorage.getItem('userEmail') || '') : '',
-            imageUrl: signedIn ? (profile.avatar || '') : '',
-            signedOutLabel: 'Sign in',
-            signedOutHref: 'src/user/user_login.html',
-            items: [
-                { label: 'My reviews', icon: 'star', onSelect: () => switchView('reviews') },
-                { label: 'Settings', icon: 'settings', onSelect: () => switchView('settings') },
-                { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutTourist }
-            ]
-        });
-    }
-
-    authActionBtn.addEventListener('click', () => {
-        if (signedInTourist()) {
-            signOutTourist();
-        } else {
-            window.location.href = 'src/user/user_login.html';
-        }
-    });
-
     /* ---------------- sidebar collapse ---------------- */
 
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
@@ -1261,12 +748,7 @@ body { overflow-x: hidden; }
 
     /* ---------------- start ---------------- */
 
-    refreshAuthUI();
     loadSpots();
-
-    // Lets the login page hand someone straight back to a chosen view.
-    const requestedView = new URLSearchParams(window.location.search).get('view');
-    if (requestedView && viewTitles[requestedView]) switchView(requestedView);
 </script>
 </body>
 </html>

@@ -291,9 +291,6 @@ body { overflow-x: hidden; }
             <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-primary hover:bg-surface-bright transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
             </button>
-            <a id="navAuthBtn" href="user/user_login.html" class="shrink-0 bg-primary text-on-primary px-3 sm:px-5 py-3 min-h-[44px] flex items-center rounded-full font-display font-bold uppercase tracking-wider sm:tracking-widest text-[11px] sm:text-xs btn-primary-gradient transition-all hover:scale-105">
-                Sign In
-            </a>
         </div>
     </div>
 </nav>
@@ -302,34 +299,6 @@ body { overflow-x: hidden; }
     <!-- Filled by the script below -->
 </main>
 
-<!-- Shown when a signed-out visitor taps Book Now. Kept on this page rather than
-     redirecting, so they don't lose the destination they were looking at. -->
-<div id="bookingAuthModal" hidden class="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-md p-7 text-center relative">
-        <button id="closeBookingAuthModal" aria-label="Close"
-                class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-
-        <span class="material-symbols-outlined !text-5xl text-surface-bright">lock_person</span>
-        <h3 class="text-2xl font-display font-bold text-on-surface mt-3 mb-2">Sign in to book</h3>
-        <p class="text-on-surface-variant text-sm mb-6">
-            Booking for <b id="bookingAuthSpotName" class="text-on-surface"></b> happens on the resort's own website.
-            Sign in first so the tourism office can keep track of visits — you'll come straight back here.
-        </p>
-
-        <div class="flex flex-col gap-3">
-            <a id="bookingAuthRegister" href="user/user_create_account.html"
-               class="bg-primary text-on-primary px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform">
-                Create an account
-            </a>
-            <a id="bookingAuthLogin" href="user/user_login.html"
-               class="px-7 py-3.5 rounded-full font-display font-bold uppercase tracking-widest text-xs border border-outline-variant/40 text-on-surface hover:border-primary transition-colors">
-                Sign in
-            </a>
-        </div>
-    </div>
-</div>
 
 <!-- Full-size photo viewer. One element reused for every photo, so a spot with
      30 photos still only ever holds one large image in the page. -->
@@ -404,14 +373,6 @@ body { overflow-x: hidden; }
         }
     }
 
-    function starRow(rating) {
-        const rounded = Math.round(Number(rating) || 0);
-        let stars = '';
-        for (let i = 1; i <= 5; i++) {
-            stars += `<span class="material-symbols-outlined !text-base ${i <= rounded ? 'text-surface-bright' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
-        }
-        return stars;
-    }
 
     function renderNotFound(message) {
         content.innerHTML = `
@@ -970,10 +931,6 @@ body { overflow-x: hidden; }
 
                     ${directionsSection(spot)}
 
-                    <div id="reviewsBlock">
-                        <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Visitor reviews</h2>
-                        <div id="reviewsList"></div>
-                    </div>
                 </div>
 
                 <aside class="lg:col-span-1">
@@ -1003,78 +960,6 @@ body { overflow-x: hidden; }
         `;
     }
 
-    function renderReviews(data) {
-        const list = document.getElementById('reviewsList');
-        if (!list) return;
-
-        const reviews = Array.isArray(data.reviews) ? data.reviews : [];
-
-        if (reviews.length === 0) {
-            list.innerHTML = `<p class="text-on-surface-variant text-sm bg-surface border border-outline-variant/20 rounded-xl p-5">No reviews yet — be the first to share your experience.</p>`;
-            return;
-        }
-
-        const heading = document.querySelector('#reviewsBlock h2');
-        if (heading && data.averageRating) {
-            heading.innerHTML = `Visitor reviews
-                <span class="inline-flex items-center gap-1.5 ml-2 align-middle text-base font-body font-normal">
-                    ${starRow(data.averageRating)}
-                    <span class="text-on-surface-variant text-sm">${data.averageRating} · ${data.total} review${data.total === 1 ? '' : 's'}</span>
-                </span>`;
-        }
-
-        list.innerHTML = reviews.map(review => `
-            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 mb-3">
-                <div class="flex items-center justify-between mb-2">
-                    <p class="font-bold text-on-surface text-sm">${escapeHtml(review.guestName)}</p>
-                    <div class="flex items-center">${starRow(review.rating)}</div>
-                </div>
-                <p class="text-on-surface-variant text-sm leading-relaxed">${escapeHtml(review.comment)}</p>
-                <p class="text-[11px] text-on-surface-variant/70 mt-2">${new Date(review.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-            </div>
-        `).join('');
-    }
-
-    /* ---------------- booking gate ---------------- */
-
-    const bookingAuthModal = document.getElementById('bookingAuthModal');
-
-    function closeBookingAuthModal() { bookingAuthModal.hidden = true; }
-
-    document.getElementById('closeBookingAuthModal').addEventListener('click', closeBookingAuthModal);
-    bookingAuthModal.addEventListener('click', event => {
-        if (event.target === bookingAuthModal) closeBookingAuthModal();
-    });
-    document.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && !bookingAuthModal.hidden) closeBookingAuthModal();
-    });
-
-    // Only a tourist account counts here. An officer or establishment manager signed into
-    // their own portal is not a visitor booking a trip.
-    function signedInTourist() {
-        return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';
-    }
-
-    function wireBookingGate(spot, spotId) {
-        const bookBtn = document.getElementById('bookNowBtn');
-        if (!bookBtn) return;   // no booking link on this spot — nothing to gate
-
-        bookBtn.addEventListener('click', event => {
-            if (signedInTourist()) return;   // let the link through to the resort
-
-            event.preventDefault();
-
-            document.getElementById('bookingAuthSpotName').textContent = spot.title;
-
-            // Carrying the spot id means both paths return here rather than dumping
-            // them on a dashboard, so the booking they started is still in front of them.
-            const returnTo = `?spotId=${encodeURIComponent(spotId)}`;
-            document.getElementById('bookingAuthRegister').href = `user/user_create_account.html${returnTo}`;
-            document.getElementById('bookingAuthLogin').href = `user/user_login.html${returnTo}`;
-
-            bookingAuthModal.hidden = false;
-        });
-    }
 
     // Photo viewer. Wired once per spot; the thumbnails live inside content that
     // renderSpot replaces, so the click handler sits on the grid itself.
@@ -1146,19 +1031,8 @@ body { overflow-x: hidden; }
             doneLoading();
             renderSpot(spot);
             document.title = `${spot.title} | Zamboanguita`;
-            wireBookingGate(spot, spotId);
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
-
-            // Reviews load after the page is already readable, so a slow review
-            // query never holds back the destination details themselves.
-            try {
-                const reviewsResponse = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/reviews`);
-                if (reviewsResponse.ok) renderReviews(await reviewsResponse.json());
-                else renderReviews({ reviews: [] });
-            } catch {
-                renderReviews({ reviews: [] });
-            }
         } catch (error) {
             console.error('❌ Failed to load destination:', error);
             doneLoading();
@@ -1169,13 +1043,6 @@ body { overflow-x: hidden; }
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     // Theme is the shared module's job, including the icon it shows.
     themeToggleBtn.addEventListener('click', toggleTheme);
-
-    // Signed-in visitors shouldn't be told to sign in.
-    if (localStorage.getItem('authToken')) {
-        const authBtn = document.getElementById('navAuthBtn');
-        authBtn.textContent = 'My Account';
-        authBtn.href = '../index.html?view=settings';
-    }
 
     loadSpot();
 </script>
