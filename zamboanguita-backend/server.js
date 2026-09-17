@@ -329,7 +329,7 @@ const GuideBookingSchema = new mongoose.Schema({
     // counter. No account is created from any of this.
     fullName: { type: String, required: true, trim: true },
     contactNumber: { type: String, required: true, trim: true },
-    email: { type: String, default: "", lowercase: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
     visitors: { type: Number, required: true, min: 1 },
     preferredDate: { type: String, required: true },   // YYYY-MM-DD, as the form sends it
     preferredTime: { type: String, required: true },   // HH:MM, 24-hour
@@ -1687,9 +1687,22 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
         const visitors = Math.floor(Number(body.visitors));
 
         if (!fullName) return res.status(400).json({ success: false, message: 'Please give the name the booking is under.' });
-        if (!contactNumber) return res.status(400).json({ success: false, message: 'A contact number is required so the office can reach you.' });
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ success: false, message: 'That email address does not look right. Leave it blank if you prefer.' });
+        if (!contactNumber) {
+            return res.status(400).json({ success: false, message: 'A contact number is required so the office can reach you.' });
+        }
+        // The form sends the country code with the number. Checked here as well,
+        // because a form is a convenience and this route is open to anyone.
+        if (!/^\+\d{1,4}[\s-]?\d[\d\s-]{5,}$/.test(contactNumber)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Give the contact number with its country code, for example +63 917 123 4567.'
+            });
+        }
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'An email address is required so the office can confirm your booking.' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'That email address does not look right.' });
         }
         if (!Number.isFinite(visitors) || visitors < 1) {
             return res.status(400).json({ success: false, message: 'How many visitors are coming?' });

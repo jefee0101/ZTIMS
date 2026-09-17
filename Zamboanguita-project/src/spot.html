@@ -324,17 +324,52 @@ body { overflow-x: hidden; }
                 <input id="bookName" type="text" required autocomplete="name"
                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
-                    <input id="bookContact" type="tel" required autocomplete="tel" placeholder="09XX XXX XXXX"
-                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            <div>
+                <label for="bookContact" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
+                <!-- Visitors arrive from abroad, so the number needs the country it
+                     belongs to. The office dials what is stored; a bare local number
+                     from another country is not dialable. -->
+                <div class="flex gap-2">
+                    <select id="bookDialCode" aria-label="Country dialling code"
+                            class="shrink-0 w-28 sm:w-32 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="+63" data-example="917 123 4567" selected>PH +63</option>
+                        <option value="+1" data-example="415 555 0123">US/CA +1</option>
+                        <option value="+44" data-example="7700 900123">UK +44</option>
+                        <option value="+61" data-example="412 345 678">AU +61</option>
+                        <option value="+64" data-example="21 123 4567">NZ +64</option>
+                        <option value="+81" data-example="90 1234 5678">JP +81</option>
+                        <option value="+82" data-example="10 1234 5678">KR +82</option>
+                        <option value="+86" data-example="131 2345 6789">CN +86</option>
+                        <option value="+852" data-example="5123 4567">HK +852</option>
+                        <option value="+886" data-example="912 345 678">TW +886</option>
+                        <option value="+65" data-example="8123 4567">SG +65</option>
+                        <option value="+60" data-example="12 345 6789">MY +60</option>
+                        <option value="+62" data-example="812 3456 789">ID +62</option>
+                        <option value="+66" data-example="81 234 5678">TH +66</option>
+                        <option value="+84" data-example="91 234 56 78">VN +84</option>
+                        <option value="+91" data-example="98765 43210">IN +91</option>
+                        <option value="+971" data-example="50 123 4567">AE +971</option>
+                        <option value="+49" data-example="151 23456789">DE +49</option>
+                        <option value="+33" data-example="6 12 34 56 78">FR +33</option>
+                        <option value="+34" data-example="612 34 56 78">ES +34</option>
+                        <option value="+39" data-example="312 345 6789">IT +39</option>
+                        <option value="+31" data-example="6 12345678">NL +31</option>
+                        <option value="+41" data-example="78 123 45 67">CH +41</option>
+                        <option value="+46" data-example="70 123 45 67">SE +46</option>
+                        <option value="+47" data-example="406 12 345">NO +47</option>
+                        <option value="+45" data-example="20 12 34 56">DK +45</option>
+                    </select>
+                    <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567"
+                           class="flex-1 min-w-0 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Email <span class="font-normal normal-case">(optional)</span></label>
-                    <input id="bookEmail" type="email" autocomplete="email"
-                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1">Without the leading zero — the country code covers it.</p>
+            </div>
+
+            <div>
+                <label for="bookEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Email</label>
+                <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com"
+                       class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                <p class="text-[11px] text-on-surface-variant mt-1">Where the office confirms your booking.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
@@ -872,6 +907,14 @@ body { overflow-x: hidden; }
             setBookingError('');
             modal.hidden = false;
         });
+        // The example number follows the country, so nobody is left guessing at
+        // the shape of it.
+        const dialCode = document.getElementById('bookDialCode');
+        dialCode.addEventListener('change', function () {
+            const chosen = dialCode.options[dialCode.selectedIndex];
+            document.getElementById('bookContact').placeholder = chosen.dataset.example || '';
+        });
+
         document.getElementById('closeBookingModal').addEventListener('click', close);
         modal.addEventListener('click', event => { if (event.target === modal) close(); });
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) close(); });
@@ -883,7 +926,9 @@ body { overflow-x: hidden; }
             const payload = {
                 spotId,
                 fullName: document.getElementById('bookName').value.trim(),
-                contactNumber: document.getElementById('bookContact').value.trim(),
+                // Stored with its country code, because the office dials what it
+                // stores and a bare local number from abroad is not dialable.
+                contactNumber: fullContactNumber(),
                 email: document.getElementById('bookEmail').value.trim(),
                 visitors: Number(document.getElementById('bookVisitors').value) || 0,
                 preferredDate: document.getElementById('bookDate').value,
@@ -918,6 +963,16 @@ body { overflow-x: hidden; }
                 button.textContent = original;
             }
         });
+    }
+
+    /* The code and the local part are collected separately so the country is a
+       choice rather than something a visitor has to remember to type. They are
+       stored as one number, which is what the office needs to dial. A leading
+       zero is a domestic prefix and would be wrong after a country code. */
+    function fullContactNumber() {
+        const code = document.getElementById('bookDialCode').value;
+        const local = document.getElementById('bookContact').value.trim().replace(/^0+/, '');
+        return local ? `${code} ${local}` : '';
     }
 
     function setBookingError(message) {
