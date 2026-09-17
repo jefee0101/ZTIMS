@@ -63,7 +63,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboangui
 mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('✅ Connected safely to MongoDB database system.');
-        return migrateEstablishmentNames();
+        return migrateEstablishmentNames().then(migrateSpotManagement);
     })
     .catch(err => console.error('❌ MongoDB Connection Error Encountered:', err));
 
@@ -130,7 +130,7 @@ const EstablishmentManagerSchema = new mongoose.Schema({
     phone: { type: String, default: "" },
     // Suspended accounts cannot sign in, and their listings drop off the public
     // site until the Tourist Officer restores them. Nothing is deleted, so a
-    // seasonal closure or a change of ownership is reversible.
+    // seasonal closure or a change of management is reversible.
     active: { type: Boolean, default: true },
     resetTokenHash: { type: String, default: null, select: false },
     resetTokenExpires: { type: Date, default: null, select: false }
@@ -169,6 +169,37 @@ async function migrateEstablishmentNames() {
         }
     } catch (error) {
         console.warn('⚠️ establishmentName migration skipped:', error.message);
+    }
+}
+
+/**
+ * Moves listings from the old `ownerId` field to `managedBy`.
+ *
+ * Nobody owns a listing in ZTIMS — a manager is assigned to maintain one — and
+ * the old name said otherwise. Done in two steps on purpose: copy every value
+ * across first, and only remove the old field from documents that now carry the
+ * new one. A half-finished run therefore leaves listings readable under both
+ * names rather than under neither.
+ */
+async function migrateSpotManagement() {
+    try {
+        const copied = await Spot.collection.updateMany(
+            { ownerId: { $exists: true }, managedBy: { $exists: false } },
+            [{ $set: { managedBy: '$ownerId' } }]
+        );
+        if (copied.modifiedCount) {
+            console.log(`🔤 Moved ownerId -> managedBy on ${copied.modifiedCount} listing(s).`);
+        }
+
+        const cleaned = await Spot.collection.updateMany(
+            { ownerId: { $exists: true }, managedBy: { $exists: true } },
+            { $unset: { ownerId: '' } }
+        );
+        if (cleaned.modifiedCount) {
+            console.log(`🧹 Dropped the old ownerId field from ${cleaned.modifiedCount} listing(s).`);
+        }
+    } catch (error) {
+        console.warn('⚠️ managedBy migration skipped:', error.message);
     }
 }
 
@@ -237,9 +268,14 @@ const SpotSchema = new mongoose.Schema({
     latitude: { type: Number, default: null, min: -90, max: 90 },
     longitude: { type: Number, default: null, min: -180, max: 180 },
 
-    // Null/absent = managed directly by the Tourist Officer. Set = managed by a
-    // Tourist Establishment Manager account.
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null }
+    // Which Tourist Establishment Manager account is assigned to maintain this
+    // listing. Null means the Tourism Office maintains it directly.
+    //
+    // Nobody owns anything here. ZTIMS records who is responsible for keeping a
+    // listing accurate, and that is all this field means — which is why it is not
+    // called an owner. The municipality's authority over the public listing does
+    // not pass to whoever is assigned to it.
+    managedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null, index: true }
 }, { timestamps: true });
 
 const Spot = mongoose.model('Spot', SpotSchema);
@@ -262,8 +298,10 @@ const requireAdmin = [requireAuth, (req, res, next) => {
     return next();
 }];
 
-// Sessions issued before the rename carry role 'resort_owner'; both spellings mean
-// the same account type, so nobody is signed out by the rename.
+// ZTIMS has three kinds of account: tourist, Establishment Manager, Tourism
+// Officer. 'resort_owner' is not a fourth — it is the spelling this same account
+// type carried in tokens issued before the rename, kept here only so a session
+// signed in back then is not thrown out mid-visit. Nothing issues it any more.
 const MANAGER_ROLES = ['establishment_manager', 'resort_owner'];
 const isEstablishmentManager = role => MANAGER_ROLES.includes(role);
 
@@ -580,7 +618,7 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
  */
 app.get('/api/establishment-managers/me/reviews', requireEstablishmentManager, async (req, res) => {
     try {
-        const spots = await Spot.find({ ownerId: req.auth.sub }).select('title type imageUrl');
+        const spots = await Spot.find({ managedBy: req.auth.sub }).select('title type imageUrl');
 
         if (spots.length === 0) {
             return res.status(200).json({ success: true, listings: [], reviews: [], averageRating: null, total: 0 });
@@ -637,7 +675,7 @@ app.get('/api/establishment-managers/me/reviews', requireEstablishmentManager, a
 /**
  * PATCH: correct an account's details, or suspend and restore it.
  * Suspending blocks sign-in and takes the manager's listings off the public site
- * without deleting anything, so a closure or a change of ownership is reversible.
+ * without deleting anything, so a closure or a change of management is reversible.
  */
 app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
     try {
@@ -656,7 +694,7 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
 
         await applyManagerDetails(manager, req.body);
 
-        const listings = await Spot.countDocuments({ ownerId: manager._id });
+        const listings = await Spot.countDocuments({ managedBy: manager._id });
         console.log(`🏨 Officer updated ${manager.email} (active: ${manager.active !== false})`);
         return res.status(200).json({
             success: true,
@@ -703,16 +741,16 @@ app.post('/api/establishment-managers/:id/password', requireAdmin, async (req, r
 });
 
 /**
- * DELETE: remove an account outright. Refused while listings still point at it,
- * because deleting would leave those listings owned by nobody — suspend instead,
- * or take the listings down first, deliberately.
+ * DELETE: remove an account outright. Refused while listings are still assigned
+ * to it, because deleting would leave those listings with nobody responsible for
+ * them — suspend instead, or reassign the listings first, deliberately.
  */
 app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
     try {
         const manager = await EstablishmentManager.findById(req.params.id);
         if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
 
-        const listings = await Spot.countDocuments({ ownerId: manager._id });
+        const listings = await Spot.countDocuments({ managedBy: manager._id });
         if (listings > 0) {
             return res.status(409).json({
                 success: false,
@@ -729,9 +767,6 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
     }
 });
 
-// Pre-rename paths, kept so any page or bookmark still pointing at them keeps working.
-app.post('/api/resort-owners', requireAdmin, createEstablishmentManager);
-app.get('/api/resort-owners', requireAdmin, listEstablishmentManagers);
 
 /**
  * POST: Register new traveler accounts into MongoDB (🌟 UPGRADED TO CAPTURE INPUT VALUES)
@@ -1045,7 +1080,7 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
 });
 
 /**
- * POST: Set a new password, proving ownership with the emailed token
+ * POST: Set a new password, proving control of the mailbox with the emailed token
  * Target URL: http://localhost:5000/api/reset-password
  */
 app.post('/api/reset-password', resetRateLimit, async (req, res) => {
@@ -1228,7 +1263,7 @@ app.patch('/api/users/:id', requireAuth, async (req, res) => {
         const userId = req.params.id;
         // This edits the tourist directory, so only a tourist editing themselves or
         // the Tourist Officer may touch it. An establishment manager was already refused by
-        // the ownership check below, but only as a side effect of their id never
+        // the identity check below, but only as a side effect of their id never
         // matching a tourist's — saying so explicitly keeps that intentional.
         if (req.auth.role !== 'admin' && req.auth.role !== 'user') {
             return res.status(403).json({ error: 'Only tourist accounts have a profile here.' });
@@ -1291,27 +1326,29 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
     try {
         const query = {};
         if (req.query.mine === 'true' && isEstablishmentManager(req.auth?.role)) {
-            query.ownerId = req.auth.sub;
+            // A manager asking for "mine" gets exactly the listings assigned to
+            // them — the scope is applied in the query, not left to the caller.
+            query.managedBy = req.auth.sub;
         }
-        // The manager's public-facing details come along so the officer's oversight
-        // page can show who is responsible for each listing without a request per row.
+        // The establishment's public-facing details come along so the officer's
+        // oversight page can show who maintains each listing without a request per row.
         const foundSpots = await Spot.find(query)
-            .populate('ownerId', 'establishmentName resortName managerName contactEmail phone active')
+            .populate('managedBy', 'establishmentName resortName managerName contactEmail phone active')
             .sort({ createdAt: -1 });
 
-        // A suspended manager's listings leave the public site, but the Tourist
-        // Officer still sees them — otherwise the listings they just hid would
-        // vanish from the very page they manage them on.
-        const activeSpots = req.auth?.role === 'admin'
+        // A suspended establishment's listings leave the public site, but the
+        // Tourist Officer still sees them — otherwise the listings they just hid
+        // would vanish from the very page they oversee them on.
+        const visibleSpots = req.auth?.role === 'admin'
             ? foundSpots
-            : foundSpots.filter(spot => !spot.ownerId || spot.ownerId.active !== false);
+            : foundSpots.filter(isPubliclyVisible);
 
-        return res.status(200).json(activeSpots.map(spot => {
+        return res.status(200).json(visibleSpots.map(spot => {
             const plain = spot.toObject();
-            const manager = plain.ownerId;
+            const manager = plain.managedBy;
             return {
                 ...plain,
-                // Null manager means the Tourism Office keeps this listing itself.
+                // No assigned manager means the Tourism Office maintains this listing.
                 managerName: manager ? (manager.establishmentName || manager.resortName || '') : '',
                 managerContact: manager ? (manager.managerName || '') : '',
                 managerEmail: manager ? (manager.contactEmail || '') : '',
@@ -1345,6 +1382,89 @@ function normaliseSpotImages(payload) {
         // galleries have only a cover, and the quick-add form only sets one.
         imageUrl: cover || cleaned[0] || ''
     };
+}
+
+/* ==========================================
+   LISTING AUTHORIZATION
+   ------------------------------------------
+   One place decides who may touch a listing, so a route written later cannot
+   quietly forget the rule. Every decision is made on ROLE and on the RESOURCE
+   together: being an establishment manager is not enough on its own, the listing
+   has to be one that manager is assigned to.
+
+   None of this depends on the frontend. The portals hide actions the signed-in
+   user cannot perform, but that is presentation. These functions are the
+   authorization, and a hand-built request carrying someone else's listing id is
+   refused here no matter what any page did or didn't show.
+========================================== */
+
+// What an establishment manager may write on a listing assigned to them: its
+// tourism information, and nothing about who is responsible for it.
+const MANAGER_WRITABLE_SPOT_FIELDS = [
+    'title', 'location', 'category', 'description', 'imageUrl', 'images', 'bookingUrl',
+    'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
+    'address', 'barangay', 'municipality', 'province', 'latitude', 'longitude'
+];
+
+/**
+ * Decides whether this caller may write to this listing.
+ *
+ * The Tourism Officer's authority covers every listing, including one a private
+ * establishment maintains. That is the point of municipal oversight, and it does
+ * not lapse because a manager has been assigned to the day-to-day upkeep.
+ */
+function authorizeSpotWrite(auth, spot) {
+    if (!auth) return { allowed: false, status: 401, message: 'Authentication required.' };
+
+    if (auth.role === 'admin') return { allowed: true, scope: 'officer' };
+
+    if (isEstablishmentManager(auth.role)) {
+        // Assigned to this exact listing, or not at all. An unassigned listing is
+        // one the Tourism Office maintains, which is never a manager's to change.
+        const assignedTo = spot.managedBy ? String(spot.managedBy._id || spot.managedBy) : '';
+        if (!assignedTo || assignedTo !== String(auth.sub)) {
+            return {
+                allowed: false,
+                status: 403,
+                message: 'You may only manage listings assigned to your own establishment.'
+            };
+        }
+        return { allowed: true, scope: 'manager' };
+    }
+
+    return { allowed: false, status: 403, message: 'Staff access required.' };
+}
+
+/**
+ * Narrows a payload to the fields the caller's scope allows. An officer's passes
+ * through whole; a manager's is reduced to their own establishment's information.
+ *
+ * Dropping beats rejecting here: the establishment's editor posts a whole listing
+ * every time, and a field it never offered to change shouldn't fail the save.
+ * What it must not set simply never reaches the document.
+ */
+function scopeSpotPayload(payload, scope) {
+    if (scope === 'officer') return payload;
+
+    const scoped = {};
+    for (const field of MANAGER_WRITABLE_SPOT_FIELDS) {
+        if (field in payload) scoped[field] = payload[field];
+    }
+    return scoped;
+}
+
+/**
+ * The one rule for whether the public may see a listing, so the landing page, the
+ * detail page and the officer's counts can never disagree about it.
+ *
+ * A listing drops off the public site while the account assigned to it is
+ * suspended, and comes back when the office restores it. Nothing is deleted to
+ * make that happen.
+ */
+function isPubliclyVisible(spot) {
+    const manager = spot.managedBy && typeof spot.managedBy === 'object' ? spot.managedBy : null;
+    if (!manager) return true;              // maintained by the office; no account behind it
+    return manager.active !== false;
 }
 
 /**
@@ -1410,8 +1530,13 @@ function normaliseSpotLocation(payload) {
 
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
-        const ownerId = isEstablishmentManager(req.auth.role) ? req.auth.sub : (req.body.ownerId || null);
-        const newSpot = new Spot({ ...normaliseSpotLocation(normaliseSpotImages(req.body)), ownerId });
+        // A manager's listing is assigned to them, whatever the request claims;
+        // only the officer may assign a listing to an establishment.
+        const managedBy = isEstablishmentManager(req.auth.role)
+            ? req.auth.sub
+            : (req.body.managedBy || null);
+        const scoped = scopeSpotPayload(req.body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
+        const newSpot = new Spot({ ...normaliseSpotLocation(normaliseSpotImages(scoped)), managedBy });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
     } catch (error) {
@@ -1425,12 +1550,12 @@ app.post('/api/spots', requireStaff, async (req, res) => {
  */
 app.get('/api/spots/:id', async (req, res) => {
     try {
-        // Only the owner's public-facing contact details — never their email or
-        // password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('ownerId', 'establishmentName resortName managerName contactEmail phone active');
+        // Only the establishment's public-facing contact details — never the
+        // sign-in email or password hash, since this route is open to anyone.
+        const spot = await Spot.findById(req.params.id).populate('managedBy', 'establishmentName resortName managerName contactEmail phone active');
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
-        // Same rule as the listing page: a suspended establishment is not public.
-        if (spot.ownerId && spot.ownerId.active === false) {
+        // The same single rule the listing page uses, so the two cannot disagree.
+        if (!isPubliclyVisible(spot)) {
             return res.status(404).json({ message: 'This destination is not available right now.' });
         }
         return res.status(200).json(spot);
@@ -1447,12 +1572,13 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
-        if (isEstablishmentManager(req.auth.role) && String(spot.ownerId) !== req.auth.sub) {
-            return res.status(403).json({ message: 'You may only edit your own listing.' });
-        }
 
-        const { ownerId, ...updates } = req.body; // ownership cannot be reassigned from this route
-        Object.assign(spot, normaliseSpotLocation(normaliseSpotImages(updates)));
+        const verdict = authorizeSpotWrite(req.auth, spot);
+        if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
+
+        // Which establishment maintains a listing is never reassigned from here.
+        const { managedBy, ownerId, ...updates } = req.body;
+        Object.assign(spot, normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope))));
         const savedSpot = await spot.save();
         return res.status(200).json(savedSpot);
     } catch (error) {
@@ -1464,9 +1590,9 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
-        if (isEstablishmentManager(req.auth.role) && String(spot.ownerId) !== req.auth.sub) {
-            return res.status(403).json({ message: 'You may only delete your own listing.' });
-        }
+
+        const verdict = authorizeSpotWrite(req.auth, spot);
+        if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
 
         await spot.deleteOne();
         return res.status(200).json({ success: true, message: 'Spot deleted.' });

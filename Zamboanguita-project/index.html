@@ -806,7 +806,7 @@ body { overflow-x: hidden; }
     }
 
     // Only a tourist account unlocks reviews and settings. Officers and resort
-    // owners have their own portals, so signing in there doesn't apply here.
+    // establishment managers have their own portals, so signing in there doesn't apply here.
     function signedInTourist() {
         return Boolean(localStorage.getItem('authToken')) && localStorage.getItem('userRole') === 'user';
     }

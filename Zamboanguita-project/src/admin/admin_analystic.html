@@ -630,9 +630,9 @@ body { overflow-x: hidden; }
                     <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">location_on</span> Published Spots</p>
                     <h2 class="text-3xl font-bold text-on-surface" id="metric-spots">0</h2>
                 </div>
-                <div onclick="switchMetricTab('owners')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-owners">
+                <div onclick="switchMetricTab('managers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-managers">
                     <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">storefront</span> Tourist Establishment Managers</p>
-                    <h2 class="text-3xl font-bold text-on-surface" id="metric-owners">0</h2>
+                    <h2 class="text-3xl font-bold text-on-surface" id="metric-managers">0</h2>
                 </div>
                 <div onclick="switchMetricTab('travelers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-travelers">
                     <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">group</span> Registered Users</p>
@@ -1178,12 +1178,12 @@ body { overflow-x: hidden; }
         // Built once; the dialog refreshes it on open, because Leaflet measures its
         // container at creation and a closed dialog measures zero.
         const quickLocationPicker = mountLocationPicker({ prefix: 'quickLoc', apiBase: BASE_API_URL });
-        const OWNERS_URL = `${BASE_API_URL}/establishment-managers`;
+        const MANAGERS_URL = `${BASE_API_URL}/establishment-managers`;
         const USERS_URL = `${BASE_API_URL}/users`;
         const REVIEWS_URL = `${BASE_API_URL}/reviews`;
 
         let systemSpots = [];
-        let systemOwners = [];
+        let systemManagers = [];
         let systemUsers = [];
         let systemReviews = [];
 
@@ -1260,7 +1260,7 @@ body { overflow-x: hidden; }
         // while the request is still out — swap in a spinner until the data lands.
         let hasLoadedMetricsOnce = false;
         function showMetricSpinners() {
-            ['metric-spots', 'metric-owners', 'metric-travelers', 'metric-rating'].forEach(id => {
+            ['metric-spots', 'metric-managers', 'metric-travelers', 'metric-rating'].forEach(id => {
                 const tile = document.getElementById(id);
                 if (tile) {
                     tile.innerHTML = '<span class="inline-block w-6 h-6 rounded-full border-[3px] border-current border-t-transparent animate-spin opacity-60 align-[-4px]"></span>';
@@ -1273,15 +1273,15 @@ body { overflow-x: hidden; }
             if (!hasLoadedMetricsOnce) showMetricSpinners();
             hasLoadedMetricsOnce = true;
             try {
-                const [spotsRes, ownersRes, usersRes, reviewsRes] = await Promise.all([
+                const [spotsRes, managersRes, usersRes, reviewsRes] = await Promise.all([
                     fetch(SPOTS_URL).catch(() => null),
-                    fetch(OWNERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
+                    fetch(MANAGERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
                     fetch(USERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null),
                     fetch(REVIEWS_URL).catch(() => null)
                 ]);
 
                 systemSpots = spotsRes && spotsRes.ok ? await spotsRes.json() : [];
-                systemOwners = ownersRes && ownersRes.ok ? await ownersRes.json() : [];
+                systemManagers = managersRes && managersRes.ok ? await managersRes.json() : [];
                 systemUsers = usersRes && usersRes.ok ? await usersRes.json() : [];
                 systemReviews = reviewsRes && reviewsRes.ok ? await reviewsRes.json() : [];
 
@@ -1296,7 +1296,7 @@ body { overflow-x: hidden; }
         function calculateCalculatedFields() {
             document.getElementById('metric-spots').innerText = systemSpots.length;
 
-            document.getElementById('metric-owners').innerText = systemOwners.length;
+            document.getElementById('metric-managers').innerText = systemManagers.length;
 
             document.getElementById('metric-travelers').innerText = systemUsers.length;
 
@@ -1345,12 +1345,12 @@ body { overflow-x: hidden; }
                     const match = daysArray.find(d => d.dateString === created);
                     if (match) match.value += 1;
                 });
-            } else if (metricType === 'owners') {
+            } else if (metricType === 'managers') {
                 chartTitle.innerText = "Tourist Establishment Manager Accounts";
                 chartRange.innerText = "New Accounts Issued / Day";
 
-                systemOwners.forEach(owner => {
-                    const created = (owner.createdAt || "").substring(0, 10);
+                systemManagers.forEach(manager => {
+                    const created = (manager.createdAt || "").substring(0, 10);
                     const match = daysArray.find(d => d.dateString === created);
                     if (match) match.value += 1;
                 });
@@ -1422,7 +1422,7 @@ body { overflow-x: hidden; }
         function switchMetricTab(metricType) {
             window.currentActiveTab = metricType;
 
-            ['spots', 'owners', 'travelers', 'rating'].forEach(type => {
+            ['spots', 'managers', 'travelers', 'rating'].forEach(type => {
                 const card = document.getElementById(`card-${type}`);
                 if (card) card.classList.remove('border-[#eab308]/80', 'bg-[#eab308]/5');
             });
@@ -1454,9 +1454,9 @@ body { overflow-x: hidden; }
                     htmlPayload += `</tbody></table>`;
                 }
             } 
-            else if (metricType === 'owners') {
+            else if (metricType === 'managers') {
                 titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">storefront</span> Registered Tourist Establishment Managers`;
-                if (systemOwners.length === 0) {
+                if (systemManagers.length === 0) {
                     htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No establishment manager accounts created yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
@@ -1464,9 +1464,15 @@ body { overflow-x: hidden; }
                             <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
-                    systemOwners.forEach(owner => {
-                        const listings = systemSpots.filter(spot => String(spot.ownerId) === String(owner._id)).length;
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(owner.establishmentName || owner.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(owner.email || '—')}</td><td class="text-stone-400">${escapeHtml(owner.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
+                    systemManagers.forEach(manager => {
+                        // The reference arrives populated, so it may be an object or a bare id.
+                        const assignedId = entry => {
+                            const assigned = entry.managedBy;
+                            if (!assigned) return '';
+                            return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
+                        };
+                        const listings = systemSpots.filter(spot => assignedId(spot) === String(manager._id)).length;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(manager.email || '—')}</td><td class="text-stone-400">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }

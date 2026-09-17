@@ -1289,7 +1289,8 @@ body { overflow-x: hidden; }
 
         function guardEstablishmentManagerSession() {
             const role = localStorage.getItem('userRole');
-            // 'resort_owner' is the pre-rename spelling of the same role.
+            // 'resort_owner' is not another kind of user — it is the spelling this
+            // same account type carried in tokens issued before the rename.
             if (!['establishment_manager', 'resort_owner'].includes(role) || !localStorage.getItem('authToken')) {
                 window.location.href = '../staff_login.html';
                 return false;

@@ -424,13 +424,13 @@ body { overflow-x: hidden; }
     }
 
     // The establishment's name, whichever spelling the account was saved under.
-    function managerName(owner) {
-        return owner?.establishmentName || owner?.resortName || '';
+    function managerName(establishment) {
+        return establishment?.establishmentName || establishment?.resortName || '';
     }
 
     function bookingPanel(spot) {
         const url = safeExternalUrl(spot.bookingUrl);
-        const owner = spot.ownerId && typeof spot.ownerId === 'object' ? spot.ownerId : null;
+        const establishment = spot.managedBy && typeof spot.managedBy === 'object' ? spot.managedBy : null;
 
         if (url) {
             // The href is always the real destination so the link still works with
@@ -442,7 +442,7 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined">open_in_new</span> Book Now
                 </a>
                 <p class="text-[11px] text-on-surface-variant text-center mt-3">
-                    Booking is handled on ${escapeHtml(managerName(owner) || 'the establishment')}'s own website. This opens in a new tab.
+                    Booking is handled on ${escapeHtml(managerName(establishment) || 'the establishment')}'s own website. This opens in a new tab.
                 </p>
             `;
         }
@@ -450,20 +450,20 @@ body { overflow-x: hidden; }
         // No booking link on file — give the visitor a way to reach the resort
         // instead of a button that goes nowhere.
         const contactLines = [];
-        if (managerName(owner)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(owner))}</p>`);
+        if (managerName(establishment)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(establishment))}</p>`);
         // The person to ask for, when the office recorded one.
-        if (owner?.managerName) {
-            contactLines.push(`<p class="text-xs text-on-surface-variant">Managed by ${escapeHtml(owner.managerName)}</p>`);
+        if (establishment?.managerName) {
+            contactLines.push(`<p class="text-xs text-on-surface-variant">Managed by ${escapeHtml(establishment.managerName)}</p>`);
         }
-        if (owner?.phone) {
-            contactLines.push(`<a href="tel:${escapeHtml(owner.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
-                <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(owner.phone)}
+        if (establishment?.phone) {
+            contactLines.push(`<a href="tel:${escapeHtml(establishment.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
+                <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(establishment.phone)}
             </a>`);
         }
         // Only the public address ever reaches this page; the sign-in email stays private.
-        if (owner?.contactEmail) {
-            contactLines.push(`<a href="mailto:${escapeHtml(owner.contactEmail)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline break-all">
-                <span class="material-symbols-outlined !text-base">mail</span>${escapeHtml(owner.contactEmail)}
+        if (establishment?.contactEmail) {
+            contactLines.push(`<a href="mailto:${escapeHtml(establishment.contactEmail)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline break-all">
+                <span class="material-symbols-outlined !text-base">mail</span>${escapeHtml(establishment.contactEmail)}
             </a>`);
         }
 

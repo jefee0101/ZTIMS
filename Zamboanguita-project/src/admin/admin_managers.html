@@ -938,12 +938,13 @@ body { overflow-x: hidden; }
             renderTable();
         }
 
-        // A spot's owner arrives populated, so it can be an object or a plain id
+        // A listing's assigned establishment arrives populated, so it can be an
+        // object or a plain id
         // depending on the route that produced it.
-        function ownerIdOf(spot) {
-            const owner = spot.ownerId;
-            if (!owner) return '';
-            return String(typeof owner === 'object' ? (owner._id || '') : owner);
+        function managedByIdOf(spot) {
+            const assigned = spot.managedBy;
+            if (!assigned) return '';
+            return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
         }
 
         async function loadDirectory() {
@@ -965,7 +966,7 @@ body { overflow-x: hidden; }
                 if (spotsResponse && spotsResponse.ok) {
                     const spots = await spotsResponse.json().catch(() => []);
                     (Array.isArray(spots) ? spots : []).forEach(spot => {
-                        const id = ownerIdOf(spot);
+                        const id = managedByIdOf(spot);
                         if (id) listingCounts[id] = (listingCounts[id] || 0) + 1;
                     });
                 }

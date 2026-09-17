@@ -335,7 +335,7 @@ body { overflow-x: hidden; }
     admin: 'admin/admin_analystic.html',
     establishment_manager: 'resort/resort_spots.html',
     // Sessions issued before the rename still carry the old role name.
-    resort_owner: 'resort/resort_spots.html'
+    resort_owner: 'resort/resort_spots.html'   // the same account, as older tokens spell it
   };
 
   const errorBox = document.getElementById('loginError');
@@ -380,7 +380,7 @@ body { overflow-x: hidden; }
     const email = document.getElementById('emailInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     // 'staff' asks the server to identify which kind of account this is, so nobody
-    // has to know in advance whether they are filed as an officer or an owner.
+    // has to know in advance whether they are filed as an officer or a manager.
     const restoreButton = setButtonLoading(document.getElementById('staffSignInBtn'), 'SIGNING IN...');
 
     let response;
