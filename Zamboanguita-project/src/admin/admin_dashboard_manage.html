@@ -798,9 +798,10 @@ body { overflow-x: hidden; }
            Written in exactly the shape every other spot uses — same fields, same
            category wording, fees as numbers, a photo gallery — so an imported
            destination and one created by an establishment manager are identical
-           in the database. The two photos taken in the municipality are served
-           from this site rather than a stock library, so they cannot vanish
-           when someone else's hosting changes. They carry no ownerId, which marks them as kept by the
+           in the database — including the photos, which live in the same
+           Cloudinary account every manager uploads to. An address stored here
+           has to resolve from anywhere the API is read, not only from this
+           deployment, so it is absolute rather than a path on this site. They carry no ownerId, which marks them as kept by the
            Tourism Office rather than run by a manager. */
         const STARTER_DESTINATIONS = [
             {
@@ -843,7 +844,7 @@ body { overflow-x: hidden; }
                 travelFee: 150,
                 entranceFee: 40,
                 bookingUrl: "",
-                images: ["/img/hot-spring.jpg"]
+                images: ["https://res.cloudinary.com/xeo3pvpw/image/upload/v1789613381/490135145_1212144130702688_2685707919091888664_n.jpg"]
             },
             {
                 type: "spot",
@@ -857,7 +858,7 @@ body { overflow-x: hidden; }
                 travelFee: 50,
                 entranceFee: 0,
                 bookingUrl: "",
-                images: ["/img/malatapay-market.jpg"]
+                images: ["https://res.cloudinary.com/xeo3pvpw/image/upload/v1789613313/501216453_2350295692038098_2400120739603406369_n.jpg"]
             }
         ];
 
