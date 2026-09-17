@@ -715,8 +715,119 @@ body { overflow-x: hidden; }
         </div>
     </main>
 
+
+    <!-- Editing a listing the Tourism Office keeps itself. Listings that belong
+         to an establishment manager are theirs alone, so this never opens for
+         one of those. -->
+    <div id="editSpotModal" hidden class="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-[200] p-3 sm:p-4">
+        <div class="bg-surface border border-outline-variant/60 rounded-2xl sm:rounded-[2rem] w-full max-w-lg p-5 sm:p-8 space-y-6 text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <h2 class="text-2xl font-black tracking-tight font-headline">Edit listing</h2>
+                    <p class="text-xs text-on-surface-variant mt-1">Kept by the Tourism Office, so the office maintains it.</p>
+                </div>
+                <button id="closeEditModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+
+            <form id="editSpotForm" class="space-y-4 font-body">
+                <input type="hidden" id="editSpotId" value=""/>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Listing Type</label>
+                        <select id="editType" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                            <option value="spot">Tourist Spot</option>
+                            <option value="accommodation">Accommodation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
+                        <select id="editCategory" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                            <option value="MOUNTAIN">Mountain</option>
+                            <option value="BEACH / DIVING">Beach / Diving</option>
+                            <option value="CULTURAL">Cultural</option>
+                            <option value="ACCOMMODATION">Accommodation</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Name</label>
+                    <input id="editTitle" type="text" required class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Location</label>
+                    <input id="editLocation" type="text" required class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
+                    <textarea id="editDescription" rows="3" required class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Label Tag</label>
+                    <input id="editLabel" type="text" placeholder="e.g., Relaxing Natural Pool" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Days</label>
+                        <input id="editWorkingDays" type="text" placeholder="Everyday" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Time</label>
+                        <input id="editWorkingTime" type="text" placeholder="All Day" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
+                        <input id="editTravelFee" type="number" min="0" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Entrance Fee (₱)</label>
+                        <input id="editEntranceFee" type="number" min="0" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Photos</label>
+                        <span id="editPhotoCounter" class="text-[11px] font-bold text-on-surface-variant">0 / 30</span>
+                    </div>
+                    <div id="editPhotoGallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+                    <p id="editPhotoHint" class="text-[11px] text-on-surface-variant">No photos yet. The first one is the cover shown on cards.</p>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button type="button" id="editAddPhotoBtn" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                            <span class="material-symbols-outlined !text-base">link</span> Add a photo link
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking Website</label>
+                    <input id="editBookingUrl" type="url" placeholder="https://..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+
+                <p id="editSpotError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+
+                <div class="flex gap-4 pt-2">
+                    <button type="button" id="cancelEditBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">Cancel</button>
+                    <button type="submit" id="saveEditBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
+
+        const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
 
         let allSpots = [];          // straight from the database
         let reviewStats = {};       // spot id and title -> { count, total }
@@ -1106,6 +1217,10 @@ body { overflow-x: hidden; }
                            class="flex-1 text-center py-2.5 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">
                             View public page
                         </a>
+                        ${manager ? '' : `<button data-edit="${escapeHtml(spot._id)}"
+                                class="flex-1 py-2.5 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">
+                            Edit
+                        </button>`}
                         <button data-takedown="${escapeHtml(spot._id)}"
                                 class="flex-1 py-2.5 rounded-full bg-red-500/10 text-red-400 text-xs font-bold hover:bg-red-500/20 transition-all">
                             Take down
@@ -1119,6 +1234,166 @@ body { overflow-x: hidden; }
             renderSummary();
             renderStarterPanel();
             renderListings();
+        }
+
+
+        /* ---- Editing a listing the office keeps -----------------------------
+           The four destinations the office publishes have no manager, so until
+           now nobody could correct one: this page was read-only and the manager
+           portal only reaches a manager's own listings. A wrong photo or price
+           on them could not be fixed from anywhere. */
+
+        let editPhotos = [];
+
+        function renderEditPhotos() {
+            const gallery = document.getElementById('editPhotoGallery');
+            document.getElementById('editPhotoCounter').textContent = `${editPhotos.length} / ${MAX_SPOT_IMAGES}`;
+            document.getElementById('editPhotoHint').hidden = editPhotos.length > 0;
+
+            gallery.innerHTML = editPhotos.map((url, index) => `
+                <figure class="relative group aspect-square rounded-xl overflow-hidden bg-surface-variant ring-1 ${index === 0 ? 'ring-primary' : 'ring-outline-variant/40'}">
+                    <img src="${escapeHtml(url)}" alt="Photo ${index + 1}" class="w-full h-full object-cover"/>
+                    ${index === 0 ? '<figcaption class="absolute bottom-0 inset-x-0 bg-primary text-on-primary text-[9px] font-bold tracking-widest text-center py-0.5">COVER</figcaption>' : ''}
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        ${index === 0 ? '' : `<button type="button" data-cover="${index}" title="Make this the cover" class="p-1 rounded-full bg-white text-black flex"><span class="material-symbols-outlined !text-base">star</span></button>`}
+                        <button type="button" data-remove="${index}" title="Remove this photo" class="p-1 rounded-full bg-white text-error flex"><span class="material-symbols-outlined !text-base">delete</span></button>
+                    </div>
+                </figure>`).join('');
+        }
+
+        function setEditError(message) {
+            const box = document.getElementById('editSpotError');
+            box.textContent = message || '';
+            box.hidden = !message;
+        }
+
+        function openEditModal(id) {
+            const spot = allSpots.find(item => String(item._id) === String(id));
+            if (!spot) return;
+
+            // Belt and braces: the button is only rendered for office-kept
+            // listings, but a manager's listing must never open here.
+            if (managerOf(spot)) {
+                showToast(`${spot.title} is run by ${managerOf(spot)}, so only they can edit it.`, 'error');
+                return;
+            }
+
+            document.getElementById('editSpotId').value = spot._id;
+            document.getElementById('editType').value = spot.type || 'spot';
+            document.getElementById('editCategory').value = spot.category || 'MOUNTAIN';
+            document.getElementById('editTitle').value = spot.title || '';
+            document.getElementById('editLocation').value = spot.location || '';
+            document.getElementById('editDescription').value = spot.description || '';
+            document.getElementById('editLabel').value = spot.label || '';
+            document.getElementById('editWorkingDays').value = spot.workingDays || '';
+            document.getElementById('editWorkingTime').value = spot.workingTime || '';
+            document.getElementById('editTravelFee').value = spot.travelFee ?? '';
+            document.getElementById('editEntranceFee').value = spot.entranceFee ?? '';
+            document.getElementById('editBookingUrl').value = spot.bookingUrl || '';
+
+            // A listing saved before galleries existed has only a cover.
+            editPhotos = Array.isArray(spot.images) && spot.images.length
+                ? [...spot.images]
+                : (spot.imageUrl ? [spot.imageUrl] : []);
+
+            setEditError('');
+            renderEditPhotos();
+            document.getElementById('editSpotModal').hidden = false;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editSpotModal').hidden = true;
+            editPhotos = [];
+            setEditError('');
+        }
+
+        async function saveEditedSpot(event) {
+            event.preventDefault();
+            setEditError('');
+
+            const id = document.getElementById('editSpotId').value;
+            const payload = {
+                type: document.getElementById('editType').value,
+                category: document.getElementById('editCategory').value,
+                title: document.getElementById('editTitle').value.trim(),
+                location: document.getElementById('editLocation').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                label: document.getElementById('editLabel').value.trim(),
+                workingDays: document.getElementById('editWorkingDays').value.trim() || 'Everyday',
+                workingTime: document.getElementById('editWorkingTime').value.trim() || 'All Day',
+                travelFee: parseFloat(document.getElementById('editTravelFee').value) || 0,
+                entranceFee: parseFloat(document.getElementById('editEntranceFee').value) || 0,
+                bookingUrl: document.getElementById('editBookingUrl').value.trim(),
+                images: editPhotos,
+                imageUrl: editPhotos[0] || ''      // photo one is the cover
+            };
+
+            if (!payload.title || !payload.location || !payload.description) {
+                setEditError('A name, a location and a description are all needed.');
+                return;
+            }
+
+            const restoreButton = setButtonLoading(document.getElementById('saveEditBtn'), 'Saving...');
+            try {
+                const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.message || result.error || `The server refused (status ${response.status}).`);
+
+                restoreButton();
+                closeEditModal();
+                await loadEverything();
+                showToast(`${payload.title} updated. The public page shows it now.`, 'success');
+            } catch (error) {
+                restoreButton();
+                setEditError(error.message);
+            }
+        }
+
+        function wireEditModal() {
+            document.getElementById('closeEditModalBtn').addEventListener('click', closeEditModal);
+            document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+            document.getElementById('editSpotForm').addEventListener('submit', saveEditedSpot);
+
+            document.getElementById('editAddPhotoBtn').addEventListener('click', () => {
+                const url = prompt('Paste the photo link (it must start with http:// or https://)');
+                if (url === null) return;
+                const trimmed = url.trim();
+                if (!/^https?:\/\//i.test(trimmed)) {
+                    setEditError('That does not look like a photo link. It should start with http:// or https://.');
+                    return;
+                }
+                if (editPhotos.includes(trimmed)) {
+                    setEditError('That photo is already in the gallery.');
+                    return;
+                }
+                if (editPhotos.length >= MAX_SPOT_IMAGES) {
+                    setEditError(`A listing can hold ${MAX_SPOT_IMAGES} photos.`);
+                    return;
+                }
+                setEditError('');
+                editPhotos.push(trimmed);
+                renderEditPhotos();
+            });
+
+            document.getElementById('editPhotoGallery').addEventListener('click', event => {
+                const remove = event.target.closest('[data-remove]');
+                const cover = event.target.closest('[data-cover]');
+                if (remove) editPhotos.splice(Number(remove.dataset.remove), 1);
+                else if (cover) editPhotos.unshift(editPhotos.splice(Number(cover.dataset.cover), 1)[0]);
+                else return;
+                renderEditPhotos();
+            });
+
+            document.getElementById('editSpotModal').addEventListener('click', event => {
+                if (event.target === document.getElementById('editSpotModal')) closeEditModal();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !document.getElementById('editSpotModal').hidden) closeEditModal();
+            });
         }
 
         async function takeDownListing(id, button) {
@@ -1214,9 +1489,13 @@ body { overflow-x: hidden; }
             document.getElementById('importStarterBtn').addEventListener('click', importStarterDestinations);
 
             // Delegated so the buttons survive every re-render of the list.
+            wireEditModal();
+
             document.getElementById('listings').addEventListener('click', event => {
-                const button = event.target.closest('[data-takedown]');
-                if (button) takeDownListing(button.dataset.takedown, button);
+                const takedown = event.target.closest('[data-takedown]');
+                if (takedown) return takeDownListing(takedown.dataset.takedown, takedown);
+                const edit = event.target.closest('[data-edit]');
+                if (edit) openEditModal(edit.dataset.edit);
             });
 
             loadEverything();
