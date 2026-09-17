@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita</title>
-    <link rel="icon" href="favicon.ico" sizes="32x32"/>
-    <link rel="icon" type="image/png" href="favicon-192.png" sizes="192x192"/>
-    <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+    <title>Explore Zamboanguita | Our History</title>
+    <link rel="icon" href="../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -334,7 +334,7 @@ body { overflow-x: hidden; }
 
             <!-- min-w-0 and no shrink-0: on a narrow phone the wordmark has to be
                  able to give way and wrap, or it pushes the nav off the screen. -->
-            <a href="index.html" class="min-w-0 leading-tight">
+            <a href="../index.html" class="min-w-0 leading-tight">
                 <span class="rise block text-sm min-[420px]:text-base sm:text-lg font-extrabold tracking-tight font-headline text-primary">
                     EXPLORE <span class="text-surface-bright">ZAMBOANGUITA</span>
                 </span>
@@ -342,11 +342,11 @@ body { overflow-x: hidden; }
             </a>
 
             <nav class="flex items-center gap-1 sm:gap-2 ml-auto">
-                <a href="index.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
+                <a href="../index.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
                     <span class="material-symbols-outlined !text-lg">location_on</span>
                     <span class="hidden min-[420px]:inline">Destinations</span>
                 </a>
-                <a href="src/history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
+                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
@@ -358,7 +358,7 @@ body { overflow-x: hidden; }
                 </button>
                 <!-- Visitors need no account. This is the way in for the Tourism
                      Office and for establishments that manage their own listing. -->
-                <a href="src/staff_login.html" title="Staff sign in"
+                <a href="staff_login.html" title="Staff sign in"
                    class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary transition-all">
                     <span class="material-symbols-outlined !text-lg">badge</span>
                 </a>
@@ -368,54 +368,90 @@ body { overflow-x: hidden; }
 
     <main class="flex-1">
 
-        <!-- ============ DESTINATIONS ============ -->
-        <div data-view="spots">
-            <section class="relative h-[38vh] sm:h-[42vh] min-h-[260px] sm:min-h-[300px] w-full flex items-center overflow-hidden">
-                <div class="absolute inset-0 z-0">
-                    <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Zamboanguita coastline"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
-                    <div class="absolute inset-0 bg-black/30"></div>
-                </div>
-                <div class="relative z-10 px-5 sm:px-6 md:px-12 max-w-3xl w-full">
-                    <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
-                        Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
-                    </h2>
-                    <p class="rise text-base md:text-lg text-white/80 max-w-xl leading-relaxed" style="--rise-delay:.26s">
-                        Experience the beauty and the hidden gems of Zamboanguita.
-                    </p>
+        <section class="px-5 sm:px-6 md:px-12 pt-10 sm:pt-14 pb-0">
+            <div class="max-w-6xl mx-auto">
+                <a href="../index.html" class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors min-h-[44px]">
+                    <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
+                </a>
+            </div>
+        </section>
+
+            <!--
+                 Sits below the destinations, as the third section of the main
+                 page. The Cebuano phrases are the point of the story, so they
+                 are marked rather than buried in the paragraph. -->
+            <section class="px-5 sm:px-6 md:px-12 py-10 sm:py-16 bg-surface">
+                <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+
+                    <div class="order-2 lg:order-1">
+                        <div class="w-16 h-1 bg-primary mb-6 sm:mb-8"></div>
+
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05] mb-4 sm:mb-6">
+                            How <span class="text-gradient">Zamboanguita</span><br class="hidden sm:block"/> Came To Be.
+                        </h2>
+
+                        <p class="text-base sm:text-lg text-on-surface font-medium leading-relaxed mb-5">
+                            A town rooted in history and replete with natural resources, Zamboanguita derived its
+                            name from an incident involving a <i>coguita</i> (octopus).
+                        </p>
+
+                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
+                            <p>
+                                Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
+                                would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
+                                &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
+                                nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
+                                in their fishing net, which they then separated from their catch as it had tentacles and
+                                no gills.
+                            </p>
+                            <p>
+                                The leader of the Moro group then ordered one of his men to go to the beach and find a
+                                tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
+                                Since then, every time an octopus was caught, it was hung on that particular tree.
+                                Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
+                                When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
+                                shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
+                                from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
+                                across the Dipolog Strait: the Zamboanga Peninsula.
+                            </p>
+                        </div>
+
+                        <!-- The name's journey, pulled out of the paragraph above so it
+                             can be read at a glance. -->
+                        <div class="flex flex-wrap items-center gap-2 my-6 text-xs font-bold">
+                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Sab-ongan ug coguita</span>
+                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
+                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Zamboangaguita</span>
+                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
+                            <span class="px-3 py-2 rounded-full bg-primary text-on-primary">Zamboanguita</span>
+                        </div>
+
+                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
+                            <p class="flex gap-2">
+                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">location_on</span>
+                                <span>
+                                    Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at
+                                    approximately 9&deg;6&prime;N latitude and 123&deg;12&prime;E longitude, about 28
+                                    kilometers south of Dumaguete City.
+                                </span>
+                            </p>
+                            <p>
+                                In Zamboanguita, we prioritize high-end experiences that leave no footprint, only
+                                memories. We partner with local guardians to ensure that the beauty we share today
+                                remains untainted for the narratives of tomorrow.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="order-1 lg:order-2">
+                        <div class="aspect-[4/3] lg:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
+                            <img class="w-full h-full object-cover" loading="lazy"
+                                 src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg"
+                                 alt="The coast of Zamboanguita, Negros Oriental"/>
+                        </div>
+                    </div>
                 </div>
             </section>
-
-            <section class="px-5 sm:px-6 md:px-12 py-8 sm:py-10 bg-surface-container-low">
-                <h2 class="rise text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2" style="--rise-delay:.34s">Tourist Spots &amp; Accommodations</h2>
-                <p class="rise text-on-surface-variant mb-6" style="--rise-delay:.42s">Browse everything the municipality has to offer.</p>
-
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center mb-4">
-                    <div class="relative w-full sm:flex-1 sm:max-w-md">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
-                        <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
-                            class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
-                    </div>
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">category</span>
-                        <select id="spotCategoryFilter" aria-label="Filter by category"
-                            class="w-full sm:w-auto appearance-none bg-surface border border-outline-variant/30 rounded-full pl-11 pr-10 py-3 text-sm font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all">
-                            <option value="all">All categories</option>
-                            <option value="BEACH / DIVING">Beach / Diving</option>
-                            <option value="MOUNTAIN">Mountain</option>
-                            <option value="CULTURAL">Cultural</option>
-                            <option value="ACCOMMODATION">Accommodation</option>
-                        </select>
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
-                    </div>
-                </div>
-                <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold"></p>
-
-                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
-            </section>
-
-        </div>
-
 
     </main>
 
@@ -425,7 +461,7 @@ body { overflow-x: hidden; }
             <span class="hidden sm:inline opacity-40">·</span>
             <!-- Quiet on purpose: findable by the officers and establishment managers who need
                  it, without putting a staff-only door in front of every tourist. -->
-            <a href="src/staff_login.html" class="inline-flex items-center gap-1 py-2.5 min-h-[44px] hover:text-primary transition-colors">
+            <a href="staff_login.html" class="inline-flex items-center gap-1 py-2.5 min-h-[44px] hover:text-primary transition-colors">
                 <span class="material-symbols-outlined !text-sm">badge</span>
                 Staff &amp; Tourist Establishment Manager Sign In
             </a>
@@ -434,158 +470,5 @@ body { overflow-x: hidden; }
 </div>
 
 <!-- Write-a-review dialog -->
-
-<script type="module">
-    const API_BASE = "https://ztims-api.onrender.com/api";
-
-    /* ---------------- shared helpers ---------------- */
-
-    // Spot and review text is written by establishment managers and tourists, so it is
-    // escaped before ever reaching innerHTML.
-    function escapeHtml(value) {
-        return String(value ?? '').replace(/[&<>"']/g, ch => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[ch]));
-    }
-
-    // The API sleeps on Render's free tier, so a cold start can take most of a
-    // minute — after 5s the spinner says so rather than looking frozen.
-    function showLoading(target, message) {
-        target.innerHTML =
-            '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
-                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-70"></div>' +
-                '<p class="text-sm opacity-80">' + message + '</p>' +
-                '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
-            '</div>';
-        const timer = setTimeout(() => {
-            const note = target.querySelector('[data-slow]');
-            if (note) note.classList.remove('hidden');
-        }, 5000);
-        return () => clearTimeout(timer);
-    }
-
-    function setButtonLoading(btn, label) {
-        if (!btn) return () => {};
-        const originalHTML = btn.innerHTML;
-        const wasDisabled = btn.disabled;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-        return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
-    }
-
-    function formatPeso(amount) {
-        return `₱${(Number(amount) || 0).toFixed(2)}`;
-    }
-
-    function authHeaders(extra) {
-        return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
-    }
-
-    // Only a tourist account unlocks reviews and settings. Officers and resort
-    // establishment managers have their own portals, so signing in there doesn't apply here.
-    // Shown in place of reviews or settings when a visitor isn't signed in.
-    /* ---------------- destinations ---------------- */
-
-    const spotsContainer = document.getElementById('spotsContainer');
-    const searchInput = document.getElementById('spotSearchInput');
-    const resultCount = document.getElementById('spotsResultCount');
-
-    // Fetched once, then filtered in the browser — one municipality's catalogue is
-    // small enough that re-querying per keystroke would only add latency.
-    let allSpots = [];
-    let activeCategory = 'all';
-
-    function renderSpotCard(spot, index) {
-        const card = document.createElement('a');
-        card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        card.className = 'rise group block rounded-2xl overflow-hidden bg-surface shadow-sm hover:shadow-xl transition-all hover:-translate-y-1';
-        // Cards arrive one after another, capped so a long list doesn't leave the
-        // last few waiting noticeably.
-        card.style.setProperty('--rise-delay', `${Math.min(index || 0, 8) * 0.05}s`);
-        const photoCount = Array.isArray(spot.images) && spot.images.length
-            ? spot.images.length
-            : (spot.imageUrl ? 1 : 0);
-        card.innerHTML = `
-            <div class="relative h-[200px] overflow-hidden">
-                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
-                    ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
-                </span>
-                ${photoCount > 1 ? `<span class="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
-                    <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
-                </span>` : ''}
-            </div>
-            <div class="p-5">
-                <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${escapeHtml(spot.label || spot.category || '')}</span>
-                <h3 class="text-lg font-display font-bold text-on-surface mb-1.5">${escapeHtml(spot.title)}</h3>
-                <p class="text-on-surface-variant text-xs flex items-center gap-1 mb-3">
-                    <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '')}
-                </p>
-                <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
-                <div class="flex items-center justify-between pt-3">
-                    <span class="text-xs text-on-surface-variant">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
-                    <span class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-1">
-                        View details <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                    </span>
-                </div>
-            </div>
-        `;
-        return card;
-    }
-
-    function applyFilters() {
-        const query = (searchInput.value || '').trim().toLowerCase();
-        const matches = allSpots.filter(spot => {
-            // Categories are stored upper case by every editor, but compared
-            // case-insensitively so an older spot typed by hand still matches.
-            if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
-            if (!query) return true;
-            return [spot.title, spot.location, spot.category, spot.label, spot.description]
-                .filter(Boolean)
-                .some(field => String(field).toLowerCase().includes(query));
-        });
-
-        spotsContainer.innerHTML = '';
-
-        if (matches.length === 0) {
-            resultCount.textContent = '';
-            spotsContainer.innerHTML = allSpots.length === 0
-                ? '<p class="text-on-surface-variant col-span-full py-8">No tourist spots have been published yet. Please check back soon.</p>'
-                : '<p class="text-on-surface-variant col-span-full py-8">Nothing matches that search or category. Try a different word, or set the category back to All.</p>';
-            return;
-        }
-
-        resultCount.textContent = `Showing ${matches.length} of ${allSpots.length}`;
-        matches.forEach((spot, index) => spotsContainer.appendChild(renderSpotCard(spot, index)));
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-
-    document.getElementById('spotCategoryFilter').addEventListener('change', event => {
-        activeCategory = event.target.value;
-        applyFilters();
-    });
-
-    async function loadSpots() {
-        const doneLoading = showLoading(spotsContainer, 'Loading tourist spots and accommodations...');
-        try {
-            const response = await fetch(`${API_BASE}/spots`);
-            if (!response.ok) throw new Error('Failed to load spots');
-            const spots = await response.json();
-            allSpots = Array.isArray(spots) ? spots : [];
-            doneLoading();
-            applyFilters();
-        } catch (error) {
-            console.error('❌ Failed to load tourist spots:', error);
-            doneLoading();
-            spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8">Unable to load tourist spots right now. Please try again later.</p>';
-        }
-    }
-
-    /* ---------------- start ---------------- */
-
-    loadSpots();
-</script>
 </body>
 </html>
