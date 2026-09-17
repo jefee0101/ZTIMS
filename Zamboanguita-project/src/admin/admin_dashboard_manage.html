@@ -798,7 +798,9 @@ body { overflow-x: hidden; }
            Written in exactly the shape every other spot uses — same fields, same
            category wording, fees as numbers, a photo gallery — so an imported
            destination and one created by an establishment manager are identical
-           in the database. They carry no ownerId, which marks them as kept by the
+           in the database. The two photos taken in the municipality are served
+           from this site rather than a stock library, so they cannot vanish
+           when someone else's hosting changes. They carry no ownerId, which marks them as kept by the
            Tourism Office rather than run by a manager. */
         const STARTER_DESTINATIONS = [
             {
@@ -841,7 +843,7 @@ body { overflow-x: hidden; }
                 travelFee: 150,
                 entranceFee: 40,
                 bookingUrl: "",
-                images: ["https://images.unsplash.com/photo-1470770841072-f978cf4d019e"]
+                images: ["/img/hot-spring.jpg"]
             },
             {
                 type: "spot",
@@ -855,7 +857,7 @@ body { overflow-x: hidden; }
                 travelFee: 50,
                 entranceFee: 0,
                 bookingUrl: "",
-                images: ["https://images.unsplash.com/photo-1519125323398-675f0ddb6308"]
+                images: ["/img/malatapay-market.jpg"]
             }
         ];
 
