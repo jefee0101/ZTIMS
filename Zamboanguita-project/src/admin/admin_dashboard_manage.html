@@ -814,6 +814,74 @@ body { overflow-x: hidden; }
                     <input id="editBookingUrl" type="url" placeholder="https://..." class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
 
+                <div class="pt-4 border-t border-outline-variant/30 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined !text-base text-primary">location_on</span>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface">Location Information</h4>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant">
+                        Visitors get directions, distance and travel time from this pin, worked out from wherever they
+                        happen to be at the time. Without it, directions stay unavailable for this listing.
+                    </p>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Address</label>
+                        <input id="editLocAddress" type="text" placeholder="e.g., Sitio Bonbon, near the wharf" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Barangay</label>
+                            <input id="editLocBarangay" type="text" placeholder="e.g., Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Municipality</label>
+                            <input id="editLocMunicipality" type="text" value="Zamboanguita" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Province</label>
+                        <input id="editLocProvince" type="text" value="Negros Oriental" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Find it on the map</label>
+                        <div class="flex gap-2">
+                            <input id="editLocSearch" type="text" placeholder="Search an address or landmark" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
+                            <button type="button" id="editLocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all min-h-[44px]">
+                                Search
+                            </button>
+                        </div>
+                        <div id="editLocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 rounded-xl p-1 max-h-44 overflow-y-auto text-on-surface"></div>
+                    </div>
+
+                    <div id="editLocMap" class="relative z-0 h-56 sm:h-72 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-variant"></div>
+                    <p class="text-[11px] text-on-surface-variant">Tap the map to drop the pin, or drag it to the exact entrance.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Latitude</label>
+                            <input id="editLocLat" type="text" inputmode="decimal" placeholder="9.123456" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Longitude</label>
+                            <input id="editLocLng" type="text" inputmode="decimal" placeholder="123.123456" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="editLocConfirm" class="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                            <span class="material-symbols-outlined !text-base">check_circle</span> Confirm location
+                        </button>
+                        <button type="button" id="editLocClear" class="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface-variant hover:bg-outline-variant/40 transition-all">
+                            <span class="material-symbols-outlined !text-base">location_off</span> Clear
+                        </button>
+                    </div>
+
+                    <p id="editLocStatus" hidden class="text-[11px] text-on-surface-variant"></p>
+                </div>
+
                 <p id="editSpotError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
 
                 <div class="flex gap-4 pt-2">
@@ -824,8 +892,300 @@ body { overflow-x: hidden; }
         </div>
     </div>
 
+<!-- ==========================================================================
+     Location picker (shared module)
+     --------------------------------------------------------------------------
+     Lets whoever is responsible for a place mark exactly where it is. ZTIMS
+     stores that one point and nothing about any journey; each visitor's route,
+     distance and travel time is worked out from it later, per request.
+
+     A written address is not enough to route with — two places on the same
+     street share one address but not one gate — so the pin is what counts.
+
+     Leaflet and OpenStreetMap need no key and no account. Address lookups go
+     through the ZTIMS API so the routing provider's key stays on the server.
+     ========================================================================== -->
+<script>
+(function () {
+    const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    // Only the map's opening view when nothing is set yet — never saved as a location.
+    const DEFAULT_CENTER = [9.1003, 123.1966];   // Zamboanguita town centre
+
+    let leafletLoading = null;
+
+    function loadLeaflet() {
+        if (window.L) return Promise.resolve(window.L);
+        if (leafletLoading) return leafletLoading;
+
+        leafletLoading = new Promise(function (resolve, reject) {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = LEAFLET_CSS;
+            document.head.appendChild(css);
+
+            const script = document.createElement('script');
+            script.src = LEAFLET_JS;
+            script.onload = function () { resolve(window.L); };
+            script.onerror = function () { reject(new Error('The map could not be loaded. Check your connection.')); };
+            document.head.appendChild(script);
+        });
+        return leafletLoading;
+    }
+
+    /**
+     * Wires one set of location fields to a map. Every element is found by a shared
+     * prefix, so a page can host more than one picker without them colliding.
+     *
+     * Expected ids: <prefix>Map, <prefix>Lat, <prefix>Lng, and optionally
+     * <prefix>Address, <prefix>Barangay, <prefix>Municipality, <prefix>Province,
+     * <prefix>Search, <prefix>SearchBtn, <prefix>Results, <prefix>Confirm,
+     * <prefix>Clear, <prefix>Status.
+     */
+    window.mountLocationPicker = function (options) {
+        const prefix = options.prefix;
+        const apiBase = options.apiBase;
+        const el = function (suffix) { return document.getElementById(prefix + suffix); };
+
+        const latInput = el('Lat');
+        const lngInput = el('Lng');
+        const mapBox = el('Map');
+        const status = el('Status');
+        const results = el('Results');
+        const searchInput = el('Search');
+
+        if (!latInput || !lngInput || !mapBox) return null;
+
+        let map = null;
+        let marker = null;
+
+        function say(message, tone) {
+            if (!status) return;
+            status.textContent = message || '';
+            status.hidden = !message;
+            status.style.color = tone === 'error' ? '#f87171' : (tone === 'ok' ? '#4ade80' : '');
+        }
+
+        // The same rule the API applies, so the form refuses what the server would.
+        function readPoint() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+            if (!isFinite(lat) || !isFinite(lng)) return null;
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+            if (lat === 0 && lng === 0) return null;   // the classic "unset" pair
+            return { lat: lat, lng: lng };
+        }
+
+        function writePoint(lat, lng) {
+            latInput.value = lat.toFixed(6);
+            lngInput.value = lng.toFixed(6);
+        }
+
+        function placeMarker(lat, lng, recentre) {
+            if (!map) return;
+            if (!marker) {
+                marker = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker.on('dragend', function () {
+                    const at = marker.getLatLng();
+                    writePoint(at.lat, at.lng);
+                    say('Pin moved to ' + at.lat.toFixed(6) + ', ' + at.lng.toFixed(6) + '.', 'ok');
+                });
+            } else {
+                marker.setLatLng([lat, lng]);
+            }
+            if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), 16));
+        }
+
+        function clearMarker() {
+            if (marker && map) { map.removeLayer(marker); }
+            marker = null;
+        }
+
+        async function ensureMap() {
+            if (map) return map;
+            await loadLeaflet();
+
+            map = window.L.map(mapBox, { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 13);
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            map.on('click', function (event) {
+                writePoint(event.latlng.lat, event.latlng.lng);
+                placeMarker(event.latlng.lat, event.latlng.lng, false);
+                say('Pin set to ' + event.latlng.lat.toFixed(6) + ', ' + event.latlng.lng.toFixed(6) + '.', 'ok');
+            });
+
+            return map;
+        }
+
+        // Turns a pin into readable address text. It only ever fills fields that are
+        // still empty — something typed by hand is never overwritten by a guess.
+        async function describePoint(point) {
+            try {
+                const response = await fetch(apiBase + '/directions/reverse?lat=' + point.lat + '&lng=' + point.lng);
+                const data = await response.json().catch(function () { return {}; });
+                if (!response.ok) return;
+
+                const fields = [
+                    [el('Address'), data.label],
+                    [el('Barangay'), data.barangay],
+                    [el('Municipality'), data.municipality],
+                    [el('Province'), data.province]
+                ];
+                fields.forEach(function (pair) {
+                    const field = pair[0];
+                    const value = pair[1];
+                    if (field && value && !field.value.trim()) field.value = value;
+                });
+            } catch (error) {
+                /* The pin is what gets saved; the address text is only a convenience. */
+            }
+        }
+
+        function renderResults(list) {
+            if (!results) return;
+            results.innerHTML = '';
+            results.hidden = list.length === 0;
+
+            list.forEach(function (place) {
+                // Built with textContent, never innerHTML: these labels come from an
+                // outside geocoder and must never be treated as markup.
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.textContent = place.label;
+                option.className = 'w-full text-left text-xs px-3 py-2.5 rounded-lg hover:bg-outline-variant/30 transition-colors';
+                option.addEventListener('click', async function () {
+                    writePoint(place.latitude, place.longitude);
+                    await ensureMap();
+                    placeMarker(place.latitude, place.longitude, true);
+                    results.hidden = true;
+                    const address = el('Address');
+                    if (address && !address.value.trim()) address.value = place.label;
+                    say('Pin placed. Drag it if the exact gate is somewhere else.', 'ok');
+                });
+                results.appendChild(option);
+            });
+        }
+
+        async function runSearch() {
+            const query = (searchInput && searchInput.value || '').trim();
+            if (query.length < 3) { say('Type at least three characters to search.', 'error'); return; }
+
+            say('Searching…');
+            try {
+                const response = await fetch(apiBase + '/directions/search?q=' + encodeURIComponent(query));
+                const data = await response.json().catch(function () { return {}; });
+                if (!response.ok) throw new Error(data.message || 'Address search is unavailable right now.');
+
+                const list = Array.isArray(data.results) ? data.results : [];
+                renderResults(list);
+                say(list.length
+                    ? 'Pick the closest match, then drag the pin to the exact spot.'
+                    : 'No match found. Drop the pin on the map instead.');
+            } catch (error) {
+                say(error.message, 'error');
+            }
+        }
+
+        async function confirmPoint() {
+            const point = readPoint();
+            if (!point) {
+                say('No location set yet. Search for the address, or tap the map to drop a pin.', 'error');
+                return false;
+            }
+            try {
+                await ensureMap();
+                placeMarker(point.lat, point.lng, true);
+                map.invalidateSize();
+                await describePoint(point);
+                say('Location confirmed: ' + point.lat.toFixed(6) + ', ' + point.lng.toFixed(6) + '.', 'ok');
+                return true;
+            } catch (error) {
+                say(error.message, 'error');
+                return false;
+            }
+        }
+
+        const searchBtn = el('SearchBtn');
+        if (searchBtn) searchBtn.addEventListener('click', runSearch);
+        if (searchInput) {
+            // Inside a form, Enter would otherwise submit the whole listing.
+            searchInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') { event.preventDefault(); runSearch(); }
+            });
+        }
+
+        const confirmBtn = el('Confirm');
+        if (confirmBtn) confirmBtn.addEventListener('click', confirmPoint);
+
+        const clearBtn = el('Clear');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                latInput.value = '';
+                lngInput.value = '';
+                clearMarker();
+                say('Location cleared. Visitors will not be offered directions to this listing.');
+            });
+        }
+
+        return {
+            // Leaflet measures the container on creation, so a map built inside a
+            // closed dialog comes out zero-sized. This is called when it opens.
+            refresh: async function () {
+                try {
+                    await ensureMap();
+                    map.invalidateSize();
+                    const point = readPoint();
+                    if (point) placeMarker(point.lat, point.lng, true);
+                    else { clearMarker(); map.setView(DEFAULT_CENTER, 13); }
+                } catch (error) {
+                    say(error.message, 'error');
+                }
+            },
+            fill: function (record) {
+                const source = record || {};
+                const pairs = [
+                    [el('Address'), source.address || ''],
+                    [el('Barangay'), source.barangay || ''],
+                    [el('Municipality'), source.municipality || 'Zamboanguita'],
+                    [el('Province'), source.province || 'Negros Oriental']
+                ];
+                pairs.forEach(function (pair) { if (pair[0]) pair[0].value = pair[1]; });
+
+                const hasPoint = source.latitude !== null && source.latitude !== undefined
+                    && source.longitude !== null && source.longitude !== undefined;
+                latInput.value = hasPoint ? source.latitude : '';
+                lngInput.value = hasPoint ? source.longitude : '';
+
+                if (searchInput) searchInput.value = '';
+                if (results) { results.innerHTML = ''; results.hidden = true; }
+                say(hasPoint ? '' : 'No location set yet — directions stay unavailable until a pin is dropped.');
+            },
+            // What the form sends. Blank coordinates are sent as empty strings, which
+            // the API reads as "clear it", never as a point at 0,0.
+            payload: function () {
+                const point = readPoint();
+                return {
+                    address: (el('Address') && el('Address').value.trim()) || '',
+                    barangay: (el('Barangay') && el('Barangay').value.trim()) || '',
+                    municipality: (el('Municipality') && el('Municipality').value.trim()) || '',
+                    province: (el('Province') && el('Province').value.trim()) || '',
+                    latitude: point ? point.lat : '',
+                    longitude: point ? point.lng : ''
+                };
+            }
+        };
+    };
+})();
+</script>
+
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
+        // Built once; the dialog refreshes it on open, because Leaflet measures its
+        // container at creation and a closed dialog measures zero.
+        const editLocationPicker = mountLocationPicker({ prefix: 'editLoc', apiBase: API_BASE });
 
         const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
 
@@ -1299,6 +1659,9 @@ body { overflow-x: hidden; }
             setEditError('');
             renderEditPhotos();
             document.getElementById('editSpotModal').hidden = false;
+
+            // After the dialog is on screen, so the map can measure itself.
+            if (editLocationPicker) { editLocationPicker.fill(spot); editLocationPicker.refresh(); }
         }
 
         function closeEditModal() {
@@ -1325,7 +1688,8 @@ body { overflow-x: hidden; }
                 entranceFee: parseFloat(document.getElementById('editEntranceFee').value) || 0,
                 bookingUrl: document.getElementById('editBookingUrl').value.trim(),
                 images: editPhotos,
-                imageUrl: editPhotos[0] || ''      // photo one is the cover
+                imageUrl: editPhotos[0] || '',     // photo one is the cover
+                ...(editLocationPicker ? editLocationPicker.payload() : {})
             };
 
             if (!payload.title || !payload.location || !payload.description) {

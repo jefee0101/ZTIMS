@@ -221,6 +221,22 @@ const SpotSchema = new mongoose.Schema({
     workingTime: { type: String, default: "All Day" },
     travelFee: { type: Number, default: 0 },
     entranceFee: { type: Number, default: 0 },
+
+    // Where this place actually is. The establishment or the Tourism Office records
+    // it once; from then on every visitor's directions, distance and travel time are
+    // worked out from it per request. Nothing about the journey is stored here —
+    // there is deliberately no travelTime field, because the answer depends entirely
+    // on who is asking and from where.
+    //
+    // All optional: listings published before this existed keep working and simply
+    // have no directions until someone sets a point on the map.
+    address: { type: String, default: "" },
+    barangay: { type: String, default: "" },
+    municipality: { type: String, default: "Zamboanguita" },
+    province: { type: String, default: "Negros Oriental" },
+    latitude: { type: Number, default: null, min: -90, max: 90 },
+    longitude: { type: Number, default: null, min: -180, max: 180 },
+
     // Null/absent = managed directly by the Tourist Officer. Set = managed by a
     // Tourist Establishment Manager account.
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null }
@@ -449,7 +465,7 @@ function reportWriteFailure(res, error, context) {
 
     if (error && error.name === 'ValidationError') {
         const detail = Object.values(error.errors || {}).map(one => one.message).join(' ');
-        return res.status(400).json({ success: false, message: detail || 'Some of those details are not valid.' });
+        return res.status(400).json({ success: false, message: detail || error.message || 'Some of those details are not valid.' });
     }
     if (error && error.code === 11000) {
         const field = Object.keys(error.keyPattern || error.keyValue || {})[0] || 'value';
@@ -1331,14 +1347,75 @@ function normaliseSpotImages(payload) {
     };
 }
 
+/**
+ * Accepts a latitude/longitude pair only when it is genuinely usable, and returns
+ * null rather than a guess when it isn't. Every routing request is checked through
+ * here first, so a half-filled or out-of-range coordinate can never be sent to a
+ * routing service or drawn on a map as though it meant something.
+ */
+function parseCoordinate(latitudeInput, longitudeInput) {
+    // Number('') is 0, so a half-filled pair would otherwise pass as a point on the
+    // equator off Africa. A blank half means there is no location, full stop.
+    const isBlank = value => value === '' || value === null || value === undefined;
+    if (isBlank(latitudeInput) || isBlank(longitudeInput)) return null;
+
+    const latitude = Number(latitudeInput);
+    const longitude = Number(longitudeInput);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    if (latitude < -90 || latitude > 90) return null;
+    if (longitude < -180 || longitude > 180) return null;
+    // Null Island, off the coast of Africa. It is what an unset pair coerces to,
+    // and it is never a real place anyone in Negros Oriental is standing.
+    if (latitude === 0 && longitude === 0) return null;
+
+    return { latitude, longitude };
+}
+
+/**
+ * Cleans the location fields on a spot payload without inventing any.
+ *
+ * A field the editor did not send is left untouched, so the quick-add form — which
+ * has no map — cannot blank a location someone already set. Latitude and longitude
+ * are only accepted as a valid pair: half a pair would put a marker in the sea.
+ */
+function normaliseSpotLocation(payload) {
+    const result = { ...payload };
+
+    for (const field of ['address', 'barangay', 'municipality', 'province']) {
+        if (field in result) result[field] = String(result[field] ?? '').trim();
+    }
+
+    if (!('latitude' in result) && !('longitude' in result)) return result;
+
+    const isBlank = value => value === '' || value === null || value === undefined;
+    if (isBlank(result.latitude) && isBlank(result.longitude)) {
+        // Clearing the point on purpose. Directions simply become unavailable.
+        result.latitude = null;
+        result.longitude = null;
+        return result;
+    }
+
+    const point = parseCoordinate(result.latitude, result.longitude);
+    if (!point) {
+        const error = new Error('Pick the location on the map — latitude and longitude must be a valid pair.');
+        error.name = 'ValidationError';
+        throw error;
+    }
+
+    result.latitude = point.latitude;
+    result.longitude = point.longitude;
+    return result;
+}
+
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
         const ownerId = isEstablishmentManager(req.auth.role) ? req.auth.sub : (req.body.ownerId || null);
-        const newSpot = new Spot({ ...normaliseSpotImages(req.body), ownerId });
+        const newSpot = new Spot({ ...normaliseSpotLocation(normaliseSpotImages(req.body)), ownerId });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return reportWriteFailure(res, error, 'Publishing a spot failed:');
     }
 });
 
@@ -1375,11 +1452,11 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         }
 
         const { ownerId, ...updates } = req.body; // ownership cannot be reassigned from this route
-        Object.assign(spot, normaliseSpotImages(updates));
+        Object.assign(spot, normaliseSpotLocation(normaliseSpotImages(updates)));
         const savedSpot = await spot.save();
         return res.status(200).json(savedSpot);
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return reportWriteFailure(res, error, 'Saving a spot failed:');
     }
 });
 
@@ -1395,6 +1472,257 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+});
+
+/* ==========================================
+   4b. TRAVEL DIRECTIONS
+   ------------------------------------------
+   The establishment says where it is. The visitor's device — or a starting point
+   they type themselves — says where they are. A routing service works out the road
+   between the two. ZTIMS stores none of the journey: no travel times are kept, and
+   the visitor's coordinates exist only for the length of one request.
+
+   These go through the API rather than straight from the browser for one reason:
+   the routing key belongs in the server's environment, not in page source anyone
+   can read.
+========================================== */
+
+const ORS_API_KEY = (process.env.ORS_API_KEY || '').trim();
+
+// Only modes the configured provider genuinely routes for are ever offered. A mode
+// the service cannot compute would mean showing the visitor an invented number.
+// OpenRouteService has no motorcycle profile, so no motorcycle option is offered.
+// Showing one would mean handing the visitor a car's estimate under another name.
+const ORS_MODES = {
+    car: { profile: 'driving-car', label: 'Car' },
+    bicycle: { profile: 'cycling-regular', label: 'Bicycle' },
+    walking: { profile: 'foot-walking', label: 'Walking' }
+};
+
+// The public OSRM demo server only runs the car profile, so that is all it offers.
+const OSRM_MODES = {
+    car: { profile: 'driving', label: 'Car' }
+};
+
+const ROUTING_PROVIDER = ORS_API_KEY ? 'openrouteservice' : 'osrm';
+const ROUTING_MODES = ORS_API_KEY ? ORS_MODES : OSRM_MODES;
+
+// Identifies ZTIMS to OpenStreetMap's geocoder, which its usage policy requires.
+const GEOCODER_USER_AGENT = `ZTIMS/1.0 (${process.env.PUBLIC_SITE_URL || 'https://ztims.vercel.app'})`;
+
+const ROUTING_TIMEOUT_MS = 12000;
+
+// Routing providers meter their free tiers, and each visitor action is one call.
+// Generous enough to switch modes freely, tight enough that a loop cannot burn the
+// day's quota. Keyed per IP by the trust-proxy setting configured at the top.
+const directionsRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 40,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many directions requests. Please wait a moment and try again.' }
+});
+
+async function fetchJson(url, options) {
+    const response = await fetch(url, { ...options, signal: AbortSignal.timeout(ROUTING_TIMEOUT_MS) });
+    const body = await response.text();
+
+    let parsed = null;
+    try { parsed = body ? JSON.parse(body) : null; } catch { parsed = null; }
+
+    if (!response.ok) {
+        const detail = parsed?.error?.message || parsed?.error || parsed?.message || `HTTP ${response.status}`;
+        const error = new Error(typeof detail === 'string' ? detail : `HTTP ${response.status}`);
+        error.upstreamStatus = response.status;
+        throw error;
+    }
+    return parsed;
+}
+
+/**
+ * Both providers answer in GeoJSON order — [longitude, latitude] — while Leaflet
+ * draws in [latitude, longitude]. Flipping it here means the browser never has to
+ * remember which way round a given service speaks.
+ */
+const toLeafletLine = coordinates => (coordinates || []).map(([lng, lat]) => [lat, lng]);
+
+async function routeWithOpenRouteService(from, to, mode) {
+    const { profile } = ROUTING_MODES[mode];
+    const data = await fetchJson(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
+        method: 'POST',
+        headers: { Authorization: ORS_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coordinates: [[from.longitude, from.latitude], [to.longitude, to.latitude]] })
+    });
+
+    const feature = data?.features?.[0];
+    const summary = feature?.properties?.summary;
+    // An empty summary is how OpenRouteService reports "these two points are not
+    // connected by this kind of road" — an islet, or walking across a strait.
+    if (!feature || !summary || !Number.isFinite(summary.distance)) return null;
+
+    return {
+        distanceMeters: summary.distance,
+        durationSeconds: summary.duration,
+        geometry: toLeafletLine(feature.geometry?.coordinates)
+    };
+}
+
+async function routeWithOsrm(from, to, mode) {
+    const { profile } = ROUTING_MODES[mode];
+    const path = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
+    const data = await fetchJson(
+        `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`,
+        { headers: { 'User-Agent': GEOCODER_USER_AGENT } }
+    );
+
+    const route = data?.code === 'Ok' ? data.routes?.[0] : null;
+    if (!route || !Number.isFinite(route.distance)) return null;
+
+    return {
+        distanceMeters: route.distance,
+        durationSeconds: route.duration,
+        geometry: toLeafletLine(route.geometry?.coordinates)
+    };
+}
+
+/**
+ * Tells the browser which provider is configured and, therefore, exactly which
+ * transport modes it may offer. The page renders this list rather than a fixed one,
+ * so a mode is never shown that nothing can actually calculate.
+ */
+app.get('/api/directions/capabilities', (req, res) => {
+    return res.status(200).json({
+        success: true,
+        provider: ROUTING_PROVIDER,
+        modes: Object.entries(ROUTING_MODES).map(([id, mode]) => ({ id, label: mode.label }))
+    });
+});
+
+app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
+    // Deliberately never logged and never written anywhere: the origin is the
+    // visitor's own position, and it has no business outliving this request.
+    const from = parseCoordinate(req.query.fromLat, req.query.fromLng);
+    const to = parseCoordinate(req.query.toLat, req.query.toLng);
+
+    if (!from) return res.status(400).json({ success: false, message: 'A valid starting point is required.' });
+    if (!to) return res.status(400).json({ success: false, message: 'This destination has no location on file yet.' });
+
+    const mode = String(req.query.mode || 'car');
+    if (!ROUTING_MODES[mode]) {
+        return res.status(400).json({ success: false, message: 'That way of travelling is not available here.' });
+    }
+
+    try {
+        const route = ROUTING_PROVIDER === 'openrouteservice'
+            ? await routeWithOpenRouteService(from, to, mode)
+            : await routeWithOsrm(from, to, mode);
+
+        if (!route) {
+            return res.status(404).json({
+                success: false,
+                message: 'No road route could be found between those two points for that way of travelling.'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            mode,
+            provider: ROUTING_PROVIDER,
+            distanceMeters: Math.round(route.distanceMeters),
+            durationSeconds: Math.round(route.durationSeconds),
+            geometry: route.geometry
+        });
+    } catch (error) {
+        console.error('Routing request failed:', error.message);
+        // Never fall back to a straight line dressed up as a travel time — an
+        // honest "unavailable" beats a number the visitor would trust.
+        return res.status(502).json({
+            success: false,
+            message: 'The routing service could not be reached. Please try again in a moment.'
+        });
+    }
+});
+
+/**
+ * Address search, used by the establishment's location picker and by a visitor who
+ * types a starting point instead of sharing their device location.
+ */
+app.get('/api/directions/search', directionsRateLimit, async (req, res) => {
+    const text = String(req.query.q || '').trim();
+    if (text.length < 3) {
+        return res.status(400).json({ success: false, message: 'Type at least three characters to search.' });
+    }
+
+    try {
+        if (ORS_API_KEY) {
+            const url = `https://api.openrouteservice.org/geocode/search?api_key=${encodeURIComponent(ORS_API_KEY)}`
+                + `&text=${encodeURIComponent(text)}&boundary.country=PHL&size=6`;
+            const data = await fetchJson(url, {});
+            return res.status(200).json({
+                success: true,
+                results: (data?.features || []).map(feature => ({
+                    label: feature.properties?.label || feature.properties?.name || text,
+                    latitude: feature.geometry?.coordinates?.[1],
+                    longitude: feature.geometry?.coordinates?.[0]
+                })).filter(one => parseCoordinate(one.latitude, one.longitude))
+            });
+        }
+
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=ph&limit=6`
+            + `&q=${encodeURIComponent(text)}`;
+        const data = await fetchJson(url, { headers: { 'User-Agent': GEOCODER_USER_AGENT } });
+        return res.status(200).json({
+            success: true,
+            results: (data || []).map(place => ({
+                label: place.display_name,
+                latitude: Number(place.lat),
+                longitude: Number(place.lon)
+            })).filter(one => parseCoordinate(one.latitude, one.longitude))
+        });
+    } catch (error) {
+        console.error('Address search failed:', error.message);
+        return res.status(502).json({ success: false, message: 'Address search is unavailable right now.' });
+    }
+});
+
+/**
+ * The reverse of the above: a point dropped on the map becomes a readable address,
+ * so whoever is registering the place does not have to type it twice.
+ */
+app.get('/api/directions/reverse', directionsRateLimit, async (req, res) => {
+    const point = parseCoordinate(req.query.lat, req.query.lng);
+    if (!point) return res.status(400).json({ success: false, message: 'A valid point is required.' });
+
+    try {
+        if (ORS_API_KEY) {
+            const url = `https://api.openrouteservice.org/geocode/reverse?api_key=${encodeURIComponent(ORS_API_KEY)}`
+                + `&point.lat=${point.latitude}&point.lon=${point.longitude}&size=1`;
+            const data = await fetchJson(url, {});
+            const properties = data?.features?.[0]?.properties || {};
+            return res.status(200).json({
+                success: true,
+                label: properties.label || '',
+                barangay: properties.neighbourhood || properties.locality || '',
+                municipality: properties.localadmin || properties.locality || '',
+                province: properties.region || ''
+            });
+        }
+
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2`
+            + `&lat=${point.latitude}&lon=${point.longitude}&zoom=16`;
+        const data = await fetchJson(url, { headers: { 'User-Agent': GEOCODER_USER_AGENT } });
+        const parts = data?.address || {};
+        return res.status(200).json({
+            success: true,
+            label: data?.display_name || '',
+            barangay: parts.village || parts.suburb || parts.neighbourhood || parts.hamlet || '',
+            municipality: parts.town || parts.municipality || parts.city || '',
+            province: parts.province || parts.state || ''
+        });
+    } catch (error) {
+        console.error('Reverse lookup failed:', error.message);
+        return res.status(502).json({ success: false, message: 'Could not read an address for that point.' });
     }
 });
 

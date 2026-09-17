@@ -510,6 +510,417 @@ body { overflow-x: hidden; }
         `;
     }
 
+    /* ===== TRAVEL DIRECTIONS =============================================
+       The destination comes from what the establishment or the Tourism Office
+       recorded. The starting point comes from the visitor's own device, or from
+       a place they type in. The route, the distance and the travel time are
+       worked out per request by a routing service through the ZTIMS API.
+
+       Nothing here is stored. The visitor's coordinates live in this page for as
+       long as the tab is open and are sent to the API only to draw one route. No
+       travel time is ever kept on a listing, because there is no single answer:
+       it depends entirely on who is asking and from where. */
+
+    const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+
+    // Google Maps takes over for turn-by-turn navigation — ZTIMS itself does not
+    // provide that, it shows the route and hands the journey over.
+    const GOOGLE_TRAVEL_MODE = { car: 'driving', bicycle: 'bicycling', walking: 'walking' };
+
+    let leafletLoading = null;
+    function loadLeaflet() {
+        if (window.L) return Promise.resolve(window.L);
+        if (leafletLoading) return leafletLoading;
+
+        leafletLoading = new Promise(function (resolve, reject) {
+            const css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = LEAFLET_CSS;
+            document.head.appendChild(css);
+
+            const script = document.createElement('script');
+            script.src = LEAFLET_JS;
+            script.onload = function () { resolve(window.L); };
+            script.onerror = function () { reject(new Error('The map could not be loaded. Check your connection.')); };
+            document.head.appendChild(script);
+        });
+        return leafletLoading;
+    }
+
+    // A point is only usable when both halves are present and in range. Anything
+    // else means this listing simply has no location yet.
+    function spotPoint(spot) {
+        const lat = Number(spot.latitude);
+        const lng = Number(spot.longitude);
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+        if (lat === 0 && lng === 0) return null;
+        return { lat: lat, lng: lng };
+    }
+
+    function locationLine(spot) {
+        return [spot.address, spot.barangay, spot.municipality, spot.province]
+            .map(function (part) { return String(part || '').trim(); })
+            .filter(Boolean)
+            .join(', ');
+    }
+
+    function formatDistance(metres) {
+        if (!isFinite(metres)) return '—';
+        return metres < 1000 ? `${Math.round(metres)} m` : `${(metres / 1000).toFixed(1)} km`;
+    }
+
+    function formatDuration(seconds) {
+        if (!isFinite(seconds)) return '—';
+        const minutes = Math.max(1, Math.round(seconds / 60));
+        if (minutes < 60) return `${minutes} min`;
+        const hours = Math.floor(minutes / 60);
+        const rest = minutes % 60;
+        return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
+    }
+
+    function googleMapsLink(destination, origin, mode) {
+        const travel = GOOGLE_TRAVEL_MODE[mode] || 'driving';
+        const from = origin ? `&origin=${origin.lat},${origin.lng}` : '';
+        return `https://www.google.com/maps/dir/?api=1${from}`
+            + `&destination=${destination.lat},${destination.lng}&travelmode=${travel}`;
+    }
+
+    /* The mobile order is deliberate and matches the way the section is used:
+       the button first, then why permission is being asked for, then the way of
+       travelling, then the two numbers, then the map, then the handover. */
+    function directionsSection(spot) {
+        const destination = spotPoint(spot);
+        const address = locationLine(spot) || spot.location || '';
+        const addressLine = address
+            ? `<p class="text-sm text-on-surface-variant flex items-start gap-2">
+                   <span class="material-symbols-outlined !text-lg text-primary shrink-0">place</span>
+                   <span>${escapeHtml(address)}</span>
+               </p>`
+            : '';
+
+        if (!destination) {
+            return `
+                <section id="directionsSection" class="scroll-mt-24">
+                    <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
+                    <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-3">
+                        ${addressLine}
+                        <p class="text-sm text-on-surface-variant flex items-start gap-2">
+                            <span class="material-symbols-outlined !text-lg text-on-surface-variant/60 shrink-0">wrong_location</span>
+                            <span>Directions are currently unavailable because this location has not been configured.</span>
+                        </p>
+                    </div>
+                </section>
+            `;
+        }
+
+        return `
+            <section id="directionsSection" class="scroll-mt-24">
+                <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
+                <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-4">
+                    ${addressLine}
+
+                    <button type="button" id="getDirectionsBtn"
+                            class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+                        <span class="material-symbols-outlined !text-lg">near_me</span> Get Directions
+                    </button>
+
+                    <div id="directionsPanel" hidden class="space-y-4">
+                        <p class="text-[11px] text-on-surface-variant leading-relaxed">
+                            ZTIMS would like to use your current location to calculate directions and estimated travel
+                            time. It is used for this route only and is never saved.
+                        </p>
+
+                        <p id="originLine" class="text-sm text-on-surface flex items-start gap-2">
+                            <span class="material-symbols-outlined !text-lg text-secondary shrink-0">my_location</span>
+                            <span id="originLabel">Asking for your location…</span>
+                        </p>
+
+                        <div id="manualOrigin" hidden class="space-y-2">
+                            <label for="originSearch" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                                Enter your starting location
+                            </label>
+                            <div class="flex gap-2">
+                                <input id="originSearch" type="text" placeholder="Search starting location…"
+                                       class="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                                <button type="button" id="originSearchBtn"
+                                        class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                                    Search
+                                </button>
+                            </div>
+                            <div id="originResults" hidden class="bg-surface-container-high border border-outline-variant/40 rounded-xl p-1 max-h-44 overflow-y-auto"></div>
+                            <button type="button" id="retryLocationBtn"
+                                    class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                                <span class="material-symbols-outlined !text-base">my_location</span> Try my device location again
+                            </button>
+                        </div>
+
+                        <div id="modeRow" hidden class="flex flex-wrap gap-2"></div>
+
+                        <div id="routeStats" hidden class="grid grid-cols-2 gap-3">
+                            <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Distance</p>
+                                <p id="routeDistance" class="text-xl font-display font-bold text-on-surface">—</p>
+                            </div>
+                            <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Estimated time</p>
+                                <p id="routeDuration" class="text-xl font-display font-bold text-on-surface">—</p>
+                            </div>
+                        </div>
+
+                        <p id="directionsStatus" hidden class="text-xs text-on-surface-variant"></p>
+
+                        <div id="directionsMap" hidden class="relative z-0 h-64 sm:h-80 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-high"></div>
+
+                        <a id="openInMapsBtn" href="#" target="_blank" rel="noopener noreferrer"
+                           class="w-full bg-surface-container-high border border-outline-variant/40 text-on-surface px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
+                            <span class="material-symbols-outlined !text-lg">open_in_new</span> Open in Maps
+                        </a>
+                        <p class="text-[11px] text-on-surface-variant text-center">
+                            ZTIMS shows the route and the estimate. Turn-by-turn navigation continues in your maps app.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function wireDirections(spot) {
+        const destination = spotPoint(spot);
+        const openButton = document.getElementById('getDirectionsBtn');
+        if (!destination || !openButton) return;
+
+        const panel = document.getElementById('directionsPanel');
+        const originLabel = document.getElementById('originLabel');
+        const manualOrigin = document.getElementById('manualOrigin');
+        const originSearch = document.getElementById('originSearch');
+        const originResults = document.getElementById('originResults');
+        const modeRow = document.getElementById('modeRow');
+        const routeStats = document.getElementById('routeStats');
+        const statusLine = document.getElementById('directionsStatus');
+        const mapBox = document.getElementById('directionsMap');
+        const openInMaps = document.getElementById('openInMapsBtn');
+
+        // Held in this page only, for as long as the tab is open.
+        let origin = null;
+        let mode = 'car';
+        let modesLoaded = false;
+        let map = null;
+        let routeLine = null;
+        let originMarker = null;
+
+        function setStatus(message, tone) {
+            statusLine.textContent = message || '';
+            statusLine.hidden = !message;
+            statusLine.style.color = tone === 'error' ? '#f87171' : '';
+        }
+
+        function refreshMapsLink() {
+            openInMaps.href = googleMapsLink(destination, origin, mode);
+        }
+
+        async function ensureMap() {
+            if (map) return map;
+            await loadLeaflet();
+            mapBox.hidden = false;
+
+            map = window.L.map(mapBox, { scrollWheelZoom: false }).setView([destination.lat, destination.lng], 14);
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            window.L.marker([destination.lat, destination.lng]).addTo(map).bindPopup(spot.title);
+            map.invalidateSize();
+            return map;
+        }
+
+        async function drawRoute(geometry) {
+            await ensureMap();
+
+            if (routeLine) map.removeLayer(routeLine);
+            if (originMarker) map.removeLayer(originMarker);
+
+            originMarker = window.L.circleMarker([origin.lat, origin.lng], {
+                radius: 8, color: '#00838F', fillColor: '#00838F', fillOpacity: 0.9
+            }).addTo(map).bindPopup('You are here');
+
+            routeLine = window.L.polyline(geometry, { color: '#E65100', weight: 5, opacity: 0.85 }).addTo(map);
+            map.invalidateSize();
+            map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+        }
+
+        async function loadModes() {
+            if (modesLoaded) return;
+            try {
+                const response = await fetch(`${API_BASE}/directions/capabilities`);
+                const data = await response.json();
+                const modes = Array.isArray(data.modes) ? data.modes : [];
+                if (!modes.length) return;
+
+                // Only what the configured routing service can genuinely calculate
+                // is offered — never a mode whose time would have to be invented.
+                mode = modes.some(function (one) { return one.id === 'car'; }) ? 'car' : modes[0].id;
+                modeRow.innerHTML = '';
+                modes.forEach(function (option) {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.dataset.mode = option.id;
+                    chip.textContent = option.label;
+                    chip.className = 'px-4 py-2.5 min-h-[44px] rounded-full text-xs font-bold border transition-colors';
+                    chip.addEventListener('click', function () {
+                        if (mode === option.id) return;
+                        mode = option.id;
+                        paintModes();
+                        refreshMapsLink();
+                        requestRoute();
+                    });
+                    modeRow.appendChild(chip);
+                });
+                modeRow.hidden = false;
+                paintModes();
+                modesLoaded = true;
+            } catch (error) {
+                /* The route request below reports the real problem honestly. */
+            }
+        }
+
+        function paintModes() {
+            [...modeRow.querySelectorAll('button')].forEach(function (chip) {
+                const active = chip.dataset.mode === mode;
+                chip.className = 'px-4 py-2.5 min-h-[44px] rounded-full text-xs font-bold border transition-colors '
+                    + (active
+                        ? 'bg-primary text-on-primary border-primary'
+                        : 'bg-surface-container-high text-on-surface-variant border-outline-variant/40 hover:bg-outline-variant/30');
+            });
+        }
+
+        async function requestRoute() {
+            if (!origin) return;
+
+            routeStats.hidden = true;
+            setStatus('Calculating the route…');
+
+            try {
+                const query = `fromLat=${origin.lat}&fromLng=${origin.lng}`
+                    + `&toLat=${destination.lat}&toLng=${destination.lng}&mode=${encodeURIComponent(mode)}`;
+                const response = await fetch(`${API_BASE}/directions/route?${query}`);
+                const data = await response.json().catch(function () { return {}; });
+
+                if (!response.ok) throw new Error(data.message || 'Directions are unavailable right now.');
+
+                document.getElementById('routeDistance').textContent = formatDistance(data.distanceMeters);
+                document.getElementById('routeDuration').textContent = formatDuration(data.durationSeconds);
+                routeStats.hidden = false;
+                setStatus('');
+                await drawRoute(data.geometry || []);
+            } catch (error) {
+                // No straight-line stand-in: an honest "unavailable" beats a number
+                // the visitor would plan their day around.
+                routeStats.hidden = true;
+                setStatus(error.message, 'error');
+            }
+        }
+
+        function useOrigin(point, label) {
+            origin = point;
+            originLabel.textContent = label;
+            manualOrigin.hidden = true;
+            if (originResults) originResults.hidden = true;
+            refreshMapsLink();
+            loadModes().then(requestRoute);
+        }
+
+        function askForManualOrigin(reason) {
+            origin = null;
+            originLabel.textContent = reason;
+            manualOrigin.hidden = false;
+            routeStats.hidden = true;
+            setStatus('');
+            loadModes();
+        }
+
+        function requestDeviceLocation() {
+            originLabel.textContent = 'Asking for your location…';
+
+            if (!navigator.geolocation || !window.isSecureContext) {
+                askForManualOrigin("We couldn't access your current location on this device.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    useOrigin(
+                        { lat: position.coords.latitude, lng: position.coords.longitude },
+                        'From: Your current location'
+                    );
+                },
+                function (error) {
+                    const reason = error.code === error.PERMISSION_DENIED
+                        ? "We couldn't access your current location because permission was declined."
+                        : error.code === error.POSITION_UNAVAILABLE
+                            ? "We couldn't determine where you are right now."
+                            : "Getting your location took too long.";
+                    askForManualOrigin(reason);
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+            );
+        }
+
+        async function searchOrigin() {
+            const query = (originSearch.value || '').trim();
+            if (query.length < 3) { setStatus('Type at least three characters to search.', 'error'); return; }
+
+            setStatus('Searching…');
+            try {
+                const response = await fetch(`${API_BASE}/directions/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json().catch(function () { return {}; });
+                if (!response.ok) throw new Error(data.message || 'Address search is unavailable right now.');
+
+                const list = Array.isArray(data.results) ? data.results : [];
+                originResults.innerHTML = '';
+                originResults.hidden = list.length === 0;
+
+                list.forEach(function (place) {
+                    // textContent, never innerHTML: these labels come from an
+                    // outside geocoder and are not markup.
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.textContent = place.label;
+                    option.className = 'w-full text-left text-xs px-3 py-2.5 rounded-lg text-on-surface hover:bg-outline-variant/30 transition-colors';
+                    option.addEventListener('click', function () {
+                        useOrigin({ lat: place.latitude, lng: place.longitude }, `From: ${place.label}`);
+                    });
+                    originResults.appendChild(option);
+                });
+
+                setStatus(list.length ? '' : 'No match found. Try a nearby landmark or town.');
+            } catch (error) {
+                setStatus(error.message, 'error');
+            }
+        }
+
+        openButton.addEventListener('click', function () {
+            const firstOpen = panel.hidden;
+            panel.hidden = false;
+            // Available the moment a valid destination is known, whether or not a
+            // route could be calculated.
+            refreshMapsLink();
+            document.getElementById('directionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Permission is requested when directions are asked for, never on load.
+            if (firstOpen) requestDeviceLocation();
+        });
+
+        document.getElementById('originSearchBtn').addEventListener('click', searchOrigin);
+        originSearch.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') { event.preventDefault(); searchOrigin(); }
+        });
+        document.getElementById('retryLocationBtn').addEventListener('click', requestDeviceLocation);
+
+        const asideButton = document.getElementById('asideDirectionsBtn');
+        if (asideButton) asideButton.addEventListener('click', function () { openButton.click(); });
+    }
+
     function renderSpot(spot) {
         const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
         const photos = spotPhotos(spot);
@@ -554,6 +965,8 @@ body { overflow-x: hidden; }
                         </div>
                     </div>
 
+                    ${directionsSection(spot)}
+
                     <div id="reviewsBlock">
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Visitor reviews</h2>
                         <div id="reviewsList"></div>
@@ -576,6 +989,11 @@ body { overflow-x: hidden; }
                             </div>
                         </div>
                         ${bookingPanel(spot)}
+                        ${spotPoint(spot) ? `
+                        <button type="button" id="asideDirectionsBtn"
+                                class="w-full mt-3 bg-surface-container-high border border-outline-variant/40 text-on-surface py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
+                            <span class="material-symbols-outlined !text-lg">near_me</span> Get Directions
+                        </button>` : ''}
                     </div>
                 </aside>
             </div>
@@ -727,6 +1145,7 @@ body { overflow-x: hidden; }
             document.title = `${spot.title} | Zamboanguita`;
             wireBookingGate(spot, spotId);
             wirePhotoLightbox(spotPhotos(spot));
+            wireDirections(spot);
 
             // Reviews load after the page is already readable, so a slow review
             // query never holds back the destination details themselves.
