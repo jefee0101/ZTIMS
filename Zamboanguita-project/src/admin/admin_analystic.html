@@ -726,10 +726,10 @@ body { overflow-x: hidden; }
                     <div>
                         <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Spot Category</label>
                         <select id="spotCategorySelect" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
-                            <option value="Beach & Diving">Beach & Diving</option>
-                            <option value="Mountain Trekking">Mountain Trekking</option>
-                            <option value="Heritage & Culture">Heritage & Culture</option>
-                            <option value="Hot Springs & Nature">Hot Springs & Nature</option>
+                            <option value="BEACH / DIVING">Beach / Diving</option>
+                            <option value="MOUNTAIN">Mountain</option>
+                            <option value="CULTURAL">Cultural</option>
+                            <option value="ACCOMMODATION">Accommodation</option>
                         </select>
                     </div>
                 </div>
@@ -742,6 +742,42 @@ body { overflow-x: hidden; }
                 <div>
                     <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Booking Website (URL)</label>
                     <input id="spotBookingUrlInput" type="url" placeholder="https://resort-site.com/book — leave blank if none" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Listing Type</label>
+                        <select id="spotTypeSelect" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
+                            <option value="spot">Tourist Spot</option>
+                            <option value="accommodation">Accommodation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Label Tag</label>
+                        <input id="spotLabelInput" type="text" placeholder="e.g., Crystal Waters" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Working Days</label>
+                        <input id="spotWorkingDaysInput" type="text" placeholder="e.g., Everyday" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Working Time</label>
+                        <input id="spotWorkingTimeInput" type="text" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Travel Fee (₱)</label>
+                        <input id="spotTravelFeeInput" type="number" min="0" placeholder="0.00" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Entrance Fee (₱)</label>
+                        <input id="spotEntranceFeeInput" type="number" min="0" placeholder="0.00" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    </div>
                 </div>
 
                 <div>
@@ -1193,7 +1229,18 @@ body { overflow-x: hidden; }
             const description = document.getElementById('spotDescriptionTextarea').value.trim();
 
             const bookingUrl = document.getElementById('spotBookingUrlInput').value.trim();
-            const newSpotPayload = { title, location, category, imageUrl, description, bookingUrl };
+            const newSpotPayload = {
+                title, location, category, imageUrl, description, bookingUrl,
+                type: document.getElementById('spotTypeSelect').value,
+                label: document.getElementById('spotLabelInput').value.trim(),
+                workingDays: document.getElementById('spotWorkingDaysInput').value.trim() || 'Everyday',
+                workingTime: document.getElementById('spotWorkingTimeInput').value.trim() || 'All Day',
+                travelFee: parseFloat(document.getElementById('spotTravelFeeInput').value) || 0,
+                entranceFee: parseFloat(document.getElementById('spotEntranceFeeInput').value) || 0,
+                // The cover doubles as the gallery's first photo, the same shape
+                // every other editor sends.
+                images: imageUrl ? [imageUrl] : []
+            };
             const restoreButton = setButtonLoading(e.target.querySelector('button[type="submit"]'), 'Publishing...');
 
             try {
