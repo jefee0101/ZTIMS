@@ -271,10 +271,46 @@ const SpotSchema = new mongoose.Schema({
     // listing's information, not whether the municipality publishes it.
     status: { type: String, enum: ['published', 'unpublished', 'archived'], default: 'published', index: true },
     statusNote: { type: String, default: "" },
-    statusUpdatedAt: { type: Date, default: null }
+    statusUpdatedAt: { type: Date, default: null },
+
+    // Whether the municipality requires a tourist guide here. A municipal
+    // decision, so only the Tourism Office sets it — which guides serve the spot
+    // is recorded on the guide, not duplicated into this document.
+    requiresGuide: { type: Boolean, default: false, index: true }
 }, { timestamps: true });
 
 const Spot = mongoose.model('Spot', SpotSchema);
+
+// 6. Tourist Guide — a municipal tourism record, not a ZTIMS account.
+//    Guides do not sign in. The Tourism Office keeps these records the way it
+//    keeps any other tourism information, which is why there is no password,
+//    no email sign-in, and no role attached to them anywhere.
+const GUIDE_STATUSES = ['available', 'unavailable', 'inactive'];
+
+const TouristGuideSchema = new mongoose.Schema({
+    fullName: { type: String, required: true, trim: true },
+    photoUrl: { type: String, default: "" },
+    contactNumber: { type: String, default: "" },
+    // General area rather than a precise address: this is a person, and a pin on
+    // their home is not tourism information.
+    location: { type: String, default: "" },
+    bio: { type: String, default: "" },
+    guideFee: { type: Number, default: 0, min: 0 },
+    maxGroupSize: { type: Number, default: 1, min: 1 },
+
+    //   available   — can be assigned to new bookings
+    //   unavailable — temporarily not taking work
+    //   inactive    — no longer taking new bookings
+    // Inactive never erases anything: past bookings keep pointing at the guide
+    // who actually led them.
+    status: { type: String, enum: GUIDE_STATUSES, default: 'available', index: true },
+
+    // The spots this guide serves. Held here rather than on the spot so a guide's
+    // details live in one place and a spot never carries a stale copy of them.
+    assignedSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }]
+}, { timestamps: true });
+
+const TouristGuide = mongoose.model('TouristGuide', TouristGuideSchema);
 
 const requireAuth = (req, res, next) => {
     const authorization = req.get('authorization') || '';
@@ -1099,6 +1135,8 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
     'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
     'address', 'barangay', 'municipality', 'province', 'latitude', 'longitude'
 ];
+// Note what is absent: status, managedBy and requiresGuide. Publication and the
+// guide requirement are municipal decisions, not an establishment's.
 
 /**
  * Decides whether this caller may write to this listing.
@@ -1377,6 +1415,153 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+});
+
+/* ==========================================
+   4a. TOURIST GUIDES
+   ------------------------------------------
+   Municipal tourism records, managed by the Tourism Office alone. A guide is
+   not a ZTIMS user: there is no account, no password and no role for them
+   anywhere, and an establishment has no access to any of this.
+
+   Everything a visitor needs to see is served by one public route that reports
+   the requirement without exposing a guide's contact details.
+========================================== */
+
+/**
+ * Cleans a guide payload. Numbers are coerced, because a form sends strings and a
+ * fee of "500" silently stored as text would break every comparison later.
+ */
+function applyGuideDetails(guide, body) {
+    if (typeof body.fullName === 'string') {
+        const name = body.fullName.trim();
+        if (!name) throw Object.assign(new Error('The guide needs a name.'), { name: 'ValidationError' });
+        guide.fullName = name;
+    }
+    for (const field of ['photoUrl', 'contactNumber', 'location', 'bio']) {
+        if (typeof body[field] === 'string') guide[field] = body[field].trim();
+    }
+    if (body.guideFee !== undefined) {
+        const fee = Number(body.guideFee);
+        if (!Number.isFinite(fee) || fee < 0) {
+            throw Object.assign(new Error('The guide fee must be zero or more.'), { name: 'ValidationError' });
+        }
+        guide.guideFee = fee;
+    }
+    if (body.maxGroupSize !== undefined) {
+        const size = Math.floor(Number(body.maxGroupSize));
+        if (!Number.isFinite(size) || size < 1) {
+            throw Object.assign(new Error('The maximum group size must be at least one person.'), { name: 'ValidationError' });
+        }
+        guide.maxGroupSize = size;
+    }
+    if (body.status !== undefined) {
+        if (!GUIDE_STATUSES.includes(body.status)) {
+            throw Object.assign(new Error('Choose available, unavailable, or inactive.'), { name: 'ValidationError' });
+        }
+        guide.status = body.status;
+    }
+    if (Array.isArray(body.assignedSpots)) {
+        // Only ids that are real, and each one once.
+        const valid = body.assignedSpots
+            .map(id => String(id || '').trim())
+            .filter(id => mongoose.isValidObjectId(id));
+        guide.assignedSpots = [...new Set(valid)];
+    }
+    return guide;
+}
+
+app.get('/api/guides', requireAdmin, async (req, res) => {
+    try {
+        const guides = await TouristGuide.find()
+            .populate('assignedSpots', 'title location status')
+            .sort({ fullName: 1 });
+        return res.status(200).json(guides);
+    } catch (error) {
+        console.error('❌ Guide list failure:', error);
+        return res.status(500).json([]);
+    }
+});
+
+app.post('/api/guides', requireAdmin, async (req, res) => {
+    try {
+        const guide = applyGuideDetails(new TouristGuide(), req.body);
+        await guide.save();
+        console.log(`🧭 Officer added guide ${guide.fullName}`);
+        return res.status(201).json({ success: true, message: `${guide.fullName} added.`, guide });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide create failure:');
+    }
+});
+
+app.put('/api/guides/:id', requireAdmin, async (req, res) => {
+    try {
+        const guide = await TouristGuide.findById(req.params.id);
+        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
+
+        applyGuideDetails(guide, req.body);
+        await guide.save();
+        return res.status(200).json({ success: true, message: `${guide.fullName} updated.`, guide });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide update failure:');
+    }
+});
+
+/**
+ * Status on its own, so marking a guide unavailable for a fortnight does not mean
+ * resubmitting their whole record.
+ */
+app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
+    try {
+        if (!GUIDE_STATUSES.includes(req.body.status)) {
+            return res.status(400).json({ success: false, message: 'Choose available, unavailable, or inactive.' });
+        }
+        const guide = await TouristGuide.findById(req.params.id);
+        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
+
+        guide.status = req.body.status;
+        await guide.save();
+        return res.status(200).json({ success: true, message: `${guide.fullName} is now ${guide.status}.`, guide });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide status failure:');
+    }
+});
+
+/**
+ * PUBLIC: what a visitor needs to know before asking for a guide.
+ *
+ * Deliberately no names, no phone numbers and no guide ids: a visitor does not
+ * choose their guide, the office assigns one. Only the fee, the group size and
+ * whether anyone is actually available leave this route.
+ */
+app.get('/api/spots/:id/guide-requirement', async (req, res) => {
+    try {
+        const spot = await Spot.findById(req.params.id).select('title requiresGuide status');
+        if (!spot) return res.status(404).json({ success: false, message: 'Spot not found.' });
+
+        if (!spot.requiresGuide) {
+            return res.status(200).json({ success: true, requiresGuide: false });
+        }
+
+        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' })
+            .select('guideFee maxGroupSize');
+
+        const fees = guides.map(g => g.guideFee).sort((a, b) => a - b);
+        return res.status(200).json({
+            success: true,
+            requiresGuide: true,
+            guidesAvailable: guides.length,
+            // A range rather than one number, because two guides at one spot may
+            // legitimately charge differently and quoting one of them would be wrong.
+            feeFrom: fees.length ? fees[0] : null,
+            feeTo: fees.length ? fees[fees.length - 1] : null,
+            maxGroupSize: guides.length ? Math.max(...guides.map(g => g.maxGroupSize)) : null,
+            payment: 'Onsite at the Municipal Tourism Office'
+        });
+    } catch (error) {
+        console.error('❌ Guide requirement failure:', error);
+        return res.status(500).json({ success: false, message: 'Could not read the guide requirement.' });
     }
 });
 

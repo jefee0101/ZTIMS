@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Establishment Managers</title>
+<title>Explore Zamboanguita Admin | Tourist Guides</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -617,46 +617,58 @@ body { overflow-x: hidden; }
             <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
                     <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
-                        <span class="text-on-surface-variant">Accounts</span>
+                        <span class="text-on-surface-variant">Municipal tourism</span>
                     </nav>
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h2>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourist Guides</h2>
                     <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Managers do not sign themselves up — as Tourist Officer you issue each account here.
-                        A manager can then publish and edit only their own tourist spots and accommodations.
+                        Guides are municipal tourism records, not accounts — they never sign in to ZTIMS.
+                        You keep their details here and assign them to the spots that require a guide.
                     </p>
                 </div>
-                <button id="openCreateModalBtn" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
-                    <span class="material-symbols-outlined">person_add</span> New manager account
+                <button id="openCreateGuideBtn" class="flex items-center gap-2 px-8 py-4 min-h-[44px] bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                    <span class="material-symbols-outlined">hiking</span> New guide record
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Manager accounts</p>
-                    <h5 id="statManagers" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Guide records</p>
+                    <h5 id="statGuides" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Listings they publish</p>
-                    <h5 id="statListings" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Available</p>
+                    <h5 id="statAvailable" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">can take new bookings</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Yet to publish anything</p>
-                    <h5 id="statIdle" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">accounts with no listing yet</p>
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Unassigned</p>
+                    <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1">not serving any spot yet</p>
+                </div>
+                <div class="glass-panel rounded-2xl p-5">
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Spots needing a guide</p>
+                    <h5 id="statGuidedSpots" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-xs text-on-surface-variant mt-1" id="statUncovered">—</p>
                 </div>
             </div>
 
             <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                 <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#FFB300] !text-lg">storefront</span> Manager directory
+                    <span class="material-symbols-outlined text-[#FFB300] !text-lg">hiking</span> Guide directory
                 </h3>
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="searchInput" type="search" placeholder="Search establishment or email"
+                        <input id="guideSearch" type="search" placeholder="Search a guide or spot"
                                class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
                     </div>
-                    <button id="refreshBtn" class="flex items-center gap-2 px-5 py-2.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                    <select id="statusFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="all">All statuses</option>
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <button id="refreshGuidesBtn" class="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
                         <span class="material-symbols-outlined !text-base">refresh</span> Refresh
                     </button>
                 </div>
@@ -667,87 +679,113 @@ body { overflow-x: hidden; }
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                                <th class="px-6 py-4">Establishment</th>
-                                <th class="px-6 py-4">Manager</th>
-                                <th class="px-6 py-4">Sign-in email</th>
-                                <th class="px-6 py-4">Public contact</th>
-                                <th class="px-6 py-4">Phone</th>
-                                <th class="px-6 py-4 text-center">Listings</th>
+                                <th class="px-6 py-4">Guide</th>
+                                <th class="px-6 py-4">Contact</th>
+                                <th class="px-6 py-4">Based in</th>
+                                <th class="px-6 py-4 text-right">Fee</th>
+                                <th class="px-6 py-4 text-center">Max group</th>
+                                <th class="px-6 py-4">Assigned spots</th>
                                 <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Account created</th>
                                 <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="managerTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
+                        <tbody id="guideTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
                     </table>
                 </div>
                 <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
                     <p class="text-on-surface-variant text-sm">
-                        Showing <span id="shownCount" class="text-on-surface font-bold">0</span>
-                        of <span id="totalCount" class="text-on-surface font-bold">0</span> manager accounts
+                        Showing <span id="guideShown" class="text-on-surface font-bold">0</span>
+                        of <span id="guideTotal" class="text-on-surface font-bold">0</span> guide records
                     </p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Create account -->
-    <div id="createManagerModal" hidden class="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-[200] p-3 sm:p-4">
+    <!-- Add or edit a guide record -->
+    <div id="guideModal" hidden class="fixed inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-[200] p-3 sm:p-4">
         <div class="bg-surface border border-outline-variant/60 rounded-2xl sm:rounded-[2rem] w-full max-w-lg p-5 sm:p-8 space-y-6 text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
             <div class="flex justify-between items-start gap-4">
                 <div>
-                    <h2 class="text-2xl font-black tracking-tight font-headline">New manager account</h2>
+                    <h2 id="guideModalTitle" class="text-2xl font-black tracking-tight font-headline">New guide record</h2>
                     <p class="text-xs text-on-surface-variant mt-1">
-                        Give the manager these details afterwards — they sign in through the staff sign-in page.
+                        A record only — guides have no ZTIMS account and never sign in.
                     </p>
                 </div>
-                <button id="closeCreateModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
-                    <span class="material-symbols-outlined text-2xl">close</span>
+                <button id="closeGuideModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
 
-            <form id="createManagerForm" class="space-y-4 font-body">
+            <form id="guideForm" class="space-y-4 font-body">
+                <input type="hidden" id="guideId" value=""/>
+
                 <div>
-                    <label for="newManagerEstablishmentName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
-                    <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                </div>
-                <div>
-                    <label for="newManagerName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
-                    <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">The person who actually runs the establishment.</p>
-                </div>
-                <div>
-                    <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Sign-in email</label>
-                    <input id="newManagerEmail" type="email" required placeholder="manager@gmail.com" autocomplete="off"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">What they type to sign in. Never shown to visitors.</p>
-                </div>
-                <div>
-                    <label for="newManagerContactEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
-                    <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
-                </div>
-                <div>
-                    <label for="newManagerPhone" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
-                    <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing that has no booking website.</p>
-                </div>
-                <div>
-                    <label for="newManagerPassword" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Starting password</label>
-                    <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Full name</label>
+                    <input id="guideName" type="text" required placeholder="e.g., Juan Dela Cruz"
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
 
-                <p id="createManagerError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
+                        <input id="guideContact" type="tel" placeholder="09XX XXX XXXX"
+                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Based in</label>
+                        <input id="guideLocation" type="text" placeholder="e.g., Brgy. Najandig"
+                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                </div>
 
-                <div class="flex gap-4 pt-2">
-                    <button type="button" id="cancelCreateBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">Cancel</button>
-                    <button type="submit" id="createManagerBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">Create account</button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Guide fee (₱)</label>
+                        <input id="guideFee" type="number" min="0" step="1" placeholder="500"
+                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Maximum group size</label>
+                        <input id="guideMaxGroup" type="number" min="1" step="1" placeholder="5"
+                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Status</label>
+                    <select id="guideStatus" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option value="available">Available — can take new bookings</option>
+                        <option value="unavailable">Unavailable — temporarily not taking work</option>
+                        <option value="inactive">Inactive — no longer taking new bookings</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Photo link</label>
+                    <input id="guidePhoto" type="url" placeholder="https://..."
+                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">About this guide</label>
+                    <textarea id="guideBio" rows="3" placeholder="Languages spoken, specialities, years guiding…"
+                              class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Spots this guide serves</label>
+                    <p class="text-[11px] text-on-surface-variant mb-2">
+                        Only spots marked as requiring a guide are listed. Tick every spot this guide can lead.
+                    </p>
+                    <div id="guideSpotList" class="max-h-52 overflow-y-auto space-y-1 bg-surface-variant border border-outline-variant/40 rounded-xl p-3"></div>
+                </div>
+
+                <p id="guideError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="cancelGuideBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 min-h-[44px] rounded-full transition-all">Cancel</button>
+                    <button type="submit" id="saveGuideBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 min-h-[44px] rounded-full transition-all shadow-lg hover:scale-[1.02]">Save guide</button>
                 </div>
             </form>
         </div>
@@ -756,69 +794,22 @@ body { overflow-x: hidden; }
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
 
-        let managers = [];
-        let listingCounts = {};     // manager id -> number of published listings
+        let allGuides = [];
+        let guidedSpots = [];       // spots the office has marked as requiring a guide
 
         function authHeaders(extra) {
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
         }
 
         function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, ch => (
-                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-            ));
+            return String(value ?? '').replace(/[&<>"']/g, ch =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         }
 
-        // The API sleeps on Render's free tier, so a cold start can take most of a
-        // minute — after 5s the spinner says so rather than looking frozen.
-        function showLoading(target, message, colspan) {
-            const spinner =
-                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
-                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
-                    '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
-                '</div>';
-            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
-            const timer = setTimeout(() => {
-                const note = target.querySelector('[data-slow]');
-                if (note) note.classList.remove('hidden');
-            }, 5000);
-            return () => clearTimeout(timer);
+        function formatPeso(amount) {
+            const number = Number(amount) || 0;
+            return `₱${number.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
-
-        function setButtonLoading(btn, label) {
-            if (!btn) return () => {};
-            const originalHTML = btn.innerHTML;
-            const wasDisabled = btn.disabled;
-            btn.disabled = true;
-            btn.innerHTML =
-                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
-        }
-
-        // Shared with the sidebar's Log Out, so both doors behave identically.
-        function signOutStaff() {
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-            } catch (e) { /* private browsing */ }
-            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
-            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
-        }
-
-        // Who is signed in, in the corner, with the way out of the portal.
-        function mountPortalAccountMenu() {
-            mountAccountMenu({
-                container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
-                email: localStorage.getItem('userEmail') || '',
-                items: [
-                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
-                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
-                ]
-            });
-        }
-
 
         function guardOfficerSession() {
             if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
@@ -828,400 +819,281 @@ body { overflow-x: hidden; }
             return true;
         }
 
-        function nameOf(manager) {
-            // Accounts created before the rename stored the same field as resortName.
-            return manager.establishmentName || manager.resortName || '';
+        function handleExpiredSession() {
+            showToast('Your session has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        // Blank means the account never got its own public address, so the sign-in
-        // one stands in — that is what the server falls back to as well.
-        function contactEmailOf(manager) {
-            return manager.contactEmail || manager.email || '—';
+        function setButtonLoading(btn, label) {
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin align-[-2px] mr-2"></span>${label}`;
+            return () => { btn.disabled = false; btn.innerHTML = original; };
         }
 
-        function formatDate(value) {
-            if (!value) return '—';
-            const date = new Date(value);
-            return Number.isNaN(date.getTime())
-                ? '—'
-                : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        const STATUS_STYLES = {
+            available: 'bg-green-500/15 text-green-400',
+            unavailable: 'bg-amber-500/15 text-amber-400',
+            inactive: 'bg-white/10 text-on-surface-variant'
+        };
+
+        function statusPill(status) {
+            const style = STATUS_STYLES[status] || STATUS_STYLES.inactive;
+            return `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${style}">${escapeHtml(status)}</span>`;
         }
 
-        function visibleManagers() {
-            const search = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!search) return managers;
-            return managers.filter(manager =>
-                [nameOf(manager), manager.managerName, manager.email, contactEmailOf(manager), manager.phone]
-                    .some(field => String(field || '').toLowerCase().includes(search))
-            );
+        /* ---- loading ---------------------------------------------------- */
+
+        async function loadEverything() {
+            const body = document.getElementById('guideTableBody');
+            body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Loading guide records…</td></tr>`;
+
+            try {
+                const [guidesRes, spotsRes] = await Promise.all([
+                    fetch(`${API_BASE}/guides`, { headers: authHeaders() }),
+                    fetch(`${API_BASE}/spots`, { headers: authHeaders() })
+                ]);
+
+                if (guidesRes.status === 401) { handleExpiredSession(); return; }
+                if (!guidesRes.ok) throw new Error('The server refused the guide list.');
+
+                allGuides = await guidesRes.json();
+                const spots = spotsRes.ok ? await spotsRes.json() : [];
+                guidedSpots = spots.filter(spot => spot.requiresGuide);
+
+                renderStats();
+                renderTable();
+            } catch (error) {
+                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-red-400">${escapeHtml(error.message)}</td></tr>`;
+            }
         }
 
-        function renderSummary() {
-            const listings = Object.values(listingCounts).reduce((sum, count) => sum + count, 0);
-            const idle = managers.filter(manager => !listingCounts[String(manager._id)]).length;
+        function renderStats() {
+            document.getElementById('statGuides').textContent = allGuides.length;
+            document.getElementById('statAvailable').textContent = allGuides.filter(g => g.status === 'available').length;
+            document.getElementById('statUnassigned').textContent =
+                allGuides.filter(g => !(g.assignedSpots || []).length).length;
+            document.getElementById('statGuidedSpots').textContent = guidedSpots.length;
 
-            document.getElementById('statManagers').textContent = managers.length;
-            document.getElementById('statListings').textContent = listings;
-            document.getElementById('statIdle').textContent = idle;
+            // A spot that requires a guide but has nobody available cannot actually
+            // be booked, so it is worth the officer seeing at a glance.
+            const covered = new Set();
+            allGuides.filter(g => g.status === 'available').forEach(g => {
+                (g.assignedSpots || []).forEach(spot => covered.add(String(spot._id || spot)));
+            });
+            const uncovered = guidedSpots.filter(spot => !covered.has(String(spot._id))).length;
+            document.getElementById('statUncovered').textContent = uncovered === 0
+                ? 'all have an available guide'
+                : `${uncovered} with no available guide`;
+        }
+
+        function visibleGuides() {
+            const query = document.getElementById('guideSearch').value.trim().toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+
+            return allGuides.filter(guide => {
+                if (status !== 'all' && guide.status !== status) return false;
+                if (!query) return true;
+                const spotNames = (guide.assignedSpots || []).map(s => s.title || '').join(' ');
+                return [guide.fullName, guide.location, guide.contactNumber, spotNames]
+                    .filter(Boolean)
+                    .some(field => String(field).toLowerCase().includes(query));
+            });
         }
 
         function renderTable() {
-            const tbody = document.getElementById('managerTableBody');
-            const rows = visibleManagers();
+            const body = document.getElementById('guideTableBody');
+            const rows = visibleGuides();
 
-            document.getElementById('shownCount').textContent = rows.length;
-            document.getElementById('totalCount').textContent = managers.length;
+            document.getElementById('guideShown').textContent = rows.length;
+            document.getElementById('guideTotal').textContent = allGuides.length;
 
             if (rows.length === 0) {
-                tbody.innerHTML = `
-                    <tr><td colspan="9" class="px-6 py-16 text-center">
-                        <span class="material-symbols-outlined text-4xl block mb-2 opacity-40">storefront</span>
-                        ${managers.length === 0
-                            ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
-                            : 'No account matches that search.'}
-                    </td></tr>`;
+                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">${
+                    allGuides.length === 0
+                        ? 'No guide records yet. Add the first one with “New guide record”.'
+                        : 'No guide matches that search.'
+                }</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = rows.map(manager => {
-                const listings = listingCounts[String(manager._id)] || 0;
-                const suspended = manager.active === false;
+            body.innerHTML = rows.map(guide => {
+                const spots = (guide.assignedSpots || []).map(s => s.title).filter(Boolean);
                 return `
-                <tr class="hover:bg-white/[0.03] transition-colors ${suspended ? 'opacity-60' : ''}">
-                    <td class="px-6 py-4 font-bold text-on-surface">
-                        <span class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary !text-lg">storefront</span>
-                            ${escapeHtml(nameOf(manager) || 'Unnamed establishment')}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">${escapeHtml(manager.managerName || '—')}</td>
-                    <td class="px-6 py-4">${escapeHtml(manager.email || '—')}</td>
-                    <td class="px-6 py-4">${escapeHtml(contactEmailOf(manager))}</td>
-                    <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${
-                            listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant text-on-surface-variant ring-outline-variant/30'
-                        }">${listings}</span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                            suspended ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary-container'
-                        }">
-                            <span class="material-symbols-outlined !text-xs">${suspended ? 'pause_circle' : 'check_circle'}</span>
-                            ${suspended ? 'Suspended' : 'Active'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right text-xs">${escapeHtml(formatDate(manager.createdAt))}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex justify-end gap-1.5">
-                            <button data-edit="${escapeHtml(manager._id)}" title="Correct these details"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-on-surface transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">edit</span>
-                            </button>
-                            <button data-password="${escapeHtml(manager._id)}" title="Issue a new password"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-[#FFB300] transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">key</span>
-                            </button>
-                            <button data-suspend="${escapeHtml(manager._id)}" title="${suspended ? 'Restore this account' : 'Suspend this account'}"
-                                    class="p-2 rounded-lg bg-surface-variant ${suspended ? 'text-primary-container' : 'text-on-surface-variant hover:text-red-400'} transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">${suspended ? 'play_circle' : 'pause_circle'}</span>
-                            </button>
-                            <button data-delete="${escapeHtml(manager._id)}" title="Delete this account"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-red-400 transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">delete</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
+                    <tr class="hover:bg-surface-variant/40 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-on-surface">${escapeHtml(guide.fullName)}</p>
+                            ${guide.bio ? `<p class="text-xs text-on-surface-variant line-clamp-1 max-w-xs">${escapeHtml(guide.bio)}</p>` : ''}
+                        </td>
+                        <td class="px-6 py-4">${escapeHtml(guide.contactNumber || '—')}</td>
+                        <td class="px-6 py-4">${escapeHtml(guide.location || '—')}</td>
+                        <td class="px-6 py-4 text-right font-bold text-on-surface">${formatPeso(guide.guideFee)}</td>
+                        <td class="px-6 py-4 text-center">${Number(guide.maxGroupSize) || 1}</td>
+                        <td class="px-6 py-4">
+                            ${spots.length
+                                ? `<div class="flex flex-wrap gap-1">${spots.map(t =>
+                                    `<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold">${escapeHtml(t)}</span>`).join('')}</div>`
+                                : '<span class="text-xs text-on-surface-variant italic">not assigned</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-center">${statusPill(guide.status)}</td>
+                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                            <button data-edit="${escapeHtml(guide._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-on-surface hover:bg-surface-variant transition-colors">Edit</button>
+                            <button data-cycle="${escapeHtml(guide._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-[#FFB300] hover:bg-surface-variant transition-colors">Status</button>
+                        </td>
+                    </tr>
+                `;
             }).join('');
         }
 
-        function render() {
-            renderSummary();
-            renderTable();
-        }
+        /* ---- the dialog -------------------------------------------------- */
 
-        // A listing's assigned establishment arrives populated, so it can be an
-        // object or a plain id
-        // depending on the route that produced it.
-        function managedByIdOf(spot) {
-            const assigned = spot.managedBy;
-            if (!assigned) return '';
-            return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
-        }
-
-        async function loadDirectory() {
-            const tbody = document.getElementById('managerTableBody');
-            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 9);
-
-            try {
-                const [managersResponse, spotsResponse] = await Promise.all([
-                    fetch(`${API_BASE}/establishment-managers`, { headers: authHeaders() }),
-                    fetch(`${API_BASE}/spots`, { headers: authHeaders() }).catch(() => null)
-                ]);
-
-                if (!managersResponse.ok) throw new Error(`The server returned status ${managersResponse.status}.`);
-                const payload = await managersResponse.json();
-                managers = Array.isArray(payload) ? payload : [];
-
-                // Listing counts are a nice-to-have; losing them must not empty the table.
-                listingCounts = {};
-                if (spotsResponse && spotsResponse.ok) {
-                    const spots = await spotsResponse.json().catch(() => []);
-                    (Array.isArray(spots) ? spots : []).forEach(spot => {
-                        const id = managedByIdOf(spot);
-                        if (id) listingCounts[id] = (listingCounts[id] || 0) + 1;
-                    });
-                }
-
-                doneLoading();
-                render();
-            } catch (error) {
-                console.error('❌ Could not load manager accounts:', error);
-                doneLoading();
-                managers = [];
-                listingCounts = {};
-                renderSummary();
-                document.getElementById('shownCount').textContent = 0;
-                document.getElementById('totalCount').textContent = 0;
-                tbody.innerHTML = `
-                    <tr><td colspan="9" class="px-6 py-16 text-center">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-red-400/70">cloud_off</span>
-                        <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
-                        <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}
-                        Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
-                    </td></tr>`;
-            }
-        }
-
-        /* ---- Account lifecycle --------------------------------------------
-           Every one of these asks first and says exactly what it will do, since
-           suspending takes an establishment's listings off the public site and
-           issuing a password locks the manager out of the one they are using. */
-
-        function managerById(id) {
-            return managers.find(manager => String(manager._id) === String(id));
-        }
-
-        async function callManagerRoute(url, options, button, label) {
-            const restoreButton = setButtonLoading(button, label || '');
-            try {
-                const response = await fetch(url, options);
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || result.success === false) {
-                    throw new Error(result.message || `The server refused (status ${response.status}).`);
-                }
-                return result;
-            } finally {
-                restoreButton();
-            }
-        }
-
-        async function toggleSuspension(id, button) {
-            const manager = managerById(id);
-            if (!manager) return;
-
-            const suspended = manager.active === false;
-            const listings = listingCounts[String(id)] || 0;
-            const name = nameOf(manager) || manager.email;
-
-            const question = suspended
-                ? `Restore ${name}?\n\nThey will be able to sign in again, and their ${listings} listing${listings === 1 ? '' : 's'} will return to the public site.`
-                : `Suspend ${name}?\n\nThey will not be able to sign in, and their ${listings} listing${listings === 1 ? '' : 's'} will be hidden from the public site.\n\nNothing is deleted — you can restore the account at any time.`;
-            if (!confirm(question)) return;
-
-            try {
-                const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ active: suspended })
-                }, button, '');
-                await loadDirectory();
-                showToast(result.message || 'Account updated.', 'success');
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        async function issueNewPassword(id, button) {
-            const manager = managerById(id);
-            if (!manager) return;
-            const name = nameOf(manager) || manager.email;
-
-            const typed = prompt(
-                `Issue a new password for ${name}?\n\n` +
-                `Their current password stops working immediately. Leave this blank to have one generated, ` +
-                `or type one of at least 8 characters.`, '');
-            if (typed === null) return;
-            if (typed.trim() && typed.trim().length < 8) {
-                showToast('A password must be at least 8 characters.', 'error');
-                return;
-            }
-
-            try {
-                const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}/password`, {
-                    method: 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ newPassword: typed.trim() })
-                }, button, '');
-                // Shown once — the server keeps only a hash of it.
-                // Stays until dismissed: it cannot be read again once closed.
-                showToast(
-                    `New password for ${name}\nSign-in email: ${result.email}\nPassword: ${result.newPassword}\n\nPass this on now — it cannot be read again.`,
-                    'success', { duration: 0 });
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        async function editManager(id, button) {
-            const manager = managerById(id);
-            if (!manager) return;
-
-            const establishmentName = prompt('Establishment name', nameOf(manager));
-            if (establishmentName === null) return;
-            const managerName = prompt("Manager's name", manager.managerName || '');
-            if (managerName === null) return;
-            const contactEmail = prompt('Public contact email (blank uses the sign-in email)', manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''));
-            if (contactEmail === null) return;
-            const phone = prompt('Phone', manager.phone || '');
-            if (phone === null) return;
-
-            try {
-                await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ establishmentName, managerName, contactEmail, phone })
-                }, button, '');
-                await loadDirectory();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        async function deleteManager(id, button) {
-            const manager = managerById(id);
-            if (!manager) return;
-
-            const listings = listingCounts[String(id)] || 0;
-            const name = nameOf(manager) || manager.email;
-
-            if (listings > 0) {
-                showToast(
-                    `${name} still has ${listings} listing${listings === 1 ? '' : 's'}.\n\n` +
-                    `Deleting the account would leave ${listings === 1 ? 'it' : 'them'} belonging to nobody. ` +
-                    `Suspend it instead, which hides the listings and can be undone, or take the listings down from Destinations first.`,
-                    'error', { duration: 9000 });
-                return;
-            }
-
-            if (!confirm(`Delete ${name} permanently?\n\nThe account and its sign-in are removed for good. This cannot be undone.`)) return;
-
-            try {
-                await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
-                    method: 'DELETE',
-                    headers: authHeaders()
-                }, button, '');
-                await loadDirectory();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        function setCreateError(message) {
-            const box = document.getElementById('createManagerError');
+        function setGuideError(message) {
+            const box = document.getElementById('guideError');
             box.textContent = message || '';
             box.hidden = !message;
         }
 
-        function toggleCreateModal(show) {
-            const modal = document.getElementById('createManagerModal');
-            modal.hidden = !show;
-            if (show) {
-                setCreateError('');
-                document.getElementById('newManagerEstablishmentName').focus();
-            } else {
-                document.getElementById('createManagerForm').reset();
-            }
-        }
+        function renderSpotChoices(selectedIds) {
+            const list = document.getElementById('guideSpotList');
+            const chosen = new Set((selectedIds || []).map(String));
 
-        async function createManager(event) {
-            event.preventDefault();
-            setCreateError('');
-
-            const establishmentName = document.getElementById('newManagerEstablishmentName').value.trim();
-            const managerName = document.getElementById('newManagerName').value.trim();
-            const email = document.getElementById('newManagerEmail').value.trim();
-            const contactEmail = document.getElementById('newManagerContactEmail').value.trim();
-            const phone = document.getElementById('newManagerPhone').value.trim();
-            const password = document.getElementById('newManagerPassword').value;
-
-            if (!establishmentName || !email || !password) {
-                setCreateError('An establishment name, email and password are all needed.');
+            if (guidedSpots.length === 0) {
+                list.innerHTML = `<p class="text-xs text-on-surface-variant italic">
+                    No spot is marked as requiring a guide yet. Tick “Requires a tourist guide” on a destination first.
+                </p>`;
                 return;
             }
 
-            const restoreButton = setButtonLoading(document.getElementById('createManagerBtn'), 'Creating...');
+            list.innerHTML = guidedSpots.map(spot => `
+                <label class="flex items-center gap-2.5 py-2 cursor-pointer min-h-[44px]">
+                    <input type="checkbox" value="${escapeHtml(spot._id)}" ${chosen.has(String(spot._id)) ? 'checked' : ''}
+                           class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
+                    <span class="text-sm text-on-surface">${escapeHtml(spot.title)}</span>
+                    <span class="text-[11px] text-on-surface-variant">${escapeHtml(spot.location || '')}</span>
+                </label>
+            `).join('');
+        }
 
+        function openGuideModal(guide) {
+            document.getElementById('guideModalTitle').textContent = guide ? 'Edit guide record' : 'New guide record';
+            document.getElementById('guideId').value = guide ? guide._id : '';
+            document.getElementById('guideName').value = guide?.fullName || '';
+            document.getElementById('guideContact').value = guide?.contactNumber || '';
+            document.getElementById('guideLocation').value = guide?.location || '';
+            document.getElementById('guideFee').value = guide?.guideFee ?? '';
+            document.getElementById('guideMaxGroup').value = guide?.maxGroupSize ?? '';
+            document.getElementById('guideStatus').value = guide?.status || 'available';
+            document.getElementById('guidePhoto').value = guide?.photoUrl || '';
+            document.getElementById('guideBio').value = guide?.bio || '';
+
+            renderSpotChoices((guide?.assignedSpots || []).map(s => s._id || s));
+            setGuideError('');
+            document.getElementById('guideModal').hidden = false;
+        }
+
+        function closeGuideModal() {
+            document.getElementById('guideModal').hidden = true;
+            document.getElementById('guideForm').reset();
+        }
+
+        async function saveGuide(event) {
+            event.preventDefault();
+            setGuideError('');
+
+            const id = document.getElementById('guideId').value;
+            const payload = {
+                fullName: document.getElementById('guideName').value.trim(),
+                contactNumber: document.getElementById('guideContact').value.trim(),
+                location: document.getElementById('guideLocation').value.trim(),
+                guideFee: Number(document.getElementById('guideFee').value) || 0,
+                maxGroupSize: Number(document.getElementById('guideMaxGroup').value) || 1,
+                status: document.getElementById('guideStatus').value,
+                photoUrl: document.getElementById('guidePhoto').value.trim(),
+                bio: document.getElementById('guideBio').value.trim(),
+                assignedSpots: [...document.querySelectorAll('#guideSpotList input:checked')].map(box => box.value)
+            };
+
+            if (!payload.fullName) { setGuideError('The guide needs a name.'); return; }
+
+            const restore = setButtonLoading(document.getElementById('saveGuideBtn'), 'Saving...');
             try {
-                const response = await fetch(`${API_BASE}/establishment-managers`, {
-                    method: 'POST',
+                const response = await fetch(id ? `${API_BASE}/guides/${encodeURIComponent(id)}` : `${API_BASE}/guides`, {
+                    method: id ? 'PUT' : 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ establishmentName, managerName, email, contactEmail, phone, password })
+                    body: JSON.stringify(payload)
                 });
-
+                if (response.status === 401) { handleExpiredSession(); return; }
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) {
-                    throw new Error(result.message || `The server refused (status ${response.status}).`);
-                }
+                if (!response.ok) throw new Error(result.message || `The server refused (status ${response.status}).`);
 
-                restoreButton();
-                toggleCreateModal(false);
-                await loadDirectory();
-                showToast(
-                    `Account created for ${establishmentName}.\nSign-in email: ${email}\nPassword: ${password}\n\nPass these on — the password cannot be read again.`,
-                    'success', { duration: 0 });
+                restore();
+                closeGuideModal();
+                await loadEverything();
+                showToast(result.message || 'Guide saved.', 'success');
             } catch (error) {
-                restoreButton();
-                setCreateError(error.message);
+                restore();
+                setGuideError(error.message);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            mountPortalAccountMenu();
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
+        /* Status cycles available -> unavailable -> inactive -> available, which is
+           quicker than opening the whole record to mark someone off for a week. */
+        async function cycleStatus(id) {
+            const guide = allGuides.find(g => String(g._id) === String(id));
+            if (!guide) return;
 
+            const order = ['available', 'unavailable', 'inactive'];
+            const next = order[(order.indexOf(guide.status) + 1) % order.length];
+
+            try {
+                const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(id)}/status`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ status: next })
+                });
+                if (response.status === 401) { handleExpiredSession(); return; }
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.message || 'Could not change the status.');
+
+                await loadEverything();
+                showToast(result.message, 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        /* ---- wiring ------------------------------------------------------ */
+
+        window.addEventListener('DOMContentLoaded', () => {
             if (!guardOfficerSession()) return;
 
-            document.getElementById('openCreateModalBtn').addEventListener('click', () => toggleCreateModal(true));
-            document.getElementById('closeCreateModalBtn').addEventListener('click', () => toggleCreateModal(false));
-            document.getElementById('cancelCreateBtn').addEventListener('click', () => toggleCreateModal(false));
-            document.getElementById('createManagerForm').addEventListener('submit', createManager);
-            document.getElementById('searchInput').addEventListener('input', renderTable);
-            document.getElementById('refreshBtn').addEventListener('click', loadDirectory);
+            document.getElementById('openCreateGuideBtn').addEventListener('click', () => openGuideModal(null));
+            document.getElementById('closeGuideModalBtn').addEventListener('click', closeGuideModal);
+            document.getElementById('cancelGuideBtn').addEventListener('click', closeGuideModal);
+            document.getElementById('guideForm').addEventListener('submit', saveGuide);
+            document.getElementById('refreshGuidesBtn').addEventListener('click', loadEverything);
+            document.getElementById('guideSearch').addEventListener('input', renderTable);
+            document.getElementById('statusFilter').addEventListener('change', renderTable);
 
-            // Delegated so the buttons survive every re-render of the table.
-            document.getElementById('managerTableBody').addEventListener('click', event => {
-                const button = event.target.closest('[data-edit], [data-password], [data-suspend], [data-delete]');
-                if (!button) return;
-                const { edit, password, suspend, delete: remove } = button.dataset;
-                if (edit) editManager(edit, button);
-                else if (password) issueNewPassword(password, button);
-                else if (suspend) toggleSuspension(suspend, button);
-                else if (remove) deleteManager(remove, button);
-            });
-
-            document.getElementById('createManagerModal').addEventListener('click', event => {
-                if (event.target === document.getElementById('createManagerModal')) toggleCreateModal(false);
+            document.getElementById('guideModal').addEventListener('click', event => {
+                if (event.target === document.getElementById('guideModal')) closeGuideModal();
             });
             document.addEventListener('keydown', event => {
-                if (event.key === 'Escape' && !document.getElementById('createManagerModal').hidden) toggleCreateModal(false);
+                if (event.key === 'Escape' && !document.getElementById('guideModal').hidden) closeGuideModal();
             });
 
-            loadDirectory();
+            document.getElementById('guideTableBody').addEventListener('click', event => {
+                const edit = event.target.closest('[data-edit]');
+                const cycle = event.target.closest('[data-cycle]');
+                if (edit) openGuideModal(allGuides.find(g => String(g._id) === edit.dataset.edit));
+                else if (cycle) cycleStatus(cycle.dataset.cycle);
+            });
+
+            loadEverything();
         });
     </script>
+
 <script>
 /* Collapsed sidebar state, shared across every portal page via one key. */
 (function () {

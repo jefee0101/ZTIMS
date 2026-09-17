@@ -578,6 +578,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
+            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
+                <span class="material-symbols-outlined text-[#FFB300]">hiking</span>
+                <span class="sidebar-label">Tourist Guides</span>
+            </a>
             <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
                 <span class="material-symbols-outlined text-[#FFB300]">settings</span>
                 <span class="sidebar-label">Settings</span>
@@ -899,6 +903,18 @@ body { overflow-x: hidden; }
                     </div>
 
                     <p id="editLocStatus" hidden class="text-[11px] text-on-surface-variant"></p>
+                </div>
+
+
+                <div class="pt-2">
+                    <label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">
+                        <input id="editRequiresGuide" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>
+                        <span class="text-xs font-bold uppercase tracking-wider text-on-surface">Requires a tourist guide</span>
+                    </label>
+                    <p class="text-[11px] text-on-surface-variant mt-1">
+                        Visitors are told a guide is needed and what it costs. Assign the guides themselves
+                        under Tourist Guides.
+                    </p>
                 </div>
 
                 <p id="editSpotError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
@@ -1809,6 +1825,7 @@ body { overflow-x: hidden; }
             document.getElementById('editLabel').value = spot.label || '';
             document.getElementById('editTravelFee').value = spot.travelFee ?? '';
             document.getElementById('editEntranceFee').value = spot.entranceFee ?? '';
+            document.getElementById('editRequiresGuide').checked = Boolean(spot.requiresGuide);
             fillEditBooking(spot);
             if (editSchedulePicker) editSchedulePicker.fill(spot);
 
@@ -1845,6 +1862,7 @@ body { overflow-x: hidden; }
                 travelFee: parseFloat(document.getElementById('editTravelFee').value) || 0,
                 entranceFee: parseFloat(document.getElementById('editEntranceFee').value) || 0,
                 bookingUrl: editBookingValue(),
+                requiresGuide: document.getElementById('editRequiresGuide').checked,
                 images: editPhotos,
                 imageUrl: editPhotos[0] || '',     // photo one is the cover
                 ...(editLocationPicker ? editLocationPicker.payload() : {})

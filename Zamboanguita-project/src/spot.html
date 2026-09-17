@@ -650,6 +650,71 @@ body { overflow-x: hidden; }
         `;
     }
 
+    /* ===== TOURIST GUIDE REQUIREMENT ====================================
+       Some spots may only be visited with a municipal guide. The API reports the
+       requirement without naming anyone: a visitor does not pick their guide, the
+       Tourism Office assigns one, so no guide's name or number is served here.
+
+       A fee range rather than a single figure, because two guides at one spot may
+       charge differently and quoting one of them would be quoting the wrong one. */
+    async function renderGuideRequirement(spotId) {
+        const slot = document.getElementById('guideRequirement');
+        if (!slot) return;
+
+        let info = null;
+        try {
+            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/guide-requirement`);
+            if (response.ok) info = await response.json();
+        } catch (error) {
+            /* Never invent a requirement. Silence is the safe failure here. */
+        }
+        if (!info || !info.requiresGuide) return;
+
+        const fee = info.feeFrom === null
+            ? 'Set by the Municipal Tourism Office'
+            : info.feeFrom === info.feeTo
+                ? formatPeso(info.feeFrom)
+                : `${formatPeso(info.feeFrom)} – ${formatPeso(info.feeTo)}`;
+
+        const group = info.maxGroupSize
+            ? `${info.maxGroupSize} person${info.maxGroupSize === 1 ? '' : 's'}`
+            : '—';
+
+        // Said plainly when nobody is free: better than a booking button that
+        // leads to a request the office cannot fulfil.
+        const availability = info.guidesAvailable > 0
+            ? ''
+            : `<p class="text-xs text-amber-400 mt-3">
+                   No guide is free for this spot at the moment. Contact the Municipal Tourism Office to arrange a visit.
+               </p>`;
+
+        slot.innerHTML = `
+            <section class="bg-surface border border-secondary/40 rounded-xl p-5 space-y-3">
+                <h2 class="text-lg font-display font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary">hiking</span> Tourist guide required
+                </h2>
+                <p class="text-sm text-on-surface-variant">
+                    The municipality requires visitors to this spot to be accompanied by an accredited tourist guide.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Guide fee</p>
+                        <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(fee)}</p>
+                    </div>
+                    <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Maximum group</p>
+                        <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(group)}</p>
+                    </div>
+                </div>
+                <p class="text-sm text-on-surface-variant flex items-start gap-2">
+                    <span class="material-symbols-outlined !text-lg text-secondary shrink-0">payments</span>
+                    <span>Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.</span>
+                </p>
+                ${availability}
+            </section>
+        `;
+    }
+
     function wireDirections(spot) {
         const destination = spotPoint(spot);
         const openButton = document.getElementById('getDirectionsBtn');
@@ -929,6 +994,8 @@ body { overflow-x: hidden; }
                         </div>
                     </div>
 
+                    <div id="guideRequirement"></div>
+
                     ${directionsSection(spot)}
 
                 </div>
@@ -1033,6 +1100,7 @@ body { overflow-x: hidden; }
             document.title = `${spot.title} | Zamboanguita`;
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
+            renderGuideRequirement(spotId);
         } catch (error) {
             console.error('❌ Failed to load destination:', error);
             doneLoading();
