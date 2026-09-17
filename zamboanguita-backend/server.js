@@ -1761,5 +1761,12 @@ app.listen(PORT, () => {
     console.log(`=================================================`);
     console.log(` 🚀 Server actively streaming data loops at:`);
     console.log(`     👉 http://localhost:${PORT}`);
+    // Says which routing service this process actually loaded. ROUTING_PROVIDER is
+    // decided once at startup from the environment, so a key added to the host after
+    // the process began shows nothing until it restarts — this line is how you tell
+    // the two apart without guessing.
+    console.log(ORS_API_KEY
+        ? ` 🧭 Travel directions: OpenRouteService (key ending ...${ORS_API_KEY.slice(-4)}) — car, bicycle, walking`
+        : ` 🧭 Travel directions: OSRM demo server — car only. Set ORS_API_KEY for bicycle and walking.`);
     console.log(`=================================================`);
 });
