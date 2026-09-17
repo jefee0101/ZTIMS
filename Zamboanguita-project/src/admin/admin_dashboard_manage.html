@@ -659,7 +659,7 @@ body { overflow-x: hidden; }
             </div>
 
             <!-- Summary of what is live -->
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Published</p>
                     <h5 id="statTotal" class="text-3xl font-black text-on-surface">—</h5>
@@ -669,11 +669,6 @@ body { overflow-x: hidden; }
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Kept by the office</p>
                     <h5 id="statOffice" class="text-3xl font-black text-on-surface">—</h5>
                     <p class="text-xs text-on-surface-variant mt-1"><span id="statManaged">0</span> run by managers</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Average rating</p>
-                    <h5 id="statRating" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1"><span id="statReviews">0</span> reviews in total</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Need attention</p>
@@ -1375,7 +1370,6 @@ body { overflow-x: hidden; }
         const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
 
         let allSpots = [];          // straight from the database
-        let reviewStats = {};       // spot id and title -> { count, total }
         let activeCategory = "ALL";
 
         function authHeaders(extra) {
@@ -1579,62 +1573,6 @@ body { overflow-x: hidden; }
             }
         }
 
-        /* ===== REVIEW TOTALS =====
-           Reviews point at a spot by reference when they are new, and by the spot's
-           name when they predate that reference, so both are indexed here. */
-        function indexReviews(reviews) {
-            const stats = {};
-            // Keyed by review id so a review filed under both its spot reference and
-            // the spot's name is still only ever counted once.
-            const add = (key, review) => {
-                if (!key) return;
-                stats[key] = stats[key] || new Map();
-                stats[key].set(String(review._id), Number(review.rating) || 0);
-            };
-            reviews
-                // The officer's figures should match what visitors see, and visitors
-                // only ever see approved reviews.
-                .filter(review => (review.status || 'approved') === 'approved')
-                .forEach(review => {
-                    add(String(review.spotId || ''), review);
-                    add(normalisedTitle(review.destinationId), review);
-                });
-            return stats;
-        }
-
-        function ratingFor(spot) {
-            const merged = new Map([
-                ...(reviewStats[String(spot._id)] || new Map()),
-                ...(reviewStats[normalisedTitle(spot.title)] || new Map())
-            ]);
-            if (merged.size === 0) return { count: 0, average: 0 };
-
-            let total = 0;
-            merged.forEach(rating => { total += rating; });
-            return { count: merged.size, average: total / merged.size };
-        }
-
-        function photoCount(spot) {
-            if (Array.isArray(spot.images) && spot.images.length) return spot.images.length;
-            return spot.imageUrl ? 1 : 0;
-        }
-
-        // What an officer would chase the manager about.
-        function completenessIssues(spot) {
-            const issues = [];
-            if (photoCount(spot) === 0) issues.push('No photo');
-            if (!String(spot.description || '').trim()) issues.push('No description');
-            return issues;
-        }
-
-        function starRow(rating) {
-            const rounded = Math.round(rating);
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                stars += `<span class="material-symbols-outlined !text-sm ${i <= rounded ? 'text-[#FFB300]' : 'text-on-surface-variant/30'}" style="font-variation-settings:'FILL' ${i <= rounded ? 1 : 0};">star</span>`;
-            }
-            return stars;
-        }
 
         function managerOf(spot) {
             return String(spot.managerName || '').trim();
@@ -1662,21 +1600,11 @@ body { overflow-x: hidden; }
             const managed = allSpots.filter(spot => managerOf(spot)).length;
             const incomplete = allSpots.filter(spot => completenessIssues(spot).length > 0).length;
 
-            let reviewTotal = 0;
-            let ratingSum = 0;
-            allSpots.forEach(spot => {
-                const { count, average } = ratingFor(spot);
-                reviewTotal += count;
-                ratingSum += average * count;
-            });
-
             document.getElementById('statTotal').textContent = allSpots.length;
             document.getElementById('statSpots').textContent = allSpots.length - stays;
             document.getElementById('statStays').textContent = stays;
             document.getElementById('statOffice').textContent = allSpots.length - managed;
             document.getElementById('statManaged').textContent = managed;
-            document.getElementById('statRating').textContent = reviewTotal ? (ratingSum / reviewTotal).toFixed(1) : '—';
-            document.getElementById('statReviews').textContent = reviewTotal;
             document.getElementById('statIncomplete').textContent = incomplete;
         }
 
@@ -1701,7 +1629,6 @@ body { overflow-x: hidden; }
             }
 
             container.innerHTML = spots.map(spot => {
-                const { count, average } = ratingFor(spot);
                 const issues = completenessIssues(spot);
                 const photos = photoCount(spot);
                 const manager = managerOf(spot);
@@ -1739,9 +1666,6 @@ body { overflow-x: hidden; }
                             <span class="flex items-center gap-1.5">
                                 <span class="material-symbols-outlined !text-sm">${manager ? 'storefront' : 'account_balance'}</span>
                                 ${manager ? escapeHtml(manager) : 'Tourism Office'}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                ${count ? `${starRow(average)}<b class="text-on-surface ml-1">${average.toFixed(1)}</b> (${count})` : '<span class="opacity-60">No reviews yet</span>'}
                             </span>
                             <span>Travel <b class="text-on-surface">${formatPeso(spot.travelFee)}</b></span>
                             <span>Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
@@ -1978,21 +1902,9 @@ body { overflow-x: hidden; }
             const doneLoading = showLoading(container, 'Loading published destinations...');
 
             try {
-                const [spotsResponse, reviewsResponse] = await Promise.all([
-                    fetch(`${API_BASE}/spots`, { headers: authHeaders() }),
-                    fetch(`${API_BASE}/reviews`, { headers: authHeaders() }).catch(() => null)
-                ]);
-
+                const spotsResponse = await fetch(`${API_BASE}/spots`, { headers: authHeaders() });
                 if (!spotsResponse.ok) throw new Error(`The server returned status ${spotsResponse.status}.`);
                 allSpots = await spotsResponse.json();
-
-                // Ratings are a nice-to-have; a failure there must not empty the page.
-                let reviews = [];
-                if (reviewsResponse && reviewsResponse.ok) {
-                    const payload = await reviewsResponse.json().catch(() => []);
-                    reviews = Array.isArray(payload) ? payload : [];
-                }
-                reviewStats = indexReviews(reviews);
 
                 doneLoading();
                 render();
@@ -2000,7 +1912,6 @@ body { overflow-x: hidden; }
                 console.error('❌ Could not load destinations:', error);
                 doneLoading();
                 allSpots = [];
-                reviewStats = {};
                 renderSummary();
                 container.innerHTML = `
                     <div class="text-center py-20 px-6">

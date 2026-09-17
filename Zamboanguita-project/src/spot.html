@@ -497,8 +497,8 @@ body { overflow-x: hidden; }
             `;
         }
 
-        // No booking link on file — give the visitor a way to reach the resort
-        // instead of a button that goes nowhere.
+        // No booking link on file. If the establishment left contact details, they
+        // are worth showing; otherwise there is nothing useful to say here.
         const contactLines = [];
         if (managerName(establishment)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(establishment))}</p>`);
         // The person to ask for, when the office recorded one.
@@ -517,11 +517,16 @@ body { overflow-x: hidden; }
             </a>`);
         }
 
+        // Booking is opt-in, so no link is a deliberate choice rather than a gap.
+        // With nobody to put the visitor in touch with, saying so adds nothing —
+        // the panel simply does not appear.
+        if (contactLines.length === 0) return '';
+
         return `
             <div class="w-full bg-surface-container-high border border-outline-variant/30 rounded-2xl py-5 px-4 text-center space-y-2">
-                <span class="material-symbols-outlined !text-2xl text-on-surface-variant">info</span>
-                <p class="text-sm text-on-surface-variant">Online booking isn't set up for this destination yet.</p>
-                ${contactLines.length ? contactLines.join('') : '<p class="text-xs text-on-surface-variant">Contact the Zamboanguita tourism office for arrangements.</p>'}
+                <span class="material-symbols-outlined !text-2xl text-on-surface-variant">call</span>
+                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Get in touch</p>
+                ${contactLines.join('')}
             </div>
         `;
     }
