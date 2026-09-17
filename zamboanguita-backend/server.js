@@ -312,6 +312,59 @@ const TouristGuideSchema = new mongoose.Schema({
 
 const TouristGuide = mongoose.model('TouristGuide', TouristGuideSchema);
 
+// 7. Guide booking — submitted by a visitor with no ZTIMS account.
+//    The reference is the visitor's only handle on it: they quote it at the
+//    Municipal Tourism Office, pay there, and the officer confirms it.
+const BOOKING_STATUSES = ['pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show'];
+
+const GuideBookingSchema = new mongoose.Schema({
+    reference: { type: String, required: true, unique: true, index: true },
+
+    // Where and when. The spot is fixed at submission; the visitor does not pick
+    // a guide, so guideId stays null until the Tourism Office assigns one.
+    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', required: true, index: true },
+    guideId: { type: mongoose.Schema.Types.ObjectId, ref: 'TouristGuide', default: null, index: true },
+
+    // Only what is needed to hold a booking and recognise the person at the
+    // counter. No account is created from any of this.
+    fullName: { type: String, required: true, trim: true },
+    contactNumber: { type: String, required: true, trim: true },
+    email: { type: String, default: "", lowercase: true, trim: true },
+    visitors: { type: Number, required: true, min: 1 },
+    preferredDate: { type: String, required: true },   // YYYY-MM-DD, as the form sends it
+    preferredTime: { type: String, required: true },   // HH:MM, 24-hour
+    notes: { type: String, default: "" },
+
+    //   pending_payment — submitted, not yet paid for at the office
+    //   confirmed       — the officer recorded payment and accepted it
+    //   cancelled / completed / no_show — after the fact
+    // Nothing is ever deleted; a booking that came to nothing is recorded as such.
+    status: { type: String, enum: BOOKING_STATUSES, default: 'pending_payment', index: true },
+    statusNote: { type: String, default: "" },
+    statusUpdatedAt: { type: Date, default: null }
+}, { timestamps: true });
+
+const GuideBooking = mongoose.model('GuideBooking', GuideBookingSchema);
+
+// 8. Payment — kept separate from the booking, because it is a different event
+//    with its own record: who took the money, when, against which receipt.
+//    There is no online payment anywhere in ZTIMS; this is a record of cash
+//    taken at the counter.
+const PaymentSchema = new mongoose.Schema({
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'GuideBooking', required: true, index: true },
+    amount: { type: Number, required: true, min: 0 },
+    method: { type: String, default: 'cash' },
+    receiptNumber: { type: String, default: "" },
+    paidAt: { type: Date, default: Date.now },
+    // The officer who took it, kept by id and email so the record survives the
+    // account being renamed later.
+    recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+    recordedByEmail: { type: String, default: "" },
+    remarks: { type: String, default: "" }
+}, { timestamps: true });
+
+const Payment = mongoose.model('Payment', PaymentSchema);
+
 const requireAuth = (req, res, next) => {
     const authorization = req.get('authorization') || '';
     const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
@@ -1562,6 +1615,364 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
     } catch (error) {
         console.error('❌ Guide requirement failure:', error);
         return res.status(500).json({ success: false, message: 'Could not read the guide requirement.' });
+    }
+});
+
+/* ==========================================
+   4c. GUIDE BOOKINGS AND ONSITE PAYMENT
+   ------------------------------------------
+   A visitor submits a request without any account, gets a reference, and takes
+   it to the Municipal Tourism Office. The officer takes payment at the counter,
+   records it, assigns a guide, and the booking becomes confirmed.
+
+   ZTIMS takes no money. There is no payment gateway here and no field pretending
+   otherwise — a Payment row is the record of cash that changed hands at a desk.
+========================================== */
+
+// Public submission is the one write anyone on the internet can make, so it is
+// held tighter than the browsing routes.
+const bookingRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many booking requests from this connection. Please try again later, or call the Municipal Tourism Office.' }
+});
+
+/**
+ * Builds the next reference for this year: TG-2026-00001, TG-2026-00002, …
+ *
+ * Reads the highest existing one rather than counting rows, so a cancelled or
+ * deleted booking cannot cause a number to be handed out twice. The unique index
+ * on the field is the real guarantee; the caller retries if two submissions race.
+ */
+async function nextBookingReference() {
+    const prefix = `TG-${new Date().getFullYear()}-`;
+    const latest = await GuideBooking
+        .findOne({ reference: new RegExp('^' + prefix) })
+        .sort({ reference: -1 })
+        .select('reference')
+        .lean();
+
+    const previous = latest ? Number(String(latest.reference).slice(prefix.length)) : 0;
+    return prefix + String((Number.isFinite(previous) ? previous : 0) + 1).padStart(5, '0');
+}
+
+// What a visitor may see by quoting a reference. Deliberately no name, phone or
+// email: references run in sequence, so anyone could try the next one along.
+// Enough to confirm the booking is real and know what to do next, nothing more.
+function publicBookingView(booking, spotTitle) {
+    return {
+        reference: booking.reference,
+        spot: spotTitle || '',
+        preferredDate: booking.preferredDate,
+        preferredTime: booking.preferredTime,
+        visitors: booking.visitors,
+        status: booking.status,
+        payment: 'Onsite at the Municipal Tourism Office'
+    };
+}
+
+/**
+ * POST: a visitor asks for a guide. No account, no login, no payment.
+ */
+app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
+    try {
+        const body = req.body || {};
+        const fullName = String(body.fullName || '').trim();
+        const contactNumber = String(body.contactNumber || '').trim();
+        const email = String(body.email || '').trim().toLowerCase();
+        const preferredDate = String(body.preferredDate || '').trim();
+        const preferredTime = String(body.preferredTime || '').trim();
+        const visitors = Math.floor(Number(body.visitors));
+
+        if (!fullName) return res.status(400).json({ success: false, message: 'Please give the name the booking is under.' });
+        if (!contactNumber) return res.status(400).json({ success: false, message: 'A contact number is required so the office can reach you.' });
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'That email address does not look right. Leave it blank if you prefer.' });
+        }
+        if (!Number.isFinite(visitors) || visitors < 1) {
+            return res.status(400).json({ success: false, message: 'How many visitors are coming?' });
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) {
+            return res.status(400).json({ success: false, message: 'Please choose a date.' });
+        }
+        if (!/^\d{2}:\d{2}$/.test(preferredTime)) {
+            return res.status(400).json({ success: false, message: 'Please choose a time.' });
+        }
+        // Compared as text against today in the same format, which avoids a
+        // timezone turning "today" into yesterday for a visitor booking from abroad.
+        if (preferredDate < new Date().toISOString().slice(0, 10)) {
+            return res.status(400).json({ success: false, message: 'That date has already passed.' });
+        }
+
+        const spot = await Spot.findById(body.spotId).populate('managedBy', 'active operationalStatus');
+        if (!spot) return res.status(404).json({ success: false, message: 'That destination could not be found.' });
+        if (!spot.requiresGuide) {
+            return res.status(400).json({ success: false, message: 'This destination does not require a tourist guide, so there is nothing to book.' });
+        }
+        if (!isPubliclyVisible(spot)) {
+            return res.status(404).json({ success: false, message: 'This destination is not open for visits right now.' });
+        }
+
+        // A group larger than any available guide can take would be accepted and
+        // then refused at the counter, so it is refused here instead.
+        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' }).select('maxGroupSize');
+        if (guides.length === 0) {
+            return res.status(409).json({
+                success: false,
+                message: 'No guide is available for this destination at the moment. Please contact the Municipal Tourism Office.'
+            });
+        }
+        const largestGroup = Math.max(...guides.map(g => g.maxGroupSize || 1));
+        if (visitors > largestGroup) {
+            return res.status(400).json({
+                success: false,
+                message: `The largest group a guide here can take is ${largestGroup}. Please contact the Municipal Tourism Office to arrange a bigger party.`
+            });
+        }
+
+        // Two submissions can land on the same number; the unique index catches it
+        // and the next attempt reads a higher one.
+        let booking = null;
+        for (let attempt = 0; attempt < 5 && !booking; attempt++) {
+            try {
+                booking = await GuideBooking.create({
+                    reference: await nextBookingReference(),
+                    spotId: spot._id,
+                    fullName, contactNumber, email, visitors, preferredDate, preferredTime,
+                    notes: String(body.notes || '').trim().slice(0, 1000)
+                });
+            } catch (error) {
+                if (error && error.code === 11000) continue;
+                throw error;
+            }
+        }
+        if (!booking) {
+            return res.status(503).json({ success: false, message: 'The system is busy. Please try again in a moment.' });
+        }
+
+        console.log(`🎟️ Guide booking ${booking.reference} for ${spot.title}`);
+        return res.status(201).json({
+            success: true,
+            message: 'Booking submitted.',
+            booking: publicBookingView(booking, spot.title),
+            instruction: 'Please proceed to the Municipal Tourism Office to complete payment and confirmation.'
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide booking failure:');
+    }
+});
+
+/**
+ * PUBLIC: check a booking by its reference. Non-personal fields only — see
+ * publicBookingView above for why.
+ */
+app.get('/api/guide-bookings/reference/:reference', async (req, res) => {
+    try {
+        const reference = String(req.params.reference || '').trim().toUpperCase();
+        const booking = await GuideBooking.findOne({ reference }).populate('spotId', 'title');
+        if (!booking) return res.status(404).json({ success: false, message: 'No booking found with that reference.' });
+
+        return res.status(200).json({
+            success: true,
+            booking: publicBookingView(booking, booking.spotId ? booking.spotId.title : '')
+        });
+    } catch (error) {
+        console.error('❌ Booking lookup failure:', error);
+        return res.status(500).json({ success: false, message: 'Could not look that up right now.' });
+    }
+});
+
+/* ---- everything below is the Tourism Office's ---------------------------- */
+
+app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
+    try {
+        const query = {};
+        if (BOOKING_STATUSES.includes(req.query.status)) query.status = req.query.status;
+
+        const bookings = await GuideBooking.find(query)
+            .populate('spotId', 'title location')
+            .populate('guideId', 'fullName contactNumber guideFee maxGroupSize status')
+            .sort({ createdAt: -1 })
+            .limit(500);
+
+        // The payment belongs to a separate record, so it is fetched alongside
+        // rather than duplicated onto the booking.
+        const payments = await Payment.find({ bookingId: { $in: bookings.map(b => b._id) } });
+        const byBooking = new Map(payments.map(p => [String(p.bookingId), p]));
+
+        return res.status(200).json(bookings.map(booking => ({
+            ...booking.toObject(),
+            payment: byBooking.get(String(booking._id)) || null
+        })));
+    } catch (error) {
+        console.error('❌ Booking list failure:', error);
+        return res.status(500).json([]);
+    }
+});
+
+/**
+ * PATCH: assign or change the guide on a booking.
+ *
+ * The overlap rule is deliberately narrow: it refuses a guide who already has a
+ * confirmed booking at the same date and time. ZTIMS does not record how long a
+ * tour runs, so anything wider would mean inventing a duration and refusing
+ * bookings on a guess. Other bookings that guide has that day are returned as
+ * information, for the officer to judge.
+ */
+app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
+    try {
+        const booking = await GuideBooking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+
+        if (req.body.guideId === null || req.body.guideId === '') {
+            booking.guideId = null;
+            await booking.save();
+            return res.status(200).json({ success: true, message: 'Guide unassigned.', booking });
+        }
+
+        const guide = await TouristGuide.findById(req.body.guideId);
+        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
+        if (guide.status !== 'available') {
+            return res.status(409).json({ success: false, message: `${guide.fullName} is marked ${guide.status} and cannot take new bookings.` });
+        }
+        if (!guide.assignedSpots.some(id => String(id) === String(booking.spotId))) {
+            return res.status(409).json({ success: false, message: `${guide.fullName} is not assigned to this destination.` });
+        }
+        if (booking.visitors > guide.maxGroupSize) {
+            return res.status(409).json({
+                success: false,
+                message: `This booking is for ${booking.visitors} visitors and ${guide.fullName} takes at most ${guide.maxGroupSize}.`
+            });
+        }
+
+        const clash = await GuideBooking.findOne({
+            _id: { $ne: booking._id },
+            guideId: guide._id,
+            status: 'confirmed',
+            preferredDate: booking.preferredDate,
+            preferredTime: booking.preferredTime
+        }).select('reference');
+        if (clash) {
+            return res.status(409).json({
+                success: false,
+                message: `${guide.fullName} already has confirmed booking ${clash.reference} at that date and time.`
+            });
+        }
+
+        booking.guideId = guide._id;
+        await booking.save();
+
+        const sameDay = await GuideBooking.find({
+            _id: { $ne: booking._id },
+            guideId: guide._id,
+            status: 'confirmed',
+            preferredDate: booking.preferredDate
+        }).select('reference preferredTime');
+
+        console.log(`🧭 ${guide.fullName} assigned to ${booking.reference}`);
+        return res.status(200).json({
+            success: true,
+            message: `${guide.fullName} assigned to ${booking.reference}.`,
+            booking,
+            alsoThatDay: sameDay.map(b => ({ reference: b.reference, time: b.preferredTime }))
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide assignment failure:');
+    }
+});
+
+/**
+ * POST: record money taken at the counter, which confirms the booking.
+ *
+ * Only the Tourism Office can do this. A visitor cannot mark their own booking
+ * paid — that is the whole point of the reference and the counter.
+ */
+app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
+    try {
+        const booking = await GuideBooking.findById(req.params.id).populate('guideId', 'fullName');
+        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+        if (booking.status === 'cancelled') {
+            return res.status(409).json({ success: false, message: 'That booking was cancelled. Reinstate it before recording payment.' });
+        }
+
+        const existing = await Payment.findOne({ bookingId: booking._id });
+        if (existing) {
+            return res.status(409).json({ success: false, message: `Payment for ${booking.reference} was already recorded.` });
+        }
+
+        const amount = Number(req.body.amount);
+        if (!Number.isFinite(amount) || amount < 0) {
+            return res.status(400).json({ success: false, message: 'Enter the amount collected.' });
+        }
+
+        // Read from the account rather than the token: sessions carry only an id
+        // and a role, and a receipt that cannot say who took the money is not a
+        // record of anything.
+        const officer = await Admin.findById(req.auth.sub).select('email');
+
+        const payment = await Payment.create({
+            bookingId: booking._id,
+            amount,
+            method: String(req.body.method || 'cash').trim() || 'cash',
+            receiptNumber: String(req.body.receiptNumber || '').trim(),
+            paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
+            recordedBy: req.auth.sub,
+            recordedByEmail: officer ? officer.email : '',
+            remarks: String(req.body.remarks || '').trim().slice(0, 500)
+        });
+
+        booking.status = 'confirmed';
+        booking.statusUpdatedAt = new Date();
+        await booking.save();
+
+        console.log(`💵 Payment recorded for ${booking.reference} by ${payment.recordedByEmail || req.auth.sub}`);
+        return res.status(201).json({
+            success: true,
+            message: `Payment recorded. ${booking.reference} is confirmed.`,
+            booking,
+            payment
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Payment recording failure:');
+    }
+});
+
+/**
+ * PATCH: move a booking through the rest of its life — cancelled, completed,
+ * or no show. Nothing here deletes a booking.
+ */
+app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
+    try {
+        const status = String(req.body.status || '').trim();
+        if (!BOOKING_STATUSES.includes(status)) {
+            return res.status(400).json({ success: false, message: 'That is not a booking status ZTIMS uses.' });
+        }
+
+        const booking = await GuideBooking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+
+        // Confirmed means paid, and payment is a separate record that this route
+        // does not create. Recording the payment is what confirms a booking.
+        if (status === 'confirmed') {
+            const paid = await Payment.findOne({ bookingId: booking._id });
+            if (!paid) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'Record the onsite payment to confirm this booking.'
+                });
+            }
+        }
+
+        booking.status = status;
+        booking.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
+        booking.statusUpdatedAt = new Date();
+        await booking.save();
+
+        return res.status(200).json({ success: true, message: `${booking.reference} is now ${status.replace('_', ' ')}.`, booking });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Booking status failure:');
     }
 });
 

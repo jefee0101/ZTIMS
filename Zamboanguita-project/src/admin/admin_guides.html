@@ -582,6 +582,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-[#FFB300]">hiking</span>
                 <span class="sidebar-label">Tourist Guides</span>
             </a>
+            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
+                <span class="material-symbols-outlined text-[#FFB300]">confirmation_number</span>
+                <span class="sidebar-label">Guide Bookings</span>
+            </a>
             <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
                 <span class="material-symbols-outlined text-[#FFB300]">settings</span>
                 <span class="sidebar-label">Settings</span>
@@ -662,7 +666,7 @@ body { overflow-x: hidden; }
                         <input id="guideSearch" type="search" placeholder="Search a guide or spot"
                                class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
                     </div>
-                    <select id="statusFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <select id="statusFilter" class="w-full sm:w-auto bg-surface-variant border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="all">All statuses</option>
                         <option value="available">Available</option>
                         <option value="unavailable">Unavailable</option>

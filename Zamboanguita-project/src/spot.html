@@ -302,6 +302,92 @@ body { overflow-x: hidden; }
 
 <!-- Full-size photo viewer. One element reused for every photo, so a spot with
      30 photos still only ever holds one large image in the page. -->
+
+<!-- Booking a municipal guide. No account, no sign-in, and no payment here:
+     the visitor leaves with a reference and pays at the Tourism Office. -->
+<div id="guideBookingModal" hidden class="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-md p-6 sm:p-7 max-h-[95vh] overflow-y-auto relative">
+        <button id="closeBookingModal" aria-label="Close"
+                class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <h3 class="text-xl font-display font-bold text-on-surface mb-1">Book a tourist guide</h3>
+        <p class="text-xs text-on-surface-variant mb-5">
+            No account needed. You will get a reference to bring to the Municipal Tourism Office,
+            where you pay and the booking is confirmed.
+        </p>
+
+        <form id="guideBookingForm" class="space-y-3">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Full name</label>
+                <input id="bookName" type="text" required autocomplete="name"
+                       class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
+                    <input id="bookContact" type="tel" required autocomplete="tel" placeholder="09XX XXX XXXX"
+                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Email <span class="font-normal normal-case">(optional)</span></label>
+                    <input id="bookEmail" type="email" autocomplete="email"
+                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Visitors</label>
+                    <input id="bookVisitors" type="number" min="1" value="1" required
+                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Date</label>
+                    <input id="bookDate" type="date" required
+                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Time</label>
+                    <input id="bookTime" type="time" required value="08:00"
+                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                </div>
+            </div>
+            <p id="bookGroupHint" class="text-[11px] text-on-surface-variant"></p>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
+                <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
+                          class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
+            </div>
+
+            <p class="text-[11px] text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
+                Payment must be completed onsite at the Municipal Tourism Office. ZTIMS does not take payment online.
+                Your guide is assigned by the office once payment is recorded.
+            </p>
+
+            <p id="bookingError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+
+            <button type="submit" id="submitBookingBtn"
+                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform">
+                Submit request
+            </button>
+        </form>
+
+        <div id="bookingResult" hidden class="text-center space-y-3">
+            <span class="material-symbols-outlined !text-5xl text-green-400">task_alt</span>
+            <h4 class="text-lg font-display font-bold text-on-surface">Booking submitted</h4>
+            <p class="text-xs uppercase tracking-widest text-on-surface-variant">Reference</p>
+            <p id="bookingReference" class="text-2xl font-display font-black text-surface-bright tracking-wider select-all"></p>
+            <p id="bookingSummary" class="text-sm text-on-surface-variant"></p>
+            <p class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
+                Please proceed to the Municipal Tourism Office to complete payment and confirmation.
+                Write this reference down — it is how the office finds your booking.
+            </p>
+        </div>
+    </div>
+</div>
+
 <div id="photoLightbox" hidden class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <button id="lightboxClose" aria-label="Close photo"
             class="absolute top-4 right-4 p-3 min-h-[48px] min-w-[48px] rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors flex items-center justify-center">
@@ -711,8 +797,128 @@ body { overflow-x: hidden; }
                     <span>Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.</span>
                 </p>
                 ${availability}
+                ${info.guidesAvailable > 0 ? `
+                <button type="button" id="openBookGuideBtn"
+                        class="w-full sm:w-auto bg-secondary text-white px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+                    <span class="material-symbols-outlined !text-lg">hiking</span> Book a Tourist Guide
+                </button>` : ''}
+
+                <details class="pt-1">
+                    <summary class="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface transition-colors min-h-[44px] flex items-center">
+                        Already booked? Check a reference
+                    </summary>
+                    <div class="flex gap-2 mt-2">
+                        <input id="lookupReference" type="text" placeholder="TG-0000-00000"
+                               class="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface uppercase focus:outline-none focus:ring-1 focus:ring-primary"/>
+                        <button type="button" id="lookupBtn"
+                                class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                            Check
+                        </button>
+                    </div>
+                    <p id="lookupResult" hidden class="text-xs mt-2 text-on-surface-variant"></p>
+                </details>
             </section>
         `;
+
+        wireGuideBooking(spotId, info);
+    }
+
+    /* The booking form itself. No account, no sign-in, no payment — the visitor
+       leaves with a reference and pays at the Municipal Tourism Office. */
+    function wireGuideBooking(spotId, info) {
+        const openBtn = document.getElementById('openBookGuideBtn');
+        const modal = document.getElementById('guideBookingModal');
+
+        document.getElementById('lookupBtn').addEventListener('click', async () => {
+            const box = document.getElementById('lookupResult');
+            const reference = document.getElementById('lookupReference').value.trim().toUpperCase();
+            if (!reference) return;
+
+            box.hidden = false;
+            box.textContent = 'Checking\u2026';
+            try {
+                const response = await fetch(`${API_BASE}/guide-bookings/reference/${encodeURIComponent(reference)}`);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Could not check that reference.');
+
+                const b = data.booking;
+                box.textContent = `${b.reference} — ${b.spot}, ${b.preferredDate} at ${b.preferredTime}, `
+                    + `${b.visitors} visitor${b.visitors === 1 ? '' : 's'}. Status: ${String(b.status).replace('_', ' ')}.`;
+                box.style.color = '';
+            } catch (error) {
+                box.textContent = error.message;
+                box.style.color = '#f87171';
+            }
+        });
+
+        if (!openBtn || !modal) return;
+
+        const maxGroup = info.maxGroupSize || 1;
+        document.getElementById('bookVisitors').max = String(maxGroup);
+        document.getElementById('bookGroupHint').textContent =
+            `Up to ${maxGroup} visitor${maxGroup === 1 ? '' : 's'} per guide.`;
+        // A date in the past is not offered in the first place.
+        document.getElementById('bookDate').min = new Date().toISOString().slice(0, 10);
+
+        function close() { modal.hidden = true; }
+        openBtn.addEventListener('click', () => {
+            document.getElementById('bookingResult').hidden = true;
+            document.getElementById('guideBookingForm').hidden = false;
+            setBookingError('');
+            modal.hidden = false;
+        });
+        document.getElementById('closeBookingModal').addEventListener('click', close);
+        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+        document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) close(); });
+
+        document.getElementById('guideBookingForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            setBookingError('');
+
+            const payload = {
+                spotId,
+                fullName: document.getElementById('bookName').value.trim(),
+                contactNumber: document.getElementById('bookContact').value.trim(),
+                email: document.getElementById('bookEmail').value.trim(),
+                visitors: Number(document.getElementById('bookVisitors').value) || 0,
+                preferredDate: document.getElementById('bookDate').value,
+                preferredTime: document.getElementById('bookTime').value,
+                notes: document.getElementById('bookNotes').value.trim()
+            };
+
+            const button = document.getElementById('submitBookingBtn');
+            const original = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Submitting\u2026';
+
+            try {
+                const response = await fetch(`${API_BASE}/guide-bookings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Could not submit that request.');
+
+                document.getElementById('guideBookingForm').hidden = true;
+                document.getElementById('bookingReference').textContent = data.booking.reference;
+                document.getElementById('bookingSummary').textContent =
+                    `${data.booking.spot} — ${data.booking.preferredDate} at ${data.booking.preferredTime}, `
+                    + `${data.booking.visitors} visitor${data.booking.visitors === 1 ? '' : 's'}.`;
+                document.getElementById('bookingResult').hidden = false;
+            } catch (error) {
+                setBookingError(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = original;
+            }
+        });
+    }
+
+    function setBookingError(message) {
+        const box = document.getElementById('bookingError');
+        box.textContent = message || '';
+        box.hidden = !message;
     }
 
     function wireDirections(spot) {
