@@ -1768,5 +1768,16 @@ app.listen(PORT, () => {
     console.log(ORS_API_KEY
         ? ` 🧭 Travel directions: OpenRouteService (key ending ...${ORS_API_KEY.slice(-4)}) — car, bicycle, walking`
         : ` 🧭 Travel directions: OSRM demo server — car only. Set ORS_API_KEY for bicycle and walking.`);
+
+    if (!ORS_API_KEY) {
+        // Separates "never set on this service" from "set under a slightly wrong
+        // name", which look identical from the outside and have different fixes.
+        // Names only — a value is never printed.
+        const nearby = Object.keys(process.env).filter(name => /ORS|OPENROUTE|ROUTING/i.test(name));
+        console.log(nearby.length
+            ? `    Similar variable names found here: ${nearby.join(', ')}. It must be spelled exactly ORS_API_KEY.`
+            : `    No variable named anything like ORS_API_KEY exists on this service.`);
+        console.log(`    ${Object.keys(process.env).length} environment variables are visible to this process.`);
+    }
     console.log(`=================================================`);
 });
