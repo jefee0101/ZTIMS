@@ -583,13 +583,6 @@ body { overflow-x: hidden; }
                 <form id="addSpotForm" onsubmit="handleSpotSubmit(event)" class="space-y-4 font-body">
                     <input type="hidden" id="editingSpotId" value=""/>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Listing Type</label>
-                        <select id="spotType" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
-                            <option value="spot">Tourist Spot</option>
-                            <option value="accommodation">Accommodation</option>
-                        </select>
-                    </div>
-                    <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Name</label>
                         <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
                     </div>
@@ -1495,7 +1488,6 @@ body { overflow-x: hidden; }
                 document.getElementById('spotModalTitle').textContent = spot ? 'Edit Spot' : 'Add New Spot';
                 document.getElementById('spotSubmitBtn').textContent = spot ? 'Save Changes' : 'Publish Spot';
                 document.getElementById('editingSpotId').value = spot ? spot._id : '';
-                document.getElementById('spotType').value = spot?.type || 'spot';
                 document.getElementById('spotTitle').value = spot?.title || '';
                 document.getElementById('spotDescription').value = spot?.description || '';
                 document.getElementById('spotCategory').value = spot?.category || 'MOUNTAIN';
@@ -1531,7 +1523,6 @@ body { overflow-x: hidden; }
             const editingId = document.getElementById('editingSpotId').value;
             const restoreButton = setButtonLoading(document.getElementById('spotSubmitBtn'), editingId ? 'Saving...' : 'Publishing...');
             const payload = {
-                type: document.getElementById('spotType').value,
                 title: document.getElementById('spotTitle').value.trim(),
                 description: document.getElementById('spotDescription').value.trim(),
                 category: document.getElementById('spotCategory').value,

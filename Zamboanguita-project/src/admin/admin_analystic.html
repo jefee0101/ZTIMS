@@ -755,14 +755,7 @@ body { overflow-x: hidden; }
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Listing Type</label>
-                        <select id="spotTypeSelect" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
-                            <option value="spot">Tourist Spot</option>
-                            <option value="accommodation">Accommodation</option>
-                        </select>
-                    </div>
+                <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Label Tag</label>
                         <input id="spotLabelInput" type="text" placeholder="e.g., Crystal Waters" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
@@ -1777,7 +1770,6 @@ body { overflow-x: hidden; }
             const newSpotPayload = {
                 title, category, imageUrl, description,
                 bookingUrl: quickBookingValue(),
-                type: document.getElementById('spotTypeSelect').value,
                 label: document.getElementById('spotLabelInput').value.trim(),
                 ...(quickSchedulePicker ? quickSchedulePicker.value() : {}),
                 travelFee: parseFloat(document.getElementById('spotTravelFeeInput').value) || 0,

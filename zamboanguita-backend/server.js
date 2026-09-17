@@ -248,6 +248,8 @@ const SpotSchema = new mongoose.Schema({
     // Booking happens on the establishment's own website — this is where "Book Now" sends
     // the visitor. Blank means the detail page shows contact details instead.
     bookingUrl: { type: String, default: "" },
+    // Whether this is a place to stay or a place to visit. Editors no longer ask
+    // for it — it follows the category, which already carries ACCOMMODATION.
     type: { type: String, enum: ['spot', 'accommodation'], default: 'spot' },
     label: { type: String, default: "" },
     workingDays: { type: String, default: "Everyday" },
@@ -1509,6 +1511,23 @@ function parseCoordinate(latitudeInput, longitudeInput) {
  * keeps saying that, rather than being quietly rewritten to its barangay the next
  * time somebody saves it.
  */
+/**
+ * Works out whether a listing is a place to stay or a place to visit, from the
+ * category the editor already asked for. Editors no longer ask separately: with
+ * ACCOMMODATION sitting in the category list, the two questions were the same one
+ * twice, and nothing stopped them contradicting each other.
+ *
+ * An explicit type is still honoured, so anything posting one directly keeps
+ * working, and a payload with no category at all leaves the stored value alone.
+ */
+function deriveSpotType(payload) {
+    if (payload.type) return payload;
+    if (!payload.category) return payload;
+
+    const isStay = String(payload.category).trim().toUpperCase() === 'ACCOMMODATION';
+    return { ...payload, type: isStay ? 'accommodation' : 'spot' };
+}
+
 function deriveSpotLocation(payload, existingLocation) {
     const current = String(payload.location ?? existingLocation ?? '').trim();
     if (current) return payload;
@@ -1557,7 +1576,7 @@ app.post('/api/spots', requireStaff, async (req, res) => {
             ? req.auth.sub
             : (req.body.managedBy || null);
         const scoped = scopeSpotPayload(req.body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
-        const prepared = deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), '');
+        const prepared = deriveSpotType(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
         const newSpot = new Spot({ ...prepared, managedBy });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
@@ -1601,7 +1620,7 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         // Which establishment maintains a listing is never reassigned from here.
         const { managedBy, ownerId, ...updates } = req.body;
         const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
-        Object.assign(spot, deriveSpotLocation(prepared, spot.location));
+        Object.assign(spot, deriveSpotType(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await spot.save();
         return res.status(200).json(savedSpot);
     } catch (error) {
