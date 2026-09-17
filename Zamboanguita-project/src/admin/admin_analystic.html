@@ -723,10 +723,6 @@ body { overflow-x: hidden; }
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Exact Location</label>
-                        <input id="spotLocationInput" type="text" required placeholder="e.g., Poblacion, Zamboanguita" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
-                    </div>
-                    <div>
                         <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Spot Category</label>
                         <select id="spotCategorySelect" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
                             <option value="BEACH / DIVING">Beach / Diving</option>
@@ -742,9 +738,21 @@ body { overflow-x: hidden; }
                     <input id="spotImageUrlInput" type="url" placeholder="e.g., https://images.unsplash.com/... or leave blank" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
                 </div>
 
+
                 <div>
-                    <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Booking Website (URL)</label>
-                    <input id="spotBookingUrlInput" type="url" placeholder="https://resort-site.com/book — leave blank if none" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                    <label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">
+                        <input id="quickTakesBookings" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>
+                        <span class="text-xs font-bold uppercase tracking-wider text-on-surface">This place takes online bookings</span>
+                    </label>
+                    <p class="text-[11px] text-on-surface-variant mt-1">
+                        Leave this off for places visitors simply turn up to. The page then shows contact
+                        details instead of a Book Now button.
+                    </p>
+
+                    <div id="quickBookingRow" hidden class="mt-3">
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Booking website</label>
+                        <input id="quickBookingUrl" type="url" placeholder="https://your-site.com/book" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors"/>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -761,14 +769,33 @@ body { overflow-x: hidden; }
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Working Days</label>
-                        <input id="spotWorkingDaysInput" type="text" placeholder="e.g., Everyday" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Open on</label>
+                        <select id="quickSchedDays" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
+                            <option value="Everyday">Everyday</option>
+                            <option value="Monday to Friday">Monday to Friday</option>
+                            <option value="Monday to Saturday">Monday to Saturday</option>
+                            <option value="Weekends only">Weekends only</option>
+                            <option value="Wednesdays only">Wednesdays only</option>
+                            <option value="__custom__">Other…</option>
+                        </select>
+                        <input id="quickSchedDaysCustom" type="text" hidden placeholder="e.g., Tuesdays and Fridays" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors mt-2"/>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Working Time</label>
-                        <input id="spotWorkingTimeInput" type="text" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors" />
+                        <label class="block text-xs font-bold uppercase text-on-surface-variant mb-1 tracking-wider">Opening hours</label>
+                        <select id="quickSchedHours" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors">
+                            <option value="all">Open all day</option>
+                            <option value="range">Set opening and closing time</option>
+                            <option value="__custom__">Other…</option>
+                        </select>
+                        <div id="quickSchedHoursRow" hidden class="flex items-center gap-2 mt-2">
+                            <input id="quickSchedOpen" type="time" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors flex-1"/>
+                            <span class="text-xs text-on-surface-variant shrink-0">to</span>
+                            <input id="quickSchedClose" type="time" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors flex-1"/>
+                        </div>
+                        <input id="quickSchedHoursCustom" type="text" hidden placeholder="e.g., By appointment" class="w-full bg-[#020F24] border border-outline-variant/40 text-on-surface rounded-xl px-4 py-3 focus:outline-none focus:border-[#2E7D32] transition-colors mt-2"/>
                     </div>
                 </div>
 
@@ -866,6 +893,137 @@ body { overflow-x: hidden; }
 
     <!-- Core Pipeline Synchronization Scripts Block -->
     <!-- ==========================================================================
+     Opening hours picker (shared module)
+     --------------------------------------------------------------------------
+     Days and times used to be free text, which meant every listing spelled them
+     differently — "Everyday", "everyday", "Mon-Fri", "8am-5pm". Now they are
+     chosen, and only written by hand when a place genuinely needs wording none
+     of the presets cover.
+
+     Anything already saved still opens correctly: a value that matches a preset
+     selects it, a recognisable time range fills the two clocks, and anything
+     else drops into the custom box exactly as it was stored.
+     ========================================================================== -->
+<script>
+(function () {
+    const DAY_PRESETS = [
+        'Everyday',
+        'Monday to Friday',
+        'Monday to Saturday',
+        'Weekends only',
+        'Wednesdays only'
+    ];
+
+    function toClock(value) {
+        // "14:30" from an <input type="time"> becomes "2:30 PM", the wording
+        // listings already use.
+        const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+        if (!match) return '';
+        let hour = Number(match[1]);
+        const minutes = match[2];
+        const suffix = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${minutes} ${suffix}`;
+    }
+
+    function toInputTime(clock) {
+        const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(clock || '').trim());
+        if (!match) return '';
+        let hour = Number(match[1]) % 12;
+        if (/PM/i.test(match[3])) hour += 12;
+        return `${String(hour).padStart(2, '0')}:${match[2]}`;
+    }
+
+    /**
+     * Expected ids, all prefixed: <p>Days, <p>DaysCustom, <p>Hours, <p>HoursRow,
+     * <p>Open, <p>Close, <p>HoursCustom.
+     */
+    window.mountSchedulePicker = function (options) {
+        const prefix = options.prefix;
+        const el = suffix => document.getElementById(prefix + suffix);
+
+        const days = el('Days');
+        const daysCustom = el('DaysCustom');
+        const hours = el('Hours');
+        const hoursRow = el('HoursRow');
+        const open = el('Open');
+        const close = el('Close');
+        const hoursCustom = el('HoursCustom');
+
+        if (!days || !hours) return null;
+
+        function paintDays() {
+            daysCustom.hidden = days.value !== '__custom__';
+        }
+
+        function paintHours() {
+            hoursRow.hidden = hours.value !== 'range';
+            hoursCustom.hidden = hours.value !== '__custom__';
+        }
+
+        days.addEventListener('change', paintDays);
+        hours.addEventListener('change', paintHours);
+
+        return {
+            fill: function (spot) {
+                const storedDays = String(spot?.workingDays || '').trim() || 'Everyday';
+                const match = DAY_PRESETS.find(preset => preset.toLowerCase() === storedDays.toLowerCase());
+                if (match) {
+                    days.value = match;
+                    daysCustom.value = '';
+                } else {
+                    days.value = '__custom__';
+                    daysCustom.value = storedDays;
+                }
+                paintDays();
+
+                const storedHours = String(spot?.workingTime || '').trim() || 'All Day';
+                const range = /^(.+?)\s*-\s*(.+)$/.exec(storedHours);
+                const from = range ? toInputTime(range[1]) : '';
+                const to = range ? toInputTime(range[2]) : '';
+
+                if (/^all day$/i.test(storedHours)) {
+                    hours.value = 'all';
+                    open.value = '';
+                    close.value = '';
+                    hoursCustom.value = '';
+                } else if (from && to) {
+                    hours.value = 'range';
+                    open.value = from;
+                    close.value = to;
+                    hoursCustom.value = '';
+                } else {
+                    // Wording no clock can express — "By appointment", say. Kept verbatim.
+                    hours.value = '__custom__';
+                    hoursCustom.value = storedHours;
+                }
+                paintHours();
+            },
+
+            // What the form sends. Falls back to the same defaults the database
+            // uses, so a half-filled picker can never save an empty schedule.
+            value: function () {
+                const chosenDays = days.value === '__custom__'
+                    ? (daysCustom.value.trim() || 'Everyday')
+                    : days.value;
+
+                let chosenHours = 'All Day';
+                if (hours.value === 'range') {
+                    const from = toClock(open.value);
+                    const to = toClock(close.value);
+                    chosenHours = (from && to) ? `${from} - ${to}` : 'All Day';
+                } else if (hours.value === '__custom__') {
+                    chosenHours = hoursCustom.value.trim() || 'All Day';
+                }
+
+                return { workingDays: chosenDays, workingTime: chosenHours };
+            }
+        };
+    };
+})();
+</script>
+
+<!-- ==========================================================================
      Location picker (shared module)
      --------------------------------------------------------------------------
      Lets whoever is responsible for a place mark exactly where it is. ZTIMS
@@ -1178,6 +1336,20 @@ body { overflow-x: hidden; }
         // Built once; the dialog refreshes it on open, because Leaflet measures its
         // container at creation and a closed dialog measures zero.
         const quickLocationPicker = mountLocationPicker({ prefix: 'quickLoc', apiBase: BASE_API_URL });
+        const quickSchedulePicker = mountSchedulePicker({ prefix: 'quickSched' });
+
+        /* Booking is opt-in: most municipal spots are simply turned up to. */
+        function quickBookingValue() {
+            return document.getElementById('quickTakesBookings').checked
+                ? document.getElementById('quickBookingUrl').value.trim()
+                : '';      // switched off means no booking link, whatever the box holds
+        }
+        (function wireQuickBooking() {
+            const takes = document.getElementById('quickTakesBookings');
+            takes.addEventListener('change', function () {
+                document.getElementById('quickBookingRow').hidden = !takes.checked;
+            });
+        })();
         const MANAGERS_URL = `${BASE_API_URL}/establishment-managers`;
         const USERS_URL = `${BASE_API_URL}/users`;
         const REVIEWS_URL = `${BASE_API_URL}/reviews`;
@@ -1533,11 +1705,14 @@ body { overflow-x: hidden; }
             document.getElementById('addSpotModal').classList.remove('hidden');
             // After the dialog is on screen, so the map can measure itself.
             if (quickLocationPicker) quickLocationPicker.refresh();
+            if (quickSchedulePicker) quickSchedulePicker.fill(null);
         }
         function closeAddSpotModal() {
             document.getElementById('addSpotModal').classList.add('hidden');
             document.getElementById('addSpotForm').reset();
             if (quickLocationPicker) quickLocationPicker.fill(null);
+            if (quickSchedulePicker) quickSchedulePicker.fill(null);
+            document.getElementById('quickBookingRow').hidden = true;
         }
 
         async function loadSpotsPreview() {
@@ -1595,18 +1770,16 @@ body { overflow-x: hidden; }
             e.preventDefault();
 
             const title = document.getElementById('spotTitleInput').value.trim();
-            const location = document.getElementById('spotLocationInput').value.trim();
             const category = document.getElementById('spotCategorySelect').value;
             const imageUrl = document.getElementById('spotImageUrlInput').value.trim();
             const description = document.getElementById('spotDescriptionTextarea').value.trim();
 
-            const bookingUrl = document.getElementById('spotBookingUrlInput').value.trim();
             const newSpotPayload = {
-                title, location, category, imageUrl, description, bookingUrl,
+                title, category, imageUrl, description,
+                bookingUrl: quickBookingValue(),
                 type: document.getElementById('spotTypeSelect').value,
                 label: document.getElementById('spotLabelInput').value.trim(),
-                workingDays: document.getElementById('spotWorkingDaysInput').value.trim() || 'Everyday',
-                workingTime: document.getElementById('spotWorkingTimeInput').value.trim() || 'All Day',
+                ...(quickSchedulePicker ? quickSchedulePicker.value() : {}),
                 travelFee: parseFloat(document.getElementById('spotTravelFeeInput').value) || 0,
                 entranceFee: parseFloat(document.getElementById('spotEntranceFeeInput').value) || 0,
                 // The cover doubles as the gallery's first photo, the same shape

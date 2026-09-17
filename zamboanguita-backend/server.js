@@ -226,7 +226,9 @@ const MAX_SPOT_IMAGES = 30;
 //    Manager account.
 const SpotSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    location: { type: String, required: true },
+    // The short place label on cards and in search. Editors no longer ask for it
+    // separately — it is filled from the Location Information below.
+    location: { type: String, required: [true, 'Fill in the Location Information so the listing has a place to show.'] },
     category: { type: String, required: true },
     description: { type: String, required: true },
     // Cover image, shown on cards and at the top of the detail page. Kept as its own
@@ -1499,6 +1501,25 @@ function parseCoordinate(latitudeInput, longitudeInput) {
  * has no map — cannot blank a location someone already set. Latitude and longitude
  * are only accepted as a valid pair: half a pair would put a marker in the sea.
  */
+/**
+ * Fills in the short place label shown on cards from the Location Information the
+ * editor already collects, so nobody is asked for the same place twice.
+ *
+ * It only ever fills a blank. A listing that already says "Zamboanguita Proper"
+ * keeps saying that, rather than being quietly rewritten to its barangay the next
+ * time somebody saves it.
+ */
+function deriveSpotLocation(payload, existingLocation) {
+    const current = String(payload.location ?? existingLocation ?? '').trim();
+    if (current) return payload;
+
+    const derived = [payload.barangay, payload.address, payload.municipality]
+        .map(part => String(part || '').trim())
+        .find(Boolean);
+
+    return derived ? { ...payload, location: derived } : payload;
+}
+
 function normaliseSpotLocation(payload) {
     const result = { ...payload };
 
@@ -1536,7 +1557,8 @@ app.post('/api/spots', requireStaff, async (req, res) => {
             ? req.auth.sub
             : (req.body.managedBy || null);
         const scoped = scopeSpotPayload(req.body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
-        const newSpot = new Spot({ ...normaliseSpotLocation(normaliseSpotImages(scoped)), managedBy });
+        const prepared = deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), '');
+        const newSpot = new Spot({ ...prepared, managedBy });
         const savedSpot = await newSpot.save();
         return res.status(201).json(savedSpot);
     } catch (error) {
@@ -1578,7 +1600,8 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
 
         // Which establishment maintains a listing is never reassigned from here.
         const { managedBy, ownerId, ...updates } = req.body;
-        Object.assign(spot, normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope))));
+        const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
+        Object.assign(spot, deriveSpotLocation(prepared, spot.location));
         const savedSpot = await spot.save();
         return res.status(200).json(savedSpot);
     } catch (error) {

@@ -594,10 +594,6 @@ body { overflow-x: hidden; }
                         <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Location</label>
-                        <input type="text" id="spotLocation" placeholder="e.g., Brgy. Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                    </div>
-                    <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
                         <textarea id="spotDescription" placeholder="Describe your spot or accommodation..." rows="3" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" required></textarea>
                     </div>
@@ -616,16 +612,35 @@ body { overflow-x: hidden; }
                             <input type="text" id="spotLabel" placeholder="e.g., Crystal Waters" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Days</label>
-                            <input type="text" id="spotWorkingDays" placeholder="e.g., Everyday" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Working Time</label>
-                            <input type="text" id="spotWorkingTime" placeholder="e.g., 8:00 AM - 5:00 PM" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Open on</label>
+                        <select id="spotSchedDays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                            <option value="Everyday">Everyday</option>
+                            <option value="Monday to Friday">Monday to Friday</option>
+                            <option value="Monday to Saturday">Monday to Saturday</option>
+                            <option value="Weekends only">Weekends only</option>
+                            <option value="Wednesdays only">Wednesdays only</option>
+                            <option value="__custom__">Other…</option>
+                        </select>
+                        <input id="spotSchedDaysCustom" type="text" hidden placeholder="e.g., Tuesdays and Fridays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary mt-2"/>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Opening hours</label>
+                        <select id="spotSchedHours" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                            <option value="all">Open all day</option>
+                            <option value="range">Set opening and closing time</option>
+                            <option value="__custom__">Other…</option>
+                        </select>
+                        <div id="spotSchedHoursRow" hidden class="flex items-center gap-2 mt-2">
+                            <input id="spotSchedOpen" type="time" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
+                            <span class="text-xs text-on-surface-variant shrink-0">to</span>
+                            <input id="spotSchedClose" type="time" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
+                        </div>
+                        <input id="spotSchedHoursCustom" type="text" hidden placeholder="e.g., By appointment" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary mt-2"/>
+                    </div>
+                </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
@@ -662,11 +677,22 @@ body { overflow-x: hidden; }
                         <p id="photoStatus" hidden class="text-[11px] mt-2 text-on-surface-variant"></p>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking Website</label>
-                        <input type="url" id="spotBookingUrl" placeholder="https://your-resort.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        <p class="text-[11px] text-on-surface-variant mt-1.5">Where "Book Now" sends visitors. Leave blank to show your phone number instead.</p>
+
+                <div>
+                    <label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">
+                        <input id="spotTakesBookings" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>
+                        <span class="text-xs font-bold uppercase tracking-wider text-on-surface">This place takes online bookings</span>
+                    </label>
+                    <p class="text-[11px] text-on-surface-variant mt-1">
+                        Leave this off for places visitors simply turn up to. The page then shows contact
+                        details instead of a Book Now button.
+                    </p>
+
+                    <div id="spotBookingRow" hidden class="mt-3">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking website</label>
+                        <input id="spotBookingUrl" type="url" placeholder="https://your-site.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
                     </div>
+                </div>
 
                 <div class="pt-4 border-t border-outline-variant/30 space-y-3">
                     <div class="flex items-center gap-2">
@@ -747,6 +773,137 @@ body { overflow-x: hidden; }
             </div>
         </div>
     </main>
+
+<!-- ==========================================================================
+     Opening hours picker (shared module)
+     --------------------------------------------------------------------------
+     Days and times used to be free text, which meant every listing spelled them
+     differently — "Everyday", "everyday", "Mon-Fri", "8am-5pm". Now they are
+     chosen, and only written by hand when a place genuinely needs wording none
+     of the presets cover.
+
+     Anything already saved still opens correctly: a value that matches a preset
+     selects it, a recognisable time range fills the two clocks, and anything
+     else drops into the custom box exactly as it was stored.
+     ========================================================================== -->
+<script>
+(function () {
+    const DAY_PRESETS = [
+        'Everyday',
+        'Monday to Friday',
+        'Monday to Saturday',
+        'Weekends only',
+        'Wednesdays only'
+    ];
+
+    function toClock(value) {
+        // "14:30" from an <input type="time"> becomes "2:30 PM", the wording
+        // listings already use.
+        const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+        if (!match) return '';
+        let hour = Number(match[1]);
+        const minutes = match[2];
+        const suffix = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${minutes} ${suffix}`;
+    }
+
+    function toInputTime(clock) {
+        const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(clock || '').trim());
+        if (!match) return '';
+        let hour = Number(match[1]) % 12;
+        if (/PM/i.test(match[3])) hour += 12;
+        return `${String(hour).padStart(2, '0')}:${match[2]}`;
+    }
+
+    /**
+     * Expected ids, all prefixed: <p>Days, <p>DaysCustom, <p>Hours, <p>HoursRow,
+     * <p>Open, <p>Close, <p>HoursCustom.
+     */
+    window.mountSchedulePicker = function (options) {
+        const prefix = options.prefix;
+        const el = suffix => document.getElementById(prefix + suffix);
+
+        const days = el('Days');
+        const daysCustom = el('DaysCustom');
+        const hours = el('Hours');
+        const hoursRow = el('HoursRow');
+        const open = el('Open');
+        const close = el('Close');
+        const hoursCustom = el('HoursCustom');
+
+        if (!days || !hours) return null;
+
+        function paintDays() {
+            daysCustom.hidden = days.value !== '__custom__';
+        }
+
+        function paintHours() {
+            hoursRow.hidden = hours.value !== 'range';
+            hoursCustom.hidden = hours.value !== '__custom__';
+        }
+
+        days.addEventListener('change', paintDays);
+        hours.addEventListener('change', paintHours);
+
+        return {
+            fill: function (spot) {
+                const storedDays = String(spot?.workingDays || '').trim() || 'Everyday';
+                const match = DAY_PRESETS.find(preset => preset.toLowerCase() === storedDays.toLowerCase());
+                if (match) {
+                    days.value = match;
+                    daysCustom.value = '';
+                } else {
+                    days.value = '__custom__';
+                    daysCustom.value = storedDays;
+                }
+                paintDays();
+
+                const storedHours = String(spot?.workingTime || '').trim() || 'All Day';
+                const range = /^(.+?)\s*-\s*(.+)$/.exec(storedHours);
+                const from = range ? toInputTime(range[1]) : '';
+                const to = range ? toInputTime(range[2]) : '';
+
+                if (/^all day$/i.test(storedHours)) {
+                    hours.value = 'all';
+                    open.value = '';
+                    close.value = '';
+                    hoursCustom.value = '';
+                } else if (from && to) {
+                    hours.value = 'range';
+                    open.value = from;
+                    close.value = to;
+                    hoursCustom.value = '';
+                } else {
+                    // Wording no clock can express — "By appointment", say. Kept verbatim.
+                    hours.value = '__custom__';
+                    hoursCustom.value = storedHours;
+                }
+                paintHours();
+            },
+
+            // What the form sends. Falls back to the same defaults the database
+            // uses, so a half-filled picker can never save an empty schedule.
+            value: function () {
+                const chosenDays = days.value === '__custom__'
+                    ? (daysCustom.value.trim() || 'Everyday')
+                    : days.value;
+
+                let chosenHours = 'All Day';
+                if (hours.value === 'range') {
+                    const from = toClock(open.value);
+                    const to = toClock(close.value);
+                    chosenHours = (from && to) ? `${from} - ${to}` : 'All Day';
+                } else if (hours.value === '__custom__') {
+                    chosenHours = hoursCustom.value.trim() || 'All Day';
+                }
+
+                return { workingDays: chosenDays, workingTime: chosenHours };
+            }
+        };
+    };
+})();
+</script>
 
 <!-- ==========================================================================
      Location picker (shared module)
@@ -1042,6 +1199,27 @@ body { overflow-x: hidden; }
         // Wired up once; the dialog refreshes it each time it opens, because Leaflet
         // measures its container on creation and a closed dialog measures zero.
         const locationPicker = mountLocationPicker({ prefix: 'spotLoc', apiBase: API_BASE });
+        const schedulePicker = mountSchedulePicker({ prefix: 'spotSched' });
+
+        /* Booking is opt-in: plenty of places visitors simply turn up to have no
+           website to send them to, and an empty URL box invited a guess. */
+        function wireBookingSwitch() {
+            const takes = document.getElementById('spotTakesBookings');
+            const row = document.getElementById('spotBookingRow');
+            takes.addEventListener('change', function () { row.hidden = !takes.checked; });
+        }
+        function fillBooking(spot) {
+            const takes = document.getElementById('spotTakesBookings');
+            const url = (spot && spot.bookingUrl) || '';
+            takes.checked = Boolean(url);
+            document.getElementById('spotBookingUrl').value = url;
+            document.getElementById('spotBookingRow').hidden = !takes.checked;
+        }
+        function bookingValue() {
+            return document.getElementById('spotTakesBookings').checked
+                ? document.getElementById('spotBookingUrl').value.trim()
+                : '';      // switched off means no booking link, whatever the box holds
+        }
         let mySpots = [];
         let loadFailed = false;
         let loadError = '';
@@ -1319,15 +1497,13 @@ body { overflow-x: hidden; }
                 document.getElementById('editingSpotId').value = spot ? spot._id : '';
                 document.getElementById('spotType').value = spot?.type || 'spot';
                 document.getElementById('spotTitle').value = spot?.title || '';
-                document.getElementById('spotLocation').value = spot?.location || '';
                 document.getElementById('spotDescription').value = spot?.description || '';
                 document.getElementById('spotCategory').value = spot?.category || 'MOUNTAIN';
                 document.getElementById('spotLabel').value = spot?.label || '';
-                document.getElementById('spotWorkingDays').value = spot?.workingDays || '';
-                document.getElementById('spotWorkingTime').value = spot?.workingTime || '';
                 document.getElementById('spotTravelFee').value = spot?.travelFee ?? '';
                 document.getElementById('spotEntranceFee').value = spot?.entranceFee ?? '';
-                document.getElementById('spotBookingUrl').value = spot?.bookingUrl || '';
+                fillBooking(spot);
+                if (schedulePicker) schedulePicker.fill(spot);
                 if (locationPicker) { locationPicker.fill(spot); locationPicker.refresh(); }
 
                 // Spots saved before galleries existed have only a cover image;
@@ -1341,6 +1517,8 @@ body { overflow-x: hidden; }
                 modal.classList.remove('flex');
                 modal.classList.add('hidden');
                 document.getElementById('addSpotForm').reset();
+                fillBooking(null);
+                if (schedulePicker) schedulePicker.fill(null);
                 if (locationPicker) locationPicker.fill(null);
                 spotImages = [];
                 setPhotoStatus('');
@@ -1355,17 +1533,15 @@ body { overflow-x: hidden; }
             const payload = {
                 type: document.getElementById('spotType').value,
                 title: document.getElementById('spotTitle').value.trim(),
-                location: document.getElementById('spotLocation').value.trim(),
                 description: document.getElementById('spotDescription').value.trim(),
                 category: document.getElementById('spotCategory').value,
                 label: document.getElementById('spotLabel').value.trim(),
-                workingDays: document.getElementById('spotWorkingDays').value.trim() || 'Everyday',
-                workingTime: document.getElementById('spotWorkingTime').value.trim() || 'All Day',
+                ...(schedulePicker ? schedulePicker.value() : {}),
                 travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
                 entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
                 images: spotImages,
                 imageUrl: spotImages[0] || '',      // photo one is the cover
-                bookingUrl: document.getElementById('spotBookingUrl').value.trim(),
+                bookingUrl: bookingValue(),
                 ...(locationPicker ? locationPicker.payload() : {})
             };
 
@@ -1488,6 +1664,7 @@ body { overflow-x: hidden; }
             if (!guardEstablishmentManagerSession()) return;
 
             wirePhotoControls();
+            wireBookingSwitch();
             renderPhotoGallery();
 
             loadMySpots();
