@@ -431,6 +431,31 @@ body { overflow-x: hidden; }
               </div>
             </section>
 
+            <!-- ============ THE TOURISM MAP ============
+                 Everything published, on one map, from the same records the grid
+                 above is built from — no second list to keep in step. The tiles
+                 are OpenStreetMap, the drawing is Leaflet, and the markers are
+                 ZTIMS's own, coloured by its own categories. Routing is not done
+                 here: a marker's "Get directions" opens the listing's page, where
+                 the existing OpenRouteService flow lives. -->
+            <section class="py-8 sm:py-10 bg-surface">
+              <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
+                <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2 text-center">
+                    Find it on the map
+                </h2>
+                <p class="text-on-surface-variant mb-6 text-center">
+                    Tap a marker to see what it is and get directions from wherever you are.
+                </p>
+
+                <div id="tourismLegend" hidden class="justify-center mb-4"></div>
+
+                <div id="tourismMap" class="relative z-0 h-[22rem] sm:h-[30rem] w-full rounded-2xl overflow-hidden
+                    border border-outline-variant/30 bg-surface-container-low"></div>
+
+                <p id="tourismMapNote" class="text-xs text-on-surface-variant mt-3 text-center"></p>
+              </div>
+            </section>
+
         </div>
 
 
@@ -450,7 +475,11 @@ body { overflow-x: hidden; }
     </footer>
 </div>
 
-<!-- Write-a-review dialog -->
+<!-- The map layer: OpenStreetMap tiles through Leaflet, with ZTIMS's own
+     category markers. Loaded before the page script below, which uses it.
+     Leaflet itself is fetched on demand from inside, so a visitor who never
+     scrolls this far never pays for it. -->
+<script type="module" src="./src/shared/tourism-map.js"></script>
 
 <script type="module">
     const API_BASE = "https://ztims-api.onrender.com/api";
@@ -595,10 +624,51 @@ body { overflow-x: hidden; }
             allSpots = Array.isArray(spots) ? spots : [];
             doneLoading();
             applyFilters();
+            showOnMap(allSpots);
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
             doneLoading();
             spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8 text-center">Unable to load tourist spots right now. Please try again later.</p>';
+            setMapNote('The map could not be loaded because the destinations did not load.');
+        }
+    }
+
+    /* ---------------- the tourism map ---------------- */
+
+    function setMapNote(message) {
+        const note = document.getElementById('tourismMapNote');
+        if (note) note.textContent = message || '';
+    }
+
+    // Built from the records already fetched above, so there is no second
+    // request and no hard-coded list of places to drift out of date.
+    async function showOnMap(spots) {
+        const mount = document.getElementById('tourismMap');
+        if (!mount || !window.ZTIMS_MAP) return;
+
+        try {
+            await window.ZTIMS_MAP.mountTourismMap({
+                mount: mount,
+                spots: spots,
+                legend: document.getElementById('tourismLegend'),
+                detailHref: spot => `src/spot.html?spotId=${encodeURIComponent(spot._id)}`,
+                onReady: ({ shown, skipped }) => {
+                    if (shown === 0) {
+                        // Said plainly rather than left as an empty map: none of
+                        // these places has been given a pin yet.
+                        setMapNote(skipped
+                            ? `None of the ${skipped} published destination${skipped === 1 ? ' has' : 's have'} a map location yet.`
+                            : 'Nothing is published yet.');
+                        return;
+                    }
+                    setMapNote(skipped
+                        ? `Showing ${shown} of ${shown + skipped} destinations — the other ${skipped} ${skipped === 1 ? 'has' : 'have'} no map location yet.`
+                        : `Showing all ${shown} destinations.`);
+                }
+            });
+        } catch (error) {
+            console.error('❌ The map could not be loaded:', error);
+            setMapNote('The map could not be loaded. The list above still works.');
         }
     }
 

@@ -446,6 +446,10 @@ body { overflow-x: hidden; }
     <p class="text-center text-sm text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
 </footer>
 
+<!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
+     the category markers. Loaded before the page script, which uses it. -->
+<script type="module" src="./shared/tourism-map.js"></script>
+
 <script type="module">
     const API_BASE = "https://ztims-api.onrender.com/api";
     const content = document.getElementById('spotContent');
@@ -611,32 +615,14 @@ body { overflow-x: hidden; }
        travel time is ever kept on a listing, because there is no single answer:
        it depends entirely on who is asking and from where. */
 
-    const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 
     // Google Maps takes over for turn-by-turn navigation — ZTIMS itself does not
     // provide that, it shows the route and hands the journey over.
     const GOOGLE_TRAVEL_MODE = { car: 'driving', bicycle: 'bicycling', walking: 'walking' };
 
-    let leafletLoading = null;
-    function loadLeaflet() {
-        if (window.L) return Promise.resolve(window.L);
-        if (leafletLoading) return leafletLoading;
-
-        leafletLoading = new Promise(function (resolve, reject) {
-            const css = document.createElement('link');
-            css.rel = 'stylesheet';
-            css.href = LEAFLET_CSS;
-            document.head.appendChild(css);
-
-            const script = document.createElement('script');
-            script.src = LEAFLET_JS;
-            script.onload = function () { resolve(window.L); };
-            script.onerror = function () { reject(new Error('The map could not be loaded. Check your connection.')); };
-            document.head.appendChild(script);
-        });
-        return leafletLoading;
-    }
+    // Leaflet and the marker styling come from the shared map module, so this
+    // page and the tourism map cannot drift apart.
+    const loadLeaflet = () => window.ZTIMS_MAP.loadLeaflet();
 
     // A point is only usable when both halves are present and in range. Anything
     // else means this listing simply has no location yet.
@@ -1021,11 +1007,15 @@ body { overflow-x: hidden; }
             mapBox.hidden = false;
 
             map = window.L.map(mapBox, { scrollWheelZoom: false }).setView([destination.lat, destination.lng], 14);
-            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            window.L.tileLayer(window.ZTIMS_MAP.OSM_TILES, {
                 maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
+                attribution: window.ZTIMS_MAP.OSM_ATTRIBUTION
             }).addTo(map);
-            window.L.marker([destination.lat, destination.lng]).addTo(map).bindPopup(spot.title);
+            // The same category marker the tourism map uses, so a place looks
+            // the same wherever a visitor meets it.
+            window.L.marker([destination.lat, destination.lng], { icon: window.ZTIMS_MAP.markerIcon(spot) })
+                .addTo(map)
+                .bindPopup(spot.title);
             map.invalidateSize();
             return map;
         }
@@ -1036,9 +1026,9 @@ body { overflow-x: hidden; }
             if (routeLine) map.removeLayer(routeLine);
             if (originMarker) map.removeLayer(originMarker);
 
-            originMarker = window.L.circleMarker([origin.lat, origin.lng], {
-                radius: 8, color: '#00838F', fillColor: '#00838F', fillOpacity: 0.9
-            }).addTo(map).bindPopup('You are here');
+            originMarker = window.L.marker([origin.lat, origin.lng], { icon: window.ZTIMS_MAP.originIcon() })
+                .addTo(map)
+                .bindPopup('You are here');
 
             routeLine = window.L.polyline(geometry, { color: '#E65100', weight: 5, opacity: 0.85 }).addTo(map);
             map.invalidateSize();
@@ -1214,6 +1204,14 @@ body { overflow-x: hidden; }
 
         const asideButton = document.getElementById('asideDirectionsBtn');
         if (asideButton) asideButton.addEventListener('click', function () { openButton.click(); });
+
+        // Arriving from a marker's "Get directions" on the tourism map. The click
+        // is replayed rather than the panel opened directly, so there is one path
+        // into directions and location permission is still asked for by a
+        // deliberate action the visitor took.
+        if (new URLSearchParams(window.location.search).get('directions') === '1') {
+            openButton.click();
+        }
     }
 
     function renderSpot(spot) {

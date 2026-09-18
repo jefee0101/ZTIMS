@@ -964,11 +964,28 @@ body { overflow-x: hidden; }
             return spot.imageUrl ? 1 : 0;
         }
 
+        // The same rule the API and the map apply, so this page agrees with them
+        // about which listings a visitor can actually be routed to.
+        function hasMapPin(spot) {
+            const lat = spot.latitude;
+            const lng = spot.longitude;
+            if (lat === '' || lat === null || lat === undefined) return false;
+            if (lng === '' || lng === null || lng === undefined) return false;
+            const latitude = Number(lat);
+            const longitude = Number(lng);
+            if (!isFinite(latitude) || !isFinite(longitude)) return false;
+            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return false;
+            return !(latitude === 0 && longitude === 0);
+        }
+
         // What an officer would chase the manager about.
         function completenessIssues(spot) {
             const issues = [];
             if (photoCount(spot) === 0) issues.push('No photo');
             if (!String(spot.description || '').trim()) issues.push('No description');
+            // Without a pin the listing is missing from the tourism map and can
+            // offer no directions — invisible in a way nothing else reports.
+            if (!hasMapPin(spot)) issues.push('No map pin');
             return issues;
         }
 
