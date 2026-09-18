@@ -461,9 +461,17 @@ h1, h2, h3, h4, .font-display, .font-headline {
     border: 1px solid rgb(var(--ztims-outline));
     border-radius: 1.125rem;
     box-shadow: var(--ztims-shadow-raised);
-    /* Big enough to work in, never so big it stops being a dialog. */
-    width: min(100%, 44rem);
-    max-height: min(90vh, 52rem);
+    /* No width here. A confirm dialog and the four-step listing editor are
+       legitimately different sizes, and the page is what knows which — this
+       used to impose 44rem on both. The height ceiling is shared, because a
+       dialog taller than the screen is unusable at any width. */
+    max-height: min(95vh, 60rem);
+}
+
+/* A dialog opened on a phone should not be a floating card with slivers of
+   page around it. */
+@media (max-width: 480px) {
+    .ztims-modal { border-radius: 1rem; }
 }
 
 .ztims-modal__head {
