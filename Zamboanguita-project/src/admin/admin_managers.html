@@ -77,7 +77,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 /* Base Override Rules */
 .light-mode { background: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
 .light-mode main { background: rgb(var(--ztims-background)) !important; }
-.light-mode aside { background: #FFFFFF !important; border-color: rgb(var(--ztims-outline)) !important; }
+.light-mode aside { background: rgb(var(--ztims-surface)) !important; border-color: rgb(var(--ztims-outline)) !important; }
 .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: rgb(var(--ztims-outline)) !important; }
 
 /* Dashboard UI Structure Elements */
@@ -86,7 +86,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     border: 1px solid rgb(var(--ztims-outline));
 }
 .light-mode .glass-panel {
-    background: #FFFFFF !important;
+    background: rgb(var(--ztims-surface)) !important;
     border-color: rgb(var(--ztims-outline)) !important;
 }
 .glass-panel:hover {
@@ -103,11 +103,11 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant {
     color: rgb(var(--ztims-on-surface-variant)) !important;
 }
-.light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
+.light-mode .border-outline-variant, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-outline-variant\/40 {
     border-color: rgb(var(--ztims-outline)) !important;
 }
 .light-mode input, .light-mode select, .light-mode textarea {
-    background: #FFFFFF !important;
+    background: rgb(var(--ztims-surface)) !important;
     color: rgb(var(--ztims-on-surface)) !important;
     border: 1px solid rgb(var(--ztims-outline)) !important;
 }
@@ -319,9 +319,9 @@ body { overflow-x: hidden; }
    ========================================================== */
 (function () {
     var TONES = {
-        success: { icon: 'check_circle', accent: '#2E7D32' },
-        error:   { icon: 'error',        accent: '#E53935' },
-        info:    { icon: 'info',         accent: '#FFB300' }
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
     };
 
     function host() {
@@ -371,8 +371,9 @@ body { overflow-x: hidden; }
             'padding:.85rem 1rem',
             'border-radius:.9rem',
             'border-left:4px solid ' + settings.accent,
-            'background:rgba(10,25,47,.97)',
-            'color:#F4F6F9',
+            'background:rgb(var(--ztims-surface))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid rgb(var(--ztims-outline))',
             'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
             'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
             'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
@@ -393,7 +394,7 @@ body { overflow-x: hidden; }
         close.type = 'button';
         close.setAttribute('aria-label', 'Dismiss');
         close.textContent = '×';
-        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
 
         toast.appendChild(icon);
         toast.appendChild(text);
@@ -464,7 +465,8 @@ body { overflow-x: hidden; }
         button.style.cssText = [
             'display:flex', 'align-items:center', 'justify-content:center',
             'width:2.5rem', 'height:2.5rem', 'border-radius:9999px',
-            'border:2px solid rgba(255,179,0,.55)', 'background:#0B2954', 'color:#FFB300',
+            'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
+            'color:rgb(var(--ztims-accent))',
             'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
             'transition:transform .15s ease'
         ].join(';');

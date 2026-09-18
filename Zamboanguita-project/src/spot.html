@@ -201,9 +201,9 @@ body { overflow-x: hidden; }
    ========================================================== */
 (function () {
     var TONES = {
-        success: { icon: 'check_circle', accent: '#2E7D32' },
-        error:   { icon: 'error',        accent: '#E53935' },
-        info:    { icon: 'info',         accent: '#FFB300' }
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
     };
 
     function host() {
@@ -253,8 +253,9 @@ body { overflow-x: hidden; }
             'padding:.85rem 1rem',
             'border-radius:.9rem',
             'border-left:4px solid ' + settings.accent,
-            'background:rgba(10,25,47,.97)',
-            'color:#F4F6F9',
+            'background:rgb(var(--ztims-surface))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid rgb(var(--ztims-outline))',
             'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
             'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
             'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
@@ -275,7 +276,7 @@ body { overflow-x: hidden; }
         close.type = 'button';
         close.setAttribute('aria-label', 'Dismiss');
         close.textContent = '×';
-        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
 
         toast.appendChild(icon);
         toast.appendChild(text);
@@ -1322,6 +1323,19 @@ body { overflow-x: hidden; }
         }
     }
 
+    /* The same category colours the landing cards and the map markers use, so a
+       place looks like itself wherever it appears. */
+    const HERO_BADGE = {
+        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape' },
+        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving' },
+        'CULTURAL': { cls: 'cat-municipal', icon: 'museum' },
+        'ACCOMMODATION': { cls: 'cat-stay', icon: 'hotel' }
+    };
+    function heroBadge(spot) {
+        return HERO_BADGE[String(spot && spot.category || '').toUpperCase()]
+            || { cls: 'cat-attraction', icon: 'photo_camera' };
+    }
+
     function renderSpot(spot) {
         const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
         const photos = spotPhotos(spot);
@@ -1329,9 +1343,13 @@ body { overflow-x: hidden; }
         content.innerHTML = `
             <section class="relative h-[38vh] sm:h-[45vh] min-h-[260px] sm:min-h-[320px] w-full overflow-hidden">
                 <img class="w-full h-full object-cover" src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+                <!-- A dark scrim, identical in both themes, because the text on it is
+                     white in both. It was keyed to the page background, which in
+                     light mode faded the photograph to sand and took the title
+                     with it. Kept to the lower half so the picture still reads. -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0 px-5 sm:px-6 md:px-12 pb-6 sm:pb-8">
-                    <span class="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm mb-3">${escapeHtml(typeLabel)}</span>
+                    <span class="cat-badge ${heroBadge(spot).cls} !bg-surface/95 backdrop-blur-sm mb-3"><span class="material-symbols-outlined !text-sm">${heroBadge(spot).icon}</span>${escapeHtml(typeLabel)}</span>
                     <h1 class="text-[1.9rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter text-white mb-2 break-words">${escapeHtml(spot.title)}</h1>
                     <p class="text-white/80 flex items-center gap-1.5 text-sm">
                         <span class="material-symbols-outlined !text-lg">location_on</span>${escapeHtml(spot.location || '')}

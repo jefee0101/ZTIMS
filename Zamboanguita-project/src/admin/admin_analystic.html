@@ -70,7 +70,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 /* Base Override Rules */
 .light-mode { background: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
 .light-mode main { background: rgb(var(--ztims-background)) !important; }
-.light-mode aside { background: #FFFFFF !important; border-color: rgb(var(--ztims-outline)) !important; }
+.light-mode aside { background: rgb(var(--ztims-surface)) !important; border-color: rgb(var(--ztims-outline)) !important; }
 .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: rgb(var(--ztims-outline)) !important; }
 
 /* Dashboard UI Structure Elements */
@@ -79,7 +79,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
     border: 1px solid rgb(var(--ztims-outline));
 }
 .light-mode .glass-panel {
-    background: #FFFFFF !important;
+    background: rgb(var(--ztims-surface)) !important;
     border-color: rgb(var(--ztims-outline)) !important;
 }
 .glass-panel:hover {
@@ -110,11 +110,11 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant {
     color: rgb(var(--ztims-on-surface-variant)) !important;
 }
-.light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
+.light-mode .border-outline-variant, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-outline-variant\/40 {
     border-color: rgb(var(--ztims-outline)) !important;
 }
 .light-mode input, .light-mode select, .light-mode textarea {
-    background: #FFFFFF !important;
+    background: rgb(var(--ztims-surface)) !important;
     color: rgb(var(--ztims-on-surface)) !important;
     border: 1px solid rgb(var(--ztims-outline)) !important;
 }
@@ -331,9 +331,9 @@ body { overflow-x: hidden; }
    ========================================================== */
 (function () {
     var TONES = {
-        success: { icon: 'check_circle', accent: '#2E7D32' },
-        error:   { icon: 'error',        accent: '#E53935' },
-        info:    { icon: 'info',         accent: '#FFB300' }
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
     };
 
     function host() {
@@ -383,8 +383,9 @@ body { overflow-x: hidden; }
             'padding:.85rem 1rem',
             'border-radius:.9rem',
             'border-left:4px solid ' + settings.accent,
-            'background:rgba(10,25,47,.97)',
-            'color:#F4F6F9',
+            'background:rgb(var(--ztims-surface))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid rgb(var(--ztims-outline))',
             'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
             'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
             'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
@@ -405,7 +406,7 @@ body { overflow-x: hidden; }
         close.type = 'button';
         close.setAttribute('aria-label', 'Dismiss');
         close.textContent = '×';
-        close.style.cssText = 'background:none;border:0;color:#A9BCD0;font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
 
         toast.appendChild(icon);
         toast.appendChild(text);
@@ -476,7 +477,8 @@ body { overflow-x: hidden; }
         button.style.cssText = [
             'display:flex', 'align-items:center', 'justify-content:center',
             'width:2.5rem', 'height:2.5rem', 'border-radius:9999px',
-            'border:2px solid rgba(255,179,0,.55)', 'background:#0B2954', 'color:#FFB300',
+            'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
+            'color:rgb(var(--ztims-accent))',
             'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
             'transition:transform .15s ease'
         ].join(';');
@@ -977,14 +979,14 @@ body { overflow-x: hidden; }
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
-                            <tr class="text-on-surface-variant border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
+                            <tr class="text-on-surface-variant border-b border-outline-variant/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-800/20">`;
+                        <tbody class="divide-y divide-outline-variant/40">`;
                     systemSpots.forEach(spot => {
                         // No Type column: it is derived from the category, so it only
                         // ever repeated it one cell to the right.
                         const fee = Number(spot.entranceFee || 0).toFixed(2);
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-on-surface-variant">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-surface-variant/50"><td class="py-3 font-bold text-on-surface-variant">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-on-surface-variant">${escapeHtml(spot.location || '—')}</td><td class="text-on-surface-variant">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-on-surface">₱${fee}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -996,9 +998,9 @@ body { overflow-x: hidden; }
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
-                            <tr class="text-on-surface-variant border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
+                            <tr class="text-on-surface-variant border-b border-outline-variant/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-800/20">`;
+                        <tbody class="divide-y divide-outline-variant/40">`;
                     systemManagers.forEach(manager => {
                         // The reference arrives populated, so it may be an object or a bare id.
                         const assignedId = entry => {
@@ -1007,7 +1009,7 @@ body { overflow-x: hidden; }
                             return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
                         };
                         const listings = systemSpots.filter(spot => assignedId(spot) === String(manager._id)).length;
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(manager.email || '—')}</td><td class="text-on-surface-variant">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-surface-variant/50"><td class="py-3 font-bold text-on-surface-variant">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-on-surface-variant">${escapeHtml(manager.email || '—')}</td><td class="text-on-surface-variant">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-on-surface">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -1077,13 +1079,13 @@ body { overflow-x: hidden; }
                             <div class="p-6 flex-1 flex flex-col justify-between">
                                 <div>
                                     <span class="px-2 py-0.5 text-[10px] font-black rounded bg-gold/10 text-gold uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
-                                    <h3 class="text-xl font-bold mt-2 text-white">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
+                                    <h3 class="text-xl font-bold mt-2 text-on-surface">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
                                     <p class="text-on-surface-variant text-xs flex items-center mt-1">
-                                        <span class="material-symbols-outlined text-sm text-error mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
+                                        <span class="material-symbols-outlined text-sm text-accent mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
                                     </p>
-                                    <p class="text-stone-300 text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
+                                    <p class="text-on-surface-variant text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
                                 </div>
-                                <div class="border-t border-zinc-800/40 mt-4 pt-4 flex items-center justify-between text-xs text-on-surface-variant">
+                                <div class="border-t border-outline-variant/40 mt-4 pt-4 flex items-center justify-between text-xs text-on-surface-variant">
                                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-gold text-base">verified_user</span> Managed Active</span>
                                     <span>Live Database Entry</span>
                                 </div>

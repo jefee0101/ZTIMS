@@ -35,10 +35,12 @@
     --ztims-primary-dim: 22 138 173;     /* #168AAD  coastal blue */
     --ztims-secondary: 22 138 173;       /* #168AAD               */
     /* #2A9D8F is the identity's teal and it is what the map markers use, but
-       as TEXT on the sand ground it measures 3.0:1 — under AA for anything
-       that is not large. Light mode therefore darkens it to #1F7A6E (4.7:1);
-       dark mode keeps the brighter one, where it reads at 5.4:1. */
-    --ztims-accent: 31 122 110;          /* #1F7A6E */
+       as TEXT it measures 3.0:1 on the sand ground — under AA for anything that
+       is not large. Light mode darkens it to #1C7064, which clears 4.5:1 on all
+       three light surfaces: sand 5.3, surface-variant 5.0, white 5.9. The first
+       attempt at #1F7A6E cleared sand but came in at 4.35 on surface-variant,
+       which is where the avatars sit. Dark mode keeps the brighter teal. */
+    --ztims-accent: 28 112 100;          /* #1C7064 */
     --ztims-gold: 244 185 66;            /* #F4B942               */
     --ztims-orange: 242 140 40;          /* #F28C28               */
 
