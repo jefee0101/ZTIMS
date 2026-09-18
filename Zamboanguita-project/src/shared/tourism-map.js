@@ -159,7 +159,35 @@
         }
         .ztims-legend span.dot {
             width: 10px; height: 10px; border-radius: 999px; display: inline-block; margin-right: 5px;
-        }`;
+        }
+
+        /* Expanded view. Fixed rather than the Fullscreen API: Safari on iPhone
+           will not put a plain <div> into fullscreen, and a phone is exactly
+           where a bigger map is wanted most. */
+        .ztims-map--expanded {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;      /* keeps clear of mobile browser chrome */
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: 0 !important;
+            z-index: 1200 !important;
+        }
+        body.ztims-map-locked { overflow: hidden; }
+
+        .ztims-expand {
+            background: #fff; color: #222;
+            border: 2px solid rgba(0,0,0,.2);
+            border-radius: 6px;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.3);
+        }
+        .ztims-expand:hover { background: #f4f4f4; }
+        .ztims-expand .material-symbols-outlined { font-size: 20px; line-height: 1; }`;
         document.head.appendChild(style);
     }
 
@@ -188,6 +216,76 @@
             iconAnchor: [15, 15],
             popupAnchor: [0, -16]
         });
+    }
+
+    /* ------------------------------------------------------------- expanding */
+
+    /**
+     * A control that grows the map to fill the window, and puts it back.
+     *
+     * Leaflet measures its container once and caches the size, so every change
+     * of shape has to be followed by invalidateSize() or the tiles stay laid
+     * out for the old box — grey bands down one side, markers in the wrong
+     * place. onResize lets the caller re-frame whatever the map is about: all
+     * the markers on the tourism map, the route on a directions map.
+     */
+    function addExpandControl(map, mount, onResize) {
+        injectStyles();
+        let expanded = false;
+
+        const control = window.L.control({ position: 'topright' });
+
+        control.onAdd = function () {
+            const button = window.L.DomUtil.create('button', 'ztims-expand');
+            button.type = 'button';
+            button.innerHTML = '<span class="material-symbols-outlined">open_in_full</span>';
+            button.title = 'Make the map bigger';
+            button.setAttribute('aria-label', 'Make the map bigger');
+            button.setAttribute('aria-pressed', 'false');
+
+            // Without this a click on the control also reaches the map, which
+            // would drop a pin or start a drag underneath the button.
+            window.L.DomEvent.disableClickPropagation(button);
+            window.L.DomEvent.on(button, 'click', function (event) {
+                window.L.DomEvent.preventDefault(event);
+                setExpanded(!expanded);
+            });
+
+            control._button = button;
+            return button;
+        };
+
+        function paint() {
+            const button = control._button;
+            if (!button) return;
+            button.innerHTML = '<span class="material-symbols-outlined">' +
+                (expanded ? 'close_fullscreen' : 'open_in_full') + '</span>';
+            const label = expanded ? 'Make the map smaller' : 'Make the map bigger';
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            button.setAttribute('aria-pressed', expanded ? 'true' : 'false');
+        }
+
+        function setExpanded(next) {
+            expanded = next;
+            mount.classList.toggle('ztims-map--expanded', expanded);
+            // The page behind must not scroll while the map covers it.
+            document.body.classList.toggle('ztims-map-locked', expanded);
+            paint();
+
+            // After the browser has applied the new size, never before it.
+            requestAnimationFrame(function () {
+                map.invalidateSize();
+                if (typeof onResize === 'function') onResize(expanded);
+            });
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && expanded) setExpanded(false);
+        });
+
+        control.addTo(map);
+        return { isExpanded: function () { return expanded; }, collapse: function () { setExpanded(false); } };
     }
 
     /* --------------------------------------------------------------- popups */
@@ -237,7 +335,16 @@
             const map = L.map(mount, { scrollWheelZoom: false }).setView(DEFAULT_CENTRE, DEFAULT_ZOOM);
             L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map);
 
-            const state = { map: map, markers: [], shown: 0, skipped: 0 };
+            const state = { map: map, markers: [], shown: 0, skipped: 0, bounds: [] };
+
+            // Re-framed on every change of size, so growing the map shows more of
+            // the municipality rather than the same view in a bigger box.
+            state.expander = addExpandControl(map, mount, function () {
+                if (state.bounds.length === 1) map.setView(state.bounds[0], 15);
+                else if (state.bounds.length > 1) {
+                    map.fitBounds(state.bounds, { padding: [40, 40], maxZoom: 15 });
+                }
+            });
 
             state.setSpots = function (spots) {
                 state.markers.forEach(function (marker) { map.removeLayer(marker); });
@@ -272,6 +379,7 @@
                     state.shown += 1;
                 });
 
+                state.bounds = bounds;      // kept so expanding can re-frame them
                 if (bounds.length === 1) {
                     map.setView(bounds[0], 15);
                 } else if (bounds.length > 1) {
@@ -320,6 +428,7 @@
         categoryOf: categoryOf,
         markerIcon: markerIcon,
         originIcon: originIcon,
+        addExpandControl: addExpandControl,
         locationLine: locationLine,
         mountTourismMap: mountTourismMap
     };

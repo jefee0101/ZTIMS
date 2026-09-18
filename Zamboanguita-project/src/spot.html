@@ -1016,6 +1016,15 @@ body { overflow-x: hidden; }
             window.L.marker([destination.lat, destination.lng], { icon: window.ZTIMS_MAP.markerIcon(spot) })
                 .addTo(map)
                 .bindPopup(spot.title);
+
+            // The same control the tourism map uses. On resize it re-frames
+            // whatever is currently on screen: the route if one is drawn, the
+            // destination on its own if not.
+            window.ZTIMS_MAP.addExpandControl(map, mapBox, function () {
+                if (routeLine) map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+                else map.setView([destination.lat, destination.lng], 14);
+            });
+
             map.invalidateSize();
             return map;
         }
