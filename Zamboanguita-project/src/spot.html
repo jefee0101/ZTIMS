@@ -1161,11 +1161,17 @@ body { overflow-x: hidden; }
             );
         }
 
-        async function searchOrigin() {
+        // explicit: the visitor pressed Search or Enter. While they are still
+        // typing, stay quiet until there is something to show — a status line
+        // flickering on every keystroke is noise.
+        async function searchOrigin(explicit) {
             const query = (originSearch.value || '').trim();
-            if (query.length < 3) { setStatus('Type at least three characters to search.', 'error'); return; }
+            if (query.length < 3) {
+                if (explicit) setStatus('Type at least three characters to search.', 'error');
+                return;
+            }
 
-            setStatus('Searching…');
+            if (explicit) setStatus('Searching…');
             try {
                 const response = await fetch(`${API_BASE}/directions/search?q=${encodeURIComponent(query)}`);
                 const data = await response.json().catch(function () { return {}; });
@@ -1205,9 +1211,30 @@ body { overflow-x: hidden; }
             if (firstOpen) requestDeviceLocation();
         });
 
-        document.getElementById('originSearchBtn').addEventListener('click', searchOrigin);
+        document.getElementById('originSearchBtn').addEventListener('click', function () { searchOrigin(true); });
         originSearch.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') { event.preventDefault(); searchOrigin(); }
+            if (event.key === 'Enter') { event.preventDefault(); searchOrigin(true); }
+        });
+
+        /* Suggestions as you type. Debounced and de-duplicated: every keystroke
+           would otherwise be one geocoder call, and both this API and the
+           service behind it are rate limited. The button stays for anyone who
+           would rather ask explicitly. */
+        let originSearchTimer = null;
+        let lastOriginQuery = '';
+        originSearch.addEventListener('input', function () {
+            clearTimeout(originSearchTimer);
+            const query = (originSearch.value || '').trim();
+            if (query.length < 3) {
+                if (originResults) originResults.hidden = true;
+                lastOriginQuery = '';
+                return;
+            }
+            originSearchTimer = setTimeout(function () {
+                if (query === lastOriginQuery) return;
+                lastOriginQuery = query;
+                searchOrigin();
+            }, 450);
         });
         document.getElementById('retryLocationBtn').addEventListener('click', requestDeviceLocation);
 

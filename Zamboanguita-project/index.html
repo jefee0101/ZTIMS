@@ -408,7 +408,16 @@ body { overflow-x: hidden; }
                     <div class="relative w-full sm:flex-1 sm:max-w-md">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
                         <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
+                            autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"
+                            aria-controls="spotSuggestions"
                             class="w-full bg-surface border border-outline-variant/30 rounded-full pl-12 pr-4 py-3 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all" />
+
+                        <!-- Names that match what has been typed so far, so a visitor
+                             who knows where they are going can jump straight there
+                             instead of reading the whole grid. -->
+                        <div id="spotSuggestions" role="listbox" hidden
+                            class="absolute left-0 right-0 top-full mt-2 z-30 bg-surface border border-outline-variant/30
+                                   rounded-2xl shadow-2xl overflow-hidden max-h-80 overflow-y-auto text-left"></div>
                     </div>
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">category</span>
@@ -608,11 +617,131 @@ body { overflow-x: hidden; }
         matches.forEach((spot, index) => spotsContainer.appendChild(renderSpotCard(spot, index)));
     }
 
-    searchInput.addEventListener('input', applyFilters);
+    /* ---------------- search suggestions ----------------
+       The grid below already narrows as you type. These are for the visitor who
+       has a particular place in mind: a short list of names, and one tap to that
+       page rather than hunting for its card. */
+
+    const suggestionBox = document.getElementById('spotSuggestions');
+    const MAX_SUGGESTIONS = 6;
+    let highlighted = -1;
+    let suggestions = [];
+
+    // The matched run is marked so it is obvious why each name is on the list.
+    function markMatch(text, query) {
+        const at = text.toLowerCase().indexOf(query);
+        if (at === -1) return escapeHtml(text);
+        return escapeHtml(text.slice(0, at))
+            + '<b class="text-primary">' + escapeHtml(text.slice(at, at + query.length)) + '</b>'
+            + escapeHtml(text.slice(at + query.length));
+    }
+
+    function findSuggestions(query) {
+        const hits = allSpots.filter(spot => {
+            if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
+            return [spot.title, spot.location, spot.barangay, spot.category, spot.label]
+                .filter(Boolean)
+                .some(field => String(field).toLowerCase().includes(query));
+        });
+
+        // A name that starts with what was typed is almost always the one meant,
+        // so those come first.
+        hits.sort((a, b) => {
+            const aStarts = String(a.title || '').toLowerCase().startsWith(query) ? 0 : 1;
+            const bStarts = String(b.title || '').toLowerCase().startsWith(query) ? 0 : 1;
+            return aStarts - bStarts;
+        });
+
+        return hits.slice(0, MAX_SUGGESTIONS);
+    }
+
+    function hideSuggestions() {
+        suggestionBox.hidden = true;
+        suggestionBox.innerHTML = '';
+        searchInput.setAttribute('aria-expanded', 'false');
+        highlighted = -1;
+        suggestions = [];
+    }
+
+    function paintHighlight() {
+        [...suggestionBox.querySelectorAll('[data-index]')].forEach(row => {
+            const on = Number(row.dataset.index) === highlighted;
+            row.classList.toggle('bg-outline-variant/30', on);
+            row.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+
+    function showSuggestions() {
+        const query = (searchInput.value || '').trim().toLowerCase();
+        if (query.length < 2) return hideSuggestions();
+
+        suggestions = findSuggestions(query);
+        if (suggestions.length === 0) return hideSuggestions();
+
+        suggestionBox.innerHTML = suggestions.map((spot, index) => {
+            const where = [spot.barangay, spot.location].filter(Boolean)[0] || 'Zamboanguita';
+            return `
+                <button type="button" role="option" aria-selected="false" data-index="${index}"
+                    class="w-full text-left px-4 py-3 min-h-[48px] flex items-center gap-3
+                           hover:bg-outline-variant/30 transition-colors">
+                    <span class="material-symbols-outlined !text-lg text-primary shrink-0">place</span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-bold text-on-surface truncate">${markMatch(String(spot.title || ''), query)}</span>
+                        <span class="block text-[11px] text-on-surface-variant truncate">${escapeHtml(spot.category || '')} · ${escapeHtml(where)}</span>
+                    </span>
+                </button>`;
+        }).join('');
+
+        suggestionBox.hidden = false;
+        searchInput.setAttribute('aria-expanded', 'true');
+        highlighted = -1;
+    }
+
+    function openSuggestion(index) {
+        const spot = suggestions[index];
+        if (!spot) return;
+        window.location.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
+    }
+
+    searchInput.addEventListener('input', () => { applyFilters(); showSuggestions(); });
+    searchInput.addEventListener('focus', showSuggestions);
+
+    searchInput.addEventListener('keydown', event => {
+        if (suggestionBox.hidden) return;
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            const step = event.key === 'ArrowDown' ? 1 : -1;
+            // -1 means "nothing chosen", and the list cycles back through it, so
+            // arrowing past the end returns you to what you actually typed.
+            const positions = suggestions.length + 1;
+            const next = (highlighted + 1 + step) % positions;
+            highlighted = ((next % positions) + positions) % positions - 1;
+            paintHighlight();
+        } else if (event.key === 'Enter') {
+            // Enter with nothing chosen leaves the grid as the answer.
+            if (highlighted >= 0) { event.preventDefault(); openSuggestion(highlighted); }
+        } else if (event.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+
+    // mousedown, not click: blur fires first and would tear the list down before
+    // the click ever lands on it.
+    suggestionBox.addEventListener('mousedown', event => {
+        const row = event.target.closest('[data-index]');
+        if (!row) return;
+        event.preventDefault();
+        openSuggestion(Number(row.dataset.index));
+    });
+
+    document.addEventListener('click', event => {
+        if (!suggestionBox.contains(event.target) && event.target !== searchInput) hideSuggestions();
+    });
 
     document.getElementById('spotCategoryFilter').addEventListener('change', event => {
         activeCategory = event.target.value;
         applyFilters();
+        hideSuggestions();
     });
 
     async function loadSpots() {

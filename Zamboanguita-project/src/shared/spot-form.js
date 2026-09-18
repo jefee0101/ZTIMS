@@ -55,6 +55,9 @@
     const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     const DEFAULT_CENTER = [9.1003, 123.1966];   // Zamboanguita town centre, view only
 
+    // Long enough that a typed word is one lookup rather than five.
+    const SEARCH_DEBOUNCE_MS = 450;
+
     const DRAFT_PREFIX = 'ztims:spot-draft:';
     const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -897,11 +900,17 @@
             });
         }
 
-        async function runSearch() {
+        // explicit: the visitor pressed Search or Enter, so say something even when
+        // there is nothing useful to say. While typing, stay quiet until there is
+        // a result — a status line flickering on every keystroke is noise.
+        async function runSearch(explicit) {
             const query = el('LocSearch').value.trim();
-            if (query.length < 3) { say('Type at least three characters to search.', 'error'); return; }
+            if (query.length < 3) {
+                if (explicit) say('Type at least three characters to search.', 'error');
+                return;
+            }
 
-            say('Searching…');
+            if (explicit) say('Searching…');
             try {
                 const response = await fetch(apiBase + '/directions/search?q=' + encodeURIComponent(query));
                 const data = await response.json().catch(function () { return {}; });
@@ -917,10 +926,31 @@
             }
         }
 
-        el('LocSearchBtn').addEventListener('click', runSearch);
+        el('LocSearchBtn').addEventListener('click', function () { runSearch(true); });
         el('LocSearch').addEventListener('keydown', function (event) {
             // Inside a form, Enter would otherwise submit the whole listing.
-            if (event.key === 'Enter') { event.preventDefault(); runSearch(); }
+            if (event.key === 'Enter') { event.preventDefault(); runSearch(true); }
+        });
+
+        /* Suggestions as you type. Debounced and de-duplicated because every
+           keystroke would otherwise be one call to the geocoder, which is rate
+           limited both here and upstream. The button stays for anyone who
+           would rather ask explicitly. */
+        let searchTimer = null;
+        let lastQuery = '';
+        el('LocSearch').addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            const query = el('LocSearch').value.trim();
+            if (query.length < 3) {
+                el('LocResults').hidden = true;
+                lastQuery = '';
+                return;
+            }
+            searchTimer = setTimeout(function () {
+                if (query === lastQuery) return;
+                lastQuery = query;
+                runSearch();
+            }, SEARCH_DEBOUNCE_MS);
         });
 
         el('LocConfirm').addEventListener('click', async function () {
