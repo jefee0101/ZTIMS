@@ -125,6 +125,19 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
    ========================================================== */
 [hidden] { display: none !important; }
 
+/* The status dropdowns wear their status colour, which is a translucent tint —
+   fine on the closed control, unreadable if the open list inherits it. The
+   options take the page's own surface colours instead. */
+select[data-status-for] option {
+    background-color: #051D40;
+    color: #FEFCF4;
+}
+.light-mode select[data-status-for] option {
+    background-color: #FFFFFF;
+    color: #020F24;
+}
+select[data-status-for]:disabled { opacity: .6; cursor: progress; }
+
 @media (min-width: 640px) {
     /* Labels collapse by width + opacity rather than display:none, because display
        cannot be animated — it would snap the text away before the rail finishes
@@ -842,9 +855,30 @@ body { overflow-x: hidden; }
             inactive: 'bg-white/10 text-on-surface-variant'
         };
 
-        function statusPill(status) {
+        const STATUS_CHOICES = [
+            { value: 'available', label: 'Available' },
+            { value: 'unavailable', label: 'Unavailable' },
+            { value: 'inactive', label: 'Inactive' }
+        ];
+
+        /* The status used to be a coloured pill next to a button that cycled
+           available -> unavailable -> inactive. Marking someone inactive meant
+           clicking twice and knowing the order, and there was no way to see what
+           the next click would do. One dropdown shows the current status and sets
+           any other directly, and keeps the colour so the table still scans. */
+        function statusSelect(guide) {
+            const status = STATUS_CHOICES.some(c => c.value === guide.status) ? guide.status : 'inactive';
             const style = STATUS_STYLES[status] || STATUS_STYLES.inactive;
-            return `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${style}">${escapeHtml(status)}</span>`;
+            const options = STATUS_CHOICES.map(choice =>
+                `<option value="${choice.value}"${choice.value === status ? ' selected' : ''}>${choice.label}</option>`
+            ).join('');
+
+            return `
+                <label class="sr-only" for="guideStatus-${escapeHtml(guide._id)}">Status for ${escapeHtml(guide.fullName)}</label>
+                <select id="guideStatus-${escapeHtml(guide._id)}" data-status-for="${escapeHtml(guide._id)}"
+                    class="appearance-none text-center px-3 py-2 min-h-[44px] rounded-full text-[10px] font-bold
+                           uppercase tracking-wider border border-transparent cursor-pointer
+                           focus:outline-none focus:ring-2 focus:ring-[#FFB300] ${style}">${options}</select>`;
         }
 
         /* ---- loading ---------------------------------------------------- */
@@ -940,10 +974,9 @@ body { overflow-x: hidden; }
                                     `<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold">${escapeHtml(t)}</span>`).join('')}</div>`
                                 : '<span class="text-xs text-on-surface-variant italic">not assigned</span>'}
                         </td>
-                        <td class="px-6 py-4 text-center">${statusPill(guide.status)}</td>
+                        <td class="px-6 py-4 text-center">${statusSelect(guide)}</td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
                             <button data-edit="${escapeHtml(guide._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-on-surface hover:bg-surface-variant transition-colors">Edit</button>
-                            <button data-cycle="${escapeHtml(guide._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-[#FFB300] hover:bg-surface-variant transition-colors">Status</button>
                         </td>
                     </tr>
                 `;
@@ -1041,14 +1074,15 @@ body { overflow-x: hidden; }
             }
         }
 
-        /* Status cycles available -> unavailable -> inactive -> available, which is
-           quicker than opening the whole record to mark someone off for a week. */
-        async function cycleStatus(id) {
+        // Set directly from the dropdown. On failure the control goes back to what
+        // the record actually says, so the table never shows a status the server
+        // refused to store.
+        async function setGuideStatus(id, next, select) {
             const guide = allGuides.find(g => String(g._id) === String(id));
-            if (!guide) return;
+            if (!guide || guide.status === next) return;
 
-            const order = ['available', 'unavailable', 'inactive'];
-            const next = order[(order.indexOf(guide.status) + 1) % order.length];
+            const previous = guide.status;
+            select.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE}/guides/${encodeURIComponent(id)}/status`, {
@@ -1060,9 +1094,11 @@ body { overflow-x: hidden; }
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(result.message || 'Could not change the status.');
 
-                await loadEverything();
-                showToast(result.message, 'success');
+                await loadEverything();      // redraws the row, so the colour follows
+                showToast(result.message || `${guide.fullName} is now ${next}.`, 'success');
             } catch (error) {
+                select.value = previous;
+                select.disabled = false;
                 showToast(error.message, 'error');
             }
         }
@@ -1089,9 +1125,13 @@ body { overflow-x: hidden; }
 
             document.getElementById('guideTableBody').addEventListener('click', event => {
                 const edit = event.target.closest('[data-edit]');
-                const cycle = event.target.closest('[data-cycle]');
                 if (edit) openGuideModal(allGuides.find(g => String(g._id) === edit.dataset.edit));
-                else if (cycle) cycleStatus(cycle.dataset.cycle);
+            });
+
+            // Delegated, so the dropdowns survive every redraw of the table.
+            document.getElementById('guideTableBody').addEventListener('change', event => {
+                const select = event.target.closest('[data-status-for]');
+                if (select) setGuideStatus(select.dataset.statusFor, select.value, select);
             });
 
             loadEverything();
