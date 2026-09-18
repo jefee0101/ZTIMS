@@ -608,3 +608,42 @@ html :where(input, select, textarea):focus {
 /* A date or time field's picker glyph is drawn by the browser in its own
    colour, which on a dark ground disappears. */
 :root.dark input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.7); }
+
+/* ==========================================================================
+   Autofilled fields
+   --------------------------------------------------------------------------
+   Chrome paints a field the browser filled in with its own pale background,
+   and it will not accept `background-color` for it — the declaration is
+   ignored outright. An inset shadow taller than the box is the only way to
+   repaint it, and -webkit-text-fill-color the only way to recolour the text
+   inside it.
+
+   This is why the staff sign-in page came up white in dark mode while every
+   other form was correct: it is the one page a password manager always fills,
+   so it was the one page whose inputs were never showing our background at
+   all. Nothing in the markup was wrong, which is why it survived a sweep that
+   checked computed backgrounds — an un-autofilled input measures correctly.
+
+   The long transition is the usual companion trick: Chrome animates its own
+   colour in on some paths, and a delay it never reaches keeps ours.
+   ========================================================================== */
+:where(input, select, textarea):-webkit-autofill,
+:where(input, select, textarea):-webkit-autofill:hover,
+:where(input, select, textarea):-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgb(var(--ztims-surface)) inset !important;
+    box-shadow: 0 0 0 1000px rgb(var(--ztims-surface)) inset !important;
+    -webkit-text-fill-color: rgb(var(--ztims-on-surface)) !important;
+    caret-color: rgb(var(--ztims-on-surface));
+    transition: background-color 100000s ease-in-out 0s;
+}
+
+/* Focus needs both: the inset that repaints the box, and the ring outside it.
+   Without this rule the autofill shadow above would swallow the focus ring and
+   a keyboard user would lose their place on the sign-in form. */
+:where(input, select, textarea):-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px rgb(var(--ztims-surface)) inset,
+                        0 0 0 3px rgb(var(--ztims-secondary) / 0.18) !important;
+    box-shadow: 0 0 0 1000px rgb(var(--ztims-surface)) inset,
+                0 0 0 3px rgb(var(--ztims-secondary) / 0.18) !important;
+    -webkit-text-fill-color: rgb(var(--ztims-on-surface)) !important;
+}
