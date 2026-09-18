@@ -740,6 +740,9 @@ body { overflow-x: hidden; }
 <!-- The listing form, the schedule picker and the location picker all live in
      src/shared/spot-form.js now. They used to be copied into this page, the
      Analytics quick-add and the manager portal, byte for byte. -->
+<!-- The shared map layer, for the location picker's expand control and its
+     Leaflet loader. Loaded before the form, which uses it when present. -->
+<script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
 
 
@@ -856,7 +859,7 @@ body { overflow-x: hidden; }
             },
             {
                 type: "spot",
-                title: "Jomao-As Falls",
+                title: "Jumao-as Falls",
                 location: "Malongcay Diot",
                 category: "MOUNTAIN",
                 label: "Hidden Jungle Waterfall",
@@ -871,7 +874,7 @@ body { overflow-x: hidden; }
             {
                 type: "spot",
                 title: "Hot Spring",
-                location: "Jomao-As",
+                location: "Jumao-as",
                 category: "MOUNTAIN",
                 label: "Relaxing Natural Pool",
                 description: "Geothermal heated structural streams filtering soothing warm minerals safely.",

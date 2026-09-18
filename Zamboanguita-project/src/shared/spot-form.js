@@ -24,12 +24,12 @@
     // "Malatapay", "malatapay" and "Malatapai" — three barangays as far as any
     // filter is concerned.
     //
-    // Jomao-as was added on local correction. The rest were originally worked
+    // Jumao-as was added on local correction. The rest were originally worked
     // out from the municipality's school locations rather than an official
     // register, so if another one is missing, this is the list to fix — and
     // the count on src/history.html has to move with it.
     const BARANGAYS = [
-        'Basak', 'Calango', 'Jomao-as', 'Lutoban', 'Malongcay Diot', 'Maluay',
+        'Basak', 'Calango', 'Jumao-as', 'Lutoban', 'Malongcay Diot', 'Maluay',
         'Mayabon', 'Nabago', 'Najandig', 'Nasig-id', 'Poblacion'
     ];
 
@@ -107,6 +107,9 @@
     let leafletLoading = null;
     function loadLeaflet() {
         if (window.L) return Promise.resolve(window.L);
+        // The tourism map module owns a loader too. Use it when it is there, so
+        // one page never has two loaders racing to inject the same script.
+        if (window.ZTIMS_MAP && window.ZTIMS_MAP.loadLeaflet) return window.ZTIMS_MAP.loadLeaflet();
         if (leafletLoading) return leafletLoading;
 
         leafletLoading = new Promise(function (resolve, reject) {
@@ -833,6 +836,20 @@
                 say('Pin set. Drag it if the exact gate is somewhere else.', 'ok');
                 describePoint({ lat: event.latlng.lat, lng: event.latlng.lng });
             });
+
+            /* Dropping a pin on a 14rem map means guessing which building is
+               which. Full screen is where the gate can actually be found, so
+               the control is here as well as on the public maps. Only the
+               control is lost if the map module is missing; the picker itself
+               carries on. */
+            if (window.ZTIMS_MAP && window.ZTIMS_MAP.addExpandControl) {
+                window.ZTIMS_MAP.addExpandControl(map, el('LocMap'), function () {
+                    const point = readPoint();
+                    // Stay on the pin through the change of size: re-framing to
+                    // anything else would lose the thing being placed.
+                    if (point) map.setView([point.lat, point.lng], Math.max(map.getZoom(), 16));
+                });
+            }
 
             return map;
         }

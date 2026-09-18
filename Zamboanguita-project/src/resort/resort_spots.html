@@ -587,6 +587,9 @@ body { overflow-x: hidden; }
 <!-- The listing form, the schedule picker and the location picker all live in
      src/shared/spot-form.js now. They used to be copied into this page and both
      admin editors, byte for byte, and kept in step by hand. -->
+<!-- The shared map layer, for the location picker's expand control and its
+     Leaflet loader. Loaded before the form, which uses it when present. -->
+<script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
 
 

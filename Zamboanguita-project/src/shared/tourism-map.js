@@ -342,9 +342,17 @@
             });
         }
 
+        // Capture phase, and the event stops here. This map can sit inside a
+        // dialog that also closes on Escape — the establishment's listing form
+        // does. Without this, shrinking the map would close the whole form and
+        // throw away everything typed into it. Registered on capture so it runs
+        // before the dialog's own bubble-phase listener, whichever was added
+        // first, and only swallows the key while the map is actually expanded.
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && expanded) setExpanded(false);
-        });
+            if (event.key !== 'Escape' || !expanded) return;
+            event.stopPropagation();
+            setExpanded(false);
+        }, true);
 
         control.addTo(map);
         return { isExpanded: function () { return expanded; }, collapse: function () { setExpanded(false); } };

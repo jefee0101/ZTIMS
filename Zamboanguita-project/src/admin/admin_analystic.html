@@ -723,6 +723,9 @@ body { overflow-x: hidden; }
      src/shared/spot-form.js now. This page used to collect five fields where the
      other two editors collected eleven, so a spot published here always read
      "₱0.00 · Open Everyday · All Day". -->
+<!-- The shared map layer, for the location picker's expand control and its
+     Leaflet loader. Loaded before the form, which uses it when present. -->
+<script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
 
 
