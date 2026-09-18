@@ -571,7 +571,7 @@ body { overflow-x: hidden; }
 
         <!-- Add/Edit Spot Modal -->
         <div id="addSpotModal" class="fixed inset-0 bg-background/90 backdrop-blur-sm hidden items-center justify-center z-[200] p-3 sm:p-4 transition-all">
-            <div class="bg-surface border border-outline-variant/60 rounded-2xl sm:rounded-[2rem] w-full max-w-lg p-5 sm:p-8 space-y-6 relative text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="bg-surface border border-outline-variant/60 rounded-2xl sm:rounded-[2rem] w-full max-w-lg xl:max-w-5xl p-5 sm:p-8 space-y-6 relative text-on-surface max-h-[95vh] overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center">
                     <h2 id="spotModalTitle" class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
                     <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
@@ -579,645 +579,21 @@ body { overflow-x: hidden; }
                     </button>
                 </div>
 
-                <form id="addSpotForm" onsubmit="handleSpotSubmit(event)" class="space-y-4 font-body">
-                    <input type="hidden" id="editingSpotId" value=""/>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Name</label>
-                        <input type="text" id="spotTitle" placeholder="e.g., Turtle Island Sanctuary" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
-                        <textarea id="spotDescription" placeholder="Describe your spot or accommodation..." rows="3" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none" required></textarea>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
-                            <select id="spotCategory" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
-                                <option value="MOUNTAIN">Mountain</option>
-                                <option value="BEACH / DIVING">Beach / Diving</option>
-                                <option value="CULTURAL">Cultural</option>
-                                <option value="ACCOMMODATION">Accommodation</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Label Tag</label>
-                            <input type="text" id="spotLabel" placeholder="e.g., Crystal Waters" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        </div>
-                    </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Open on</label>
-                        <select id="spotSchedDays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            <option value="Everyday">Everyday</option>
-                            <option value="Monday to Friday">Monday to Friday</option>
-                            <option value="Monday to Saturday">Monday to Saturday</option>
-                            <option value="Weekends only">Weekends only</option>
-                            <option value="Wednesdays only">Wednesdays only</option>
-                            <option value="__custom__">Other…</option>
-                        </select>
-                        <input id="spotSchedDaysCustom" type="text" hidden placeholder="e.g., Tuesdays and Fridays" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary mt-2"/>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Opening hours</label>
-                        <select id="spotSchedHours" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                            <option value="all">Open all day</option>
-                            <option value="range">Set opening and closing time</option>
-                            <option value="__custom__">Other…</option>
-                        </select>
-                        <div id="spotSchedHoursRow" hidden class="flex items-center gap-2 mt-2">
-                            <input id="spotSchedOpen" type="time" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
-                            <span class="text-xs text-on-surface-variant shrink-0">to</span>
-                            <input id="spotSchedClose" type="time" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
-                        </div>
-                        <input id="spotSchedHoursCustom" type="text" hidden placeholder="e.g., By appointment" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary mt-2"/>
-                    </div>
-                </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Travel Fee (₱)</label>
-                            <input type="number" id="spotTravelFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Entrance Fee (₱)</label>
-                            <input type="number" id="spotEntranceFee" min="0" placeholder="0.00" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Photos</label>
-                            <span id="photoCounter" class="text-[11px] font-bold text-on-surface-variant">0 / 30</span>
-                        </div>
-
-                        <div id="photoGallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
-
-                        <p id="photoEmptyHint" class="text-[11px] text-on-surface-variant">
-                            No photos yet. The first one becomes the cover shown on your listing card.
-                        </p>
-
-                        <div class="flex flex-wrap gap-2 mt-2">
-                            <label id="photoUploadLabel" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                                <span class="material-symbols-outlined !text-base">add_photo_alternate</span>
-                                <span id="photoUploadText">Upload photos</span>
-                                <input type="file" id="spotPhotoInput" accept="image/*" multiple class="hidden"/>
-                            </label>
-                            <button type="button" id="addPhotoUrlBtn" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                                <span class="material-symbols-outlined !text-base">link</span> Paste a link
-                            </button>
-                        </div>
-
-                        <p id="photoStatus" hidden class="text-[11px] mt-2 text-on-surface-variant"></p>
-                    </div>
-
-
-                <div>
-                    <label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">
-                        <input id="spotTakesBookings" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>
-                        <span class="text-xs font-bold uppercase tracking-wider text-on-surface">This place takes online bookings</span>
-                    </label>
-                    <p class="text-[11px] text-on-surface-variant mt-1">
-                        Leave this off for places visitors simply turn up to. The page then shows contact
-                        details instead of a Book Now button.
-                    </p>
-
-                    <div id="spotBookingRow" hidden class="mt-3">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Booking website</label>
-                        <input id="spotBookingUrl" type="url" placeholder="https://your-site.com/book" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    </div>
-                </div>
-
-                <div class="pt-4 border-t border-outline-variant/30 space-y-3">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined !text-base text-primary">location_on</span>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface">Location Information</h4>
-                    </div>
-                    <p class="text-[11px] text-on-surface-variant">
-                        Visitors get directions, distance and travel time from this pin, worked out from wherever they
-                        happen to be at the time. Without it, directions stay unavailable for this listing.
-                    </p>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Address</label>
-                        <input id="spotLocAddress" type="text" placeholder="e.g., Sitio Bonbon, near the wharf" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Barangay</label>
-                            <input id="spotLocBarangay" type="text" placeholder="e.g., Malatapay" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Municipality</label>
-                            <input id="spotLocMunicipality" type="text" value="Zamboanguita" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Province</label>
-                        <input id="spotLocProvince" type="text" value="Negros Oriental" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Find it on the map</label>
-                        <div class="flex gap-2">
-                            <input id="spotLocSearch" type="text" placeholder="Search an address or landmark" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary flex-1"/>
-                            <button type="button" id="spotLocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all min-h-[44px]">
-                                Search
-                            </button>
-                        </div>
-                        <div id="spotLocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 rounded-xl p-1 max-h-44 overflow-y-auto text-on-surface"></div>
-                    </div>
-
-                    <div id="spotLocMap" class="relative z-0 h-56 sm:h-72 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-variant"></div>
-                    <p class="text-[11px] text-on-surface-variant">Tap the map to drop the pin, or drag it to the exact entrance.</p>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Latitude</label>
-                            <input id="spotLocLat" type="text" inputmode="decimal" placeholder="9.123456" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Longitude</label>
-                            <input id="spotLocLng" type="text" inputmode="decimal" placeholder="123.123456" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" id="spotLocConfirm" class="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                            <span class="material-symbols-outlined !text-base">check_circle</span> Confirm location
-                        </button>
-                        <button type="button" id="spotLocClear" class="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface-variant hover:bg-outline-variant/40 transition-all">
-                            <span class="material-symbols-outlined !text-base">location_off</span> Clear
-                        </button>
-                    </div>
-
-                    <p id="spotLocStatus" hidden class="text-[11px] text-on-surface-variant"></p>
-                </div>
-                    <div class="flex gap-4 pt-4">
-                        <button type="button" onclick="toggleAddSpotModal(false)" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">
-                            Cancel
-                        </button>
-                        <button type="submit" id="spotSubmitBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">
-                            Publish Spot
-                        </button>
-                    </div>
-                </form>
+                <div id="spotFormMount"></div>
             </div>
         </div>
     </main>
 
-<!-- ==========================================================================
-     Opening hours picker (shared module)
-     --------------------------------------------------------------------------
-     Days and times used to be free text, which meant every listing spelled them
-     differently — "Everyday", "everyday", "Mon-Fri", "8am-5pm". Now they are
-     chosen, and only written by hand when a place genuinely needs wording none
-     of the presets cover.
+<!-- The listing form, the schedule picker and the location picker all live in
+     src/shared/spot-form.js now. They used to be copied into this page and both
+     admin editors, byte for byte, and kept in step by hand. -->
+<script type="module" src="../shared/spot-form.js"></script>
 
-     Anything already saved still opens correctly: a value that matches a preset
-     selects it, a recognisable time range fills the two clocks, and anything
-     else drops into the custom box exactly as it was stored.
-     ========================================================================== -->
-<script>
-(function () {
-    const DAY_PRESETS = [
-        'Everyday',
-        'Monday to Friday',
-        'Monday to Saturday',
-        'Weekends only',
-        'Wednesdays only'
-    ];
-
-    function toClock(value) {
-        // "14:30" from an <input type="time"> becomes "2:30 PM", the wording
-        // listings already use.
-        const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
-        if (!match) return '';
-        let hour = Number(match[1]);
-        const minutes = match[2];
-        const suffix = hour >= 12 ? 'PM' : 'AM';
-        hour = hour % 12 || 12;
-        return `${hour}:${minutes} ${suffix}`;
-    }
-
-    function toInputTime(clock) {
-        const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(clock || '').trim());
-        if (!match) return '';
-        let hour = Number(match[1]) % 12;
-        if (/PM/i.test(match[3])) hour += 12;
-        return `${String(hour).padStart(2, '0')}:${match[2]}`;
-    }
-
-    /**
-     * Expected ids, all prefixed: <p>Days, <p>DaysCustom, <p>Hours, <p>HoursRow,
-     * <p>Open, <p>Close, <p>HoursCustom.
-     */
-    window.mountSchedulePicker = function (options) {
-        const prefix = options.prefix;
-        const el = suffix => document.getElementById(prefix + suffix);
-
-        const days = el('Days');
-        const daysCustom = el('DaysCustom');
-        const hours = el('Hours');
-        const hoursRow = el('HoursRow');
-        const open = el('Open');
-        const close = el('Close');
-        const hoursCustom = el('HoursCustom');
-
-        if (!days || !hours) return null;
-
-        function paintDays() {
-            daysCustom.hidden = days.value !== '__custom__';
-        }
-
-        function paintHours() {
-            hoursRow.hidden = hours.value !== 'range';
-            hoursCustom.hidden = hours.value !== '__custom__';
-        }
-
-        days.addEventListener('change', paintDays);
-        hours.addEventListener('change', paintHours);
-
-        return {
-            fill: function (spot) {
-                const storedDays = String(spot?.workingDays || '').trim() || 'Everyday';
-                const match = DAY_PRESETS.find(preset => preset.toLowerCase() === storedDays.toLowerCase());
-                if (match) {
-                    days.value = match;
-                    daysCustom.value = '';
-                } else {
-                    days.value = '__custom__';
-                    daysCustom.value = storedDays;
-                }
-                paintDays();
-
-                const storedHours = String(spot?.workingTime || '').trim() || 'All Day';
-                const range = /^(.+?)\s*-\s*(.+)$/.exec(storedHours);
-                const from = range ? toInputTime(range[1]) : '';
-                const to = range ? toInputTime(range[2]) : '';
-
-                if (/^all day$/i.test(storedHours)) {
-                    hours.value = 'all';
-                    open.value = '';
-                    close.value = '';
-                    hoursCustom.value = '';
-                } else if (from && to) {
-                    hours.value = 'range';
-                    open.value = from;
-                    close.value = to;
-                    hoursCustom.value = '';
-                } else {
-                    // Wording no clock can express — "By appointment", say. Kept verbatim.
-                    hours.value = '__custom__';
-                    hoursCustom.value = storedHours;
-                }
-                paintHours();
-            },
-
-            // What the form sends. Falls back to the same defaults the database
-            // uses, so a half-filled picker can never save an empty schedule.
-            value: function () {
-                const chosenDays = days.value === '__custom__'
-                    ? (daysCustom.value.trim() || 'Everyday')
-                    : days.value;
-
-                let chosenHours = 'All Day';
-                if (hours.value === 'range') {
-                    const from = toClock(open.value);
-                    const to = toClock(close.value);
-                    chosenHours = (from && to) ? `${from} - ${to}` : 'All Day';
-                } else if (hours.value === '__custom__') {
-                    chosenHours = hoursCustom.value.trim() || 'All Day';
-                }
-
-                return { workingDays: chosenDays, workingTime: chosenHours };
-            }
-        };
-    };
-})();
-</script>
-
-<!-- ==========================================================================
-     Location picker (shared module)
-     --------------------------------------------------------------------------
-     Lets whoever is responsible for a place mark exactly where it is. ZTIMS
-     stores that one point and nothing about any journey; each visitor's route,
-     distance and travel time is worked out from it later, per request.
-
-     A written address is not enough to route with — two places on the same
-     street share one address but not one gate — so the pin is what counts.
-
-     Leaflet and OpenStreetMap need no key and no account. Address lookups go
-     through the ZTIMS API so the routing provider's key stays on the server.
-     ========================================================================== -->
-<script>
-(function () {
-    const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    // Only the map's opening view when nothing is set yet — never saved as a location.
-    const DEFAULT_CENTER = [9.1003, 123.1966];   // Zamboanguita town centre
-
-    let leafletLoading = null;
-
-    function loadLeaflet() {
-        if (window.L) return Promise.resolve(window.L);
-        if (leafletLoading) return leafletLoading;
-
-        leafletLoading = new Promise(function (resolve, reject) {
-            const css = document.createElement('link');
-            css.rel = 'stylesheet';
-            css.href = LEAFLET_CSS;
-            document.head.appendChild(css);
-
-            const script = document.createElement('script');
-            script.src = LEAFLET_JS;
-            script.onload = function () { resolve(window.L); };
-            script.onerror = function () { reject(new Error('The map could not be loaded. Check your connection.')); };
-            document.head.appendChild(script);
-        });
-        return leafletLoading;
-    }
-
-    /**
-     * Wires one set of location fields to a map. Every element is found by a shared
-     * prefix, so a page can host more than one picker without them colliding.
-     *
-     * Expected ids: <prefix>Map, <prefix>Lat, <prefix>Lng, and optionally
-     * <prefix>Address, <prefix>Barangay, <prefix>Municipality, <prefix>Province,
-     * <prefix>Search, <prefix>SearchBtn, <prefix>Results, <prefix>Confirm,
-     * <prefix>Clear, <prefix>Status.
-     */
-    window.mountLocationPicker = function (options) {
-        const prefix = options.prefix;
-        const apiBase = options.apiBase;
-        const el = function (suffix) { return document.getElementById(prefix + suffix); };
-
-        const latInput = el('Lat');
-        const lngInput = el('Lng');
-        const mapBox = el('Map');
-        const status = el('Status');
-        const results = el('Results');
-        const searchInput = el('Search');
-
-        if (!latInput || !lngInput || !mapBox) return null;
-
-        let map = null;
-        let marker = null;
-
-        function say(message, tone) {
-            if (!status) return;
-            status.textContent = message || '';
-            status.hidden = !message;
-            status.style.color = tone === 'error' ? '#f87171' : (tone === 'ok' ? '#4ade80' : '');
-        }
-
-        // The same rule the API applies, so the form refuses what the server would.
-        function readPoint() {
-            const lat = parseFloat(latInput.value);
-            const lng = parseFloat(lngInput.value);
-            if (!isFinite(lat) || !isFinite(lng)) return null;
-            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
-            if (lat === 0 && lng === 0) return null;   // the classic "unset" pair
-            return { lat: lat, lng: lng };
-        }
-
-        function writePoint(lat, lng) {
-            latInput.value = lat.toFixed(6);
-            lngInput.value = lng.toFixed(6);
-        }
-
-        function placeMarker(lat, lng, recentre) {
-            if (!map) return;
-            if (!marker) {
-                marker = window.L.marker([lat, lng], { draggable: true }).addTo(map);
-                marker.on('dragend', function () {
-                    const at = marker.getLatLng();
-                    writePoint(at.lat, at.lng);
-                    say('Pin moved to ' + at.lat.toFixed(6) + ', ' + at.lng.toFixed(6) + '.', 'ok');
-                });
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
-            if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), 16));
-        }
-
-        function clearMarker() {
-            if (marker && map) { map.removeLayer(marker); }
-            marker = null;
-        }
-
-        async function ensureMap() {
-            if (map) return map;
-            await loadLeaflet();
-
-            map = window.L.map(mapBox, { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 13);
-            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            map.on('click', function (event) {
-                writePoint(event.latlng.lat, event.latlng.lng);
-                placeMarker(event.latlng.lat, event.latlng.lng, false);
-                say('Pin set to ' + event.latlng.lat.toFixed(6) + ', ' + event.latlng.lng.toFixed(6) + '.', 'ok');
-            });
-
-            return map;
-        }
-
-        // Turns a pin into readable address text. It only ever fills fields that are
-        // still empty — something typed by hand is never overwritten by a guess.
-        async function describePoint(point) {
-            try {
-                const response = await fetch(apiBase + '/directions/reverse?lat=' + point.lat + '&lng=' + point.lng);
-                const data = await response.json().catch(function () { return {}; });
-                if (!response.ok) return;
-
-                const fields = [
-                    [el('Address'), data.label],
-                    [el('Barangay'), data.barangay],
-                    [el('Municipality'), data.municipality],
-                    [el('Province'), data.province]
-                ];
-                fields.forEach(function (pair) {
-                    const field = pair[0];
-                    const value = pair[1];
-                    if (field && value && !field.value.trim()) field.value = value;
-                });
-            } catch (error) {
-                /* The pin is what gets saved; the address text is only a convenience. */
-            }
-        }
-
-        function renderResults(list) {
-            if (!results) return;
-            results.innerHTML = '';
-            results.hidden = list.length === 0;
-
-            list.forEach(function (place) {
-                // Built with textContent, never innerHTML: these labels come from an
-                // outside geocoder and must never be treated as markup.
-                const option = document.createElement('button');
-                option.type = 'button';
-                option.textContent = place.label;
-                option.className = 'w-full text-left text-xs px-3 py-2.5 rounded-lg hover:bg-outline-variant/30 transition-colors';
-                option.addEventListener('click', async function () {
-                    writePoint(place.latitude, place.longitude);
-                    await ensureMap();
-                    placeMarker(place.latitude, place.longitude, true);
-                    results.hidden = true;
-                    const address = el('Address');
-                    if (address && !address.value.trim()) address.value = place.label;
-                    say('Pin placed. Drag it if the exact gate is somewhere else.', 'ok');
-                });
-                results.appendChild(option);
-            });
-        }
-
-        async function runSearch() {
-            const query = (searchInput && searchInput.value || '').trim();
-            if (query.length < 3) { say('Type at least three characters to search.', 'error'); return; }
-
-            say('Searching…');
-            try {
-                const response = await fetch(apiBase + '/directions/search?q=' + encodeURIComponent(query));
-                const data = await response.json().catch(function () { return {}; });
-                if (!response.ok) throw new Error(data.message || 'Address search is unavailable right now.');
-
-                const list = Array.isArray(data.results) ? data.results : [];
-                renderResults(list);
-                say(list.length
-                    ? 'Pick the closest match, then drag the pin to the exact spot.'
-                    : 'No match found. Drop the pin on the map instead.');
-            } catch (error) {
-                say(error.message, 'error');
-            }
-        }
-
-        async function confirmPoint() {
-            const point = readPoint();
-            if (!point) {
-                say('No location set yet. Search for the address, or tap the map to drop a pin.', 'error');
-                return false;
-            }
-            try {
-                await ensureMap();
-                placeMarker(point.lat, point.lng, true);
-                map.invalidateSize();
-                await describePoint(point);
-                say('Location confirmed: ' + point.lat.toFixed(6) + ', ' + point.lng.toFixed(6) + '.', 'ok');
-                return true;
-            } catch (error) {
-                say(error.message, 'error');
-                return false;
-            }
-        }
-
-        const searchBtn = el('SearchBtn');
-        if (searchBtn) searchBtn.addEventListener('click', runSearch);
-        if (searchInput) {
-            // Inside a form, Enter would otherwise submit the whole listing.
-            searchInput.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') { event.preventDefault(); runSearch(); }
-            });
-        }
-
-        const confirmBtn = el('Confirm');
-        if (confirmBtn) confirmBtn.addEventListener('click', confirmPoint);
-
-        const clearBtn = el('Clear');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function () {
-                latInput.value = '';
-                lngInput.value = '';
-                clearMarker();
-                say('Location cleared. Visitors will not be offered directions to this listing.');
-            });
-        }
-
-        return {
-            // Leaflet measures the container on creation, so a map built inside a
-            // closed dialog comes out zero-sized. This is called when it opens.
-            refresh: async function () {
-                try {
-                    await ensureMap();
-                    map.invalidateSize();
-                    const point = readPoint();
-                    if (point) placeMarker(point.lat, point.lng, true);
-                    else { clearMarker(); map.setView(DEFAULT_CENTER, 13); }
-                } catch (error) {
-                    say(error.message, 'error');
-                }
-            },
-            fill: function (record) {
-                const source = record || {};
-                const pairs = [
-                    [el('Address'), source.address || ''],
-                    [el('Barangay'), source.barangay || ''],
-                    [el('Municipality'), source.municipality || 'Zamboanguita'],
-                    [el('Province'), source.province || 'Negros Oriental']
-                ];
-                pairs.forEach(function (pair) { if (pair[0]) pair[0].value = pair[1]; });
-
-                const hasPoint = source.latitude !== null && source.latitude !== undefined
-                    && source.longitude !== null && source.longitude !== undefined;
-                latInput.value = hasPoint ? source.latitude : '';
-                lngInput.value = hasPoint ? source.longitude : '';
-
-                if (searchInput) searchInput.value = '';
-                if (results) { results.innerHTML = ''; results.hidden = true; }
-                say(hasPoint ? '' : 'No location set yet — directions stay unavailable until a pin is dropped.');
-            },
-            // What the form sends. Blank coordinates are sent as empty strings, which
-            // the API reads as "clear it", never as a point at 0,0.
-            payload: function () {
-                const point = readPoint();
-                return {
-                    address: (el('Address') && el('Address').value.trim()) || '',
-                    barangay: (el('Barangay') && el('Barangay').value.trim()) || '',
-                    municipality: (el('Municipality') && el('Municipality').value.trim()) || '',
-                    province: (el('Province') && el('Province').value.trim()) || '',
-                    latitude: point ? point.lat : '',
-                    longitude: point ? point.lng : ''
-                };
-            }
-        };
-    };
-})();
-</script>
 
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
-        // Wired up once; the dialog refreshes it each time it opens, because Leaflet
-        // measures its container on creation and a closed dialog measures zero.
-        const locationPicker = mountLocationPicker({ prefix: 'spotLoc', apiBase: API_BASE });
-        const schedulePicker = mountSchedulePicker({ prefix: 'spotSched' });
 
-        /* Booking is opt-in: plenty of places visitors simply turn up to have no
-           website to send them to, and an empty URL box invited a guess. */
-        function wireBookingSwitch() {
-            const takes = document.getElementById('spotTakesBookings');
-            const row = document.getElementById('spotBookingRow');
-            takes.addEventListener('change', function () { row.hidden = !takes.checked; });
-        }
-        function fillBooking(spot) {
-            const takes = document.getElementById('spotTakesBookings');
-            const url = (spot && spot.bookingUrl) || '';
-            takes.checked = Boolean(url);
-            document.getElementById('spotBookingUrl').value = url;
-            document.getElementById('spotBookingRow').hidden = !takes.checked;
-        }
-        function bookingValue() {
-            return document.getElementById('spotTakesBookings').checked
-                ? document.getElementById('spotBookingUrl').value.trim()
-                : '';      // switched off means no booking link, whatever the box holds
-        }
-        let mySpots = [];
-        let loadFailed = false;
-        let loadError = '';
-
-        /* ---- Photo gallery ---------------------------------------------------
-           Photos go straight from the browser to Cloudinary; MongoDB only ever
+        /* Photos go straight from the browser to Cloudinary; MongoDB only ever
            stores the resulting links. Photos are far too large to keep in the
            database itself — one phone photo is 2-5 MB, the API accepts 1 MB
            request bodies, and a MongoDB document caps out at 16 MB.
@@ -1231,172 +607,15 @@ body { overflow-x: hidden; }
         const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
         const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
 
-        const MAX_SPOT_IMAGES = 30;     // must match MAX_SPOT_IMAGES in server.js
-        const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-
-        // Photo links for the spot currently open in the modal. Index 0 is the cover.
-        let spotImages = [];
-
-        function cloudinaryConfigured() {
-            return !CLOUDINARY_CLOUD_NAME.startsWith('YOUR_') && !CLOUDINARY_UPLOAD_PRESET.startsWith('YOUR_');
-        }
+        let spotForm = null;
+        let mySpots = [];
+        let loadFailed = false;
+        let loadError = '';
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => (
                 { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
             ));
-        }
-
-        function setPhotoStatus(message, tone) {
-            const status = document.getElementById('photoStatus');
-            if (!status) return;
-            status.textContent = message || '';
-            status.className = 'text-[11px] mt-2 ' + (tone === 'error' ? 'text-error' : 'text-on-surface-variant');
-            status.hidden = !message;
-        }
-
-        function renderPhotoGallery() {
-            const gallery = document.getElementById('photoGallery');
-            if (!gallery) return;
-            document.getElementById('photoCounter').textContent = `${spotImages.length} / ${MAX_SPOT_IMAGES}`;
-            document.getElementById('photoEmptyHint').hidden = spotImages.length > 0;
-
-            gallery.innerHTML = spotImages.map((url, index) => `
-                <figure class="relative group aspect-square rounded-xl overflow-hidden bg-surface-variant ring-1 ${index === 0 ? 'ring-primary' : 'ring-outline-variant/40'}">
-                    <img src="${escapeHtml(url)}" alt="Photo ${index + 1}" class="w-full h-full object-cover"/>
-                    ${index === 0 ? '<figcaption class="absolute bottom-0 inset-x-0 bg-primary text-on-primary text-[9px] font-bold tracking-widest text-center py-0.5">COVER</figcaption>' : ''}
-                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                        ${index === 0 ? '' : `<button type="button" data-cover="${index}" title="Make this the cover" class="p-1 rounded-full bg-white text-black hover:scale-110 transition-transform flex"><span class="material-symbols-outlined !text-base">star</span></button>`}
-                        <button type="button" data-remove="${index}" title="Remove this photo" class="p-1 rounded-full bg-white text-error hover:scale-110 transition-transform flex"><span class="material-symbols-outlined !text-base">delete</span></button>
-                    </div>
-                </figure>
-            `).join('');
-        }
-
-        // Keeps the list unique and inside the limit, and reports what it dropped
-        // so photos never disappear without explanation.
-        function addPhotos(urls) {
-            const added = [];
-            let duplicates = 0;
-            for (const raw of urls) {
-                const url = String(raw || '').trim();
-                if (!url) continue;
-                if (spotImages.includes(url)) { duplicates += 1; continue; }
-                if (spotImages.length >= MAX_SPOT_IMAGES) {
-                    renderPhotoGallery();
-                    setPhotoStatus(`Only ${MAX_SPOT_IMAGES} photos are allowed, so the rest were not added.`, 'error');
-                    return added;
-                }
-                spotImages.push(url);
-                added.push(url);
-            }
-            renderPhotoGallery();
-            if (duplicates) setPhotoStatus(`${duplicates} photo${duplicates > 1 ? 's were' : ' was'} already in the gallery.`);
-            return added;
-        }
-
-        async function uploadPhotoToCloudinary(file) {
-            const form = new FormData();
-            form.append('file', file);
-            form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: form
-            });
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok || !result.secure_url) {
-                throw new Error(result?.error?.message || 'Cloudinary rejected the upload.');
-            }
-            return result.secure_url;
-        }
-
-        async function handlePhotoFiles(event) {
-            const input = event.target;
-            const files = Array.from(input.files || []);
-            input.value = '';   // so picking the same file twice still fires change
-            if (files.length === 0) return;
-
-            if (!cloudinaryConfigured()) {
-                setPhotoStatus('Photo uploads are not set up yet — add your Cloudinary cloud name and upload preset in this page, or use "Paste a link".', 'error');
-                return;
-            }
-
-            const room = MAX_SPOT_IMAGES - spotImages.length;
-            if (room <= 0) {
-                setPhotoStatus(`You already have the maximum of ${MAX_SPOT_IMAGES} photos.`, 'error');
-                return;
-            }
-
-            const queue = files.slice(0, room);
-            const skippedForLimit = files.length - queue.length;
-            const failed = [];
-            const label = document.getElementById('photoUploadText');
-            const originalLabel = label.textContent;
-            document.getElementById('spotPhotoInput').disabled = true;
-
-            for (let i = 0; i < queue.length; i++) {
-                const file = queue[i];
-                label.textContent = `Uploading ${i + 1} of ${queue.length}...`;
-                setPhotoStatus(`Uploading ${escapeHtml(file.name)} (${i + 1} of ${queue.length})...`);
-                if (file.size > MAX_PHOTO_BYTES) {
-                    failed.push(`${file.name} (over 10 MB)`);
-                    continue;
-                }
-                try {
-                    const url = await uploadPhotoToCloudinary(file);
-                    spotImages.push(url);
-                    renderPhotoGallery();
-                } catch (error) {
-                    console.error('Cloudinary upload failed:', error);
-                    failed.push(`${file.name} (${error.message})`);
-                }
-            }
-
-            label.textContent = originalLabel;
-            document.getElementById('spotPhotoInput').disabled = false;
-            renderPhotoGallery();
-
-            const notes = [];
-            if (failed.length) notes.push(`Could not upload: ${failed.join(', ')}.`);
-            if (skippedForLimit) notes.push(`${skippedForLimit} photo${skippedForLimit > 1 ? 's were' : ' was'} skipped — the limit is ${MAX_SPOT_IMAGES}.`);
-            setPhotoStatus(notes.join(' ') || `${queue.length - failed.length} photo${queue.length - failed.length === 1 ? '' : 's'} uploaded.`, failed.length ? 'error' : '');
-        }
-
-        function wirePhotoControls() {
-            document.getElementById('spotPhotoInput').addEventListener('change', handlePhotoFiles);
-
-            document.getElementById('addPhotoUrlBtn').addEventListener('click', () => {
-                const url = prompt('Paste the photo link (it must start with http:// or https://)');
-                if (url === null) return;
-                if (!/^https?:\/\//i.test(url.trim())) {
-                    setPhotoStatus('That does not look like a photo link. It should start with http:// or https://.', 'error');
-                    return;
-                }
-                setPhotoStatus('');
-                addPhotos([url]);
-            });
-
-            // Delegated so the buttons survive every re-render of the gallery.
-            document.getElementById('photoGallery').addEventListener('click', event => {
-                const removeBtn = event.target.closest('[data-remove]');
-                const coverBtn = event.target.closest('[data-cover]');
-                if (removeBtn) {
-                    spotImages.splice(Number(removeBtn.dataset.remove), 1);
-                } else if (coverBtn) {
-                    const index = Number(coverBtn.dataset.cover);
-                    spotImages.unshift(spotImages.splice(index, 1)[0]);
-                } else {
-                    return;
-                }
-                setPhotoStatus('');
-                renderPhotoGallery();
-            });
-
-            if (!cloudinaryConfigured()) {
-                document.getElementById('photoUploadLabel').title =
-                    'Add your Cloudinary cloud name and upload preset in this page to enable uploads.';
-            }
         }
 
         function authHeaders(extra) {
@@ -1484,76 +703,35 @@ body { overflow-x: hidden; }
             if (show) {
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                document.getElementById('spotModalTitle').textContent = spot ? 'Edit Spot' : 'Add New Spot';
-                document.getElementById('spotSubmitBtn').textContent = spot ? 'Save Changes' : 'Publish Spot';
-                document.getElementById('editingSpotId').value = spot ? spot._id : '';
-                document.getElementById('spotTitle').value = spot?.title || '';
-                document.getElementById('spotDescription').value = spot?.description || '';
-                document.getElementById('spotCategory').value = spot?.category || 'MOUNTAIN';
-                document.getElementById('spotLabel').value = spot?.label || '';
-                document.getElementById('spotTravelFee').value = spot?.travelFee ?? '';
-                document.getElementById('spotEntranceFee').value = spot?.entranceFee ?? '';
-                fillBooking(spot);
-                if (schedulePicker) schedulePicker.fill(spot);
-                if (locationPicker) { locationPicker.fill(spot); locationPicker.refresh(); }
-
-                // Spots saved before galleries existed have only a cover image;
-                // showing it as photo one keeps it from being wiped on the next save.
-                spotImages = Array.isArray(spot?.images) && spot.images.length
-                    ? [...spot.images]
-                    : (spot?.imageUrl ? [spot.imageUrl] : []);
-                setPhotoStatus('');
-                renderPhotoGallery();
+                document.getElementById('spotModalTitle').textContent = spot ? 'Edit listing' : 'Add a listing';
+                if (spotForm) spotForm.open(spot);
             } else {
                 modal.classList.remove('flex');
                 modal.classList.add('hidden');
-                document.getElementById('addSpotForm').reset();
-                fillBooking(null);
-                if (schedulePicker) schedulePicker.fill(null);
-                if (locationPicker) locationPicker.fill(null);
-                spotImages = [];
-                setPhotoStatus('');
-                renderPhotoGallery();
+                if (spotForm) spotForm.close();
             }
         }
 
-        async function handleSpotSubmit(event) {
-            event.preventDefault();
-            const editingId = document.getElementById('editingSpotId').value;
-            const restoreButton = setButtonLoading(document.getElementById('spotSubmitBtn'), editingId ? 'Saving...' : 'Publishing...');
-            const payload = {
-                title: document.getElementById('spotTitle').value.trim(),
-                description: document.getElementById('spotDescription').value.trim(),
-                category: document.getElementById('spotCategory').value,
-                label: document.getElementById('spotLabel').value.trim(),
-                ...(schedulePicker ? schedulePicker.value() : {}),
-                travelFee: parseFloat(document.getElementById('spotTravelFee').value) || 0,
-                entranceFee: parseFloat(document.getElementById('spotEntranceFee').value) || 0,
-                images: spotImages,
-                imageUrl: spotImages[0] || '',      // photo one is the cover
-                bookingUrl: bookingValue(),
-                ...(locationPicker ? locationPicker.payload() : {})
-            };
-
-            try {
-                const response = await fetch(
-                    editingId ? `${API_BASE}/spots/${editingId}` : `${API_BASE}/spots`,
-                    {
-                        method: editingId ? 'PUT' : 'POST',
-                        headers: authHeaders({ 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(payload)
-                    }
-                );
-                if (response.status === 401) { handleExpiredSession(); return; }
-                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || 'Failed to save spot.');
-
-                toggleAddSpotModal(false);
-                await loadMySpots();
-            } catch (error) {
-                showToast(error.message, 'error');
-            } finally {
-                restoreButton();
+        // The form collects and validates; this page only knows where to send it.
+        async function saveSpot(payload, context) {
+            const editingId = context.editingId;
+            const response = await fetch(
+                editingId ? `${API_BASE}/spots/${encodeURIComponent(editingId)}` : `${API_BASE}/spots`,
+                {
+                    method: editingId ? 'PUT' : 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload)
+                }
+            );
+            if (response.status === 401) { handleExpiredSession(); return; }
+            if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.message || result.error || `The server refused this (status ${response.status}).`);
             }
+
+            toggleAddSpotModal(false);
+            await loadMySpots();
+            showToast(`${payload.title} ${editingId ? 'updated' : 'published'}.`, 'success');
         }
 
         async function deleteSpot(id, button) {
@@ -1646,6 +824,33 @@ body { overflow-x: hidden; }
             }
         }
 
+        // Kept separate so a missing module costs the editor and nothing else:
+        // an early return here cannot skip the page's own loading.
+        function mountListingForm() {
+            if (typeof mountSpotForm !== 'function') {
+                console.error('The listing form (src/shared/spot-form.js) did not load.');
+                const mount = document.getElementById('spotFormMount');
+                if (mount) {
+                    mount.innerHTML = '<p class="text-sm text-error bg-error/10 border border-error/20 ' +
+                        'rounded-xl px-4 py-3">The listing form could not be loaded. Reload the page; if it ' +
+                        'keeps happening, the site needs redeploying.</p>';
+                }
+                return;
+            }
+
+            spotForm = mountSpotForm({
+                mount: document.getElementById('spotFormMount'),
+                prefix: 'spot',
+                apiBase: API_BASE,
+                role: 'manager',
+                cloudName: CLOUDINARY_CLOUD_NAME,
+                uploadPreset: CLOUDINARY_UPLOAD_PRESET,
+                labels: { create: 'Publish listing', edit: 'Save changes' },
+                onSubmit: saveSpot,
+                onCancel: () => toggleAddSpotModal(false)
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             mountPortalAccountMenu();
             const icon = document.getElementById('themeIcon');
@@ -1653,9 +858,7 @@ body { overflow-x: hidden; }
 
             if (!guardEstablishmentManagerSession()) return;
 
-            wirePhotoControls();
-            wireBookingSwitch();
-            renderPhotoGallery();
+            mountListingForm();
 
             loadMySpots();
         });
