@@ -972,13 +972,14 @@ body { overflow-x: hidden; }
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
-                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th>Type</th><th class="text-right">Entrance</th></tr>
+                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
                     systemSpots.forEach(spot => {
-                        const kind = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
+                        // No Type column: it is derived from the category, so it only
+                        // ever repeated it one cell to the right.
                         const fee = Number(spot.entranceFee || 0).toFixed(2);
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-stone-400">${escapeHtml(spot.category || '—')}</td><td class="text-stone-400">${escapeHtml(kind)}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-stone-400">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -1231,5 +1232,7 @@ body { overflow-x: hidden; }
     });
 })();
 </script>
+<!-- Marks the sidebar link for the page you are on. -->
+<script type="module" src="../shared/nav-active.js"></script>
 </body>
 </html>

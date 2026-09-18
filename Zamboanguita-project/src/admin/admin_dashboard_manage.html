@@ -1069,10 +1069,11 @@ body { overflow-x: hidden; }
                     <div class="flex-1 min-w-0 space-y-2">
                         <div class="flex flex-wrap items-center gap-2">
                             <h3 class="text-xl font-black text-on-surface">${escapeHtml(spot.title)}</h3>
+                            <!-- Category only. The type badge beside it was derived from the
+                                 category on the server, so it could only ever restate it:
+                                 ACCOMMODATION sat next to "Accommodation", and every other
+                                 category next to "Tourist Spot". -->
                             <span class="px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${categoryColour}">${escapeHtml(spot.category || 'General')}</span>
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-surface-variant text-on-surface-variant uppercase tracking-wider">
-                                ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
-                            </span>
                         </div>
 
                         <p class="text-xs text-on-surface-variant flex items-center gap-1">
@@ -1398,5 +1399,7 @@ body { overflow-x: hidden; }
     });
 })();
 </script>
+<!-- Marks the sidebar link for the page you are on. -->
+<script type="module" src="../shared/nav-active.js"></script>
 </body>
 </html>
