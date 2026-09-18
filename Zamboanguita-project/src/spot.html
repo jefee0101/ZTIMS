@@ -635,6 +635,28 @@ body { overflow-x: hidden; }
         return { lat: lat, lng: lng };
     }
 
+    /**
+     * A description written in paragraphs stays in paragraphs. Escaped text inside
+     * a single <p> collapses every blank line, so a structured entry — what the
+     * place is, what to expect, how to get there — arrived as one unbroken block.
+     * This changes only how the existing description is displayed; nothing new is
+     * stored.
+     */
+    function describe(text) {
+        const paragraphs = String(text || '')
+            .split(/\n\s*\n/)
+            .map(function (part) { return part.trim(); })
+            .filter(Boolean);
+
+        if (paragraphs.length === 0) return '';
+
+        return paragraphs.map(function (part) {
+            // A single newline inside a paragraph is a line break, not a new one.
+            return '<p class="text-on-surface-variant leading-relaxed mb-3 last:mb-0">' +
+                escapeHtml(part).replace(/\n/g, '<br/>') + '</p>';
+        }).join('');
+    }
+
     function locationLine(spot) {
         return [spot.address, spot.barangay, spot.municipality, spot.province]
             .map(function (part) { return String(part || '').trim(); })
@@ -1277,7 +1299,7 @@ body { overflow-x: hidden; }
                     <div>
                         <span class="text-primary text-xs font-bold uppercase tracking-widest block mb-2">${escapeHtml(spot.label || spot.category || '')}</span>
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-3">About this destination</h2>
-                        <p class="text-on-surface-variant leading-relaxed">${escapeHtml(spot.description)}</p>
+                        ${describe(spot.description)}
                     </div>
 
                     ${photoGallerySection(photos)}
