@@ -172,8 +172,26 @@ body { overflow-x: hidden; }
         var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
         ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
             var button = document.getElementById(id);
-            if (button) { button.title = label; button.setAttribute('aria-label', label); }
+            if (!button) return;
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            bindToggle(button);
         });
+    }
+
+    /* The landing page's theme button had no handler at all — no onclick, no
+       listener — so choosing light mode there did nothing. Every other page
+       wired it, each in its own way, and the one that forgot failed silently.
+       Binding here means no page can forget again.
+
+       Bound at most once per button, and never over a button that already
+       carries an inline onclick: two handlers would toggle twice and land back
+       where they started, which looks exactly like a button that does nothing. */
+    function bindToggle(button) {
+        if (button.getAttribute('data-theme-bound')) return;
+        if (button.getAttribute('onclick')) return;
+        button.setAttribute('data-theme-bound', '1');
+        button.addEventListener('click', function () { window.toggleTheme(); });
     }
 
     function current() {

@@ -602,6 +602,18 @@
            old listing never had one and that must not block fixing its hours". */
         let locationConfirmed = false;
         let hadPointOnOpen = false;
+
+        /* The map has two modes. In View mode it is a map: it pans, it zooms, and
+           clicking it does nothing to the listing. Pin mode is entered
+           deliberately, and only then does a click move the pin.
+
+           Before this, every click on the map moved the saved location, so
+           looking around the map and changing where visitors are sent were the
+           same gesture. pinBackup holds what the location was when pin mode was
+           entered, which is what Cancel puts back. */
+        let pinMode = false;
+        let pinBackup = null;
+        let pinControl = null;
         let locMethod = '';                 // '' | 'search' | 'here' | 'map'
         let detectedBarangay = '';          // what the geocoder made of the pin
         let detectedMunicipality = '';
@@ -989,6 +1001,7 @@
             el('LocConfirmLabel').textContent = locationConfirmed ? 'Location confirmed' : 'Confirm location';
             confirmBtn.classList.toggle('!bg-surface-variant', locationConfirmed);
             confirmBtn.classList.toggle('!text-on-surface', locationConfirmed);
+            paintPinControl();
 
             check.hidden = false;
             const inside = insideZamboanguita(point.lat, point.lng);
@@ -1032,10 +1045,13 @@
             });
         });
 
+        /* Draggable only while pinning. A marker that can be dragged at any time
+           means the location can be changed by a slip of the hand on a map
+           somebody opened to look at. */
         function placeMarker(lat, lng, recentre) {
             if (!map) return;
             if (!marker) {
-                marker = window.L.marker([lat, lng], { draggable: true }).addTo(map);
+                marker = window.L.marker([lat, lng], { draggable: pinMode }).addTo(map);
                 marker.on('dragend', function () {
                     const at = marker.getLatLng();
                     writePoint(at.lat, at.lng);
@@ -1045,7 +1061,21 @@
             } else {
                 marker.setLatLng([lat, lng]);
             }
+            setMarkerDraggable(pinMode);
+            paintMarkerState();
             if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), PIN_ZOOM));
+        }
+
+        function setMarkerDraggable(on) {
+            if (!marker || !marker.dragging) return;
+            if (on) marker.dragging.enable();
+            else marker.dragging.disable();
+        }
+
+        // A pin being placed and a pin already agreed to should not look alike.
+        function paintMarkerState() {
+            if (!marker || !marker._icon) return;
+            marker._icon.classList.toggle('ztims-pin--choosing', pinMode);
         }
 
         function clearMarker() {
@@ -1053,10 +1083,32 @@
             marker = null;
         }
 
-        async function ensureMap() {
-            if (map) return map;
+        /* Guarded by the promise, not by `map`. Two callers can reach this before
+           either has finished — setLocPhase asks for the map when the panel is
+           shown, and the "Pick on the map" button asks for it again in the same
+           tick — and the old `if (map)` check let both through, because neither
+           had assigned it yet. That built two Leaflet maps on one container, and
+           once the pin bar existed, two of those as well. */
+        let mapReady = null;
+
+        function ensureMap() {
+            if (map) return Promise.resolve(map);
+            if (mapReady) return mapReady;
+            mapReady = buildMap().catch(function (error) {
+                mapReady = null;        // a failed attempt must not poison the next
+                throw error;
+            });
+            return mapReady;
+        }
+
+        async function buildMap() {
             await loadLeaflet();
 
+            /* The wheel is left to the page while the map is a panel inside a
+               scrolling form — otherwise scrolling past the form zooms the map
+               instead. Expanded, the map is the whole screen and there is
+               nothing to scroll past, so the wheel becomes zoom. That switch is
+               in the expand control's callback below. */
             map = window.L.map(el('LocMap'), { scrollWheelZoom: false })
                 .setView(ZAMBOANGUITA_CENTER, LOCAL_ZOOM);
             window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1064,16 +1116,28 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
+            /* Leaflet does not raise `click` at the end of a drag, so panning
+               cannot place a pin. The mode check is the second guard: a plain
+               click while looking around must not move anybody's listing. */
             map.on('click', function (event) {
+                if (!pinMode) return;
                 writePoint(event.latlng.lat, event.latlng.lng);
                 placeMarker(event.latlng.lat, event.latlng.lng, false);
                 // Placed from a municipality-wide view, the pin is a guess at which
                 // building it is. Rather than refusing it, go in close enough that
                 // the guess can be corrected by looking.
                 if (map.getZoom() < PIN_ZOOM) map.setView([event.latlng.lat, event.latlng.lng], PIN_ZOOM);
-                say('Pin placed. Drag it onto the entrance if it is not there already.', 'ok');
+                say('Pin placed. Tap again or drag it to move it, then confirm.', 'ok');
                 describePoint({ lat: event.latlng.lat, lng: event.latlng.lng });
             });
+
+            try {
+                pinControl = addPinControl(map);
+            } catch (error) {
+                // An older Leaflet, or a partial one. Pin mode still works from
+                // the panel below; only the in-map buttons are missing.
+                pinControl = null;
+            }
 
             /* Dropping a pin on a small map means guessing which building is
                which. Full screen is where the gate can actually be found, so
@@ -1081,7 +1145,13 @@
                control is lost if the map module is missing; the picker itself
                carries on. */
             if (window.ZTIMS_MAP && window.ZTIMS_MAP.addExpandControl) {
-                window.ZTIMS_MAP.addExpandControl(map, el('LocMap'), function () {
+                window.ZTIMS_MAP.addExpandControl(map, el('LocMap'), function (expanded) {
+                    // Full screen has no page behind it to scroll, so the wheel
+                    // can do the obvious thing.
+                    if (expanded) map.scrollWheelZoom.enable();
+                    else map.scrollWheelZoom.disable();
+                    map.invalidateSize();
+
                     const point = readPoint();
                     // Stay on the pin through the change of size: re-framing to
                     // anything else would lose the thing being placed.
@@ -1186,6 +1256,130 @@
             paintLocation();
         }
 
+
+        /* ------------------------------------------------- pin mode -------
+           The controls live inside the map, because section by section the
+           reason to be here is that the map is full screen — and the form's own
+           Confirm button is then somewhere behind it, unreachable without
+           shrinking the map again and losing the view you just found.
+
+           Only this picker gets them. The public map has no pin control at all,
+           which is the front half of "visitors are read-only"; the back half is
+           authorizeSpotWrite on the server, which is what actually stops a
+           hand-written request. */
+        function addPinControl(target) {
+            const control = window.L.control({ position: 'bottomleft' });
+
+            control.onAdd = function () {
+                const box = window.L.DomUtil.create('div', 'ztims-pinbar');
+
+                function button(label, icon, kind) {
+                    const el = window.L.DomUtil.create('button', 'ztims-pinbar__btn ztims-pinbar__btn--' + kind, box);
+                    el.type = 'button';
+                    el.innerHTML = '<span class="material-symbols-outlined">' + icon + '</span><span>' + label + '</span>';
+                    return el;
+                }
+
+                control._start = button('Pin location', 'edit_location_alt', 'start');
+                control._confirm = button('Confirm location', 'check_circle', 'confirm');
+                control._cancel = button('Cancel', 'close', 'cancel');
+
+                // Without this a press on a control also reaches the map, which
+                // would drop a pin under the button that was just pressed.
+                window.L.DomEvent.disableClickPropagation(box);
+                window.L.DomEvent.disableScrollPropagation(box);
+
+                window.L.DomEvent.on(control._start, 'click', function (event) {
+                    window.L.DomEvent.preventDefault(event);
+                    enterPinMode();
+                });
+                window.L.DomEvent.on(control._confirm, 'click', function (event) {
+                    window.L.DomEvent.preventDefault(event);
+                    confirmPin();
+                });
+                window.L.DomEvent.on(control._cancel, 'click', function (event) {
+                    window.L.DomEvent.preventDefault(event);
+                    cancelPin();
+                });
+
+                return box;
+            };
+
+            control.addTo(target);
+            paintPinControl();
+            return control;
+        }
+
+        function paintPinControl() {
+            // Independent of the control: the map says which mode it is in even
+            // if the buttons could not be drawn.
+            const mount = el('LocMap');
+            if (mount) mount.classList.toggle('ztims-map--pinning', pinMode);
+
+            if (!pinControl || !pinControl._start) return;
+            pinControl._start.hidden = pinMode;
+            pinControl._confirm.hidden = !pinMode;
+            pinControl._cancel.hidden = !pinMode;
+            // Nothing to confirm until something has been chosen.
+            pinControl._confirm.disabled = !readPoint();
+        }
+
+        function enterPinMode() {
+            if (pinMode) return;
+            // What Cancel restores. Taken before anything can change.
+            const point = readPoint();
+            pinBackup = {
+                lat: el('LocLat').value,
+                lng: el('LocLng').value,
+                confirmed: locationConfirmed,
+                had: Boolean(point)
+            };
+            pinMode = true;
+            setMarkerDraggable(true);
+            paintMarkerState();
+            paintPinControl();
+            say('Tap the map where visitors should arrive, then confirm.', 'ok');
+        }
+
+        function leavePinMode() {
+            pinMode = false;
+            pinBackup = null;
+            setMarkerDraggable(false);
+            paintMarkerState();
+            paintPinControl();
+        }
+
+        /* The same checks the form's own Confirm button runs, because there is
+           one definition of a location being agreed to and both buttons have to
+           mean it. Nothing is written to the database here: the listing is saved
+           by the form's Publish or Save, exactly as before. */
+        async function confirmPin() {
+            const ok = await confirmLocation();
+            if (ok) leavePinMode();
+        }
+
+        function cancelPin() {
+            if (!pinMode) return;
+            const backup = pinBackup;
+            leavePinMode();
+            if (!backup) return;
+
+            el('LocLat').value = backup.lat;
+            el('LocLng').value = backup.lng;
+            locationConfirmed = backup.confirmed;
+
+            const point = readPoint();
+            if (point) {
+                placeMarker(point.lat, point.lng, true);
+                say('Left as it was.');
+            } else {
+                clearMarker();
+                say('No location set. The listing is unchanged.');
+            }
+            paintLocation();
+            saveDraftSoon();
+        }
+
         /* ------------------------------------------------- the three ways in */
 
         el('LocWaySearch').addEventListener('click', function () {
@@ -1195,10 +1389,13 @@
             el('LocSearch').focus();
         });
 
-        el('LocWayMap').addEventListener('click', function () {
+        el('LocWayMap').addEventListener('click', async function () {
             locMethod = 'map';
             setLocPhase();
-            say('Tap the map where the place is. You can drag the pin afterwards.');
+            // Choosing this is itself the deliberate act, so pin mode starts here
+            // rather than asking for a second press of the same intent.
+            try { await ensureMap(); } catch (error) { /* say() already reported it */ }
+            enterPinMode();
         });
 
         el('LocLegacyAdd').addEventListener('click', function () {
@@ -1342,21 +1539,24 @@
 
         /* ----------------------------------------------- confirm and change */
 
-        el('LocConfirm').addEventListener('click', async function () {
+        /* One definition of "this location is agreed to", used by the button under
+           the map and by the one inside it. Returns whether it took, so the
+           caller can decide what to do next. */
+        async function confirmLocation() {
             const point = readPoint();
             if (!point) {
                 say('No pin yet. Search for the place, use this device\'s position, or tap the map.', 'error');
-                return;
+                return false;
             }
             if (!insideZamboanguita(point.lat, point.lng)) {
                 say('This location appears to be outside ' + MUNICIPALITY
                     + '. Please move the pin, or choose another search result.', 'error');
-                return;
+                return false;
             }
             if (!pointIsPrecise()) {
                 say('Those coordinates are not exact enough to send anyone to. Place the pin on the map, '
                     + 'or give at least four decimal places.', 'error');
-                return;
+                return false;
             }
 
             try {
@@ -1369,7 +1569,7 @@
             if (!el('LocBarangay').value) {
                 say('Choose the barangay to finish confirming this location.', 'error');
                 el('LocBarangay').focus();
-                return;
+                return false;
             }
 
             locationConfirmed = true;
@@ -1384,7 +1584,10 @@
                     + '. Worth a second look before you publish.'
                 : 'Location confirmed. This is where visitors will be sent.',
                 elsewhere ? 'error' : 'ok');
-        });
+            return true;
+        }
+
+        el('LocConfirm').addEventListener('click', function () { confirmLocation(); });
 
         function clearLocation() {
             el('LocLat').value = '';
@@ -1564,7 +1767,20 @@
             );
         }
 
+        /* The upload itself lives in src/shared/photo-upload.js, because the
+           guides page needs the same thing and two copies of a signed upload is
+           two places to get the signing wrong. The local path below is kept for
+           the case where that module did not load, so a missing script costs the
+           page its uploads rather than its whole form. */
         async function uploadToCloudinary(file) {
+            if (window.ZTIMS_UPLOAD) {
+                return window.ZTIMS_UPLOAD.uploadImage(file, {
+                    apiBase: apiBase,
+                    cloudName: options.cloudName,
+                    uploadPreset: options.uploadPreset
+                });
+            }
+
             // Checked here as well as by the accept attribute, which a determined
             // file picker will happily ignore.
             if (!/^image\//.test(file.type || '')) {

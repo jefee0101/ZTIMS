@@ -289,8 +289,26 @@ body { overflow-x: hidden; }
         var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
         ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
             var button = document.getElementById(id);
-            if (button) { button.title = label; button.setAttribute('aria-label', label); }
+            if (!button) return;
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            bindToggle(button);
         });
+    }
+
+    /* The landing page's theme button had no handler at all — no onclick, no
+       listener — so choosing light mode there did nothing. Every other page
+       wired it, each in its own way, and the one that forgot failed silently.
+       Binding here means no page can forget again.
+
+       Bound at most once per button, and never over a button that already
+       carries an inline onclick: two handlers would toggle twice and land back
+       where they started, which looks exactly like a button that does nothing. */
+    function bindToggle(button) {
+        if (button.getAttribute('data-theme-bound')) return;
+        if (button.getAttribute('onclick')) return;
+        button.setAttribute('data-theme-bound', '1');
+        button.addEventListener('click', function () { window.toggleTheme(); });
     }
 
     function current() {
@@ -787,10 +805,37 @@ body { overflow-x: hidden; }
                     </select>
                 </div>
 
+                <!-- This asked for a URL, which meant the officer had to host the
+                     photograph somewhere else first. That is not something anyone
+                     in a municipal office can reasonably be asked to do, and it is
+                     why guide photos were nearly all empty. It takes a file now,
+                     through the same signed upload the listing form uses. -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Photo link</label>
-                    <input id="guidePhoto" type="url" placeholder="https://..."
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Photo</label>
+                    <div class="flex items-center gap-3">
+                        <img id="guidePhotoPreview" hidden alt=""
+                             class="w-16 h-16 rounded-xl object-cover border border-outline-variant/40 shrink-0"/>
+                        <div id="guidePhotoEmpty"
+                             class="w-16 h-16 rounded-xl bg-surface-variant border border-outline-variant/40 shrink-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-on-surface-variant">person</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" id="guidePhotoPick" class="btn btn-secondary !min-h-[40px] !py-2 !px-3 !text-xs">
+                                    <span class="material-symbols-outlined !text-base">upload</span>Choose a photo
+                                </button>
+                                <button type="button" id="guidePhotoClear" hidden
+                                        class="btn btn-secondary !min-h-[40px] !py-2 !px-3 !text-xs !text-on-surface-variant">
+                                    <span class="material-symbols-outlined !text-base">delete</span>Remove
+                                </button>
+                            </div>
+                            <p id="guidePhotoStatus" class="text-[11px] text-on-surface-variant mt-1">JPG or PNG, up to 10MB. Optional.</p>
+                        </div>
+                    </div>
+                    <input id="guidePhotoFile" type="file" accept="image/*" class="sr-only"/>
+                    <!-- What actually gets saved. Hidden rather than removed, so a
+                         guide whose photo was set as a link before this keeps it. -->
+                    <input id="guidePhoto" type="hidden"/>
                 </div>
 
                 <div>
@@ -819,6 +864,11 @@ body { overflow-x: hidden; }
 
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
+        // Only a fallback: the server signs uploads at /api/uploads/signature and
+        // that path is preferred. These are the same values the Destinations page
+        // carries, and neither is a secret — the preset is a public identifier.
+        const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
+        const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
 
         let allGuides = [];
         let guidedSpots = [];       // spots the office has marked as requiring a guide
@@ -875,6 +925,68 @@ body { overflow-x: hidden; }
            clicking twice and knowing the order, and there was no way to see what
            the next click would do. One dropdown shows the current status and sets
            any other directly, and keeps the colour so the table still scans. */
+
+        /* ---- the guide's photograph ----------------------------------------
+           The hidden input stays the single source of truth for what is saved, so
+           nothing else in this form had to change. */
+        function setGuidePhoto(url) {
+            const value = String(url || '').trim();
+            document.getElementById('guidePhoto').value = value;
+            const preview = document.getElementById('guidePhotoPreview');
+            const empty = document.getElementById('guidePhotoEmpty');
+            const clear = document.getElementById('guidePhotoClear');
+            preview.hidden = !value;
+            empty.hidden = Boolean(value);
+            clear.hidden = !value;
+            if (value) preview.src = value;
+            else preview.removeAttribute('src');
+        }
+
+        function guidePhotoStatus(message, tone) {
+            const box = document.getElementById('guidePhotoStatus');
+            box.textContent = message;
+            box.className = 'text-[11px] mt-1 ' + (tone === 'error' ? 'text-error' : 'text-on-surface-variant');
+        }
+
+        document.getElementById('guidePhotoPick').addEventListener('click', function () {
+            document.getElementById('guidePhotoFile').click();
+        });
+
+        document.getElementById('guidePhotoClear').addEventListener('click', function () {
+            setGuidePhoto('');
+            guidePhotoStatus('JPG or PNG, up to 10MB. Optional.');
+        });
+
+        document.getElementById('guidePhotoFile').addEventListener('change', async function (event) {
+            const input = event.target;
+            const file = (input.files || [])[0];
+            input.value = '';            // so choosing the same file twice still fires
+            if (!file) return;
+
+            if (!window.ZTIMS_UPLOAD) {
+                guidePhotoStatus('The upload module did not load. Refresh and try again.', 'error');
+                return;
+            }
+
+            const button = document.getElementById('guidePhotoPick');
+            button.disabled = true;
+            guidePhotoStatus('Uploading\u2026');
+            try {
+                const url = await window.ZTIMS_UPLOAD.uploadImage(file, {
+                    apiBase: API_BASE,
+                    cloudName: CLOUDINARY_CLOUD_NAME,
+                    uploadPreset: CLOUDINARY_UPLOAD_PRESET
+                });
+                setGuidePhoto(url);
+                guidePhotoStatus('Photo added. It is saved when you save the guide.');
+            } catch (error) {
+                // Whatever was set before is left exactly as it was.
+                guidePhotoStatus(error.message || 'That photo could not be uploaded.', 'error');
+            } finally {
+                button.disabled = false;
+            }
+        });
+
         function statusSelect(guide) {
             const status = STATUS_CHOICES.some(c => c.value === guide.status) ? guide.status : 'inactive';
             const style = STATUS_STYLES[status] || STATUS_STYLES.inactive;
@@ -1030,7 +1142,7 @@ body { overflow-x: hidden; }
             document.getElementById('guideFee').value = guide?.guideFee ?? '';
             document.getElementById('guideMaxGroup').value = guide?.maxGroupSize ?? '';
             document.getElementById('guideStatus').value = guide?.status || 'available';
-            document.getElementById('guidePhoto').value = guide?.photoUrl || '';
+            setGuidePhoto(guide?.photoUrl || '');
             document.getElementById('guideBio').value = guide?.bio || '';
 
             renderSpotChoices((guide?.assignedSpots || []).map(s => s._id || s));
@@ -1230,5 +1342,6 @@ body { overflow-x: hidden; }
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
+<script type="module" src="../shared/photo-upload.js"></script>
 </body>
 </html>

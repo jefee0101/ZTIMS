@@ -493,3 +493,110 @@ h1, h2, h3, h4, .font-display, .font-headline {
     padding: 1rem 1.125rem;
 }
 .notice-date { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* ==========================================================================
+   The map's pin controls
+   --------------------------------------------------------------------------
+   They sit inside the map, because the reason to be here at all is usually
+   that the map is full screen — and the form's own buttons are then behind it,
+   unreachable without shrinking the map and losing the view just found.
+
+   Only the location picker draws these. The public map has no pin control,
+   which is the visible half of "visitors are read-only"; the half that counts
+   is authorizeSpotWrite on the server.
+   ========================================================================== */
+.ztims-pinbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0 0 0.6rem 0.6rem;
+}
+
+.ztims-pinbar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;                 /* a thumb, on the phone this is used from */
+    padding: 0.55rem 0.9rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface));
+    color: rgb(var(--ztims-on-surface));
+    font-family: var(--ztims-font-body);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: var(--ztims-shadow-card);
+    transition: background-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                opacity var(--motion-fast, 150ms) var(--ease-standard, ease);
+}
+.ztims-pinbar__btn[hidden] { display: none; }
+.ztims-pinbar__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ztims-pinbar__btn--start   { background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-primary)); }
+.ztims-pinbar__btn--confirm { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); border-color: transparent; }
+.ztims-pinbar__btn--cancel  { background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface-variant)); }
+
+/* While pinning, the map says so — a tinted rule round the edge, so it is
+   obvious at a glance that a tap here will move the listing. */
+.ztims-map--pinning { box-shadow: inset 0 0 0 3px rgb(var(--ztims-accent)); }
+
+/* A pin being chosen should not look like one already agreed to. */
+.ztims-pin--choosing {
+    filter: drop-shadow(0 0 0 rgb(var(--ztims-accent)))
+            drop-shadow(0 2px 6px rgb(var(--ztims-accent) / 0.55));
+    animation: ztimsPinChoosing 1.4s var(--ease-standard, ease) infinite;
+}
+@keyframes ztimsPinChoosing {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+/* The one looping animation in the system, and it stops with the mode. Anyone
+   who asked for less motion gets the drop shadow and no movement. */
+@media (prefers-reduced-motion: reduce) {
+    .ztims-pin--choosing { animation: none !important; }
+}
+
+/* ==========================================================================
+   Form controls, by default
+   --------------------------------------------------------------------------
+   The Tailwind forms plugin resets every input to `background-color: #fff`.
+   It does so through `input:where([type='email'])`, which carries the
+   specificity of `input` alone — but that was still enough to win wherever a
+   page had not set a background of its own, so in dark mode those inputs came
+   out white with near-white text in them. The officer's and manager's pages
+   only ever wrote `.light-mode input { ... }`, so dark mode was exactly that
+   case.
+
+   `html input` outranks the plugin's `input`, and `:where()` keeps the :not()
+   from adding anything, so this stays below `.field` (0,1,0) and below every
+   `bg-*` utility. It is a floor, not an override.
+
+   Checkboxes and radios are left alone: the plugin styles those as controls
+   rather than as boxes to type in.
+   ========================================================================== */
+html :where(input, select, textarea):where(:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file'])),
+html input:where(:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file'])),
+html select,
+html textarea {
+    background-color: rgb(var(--ztims-surface));
+    color: rgb(var(--ztims-on-surface));
+    border-color: rgb(var(--ztims-outline));
+}
+
+html :where(input, select, textarea)::placeholder {
+    color: rgb(var(--ztims-on-surface-variant));
+    opacity: 1;                        /* Firefox fades placeholders by default */
+}
+
+/* The plugin's focus ring is its own blue. This is the identity's. */
+html :where(input, select, textarea):focus {
+    outline: none;
+    border-color: rgb(var(--ztims-secondary));
+    box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / 0.18);
+}
+
+/* A date or time field's picker glyph is drawn by the browser in its own
+   colour, which on a dark ground disappears. */
+:root.dark input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.7); }
