@@ -1573,6 +1573,18 @@ body { overflow-x: hidden; }
             }
         }
 
+        function photoCount(spot) {
+            if (Array.isArray(spot.images) && spot.images.length) return spot.images.length;
+            return spot.imageUrl ? 1 : 0;
+        }
+
+        // What an officer would chase the manager about.
+        function completenessIssues(spot) {
+            const issues = [];
+            if (photoCount(spot) === 0) issues.push('No photo');
+            if (!String(spot.description || '').trim()) issues.push('No description');
+            return issues;
+        }
 
         function managerOf(spot) {
             return String(spot.managerName || '').trim();
@@ -1901,13 +1913,14 @@ body { overflow-x: hidden; }
             const container = document.getElementById('listings');
             const doneLoading = showLoading(container, 'Loading published destinations...');
 
+            // Fetching and drawing fail for completely different reasons, so they
+            // get their own try blocks. Wrapping both said "could not reach the
+            // database" when the real fault was a missing function on this page —
+            // which sends whoever reads it to check Render and Atlas for nothing.
             try {
                 const spotsResponse = await fetch(`${API_BASE}/spots`, { headers: authHeaders() });
                 if (!spotsResponse.ok) throw new Error(`The server returned status ${spotsResponse.status}.`);
                 allSpots = await spotsResponse.json();
-
-                doneLoading();
-                render();
             } catch (error) {
                 console.error('❌ Could not load destinations:', error);
                 doneLoading();
@@ -1919,6 +1932,22 @@ body { overflow-x: hidden; }
                         <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
                         <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(error.message)}
                         Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
+                    </div>`;
+                return;
+            }
+
+            doneLoading();
+
+            try {
+                render();
+            } catch (error) {
+                console.error('❌ The destinations loaded but the page could not draw them:', error);
+                container.innerHTML = `
+                    <div class="text-center py-20 px-6">
+                        <span class="material-symbols-outlined text-5xl block mb-3 text-red-400/70">bug_report</span>
+                        <p class="text-on-surface font-bold mb-1">The destinations loaded, but this page could not display them</p>
+                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(error.message)}
+                        This is a fault in the page itself, not the database — your listings are safe. Please report it.</p>
                     </div>`;
             }
         }
