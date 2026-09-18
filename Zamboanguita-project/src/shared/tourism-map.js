@@ -187,7 +187,34 @@
             cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.3);
         }
         .ztims-expand:hover { background: #f4f4f4; }
-        .ztims-expand .material-symbols-outlined { font-size: 20px; line-height: 1; }`;
+        .ztims-expand .material-symbols-outlined { font-size: 20px; line-height: 1; }
+
+        /* The always-on name beside each pin. Leaflet's tooltip default is a
+           white box with a pointer; this is a bare label instead, the way a map
+           names a place. The white halo keeps it readable over roads, water and
+           open land without a box getting in the way of the map underneath. */
+        .leaflet-tooltip.ztims-label {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .01em;
+            white-space: nowrap;
+            text-shadow:
+                 0  0   3px #fff,  0  0 3px #fff,
+                 1px 0  2px #fff, -1px 0 2px #fff,
+                 0  1px 2px #fff,  0 -1px 2px #fff;
+            /* Clicks belong to the pin, not to the text floating next to it. */
+            pointer-events: none;
+        }
+        /* Leaflet draws the tooltip's pointer with ::before. A bare label has none. */
+        .leaflet-tooltip.ztims-label::before { display: none !important; }
+
+        .ztims-map--nolabels .leaflet-tooltip.ztims-label { display: none; }`;
         document.head.appendChild(style);
     }
 
@@ -201,8 +228,43 @@
                   '</div>',
             iconSize: [34, 34],
             iconAnchor: [17, 34],
-            popupAnchor: [0, -32]
+            popupAnchor: [0, -32],
+            // Where the always-on name label hangs from — just above the pin.
+            tooltipAnchor: [0, -36]
         });
+    }
+
+    // Names below this are more clutter than help: at municipality-wide zoom the
+    // labels would overlap each other and the roads underneath.
+    const LABEL_MIN_ZOOM = 12;
+
+    /**
+     * The name, shown beside the pin without anyone having to click it. A map
+     * where every marker is an anonymous dot makes you tap each one to find out
+     * what it is; the point of the map is to answer that at a glance.
+     *
+     * Coloured by category and haloed in white so it stays readable over roads,
+     * water and open land alike.
+     */
+    function attachLabel(marker, spot) {
+        const meta = categoryOf(spot);
+        const title = String(spot.title || '').trim();
+        if (!title) return marker;
+
+        marker.bindTooltip(
+            '<span style="color:' + meta.colour + '">' + escapeHtml(title) + '</span>',
+            { permanent: true, direction: 'top', className: 'ztims-label', opacity: 1 }
+        );
+        return marker;
+    }
+
+    // Labels are hidden rather than removed, so zooming back in costs nothing.
+    function watchLabelZoom(map, mount) {
+        function paint() {
+            mount.classList.toggle('ztims-map--nolabels', map.getZoom() < LABEL_MIN_ZOOM);
+        }
+        map.on('zoomend', paint);
+        paint();
     }
 
     function originIcon() {
@@ -339,6 +401,8 @@
 
             // Re-framed on every change of size, so growing the map shows more of
             // the municipality rather than the same view in a bigger box.
+            watchLabelZoom(map, mount);
+
             state.expander = addExpandControl(map, mount, function () {
                 if (state.bounds.length === 1) map.setView(state.bounds[0], 15);
                 else if (state.bounds.length > 1) {
@@ -368,6 +432,8 @@
                         icon: markerIcon(spot),
                         title: spot.title || ''
                     }).addTo(map);
+
+                    attachLabel(marker, spot);
 
                     marker.bindPopup(popupHtml(spot, options.detailHref
                         ? options.detailHref(spot)
@@ -429,6 +495,8 @@
         markerIcon: markerIcon,
         originIcon: originIcon,
         addExpandControl: addExpandControl,
+        attachLabel: attachLabel,
+        watchLabelZoom: watchLabelZoom,
         locationLine: locationLine,
         mountTourismMap: mountTourismMap
     };

@@ -1013,9 +1013,14 @@ body { overflow-x: hidden; }
             }).addTo(map);
             // The same category marker the tourism map uses, so a place looks
             // the same wherever a visitor meets it.
-            window.L.marker([destination.lat, destination.lng], { icon: window.ZTIMS_MAP.markerIcon(spot) })
-                .addTo(map)
-                .bindPopup(spot.title);
+            // Named on the map, not only in a popup — the same as the tourism map.
+            window.ZTIMS_MAP.attachLabel(
+                window.L.marker([destination.lat, destination.lng], { icon: window.ZTIMS_MAP.markerIcon(spot) })
+                    .addTo(map)
+                    .bindPopup(spot.title),
+                spot
+            );
+            window.ZTIMS_MAP.watchLabelZoom(map, mapBox);
 
             // The same control the tourism map uses. On resize it re-frames
             // whatever is currently on screen: the route if one is drawn, the
