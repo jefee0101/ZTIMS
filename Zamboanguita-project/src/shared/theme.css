@@ -296,3 +296,198 @@ h1, h2, h3, h4, .font-display, .font-headline {
     outline-offset: 2px;
     border-radius: 0.375rem;
 }
+
+/* ==========================================================================
+   Buttons
+   --------------------------------------------------------------------------
+   There was no button system: each page sized and coloured its own, so the
+   same action was a pill on one screen and a square on the next, and orange
+   was the default fill everywhere. These are the four buttons ZTIMS actually
+   needs. They are opt-in — existing markup keeps working untouched — so a page
+   can be moved onto them one button at a time.
+
+   Every one is at least 44px tall, because the officer's and manager's most
+   common device is a phone.
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0.7rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid transparent;
+    font-family: var(--ztims-font-body);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
+}
+
+/* Disabled has to look unavailable without becoming unreadable — a control
+   nobody can read is not a control anyone can diagnose. */
+.btn:disabled,
+.btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+
+.btn-primary {
+    background: rgb(var(--ztims-primary));
+    color: rgb(var(--ztims-on-primary));
+}
+.btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-secondary)); }
+
+/* The quiet one: same size and weight, no fill. For the second action in a
+   pair, where a second filled button would make neither look like the answer. */
+.btn-secondary {
+    background: rgb(var(--ztims-surface));
+    color: rgb(var(--ztims-primary));
+    border-color: rgb(var(--ztims-primary) / 0.45);
+}
+.btn-secondary:hover:not(:disabled) {
+    background: rgb(var(--ztims-primary-container));
+    border-color: rgb(var(--ztims-primary));
+}
+
+/* Directions and other map actions, so they read as belonging to the map. */
+.btn-accent {
+    background: rgb(var(--ztims-accent));
+    color: rgb(var(--ztims-on-primary));
+}
+.btn-accent:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* The one place gold is allowed to be a fill: an action the office wants
+   noticed. Dark ink on gold, because white on gold is unreadable. */
+.btn-highlight {
+    background: rgb(var(--ztims-gold));
+    color: #3A2A05;
+}
+.btn-highlight:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* A button that is working. The spinner is supplied by the page; this only
+   stops the press registering twice. */
+.btn.is-loading { pointer-events: none; opacity: 0.8; }
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+.ztims-card {
+    background: rgb(var(--ztims-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    border-radius: 1rem;
+    box-shadow: var(--ztims-shadow-card);
+    overflow: hidden;
+}
+
+/* A destination is a place you might go, so its card lifts a little when you
+   consider it. Small and quick: 2px and 200ms, not a jump. */
+.card-destination {
+    display: block;
+    transition: transform var(--motion-base, 300ms) var(--ease-standard, ease),
+                box-shadow var(--motion-base, 300ms) var(--ease-standard, ease),
+                border-color var(--motion-base, 300ms) var(--ease-standard, ease);
+}
+.card-destination:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ztims-shadow-raised);
+    border-color: rgb(var(--ztims-accent) / 0.5);
+}
+.card-destination img { transition: transform 600ms var(--ease-standard, ease); }
+.card-destination:hover img { transform: scale(1.05); }
+
+/* ==========================================================================
+   Form fields
+   --------------------------------------------------------------------------
+   The focus ring is the point. Several pages had removed the outline without
+   putting anything back, which leaves a keyboard user with no idea where they
+   are.
+   ========================================================================== */
+.field {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.7rem 0.875rem;
+    border-radius: 0.75rem;
+    background: rgb(var(--ztims-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    color: rgb(var(--ztims-on-surface));
+    font-size: 0.9375rem;
+    transition: border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
+}
+.field::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
+.field:focus {
+    outline: none;
+    border-color: rgb(var(--ztims-secondary));
+    box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / 0.18);
+}
+/* Never colour alone: the field is also described by its message below it. */
+.field[aria-invalid="true"] {
+    border-color: rgb(var(--ztims-error));
+    box-shadow: 0 0 0 3px rgb(var(--ztims-error) / 0.15);
+}
+
+.field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--ztims-on-surface-variant));
+    margin-bottom: 0.35rem;
+}
+
+.field-help { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); margin-top: 0.3rem; }
+.field-error {
+    display: flex; align-items: flex-start; gap: 0.3rem;
+    font-size: 0.75rem; color: rgb(var(--ztims-error)); margin-top: 0.3rem;
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+.ztims-scrim {
+    background: rgb(4 18 26 / 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.ztims-modal {
+    background: rgb(var(--ztims-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    border-radius: 1.125rem;
+    box-shadow: var(--ztims-shadow-raised);
+    /* Big enough to work in, never so big it stops being a dialog. */
+    width: min(100%, 44rem);
+    max-height: min(90vh, 52rem);
+}
+
+.ztims-modal__head {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.125rem 1.25rem;
+    border-bottom: 1px solid rgb(var(--ztims-outline));
+}
+.ztims-modal__title {
+    font-family: var(--ztims-font-display);
+    font-size: 1.0625rem; font-weight: 600;
+    color: rgb(var(--ztims-on-surface)); margin: 0;
+}
+.ztims-modal__sub { font-size: 0.8125rem; color: rgb(var(--ztims-on-surface-variant)); margin: 0.2rem 0 0; }
+
+/* ==========================================================================
+   Announcements and notices
+   --------------------------------------------------------------------------
+   Official information, so it reads as official: a category, then the notice.
+   The left rule carries the category's colour, which is the whole of the
+   decoration.
+   ========================================================================== */
+.notice {
+    background: rgb(var(--ztims-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    border-left: 3px solid rgb(var(--cat, var(--ztims-cat-notice)));
+    border-radius: 0.75rem;
+    padding: 1rem 1.125rem;
+}
+.notice-date { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); }

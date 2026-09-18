@@ -386,18 +386,35 @@ body { overflow-x: hidden; }
                 <div class="relative z-10 w-full">
                   <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                     <div class="max-w-3xl">
+                    <!-- An eyebrow, the name, one line, and the two things a
+                         visitor actually came to do. The hero used to end at the
+                         sentence, so the only way on was to scroll and hope. -->
+                    <p class="rise flex items-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-[0.22em] text-white/90 mb-2" style="--rise-delay:.06s">
+                        Discover
+                        <span class="inline-block w-6 h-[2px] rounded-full bg-gold"></span>
+                    </p>
                     <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
                         Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
                     </h2>
-                    <p class="rise text-base md:text-lg text-white/80 max-w-xl leading-relaxed" style="--rise-delay:.26s">
+                    <p class="rise text-base md:text-lg text-white/90 max-w-xl leading-relaxed" style="--rise-delay:.26s">
                         Experience the beauty and the hidden gems of Zamboanguita.
                     </p>
+                    <div class="rise flex flex-wrap gap-3 mt-5" style="--rise-delay:.38s">
+                        <a href="#browse" class="btn btn-primary">
+                            <span class="material-symbols-outlined !text-base">explore</span>Explore destinations
+                        </a>
+                        <!-- Reads as a control on a photograph rather than a
+                             ghost button that disappears over a pale sky. -->
+                        <a href="#map" class="btn btn-secondary !bg-surface/90 backdrop-blur-sm">
+                            <span class="material-symbols-outlined !text-base">map</span>View the map
+                        </a>
+                    </div>
                     </div>
                   </div>
                 </div>
             </section>
 
-            <section class="py-8 sm:py-10 bg-surface-container-low">
+            <section id="browse" class="py-8 sm:py-10 bg-surface-container-low">
               <!-- Same container AND the same gutter as the header, so the heading,
                    the filters and the cards line up with the wordmark at any width. -->
               <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
@@ -450,7 +467,7 @@ body { overflow-x: hidden; }
                  ZTIMS's own, coloured by its own categories. Routing is not done
                  here: a marker's "Get directions" opens the listing's page, where
                  the existing OpenRouteService flow lives. -->
-            <section class="py-8 sm:py-10 bg-surface">
+            <section id="map" class="py-8 sm:py-10 bg-surface">
               <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                 <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2 text-center">
                     Find it on the map
@@ -560,38 +577,56 @@ body { overflow-x: hidden; }
     // grid on each keystroke would read as the page lagging behind them.
     let awaitingFirstPaint = true;
 
+    /* Which of the identity's colours a category answers to. The same mapping
+       the map markers use, so a place is the same colour on the card and on the
+       map — teal for what you climb, coastal blue for what you swim, gold for
+       what the municipality keeps, ocean for somewhere to stay. */
+    const CATEGORY_BADGE = {
+        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape', label: 'Tourist Spot' },
+        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving', label: 'Tourist Spot' },
+        'CULTURAL': { cls: 'cat-municipal', icon: 'museum', label: 'Cultural' },
+        'ACCOMMODATION': { cls: 'cat-stay', icon: 'hotel', label: 'Accommodation' }
+    };
+
+    function categoryBadge(spot) {
+        const key = String(spot.category || '').toUpperCase();
+        return CATEGORY_BADGE[key] || { cls: 'cat-attraction', icon: 'photo_camera', label: 'Tourist Spot' };
+    }
+
     function renderSpotCard(spot, index) {
         const card = document.createElement('a');
         card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        card.className = 'rise group block rounded-2xl overflow-hidden bg-surface shadow-sm hover:shadow-xl transition-all hover:-translate-y-1';
+        card.className = 'rise ztims-card card-destination group flex flex-col';
         // Cards arrive one after another, capped so a long list doesn't leave the
         // last few waiting noticeably.
         card.style.setProperty('--rise-delay', `${Math.min(index || 0, 8) * 0.05}s`);
         const photoCount = Array.isArray(spot.images) && spot.images.length
             ? spot.images.length
             : (spot.imageUrl ? 1 : 0);
+        const badge = categoryBadge(spot);
         card.innerHTML = `
-            <div class="relative h-[200px] overflow-hidden">
-                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
-                    ${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}
+            <div class="relative h-[200px] shrink-0 overflow-hidden bg-surface-variant">
+                <img class="w-full h-full object-cover" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
+                <!-- The overlay exists so the badges are legible over whatever the
+                     photo happens to be, and stops short of dimming the picture. -->
+                <div class="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/45 to-transparent"></div>
+                <span class="cat-badge ${badge.cls} absolute top-3 left-3 !bg-surface/95 backdrop-blur-sm">
+                    <span class="material-symbols-outlined !text-sm">${badge.icon}</span>${badge.label}
                 </span>
-                ${photoCount > 1 ? `<span class="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-black/60 text-white backdrop-blur-sm">
+                ${photoCount > 1 ? `<span class="absolute top-3 right-3 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-full bg-surface/95 text-on-surface backdrop-blur-sm">
                     <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
                 </span>` : ''}
             </div>
-            <div class="p-5">
-                <span class="text-primary text-[11px] font-bold uppercase tracking-widest block mb-1.5">${escapeHtml(spot.label || spot.category || '')}</span>
-                <h3 class="text-lg font-display font-bold text-on-surface mb-1.5">${escapeHtml(spot.title)}</h3>
+            <div class="p-5 flex flex-col flex-1">
+                <h3 class="text-lg font-display font-semibold text-on-surface mb-1.5">${escapeHtml(spot.title)}</h3>
                 <p class="text-on-surface-variant text-xs flex items-center gap-1 mb-3">
-                    <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '')}
+                    <span class="material-symbols-outlined !text-sm text-accent">location_on</span>${escapeHtml(spot.location || '')}
                 </p>
                 <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
-                <div class="flex items-center justify-between pt-3">
+                <div class="mt-auto flex items-center justify-between pt-3 border-t border-outline-variant/60">
                     <span class="text-xs text-on-surface-variant">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
-                    <span class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-1">
-                        View details <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    <span class="text-accent text-xs font-bold flex items-center gap-1">
+                        Explore <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </span>
                 </div>
             </div>

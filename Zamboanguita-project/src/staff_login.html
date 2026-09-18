@@ -286,9 +286,10 @@ body { overflow-x: hidden; }
       <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the public site
     </a>
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-2">Staff Sign In</h1>
-      <p class="text-on-surface-variant text-sm">
+    <div class="page-head">
+      <p class="page-eyebrow">Zamboanguita Tourism</p>
+      <h1 class="page-title">Staff sign in</h1>
+      <p class="page-lede">
         For <b class="text-on-surface">Tourist Officers</b> and <b class="text-on-surface">Tourist Establishment Managers</b>.
         Sign in with the account issued to you — we'll take you to the right portal automatically.
       </p>
@@ -296,20 +297,20 @@ body { overflow-x: hidden; }
 
     <form id="staffLoginForm" class="space-y-5 bg-surface border border-outline/30 rounded-2xl p-6">
       <div>
-        <label for="emailInput" class="block mb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Email address</label>
+        <label for="emailInput" class="field-label">Email address</label>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">mail</span>
           <input id="emailInput" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
-            class="w-full pl-12 pr-4 py-3.5 rounded-xl border border-outline/40 bg-surface-high text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary outline-none transition"/>
+            class="field !pl-12"/>
         </div>
       </div>
 
       <div>
-        <label for="passwordInput" class="block mb-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Password</label>
+        <label for="passwordInput" class="field-label">Password</label>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">lock</span>
           <input id="passwordInput" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
-            class="w-full pl-12 pr-12 py-3.5 rounded-xl border border-outline/40 bg-surface-high text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary outline-none transition"/>
+            class="field !pl-12 !pr-12"/>
           <button type="button" id="togglePasswordBtn" aria-label="Show password"
                   class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
             <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
@@ -319,9 +320,8 @@ body { overflow-x: hidden; }
 
       <p id="loginError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
-      <button type="submit" id="staffSignInBtn"
-              class="w-full py-3.5 rounded-full bg-primary hover:bg-primaryHover text-white font-bold tracking-wide transition-all shadow-lg shadow-primary/20 flex items-center justify-center">
-        SIGN IN
+      <button type="submit" id="staffSignInBtn" class="btn btn-primary w-full">
+        <span class="material-symbols-outlined !text-base">login</span>Sign in
       </button>
     </form>
 
