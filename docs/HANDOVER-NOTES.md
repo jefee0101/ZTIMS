@@ -8,54 +8,64 @@ Nothing here is a bug in the code. It is the list of things that live outside
 the repository — credentials, live services, and facts about Zamboanguita that
 only the municipality can confirm.
 
-Last updated with the Location step redesign.
+Last updated after the Coastal Tourism redesign. The three credential
+tasks in section 1 were reported done on 18 September 2026 — section 1 now
+records how to confirm each one actually took, because all three fail quietly.
 
 ---
 
-## 1. Blocking — the system is degraded until these are done
+## 1. Credentials — reported done, worth confirming
 
-### 1.1 Rotate the OpenRouteService key
+All three were set by the maintainer. Each one fails *silently* when it does not
+take, which is the whole reason they are still written down: nothing on the site
+says "the key never arrived". These are the checks that would catch it.
 
-The key was pasted into this chat twice. Anything pasted into a chat should be
-treated as disclosed.
+### 1.1 OpenRouteService key — rotated
 
-- Sign in at <https://openrouteservice.org/dev/#/home>, revoke the existing key,
-  create a new one.
-- Put the new value in `ORS_API_KEY` on Render. Never in any file under
-  `Zamboanguita-project/`.
-- **How you will know:** directions and address search keep working after the old
-  key is revoked. If they fall back silently, the key never reached Render —
-  the backend drops to OSRM and Nominatim without complaining, which looks fine
-  until you notice search results got worse.
+The old key had been pasted into a chat twice and was rotated as a precaution.
+It never appeared in the working tree or in git history, so there was nothing to
+clean up in the repository.
 
-I verified the key appears **zero** times in the working tree and **zero** times
-in git history, so rotating it is a precaution, not a cleanup.
+**How the failure looks:** if `ORS_API_KEY` is missing or wrong on Render, the
+backend does not error. It falls back to OSRM for routing and Nominatim for
+search, both of which work — so directions keep working and nobody notices
+except that address search gets worse.
 
-### 1.2 Regain admin access
+**Confirm it:** on the live site, open a listing's Location step, choose *Search
+for the place*, and search a local landmark — Malatapay market, Lutoban pier,
+the municipal hall. With ORS in use the results are ranked toward Zamboanguita
+because the backend sends `focus.point`. If local results are not coming first,
+the key is not reaching the service.
 
-`INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are read at boot by
-`bootstrapAdmin()` in `zamboanguita-backend/server.js`.
+### 1.2 Admin account — created
 
-- Set both on Render. The password must be at least 10 characters.
-- Redeploy. The account is created only if no admin exists.
-- To reset an existing admin's password, also set `ADMIN_PASSWORD_RESET=true`,
-  redeploy once, then **remove that variable and redeploy again**. Leaving it set
-  means the password resets on every boot.
-- **How you will know:** the Render log prints a line naming the admin email. It
-  never prints the password.
+`INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` were set on Render and the
+service redeployed.
 
-### 1.3 Cloudinary: switch to signed uploads
+**Confirm it:** the Render log prints one line naming the admin email at boot.
+It never prints the password. Then sign in at `/src/staff_login.html`.
 
-The backend signs uploads at `GET /api/uploads/signature` (staff only). The
-frontend uses it when it can and falls back to an unsigned preset otherwise.
+**One thing to check and then undo:** if `ADMIN_PASSWORD_RESET=true` was set to
+reset an existing password, remove it and redeploy again. Left in place, the
+password resets on every boot.
 
-- Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` on
-  Render.
-- In the Cloudinary console, change the upload preset from **unsigned** to
-  **signed**.
-- **How you will know:** photo upload still works from all three editors. If the
-  preset is switched to signed *before* the environment variables are set,
-  uploads will fail — do them in that order.
+### 1.3 Cloudinary — signed uploads
+
+`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` were
+set on Render and the preset switched to signed.
+
+**How the failure looks:** the frontend asks `/api/uploads/signature` first and
+falls back to the unsigned preset if the server has no credentials. So if the
+variables did not take but the preset was switched to signed anyway, uploads
+fail — and if the preset were left unsigned, uploads would keep working while
+the account stayed publicly writable. Neither state announces itself.
+
+**Confirm both halves:**
+1. Upload a photo to a listing, and upload one to a tourist guide. Both go
+   through the same signed path now, so if either works, signing works.
+2. Check the Cloudinary console shows the preset as **signed**. If uploads work
+   *and* the preset is unsigned, the credentials did not take and the account is
+   still open to anyone who reads the page source.
 
 ---
 
