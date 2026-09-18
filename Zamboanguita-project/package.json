@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check": "node scripts/check-undefined.cjs"
+    "check": "node scripts/check-undefined.cjs && node scripts/check-countries.cjs"
   },
   "dependencies": {
     "react": "^19.1.1",

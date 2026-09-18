@@ -378,6 +378,24 @@ const TouristGuide = mongoose.model('TouristGuide', TouristGuideSchema);
 // 7. Guide booking — submitted by a visitor with no ZTIMS account.
 //    The reference is the visitor's only handle on it: they quote it at the
 //    Municipal Tourism Office, pay there, and the officer confirms it.
+/* The set of ISO 3166-1 alpha-2 codes a booking's nationality may be. Mirrors
+   the list in Zamboanguita-project/src/shared/countries.js, which also carries
+   the display names the browser needs. The two deploy separately (Render and
+   Vercel) so they cannot share a file; scripts/check-countries.cjs compares
+   them, because a code the form offers and the API rejects is a booking a
+   visitor cannot submit and cannot see why. */
+const COUNTRY_CODES = new Set((
+    'AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ ' +
+    'BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM ' +
+    'DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS ' +
+    'GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN ' +
+    'KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ ' +
+    'MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM ' +
+    'PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV ' +
+    'SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI ' +
+    'VN VU WF WS YE YT ZA ZM ZW'
+).trim().split(/\s+/));
+
 const BOOKING_STATUSES = ['pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show'];
 
 const GuideBookingSchema = new mongoose.Schema({
@@ -393,6 +411,19 @@ const GuideBookingSchema = new mongoose.Schema({
     fullName: { type: String, required: true, trim: true },
     contactNumber: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
+
+    /* Nationality as an ISO 3166-1 alpha-2 code, because the office reports
+       domestic and foreign arrivals upward and free text cannot be counted.
+       The code outlives a country being renamed; the name is only presentation.
+
+       Required by the POST route below, but deliberately NOT required here.
+       Every booking the officer touches — assigning a guide, recording payment,
+       changing status — goes through booking.save(), and a required field would
+       make each of those throw on any booking taken before this existed. The
+       officer would be unable to confirm them, which is a worse outcome than an
+       older booking having no nationality on file. */
+    nationality: { type: String, default: '', uppercase: true, trim: true, index: true },
+
     visitors: { type: Number, required: true, min: 1 },
     preferredDate: { type: String, required: true },   // YYYY-MM-DD, as the form sends it
     preferredTime: { type: String, required: true },   // HH:MM, 24-hour
@@ -1807,6 +1838,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
         const fullName = String(body.fullName || '').trim();
         const contactNumber = String(body.contactNumber || '').trim();
         const email = String(body.email || '').trim().toLowerCase();
+        const nationality = String(body.nationality || '').trim().toUpperCase();
         const preferredDate = String(body.preferredDate || '').trim();
         const preferredTime = String(body.preferredTime || '').trim();
         const visitors = Math.floor(Number(body.visitors));
@@ -1828,6 +1860,15 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ success: false, message: 'That email address does not look right.' });
+        }
+        // Required here rather than on the schema — see the field's own note.
+        if (!nationality) {
+            return res.status(400).json({ success: false, message: 'Please choose the visitor\'s nationality.' });
+        }
+        // The form offers a fixed list, but this route is open to anyone, so the
+        // list is the authority rather than the dropdown.
+        if (!COUNTRY_CODES.has(nationality)) {
+            return res.status(400).json({ success: false, message: 'That is not a country ZTIMS recognises.' });
         }
         if (!Number.isFinite(visitors) || visitors < 1) {
             return res.status(400).json({ success: false, message: 'How many visitors are coming?' });
@@ -1878,7 +1919,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
                 booking = await GuideBooking.create({
                     reference: await nextBookingReference(),
                     spotId: spot._id,
-                    fullName, contactNumber, email, visitors, preferredDate, preferredTime,
+                    fullName, contactNumber, email, nationality, visitors, preferredDate, preferredTime,
                     notes: String(body.notes || '').trim().slice(0, 1000)
                 });
             } catch (error) {

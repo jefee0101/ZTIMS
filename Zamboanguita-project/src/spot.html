@@ -373,6 +373,22 @@ body { overflow-x: hidden; }
                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 <p class="text-[11px] text-on-surface-variant mt-1">Where the office confirms your booking.</p>
             </div>
+
+            <div>
+                <label for="bookNationality" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Nationality</label>
+                <!-- The office reports domestic and foreign arrivals to the
+                     Department of Tourism. A free-text box cannot be counted, so
+                     this is a list and what is stored is the country code. It
+                     starts on no country at all: a pre-selected Philippines would
+                     record a Filipino visitor every time nobody looked at it,
+                     which is the very number being collected. -->
+                <select id="bookNationality" required
+                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <option value="">Select nationality…</option>
+                </select>
+                <p class="text-[11px] text-on-surface-variant mt-1">Collected for the municipality's visitor statistics.</p>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Visitors</label>
@@ -451,6 +467,7 @@ body { overflow-x: hidden; }
 <!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
      the category markers. Loaded before the page script, which uses it. -->
 <script type="module" src="./shared/tourism-map.js"></script>
+<script type="module" src="./shared/countries.js"></script>
 
 <script type="module">
     const API_BASE = "https://ztims-api.onrender.com/api";
@@ -917,6 +934,17 @@ body { overflow-x: hidden; }
             setBookingError('');
             modal.hidden = false;
         });
+        /* The country list lives in one module so the officer's page and this one
+           agree on spelling. Without it the field is an empty dropdown, which
+           would be a booking nobody could submit — so say so rather than fail
+           silently at the point of sending. */
+        const nationality = document.getElementById('bookNationality');
+        if (window.ZTIMS_COUNTRIES) {
+            window.ZTIMS_COUNTRIES.fillSelect(nationality);
+        } else {
+            setBookingError('The nationality list did not load. Refresh the page and try again.');
+        }
+
         // The example number follows the country, so nobody is left guessing at
         // the shape of it.
         const dialCode = document.getElementById('bookDialCode');
@@ -940,6 +968,8 @@ body { overflow-x: hidden; }
                 // stores and a bare local number from abroad is not dialable.
                 contactNumber: fullContactNumber(),
                 email: document.getElementById('bookEmail').value.trim(),
+                // The ISO code, not the country's name — see the note on the field.
+                nationality: document.getElementById('bookNationality').value,
                 visitors: Number(document.getElementById('bookVisitors').value) || 0,
                 preferredDate: document.getElementById('bookDate').value,
                 preferredTime: document.getElementById('bookTime').value,

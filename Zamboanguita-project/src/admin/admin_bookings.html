@@ -861,13 +861,25 @@ body { overflow-x: hidden; }
             document.getElementById('statCollected').textContent = formatPeso(collected);
         }
 
+        /* A booking stores the country code; the officer reads country names.
+           Bookings taken before nationality was collected have none, and an
+           em dash is the honest answer for those — not a guess, and not a blank
+           that reads as a rendering fault. */
+        function countryName(code) {
+            if (!code) return '\u2014';
+            const named = window.ZTIMS_COUNTRIES && window.ZTIMS_COUNTRIES.nameOf(code);
+            // A code with no name is still worth showing: it is what is on file.
+            return named || String(code);
+        }
+
         function visibleBookings() {
             const query = document.getElementById('bookingSearch').value.trim().toLowerCase();
             const status = document.getElementById('bookingStatusFilter').value;
             return allBookings.filter(booking => {
                 if (status !== 'all' && booking.status !== status) return false;
                 if (!query) return true;
-                return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title]
+                return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title,
+                        booking.nationality, countryName(booking.nationality)]
                     .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
             });
         }
@@ -891,6 +903,7 @@ body { overflow-x: hidden; }
                     <td class="px-6 py-4">
                         <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
                         <p class="text-xs">${escapeHtml(b.contactNumber)}</p>
+                        <p class="text-xs">${escapeHtml(countryName(b.nationality))}</p>
                     </td>
                     <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-xs">${escapeHtml(b.preferredTime)}</span></td>
@@ -923,6 +936,7 @@ body { overflow-x: hidden; }
             document.getElementById('bookingDetails').innerHTML = `
                 <p><span class="text-on-surface-variant">Visitor:</span> <b class="text-on-surface">${escapeHtml(booking.fullName)}</b></p>
                 <p><span class="text-on-surface-variant">Contact:</span> ${escapeHtml(booking.contactNumber)}</p>
+                <p><span class="text-on-surface-variant">Nationality:</span> ${escapeHtml(countryName(booking.nationality))}</p>
                 ${booking.email ? `<p><span class="text-on-surface-variant">Email:</span> ${escapeHtml(booking.email)}</p>` : ''}
                 <p><span class="text-on-surface-variant">Destination:</span> ${escapeHtml(booking.spotId?.title || '—')}</p>
                 <p><span class="text-on-surface-variant">Visitors:</span> ${Number(booking.visitors) || 0}</p>
@@ -1130,5 +1144,6 @@ body { overflow-x: hidden; }
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
+<script type="module" src="../shared/countries.js"></script>
 </body>
 </html>
