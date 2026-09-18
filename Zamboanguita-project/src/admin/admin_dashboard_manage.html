@@ -898,6 +898,72 @@ body { overflow-x: hidden; }
                 entranceFee: 0,
                 bookingUrl: "",
                 images: ["https://res.cloudinary.com/xeo3pvpw/image/upload/v1789613313/501216453_2350295692038098_2400120739603406369_n.jpg"]
+            },
+            /* The two below were documented by the office with per-mode fares —
+               bus, tricycle, jeepney, habal-habal. A listing holds one travelFee
+               and shows it as a flat "Travel ₱X", so the tricycle fare is used
+               (the ordinary way in) and the full breakdown is written into the
+               description rather than dropped. Neither has coordinates yet, so
+               both will show "No map pin" until someone sets one. */
+            {
+                type: "spot",
+                title: "Zamora Agri Farm",
+                location: "Brgy. Calango",
+                barangay: "Calango",
+                address: "Sitio Mayaposi, inland from the national highway",
+                category: "CULTURAL",
+                label: "Organic Farm & Farm-to-Table",
+                description:
+                    "Also known as Zamora Natural Farm, an eco-tourism and organic farm in the quiet interior of " +
+                    "Zamboanguita, given over to sustainable agriculture, farm-to-table dining and wellness retreats.\n\n" +
+                    "The farm is worked without chemicals, growing vegetables, herbal plants and fruit trees, and guided " +
+                    "tours explain the organic methods behind them. An on-site kitchen and cafe serves dishes, herbal " +
+                    "teas and fruit juices made from what has just been harvested. Open-air native gazebos, wooden " +
+                    "cottages and cut lawns sit among thick green foliage, which suits family day trips, picnics and " +
+                    "small events. Being well off the national highway, the air is fresh and quiet, with mountain views " +
+                    "toward Mount Talinis.\n\n" +
+                    "Best for: day tours, farm-to-table dining, family picnics and agritourism.\n\n" +
+                    "Getting there: turn inland from the main Zamboanguita highway by private car or hired motorcycle " +
+                    "(habal-habal). Estimated fares — tricycle ₱20, jeepney ₱45, bus ₱55.\n\n" +
+                    "Photo credits: Zamora Agri Farm.",
+                workingDays: "Everyday",
+                workingTime: "8:00 AM - 5:00 PM",
+                travelFee: 20,
+                entranceFee: 50,
+                bookingUrl: "",
+                images: []
+            },
+            {
+                type: "spot",
+                title: "St. Isidore the Farmer Church",
+                location: "Poblacion",
+                barangay: "Poblacion",
+                address: "Corner Magsaysay Street and Quezon Street",
+                category: "CULTURAL",
+                label: "19th-Century Heritage Parish",
+                description:
+                    "Simbahan ng Zamboanguita, a 19th-century heritage parish church at the town centre and the " +
+                    "spiritual heart of the municipality.\n\n" +
+                    "The parish began as a visita under Dauin and became independent on 21 May 1866, administered by " +
+                    "the Augustinian Recollects, who oversaw construction between 1871 and 1897. It falls under the " +
+                    "Roman Catholic Diocese of Dumaguete. The National Historical Commission of the Philippines " +
+                    "declared it a Heritage Church and unveiled a Level II historical marker at the site in August " +
+                    "2019, following a major restoration.\n\n" +
+                    "Its slender facade is built of mamposteria — rubblework masonry — with red brick accents. Rather " +
+                    "than a freestanding or attached bell tower, the pediment itself serves as the belfry, with twin " +
+                    "arched openings where the bells hang. The front carries arched entries, a small rose-style window " +
+                    "and a broken-gable roofline.\n\n" +
+                    "Patron saint: San Isidro Labrador, St. Isidore the Farmer. Town fiesta: 15 May, the Baulan " +
+                    "Festival. Masses are said in Cebuano, with English on a selected Sunday afternoon schedule.\n\n" +
+                    "Getting there: the church faces the town plaza and stands on the main highway, easy to spot " +
+                    "heading south toward Siaton or on the way to Malatapay Market. Estimated fares — habal-habal " +
+                    "free, tricycle ₱15, jeepney ₱45, bus ₱60.",
+                workingDays: "Everyday",
+                workingTime: "8:00 AM - 4:00 PM",
+                travelFee: 15,
+                entranceFee: 0,
+                bookingUrl: "",
+                images: []
             }
         ];
 
