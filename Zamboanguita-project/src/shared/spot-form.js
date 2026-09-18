@@ -20,11 +20,16 @@
 
     /* ---------------------------------------------------------------- data */
 
-    // The municipality's ten barangays. Free text let the same place arrive as
+    // The municipality's barangays. Free text let the same place arrive as
     // "Malatapay", "malatapay" and "Malatapai" — three barangays as far as any
     // filter is concerned.
+    //
+    // Jomao-as was added on local correction. The rest were originally worked
+    // out from the municipality's school locations rather than an official
+    // register, so if another one is missing, this is the list to fix — and
+    // the count on src/history.html has to move with it.
     const BARANGAYS = [
-        'Basak', 'Calango', 'Lutoban', 'Malongcay Diot', 'Maluay',
+        'Basak', 'Calango', 'Jomao-as', 'Lutoban', 'Malongcay Diot', 'Maluay',
         'Mayabon', 'Nabago', 'Najandig', 'Nasig-id', 'Poblacion'
     ];
 
