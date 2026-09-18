@@ -2150,6 +2150,16 @@ const ROUTING_MODES = ORS_API_KEY ? ORS_MODES : OSRM_MODES;
 // Identifies ZTIMS to OpenStreetMap's geocoder, which its usage policy requires.
 const GEOCODER_USER_AGENT = `ZTIMS/1.0 (${process.env.PUBLIC_SITE_URL || 'https://ztims.vercel.app'})`;
 
+/* Every place ZTIMS lists is in one municipality, so a search that ranks the rest
+   of the Philippines equally is answering a question nobody asked. Both geocoders
+   below are pointed here first.
+
+   This mirrors ZAMBOANGUITA_CENTER and ZAMBOANGUITA_BOUNDS in
+   Zamboanguita-project/src/shared/spot-form.js. The two deploy separately — Render
+   and Vercel — so they cannot share a file; if one moves, move the other. */
+const ZAMBOANGUITA_CENTER = { latitude: 9.1005, longitude: 123.1994 };
+const ZAMBOANGUITA_SEARCH_BOX = { minLat: 9.02, maxLat: 9.19, minLng: 123.09, maxLng: 123.27 };
+
 const ROUTING_TIMEOUT_MS = 12000;
 
 // Routing providers meter their free tiers, and each visitor action is one call.
@@ -2295,8 +2305,13 @@ app.get('/api/directions/search', directionsRateLimit, async (req, res) => {
 
     try {
         if (ORS_API_KEY) {
+            // focus.point biases the ranking toward Zamboanguita without hiding
+            // anything: "wharf" should find the local one first, but a manager
+            // whose landmark genuinely sits on the municipal edge still sees it.
+            // boundary.rect would have excluded that second case outright.
             const url = `https://api.openrouteservice.org/geocode/search?api_key=${encodeURIComponent(ORS_API_KEY)}`
-                + `&text=${encodeURIComponent(text)}&boundary.country=PHL&size=6`;
+                + `&text=${encodeURIComponent(text)}&boundary.country=PHL&size=6`
+                + `&focus.point.lat=${ZAMBOANGUITA_CENTER.latitude}&focus.point.lon=${ZAMBOANGUITA_CENTER.longitude}`;
             const data = await fetchJson(url, {});
             return res.status(200).json({
                 success: true,
@@ -2308,7 +2323,11 @@ app.get('/api/directions/search', directionsRateLimit, async (req, res) => {
             });
         }
 
+        // viewbox without bounded=1 prefers this rectangle rather than restricting
+        // to it, which is the same bargain focus.point strikes above.
+        const box = ZAMBOANGUITA_SEARCH_BOX;
         const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=ph&limit=6`
+            + `&viewbox=${box.minLng},${box.minLat},${box.maxLng},${box.maxLat}`
             + `&q=${encodeURIComponent(text)}`;
         const data = await fetchJson(url, { headers: { 'User-Agent': GEOCODER_USER_AGENT } });
         return res.status(200).json({

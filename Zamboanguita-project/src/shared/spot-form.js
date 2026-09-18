@@ -58,7 +58,39 @@
 
     const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    const DEFAULT_CENTER = [9.1003, 123.1966];   // Zamboanguita town centre, view only
+
+    /* --------------------------------------------------------------- where
+       Every map in this form opens over Zamboanguita. Nobody registering a
+       listing here is ever placing it anywhere else, so starting on a world
+       view, on the province, or on wherever the browser thinks the officer is
+       just means panning back before any work can start.
+
+       The centre is the municipal centre of Zamboanguita, Negros Oriental.
+
+       The bounds are a COARSE envelope, not the municipal boundary. Their only
+       job is to catch a pin that is obviously somewhere else — a search result
+       in Manila, a mistyped coordinate — while never rejecting a real one. They
+       are therefore deliberately wider than the municipality's 85.86 km², and
+       they do overlap Dauin to the north and Siaton to the south and west.
+       A pin inside them is not proof it is in Zamboanguita; that is what the
+       reverse geocoder's municipality is for, and the two are used together.
+
+       To replace these with the real boundary: the municipality is OSM relation
+       3740506. Its bounding box, or the LGU's own shapefile, drops straight in
+       here — nothing else has to change.
+       ------------------------------------------------------------------- */
+    const ZAMBOANGUITA_CENTER = [9.1005, 123.1994];
+    const ZAMBOANGUITA_BOUNDS = { minLat: 9.02, maxLat: 9.19, minLng: 123.09, maxLng: 123.27 };
+
+    // Enough of the municipality to get your bearings, and close enough to tell
+    // one building from the next. Nobody is asked to think in zoom levels.
+    const LOCAL_ZOOM = 14;
+    const PIN_ZOOM = 17;
+
+    function insideZamboanguita(lat, lng) {
+        return lat >= ZAMBOANGUITA_BOUNDS.minLat && lat <= ZAMBOANGUITA_BOUNDS.maxLat
+            && lng >= ZAMBOANGUITA_BOUNDS.minLng && lng <= ZAMBOANGUITA_BOUNDS.maxLng;
+    }
 
     // Long enough that a typed word is one lookup rather than five.
     const SEARCH_DEBOUNCE_MS = 450;
@@ -134,6 +166,12 @@
     const LABEL = 'block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1';
     const CHIP_BTN = 'inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant ' +
         'border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all';
+
+    // The three ways into a location. Big on purpose: on a phone this is the
+    // first thing a manager taps, and all three are equally valid answers.
+    const WAY_BTN = 'flex flex-col items-start gap-1 text-left px-4 py-4 min-h-[88px] rounded-xl bg-surface-variant ' +
+        'border border-outline-variant/40 hover:border-primary hover:bg-outline-variant/30 transition-all ' +
+        'focus:outline-none focus:ring-2 focus:ring-primary';
 
     // A required field says so, once, where it is asked for.
     function required() {
@@ -216,83 +254,175 @@
             '</div>' +
         '</section>' +
 
-        /* =========================== STEP 2 — LOCATION ====================== */
+        /* =========================== STEP 2 — LOCATION ======================
+           The question is "where should visitors arrive?", not "what are the
+           coordinates?". Nobody registering a resort should have to know what a
+           latitude is, so the numbers are the last thing on this panel rather
+           than the first, and there are three ways to get to them that all end
+           in the same place: a pin you can look at and agree with.
+           ------------------------------------------------------------------ */
         '<section data-step="1" class="space-y-4" hidden>' +
-            '<p class="text-[11px] text-on-surface-variant">' +
-                'Visitors get directions, distance and travel time from this pin, worked out from wherever they ' +
-                'happen to be at the time. Without it, directions stay unavailable for this listing.' +
-            '</p>' +
 
             '<div>' +
-                '<label for="' + p + 'LocBarangay" class="' + LABEL + '">Barangay' + required() + '</label>' +
-                '<select id="' + p + 'LocBarangay" name="barangay" class="' + INPUT + '">' +
-                    '<option value="">Choose a barangay…</option>' +
-                    BARANGAYS.map(function (b) {
-                        return '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
-                    }).join('') +
-                '</select>' +
-                errorSlot(p + 'BarangayError') +
+                '<h3 class="text-base sm:text-lg font-bold text-on-surface">Where should visitors arrive?</h3>' +
+                '<p class="text-xs text-on-surface-variant mt-1">' +
+                    'Find the place, then put the pin on the gate or entrance people should head for. ' +
+                    'ZTIMS works out the map position, the barangay and the directions from that.' +
+                '</p>' +
             '</div>' +
 
-            '<div>' +
-                '<label for="' + p + 'LocAddress" class="' + LABEL + '">Street or sitio <span class="normal-case font-normal opacity-70">(optional)</span></label>' +
-                '<input id="' + p + 'LocAddress" name="address" type="text" ' +
-                    'placeholder="e.g., Sitio Bonbon, near the wharf" class="' + INPUT + '"/>' +
+            /* A listing saved before this step existed, or one an officer added
+               in a hurry. It is a notice, not a wall: everything else about the
+               listing stays editable. */
+            '<div id="' + p + 'LocLegacy" hidden class="flex flex-wrap items-start gap-2 bg-surface-container-high ' +
+                'border border-outline-variant/40 rounded-xl px-4 py-3">' +
+                '<span class="material-symbols-outlined !text-base text-primary shrink-0">wrong_location</span>' +
+                '<p class="text-xs text-on-surface flex-1 min-w-[12rem]">' +
+                    'This listing has no map location yet. Visitors cannot get directions to it until one is added — ' +
+                    'everything else here can still be edited and saved.' +
+                '</p>' +
+                '<button type="button" id="' + p + 'LocLegacyAdd" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' +
+                    'text-on-primary text-[11px] font-bold">Add location</button>' +
             '</div>' +
 
-            '<div class="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container-low rounded-xl px-4 py-3">' +
-                '<span class="material-symbols-outlined !text-base">public</span>' +
-                '<span><b class="text-on-surface">' + MUNICIPALITY + '</b>, ' + PROVINCE + '</span>' +
+            /* ---------------- pick a way in ---------------- */
+            '<div id="' + p + 'LocChoose" class="grid grid-cols-1 sm:grid-cols-3 gap-2">' +
+                '<button type="button" id="' + p + 'LocWaySearch" class="' + WAY_BTN + '">' +
+                    '<span class="material-symbols-outlined text-primary">search</span>' +
+                    '<span class="font-bold text-on-surface">Search for the place</span>' +
+                    '<span class="text-[11px] text-on-surface-variant">By name, landmark or address. Easiest.</span>' +
+                '</button>' +
+                '<button type="button" id="' + p + 'LocWayHere" class="' + WAY_BTN + '">' +
+                    '<span class="material-symbols-outlined text-primary">my_location</span>' +
+                    '<span class="font-bold text-on-surface">I am at the location</span>' +
+                    '<span class="text-[11px] text-on-surface-variant">Use this device\'s position right now.</span>' +
+                '</button>' +
+                '<button type="button" id="' + p + 'LocWayMap" class="' + WAY_BTN + '">' +
+                    '<span class="material-symbols-outlined text-primary">map</span>' +
+                    '<span class="font-bold text-on-surface">Pick on the map</span>' +
+                    '<span class="text-[11px] text-on-surface-variant">Tap the spot yourself.</span>' +
+                '</button>' +
             '</div>' +
-            '<input type="hidden" id="' + p + 'LocMunicipality" value="' + MUNICIPALITY + '"/>' +
-            '<input type="hidden" id="' + p + 'LocProvince" value="' + PROVINCE + '"/>' +
 
-            '<div>' +
-                '<label for="' + p + 'LocSearch" class="' + LABEL + '">Find it on the map</label>' +
-                '<div class="flex gap-2">' +
-                    '<input id="' + p + 'LocSearch" type="text" placeholder="Search an address or landmark" ' +
-                        'class="' + INPUT + ' flex-1"/>' +
-                    '<button type="button" id="' + p + 'LocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl ' +
-                        'bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface ' +
-                        'hover:bg-outline-variant/40 transition-all min-h-[44px]">Search</button>' +
+            /* ---------------- the working area ---------------- */
+            '<div id="' + p + 'LocWork" hidden class="space-y-4">' +
+
+                '<div id="' + p + 'LocFind" hidden>' +
+                    '<label for="' + p + 'LocSearch" class="' + LABEL + '">Search for the place</label>' +
+                    '<div class="flex gap-2">' +
+                        '<input id="' + p + 'LocSearch" type="text" ' +
+                            'placeholder="Resort, landmark, barangay or address…" ' +
+                            'class="' + INPUT + ' flex-1"/>' +
+                        '<button type="button" id="' + p + 'LocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl ' +
+                            'bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface ' +
+                            'hover:bg-outline-variant/40 transition-all min-h-[44px]">Search</button>' +
+                    '</div>' +
+                    '<div id="' + p + 'LocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 ' +
+                        'rounded-xl p-1 max-h-56 overflow-y-auto text-on-surface"></div>' +
+                    '<p class="text-[11px] text-on-surface-variant mt-1">Places in Zamboanguita are listed first.</p>' +
                 '</div>' +
-                '<div id="' + p + 'LocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 ' +
-                    'rounded-xl p-1 max-h-44 overflow-y-auto text-on-surface"></div>' +
-            '</div>' +
 
-            '<div id="' + p + 'LocMap" class="relative z-0 h-56 sm:h-72 w-full rounded-xl overflow-hidden ' +
-                'border border-outline-variant/40 bg-surface-variant"></div>' +
-            '<p class="text-[11px] text-on-surface-variant">Tap the map to drop the pin, or drag it to the exact entrance.</p>' +
-
-            // The pin is the truth; the numbers are a readout of it. They used to be
-            // two decimal text boxes beside a map that already set them — an
-            // invitation to a transposed pin.
-            '<div class="flex flex-wrap items-center gap-2 bg-surface-container-low rounded-xl px-4 py-3">' +
-                '<span class="material-symbols-outlined !text-base text-primary shrink-0">my_location</span>' +
-                '<p id="' + p + 'LocReadout" class="text-xs text-on-surface-variant flex-1 min-w-[10rem]">No pin dropped yet.</p>' +
-                '<button type="button" id="' + p + 'LocManualToggle" class="text-[11px] font-bold text-primary ' +
-                    'underline underline-offset-2 min-h-[36px] px-1">Enter manually</button>' +
-            '</div>' +
-
-            '<div id="' + p + 'LocManualRow" hidden class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
                 '<div>' +
-                    '<label for="' + p + 'LocLat" class="' + LABEL + '">Latitude</label>' +
-                    '<input id="' + p + 'LocLat" type="text" inputmode="decimal" placeholder="9.123456" class="' + INPUT + '"/>' +
+                    '<p id="' + p + 'LocMapHint' + '" class="text-xs text-on-surface mb-2 flex items-start gap-1.5">' +
+                        '<span class="material-symbols-outlined !text-base text-primary shrink-0">touch_app</span>' +
+                        '<span>Move the pin to the entrance visitors should arrive at.</span>' +
+                    '</p>' +
+                    // Taller than it was, and tallest on a phone, where a pin is
+                    // placed with a fingertip rather than a mouse.
+                    '<div id="' + p + 'LocMap" class="relative z-0 h-72 sm:h-80 w-full rounded-xl overflow-hidden ' +
+                        'border border-outline-variant/40 bg-surface-variant"></div>' +
                 '</div>' +
-                '<div>' +
-                    '<label for="' + p + 'LocLng" class="' + LABEL + '">Longitude</label>' +
-                    '<input id="' + p + 'LocLng" type="text" inputmode="decimal" placeholder="123.123456" class="' + INPUT + '"/>' +
+
+                /* The pin in words. Somewhere unexpected reads as wrong text far
+                   more readily than it reads as a dot in the wrong place. */
+                '<div id="' + p + 'LocSanity" hidden class="flex items-start gap-2 bg-surface-container-low rounded-xl px-4 py-3">' +
+                    '<span class="material-symbols-outlined !text-base text-primary shrink-0">location_on</span>' +
+                    '<p class="text-xs text-on-surface-variant flex-1 min-w-0">' +
+                        '<span class="block text-[11px] uppercase tracking-wider font-bold">This pin is at</span>' +
+                        '<span id="' + p + 'LocSanityText" class="text-on-surface break-words">Reading the address…</span>' +
+                    '</p>' +
                 '</div>' +
-            '</div>' +
 
-            '<div class="flex flex-wrap gap-2">' +
-                '<button type="button" id="' + p + 'LocConfirm" class="' + CHIP_BTN + '">' +
-                    '<span class="material-symbols-outlined !text-base">check_circle</span> Confirm location</button>' +
-                '<button type="button" id="' + p + 'LocClear" class="' + CHIP_BTN + ' !text-on-surface-variant">' +
-                    '<span class="material-symbols-outlined !text-base">location_off</span> Clear</button>' +
-            '</div>' +
+                '<p id="' + p + 'LocCheck" hidden class="text-xs flex items-start gap-1.5"></p>' +
 
-            '<p id="' + p + 'LocStatus" hidden class="text-[11px] text-on-surface-variant"></p>' +
+                /* The pin says one barangay, the form says another. Offered as a
+                   choice, because the geocoder is not always the one that is right. */
+                '<div id="' + p + 'LocMismatch" hidden class="bg-surface-container-high border border-outline-variant/40 ' +
+                    'rounded-xl px-4 py-3 space-y-2">' +
+                    '<p id="' + p + 'LocMismatchText" class="text-xs text-on-surface"></p>' +
+                    '<div class="flex flex-wrap gap-2">' +
+                        '<button type="button" id="' + p + 'LocMismatchUse" class="px-3 py-2 min-h-[40px] rounded-lg ' +
+                            'bg-primary text-on-primary text-[11px] font-bold"></button>' +
+                        '<button type="button" id="' + p + 'LocMismatchKeep" class="px-3 py-2 min-h-[40px] rounded-lg ' +
+                            'border border-outline-variant/40 text-on-surface text-[11px] font-bold">Adjust the pin</button>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                    '<div>' +
+                        '<label for="' + p + 'LocBarangay" class="' + LABEL + '">Barangay' + required() + '</label>' +
+                        '<select id="' + p + 'LocBarangay" name="barangay" class="' + INPUT + '">' +
+                            '<option value="">Choose a barangay…</option>' +
+                            BARANGAYS.map(function (b) {
+                                return '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
+                            }).join('') +
+                        '</select>' +
+                        '<p class="text-[11px] text-on-surface-variant mt-1">Filled in from the pin. Change it if it is wrong.</p>' +
+                        errorSlot(p + 'BarangayError') +
+                    '</div>' +
+                    '<div>' +
+                        '<label for="' + p + 'LocAddress" class="' + LABEL + '">Street or sitio ' +
+                            '<span class="normal-case font-normal opacity-70">(optional)</span></label>' +
+                        '<input id="' + p + 'LocAddress" name="address" type="text" ' +
+                            'placeholder="e.g., Sitio Bonbon, near the wharf" class="' + INPUT + '"/>' +
+                        '<p class="text-[11px] text-on-surface-variant mt-1">Anything you type here is kept as you typed it.</p>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container-low rounded-xl px-4 py-3">' +
+                    '<span class="material-symbols-outlined !text-base">public</span>' +
+                    '<span><b class="text-on-surface">' + MUNICIPALITY + '</b>, ' + PROVINCE + '</span>' +
+                '</div>' +
+                '<input type="hidden" id="' + p + 'LocMunicipality" value="' + MUNICIPALITY + '"/>' +
+                '<input type="hidden" id="' + p + 'LocProvince" value="' + PROVINCE + '"/>' +
+
+                /* Still here for whoever has a GPS reading off a handset, and out
+                   of the way of everyone who does not. */
+                '<details id="' + p + 'LocAdvanced" class="rounded-xl border border-outline-variant/40 bg-surface-container-low">' +
+                    '<summary class="cursor-pointer px-4 py-3 text-[11px] font-bold uppercase tracking-wider ' +
+                        'text-on-surface-variant select-none min-h-[44px] flex items-center gap-1.5">' +
+                        '<span class="material-symbols-outlined !text-base">tune</span>Advanced location details</summary>' +
+                    '<div class="px-4 pb-4 space-y-2">' +
+                        '<p class="text-[11px] text-on-surface-variant">' +
+                            'The pin is what gets saved. These are a readout of it, and you can type over them ' +
+                            'if you are copying a reading from somewhere else.' +
+                        '</p>' +
+                        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                            '<div>' +
+                                '<label for="' + p + 'LocLat" class="' + LABEL + '">Latitude</label>' +
+                                '<input id="' + p + 'LocLat" type="text" inputmode="decimal" placeholder="9.100500" class="' + INPUT + '"/>' +
+                            '</div>' +
+                            '<div>' +
+                                '<label for="' + p + 'LocLng" class="' + LABEL + '">Longitude</label>' +
+                                '<input id="' + p + 'LocLng" type="text" inputmode="decimal" placeholder="123.199400" class="' + INPUT + '"/>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</details>' +
+
+                '<div class="flex flex-wrap gap-2">' +
+                    '<button type="button" id="' + p + 'LocConfirm" class="inline-flex items-center gap-1.5 px-5 py-3 ' +
+                        'min-h-[48px] rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-90 ' +
+                        'transition-all disabled:opacity-40">' +
+                        '<span class="material-symbols-outlined !text-base">check_circle</span>' +
+                        '<span id="' + p + 'LocConfirmLabel">Confirm location</span></button>' +
+                    '<button type="button" id="' + p + 'LocChange" class="' + CHIP_BTN + ' !text-on-surface-variant">' +
+                        '<span class="material-symbols-outlined !text-base">edit_location_alt</span> Change location</button>' +
+                '</div>' +
+                errorSlot(p + 'LocError') +
+
+                '<p id="' + p + 'LocStatus" hidden class="text-[11px] text-on-surface-variant"></p>' +
+            '</div>' +
         '</section>' +
 
         /* =========================== STEP 3 — VISITING ====================== */
@@ -459,8 +589,22 @@
         let photos = [];
         let map = null;
         let marker = null;
-        let manualOpen = false;
         let draftTimer = null;
+
+        /* ---- location state ----
+           locationConfirmed is the whole point of the Confirm button: before it,
+           pressing Next on a new listing is refused. It goes back to false the
+           moment the pin moves, so "confirmed" always means somebody looked at
+           this pin, not an earlier one.
+
+           hadPointOnOpen remembers whether the listing arrived with a location,
+           which is what separates "this new listing still needs one" from "this
+           old listing never had one and that must not block fixing its hours". */
+        let locationConfirmed = false;
+        let hadPointOnOpen = false;
+        let locMethod = '';                 // '' | 'search' | 'here' | 'map'
+        let detectedBarangay = '';          // what the geocoder made of the pin
+        let detectedMunicipality = '';
 
         /* ------------------------------------------------------ validation */
 
@@ -493,6 +637,24 @@
                 test: function (v) {
                     if (!v.trim()) return 'Describe what a visitor will find here.';
                     if (v.trim().length < 20) return 'A little more detail — at least 20 characters.';
+                    return '';
+                }
+            },
+            /* Before the barangay rule on purpose: the barangay is filled in from
+               the pin now, so being told to set a location first is the order that
+               actually gets someone through this panel. */
+            {
+                step: 1, field: 'LocLat', slot: 'LocError', focusId: 'LocConfirm', decorate: false,
+                test: function () {
+                    // An existing listing that never had a location is not blocked
+                    // from having its description or hours corrected. The notice on
+                    // the panel says what is missing; it does not stand in the way.
+                    if (editingId && !hadPointOnOpen) return '';
+                    if (!readPoint()) {
+                        return 'Set where visitors should arrive — search for the place, '
+                            + 'use this device\'s position, or tap the map.';
+                    }
+                    if (!locationConfirmed) return 'Check the pin, then press Confirm location.';
                     return '';
                 }
             },
@@ -529,7 +691,10 @@
             const field = el(rule.field);
             if (!field) return '';
             const message = rule.test(field.value);
-            if (show) setFieldError(field, p + rule.slot, message);
+            // decorate:false for a rule whose real subject is not a text box — the
+            // location rule watches a pin, and putting a red ring round a latitude
+            // field folded away under Advanced would point at the wrong thing.
+            if (show) setFieldError(rule.decorate === false ? null : field, p + rule.slot, message);
             return message;
         }
 
@@ -544,7 +709,7 @@
 
         function focusProblem(rule) {
             goToStep(rule.step);
-            const field = el(rule.field);
+            const field = el(rule.focusId || rule.field);
             if (!field) return;
             // After the panel is visible, or the scroll lands on a hidden element.
             requestAnimationFrame(function () {
@@ -596,7 +761,10 @@
             el('SubmitBtn').hidden = !last;
             el('SubmitBtn').textContent = editingId ? editLabel : createLabel;
 
-            if (step === 1) refreshMap();
+            // The map is built the first time the Location panel is actually shown
+            // with something to show, and re-measured every time after that.
+            // setLocPhase decides which of the two it is.
+            if (step === 1) setLocPhase();
         }
 
         function goToStep(index) {
@@ -777,27 +945,91 @@
             return { lat: lat, lng: lng };
         }
 
-        function paintReadout() {
+        // Four decimals is about eleven metres — close enough to send somebody to.
+        // Two is a kilometre, which is a different building or a different beach.
+        function decimalsOf(value) {
+            const match = /\.(\d+)$/.exec(String(value || '').trim());
+            return match ? match[1].length : 0;
+        }
+
+        function pointIsPrecise() {
+            return decimalsOf(el('LocLat').value) >= 4 && decimalsOf(el('LocLng').value) >= 4;
+        }
+
+        /* Which of the three ways in is currently open, '' when none is. The panel
+           shows the chooser or the working area based on this and on whether a pin
+           exists — there is no other state to keep in step. */
+        function setLocPhase() {
+            const working = Boolean(locMethod) || Boolean(readPoint());
+            el('LocChoose').hidden = working;
+            el('LocWork').hidden = !working;
+            el('LocFind').hidden = locMethod !== 'search';
+            if (working) refreshMap();
+            paintLocation();
+        }
+
+        // Everything that reads off the current pin: the confirm button, the
+        // within-Zamboanguita line, and whether the address line is worth showing.
+        function paintLocation() {
             const point = readPoint();
-            el('LocReadout').textContent = point
-                ? 'Pin at ' + point.lat.toFixed(6) + ', ' + point.lng.toFixed(6) + '.'
-                : 'No pin dropped yet — directions stay unavailable for this listing.';
+            const confirmBtn = el('LocConfirm');
+            const check = el('LocCheck');
+            const sanity = el('LocSanity');
+
+            if (!point) {
+                check.hidden = true;
+                sanity.hidden = true;
+                confirmBtn.disabled = true;
+                el('LocConfirmLabel').textContent = 'Confirm location';
+                return;
+            }
+
+            sanity.hidden = false;
+            confirmBtn.disabled = false;
+            el('LocConfirmLabel').textContent = locationConfirmed ? 'Location confirmed' : 'Confirm location';
+            confirmBtn.classList.toggle('!bg-surface-variant', locationConfirmed);
+            confirmBtn.classList.toggle('!text-on-surface', locationConfirmed);
+
+            check.hidden = false;
+            const inside = insideZamboanguita(point.lat, point.lng);
+            check.className = 'text-xs flex items-start gap-1.5 ' + (inside ? 'text-on-surface-variant' : 'text-error');
+            check.textContent = '';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined !text-base shrink-0';
+            icon.textContent = inside ? 'check_circle' : 'warning';
+            const words = document.createElement('span');
+            words.textContent = inside
+                ? 'Within ' + MUNICIPALITY + '.'
+                : 'This location appears to be outside ' + MUNICIPALITY + '. Move the pin, or choose another search result.';
+            check.appendChild(icon);
+            check.appendChild(words);
         }
 
         function writePoint(lat, lng) {
             el('LocLat').value = lat.toFixed(6);
             el('LocLng').value = lng.toFixed(6);
-            paintReadout();
+            // A pin that has moved has not been agreed to yet, whatever was agreed
+            // to before it moved.
+            locationConfirmed = false;
+            paintLocation();
             saveDraftSoon();
         }
 
-        el('LocManualToggle').addEventListener('click', function () {
-            manualOpen = !manualOpen;
-            el('LocManualRow').hidden = !manualOpen;
-            el('LocManualToggle').textContent = manualOpen ? 'Hide the numbers' : 'Enter manually';
-        });
         [el('LocLat'), el('LocLng')].forEach(function (field) {
-            field.addEventListener('input', function () { paintReadout(); saveDraftSoon(); });
+            field.addEventListener('input', function () {
+                locationConfirmed = false;
+                paintLocation();
+                saveDraftSoon();
+            });
+            // Typed by hand, so the map has to catch up with the numbers.
+            field.addEventListener('change', async function () {
+                const point = readPoint();
+                if (!point) return;
+                try {
+                    await ensureMap();
+                    placeMarker(point.lat, point.lng, true);
+                } catch (error) { /* the numbers still stand without a map */ }
+            });
         });
 
         function placeMarker(lat, lng, recentre) {
@@ -807,12 +1039,13 @@
                 marker.on('dragend', function () {
                     const at = marker.getLatLng();
                     writePoint(at.lat, at.lng);
-                    say('Pin moved to ' + at.lat.toFixed(6) + ', ' + at.lng.toFixed(6) + '.', 'ok');
+                    describePoint({ lat: at.lat, lng: at.lng });
+                    say('Pin moved. Check the address below still reads right.', 'ok');
                 });
             } else {
                 marker.setLatLng([lat, lng]);
             }
-            if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), 16));
+            if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), PIN_ZOOM));
         }
 
         function clearMarker() {
@@ -824,7 +1057,8 @@
             if (map) return map;
             await loadLeaflet();
 
-            map = window.L.map(el('LocMap'), { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 13);
+            map = window.L.map(el('LocMap'), { scrollWheelZoom: false })
+                .setView(ZAMBOANGUITA_CENTER, LOCAL_ZOOM);
             window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap contributors'
@@ -833,11 +1067,15 @@
             map.on('click', function (event) {
                 writePoint(event.latlng.lat, event.latlng.lng);
                 placeMarker(event.latlng.lat, event.latlng.lng, false);
-                say('Pin set. Drag it if the exact gate is somewhere else.', 'ok');
+                // Placed from a municipality-wide view, the pin is a guess at which
+                // building it is. Rather than refusing it, go in close enough that
+                // the guess can be corrected by looking.
+                if (map.getZoom() < PIN_ZOOM) map.setView([event.latlng.lat, event.latlng.lng], PIN_ZOOM);
+                say('Pin placed. Drag it onto the entrance if it is not there already.', 'ok');
                 describePoint({ lat: event.latlng.lat, lng: event.latlng.lng });
             });
 
-            /* Dropping a pin on a 14rem map means guessing which building is
+            /* Dropping a pin on a small map means guessing which building is
                which. Full screen is where the gate can actually be found, so
                the control is here as well as on the public maps. Only the
                control is lost if the map module is missing; the picker itself
@@ -847,7 +1085,7 @@
                     const point = readPoint();
                     // Stay on the pin through the change of size: re-framing to
                     // anything else would lose the thing being placed.
-                    if (point) map.setView([point.lat, point.lng], Math.max(map.getZoom(), 16));
+                    if (point) map.setView([point.lat, point.lng], Math.max(map.getZoom(), PIN_ZOOM));
                 });
             }
 
@@ -855,46 +1093,156 @@
         }
 
         // Leaflet measures the container on creation, so a map built inside a
-        // closed dialog comes out zero-sized. Called whenever step 2 is shown.
+        // closed dialog comes out zero-sized. Called whenever the panel is shown.
         async function refreshMap() {
             try {
                 await ensureMap();
                 map.invalidateSize();
                 const point = readPoint();
                 if (point) placeMarker(point.lat, point.lng, true);
-                else { clearMarker(); map.setView(DEFAULT_CENTER, 13); }
+                else { clearMarker(); map.setView(ZAMBOANGUITA_CENTER, LOCAL_ZOOM); }
             } catch (error) {
                 say(error.message, 'error');
             }
         }
 
         // A dropdown only takes a value it already has an option for, so the
-        // geocoder's spelling is matched against the ten rather than assigned.
-        function setBarangay(value) {
+        // geocoder's spelling is matched against the eleven rather than assigned.
+        function matchBarangay(value) {
             const wanted = String(value || '').trim().toLowerCase();
-            if (!wanted) return false;
-            const match = BARANGAYS.find(function (b) { return b.toLowerCase() === wanted; });
+            if (!wanted) return '';
+            return BARANGAYS.find(function (b) { return b.toLowerCase() === wanted; }) || '';
+        }
+
+        function setBarangay(value) {
+            const match = matchBarangay(value);
             if (!match) return false;
             el('LocBarangay').value = match;
             return true;
         }
 
+        /* The pin says one barangay and the form says another. Shown as a choice
+           rather than a correction: the geocoder is not always the one that is
+           right, and whoever is filling this in may well know better. */
+        function paintMismatch() {
+            const chosen = el('LocBarangay').value;
+            const box = el('LocMismatch');
+            if (!detectedBarangay || !chosen || detectedBarangay === chosen) {
+                box.hidden = true;
+                return;
+            }
+            el('LocMismatchText').textContent =
+                'The pin looks like it is in ' + detectedBarangay + ', but this listing says ' + chosen + '.';
+            el('LocMismatchUse').textContent = 'Use ' + detectedBarangay;
+            box.hidden = false;
+        }
+
+        el('LocMismatchUse').addEventListener('click', function () {
+            setBarangay(detectedBarangay);
+            paintMismatch();
+            paintPreview();
+            saveDraftSoon();
+        });
+
+        el('LocMismatchKeep').addEventListener('click', function () {
+            el('LocMismatch').hidden = true;
+            say('Drag the pin to where visitors actually arrive, and the barangay will follow it.');
+            el('LocMap').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+
+        el('LocBarangay').addEventListener('change', function () { paintMismatch(); });
+
+        function pointWords(point) {
+            return point.lat.toFixed(5) + ', ' + point.lng.toFixed(5);
+        }
+
         // Turns a pin into readable address text. It only ever fills fields that
         // are still empty — something typed by hand is never overwritten.
         async function describePoint(point) {
+            const sanity = el('LocSanityText');
+            sanity.textContent = 'Reading the address…';
             try {
                 const response = await fetch(apiBase + '/directions/reverse?lat=' + point.lat + '&lng=' + point.lng);
                 const data = await response.json().catch(function () { return {}; });
-                if (!response.ok) return;
+                if (!response.ok) { sanity.textContent = pointWords(point); return; }
 
                 if (data.label && !el('LocAddress').value.trim()) el('LocAddress').value = data.label;
-                if (data.barangay && !el('LocBarangay').value) setBarangay(data.barangay);
+
+                detectedBarangay = matchBarangay(data.barangay);
+                detectedMunicipality = String(data.municipality || '').trim();
+                if (detectedBarangay && !el('LocBarangay').value) setBarangay(detectedBarangay);
+
+                sanity.textContent = data.label
+                    || [detectedBarangay, MUNICIPALITY].filter(Boolean).join(', ')
+                    || pointWords(point);
+
+                paintMismatch();
                 paintPreview();
                 saveDraftSoon();
             } catch (error) {
                 /* The pin is what gets saved; the address text is only a convenience. */
+                sanity.textContent = pointWords(point);
             }
+            paintLocation();
         }
+
+        /* ------------------------------------------------- the three ways in */
+
+        el('LocWaySearch').addEventListener('click', function () {
+            locMethod = 'search';
+            setLocPhase();
+            say('');
+            el('LocSearch').focus();
+        });
+
+        el('LocWayMap').addEventListener('click', function () {
+            locMethod = 'map';
+            setLocPhase();
+            say('Tap the map where the place is. You can drag the pin afterwards.');
+        });
+
+        el('LocLegacyAdd').addEventListener('click', function () {
+            locMethod = 'search';
+            setLocPhase();
+            el('LocSearch').focus();
+        });
+
+        /* The device's own position, asked for only when it is offered as the
+           answer and used only as this listing's location. ZTIMS keeps no record
+           of where whoever filled the form happened to be standing. */
+        el('LocWayHere').addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                say('This device cannot report its position. Search for the place, or pick it on the map instead.', 'error');
+                return;
+            }
+            locMethod = 'here';
+            setLocPhase();
+            say('Asking this device where it is. The position is used to place this listing and nothing else.');
+
+            navigator.geolocation.getCurrentPosition(async function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                writePoint(lat, lng);
+                try {
+                    await ensureMap();
+                    placeMarker(lat, lng, true);
+                } catch (error) { /* the pin stands even if the map will not load */ }
+                await describePoint({ lat: lat, lng: lng });
+                say(insideZamboanguita(lat, lng)
+                    ? 'Position found. Drag the pin onto the entrance, then confirm.'
+                    : 'Position found, but it is outside ' + MUNICIPALITY + '. Move the pin to the place you are listing.',
+                    insideZamboanguita(lat, lng) ? 'ok' : 'error');
+            }, function (error) {
+                locMethod = '';
+                setLocPhase();
+                say(error && error.code === 1
+                    ? 'Location access was not allowed. You can search for the place, or choose it on the map instead.'
+                    : 'We could not read this device\'s position. You can search for the place, or choose it on the map instead.',
+                    'error');
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        });
+
+        /* ------------------------------------------------------------ search */
 
         function renderResults(list) {
             const results = el('LocResults');
@@ -906,16 +1254,32 @@
                 // outside geocoder and must never be treated as markup.
                 const option = document.createElement('button');
                 option.type = 'button';
-                option.textContent = place.label;
-                option.className = 'w-full text-left text-xs px-3 py-2.5 rounded-lg hover:bg-outline-variant/30 transition-colors';
+                option.className = 'w-full text-left px-3 py-3 min-h-[44px] rounded-lg hover:bg-outline-variant/30 transition-colors';
+
+                const name = document.createElement('span');
+                name.className = 'block text-xs text-on-surface';
+                name.textContent = place.label;
+                option.appendChild(name);
+
+                // A result outside the municipality is still offered — it may be
+                // the one they meant — but it is labelled before it is picked.
+                if (!insideZamboanguita(place.latitude, place.longitude)) {
+                    const flag = document.createElement('span');
+                    flag.className = 'block text-[11px] text-error mt-0.5';
+                    flag.textContent = 'Outside ' + MUNICIPALITY;
+                    option.appendChild(flag);
+                }
+
                 option.addEventListener('click', async function () {
                     writePoint(place.latitude, place.longitude);
-                    await ensureMap();
-                    placeMarker(place.latitude, place.longitude, true);
+                    try {
+                        await ensureMap();
+                        placeMarker(place.latitude, place.longitude, true);
+                    } catch (error) { /* the pin stands even without a map */ }
                     results.hidden = true;
                     if (!el('LocAddress').value.trim()) el('LocAddress').value = place.label;
-                    describePoint({ lat: place.latitude, lng: place.longitude });
-                    say('Pin placed. Drag it if the exact gate is somewhere else.', 'ok');
+                    await describePoint({ lat: place.latitude, lng: place.longitude });
+                    say('Pin placed. Drag it onto the entrance if it is not there already.', 'ok');
                     paintPreview();
                 });
                 results.appendChild(option);
@@ -942,7 +1306,8 @@
                 renderResults(list);
                 say(list.length
                     ? 'Pick the closest match, then drag the pin to the exact spot.'
-                    : 'No match found. Drop the pin on the map instead.');
+                    : 'We could not find that place. Try the establishment name, a landmark, the barangay or the street — '
+                        + 'or pick it on the map instead.');
             } catch (error) {
                 say(error.message, 'error');
             }
@@ -975,30 +1340,80 @@
             }, SEARCH_DEBOUNCE_MS);
         });
 
+        /* ----------------------------------------------- confirm and change */
+
         el('LocConfirm').addEventListener('click', async function () {
             const point = readPoint();
             if (!point) {
-                say('No location set yet. Search for the address, or tap the map to drop a pin.', 'error');
+                say('No pin yet. Search for the place, use this device\'s position, or tap the map.', 'error');
                 return;
             }
+            if (!insideZamboanguita(point.lat, point.lng)) {
+                say('This location appears to be outside ' + MUNICIPALITY
+                    + '. Please move the pin, or choose another search result.', 'error');
+                return;
+            }
+            if (!pointIsPrecise()) {
+                say('Those coordinates are not exact enough to send anyone to. Place the pin on the map, '
+                    + 'or give at least four decimal places.', 'error');
+                return;
+            }
+
             try {
                 await ensureMap();
                 placeMarker(point.lat, point.lng, true);
                 map.invalidateSize();
-                await describePoint(point);
-                say('Location confirmed: ' + point.lat.toFixed(6) + ', ' + point.lng.toFixed(6) + '.', 'ok');
-            } catch (error) {
-                say(error.message, 'error');
+            } catch (error) { /* a pin with no map is still a pin */ }
+            await describePoint(point);
+
+            if (!el('LocBarangay').value) {
+                say('Choose the barangay to finish confirming this location.', 'error');
+                el('LocBarangay').focus();
+                return;
             }
+
+            locationConfirmed = true;
+            paintLocation();
+            setFieldError(null, p + 'LocError', '');
+
+            // The coarse bounds said yes and the map service disagrees. It is
+            // wrong often enough at a boundary that it warns rather than blocks.
+            const elsewhere = detectedMunicipality && !/zamboanguita/i.test(detectedMunicipality);
+            say(elsewhere
+                ? 'Location confirmed — but the map service reads this pin as ' + detectedMunicipality
+                    + '. Worth a second look before you publish.'
+                : 'Location confirmed. This is where visitors will be sent.',
+                elsewhere ? 'error' : 'ok');
         });
 
-        el('LocClear').addEventListener('click', function () {
+        function clearLocation() {
             el('LocLat').value = '';
             el('LocLng').value = '';
             clearMarker();
-            paintReadout();
-            say('Location cleared. Visitors will not be offered directions to this listing.');
+            locationConfirmed = false;
+            locMethod = '';
+            detectedBarangay = '';
+            detectedMunicipality = '';
+            el('LocSearch').value = '';
+            el('LocResults').innerHTML = '';
+            el('LocResults').hidden = true;
+            el('LocMismatch').hidden = true;
+            lastQuery = '';
+            say('');
+            setLocPhase();
             saveDraftSoon();
+        }
+
+        /* Losing a located pin to a mis-tap is worse than one extra tap. A native
+           confirm rather than a dialog of our own: these forms already open inside
+           a dialog on two of the three pages, and a second overlay would have to
+           fight the first one for Escape and for stacking order. */
+        el('LocChange').addEventListener('click', function () {
+            if (!readPoint() && !locMethod) return;
+            const sure = window.confirm(
+                'Change location?\n\nThe location currently set for this listing will be removed.');
+            if (!sure) return;
+            clearLocation();
         });
 
         function fillLocation(spot) {
@@ -1012,14 +1427,27 @@
             el('LocLat').value = hasPoint ? source.latitude : '';
             el('LocLng').value = hasPoint ? source.longitude : '';
 
+            hadPointOnOpen = Boolean(readPoint());
+            // A pin already saved was agreed to when it was set. Asking for it to
+            // be confirmed again would mean anyone fixing a typo in the opening
+            // hours first had to re-place a pin nobody had questioned.
+            locationConfirmed = hadPointOnOpen;
+            locMethod = '';
+            detectedBarangay = '';
+            detectedMunicipality = '';
+
             el('LocSearch').value = '';
             el('LocResults').innerHTML = '';
             el('LocResults').hidden = true;
-            manualOpen = false;
-            el('LocManualRow').hidden = true;
-            el('LocManualToggle').textContent = 'Enter manually';
-            paintReadout();
+            el('LocMismatch').hidden = true;
+            el('LocAdvanced').open = false;
+            // Shown only for a listing that exists and never had a pin — a new one
+            // has not failed to do anything yet.
+            el('LocLegacy').hidden = !(editingId && !hadPointOnOpen);
+            el('LocSanityText').textContent = source.address
+                || (hasPoint ? pointWords({ lat: Number(source.latitude), lng: Number(source.longitude) }) : '');
             say('');
+            setLocPhase();
         }
 
         function locationPayload() {
@@ -1312,7 +1740,12 @@
             photos = Array.isArray(data.photos) ? data.photos.slice() : [];
 
             paintSchedule();
-            paintReadout();
+            // A restored draft's pin was placed by whoever drafted it, but nobody
+            // has looked at it since. One glance and one press is a small price for
+            // never publishing a pin that was last seen days ago.
+            locationConfirmed = false;
+            hadPointOnOpen = false;
+            setLocPhase();
             renderPhotos();
             paintPreview();
         }
@@ -1476,7 +1909,7 @@
         // Nothing is on screen until a page calls open(), but the preview and the
         // pickers should be in a sane state from the start.
         paintSchedule();
-        paintReadout();
+        setLocPhase();
         renderPhotos();
         paintPreview();
         paintSteps();
