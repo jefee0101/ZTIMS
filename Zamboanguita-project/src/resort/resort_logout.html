@@ -66,6 +66,8 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
 </head>
 <body class="bg-background text-on-surface min-h-screen flex flex-col overflow-x-hidden">
 
@@ -136,7 +138,7 @@ body { overflow-x: hidden; }
 })();
 </script>
 
-    <main class="relative flex-grow flex items-center justify-center p-6 md:p-12">
+    <main class="page-enter relative flex-grow flex items-center justify-center p-6 md:p-12">
         <div class="relative z-10 w-full max-w-xl">
             <div class="bg-surface/50 backdrop-blur-2xl rounded-3xl border border-outline-variant/15 p-8 md:p-14 text-center shadow-2xl">
                 <div class="mb-8">

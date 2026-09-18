@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Motion — named once, and switched off in one place
+   --------------------------------------------------------------------------
+   Before this there were three easings and six durations across fourteen
+   pages, doing what should be two or three decisions. And every page carried
+   its own prefers-reduced-motion block covering exactly one animation: the
+   landing page turned off .rise, the portals turned off the toast, and nothing
+   anywhere turned off the hover scales, the sidebar slide, the card zooms or
+   the analytics glow — which looped forever.
+
+   Load this on every page. It is the only place motion is defined and the only
+   place it is turned off.
+   ========================================================================== */
+
+:root {
+    /* Chosen to agree with what the pages already use: duration-300 appears 83
+       times in the markup, so the base is 300ms rather than a rounder number
+       that would quietly disagree with every Tailwind class on the site. */
+    --motion-fast: 150ms;
+    --motion-base: 300ms;
+    --motion-slow: 450ms;
+
+    /* Standard: things moving under your finger, and colour changes.
+       Entrance: things arriving, which want a softer landing. */
+    --ease-standard: cubic-bezier(.4, 0, .2, 1);
+    --ease-entrance: cubic-bezier(.16, .84, .44, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Page to page
+   --------------------------------------------------------------------------
+   ZTIMS is a multi-page site, so every click was a full reload and a flash of
+   background. This hands the crossfade to the browser.
+
+   One at-rule and nothing else: a browser that does not support it ignores the
+   rule entirely and navigates exactly as it did before, so there is no
+   fallback to write and nothing to feature-detect.
+   -------------------------------------------------------------------------- */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: var(--motion-base);
+    animation-timing-function: var(--ease-standard);
+}
+
+/* --------------------------------------------------------------------------
+   Arriving
+   -------------------------------------------------------------------------- */
+
+/* Staggered, for a page that introduces itself line by line. Each element sets
+   its own --rise-delay. */
+@keyframes ztimsRise {
+    from { opacity: 0; transform: translateY(0.7rem); }
+    to   { opacity: 1; transform: none; }
+}
+
+.rise {
+    opacity: 0;
+    animation: ztimsRise var(--motion-slow) var(--ease-entrance) both;
+    animation-delay: var(--rise-delay, 0s);
+}
+
+/* For the pages that have no reason to introduce themselves line by line —
+   the officer's tables, the establishment portal. The whole of main lifts once.
+   Deliberately shorter and smaller than .rise: it should register as the page
+   having settled, not as an animation someone has to sit through. */
+@keyframes ztimsPageIn {
+    from { opacity: 0; transform: translateY(0.4rem); }
+    to   { opacity: 1; transform: none; }
+}
+
+.page-enter {
+    animation: ztimsPageIn var(--motion-base) var(--ease-entrance) both;
+}
+
+/* Content replacing a spinner. Without it the swap is a hard cut: the spinner
+   vanishes and a full grid appears in the same frame. */
+@keyframes ztimsFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.ztims-fade-in {
+    animation: ztimsFadeIn var(--motion-base) var(--ease-standard) both;
+}
+
+/* --------------------------------------------------------------------------
+   Turning it off
+   --------------------------------------------------------------------------
+   Someone who has asked their system for less motion gets the site still —
+   all of it, not the one animation each page happened to remember.
+
+   Not display:none and not animation:none on everything: a duration of
+   almost-zero lets animations still fire their end events, so anything built
+   on them keeps working. Nothing here relies on that today, but the next thing
+   someone writes might.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-delay: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Elements that animate in from opacity:0 must not be left invisible when
+       their animation is cut to nothing. */
+    .rise,
+    .page-enter,
+    .ztims-fade-in {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+
+    /* A frozen spinner reads as a crashed page. This one keeps turning, slowly:
+       it is small, it is expected, and it is the only thing on screen saying
+       the request has not finished. */
+    .animate-spin {
+        animation: spin 1.8s linear infinite !important;
+    }
+
+    /* Hover effects stop moving things about, but keep their colour change so
+       it is still obvious what is interactive. */
+    .glass-panel:hover,
+    .group:hover img,
+    [class*="hover:scale"]:hover {
+        transform: none !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}

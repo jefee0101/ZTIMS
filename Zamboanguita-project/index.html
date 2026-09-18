@@ -96,23 +96,9 @@
         .star-input { cursor: pointer; transition: transform .1s ease; }
         .star-input.filled { font-variation-settings: 'FILL' 1; }
 
-        /* Text arrives instead of simply being there: each line lifts into place
-           a beat after the one above it. The delay is set per element with
-           --rise-delay, so one rule covers the header, the hero and the section
-           headings. Anyone who has asked their system for less motion gets the
-           text immediately and still, rather than a stripped-down version. */
-        @keyframes riseIn {
-            from { opacity: 0; transform: translateY(0.7rem); }
-            to   { opacity: 1; transform: none; }
-        }
-        .rise {
-            opacity: 0;
-            animation: riseIn .55s cubic-bezier(.16, .84, .44, 1) both;
-            animation-delay: var(--rise-delay, 0s);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .rise { animation: none; opacity: 1; }
-        }
+        /* .rise, its easing and the reduced-motion rule all live in
+           src/shared/motion.css now, so every page animates the same way and
+           there is one place that turns motion off. */
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
    and a long unbroken word — a URL in a review, an establishment name — must
@@ -141,6 +127,8 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="./src/shared/motion.css"/>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
@@ -554,6 +542,11 @@ body { overflow-x: hidden; }
     // small enough that re-querying per keystroke would only add latency.
     let allSpots = [];
     let activeCategory = 'all';
+    // True until the grid has painted once. The first paint is the one that
+    // replaces the loading spinner, and that swap gets a fade; every paint
+    // after it is the visitor typing in the search box, where fading the whole
+    // grid on each keystroke would read as the page lagging behind them.
+    let awaitingFirstPaint = true;
 
     function renderSpotCard(spot, index) {
         const card = document.createElement('a');
@@ -607,6 +600,11 @@ body { overflow-x: hidden; }
         });
 
         spotsContainer.innerHTML = '';
+
+        if (awaitingFirstPaint) {
+            awaitingFirstPaint = false;
+            spotsContainer.classList.add('ztims-fade-in');
+        }
 
         if (matches.length === 0) {
             resultCount.textContent = '';
@@ -760,6 +758,10 @@ body { overflow-x: hidden; }
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
             doneLoading();
+            // This replaces the spinner too, so it fades in the same way the
+            // grid would have.
+            awaitingFirstPaint = false;
+            spotsContainer.classList.add('ztims-fade-in');
             spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8 text-center">Unable to load tourist spots right now. Please try again later.</p>';
             setMapNote('The map could not be loaded because the destinations did not load.');
         }
