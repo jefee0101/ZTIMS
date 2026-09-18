@@ -59,7 +59,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboangui
 mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('✅ Connected safely to MongoDB database system.');
-        return migrateEstablishmentNames().then(migrateSpotManagement);
+        return migrateEstablishmentNames().then(migrateSpotManagement).then(bootstrapAdmin);
     })
     .catch(err => console.error('❌ MongoDB Connection Error Encountered:', err));
 
@@ -174,6 +174,69 @@ async function migrateEstablishmentNames() {
  * new one. A half-finished run therefore leaves listings readable under both
  * names rather than under neither.
  */
+/**
+ * Creates the first Tourism Officer account from the environment.
+ *
+ * .env.example has documented INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD
+ * since the beginning, but nothing ever read them — and /api/admin/create is
+ * behind requireAdmin, so an officer account could only be made by an officer
+ * who already existed. With no admin in the database, or with the password
+ * forgotten, there was no way in at all.
+ *
+ * Creating is safe to leave switched on: it only ever fills a gap. Changing the
+ * password of an account that already exists is not, so that needs
+ * ADMIN_PASSWORD_RESET=true set deliberately, and says so loudly when it runs.
+ *
+ * Remove all three variables once you are back in. While INITIAL_ADMIN_PASSWORD
+ * sits in the environment, anyone who can read the environment knows it.
+ */
+async function bootstrapAdmin() {
+    const email = String(process.env.INITIAL_ADMIN_EMAIL || '').toLowerCase().trim();
+    const password = String(process.env.INITIAL_ADMIN_PASSWORD || '');
+    const forceReset = String(process.env.ADMIN_PASSWORD_RESET || '').trim().toLowerCase() === 'true';
+
+    if (!email || !password) return;
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        console.warn(`⚠️  INITIAL_ADMIN_EMAIL is not a valid email address — no account was created.`);
+        return;
+    }
+    if (password.length < 10) {
+        // Refused rather than trimmed to a warning: this account can edit every
+        // listing in the municipality.
+        console.warn('⚠️  INITIAL_ADMIN_PASSWORD is shorter than 10 characters — no account was created.');
+        return;
+    }
+
+    try {
+        const existing = await Admin.findOne({ email });
+
+        if (!existing) {
+            await new Admin({ email, password: await bcrypt.hash(password, 12) }).save();
+            console.log(`🛡️  Tourism Officer account created for ${email}.`);
+            console.log('    Sign in, then REMOVE INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD.');
+            return;
+        }
+
+        if (forceReset) {
+            existing.password = await bcrypt.hash(password, 12);
+            // A forgotten password and a half-finished reset are different
+            // problems; clearing this stops an old emailed link still working.
+            existing.resetTokenHash = null;
+            existing.resetTokenExpires = null;
+            await existing.save();
+            console.warn(`🔑 PASSWORD RESET: ${email} now uses INITIAL_ADMIN_PASSWORD.`);
+            console.warn('    Remove ADMIN_PASSWORD_RESET, INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD now.');
+            return;
+        }
+
+        console.log(`🛡️  ${email} already exists — left untouched.`);
+        console.log('    To change its password, set ADMIN_PASSWORD_RESET=true and redeploy.');
+    } catch (error) {
+        console.error('❌ Could not create the Tourism Officer account:', error.message);
+    }
+}
+
 async function migrateSpotManagement() {
     try {
         const copied = await Spot.collection.updateMany(
