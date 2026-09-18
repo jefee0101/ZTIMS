@@ -1356,6 +1356,68 @@ function normaliseSpotLocation(payload) {
     return result;
 }
 
+/* ==========================================
+   PHOTO UPLOADS
+   ------------------------------------------
+   Photos go from the browser straight to Cloudinary — they are far too large to
+   pass through this API, which accepts 1 MB bodies.
+
+   What used to authorise that upload was an unsigned preset sitting in the page
+   source. Unsigned presets are designed to be public, so that was not a leaked
+   secret, but it did mean anyone who read the page could upload to the
+   municipality's account for as long as the preset existed.
+
+   Now the browser asks here first. This route is staff-only, so a signature is
+   issued to a signed-in Tourism Officer or establishment manager and to nobody
+   else. The API secret never leaves the server; only the resulting signature
+   does, and it covers a fixed folder and a timestamp Cloudinary will reject once
+   it is an hour old.
+
+   Set CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, then switch the preset to
+   "signed" in the Cloudinary console. Until those are set the browser falls back
+   to the old unsigned upload, so nothing breaks in the meantime.
+   ========================================== */
+
+const CLOUDINARY_CLOUD_NAME = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+const CLOUDINARY_API_KEY = (process.env.CLOUDINARY_API_KEY || '').trim();
+const CLOUDINARY_API_SECRET = (process.env.CLOUDINARY_API_SECRET || '').trim();
+const CLOUDINARY_FOLDER = (process.env.CLOUDINARY_FOLDER || 'ztims').trim();
+
+const cloudinarySigningReady = Boolean(
+    CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET
+);
+
+// Cloudinary signs the upload parameters sorted by name, joined as a query
+// string, with the API secret appended — then SHA-1 of the lot.
+function signCloudinaryParams(params) {
+    const toSign = Object.keys(params)
+        .sort()
+        .map(key => `${key}=${params[key]}`)
+        .join('&');
+    return crypto.createHash('sha1').update(toSign + CLOUDINARY_API_SECRET).digest('hex');
+}
+
+app.get('/api/uploads/signature', requireStaff, (req, res) => {
+    if (!cloudinarySigningReady) {
+        // Not an error: the browser reads this and uses the unsigned preset, so
+        // uploads keep working until the two variables are set.
+        return res.status(200).json({ success: true, signed: false });
+    }
+
+    const timestamp = Math.round(Date.now() / 1000);
+    const params = { folder: CLOUDINARY_FOLDER, timestamp };
+
+    return res.status(200).json({
+        success: true,
+        signed: true,
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        apiKey: CLOUDINARY_API_KEY,
+        folder: CLOUDINARY_FOLDER,
+        timestamp,
+        signature: signCloudinaryParams(params)
+    });
+});
+
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
         // A manager's listing is assigned to them, whatever the request claims;
@@ -2279,6 +2341,12 @@ app.listen(PORT, () => {
     // decided once at startup from the environment, so a key added to the host after
     // the process began shows nothing until it restarts — this line is how you tell
     // the two apart without guessing.
+    console.log(cloudinarySigningReady
+        ? ` 📷 Photo uploads: signed — only a signed-in officer or manager can upload.`
+        : ` 📷 Photo uploads: UNSIGNED preset — anyone reading the page can upload to this account.\n` +
+          `    Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, then\n` +
+          `    switch the preset to "signed" in the Cloudinary console.`);
+
     console.log(ORS_API_KEY
         ? ` 🧭 Travel directions: OpenRouteService (key ending ...${ORS_API_KEY.slice(-4)}) — car, bicycle, walking`
         : ` 🧭 Travel directions: OSRM demo server — car only. Set ORS_API_KEY for bicycle and walking.`);

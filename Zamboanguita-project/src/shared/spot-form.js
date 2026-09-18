@@ -1101,16 +1101,72 @@
             }
         }
 
+        /* The upload is authorised by the ZTIMS API rather than by a preset sitting
+           in the page source. Only a signed-in officer or establishment manager can
+           obtain a signature, so reading this page no longer grants anyone the
+           ability to upload to the municipality's Cloudinary account.
+
+           Asked for once per batch and reused: a signature is valid for an hour,
+           and one request per photo would be wasteful. If the server has no
+           credentials configured it says so, and the old unsigned preset is used —
+           uploads keep working while that is being set up. */
+        let uploadTicket = null;
+
+        async function getUploadTicket() {
+            if (uploadTicket) return uploadTicket;
+            try {
+                const response = await fetch(apiBase + '/uploads/signature', { headers: authHeaders() });
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error('Your sign-in does not allow uploading photos. Sign in again and retry.');
+                }
+                if (!response.ok) throw new Error('Could not authorise the upload.');
+                uploadTicket = await response.json();
+            } catch (error) {
+                if (/sign-in/.test(error.message)) throw error;
+                // A network blip should not block the upload path entirely.
+                uploadTicket = { signed: false };
+            }
+            return uploadTicket;
+        }
+
+        function authHeaders(extra) {
+            return Object.assign(
+                { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
+                extra || {}
+            );
+        }
+
         async function uploadToCloudinary(file) {
+            // Checked here as well as by the accept attribute, which a determined
+            // file picker will happily ignore.
+            if (!/^image\//.test(file.type || '')) {
+                throw new Error('that is not an image');
+            }
+
+            const ticket = await getUploadTicket();
             const body = new FormData();
             body.append('file', file);
-            body.append('upload_preset', options.uploadPreset);
 
-            const response = await fetch('https://api.cloudinary.com/v1_1/' + options.cloudName + '/image/upload', {
+            let cloudName = options.cloudName;
+            if (ticket.signed) {
+                cloudName = ticket.cloudName;
+                body.append('api_key', ticket.apiKey);
+                body.append('timestamp', ticket.timestamp);
+                body.append('folder', ticket.folder);
+                body.append('signature', ticket.signature);
+            } else {
+                body.append('upload_preset', options.uploadPreset);
+            }
+
+            const response = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/image/upload', {
                 method: 'POST', body: body
             });
             const result = await response.json().catch(function () { return {}; });
             if (!response.ok || !result.secure_url) {
+                // A stale signature is worth one retry with a fresh one.
+                if (ticket.signed && response.status === 401) {
+                    uploadTicket = null;
+                }
                 throw new Error((result && result.error && result.error.message) || 'Cloudinary rejected the upload.');
             }
             return result.secure_url;
@@ -1146,6 +1202,10 @@
                 setPhotoStatus('Uploading ' + file.name + ' (' + (i + 1) + ' of ' + queue.length + ')…');
                 if (file.size > MAX_PHOTO_BYTES) {
                     failed.push(file.name + ' (over 10 MB)');
+                    continue;
+                }
+                if (!/^image\//.test(file.type || '')) {
+                    failed.push(file.name + ' (not an image)');
                     continue;
                 }
                 try {
@@ -1365,6 +1425,7 @@
         /* ------------------------------------------------------------- api */
 
         function open(spot) {
+            uploadTicket = null;      // re-authorised per dialog
             currentSpot = spot || null;
             editingId = spot && spot._id ? String(spot._id) : '';
 
