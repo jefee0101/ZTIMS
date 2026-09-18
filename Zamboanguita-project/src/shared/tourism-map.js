@@ -37,14 +37,20 @@
        service's. The glyphs come from Material Symbols, which every page
        already loads, so the markers look like the rest of the system rather
        than like a second design dropped on top of it. */
+    /* Category colours, drawn from the Coastal Tourism palette rather than from
+       four unrelated material hues. Written as hex, not tokens, because Leaflet
+       builds these markers as inline SVG and canvas fills where a CSS variable
+       would not resolve — so this is the one place the palette is repeated, and
+       it is repeated deliberately. Ocean for a place to stay, teal for a natural
+       attraction, coastal blue for the sea, gold for what the municipality keeps. */
     const CATEGORIES = {
-        'BEACH / DIVING': { label: 'Beach / Diving', icon: 'scuba_diving', colour: '#00838F' },
-        'MOUNTAIN': { label: 'Mountain', icon: 'landscape', colour: '#2E7D32' },
-        'CULTURAL': { label: 'Cultural', icon: 'museum', colour: '#6A1B9A' },
-        'ACCOMMODATION': { label: 'Accommodation', icon: 'hotel', colour: '#E65100' }
+        'BEACH / DIVING': { label: 'Beach / Diving', icon: 'scuba_diving', colour: '#168AAD' },
+        'MOUNTAIN': { label: 'Mountain', icon: 'landscape', colour: '#2A9D8F' },
+        'CULTURAL': { label: 'Cultural', icon: 'museum', colour: '#F4B942' },
+        'ACCOMMODATION': { label: 'Accommodation', icon: 'hotel', colour: '#0B4F6C' }
     };
 
-    const FALLBACK_CATEGORY = { label: 'Tourist spot', icon: 'photo_camera', colour: '#455A64' };
+    const FALLBACK_CATEGORY = { label: 'Tourist spot', icon: 'photo_camera', colour: '#667085' };
 
     function categoryOf(spot) {
         const key = String((spot && spot.category) || '').trim().toUpperCase();
@@ -142,16 +148,16 @@
             font-size: 10px; font-weight: 700; letter-spacing: .1em;
             text-transform: uppercase; margin: 0 0 4px;
         }
-        .ztims-popup__title { font-size: 15px; font-weight: 800; margin: 0 0 4px; color: #111; }
-        .ztims-popup__where { font-size: 12px; color: #555; margin: 0 0 10px; }
+        .ztims-popup__title { font-size: 15px; font-weight: 700; margin: 0 0 4px; color: #17212B; }
+        .ztims-popup__where { font-size: 12px; color: #667085; margin: 0 0 10px; }
         .ztims-popup__actions { display: flex; flex-wrap: wrap; gap: 6px; }
         .ztims-popup__actions a {
             flex: 1 1 auto; text-align: center; white-space: nowrap;
             padding: 9px 12px; min-height: 40px; box-sizing: border-box;
             border-radius: 999px; font-size: 11px; font-weight: 700; text-decoration: none;
         }
-        .ztims-popup__actions .is-primary { background: #E65100; color: #fff; }
-        .ztims-popup__actions .is-secondary { border: 1px solid #c8ccd2; color: #333; }
+        .ztims-popup__actions .is-primary { background: #0B4F6C; color: #fff; }
+        .ztims-popup__actions .is-secondary { border: 1px solid #CDD8E2; color: #0B4F6C; }
 
         .ztims-legend {
             display: flex; flex-wrap: wrap; gap: 6px 14px;

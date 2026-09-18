@@ -25,26 +25,28 @@
             theme: {
                 extend: {
                     colors: {
-                        // Drawn from the municipal logo: sunset orange, sun yellow, deep sea navy.
-                        "primary": "#E65100",
-                        "primary-dim": "#FF8F3C",
-                        "surface-bright": "#FFB300",
-                        "secondary": "#00838F",
-                        "background": "var(--bg)",
-                        "surface": "var(--surface)",
-                        "surface-container-low": "var(--surface-low)",
-                        "surface-container-high": "var(--surface-high)",
-                        "on-surface": "var(--on-surface)",
-                        "on-surface-variant": "var(--on-surface-variant)",
-                        "outline-variant": "var(--outline)",
-                        "on-primary": "#FFFFFF",
-                        "error": "#E53935"
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "primary-dim": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "secondary": "rgb(var(--ztims-secondary) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--ztims-surface-low) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "error": "rgb(var(--ztims-error) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
                     },
                     borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
                     fontFamily: {
-                        headline: ["Plus Jakarta Sans", "sans-serif"],
-                        display: ["Plus Jakarta Sans", "sans-serif"],
-                        body: ["Plus Jakarta Sans", "sans-serif"],
+                        headline: ["Poppins", "sans-serif"],
+                        display: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
                         label: ["Plus Jakarta Sans", "sans-serif"]
                     }
                 }
@@ -56,22 +58,22 @@
         /* Both themes are defined as tokens so every component follows automatically,
            rather than each one carrying its own light-mode override. */
         :root {
-            --bg: #F4F6F9;
-            --surface: #FFFFFF;
-            --surface-low: #EAEFF5;
-            --surface-high: #E2E9F2;
-            --on-surface: #0A192F;
-            --on-surface-variant: #46587A;
-            --outline: #D7E0EC;
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
         }
         html.dark {
-            --bg: #0A192F;
-            --surface: #0D253F;
-            --surface-low: #0A1E36;
-            --surface-high: #102A43;
-            --on-surface: #F4F6F9;
-            --on-surface-variant: #A9BCD0;
-            --outline: #264653;
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
         }
 
         body { background: var(--bg); color: var(--on-surface); }
@@ -81,13 +83,20 @@
            elements toggled via el.hidden stay on screen. */
         [hidden] { display: none !important; }
 
+        /* The identity gradient. It was gold into orange, which on the sand
+           ground was both unreadable and the loudest thing on the page — the
+           one element most responsible for the site reading as an orange
+           template. Ocean into teal carries the same emphasis and is legible
+           in both themes. */
         .text-gradient {
-            background: linear-gradient(to right, #FFB300, #ff6811);
+            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-primary-gradient { background: linear-gradient(135deg, #E65100 0%, #FFB300 100%); }
+        /* Likewise: a primary button is ocean into coastal blue. Gold is for the
+           occasional highlight, not for every call to action. */
+        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -127,6 +136,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
 </head>
@@ -330,25 +342,25 @@ body { overflow-x: hidden; }
                 <img src="data:image/png;base64,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" alt="" width="28" height="28" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full"/>
                 <span class="min-w-0">
                     <span class="rise block text-[11px] min-[420px]:text-sm sm:text-base font-extrabold tracking-tight font-headline text-primary">
-                        ZAMBOANGUITA <span class="text-surface-bright">TOURISM</span>
+                        ZAMBOANGUITA <span class="text-accent">TOURISM</span>
                     </span>
                     <span class="rise block text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
                 </span>
             </a>
 
             <nav class="flex items-center gap-1 sm:gap-2 ml-auto">
-                <a href="../index.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
+                <a href="../index.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">location_on</span>
                     <span class="hidden min-[420px]:inline">Destinations</span>
                 </a>
-                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-surface-bright transition-colors">
+                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
-                <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-surface-bright hover:scale-110 transition-all" title="Toggle theme">
+                <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all" title="Toggle theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
                 <!-- Visitors need no account. This is the way in for the Tourism
@@ -571,7 +583,7 @@ body { overflow-x: hidden; }
                     <p class="text-xs text-on-surface-variant leading-relaxed">
                         Municipal figures on this page are drawn from the
                         <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer"
-                           class="text-primary font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
+                           class="text-accent font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
                         available under CC BY-SA, which cites the Philippine Statistics Authority for the
                         census and land area. Population and area figures change with each census.
                         The barangay list is the exception: it has been corrected locally and no longer

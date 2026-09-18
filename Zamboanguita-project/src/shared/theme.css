@@ -1,0 +1,298 @@
+/* ==========================================================================
+   Zamboanguita Coastal Tourism — the palette, in one place
+   --------------------------------------------------------------------------
+   Before this, fifteen pages each carried their own `tailwind.config` with the
+   colours written out as hex. They disagreed: `primary` was forest green on the
+   officer's pages, burnt orange on the public ones, and #59ee50 on one. There
+   was no palette, only fifteen opinions, which is why the site read as a
+   generic admin tool with an orange accent rather than as one municipality's
+   tourism portal.
+
+   Now every page's config points at these tokens, so the whole system changes
+   colour from this file and nothing else.
+
+   -- Why channels and not hex --------------------------------------------
+   The tokens are `R G B` triples rather than `#RRGGBB` so that the configs can
+   say `rgb(var(--ztims-primary) / <alpha-value>)`. That is what makes the 303
+   opacity modifiers already in the markup — border-outline-variant/40 and its
+   kind — keep working. A bare `var(--x)` cannot carry an alpha, and the four
+   pages that already did that had those borders silently falling back to
+   opaque. This fixes them.
+
+   -- The identity ---------------------------------------------------------
+   Ocean blue and teal carry it. Warm sand and white are the surfaces. Gold and
+   orange are accents and stay accents: they belong on a highlighted notice or a
+   rating star, not on every button.
+
+   Dark mode is a night ocean, not an inverted daytime one — deep blue-greens
+   rather than black, and text that is off-white rather than pure.
+   ========================================================================== */
+
+/* -------------------------------------------------------------- light ---- */
+:root {
+    /* Identity */
+    --ztims-primary: 11 79 108;          /* #0B4F6C  ocean blue   */
+    --ztims-primary-dim: 22 138 173;     /* #168AAD  coastal blue */
+    --ztims-secondary: 22 138 173;       /* #168AAD               */
+    /* #2A9D8F is the identity's teal and it is what the map markers use, but
+       as TEXT on the sand ground it measures 3.0:1 — under AA for anything
+       that is not large. Light mode therefore darkens it to #1F7A6E (4.7:1);
+       dark mode keeps the brighter one, where it reads at 5.4:1. */
+    --ztims-accent: 31 122 110;          /* #1F7A6E */
+    --ztims-gold: 244 185 66;            /* #F4B942               */
+    --ztims-orange: 242 140 40;          /* #F28C28               */
+
+    /* Surfaces: warm sand behind, white on top */
+    --ztims-background: 247 243 232;     /* #F7F3E8 */
+    --ztims-surface: 255 255 255;        /* #FFFFFF */
+    --ztims-surface-low: 251 248 241;    /* #FBF8F1 */
+    --ztims-surface-high: 255 255 255;   /* #FFFFFF */
+    --ztims-surface-variant: 240 235 225; /* #F0EBE1 */
+
+    /* Text */
+    --ztims-on-surface: 23 33 43;        /* #17212B */
+    /* #667085 came in at 4.49:1 on sand — under 4.5 by a hundredth, which is
+       still under. #545E73 is 5.9:1 and reads as the same quiet grey. */
+    --ztims-on-surface-variant: 84 94 115; /* #545E73 */
+    --ztims-on-primary: 255 255 255;     /* #FFFFFF */
+
+    /* Lines — a soft blue-grey, never black */
+    --ztims-outline: 205 216 226;        /* #CDD8E2 */
+
+    /* Tinted containers, for a quiet emphasis that is not a filled button */
+    --ztims-primary-container: 226 240 246;   /* #E2F0F6 */
+    --ztims-secondary-container: 223 242 240; /* #DFF2F0 */
+    --ztims-on-secondary-container: 11 79 108;/* #0B4F6C */
+
+    --ztims-error: 198 40 40;            /* #C62828 */
+    --ztims-success: 27 122 106;         /* #1B7A6A */
+
+    /* Category identity. Used on badges, markers and small indicators — never
+       to flood a whole card. */
+    --ztims-cat-attraction: 42 157 143;  /* teal   */
+    --ztims-cat-stay: 11 79 108;         /* ocean  */
+    --ztims-cat-food: 242 140 40;        /* orange */
+    --ztims-cat-municipal: 244 185 66;   /* gold   */
+    --ztims-cat-notice: 22 138 173;      /* coastal*/
+
+    /* Elevation. Light mode gets a real shadow; dark mode leans on surface
+       steps instead, because a black shadow on a dark ground is invisible. */
+    --ztims-shadow-card: 0 1px 2px rgb(23 33 43 / 0.04), 0 4px 16px rgb(23 33 43 / 0.06);
+    --ztims-shadow-raised: 0 2px 4px rgb(23 33 43 / 0.06), 0 12px 28px rgb(23 33 43 / 0.10);
+}
+
+/* --------------------------------------------------------------- dark ---- */
+/* The theme script sets `.dark` on <html>, and `.light-mode` for the other.
+   Both are honoured so no page has to change how it toggles. */
+:root.dark,
+html.dark,
+body.dark-mode {
+    /* #168AAD is the coastal blue the identity asks for, and it stays the
+       accent. Filled primary surfaces use a slightly deeper blue instead:
+       white on #168AAD is 3.98:1, which is under AA for the 12px bold text the
+       buttons use. #0F7391 takes it to 5.4:1 and still reads as the same
+       colour. Contrast wins over an exact hex. */
+    --ztims-primary: 15 115 145;         /* #0F7391 */
+    --ztims-primary-dim: 42 157 143;     /* #2A9D8F */
+    --ztims-secondary: 22 138 173;       /* #168AAD */
+    /* #2A9D8F measured 4.1:1 against the raised surface. This is the same
+       teal the markers use in dark, and it reads at 6:1. */
+    --ztims-accent: 61 190 174;          /* #3DBEAE */
+    --ztims-gold: 244 185 66;
+    --ztims-orange: 242 140 40;
+
+    --ztims-background: 7 26 36;         /* #071A24  night ocean */
+    --ztims-surface: 13 39 51;           /* #0D2733 */
+    --ztims-surface-low: 10 32 42;       /* #0A202A */
+    --ztims-surface-high: 18 49 65;      /* #123141 */
+    --ztims-surface-variant: 18 49 65;   /* #123141 */
+
+    --ztims-on-surface: 245 247 250;     /* #F5F7FA */
+    --ztims-on-surface-variant: 147 169 184; /* #93A9B8 */
+    --ztims-on-primary: 255 255 255;
+
+    --ztims-outline: 30 63 79;           /* #1E3F4F */
+
+    --ztims-primary-container: 15 58 74;      /* #0F3A4A */
+    --ztims-secondary-container: 18 67 63;    /* #12433F */
+    --ztims-on-secondary-container: 167 232 223; /* #A7E8DF */
+
+    --ztims-error: 255 128 128;          /* readable on a dark ground */
+    --ztims-success: 90 200 180;
+
+    --ztims-cat-attraction: 61 190 174;
+    --ztims-cat-stay: 61 155 190;
+    --ztims-cat-food: 245 160 80;
+    --ztims-cat-municipal: 244 185 66;
+    --ztims-cat-notice: 61 178 210;
+
+    --ztims-shadow-card: 0 1px 2px rgb(0 0 0 / 0.30), 0 4px 16px rgb(0 0 0 / 0.25);
+    --ztims-shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px rgb(0 0 0 / 0.35);
+}
+
+/* ==========================================================================
+   Typography
+   --------------------------------------------------------------------------
+   Poppins for headings, because it is the friendlier face and these are
+   invitations to visit somewhere. Inter for body text, because it is the more
+   legible one at 14px and most of this system is information to be read.
+   Both fall back to the previous face and then to the system stack, so a
+   blocked font never leaves a page unstyled.
+   ========================================================================== */
+:root {
+    --ztims-font-display: 'Poppins', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --ztims-font-body: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+    font-family: var(--ztims-font-body);
+    /* The old palette was applied per page. This is the floor, so a page that
+       forgets still lands on the right ground rather than on white. */
+    background-color: rgb(var(--ztims-background));
+    color: rgb(var(--ztims-on-surface));
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-display, .font-headline {
+    font-family: var(--ztims-font-display);
+    letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   Page titles
+   --------------------------------------------------------------------------
+   A page title was a line of bold black text, which is what made these read as
+   screens in a database tool rather than pages in a tourism portal. The pattern
+   is an eyebrow, the title, and one line saying what the page is for.
+
+       <div class="page-head">
+           <p class="page-eyebrow">Discover</p>
+           <h1 class="page-title">Tourist Spots</h1>
+           <p class="page-lede">Beaches, mountains and attractions around
+              Zamboanguita.</p>
+       </div>
+   ========================================================================== */
+.page-head { margin-bottom: 1.75rem; }
+
+.page-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--ztims-accent));
+    margin-bottom: 0.5rem;
+}
+
+/* The one decorative element, and it is a 1.5rem line. */
+.page-eyebrow::after {
+    content: '';
+    flex: 0 0 1.5rem;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(var(--ztims-gold));
+}
+
+.page-title {
+    font-family: var(--ztims-font-display);
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+    line-height: 1.15;
+    font-weight: 600;
+    color: rgb(var(--ztims-on-surface));
+    margin: 0;
+}
+
+.page-lede {
+    margin-top: 0.5rem;
+    max-width: 62ch;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: rgb(var(--ztims-on-surface-variant));
+}
+
+/* ==========================================================================
+   Information, structured
+   --------------------------------------------------------------------------
+   A label, then the thing. "Address: Barangay Maluay, Zamboanguita, Negros
+   Oriental" on one line is a sentence to read; a label above two short lines is
+   something you can find at a glance.
+   ========================================================================== */
+.info-card {
+    background: rgb(var(--ztims-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    border-radius: 0.875rem;
+    padding: 1rem 1.125rem;
+    box-shadow: var(--ztims-shadow-card);
+}
+
+.info-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--ztims-on-surface-variant));
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: rgb(var(--ztims-on-surface));
+}
+
+.info-value-muted {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: rgb(var(--ztims-on-surface-variant));
+}
+
+/* ==========================================================================
+   Category badges
+   --------------------------------------------------------------------------
+   Tinted, not filled: the category is a label on a card, not the card's
+   identity. Each also carries its own text, so the colour is never the only
+   thing saying what it is.
+   ========================================================================== */
+.cat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgb(var(--cat) / 0.12);
+    color: rgb(var(--cat));
+    border: 1px solid rgb(var(--cat) / 0.28);
+}
+
+.cat-attraction { --cat: var(--ztims-cat-attraction); }
+.cat-stay       { --cat: var(--ztims-cat-stay); }
+.cat-food       { --cat: var(--ztims-cat-food); }
+.cat-municipal  { --cat: var(--ztims-cat-municipal); }
+.cat-notice     { --cat: var(--ztims-cat-notice); }
+
+/* On a dark ground a 12% tint of the category colour is nearly the surface, so
+   it is lifted and the border carries more of the work. */
+:root.dark .cat-badge {
+    background: rgb(var(--cat) / 0.18);
+    border-color: rgb(var(--cat) / 0.40);
+}
+
+/* ==========================================================================
+   Focus
+   --------------------------------------------------------------------------
+   One visible ring everywhere, in the identity colour. Keyboard only, so it
+   never appears under a mouse click — but it is never removed, which is what
+   most "clean" designs get wrong.
+   ========================================================================== */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--ztims-secondary));
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+}

@@ -18,17 +18,20 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#59ee50",
-                        "on-primary": "#005406",
-                        background: "#0e0f0a",
-                        surface: "#191a14",
-                        "on-surface": "#fefcf4",
-                        "on-surface-variant": "#acaba4",
-                        "outline-variant": "#484842"
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
                     },
                     fontFamily: {
-                        headline: ["Plus Jakarta Sans"],
-                        body: ["Manrope"]
+                        headline: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"]
                     }
                 }
             }
@@ -36,7 +39,7 @@
     </script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        body { font-family: 'Manrope', sans-serif; background-color: #0e0f0a; }
+        body { font-family: 'Manrope', sans-serif; background-color: rgb(var(--ztims-on-surface)); }
         .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
@@ -66,6 +69,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="../shared/motion.css"/>
 </head>

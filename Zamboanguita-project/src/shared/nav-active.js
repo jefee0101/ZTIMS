@@ -13,7 +13,12 @@
 (function () {
     'use strict';
 
-    const ACCENT = '#FFB300';
+    /* The active link is marked in the identity's teal, taken from the shared
+       tokens so it follows the theme rather than being a second opinion about
+       what the accent is. Gold read as the brand colour when it was meant to be
+       an accent, and on the light theme's sand ground it barely registered. */
+    const ACCENT = 'rgb(var(--ztims-accent))';
+    const ACCENT_SOFT = 'rgb(var(--ztims-accent) / .12)';
 
     function fileOf(path) {
         return String(path || '').split('?')[0].split('#')[0].split('/').pop() || 'index.html';
@@ -30,7 +35,7 @@
         aside a.nav-active {
             color: ${ACCENT} !important;
             font-weight: 800;
-            background: rgba(255, 179, 0, .12);
+            background: ${ACCENT_SOFT};
             /* An inset shadow rather than a ::before bar: these links are flex
                containers, so a pseudo-element would become a flex child and
                shift the icon and label along. */

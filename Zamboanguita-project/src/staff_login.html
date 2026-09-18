@@ -25,19 +25,22 @@
       theme: {
         extend: {
           colors: {
-            primary: "#2E7D32",
-            primaryHover: "#1B5E20",
-            accent: "#FFB300",
-            background: "var(--bg)",
-            surface: "var(--surface)",
-            "surface-high": "var(--surface-high)",
-            "on-surface": "var(--on-surface)",
-            "on-surface-variant": "var(--on-surface-variant)",
-            outline: "var(--outline)"
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "primaryHover": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+              "accent": "rgb(var(--ztims-accent) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "surface-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
           },
           fontFamily: {
-            headline: ["Plus Jakarta Sans", "sans-serif"],
-            body: ["Plus Jakarta Sans", "sans-serif"]
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"]
           }
         }
       }
@@ -46,12 +49,12 @@
 
   <style>
     :root {
-        --bg: #F4F6F9; --surface: #FFFFFF; --surface-high: #E2E9F2;
-        --on-surface: #0A192F; --on-surface-variant: #46587A; --outline: #D7E0EC;
+        --bg: rgb(var(--ztims-background)); --surface: rgb(var(--ztims-surface)); --surface-high: rgb(var(--ztims-surface-high));
+        --on-surface: rgb(var(--ztims-on-surface)); --on-surface-variant: rgb(var(--ztims-on-surface-variant)); --outline: rgb(var(--ztims-outline));
     }
     html.dark {
-        --bg: #020F24; --surface: #051D40; --surface-high: #0B2954;
-        --on-surface: #FEFCF4; --on-surface-variant: #A0B2C6; --outline: #1E3D6B;
+        --bg: rgb(var(--ztims-background)); --surface: rgb(var(--ztims-surface)); --surface-high: rgb(var(--ztims-surface-high));
+        --on-surface: rgb(var(--ztims-on-surface)); --on-surface-variant: rgb(var(--ztims-on-surface-variant)); --outline: rgb(var(--ztims-outline));
     }
     body { background: var(--bg); color: var(--on-surface); font-family: 'Plus Jakarta Sans', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
@@ -84,6 +87,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
 </head>
@@ -311,7 +317,7 @@ body { overflow-x: hidden; }
         </div>
       </div>
 
-      <p id="loginError" hidden class="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+      <p id="loginError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
       <button type="submit" id="staffSignInBtn"
               class="w-full py-3.5 rounded-full bg-primary hover:bg-primaryHover text-white font-bold tracking-wide transition-all shadow-lg shadow-primary/20 flex items-center justify-center">
@@ -320,7 +326,7 @@ body { overflow-x: hidden; }
     </form>
 
     <div class="mt-8 space-y-3 text-center">
-            <p class="text-xs text-on-surface-variant/80">
+            <p class="text-xs text-on-surface-variant">
         Establishment manager accounts are issued by the Municipal Tourism Office. Contact them if you don't have one yet.
       </p>
     </div>
@@ -351,7 +357,7 @@ body { overflow-x: hidden; }
 
   function showError(message) {
     errorBox.textContent = message;
-    errorBox.className = 'text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3';
+    errorBox.className = 'text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3';
     errorBox.hidden = false;
   }
 

@@ -20,22 +20,24 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        /* Colors pulled directly from the Zamboanguita Tourism Logo Layering */
-        "primary": "#2E7D32",                  // Vibrant Leaf Green
-        "on-primary": "#FFFFFF",               // White text over green
-        "surface": "var(--color-surface, #051D40)", // Deep Ocean Navy Blue
-        "background": "var(--color-background, #020F24)", // Rich Midnight Blue
-        "surface-variant": "var(--color-surface-variant, #0B2954)", // Medium Ocean Tint
-        "on-surface": "var(--color-on-surface, #FEFCF4)",
-        "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
-        "outline-variant": "#1E3D6B",
-        "primary-container": "#4CAF50",        // Sunset Light Green Accent
-        "secondary-container": "#00838F",      // Pure Ocean Sea Blue
-        "on-secondary-container": "#E0F7FA",
+          "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+          "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+          "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+          "background": "rgb(var(--ztims-background) / <alpha-value>)",
+          "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+          "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+          "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+          "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+          "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+          "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+          "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+          "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+          "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+          "success": "rgb(var(--ztims-success) / <alpha-value>)"
       },
       fontFamily: {
-        headline: ["Plus Jakarta Sans", "sans-serif"],
-        body: ["Plus Jakarta Sans", "sans-serif"],
+        headline: ["Poppins", "sans-serif"],
+        body: ["Inter", "sans-serif"],
       }
     }
   }
@@ -45,20 +47,20 @@ tailwind.config = {
 <style>
 /* ROOT DARK CONFIG */
 :root {
-    --color-surface: #051D40; 
-    --color-background: #020F24; 
-    --color-surface-variant: #0B2954;
-    --color-on-surface: #FEFCF4;
-    --color-on-surface-variant: #A0B2C6;
+    --color-surface: rgb(var(--ztims-surface)); 
+    --color-background: rgb(var(--ztims-background)); 
+    --color-surface-variant: rgb(var(--ztims-surface-variant));
+    --color-on-surface: rgb(var(--ztims-on-surface));
+    --color-on-surface-variant: rgb(var(--ztims-on-surface-variant));
 }
 
 /* LIGHT MODE HARMONY */
 .light-mode, [class*="light-mode"] {
-    --color-surface: #FFFFFF !important;
-    --color-background: #F4F7FA !important;
-    --color-surface-variant: #E6EEF8 !important;
-    --color-on-surface: #020F24 !important;
-    --color-on-surface-variant: #4A5D73 !important;
+    --color-surface: rgb(var(--ztims-surface)) !important;
+    --color-background: rgb(var(--ztims-background)) !important;
+    --color-surface-variant: rgb(var(--ztims-surface-variant)) !important;
+    --color-on-surface: rgb(var(--ztims-on-surface)) !important;
+    --color-on-surface-variant: rgb(var(--ztims-on-surface-variant)) !important;
 }
 
 body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th {
@@ -66,36 +68,36 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 }
 
 /* Base Override Rules */
-.light-mode { background: #F4F7FA !important; color: #020F24 !important; }
-.light-mode main { background: #F4F7FA !important; }
-.light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
-.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+.light-mode { background: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
+.light-mode main { background: rgb(var(--ztims-background)) !important; }
+.light-mode aside { background: #FFFFFF !important; border-color: rgb(var(--ztims-outline)) !important; }
+.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: rgb(var(--ztims-outline)) !important; }
 
 /* Dashboard UI Structure Elements */
 .glass-panel {
     background: var(--color-surface);
-    border: 1px solid #1E3D6B;
+    border: 1px solid rgb(var(--ztims-outline));
 }
 .light-mode .glass-panel {
     background: #FFFFFF !important;
-    border-color: #E2E8F0 !important;
+    border-color: rgb(var(--ztims-outline)) !important;
 }
 .glass-panel:hover {
     transform: translateY(-2px);
-    border-color: #FFB300;
-    box-shadow: 0 12px 30px rgba(255, 179, 0, 0.1);
+    border-color: rgb(var(--ztims-secondary));
+    box-shadow: 0 12px 30px rgb(var(--ztims-secondary) / 0.14);
 }
 
 /* DYNAMIC MOON ICON STATES */
 /* Dark Mode Moon Style (Default) */
 #themeIcon { 
-    color: #FFB300 !important; 
+    color: rgb(var(--ztims-secondary)) !important; 
     font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
 }
 
 /* Light Mode Moon Style Override */
 .light-mode #themeIcon { 
-    color: #020F24 !important; 
+    color: rgb(var(--ztims-on-surface)) !important; 
     font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24 !important;
 }
 
@@ -103,18 +105,18 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 /* Global Light/Dark Element Maps */
 .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
 .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
-    color: #020F24 !important;
+    color: rgb(var(--ztims-on-surface)) !important;
 }
-.light-mode .text-stone-400, .light-mode .text-stone-500, .light-mode .text-zinc-500, .light-mode .text-on-surface-variant {
-    color: #4A5D73 !important;
+.light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant, .light-mode .text-on-surface-variant {
+    color: rgb(var(--ztims-on-surface-variant)) !important;
 }
 .light-mode .border-zinc-800, .light-mode .border-outline-variant\/20, .light-mode .border-outline-variant\/30, .light-mode .border-zinc-800\/40 {
-    border-color: #E2E8F0 !important;
+    border-color: rgb(var(--ztims-outline)) !important;
 }
 .light-mode input, .light-mode select, .light-mode textarea {
     background: #FFFFFF !important;
-    color: #020F24 !important;
-    border: 1px solid #CBD5E1 !important;
+    color: rgb(var(--ztims-on-surface)) !important;
+    border: 1px solid rgb(var(--ztims-outline)) !important;
 }
 
 /* Premium Dynamic SVG Glowing Accent Trend Line */
@@ -122,11 +124,11 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
    battery cost and a standing claim on the reader's attention, for a chart that
    is not asking for any. */
 .chart-line {
-    filter: drop-shadow(0 0 6px #FFB300) drop-shadow(0 0 12px rgba(255, 179, 0, 0.4));
+    filter: drop-shadow(0 0 6px rgb(var(--ztims-secondary))) drop-shadow(0 0 12px rgb(var(--ztims-accent) / 0.35));
 }
 
-.light-mode #themeIcon { color: #FFB300 !important; }
-.light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+.light-mode #themeIcon { color: rgb(var(--ztims-secondary)) !important; }
+.light-mode aside a:hover { background-color: rgb(var(--ztims-surface-variant)) !important; color: rgb(var(--ztims-primary)) !important; }
 
 /* ==========================================================
    COLLAPSIBLE SIDEBAR — identical on every portal page, and the
@@ -196,7 +198,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         position: fixed;
         inset: 0;
         z-index: 95;
-        background: rgba(2, 15, 36, .6);
+        background: rgb(var(--ztims-background) / .6);
         opacity: 0;
         pointer-events: none;
         transition: opacity .28s ease;
@@ -237,6 +239,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="../shared/motion.css"/>
 </head>
@@ -569,44 +574,44 @@ body { overflow-x: hidden; }
 
     <!-- Left Sidebar Control Desk -->
     <div id="navScrim" aria-hidden="true"></div>
-    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
+    <aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
-            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
-            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
-                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-white/5 transition-all">
                 <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
             </button>
         </div>
 
         <nav class="flex-1 space-y-2 font-body">
-            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
-                <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
+            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-accent">analytics</span>
                 <span class="sidebar-label">Analytics</span>
             </a>
-            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
-                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-accent">location_on</span>
                 <span class="sidebar-label">Destinations</span>
             </a>
-            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
-                <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
+            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-[#FFB300]">hiking</span>
+            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
+                <span class="material-symbols-outlined text-accent">hiking</span>
                 <span class="sidebar-label">Tourist Guides</span>
             </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-[#FFB300]">confirmation_number</span>
+            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
+                <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Guide Bookings</span>
             </a>
-            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
-                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined text-accent">settings</span>
                 <span class="sidebar-label">Settings</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
-            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-error dark:hover:text-error transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="sidebar-label">Log Out</span>
             </a>
@@ -634,11 +639,11 @@ body { overflow-x: hidden; }
             <!-- Operational System KPI Slots -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div onclick="switchMetricTab('spots')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-spots">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">location_on</span> Published Spots</p>
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-accent">location_on</span> Published Spots</p>
                     <h2 class="text-3xl font-bold text-on-surface" id="metric-spots">0</h2>
                 </div>
                 <div onclick="switchMetricTab('managers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-managers">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-[#FFB300]">storefront</span> Tourist Establishment Managers</p>
+                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-accent">storefront</span> Tourist Establishment Managers</p>
                     <h2 class="text-3xl font-bold text-on-surface" id="metric-managers">0</h2>
                 </div>
             </div>
@@ -647,7 +652,7 @@ body { overflow-x: hidden; }
             <div class="glass-panel p-8 rounded-2xl">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-on-surface" id="chart-title-heading">Booking Trends</h3>
-                    <span class="text-xs text-[#FFB300] font-mono bg-surface-variant px-3 py-1 rounded-full border border-outline-variant/30" id="chart-date-range">Last 7 Days</span>
+                    <span class="text-xs text-accent font-mono bg-surface-variant px-3 py-1 rounded-full border border-outline-variant/30" id="chart-date-range">Last 7 Days</span>
                 </div>
                 <div class="relative h-48 flex items-end gap-1">
                     <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
@@ -675,7 +680,7 @@ body { overflow-x: hidden; }
             <section class="glass-panel p-6 rounded-2xl">
                 <div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
                     <h3 class="text-lg font-bold flex items-center gap-2 text-on-surface" id="tab-title-display">
-                        <span class="material-symbols-outlined text-[#FFB300]">analytics</span> System Metric Details
+                        <span class="material-symbols-outlined text-accent">analytics</span> System Metric Details
                     </h3>
                     <span class="text-xs text-on-surface-variant uppercase tracking-widest font-mono">Live Sync Logs</span>
                 </div>
@@ -688,7 +693,7 @@ body { overflow-x: hidden; }
             <section>
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-extrabold text-on-surface">Live System Destination Entries</h2>
-                    <button onclick="openAddSpotModal()" class="px-5 py-2.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-bold text-sm rounded-xl transition-all shadow-lg flex items-center gap-2">
+                    <button onclick="openAddSpotModal()" class="px-5 py-2.5 bg-primary hover:bg-primary text-white font-bold text-sm rounded-xl transition-all shadow-lg flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm font-bold">add</span> Add New Spot
                     </button>
                 </div>
@@ -703,10 +708,10 @@ body { overflow-x: hidden; }
         <!-- Scrolls like the other two spot dialogs. Without a height cap and a
              scrollbar, a form taller than the window has its Publish button clipped
              off the bottom with no way to reach it. -->
-        <div class="bg-[#051D40] border border-outline-variant/40 w-full max-w-xl xl:max-w-5xl rounded-2xl max-h-[95vh] overflow-y-auto shadow-2xl p-5 sm:p-8 space-y-6" id="spotModalContent">
+        <div class="bg-surface border border-outline-variant/40 w-full max-w-xl xl:max-w-5xl rounded-2xl max-h-[95vh] overflow-y-auto shadow-2xl p-5 sm:p-8 space-y-6" id="spotModalContent">
             <div class="flex justify-between items-center border-b border-outline-variant/30 pb-4">
                 <h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#FFB300]">landscape</span>
+                    <span class="material-symbols-outlined text-accent">landscape</span>
                     Publish New Destination Spot
                 </h3>
                 <button onclick="closeAddSpotModal()" class="text-on-surface-variant hover:text-on-surface transition-colors">
@@ -953,11 +958,11 @@ body { overflow-x: hidden; }
 
             ['spots', 'managers'].forEach(type => {
                 const card = document.getElementById(`card-${type}`);
-                if (card) card.classList.remove('border-[#eab308]/80', 'bg-[#eab308]/5');
+                if (card) card.classList.remove('border-gold/80', 'bg-gold/5');
             });
             
             const activeCard = document.getElementById(`card-${metricType}`);
-            if (activeCard) activeCard.classList.add('border-[#eab308]/80', 'bg-[#eab308]/5');
+            if (activeCard) activeCard.classList.add('border-gold/80', 'bg-gold/5');
 
             updateTrendsChart(metricType);
 
@@ -966,32 +971,32 @@ body { overflow-x: hidden; }
             let htmlPayload = "";
 
             if (metricType === 'spots') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">location_on</span> Published Destinations`;
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-gold">location_on</span> Published Destinations`;
                 if (systemSpots.length === 0) {
-                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No destinations published yet.</p>`;
+                    htmlPayload = `<p class="text-sm text-on-surface-variant py-4 italic text-center">No destinations published yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
-                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
+                            <tr class="text-on-surface-variant border-b border-zinc-800/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
                     systemSpots.forEach(spot => {
                         // No Type column: it is derived from the category, so it only
                         // ever repeated it one cell to the right.
                         const fee = Number(spot.entranceFee || 0).toFixed(2);
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-stone-400">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-stone-300">${escapeHtml(spot.location || '—')}</td><td class="text-on-surface-variant">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-white">₱${fee}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
             } 
             else if (metricType === 'managers') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-[#eab308]">storefront</span> Registered Tourist Establishment Managers`;
+                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-gold">storefront</span> Registered Tourist Establishment Managers`;
                 if (systemManagers.length === 0) {
-                    htmlPayload = `<p class="text-sm text-stone-500 py-4 italic text-center">No establishment manager accounts created yet.</p>`;
+                    htmlPayload = `<p class="text-sm text-on-surface-variant py-4 italic text-center">No establishment manager accounts created yet.</p>`;
                 } else {
                     htmlPayload = `<table class="w-full min-w-[28rem] text-left text-sm">
                         <thead>
-                            <tr class="text-stone-400 border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
+                            <tr class="text-on-surface-variant border-b border-zinc-800/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-800/20">`;
                     systemManagers.forEach(manager => {
@@ -1002,7 +1007,7 @@ body { overflow-x: hidden; }
                             return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
                         };
                         const listings = systemSpots.filter(spot => assignedId(spot) === String(manager._id)).length;
-                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(manager.email || '—')}</td><td class="text-stone-400">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
+                        htmlPayload += `<tr class="hover:bg-zinc-900/30"><td class="py-3 font-bold text-stone-200">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-stone-300">${escapeHtml(manager.email || '—')}</td><td class="text-on-surface-variant">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-white">${listings}</td></tr>`;
                     });
                     htmlPayload += `</tbody></table>`;
                 }
@@ -1058,7 +1063,7 @@ body { overflow-x: hidden; }
                 container.innerHTML = ''; 
 
                 if (spots.length === 0) {
-                    container.innerHTML = `<p class="text-stone-500 col-span-3 text-center py-12 font-medium">No live system spots active. Use the button above to publish the first destination!</p>`;
+                    container.innerHTML = `<p class="text-on-surface-variant col-span-3 text-center py-12 font-medium">No live system spots active. Use the button above to publish the first destination!</p>`;
                     return;
                 }
 
@@ -1071,15 +1076,15 @@ body { overflow-x: hidden; }
                             <img src="${safeImageUrl(displayImg, fallbackImg)}" class="w-full h-52 object-cover" alt="${escapeHtml(spot.title || 'Spot')}" onerror="this.src='${fallbackImg}'"/>
                             <div class="p-6 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-[#eab308]/10 text-[#eab308] uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
+                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-gold/10 text-gold uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
                                     <h3 class="text-xl font-bold mt-2 text-white">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
-                                    <p class="text-stone-400 text-xs flex items-center mt-1">
-                                        <span class="material-symbols-outlined text-sm text-red-500 mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
+                                    <p class="text-on-surface-variant text-xs flex items-center mt-1">
+                                        <span class="material-symbols-outlined text-sm text-error mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
                                     </p>
                                     <p class="text-stone-300 text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
                                 </div>
-                                <div class="border-t border-zinc-800/40 mt-4 pt-4 flex items-center justify-between text-xs text-stone-400">
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[#eab308] text-base">verified_user</span> Managed Active</span>
+                                <div class="border-t border-zinc-800/40 mt-4 pt-4 flex items-center justify-between text-xs text-on-surface-variant">
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-gold text-base">verified_user</span> Managed Active</span>
                                     <span>Live Database Entry</span>
                                 </div>
                             </div>
@@ -1089,7 +1094,7 @@ body { overflow-x: hidden; }
 
             } catch (err) {
                 console.error("Error drawing destination items profiles:", err);
-                container.innerHTML = `<p class="text-red-400 text-sm col-span-3 text-center py-6 font-mono">Failed loading destinations preview. Verify API cluster connection.</p>`;
+                container.innerHTML = `<p class="text-error text-sm col-span-3 text-center py-6 font-mono">Failed loading destinations preview. Verify API cluster connection.</p>`;
             } finally {
                 doneLoading();
             }

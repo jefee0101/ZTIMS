@@ -25,25 +25,28 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#E65100",
-                        "secondary": "#00838F",
-                        "surface-bright": "#FFB300",
-                        "surface-container": "#0A192F",
-                        "surface-container-low": "#0D253F",
-                        "surface-container-high": "#102A43",
-                        "on-surface": "#FFFFFF",
-                        "on-surface-variant": "#A9BCD0",
-                        "on-primary": "#FFFFFF",
-                        "outline-variant": "#264653",
-                        "background": "#0A192F",
-                        "surface": "#0D253F",
-                        "error": "#E53935"
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "secondary": "rgb(var(--ztims-secondary) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "surface-container": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--ztims-surface-low) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "error": "rgb(var(--ztims-error) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
                     },
                     borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
                     fontFamily: {
-                        headline: ["Plus Jakarta Sans", "sans-serif"],
-                        display: ["Plus Jakarta Sans", "sans-serif"],
-                        body: ["Plus Jakarta Sans", "sans-serif"]
+                        headline: ["Poppins", "sans-serif"],
+                        display: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"]
                     }
                 }
             }
@@ -57,20 +60,27 @@
            which any Tailwind display class (.flex here) outranks. Without this,
            elements toggled via el.hidden stay on screen. */
         [hidden] { display: none !important; }
+        /* The identity gradient. It was gold into orange, which on the sand
+           ground was both unreadable and the loudest thing on the page — the
+           one element most responsible for the site reading as an orange
+           template. Ocean into teal carries the same emphasis and is legible
+           in both themes. */
         .text-gradient {
-            background: linear-gradient(to right, #FFB300, #ff6811);
+            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-primary-gradient { background: linear-gradient(135deg, #E65100 0%, #FFB300 100%); }
+        /* Likewise: a primary button is ocean into coastal blue. Gold is for the
+           occasional highlight, not for every call to action. */
+        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
 
-        html:not(.dark) body { background-color: #F4F6F9 !important; color: #0A192F !important; }
-        html:not(.dark) .bg-surface { background-color: #FFFFFF !important; }
-        html:not(.dark) .bg-surface-container-low { background-color: #EAEFF5 !important; }
-        html:not(.dark) .bg-surface-container-high { background-color: #E2E9F2 !important; }
-        html:not(.dark) .text-on-surface { color: #0A192F !important; }
-        html:not(.dark) .text-on-surface-variant { color: #46587A !important; }
+        html:not(.dark) body { background-color: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
+        html:not(.dark) .bg-surface { background-color: rgb(var(--ztims-surface)) !important; }
+        html:not(.dark) .bg-surface-container-low { background-color: rgb(var(--ztims-surface-low)) !important; }
+        html:not(.dark) .bg-surface-container-high { background-color: rgb(var(--ztims-surface-high)) !important; }
+        html:not(.dark) .text-on-surface { color: rgb(var(--ztims-on-surface)) !important; }
+        html:not(.dark) .text-on-surface-variant { color: rgb(var(--ztims-on-surface-variant)) !important; }
         html:not(.dark) nav { background-color: rgba(255,255,255,0.85) !important; }
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
@@ -100,6 +110,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
 </head>
@@ -290,7 +303,7 @@ body { overflow-x: hidden; }
             <span class="truncate"><span class="hidden sm:inline">EXPLORE </span>ZAMBOANGUITA</span>
         </a>
         <div class="flex items-center gap-3">
-            <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-primary hover:bg-surface-bright transition-all" title="Toggle theme">
+            <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-secondary hover:bg-surface-variant transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
             </button>
         </div>
@@ -419,7 +432,7 @@ body { overflow-x: hidden; }
                 Your guide is assigned by the office once payment is recorded.
             </p>
 
-            <p id="bookingError" hidden class="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"></p>
+            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
             <button type="submit" id="submitBookingBtn"
                     class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform">
@@ -1340,13 +1353,13 @@ body { overflow-x: hidden; }
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Know before you go</h2>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
-                                <span class="material-symbols-outlined text-surface-bright !text-2xl mb-2">schedule</span>
+                                <span class="material-symbols-outlined text-accent !text-2xl mb-2">schedule</span>
                                 <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Open</p>
                                 <p class="text-on-surface font-bold">${escapeHtml(spot.workingDays || 'Everyday')}</p>
                                 <p class="text-on-surface-variant text-sm">${escapeHtml(spot.workingTime || 'All Day')}</p>
                             </div>
                             <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
-                                <span class="material-symbols-outlined text-surface-bright !text-2xl mb-2">category</span>
+                                <span class="material-symbols-outlined text-accent !text-2xl mb-2">category</span>
                                 <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Category</p>
                                 <p class="text-on-surface font-bold">${escapeHtml(spot.category || '—')}</p>
                             </div>
@@ -1361,7 +1374,7 @@ body { overflow-x: hidden; }
 
                 <aside class="lg:col-span-1">
                     <div class="bg-surface border border-outline-variant/30 rounded-2xl p-6 sticky top-24">
-                        <h3 class="font-display font-bold text-lg text-surface-bright mb-4 flex items-center gap-2">
+                        <h3 class="font-display font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
                             <span class="material-symbols-outlined !text-xl">payments</span> Estimated fees
                         </h3>
                         <div class="space-y-3 mb-6">

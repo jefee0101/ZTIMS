@@ -25,21 +25,24 @@ HTML
         theme: {
             extend: {
                 colors: {
-                    "primary": "#2E7D32",
-                    "on-primary": "#FFFFFF",
-                    "surface": "var(--color-surface, #051D40)",
-                    "background": "var(--color-background, #020F24)",
-                    "surface-variant": "var(--color-surface-variant, #0B2954)",
-                    "on-surface": "var(--color-on-surface, #FEFCF4)",
-                    "on-surface-variant": "var(--color-on-surface-variant, #A0B2C6)",
-                    "outline-variant": "#1E3D6B",
-                    "primary-container": "#4CAF50",
-                    "secondary-container": "#00838F",
-                    "on-secondary-container": "#E0F7FA",
+                    "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                    "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                    "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                    "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                    "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+                    "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                    "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                    "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                    "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+                    "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+                    "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+                    "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                    "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                    "success": "rgb(var(--ztims-success) / <alpha-value>)"
                 },
                 fontFamily: {
-                    headline: ["Plus Jakarta Sans", "sans-serif"],
-                    body: ["Plus Jakarta Sans", "sans-serif"],
+                    headline: ["Poppins", "sans-serif"],
+                    body: ["Inter", "sans-serif"],
                 }
             }
         }
@@ -49,20 +52,20 @@ HTML
 <style>
 /* ROOT DARK CONFIG */
 :root {
-    --color-surface: #051D40; 
-    --color-background: #020F24; 
-    --color-surface-variant: #0B2954;
-    --color-on-surface: #FEFCF4;
-    --color-on-surface-variant: #A0B2C6;
+    --color-surface: rgb(var(--ztims-surface)); 
+    --color-background: rgb(var(--ztims-background)); 
+    --color-surface-variant: rgb(var(--ztims-surface-variant));
+    --color-on-surface: rgb(var(--ztims-on-surface));
+    --color-on-surface-variant: rgb(var(--ztims-on-surface-variant));
 }
 
 /* LIGHT MODE HARMONY */
 .light-mode, [class*="light-mode"] {
-    --color-surface: #FFFFFF !important;
-    --color-background: #F4F7FA !important;
-    --color-surface-variant: #E6EEF8 !important;
-    --color-on-surface: #020F24 !important;
-    --color-on-surface-variant: #4A5D73 !important;
+    --color-surface: rgb(var(--ztims-surface)) !important;
+    --color-background: rgb(var(--ztims-background)) !important;
+    --color-surface-variant: rgb(var(--ztims-surface-variant)) !important;
+    --color-on-surface: rgb(var(--ztims-on-surface)) !important;
+    --color-on-surface-variant: rgb(var(--ztims-on-surface-variant)) !important;
 }
 
 body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th, input {
@@ -70,32 +73,32 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 }
 
 /* Base Overrides */
-.light-mode { background: #F4F7FA !important; color: #020F24 !important; }
-.light-mode main { background: #F4F7FA !important; }
-.light-mode aside { background: #FFFFFF !important; border-color: #E2E8F0 !important; }
-.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: #E2E8F0 !important; }
+.light-mode { background: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
+.light-mode main { background: rgb(var(--ztims-background)) !important; }
+.light-mode aside { background: #FFFFFF !important; border-color: rgb(var(--ztims-outline)) !important; }
+.light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: rgb(var(--ztims-outline)) !important; }
 
 /* Dashboard UI Structure Elements */
 .glass-panel {
     background: var(--color-surface);
-    border: 1px solid #1E3D6B;
+    border: 1px solid rgb(var(--ztims-outline));
 }
 .light-mode .glass-panel {
     background: #FFFFFF !important;
-    border-color: #E2E8F0 !important;
+    border-color: rgb(var(--ztims-outline)) !important;
 }
 
 .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
 .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
-    color: #020F24 !important;
+    color: rgb(var(--ztims-on-surface)) !important;
 }
-.light-mode .text-on-surface-variant { color: #4A5D73 !important; }
+.light-mode .text-on-surface-variant { color: rgb(var(--ztims-on-surface-variant)) !important; }
 
 /* INPUT & ACCESSIBILITY VISIBILITY FIXES */
 .light-mode input, .light-mode select, .light-mode textarea {
     background: #FFFFFF !important;
-    color: #020F24 !important;
-    border: 1px solid #CBD5E1 !important;
+    color: rgb(var(--ztims-on-surface)) !important;
+    border: 1px solid rgb(var(--ztims-outline)) !important;
 }
 .light-mode input::placeholder {
     color: #94A3B8 !important;
@@ -103,15 +106,15 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
 
 /* Ensure inputs remain starkly legible in deep dark mode surfaces */
 .dark input {
-    color: #FEFCF4 !important;
-    background-color: #0B2954 !important;
+    color: rgb(var(--ztims-on-surface)) !important;
+    background-color: rgb(var(--ztims-surface-variant)) !important;
 }
 .dark input::placeholder {
     color: #5C7B9E !important;
 }
 
-.light-mode #themeIcon { color: #FFB300 !important; }
-.light-mode aside a:hover { background-color: #E6EEF8 !important; color: #2E7D32 !important; }
+.light-mode #themeIcon { color: rgb(var(--ztims-secondary)) !important; }
+.light-mode aside a:hover { background-color: rgb(var(--ztims-surface-variant)) !important; color: rgb(var(--ztims-primary)) !important; }
 
 /* ==========================================================
    COLLAPSIBLE SIDEBAR — identical on every portal page, and the
@@ -181,7 +184,7 @@ body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a,
         position: fixed;
         inset: 0;
         z-index: 95;
-        background: rgba(2, 15, 36, .6);
+        background: rgb(var(--ztims-background) / .6);
         opacity: 0;
         pointer-events: none;
         transition: opacity .28s ease;
@@ -222,6 +225,9 @@ body { overflow-x: hidden; }
     }
 }
 </style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="../shared/motion.css"/>
 </head>
@@ -554,43 +560,43 @@ body { overflow-x: hidden; }
 
     <!-- Sidebar Navigation -->
     <div id="navScrim" aria-hidden="true"></div>
-    <aside class="fixed left-0 top-0 h-full w-64 bg-[#051D40] border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6">
+    <aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
-            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-[#2E7D32]">EXPLORE<br><span class="text-[#FFB300]">ZAMBOANGUITA</span></h1>
-            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-[#2E7D32]">EZ</span></div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
-                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-[#FFB300] hover:bg-white/5 transition-all">
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-white/5 transition-all">
                 <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_analystic.html">
-                <span class="material-symbols-outlined text-[#FFB300]">analytics</span>
+            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-accent">analytics</span>
                 <span class="sidebar-label">Analytics</span>
             </a>
-            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_dashboard_manage.html">
-                <span class="material-symbols-outlined text-[#FFB300]">location_on</span>
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-accent">location_on</span>
                 <span class="sidebar-label">Destinations</span>
             </a>
-            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
-                <span class="material-symbols-outlined text-[#FFB300]">storefront</span>
+            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-[#FFB300]">hiking</span>
+            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
+                <span class="material-symbols-outlined text-accent">hiking</span>
                 <span class="sidebar-label">Tourist Guides</span>
             </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-[#FFB300]">confirmation_number</span>
+            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
+                <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Guide Bookings</span>
             </a>
-            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-[#FFB300] transition-all" href="admin_profile.html">
-                <span class="material-symbols-outlined text-[#FFB300]">settings</span>
+            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all" href="admin_profile.html">
+                <span class="material-symbols-outlined text-accent">settings</span>
                 <span class="sidebar-label">Settings</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
-            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-red-500 dark:hover:text-red-400 transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-error dark:hover:text-error transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="sidebar-label">Log Out</span>
             </a>
@@ -604,7 +610,7 @@ body { overflow-x: hidden; }
             <span class="material-symbols-outlined">menu</span>
         </button>
         <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all">
-            <span id="themeIcon" class="material-symbols-outlined text-[#FFB300]">dark_mode</span>
+            <span id="themeIcon" class="material-symbols-outlined text-accent">dark_mode</span>
         </button>
             <div id="accountMenuSlot"></div>
     </header>
