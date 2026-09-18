@@ -605,33 +605,33 @@ body { overflow-x: hidden; }
                         <div>
                             <label for="establishmentNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
                             <input id="establishmentNameInput" type="text" required
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                   class="field w-full"/>
                             <p class="text-[11px] text-on-surface-variant mt-1.5">Shown on your listings and in the tourism office's records.</p>
                         </div>
 
                         <div>
                             <label for="managerNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
                             <input id="managerNameInput" type="text" placeholder="The person visitors should ask for"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                   class="field w-full"/>
                         </div>
 
                         <div>
                             <label for="contactEmailInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email</label>
                             <input id="contactEmailInput" type="email" placeholder="Leave blank to use your sign-in email"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                   class="field w-full"/>
                             <p class="text-[11px] text-on-surface-variant mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
                         </div>
 
                         <div>
                             <label for="phoneInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone</label>
                             <input id="phoneInput" type="text" placeholder="09XX XXX XXXX"
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                   class="field w-full"/>
                         </div>
 
                         <p id="detailsMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
 
                         <button type="submit" id="saveDetailsBtn"
-                                class="w-full bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.01]">
+                                class="btn btn-primary w-full">
                             Save details
                         </button>
                     </form>
@@ -647,23 +647,23 @@ body { overflow-x: hidden; }
                             <div>
                                 <label for="currentPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Current password</label>
                                 <input id="currentPasswordInput" type="password" required autocomplete="current-password"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                       class="field w-full"/>
                             </div>
                             <div>
                                 <label for="newPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">New password</label>
                                 <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                       class="field w-full"/>
                             </div>
                             <div>
                                 <label for="confirmPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Repeat the new password</label>
                                 <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password"
-                                       class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                                       class="field w-full"/>
                             </div>
 
                             <p id="passwordMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
 
                             <button type="submit" id="savePasswordBtn"
-                                    class="w-full bg-surface-variant border border-outline-variant/40 text-on-surface font-bold py-3.5 rounded-full transition-all hover:bg-outline-variant/50">
+                                    class="btn btn-secondary w-full">
                                 Change password
                             </button>
                         </form>

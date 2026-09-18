@@ -669,7 +669,7 @@ body { overflow-x: hidden; }
                         You keep their details here and assign them to the spots that require a guide.
                     </p>
                 </div>
-                <button id="openCreateGuideBtn" class="flex items-center gap-2 px-8 py-4 min-h-[44px] bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                <button id="openCreateGuideBtn" class="btn btn-primary min-h-[44px]">
                     <span class="material-symbols-outlined">hiking</span> New guide record
                 </button>
             </div>
@@ -704,15 +704,15 @@ body { overflow-x: hidden; }
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
                         <input id="guideSearch" type="search" placeholder="Search a guide or spot"
-                               class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                               class="field !pl-10 w-full sm:w-72"/>
                     </div>
-                    <select id="statusFilter" class="w-full sm:w-auto bg-surface-variant border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <select id="statusFilter" class="field w-full sm:w-auto">
                         <option value="all">All statuses</option>
                         <option value="available">Available</option>
                         <option value="unavailable">Unavailable</option>
                         <option value="inactive">Inactive</option>
                     </select>
-                    <button id="refreshGuidesBtn" class="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                    <button id="refreshGuidesBtn" class="btn btn-secondary min-h-[44px]">
                         <span class="material-symbols-outlined !text-base">refresh</span> Refresh
                     </button>
                 </div>
@@ -767,19 +767,19 @@ body { overflow-x: hidden; }
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Full name</label>
                     <input id="guideName" type="text" required placeholder="e.g., Juan Dela Cruz"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                           class="field"/>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
                         <input id="guideContact" type="tel" placeholder="09XX XXX XXXX"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Based in</label>
                         <input id="guideLocation" type="text" placeholder="e.g., Brgy. Najandig"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                 </div>
 
@@ -787,18 +787,18 @@ body { overflow-x: hidden; }
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Guide fee (₱)</label>
                         <input id="guideFee" type="number" min="0" step="1" placeholder="500"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Maximum group size</label>
                         <input id="guideMaxGroup" type="number" min="1" step="1" placeholder="5"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Status</label>
-                    <select id="guideStatus" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <select id="guideStatus" class="field">
                         <option value="available">Available — can take new bookings</option>
                         <option value="unavailable">Unavailable — temporarily not taking work</option>
                         <option value="inactive">Inactive — no longer taking new bookings</option>
@@ -841,7 +841,7 @@ body { overflow-x: hidden; }
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">About this guide</label>
                     <textarea id="guideBio" rows="3" placeholder="Languages spoken, specialities, years guiding…"
-                              class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
+                              class="field resize-none"></textarea>
                 </div>
 
                 <div>
@@ -855,8 +855,8 @@ body { overflow-x: hidden; }
                 <p id="guideError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="button" id="cancelGuideBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 min-h-[44px] rounded-full transition-all">Cancel</button>
-                    <button type="submit" id="saveGuideBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 min-h-[44px] rounded-full transition-all shadow-lg hover:scale-[1.02]">Save guide</button>
+                    <button type="button" id="cancelGuideBtn" class="btn btn-secondary w-1/2 min-h-[44px]">Cancel</button>
+                    <button type="submit" id="saveGuideBtn" class="btn btn-primary w-1/2 min-h-[44px]">Save guide</button>
                 </div>
             </form>
         </div>
@@ -1097,7 +1097,7 @@ body { overflow-x: hidden; }
                         </td>
                         <td class="px-6 py-4 text-center">${statusSelect(guide)}</td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
-                            <button data-edit="${escapeHtml(guide._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-on-surface hover:bg-surface-variant transition-colors">Edit</button>
+                            <button data-edit="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">Edit</button>
                         </td>
                     </tr>
                 `;

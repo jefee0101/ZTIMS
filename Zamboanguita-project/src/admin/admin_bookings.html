@@ -687,9 +687,9 @@ body { overflow-x: hidden; }
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
                         <input id="bookingSearch" type="search" placeholder="Search a reference or name"
-                               class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field !pl-10 w-full sm:w-72"/>
                     </div>
-                    <select id="bookingStatusFilter" class="w-full sm:w-auto bg-surface-variant border border-outline-variant/40 rounded-full px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                    <select id="bookingStatusFilter" class="field w-full sm:w-auto">
                         <option value="all">All statuses</option>
                         <option value="pending_payment">Pending payment</option>
                         <option value="confirmed">Confirmed</option>
@@ -697,7 +697,7 @@ body { overflow-x: hidden; }
                         <option value="cancelled">Cancelled</option>
                         <option value="no_show">No show</option>
                     </select>
-                    <button id="refreshBookingsBtn" class="flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                    <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
                         <span class="material-symbols-outlined !text-base">refresh</span> Refresh
                     </button>
                 </div>
@@ -749,8 +749,8 @@ body { overflow-x: hidden; }
             <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Guide</h3>
                 <div class="flex gap-2">
-                    <select id="assignGuideSelect" class="flex-1 bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"></select>
-                    <button type="button" id="assignGuideBtn" class="shrink-0 px-5 py-3 min-h-[44px] rounded-xl bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">Assign</button>
+                    <select id="assignGuideSelect" class="field flex-1"></select>
+                    <button type="button" id="assignGuideBtn" class="btn btn-secondary shrink-0">Assign</button>
                 </div>
                 <p id="assignHint" class="text-[11px] text-on-surface-variant mt-1.5"></p>
             </div>
@@ -764,11 +764,11 @@ body { overflow-x: hidden; }
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Amount collected (₱)</label>
                             <input id="payAmount" type="number" min="0" step="1" required
-                                   class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                                   class="field"/>
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Method</label>
-                            <select id="payMethod" class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+                            <select id="payMethod" class="field">
                                 <option value="cash">Cash</option>
                                 <option value="gcash">GCash</option>
                                 <option value="bank">Bank transfer</option>
@@ -778,15 +778,15 @@ body { overflow-x: hidden; }
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Official receipt number</label>
                         <input id="payReceipt" type="text" placeholder="OR-…"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Remarks</label>
                         <input id="payRemarks" type="text"
-                               class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                               class="field"/>
                     </div>
                     <button type="submit" id="recordPaymentBtn"
-                            class="w-full bg-primary text-on-primary font-bold py-3.5 min-h-[44px] rounded-full transition-all shadow-lg hover:scale-[1.02]">
+                            class="btn btn-primary w-full min-h-[44px]">
                         Record payment and confirm
                     </button>
                 </form>
@@ -795,9 +795,9 @@ body { overflow-x: hidden; }
             <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Mark as</h3>
                 <div class="flex flex-wrap gap-2">
-                    <button data-status="completed" class="booking-status-btn px-4 py-2.5 min-h-[44px] rounded-full text-xs font-bold bg-surface-variant border border-outline-variant/40 text-on-surface hover:bg-outline-variant/40 transition-all">Completed</button>
-                    <button data-status="no_show" class="booking-status-btn px-4 py-2.5 min-h-[44px] rounded-full text-xs font-bold bg-surface-variant border border-outline-variant/40 text-on-surface hover:bg-outline-variant/40 transition-all">No show</button>
-                    <button data-status="cancelled" class="booking-status-btn px-4 py-2.5 min-h-[44px] rounded-full text-xs font-bold bg-surface-variant border border-outline-variant/40 text-error hover:bg-outline-variant/40 transition-all">Cancelled</button>
+                    <button data-status="completed" class="booking-status-btn btn btn-secondary">Completed</button>
+                    <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
+                    <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
                 </div>
                 <p class="text-[11px] text-on-surface-variant mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
             </div>
@@ -940,7 +940,7 @@ body { overflow-x: hidden; }
                         <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button data-open="${escapeHtml(b._id)}" class="px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold text-accent hover:bg-surface-variant transition-colors">Open</button>
+                        <button data-open="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
                     </td>
                 </tr>
             `).join('');

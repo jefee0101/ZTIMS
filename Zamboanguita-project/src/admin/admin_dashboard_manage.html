@@ -657,7 +657,7 @@ body { overflow-x: hidden; }
                         Listings are edited by whoever manages them; take one down here when it is no longer available.
                     </p>
                 </div>
-                <button id="refreshBtn" class="flex items-center gap-2 px-6 py-3.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-sm hover:bg-outline-variant/50 transition-all">
+                <button id="refreshBtn" class="btn btn-secondary">
                     <span class="material-symbols-outlined !text-lg">refresh</span> Refresh
                 </button>
             </div>
@@ -678,7 +678,7 @@ body { overflow-x: hidden; }
                         </p>
                         <p id="starterMissingNames" class="text-xs text-on-surface-variant mt-1"></p>
                     </div>
-                    <button id="importStarterBtn" class="shrink-0 flex items-center gap-2 px-7 py-3.5 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                    <button id="importStarterBtn" class="btn btn-primary shrink-0">
                         <span class="material-symbols-outlined">publish</span> Publish them now
                     </button>
                 </div>
@@ -709,20 +709,20 @@ body { overflow-x: hidden; }
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Categories:</span>
                     <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
-                        <button data-category="ALL" class="cat-filter-btn px-5 py-3 min-h-[44px] rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold transition-all">All</button>
-                        <button data-category="BEACH / DIVING" class="cat-filter-btn px-5 py-3 min-h-[44px] rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Beach / Diving</button>
-                        <button data-category="MOUNTAIN" class="cat-filter-btn px-5 py-3 min-h-[44px] rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Mountain</button>
-                        <button data-category="CULTURAL" class="cat-filter-btn px-5 py-3 min-h-[44px] rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Cultural</button>
-                        <button data-category="ACCOMMODATION" class="cat-filter-btn px-5 py-3 min-h-[44px] rounded-full bg-surface-variant text-on-surface-variant text-xs font-bold hover:bg-outline-variant transition-all">Accommodation</button>
+                        <button data-category="ALL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">All</button>
+                        <button data-category="BEACH / DIVING" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Beach / Diving</button>
+                        <button data-category="MOUNTAIN" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Mountain</button>
+                        <button data-category="CULTURAL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Cultural</button>
+                        <button data-category="ACCOMMODATION" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Accommodation</button>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
                         <input id="searchInput" type="search" placeholder="Search name, location or manager"
-                               class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                               class="field !pl-10 w-full sm:w-72"/>
                     </div>
-                    <select id="managerFilter" class="bg-surface-variant border border-outline-variant/40 rounded-full text-xs font-bold text-on-surface px-4 py-3 min-h-[44px] focus:ring-1 focus:ring-primary focus:border-primary">
+                    <select id="managerFilter" class="field min-h-[44px]">
                         <option value="all">Everyone</option>
                         <option value="office">Kept by the office</option>
                         <option value="manager">Run by a manager</option>
@@ -1194,15 +1194,15 @@ body { overflow-x: hidden; }
 
                     <div class="flex lg:flex-col gap-2 shrink-0 lg:w-40">
                         <a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener"
-                           class="flex-1 text-center py-2.5 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">
+                           class="btn btn-secondary flex-1 text-center">
                             View public page
                         </a>
                         ${manager ? '' : `<button data-edit="${escapeHtml(spot._id)}"
-                                class="flex-1 py-2.5 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">
+                                class="btn btn-secondary flex-1">
                             Edit
                         </button>`}
                         <button data-takedown="${escapeHtml(spot._id)}"
-                                class="flex-1 py-2.5 rounded-full bg-error/10 text-error text-xs font-bold hover:bg-error/20 transition-all">
+                                class="btn btn-secondary flex-1">
                             Take down
                         </button>
                     </div>
@@ -1385,9 +1385,11 @@ body { overflow-x: hidden; }
                 activeCategory = button.dataset.category;
                 document.querySelectorAll('.cat-filter-btn').forEach(btn => {
                     const isActive = btn.dataset.category === activeCategory;
-                    btn.className = 'cat-filter-btn px-5 py-3 min-h-[44px] rounded-full text-xs font-bold transition-all ' +
-                        (isActive ? 'bg-secondary-container text-on-secondary-container'
-                                  : 'bg-surface-variant text-on-surface-variant hover:bg-outline-variant');
+                    // Rebuilt from the system's classes, not from a second set of
+                    // hand-written ones — this line runs on every filter press and
+                    // would otherwise undo whatever the markup said.
+                    btn.className = 'cat-filter-btn btn ' +
+                        (isActive ? 'btn-primary' : 'btn-secondary !text-on-surface-variant');
                 });
                 renderListings();
             });

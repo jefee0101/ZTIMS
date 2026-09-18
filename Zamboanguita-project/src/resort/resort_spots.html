@@ -588,7 +588,7 @@ body { overflow-x: hidden; }
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Spots</h2>
                     <p class="text-on-surface-variant">Only listings owned by your account are shown here.</p>
                 </div>
-                <button onclick="toggleAddSpotModal(true)" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                <button onclick="toggleAddSpotModal(true)" class="btn btn-primary">
                     <span class="material-symbols-outlined">add_circle</span> Add New Spot
                 </button>
             </div>
@@ -792,7 +792,7 @@ body { overflow-x: hidden; }
                         <p class="text-on-surface font-bold mb-1">Could not load your listings</p>
                         <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(loadError)}
                         Your listings are safe — this is only a problem reaching the server. The API sleeps when idle, so give it a moment and refresh.</p>
-                        <button onclick="loadMySpots()" class="mt-4 px-6 py-3 min-h-[44px] rounded-full bg-surface-variant border border-outline-variant/40 text-on-surface text-xs font-bold hover:bg-outline-variant/50 transition-all">Try again</button>
+                        <button onclick="loadMySpots()" class="btn btn-secondary mt-4 min-h-[44px]">Try again</button>
                     </div>`;
                 return;
             }
@@ -822,8 +822,8 @@ body { overflow-x: hidden; }
                         <p class="text-xs text-on-surface-variant">${escapeHtml(spot.location)}</p>
                         <p class="text-xs text-on-surface-variant line-clamp-2 flex-1">${escapeHtml(spot.description)}</p>
                         <div class="flex gap-2 pt-3">
-                            <button class="flex-1 py-2 rounded-full bg-surface-variant text-on-surface text-xs font-bold hover:bg-outline-variant/60 transition-all">Edit</button>
-                            <button class="flex-1 py-2 rounded-full bg-error/10 text-error text-xs font-bold hover:bg-error/20 transition-all">Delete</button>
+                            <button class="btn btn-secondary flex-1">Edit</button>
+                            <button class="btn btn-secondary flex-1">Delete</button>
                         </div>
                     </div>
                 `;

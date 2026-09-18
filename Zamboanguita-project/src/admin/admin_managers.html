@@ -656,7 +656,7 @@ body { overflow-x: hidden; }
                         A manager can then publish and edit only their own tourist spots and accommodations.
                     </p>
                 </div>
-                <button id="openCreateModalBtn" class="flex items-center gap-2 px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20">
+                <button id="openCreateModalBtn" class="btn btn-primary">
                     <span class="material-symbols-outlined">person_add</span> New manager account
                 </button>
             </div>
@@ -685,9 +685,9 @@ body { overflow-x: hidden; }
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
                         <input id="searchInput" type="search" placeholder="Search establishment or email"
-                               class="w-full sm:w-72 bg-surface-variant border border-outline-variant/40 rounded-full pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                               class="field !pl-10 w-full sm:w-72"/>
                     </div>
-                    <button id="refreshBtn" class="flex items-center gap-2 px-5 py-2.5 bg-surface-variant border border-outline-variant/40 text-on-surface rounded-full font-bold text-xs hover:bg-outline-variant/50 transition-all">
+                    <button id="refreshBtn" class="btn btn-secondary">
                         <span class="material-symbols-outlined !text-base">refresh</span> Refresh
                     </button>
                 </div>
@@ -741,44 +741,44 @@ body { overflow-x: hidden; }
                 <div>
                     <label for="newManagerEstablishmentName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
                     <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                 </div>
                 <div>
                     <label for="newManagerName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
                     <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                     <p class="text-[11px] text-on-surface-variant mt-1.5">The person who actually runs the establishment.</p>
                 </div>
                 <div>
                     <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Sign-in email</label>
                     <input id="newManagerEmail" type="email" required placeholder="manager@gmail.com" autocomplete="off"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                     <p class="text-[11px] text-on-surface-variant mt-1.5">What they type to sign in. Never shown to visitors.</p>
                 </div>
                 <div>
                     <label for="newManagerContactEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                     <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
                 </div>
                 <div>
                     <label for="newManagerPhone" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                     <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing that has no booking website.</p>
                 </div>
                 <div>
                     <label for="newManagerPassword" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Starting password</label>
                     <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
-                           class="w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                           class="field w-full"/>
                     <p class="text-[11px] text-on-surface-variant mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
                 </div>
 
                 <p id="createManagerError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
                 <div class="flex gap-4 pt-2">
-                    <button type="button" id="cancelCreateBtn" class="w-1/2 bg-outline-variant hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all">Cancel</button>
-                    <button type="submit" id="createManagerBtn" class="w-1/2 bg-primary text-on-primary font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02]">Create account</button>
+                    <button type="button" id="cancelCreateBtn" class="btn btn-secondary w-1/2">Cancel</button>
+                    <button type="submit" id="createManagerBtn" class="btn btn-primary w-1/2">Create account</button>
                 </div>
             </form>
         </div>
