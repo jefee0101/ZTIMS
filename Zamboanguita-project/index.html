@@ -401,10 +401,10 @@ body { overflow-x: hidden; }
               <!-- Same container AND the same gutter as the header, so the heading,
                    the filters and the cards line up with the wordmark at any width. -->
               <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
-                <h2 class="rise text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2" style="--rise-delay:.34s">Tourist Spots &amp; Accommodations</h2>
-                <p class="rise text-on-surface-variant mb-6" style="--rise-delay:.42s">Browse everything the municipality has to offer.</p>
+                <h2 class="rise text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2 text-center" style="--rise-delay:.34s">Tourist Spots &amp; Accommodations</h2>
+                <p class="rise text-on-surface-variant mb-6 text-center" style="--rise-delay:.42s">Browse everything the municipality has to offer.</p>
 
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center mb-4">
+                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center sm:justify-center mb-4">
                     <div class="relative w-full sm:flex-1 sm:max-w-md">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
                         <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
@@ -423,7 +423,7 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
                     </div>
                 </div>
-                <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold"></p>
+                <p id="spotsResultCount" class="text-xs text-on-surface-variant mb-6 uppercase tracking-widest font-bold text-center"></p>
 
                 <!-- With the rail gone there is room for a fourth column; three
                      across a full-width page left the cards oddly wide. -->
@@ -469,7 +469,9 @@ body { overflow-x: hidden; }
     // minute — after 5s the spinner says so rather than looking frozen.
     function showLoading(target, message) {
         target.innerHTML =
-            '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
+            // col-span-full matters when the target is the spots grid: without it the
+            // spinner is one cell wide and sits in the first column, not the middle.
+            '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full col-span-full text-center">' +
                 '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-70"></div>' +
                 '<p class="text-sm opacity-80">' + message + '</p>' +
                 '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
@@ -568,8 +570,8 @@ body { overflow-x: hidden; }
         if (matches.length === 0) {
             resultCount.textContent = '';
             spotsContainer.innerHTML = allSpots.length === 0
-                ? '<p class="text-on-surface-variant col-span-full py-8">No tourist spots have been published yet. Please check back soon.</p>'
-                : '<p class="text-on-surface-variant col-span-full py-8">Nothing matches that search or category. Try a different word, or set the category back to All.</p>';
+                ? '<p class="text-on-surface-variant col-span-full py-8 text-center">No tourist spots have been published yet. Please check back soon.</p>'
+                : '<p class="text-on-surface-variant col-span-full py-8 text-center">Nothing matches that search or category. Try a different word, or set the category back to All.</p>';
             return;
         }
 
@@ -596,7 +598,7 @@ body { overflow-x: hidden; }
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
             doneLoading();
-            spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8">Unable to load tourist spots right now. Please try again later.</p>';
+            spotsContainer.innerHTML = '<p class="text-on-surface-variant col-span-full py-8 text-center">Unable to load tourist spots right now. Please try again later.</p>';
         }
     }
 
