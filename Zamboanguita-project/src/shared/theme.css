@@ -28,6 +28,18 @@
    rather than black, and text that is off-white rather than pure.
    ========================================================================== */
 
+/* The browser draws things we do not: scrollbars, the panel a <select> opens,
+   the calendar a date field opens, the spinners on a number field. Without
+   color-scheme it draws all of them light, so on the night theme a dropdown
+   opened as a white sheet over a dark page. Declaring the scheme is also what
+   tells Chrome which autofill colours to reach for.
+
+   Set per theme rather than `light dark`, because ZTIMS has its own toggle and
+   the two must not disagree: a visitor who chose light on a machine set to dark
+   would otherwise get light pages with dark scrollbars. */
+:root { color-scheme: light; }
+:root.dark, html.dark, body.dark-mode { color-scheme: dark; }
+
 /* -------------------------------------------------------------- light ---- */
 :root {
     /* Identity */
@@ -605,9 +617,8 @@ html :where(input, select, textarea):focus {
     box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / 0.18);
 }
 
-/* A date or time field's picker glyph is drawn by the browser in its own
-   colour, which on a dark ground disappears. */
-:root.dark input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.7); }
+/* The calendar and clock glyphs follow color-scheme now, so the invert hack
+   that used to live here is gone. */
 
 /* ==========================================================================
    Autofilled fields
