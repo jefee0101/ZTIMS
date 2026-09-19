@@ -187,6 +187,50 @@ and Google Fonts. That shapes what any test here can honestly claim.
   route panel never says "quickest of 2" or more anywhere, the alternatives are
   not coming back and it is worth checking the provider's response directly.
 
+### 3.0 The hero film — check it plays, and watch the bandwidth
+
+The landing page's hero is a looping clip from your own Cloudinary account:
+
+```
+cloud   xeo3pvpw
+asset   Stuns  (v1789808713)
+```
+
+`index.html` builds three sources from it, cheapest first, ending with the
+untouched URL you supplied — so if a Cloudinary transformation ever fails to
+generate, the browser falls through to the original rather than showing
+nothing. The still underneath is cut from frame zero of the same asset
+(`so_0`), so the film and the still can never show different scenes.
+
+**Nothing about playback could be tested here.** The sandbox cannot reach
+Cloudinary and has no encoder, so no real clip was ever decoded. What is tested
+is the part that decides: when the film is asked for, with what attributes, and
+that the still carries every case where it is not.
+
+**Confirm on the live site:**
+1. On a desktop, the hero should be moving within a second or two.
+2. On a phone, it should be a still — and the Network tab should show **no**
+   video request at all. That is deliberate: see below.
+3. Both should show the same scene. If the still is a different frame from where
+   the film starts, `so_0` resolved oddly and you can replace the poster URL
+   with any uploaded image.
+
+**Who gets the film:** desktop and tablet only, and only when the browser has
+not reported Save-Data or a 2G/3G connection, and only when the visitor has not
+asked for reduced motion. Everyone else gets the still. This is a data decision,
+not a visual one — a looping clip is megabytes re-fetched on every visit, and
+most visitors to this site are on a phone paying for data by the gigabyte.
+
+**Watch the Cloudinary quota.** Video bandwidth is counted against the free
+tier much faster than images. If the site gets real traffic and the quota runs
+low, the cheapest fix is to shorten the clip or lower `w_1600` in the two
+transformation URLs in `index.html`; the last source is the original and is
+unaffected.
+
+**To change the clip:** upload a new one, then update the three source URLs and
+the poster URL in `index.html`. They are together, in the `heroFilm` block at
+the foot of the page and in the `.ztims-stage__media` markup.
+
 ### 3.1 Motorbike directions depend on a community server
 
 Habal-habal is how most visitors actually travel, so *Motorbike* is one of the

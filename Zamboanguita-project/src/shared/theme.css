@@ -283,23 +283,64 @@ h1, h2, h3, h4, .font-display, .font-headline {
 
 .ztims-hero { height: var(--ztims-hero-h); }
 
-/* Both copies of the photograph, sized to the whole stage so their crops match.
-   The hero shows the top of it and the cove shows the bottom; each is clipped
-   by its own container. */
-.ztims-hero__photo,
-.ztims-cove__photo {
+/* One piece of media behind both sections, rather than a copy in each.
+
+   The still version worked by duplicating the image and matching the crops
+   exactly. That cannot work for film: two <video> elements are two downloads
+   that drift apart, and the join would show two different frames meeting. A
+   single layer spanning the hero and the cove has nothing to keep in step.
+
+   The gradient is the floor beneath the floor: if the still never loads and the
+   film never plays, the hero is still the municipality's own blues rather than
+   a white hole with white text on it. */
+.ztims-stage { position: relative; }
+
+.ztims-stage__media {
     position: absolute;
+    top: 0;
     left: 0;
     width: 100%;
     height: calc(var(--ztims-hero-h) + var(--ztims-cove));
-    object-fit: cover;
-    /* Without this the two halves can land on different subpixel rows and
-       leave a hairline through the opening. */
-    object-position: center top;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    /* Both stops are deep enough to carry white text. It ended on the page
+       background before, which on the light theme is sand — and the cove, where
+       the white heading sits, is the very bottom of this layer. Had the still
+       and the film both failed, the heading would have been white on sand. */
+    background: linear-gradient(160deg,
+        rgb(var(--ztims-secondary)) 0%,
+        rgb(var(--ztims-primary)) 100%);
 }
 
-.ztims-hero__photo { top: 0; }
-.ztims-cove__photo { bottom: 0; object-position: center bottom; }
+.ztims-stage__poster,
+.ztims-stage__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Over the still, so the first frame is already in place when it starts and
+   there is no flash of empty space between the two. */
+.ztims-stage__video { z-index: 1; }
+
+/* Both sections sit on the stage, so both need to be above it. */
+.ztims-hero,
+.ztims-browse { position: relative; z-index: 1; }
+
+/* The section's colour, but starting at its own cove depth instead of its top
+   edge, so the stage behind shows through the opening. A gradient with two
+   stops at the same position is a hard line, not a fade, and the final colour
+   carries on to the bottom of the section however tall it grows. */
+.ztims-browse {
+    background: linear-gradient(to bottom,
+        rgb(var(--ztims-surface-low) / 0) 0,
+        rgb(var(--ztims-surface-low) / 0) var(--ztims-cove),
+        rgb(var(--ztims-surface-low))     var(--ztims-cove));
+}
 
 /* The hero's own shading. Deepest behind the words, then easing off again
    towards the join so the opening below starts on a clear picture rather than

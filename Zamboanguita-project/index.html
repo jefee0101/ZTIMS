@@ -402,13 +402,29 @@ body { overflow-x: hidden; }
 
         <!-- ============ DESTINATIONS ============ -->
         <div data-view="spots">
+            <!-- Hero and Browse share one stage so they can share ONE piece of
+                 media. The picture used to be duplicated — a copy in the hero and
+                 a matching copy in the cove — which is fine for a still but not
+                 for a film: two <video> elements are two downloads that drift out
+                 of step, and the join would show two different frames meeting.
+                 A single layer behind both removes the problem rather than
+                 managing it. -->
+            <div class="ztims-stage">
+                <div class="ztims-stage__media" aria-hidden="true">
+                    <!-- The still is the floor, not a placeholder: it is what a
+                         phone, a metered connection and anyone who has asked for
+                         less motion actually get, and what remains if the film
+                         fails to load. Cloudinary cuts it from frame zero of the
+                         same asset, so the two cannot disagree. -->
+                    <img class="ztims-stage__poster"
+                         src="https://res.cloudinary.com/xeo3pvpw/video/upload/so_0,q_auto,w_1600,c_limit/v1789808713/Stuns.jpg"
+                         alt="" fetchpriority="high"/>
+                    <!-- The film is added here by the script at the foot of this
+                         page, and only where it is wanted. -->
+                </div>
+
             <section class="ztims-hero relative w-full flex items-center overflow-hidden">
                 <div class="absolute inset-0 z-0">
-                    <!-- Taller than the hero on purpose: the same picture carries on
-                         into the cove at the top of Browse, and both copies must be
-                         sized to hero + cove or object-fit picks a different crop for
-                         each and the join shows. The overflow-hidden above clips it. -->
-                    <img class="ztims-hero__photo" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Zamboanguita coastline"/>
                     <!-- A dark scrim, identical in both themes, because the text on it is
                      white in both. It was keyed to the page background, which in
                      light mode faded the photograph to sand and took the title
@@ -451,14 +467,16 @@ body { overflow-x: hidden; }
                 </div>
             </section>
 
-            <section id="browse" class="relative py-8 sm:py-10 bg-surface-container-low">
+            <!-- ztims-browse, not bg-surface-container-low: the section's colour
+                 has to stop short of its own top edge so the stage behind shows
+                 through the cove. Same colour everywhere below that. -->
+            <section id="browse" class="ztims-browse relative py-8 sm:py-10">
               <!-- The cove: the hero's photograph continuing into this section,
                    with this section's own colour painted back over it in a curve.
                    Decoration only — aria-hidden, and pointer-events:none in
                    theme.css so it cannot take a tap meant for the search below.
                    Everything in this section is the same markup it always was. -->
               <div class="ztims-cove" aria-hidden="true">
-                  <img class="ztims-cove__photo" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt=""/>
                   <div class="ztims-cove__scrim"></div>
                   <svg class="ztims-cove__curve" viewBox="0 0 1440 240" preserveAspectRatio="none" focusable="false">
                       <!-- Narrow screens: shoulders of a few per cent, so the opening
@@ -513,6 +531,7 @@ body { overflow-x: hidden; }
                 <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"></div>
               </div>
             </section>
+            </div><!-- /ztims-stage -->
 
             <!-- ============ THE TOURISM MAP ============
                  Everything published, on one map, from the same records the grid
@@ -906,6 +925,88 @@ body { overflow-x: hidden; }
             setMapNote('The map could not be loaded. The list above still works.');
         }
     }
+
+    /* =====================================================
+       THE HERO FILM
+       -----------------------------------------------------
+       The still is already on the page and already correct. This only adds the
+       film on top of it, and only where the film is worth what it costs: a
+       looping clip is megabytes, re-fetched on every visit, and most of the
+       people this site is for are on a phone paying for data by the gigabyte.
+
+       So it is asked for on a wide screen, on a connection that has not said
+       otherwise, and from someone who has not asked for less motion. Everywhere
+       else the still stands, and it is the same frame — Cloudinary cuts it from
+       frame zero of this very asset — so nobody is shown a different picture,
+       only a still one.
+       ===================================================== */
+    (function heroFilm() {
+        const stage = document.querySelector('.ztims-stage__media');
+        if (!stage || !window.matchMedia) return;
+
+        const wide = window.matchMedia('(min-width: 640px)').matches;
+        const stillPlease = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Present on Chrome and Android browsers, absent on Safari — absent is
+        // treated as "no objection", not as "slow".
+        const link = navigator.connection || {};
+        const thin = link.saveData === true || /(^|-)2g$|^3g$/.test(link.effectiveType || '');
+
+        if (!wide || stillPlease || thin) return;
+
+        const video = document.createElement('video');
+        video.className = 'ztims-stage__video';
+        video.muted = true;            // the only way a browser will autoplay
+        video.defaultMuted = true;
+        video.loop = true;
+        video.autoplay = true;
+        video.playsInline = true;      // or iOS takes it fullscreen on play
+        video.setAttribute('playsinline', '');
+        video.setAttribute('aria-hidden', 'true');
+        video.tabIndex = -1;
+        video.preload = 'auto';
+
+        /* Three sources, cheapest first, ending with the untouched original.
+           The two above it are Cloudinary transformations, which are generated on
+           first request — if either ever fails to build, the browser simply falls
+           through to the file as uploaded rather than showing nothing. */
+        [
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1789808713/Stuns.webm', 'video/webm'],
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1789808713/Stuns.mp4', 'video/mp4'],
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/v1789808713/Stuns.mp4', 'video/mp4']
+        ].forEach(function (pair) {
+            const source = document.createElement('source');
+            source.src = pair[0];
+            source.type = pair[1];
+            video.appendChild(source);
+        });
+
+        // If every source fails, take the film back off and leave the still.
+        video.addEventListener('error', function () { video.remove(); }, true);
+
+        stage.appendChild(video);
+
+        // Autoplay can still be refused. Nothing is broken if it is — the still
+        // is underneath — so the rejection is swallowed rather than logged at
+        // the visitor.
+        const started = video.play();
+        if (started && typeof started.catch === 'function') started.catch(function () {});
+
+        /* Nothing is gained by decoding frames for a hero that has been scrolled
+           past, and on a laptop it is a measurable amount of battery. */
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        const again = video.play();
+                        if (again && typeof again.catch === 'function') again.catch(function () {});
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0 }).observe(stage);
+        }
+    })();
 
     /* ---------------- start ---------------- */
 
