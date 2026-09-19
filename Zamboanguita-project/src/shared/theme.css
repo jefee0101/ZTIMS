@@ -458,12 +458,29 @@ h1, h2, h3, h4, .font-display, .font-headline {
    putting anything back, which leaves a keyboard user with no idea where they
    are.
    ========================================================================== */
-/* Qualified by element on purpose. The Tailwind CLI wraps the forms plugin's
-   reset in :where(), which carries no specificity, so a bare `.field` beat it —
-   and every test built against the CLI passed. Production loads the Play CDN,
-   which emits the plain `[type='email']` instead: (0,1,0), the same as `.field`,
-   and injected into the head at runtime, therefore AFTER this file. It won on
-   source order, and the sign-in fields came out white on the night theme.
+/* Shape and size, at plain class specificity. This half must stay beatable:
+   `w-72`, `sm:w-auto` and the rest are (0,1,0) too, and the Play CDN injects
+   them after this file, so they win on source order — which is how a page says
+   a search box is 18rem wide and a filter only as wide as its longest option.
+   Raising this block once cost exactly that, and every field on the page went
+   full width and wrapped onto a line of its own. */
+.field {
+    width: 100%;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    transition: border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
+}
+
+/* Colour and the box it is painted in, qualified by element on purpose, and
+   deliberately only these properties.
+
+   The Tailwind CLI wraps the forms plugin's reset in :where(), which carries no
+   specificity, so a bare `.field` beat it — and every test built against the CLI
+   passed. Production loads the Play CDN, which emits the plain `[type='email']`
+   instead: (0,1,0), the same as `.field`, and injected into the head at runtime,
+   therefore AFTER this file. It won on source order, and the sign-in fields came
+   out white on the night theme.
 
    `input.field` is (0,1,1) and settles it. An `!bg-…` utility still overrides,
    which is the escape hatch a page needs. */
@@ -471,16 +488,11 @@ input.field,
 select.field,
 textarea.field,
 .field {
-    width: 100%;
-    min-height: 44px;
     padding: 0.7rem 0.875rem;
     border-radius: 0.75rem;
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
     color: rgb(var(--ztims-on-surface));
-    font-size: 0.9375rem;
-    transition: border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
-                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
 }
 input.field::placeholder,
 select.field::placeholder,
