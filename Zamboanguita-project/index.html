@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Great+Vibes&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
     <script>
         // Applied before first paint so the page never flashes the wrong theme.
@@ -461,9 +461,15 @@ body { overflow-x: hidden; }
                     <!-- An eyebrow, the name, one line, and the two things a
                          visitor actually came to do. The hero used to end at the
                          sentence, so the only way on was to scroll and hope. -->
-                    <p class="rise flex items-center gap-2 text-label sm:text-xs font-bold uppercase tracking-[0.22em] text-white/90 mb-2" style="--rise-delay:.06s">
-                        Discover
-                        <span class="inline-block w-6 h-[2px] rounded-full bg-gold"></span>
+                    <!-- A greeting rather than an instruction, in a hand rather than
+                         in capitals. Everything the old eyebrow did to it — bold,
+                         uppercase, 0.22em of tracking — is exactly what a script
+                         face cannot survive: the letters are drawn to join, and
+                         tracking pulls them apart. It is also set much larger,
+                         because a cursive at 12px is a smudge. -->
+                    <p class="rise ztims-script flex items-center gap-3 text-[1.75rem] sm:text-[2rem] text-white leading-none mb-1" style="--rise-delay:.06s">
+                        Mabuhay
+                        <span class="inline-block w-8 h-[2px] rounded-full bg-gold"></span>
                     </p>
                     <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
                         Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
@@ -542,7 +548,12 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
                     </div>
                 </div>
-                <p id="spotsResultCount" class="text-label mb-6 uppercase tracking-widest font-bold text-center"></p>
+                <!-- Off the page, not out of it. The count was visual clutter above
+                     the grid, but it is the only thing that tells someone using a
+                     screen reader that a search or a category change did anything
+                     at all — the cards below simply swap without comment. sr-only
+                     plus aria-live keeps that announcement and removes the line. -->
+                <p id="spotsResultCount" class="sr-only" role="status" aria-live="polite"></p>
 
                 <!-- With the rail gone there is room for a fourth column; three
                      across a full-width page left the cards oddly wide. -->

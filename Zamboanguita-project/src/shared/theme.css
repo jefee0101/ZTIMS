@@ -443,6 +443,19 @@ body.dark-mode .text-primary {
     color: rgb(var(--ztims-primary-text));
 }
 
+/* A hand, for the one or two places that greet rather than label. Kept as a
+   token so the face is named once; the page that uses it is what loads it. The
+   fallbacks matter more than usual here — if the webfont never arrives, a
+   generic cursive is still a script, and a sans-serif at this size would just
+   look like a mistake. */
+.ztims-script {
+    font-family: "Great Vibes", "Segoe Script", "Snell Roundhand", cursive;
+    font-weight: 400;
+    /* Script faces sit high in their em box; without this the descenders of a
+       word like Mabuhay collide with the line beneath. */
+    padding-bottom: 0.12em;
+}
+
 /* ==========================================================================
    Supporting text
    --------------------------------------------------------------------------
