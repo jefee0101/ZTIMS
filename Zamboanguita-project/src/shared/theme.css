@@ -240,48 +240,149 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 /* ==========================================================================
-   The coastline — a section transition
+   The cove — a curved window where the photograph carries on
    --------------------------------------------------------------------------
-   A wave shape that belongs to the section BELOW it, painted over the bottom
-   edge of the one above. Filled with the lower section's own background token,
-   so the two read as one surface rising into the photograph rather than two
-   blocks butted together, and so it follows the theme without being restated.
+   The hero used to stop dead on a straight line, and then on a wave. Neither
+   let the photograph into the page. This does: the picture continues past the
+   bottom of the hero into the top of the section below, and the section's own
+   colour is painted back over it in a curve that is high at both edges and
+   dips through the middle — so what you see through the opening is the
+   photograph itself, at full strength, not a tint of it.
 
-   An <svg> rather than a border-radius or a skewed pseudo-element, because a
-   coastline is not an arc: the path can have two crests and an uneven trough,
-   which is what makes it read as water instead of as a rounded corner.
-   preserveAspectRatio="none" lets one path stretch from a phone to a desktop
-   while the height is set here, so the wave gets gentler on wide screens
-   instead of taller.
+   The trick that makes it seamless: the SAME image is used twice, in the hero
+   and again in the band below it, and both are sized to the hero PLUS the
+   cove. object-fit: cover then computes an identical crop for both, one
+   anchored to the top and one to the bottom, so the two halves line up exactly
+   across the join. Size them differently and cover picks a different scale for
+   each, which shows up as a hard horizontal jump straight through the opening.
 
-   Two rules it must never break, both of which are why it is a decoration and
-   not a layer of the layout:
-     - pointer-events: none. It sits across the seam between a hero's buttons
-       and a search field, and it must not swallow a tap meant for either.
-     - It stays BEHIND the text of the section it overlays (z-index below the
-       hero's content), so if anything ever does overlap, the words win.
+   The heading and the search sit over the picture, so a scrim underneath them
+   is not optional. It is built from the section's own surface colour, which
+   means it darkens the photograph on the night theme and lightens it on the
+   day one — the text above it is --ztims-on-surface either way and stays
+   readable without being restated per theme. The two scrims meet at the same
+   value on the join, or the seam reappears as a band of shadow.
    ========================================================================== */
-.ztims-wave {
-    position: absolute;
-    left: 0;
-    right: 0;
-    /* A hair past the edge: at some zoom levels a rounded-down height leaves a
-       one-pixel line of the photograph showing under the fill. */
-    bottom: -1px;
-    width: 100%;
-    height: 44px;
-    display: block;
-    pointer-events: none;
-    z-index: 5;
+:root {
+    /* One source of truth. The hero is sized from this and the continuation
+       below is measured against it, so the crop cannot drift out of step. */
+    --ztims-hero-h: max(38vh, 360px);
+    /* Deep enough to hold the heading and, on a wide screen, the search row —
+       and no deeper. Past this the destination cards begin, and the picture
+       would show through the gaps between them. */
+    --ztims-cove: 200px;
 }
 
-@media (min-width: 640px)  { .ztims-wave { height: 68px; } }
-@media (min-width: 1024px) { .ztims-wave { height: 92px; } }
+@media (min-width: 640px) {
+    :root { --ztims-hero-h: max(42vh, 340px); --ztims-cove: 215px; }
+}
 
-/* The swell behind the shoreline. Same colour, half-strength, offset — it is
-   what stops the curve looking like a single cut-out. */
-.ztims-wave__back  { fill: rgb(var(--ztims-surface-low) / 0.45); }
-.ztims-wave__front { fill: rgb(var(--ztims-surface-low)); }
+@media (min-width: 1024px) {
+    :root { --ztims-cove: 235px; }
+}
+
+.ztims-hero { height: var(--ztims-hero-h); }
+
+/* Both copies of the photograph, sized to the whole stage so their crops match.
+   The hero shows the top of it and the cove shows the bottom; each is clipped
+   by its own container. */
+.ztims-hero__photo,
+.ztims-cove__photo {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: calc(var(--ztims-hero-h) + var(--ztims-cove));
+    object-fit: cover;
+    /* Without this the two halves can land on different subpixel rows and
+       leave a hairline through the opening. */
+    object-position: center top;
+}
+
+.ztims-hero__photo { top: 0; }
+.ztims-cove__photo { bottom: 0; object-position: center bottom; }
+
+/* The hero's own shading. Deepest behind the words, then easing off again
+   towards the join so the opening below starts on a clear picture rather than
+   on the darkest part of the gradient. */
+.ztims-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+        rgb(0 0 0 / 0)    0%,
+        rgb(0 0 0 / 0.26) 38%,
+        rgb(0 0 0 / 0.70) 76%,
+        rgb(0 0 0 / 0.32) 100%);
+}
+
+.ztims-cove {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--ztims-cove);
+    overflow: hidden;
+    /* Above the section's flat background, below everything anybody types into
+       or taps. Decoration: it must never take a click meant for the search. */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Dark in BOTH themes, and picking up at exactly the value the hero's gradient
+   ends on, so the join does not show as a band of shadow.
+
+   Deliberately not the section's own colour. Text over a photograph is white
+   here exactly as it is in the hero, and the alternative — tinting towards the
+   surface so the section's dark text works — meant either washing the picture
+   out until there was no point showing it, or leaving dark text on a dark
+   photograph. The scrim is a flat colour, not the image, so the white stays
+   readable even if the photograph never loads. */
+.ztims-cove__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+        rgb(0 0 0 / 0.32) 0%,
+        rgb(0 0 0 / 0.50) 20%,
+        rgb(0 0 0 / 0.60) 55%,
+        rgb(0 0 0 / 0.62) 100%);
+}
+
+/* What sits inside the opening. White, because it is over a photograph, with a
+   shadow so a bright patch of sky cannot swallow a letter. */
+.ztims-cove-text { color: #fff; text-shadow: 0 1px 10px rgb(0 0 0 / 0.55); }
+
+/* The curve itself: the section's colour, filled from the shoreline downwards,
+   leaving the opening above it clear. Stretched rather than scaled, so it grows
+   wider on a desktop instead of taller. */
+.ztims-cove__curve {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.ztims-cove__curve path { fill: rgb(var(--ztims-surface-low)); }
+
+/* Two shapes for one idea. preserveAspectRatio stretches the path to the
+   viewport, so a curve that falls away gracefully across 1440px collapses into
+   a sharp V at 360px — and the heading, which is nearly full width on a phone,
+   ends up with its first and last words out on the shoulders where white text
+   has nothing dark behind it. The narrow shape keeps the shoulders to a few
+   per cent so the opening stays as wide as the text. */
+.ztims-cove__curve .is-wide { display: none; }
+
+/* Not 640px: at tablet widths the heading still wraps to two long lines, and
+   the graceful shoulders put the ends of them out on the sand where white text
+   has nothing behind it. Measured, not guessed — 1.06:1 at 820px. The wide
+   shape only earns its keep once the viewport is wide enough that the heading
+   is comfortably narrower than the opening. 1024px is not it either: that is
+   exactly where the heading steps up to its largest size and wraps to two long
+   lines again, so it failed there too. 1280px is the first width where the
+   graceful shape and the heading coexist. */
+@media (min-width: 1280px) {
+    .ztims-cove__curve .is-narrow { display: none; }
+    .ztims-cove__curve .is-wide { display: inline; }
+}
 
 /* ==========================================================================
    Primary, used as text, on the night theme
