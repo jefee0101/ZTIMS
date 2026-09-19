@@ -342,50 +342,27 @@ h1, h2, h3, h4, .font-display, .font-headline {
         rgb(var(--ztims-surface-low))     var(--ztims-cove));
 }
 
-/* Shading where the words are, and nowhere else.
+/* No shading over the film. Asked for, twice, and this is what it costs and how
+   the cost is paid.
 
-   This used to be a full-height fade across the whole frame, which darkened the
-   film everywhere to solve a problem that only exists behind the text. The
-   words are left-aligned, so the shading is too: by two thirds of the way
-   across there is none left, and the right of the frame — where the sea and the
-   boats are — plays untouched. The faint vertical layer underneath only softens
-   the very top and the join; it is a tenth of what was there. */
-.ztims-hero__scrim {
-    position: absolute;
-    inset: 0;
-    /* Narrow screens first, where the words run the full width of the frame and
-       there is no clear side to give back. This is a little lighter than it was
-       and no lighter than the sentence can take: 16px regular over film wants
-       4.5:1, and that sets the floor, not taste. */
-    background: linear-gradient(to bottom,
-        rgb(0 0 0 / 0.34) 0%,
-        rgb(0 0 0 / 0.58) 12%,
-        rgb(0 0 0 / 0.58) 86%,
-        rgb(0 0 0 / 0.34) 100%);
-}
+   There is nothing between the clip and the words now — no wash, no gradient, no
+   band across the frame. What keeps the text readable instead is a halo carried
+   by the glyphs themselves: several shadow layers, tight and dark, that darken
+   only the few pixels around each letter rather than the picture behind them.
 
-/* Wide screens are where the reduction is actually possible: the copy sits in
-   the left third, so the shading can stop once the words do and the rest of the
-   frame — the sea, the boats, the far shore — plays untouched. */
-@media (min-width: 1280px) {
-    .ztims-hero__scrim {
-        background:
-            linear-gradient(100deg,
-                rgb(0 0 0 / 0.66) 0%,
-                rgb(0 0 0 / 0.60) 38%,
-                rgb(0 0 0 / 0.22) 58%,
-                rgb(0 0 0 / 0)    74%),
-            linear-gradient(to bottom,
-                rgb(0 0 0 / 0.10) 0%,
-                rgb(0 0 0 / 0)    45%,
-                rgb(0 0 0 / 0.12) 100%);
-    }
-}
-
-/* The text carries its own darkness, so the frame does not have to. */
+   Be clear about the limit. A halo is not contrast in the sense a contrast
+   checker means: WCAG measures text against the colour behind it and a shadow
+   does not change that colour. Over a bright frame these numbers are below AA,
+   and the test says so per width rather than pretending otherwise. Legible in
+   practice, not compliant on paper — which is a design decision, and is written
+   down here so nobody later mistakes it for an oversight. */
 .ztims-hero h2,
 .ztims-hero p {
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 2px 16px rgb(0 0 0 / 0.55);
+    text-shadow:
+        0 1px 2px  rgb(0 0 0 / 0.95),
+        0 2px 6px  rgb(0 0 0 / 0.85),
+        0 4px 18px rgb(0 0 0 / 0.70),
+        0 0   42px rgb(0 0 0 / 0.55);
 }
 
 .ztims-cove {
@@ -401,37 +378,18 @@ h1, h2, h3, h4, .font-display, .font-headline {
     pointer-events: none;
 }
 
-/* Dark in BOTH themes, and picking up at exactly the value the hero's gradient
-   ends on, so the join does not show as a band of shadow.
-
-   Deliberately not the section's own colour. Text over a photograph is white
-   here exactly as it is in the hero, and the alternative — tinting towards the
-   surface so the section's dark text works — meant either washing the picture
-   out until there was no point showing it, or leaving dark text on a dark
-   photograph. The scrim is a flat colour, not the image, so the white stays
-   readable even if the photograph never loads. */
-.ztims-cove__scrim {
-    position: absolute;
-    inset: 0;
-    /* Clear at the top, where nothing is written, so the film runs on into the
-       opening — the old gradient started at a third dark and was already at
-       half by a fifth of the way down. It only reaches its full value in the
-       band the heading actually occupies, and that value is the least that
-       keeps white text at AA over the brightest frame the clip can show.
-       Below that threshold this stops being a design decision and becomes an
-       unreadable heading. */
-    background: linear-gradient(to bottom,
-        rgb(0 0 0 / 0.04) 0%,
-        rgb(0 0 0 / 0.12) 6%,
-        rgb(0 0 0 / 0.46) 13%,
-        rgb(0 0 0 / 0.48) 100%);
-}
-
-/* What sits inside the opening. White, because it is over a photograph, with a
-   shadow so a bright patch of sky cannot swallow a letter. */
+/* What sits inside the opening. White, because it is over a film, and carrying
+   its own halo for the same reason the hero's does — there is no scrim over the
+   picture any more. The old one started a third dark at the join and reached
+   nearly half a fifth of the way down, which drew a visible horizontal band
+   straight across the clip. */
 .ztims-cove-text {
     color: #fff;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 2px 18px rgb(0 0 0 / 0.6);
+    text-shadow:
+        0 1px 2px  rgb(0 0 0 / 0.95),
+        0 2px 6px  rgb(0 0 0 / 0.85),
+        0 4px 18px rgb(0 0 0 / 0.70),
+        0 0   42px rgb(0 0 0 / 0.55);
 }
 
 /* The curve itself: the section's colour, filled from the shoreline downwards,

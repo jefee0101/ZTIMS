@@ -112,6 +112,14 @@
                word in near-black and left only a hairline of gradient along the
                top edge. Hollow, embossed, and unreadable. */
             text-shadow: none;
+            /* Which leaves this word with no halo, and with the shading gone
+               there is nothing else holding it off the film. A stroke is the one
+               separation that works on clipped text: it is drawn from its own
+               colour rather than the fill, so unlike a shadow it actually
+               appears, and unlike a filter it does not stop the gradient being
+               painted at all. */
+            -webkit-text-stroke: 1.3px rgb(0 0 0 / 0.55);
+            paint-order: stroke fill;
         }
         /* Likewise: a primary button is ocean into coastal blue. Gold is for the
            occasional highlight, not for every call to action. */
@@ -443,14 +451,6 @@ body { overflow-x: hidden; }
                 </div>
 
             <section class="ztims-hero relative w-full flex items-center overflow-hidden">
-                <div class="absolute inset-0 z-0">
-                    <!-- A dark scrim, identical in both themes, because the text on it is
-                     white in both. It was keyed to the page background, which in
-                     light mode faded the photograph to sand and took the title
-                     with it. Kept to the lower half so the picture still reads. -->
-                <div class="ztims-hero__scrim"></div>
-                </div>
-
 
                 <!-- Bottom padding is the wave's height: the hero centres its
                      content, and without this the buttons drift down onto the
@@ -496,7 +496,6 @@ body { overflow-x: hidden; }
                    theme.css so it cannot take a tap meant for the search below.
                    Everything in this section is the same markup it always was. -->
               <div class="ztims-cove" aria-hidden="true">
-                  <div class="ztims-cove__scrim"></div>
                   <svg class="ztims-cove__curve" viewBox="0 0 1440 240" preserveAspectRatio="none" focusable="false">
                       <!-- Narrow screens: shoulders of a few per cent, so the opening
                            stays at least as wide as the heading. -->

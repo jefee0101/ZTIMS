@@ -231,6 +231,38 @@ unaffected.
 the poster URL in `index.html`. They are together, in the `heroFilm` block at
 the foot of the page and in the `.ztims-stage__media` markup.
 
+### 3.0.1 The hero text is below AA on purpose
+
+There is no shading between the film and the words on the landing page. It was
+removed deliberately, on request, so the clip is seen at full strength. This is
+the consequence, written down so it is not later read as an oversight:
+
+**Over a bright frame, the hero title, the wordmark, the sentence under it and
+the Browse heading are all below WCAG AA.** Measured against a deliberately
+near-white stand-in — the worst frame any clip can show — every reading is
+around 1.1:1, where AA wants 3:1 for the large headings and 4.5:1 for the
+sentence.
+
+What keeps them readable instead is a halo: several tight, dark text-shadow
+layers that darken the few pixels immediately around each letter. That works
+perceptually and is why the page still reads. It is not contrast in the sense a
+checker means, because WCAG measures text against the colour *behind* it and a
+shadow does not change that colour.
+
+The wordmark is the fragile one. It is gradient-clipped text, so it cannot take
+a text-shadow at all — a shadow shows *through* transparent letters rather than
+behind them, and the usual workaround of a `drop-shadow` filter makes Chromium
+stop painting the clipped gradient entirely. It carries a `-webkit-text-stroke`
+instead, which is the one separation that survives both. If a future clip is
+very bright it will be the first thing to become hard to read.
+
+`cove_test.js` measures all of this at nine widths in both themes and **prints
+every reading with a pass/fail against AA, without failing the suite** — the
+line `contrast over the film: N/44 readings clear AA` is the number to watch.
+If the decision is ever revisited, restoring a scrim is a few lines in
+`.ztims-hero` / `.ztims-cove` in `src/shared/theme.css`, and the git history has
+tuned values that did clear AA at every width.
+
 ### 3.1 Motorbike directions depend on a community server
 
 Habal-habal is how most visitors actually travel, so *Motorbike* is one of the
