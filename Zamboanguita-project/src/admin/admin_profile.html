@@ -4,7 +4,7 @@ HTML
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Profile Settings</title>
+<title>Zamboanguita Tourism Officer | Profile Settings</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -635,7 +635,7 @@ body { overflow-x: hidden; }
                 <div class="lg:col-span-7 space-y-8">
                     <section class="glass-panel rounded-2xl p-5 sm:p-8">
                         <h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
-                            <span class="material-symbols-outlined">person</span>Admin Information
+                            <span class="material-symbols-outlined">person</span>Officer Information
                         </h3>
                         <div class="flex flex-col md:flex-row gap-8 items-start mb-4">
                             <div class="relative group">
@@ -648,13 +648,21 @@ body { overflow-x: hidden; }
                                 <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="autoUploadAdminPhoto(this)">
                             </div>
                             <div class="flex-1 space-y-4 w-full">
+                                <!-- Read-only on purpose. Both boxes used to hold hardcoded
+                                     literals — "ADMINISTRATOR" and an invented address — that
+                                     nothing read and nothing saved, so every officer saw the
+                                     same fictional account and could type over it to no
+                                     effect. They show the signed-in account now. Changing the
+                                     address is account creation, which is the panel below. -->
                                 <div>
-                                    <label class="block text-label font-bold uppercase tracking-widest mb-2">Full Name</label>
-                                    <input id="currentAdminName" class="field !font-semibold" type="text" value="ADMINISTRATOR">
+                                    <label class="block text-label font-bold uppercase tracking-widest mb-2">Role</label>
+                                    <input id="currentAdminName" class="field !font-semibold" type="text"
+                                           value="Tourism Officer" readonly>
                                 </div>
                                 <div>
-                                    <label class="block text-label font-bold uppercase tracking-widest mb-2">Email Address</label>
-                                    <input id="adminEmailField" class="field !font-semibold" type="email" value="admin@zamboanguita.gov.ph">
+                                    <label for="adminEmailField" class="block text-label font-bold uppercase tracking-widest mb-2">Email Address</label>
+                                    <input id="adminEmailField" class="field !font-semibold" type="email"
+                                           value="" placeholder="Not signed in" readonly>
                                 </div>
                             </div>
                         </div>
@@ -662,19 +670,19 @@ body { overflow-x: hidden; }
 
                     <section class="glass-panel rounded-2xl p-5 sm:p-8">
                         <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                            <span class="material-symbols-outlined">person_add</span> Add New System Administrator
+                            <span class="material-symbols-outlined">person_add</span> Add Another Tourism Officer
                         </h3>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">New Admin Email Address</label>
-                                <input id="newAdminEmail" class="field !font-semibold" placeholder="admin@zamboanguita.gov.ph" type="email">
+                                <label class="block text-label font-bold uppercase tracking-widest mb-2">New Officer Email Address</label>
+                                <input id="newAdminEmail" class="field !font-semibold" placeholder="officer@zamboanguita.gov.ph" type="email">
                             </div>
                             <div>
                                 <label class="block text-label font-bold uppercase tracking-widest mb-2">Assign Account Password</label>
                                 <input id="newAdminPassword" class="field !font-semibold" placeholder="••••••••" type="password">
                             </div>
                             <button id="addAdminBtn" onclick="submitNewAdmin()" class="btn btn-secondary w-full mt-2">
-                                <span class="material-symbols-outlined">how_to_reg</span> ADD ADMIN
+                                <span class="material-symbols-outlined">how_to_reg</span> ADD OFFICER
                             </button>
                         </div>
                     </section>
@@ -687,41 +695,45 @@ body { overflow-x: hidden; }
                         <h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
                             <span class="material-symbols-outlined">security</span> Security
                         </h3>
-                        <div class="space-y-6">
+                        <form id="officerPasswordForm" class="space-y-6" autocomplete="off">
                             <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">Current Password</label>
-                                <input class="field !font-semibold" placeholder="••••••••" type="password">
-                            </div>
-                            <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">New Password</label>
-                                <input class="field !font-semibold" placeholder="••••••••" type="password">
+                                <label for="currentPassword" class="block text-label font-bold uppercase tracking-widest mb-2">Current Password</label>
+                                <input id="currentPassword" name="currentPassword" class="field !font-semibold"
+                                       placeholder="••••••••" type="password" autocomplete="current-password" required>
                             </div>
                             <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">Confirm New Password</label>
-                                <input class="field !font-semibold" placeholder="••••••••" type="password">
+                                <label for="newPassword" class="block text-label font-bold uppercase tracking-widest mb-2">New Password</label>
+                                <input id="newPassword" name="newPassword" class="field !font-semibold"
+                                       placeholder="••••••••" type="password" autocomplete="new-password"
+                                       minlength="8" required>
+                                <p class="text-support mt-1">At least 8 characters.</p>
                             </div>
-                            <div class="pt-6 border-t border-outline-variant/30 flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-bold text-sm mb-1">Two-Factor Authentication</h4>
-                                    <p class="text-support">Add an extra layer of security</p>
-                                </div>
-                                <button class="relative inline-flex h-6 w-11 after:absolute after:content-[''] after:-inset-y-2.5 after:inset-x-0 items-center rounded-full bg-primary/30">
-                                    <span class="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-primary transition"></span>
-                                </button>
+                            <div>
+                                <label for="confirmPassword" class="block text-label font-bold uppercase tracking-widest mb-2">Confirm New Password</label>
+                                <input id="confirmPassword" name="confirmPassword" class="field !font-semibold"
+                                       placeholder="••••••••" type="password" autocomplete="new-password"
+                                       minlength="8" required>
                             </div>
-                        </div>
+                            <button id="changePasswordBtn" type="submit" class="btn btn-secondary w-full">
+                                <span class="material-symbols-outlined">key</span> Change Password
+                            </button>
+                            <p class="text-support">
+                                Signing out everywhere else is not part of this — a session already
+                                open elsewhere stays open until it expires.
+                            </p>
+                        </form>
                     </section>
 
                     <section class="glass-panel rounded-2xl p-5 sm:p-8">
                         <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                            <span class="material-symbols-outlined">shield_person</span> Authorized Admin Team Directory
+                            <span class="material-symbols-outlined">shield_person</span> Authorized Tourism Officers
                         </h3>
                         <div class="overflow-x-auto rounded-xl border border-outline-variant/30 bg-background/40">
                             <div class="max-h-[260px] overflow-y-auto">
                                 <table class="w-full min-w-[22rem] text-left border-collapse">
                                     <thead>
                                         <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                            <th class="px-6 py-4">Admin Email</th>
+                                            <th class="px-6 py-4">Officer Email</th>
                                             <th class="px-6 py-4 text-right">Role</th>
                                         </tr>
                                     </thead>
@@ -800,7 +812,7 @@ function renderTableRows(admins) {
     tbody.innerHTML = '';
 
     if (!admins || admins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-8 text-center text-on-surface-variant">No administrator accounts found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-8 text-center text-on-surface-variant">No Tourism Officer accounts found.</td></tr>';
         return;
     }
     
@@ -814,7 +826,7 @@ function renderTableRows(admins) {
             </td>
             <td class="px-6 py-4 text-right">
                 <span class="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-support font-medium text-primary ring-1 ring-inset ring-primary/20">
-                    SYSTEM ADMIN
+                    TOURISM OFFICER
                 </span>
             </td>
         `;
@@ -823,7 +835,7 @@ function renderTableRows(admins) {
 }
 
 function loadAdminDirectory() {
-    const doneLoading = showLoading(document.getElementById('adminListTableBody'), 'Loading administrators...', 2);
+    const doneLoading = showLoading(document.getElementById('adminListTableBody'), 'Loading Tourism Officers...', 2);
     fetch('https://ztims-api.onrender.com/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(admins => {
@@ -848,7 +860,7 @@ function submitNewAdmin() {
     const password = document.getElementById('newAdminPassword').value.trim();
 
     if(!email || !password) {
-        showToast('An email and a password are both needed to create an administrator.', 'error');
+        showToast('An email and a password are both needed to create a Tourism Officer.', 'error');
         return;
     }
 
@@ -863,7 +875,7 @@ function submitNewAdmin() {
     .then(res => res.json())
     .then(data => {
         if(data.success) {
-            showToast(`Administrator account created for ${email}.`, 'success');
+            showToast(`Tourism Officer account created for ${email}.`, 'success');
             document.getElementById('newAdminEmail').value = '';
             document.getElementById('newAdminPassword').value = '';
             loadAdminDirectory();
@@ -875,9 +887,81 @@ function submitNewAdmin() {
         // Nothing is added to the list: the account does not exist, and showing
         // it would tell the officer someone can sign in who cannot.
         console.error("Could not reach the server while creating an administrator:", err);
-        showToast('Could not reach the server, so that administrator was not created.', 'error');
+        showToast('Could not reach the server, so that account was not created.', 'error');
     })
     .finally(restoreButton);
+}
+
+/* =====================================================
+   CHANGE OWN PASSWORD
+   -----------------------------------------------------
+   The three boxes in the Security panel had no ids, no form around them and no
+   button underneath: nothing was ever sent anywhere. They are wired to
+   /api/admin/me/password now, which is the officer's counterpart to the route
+   establishment managers already had.
+
+   The checks below are for telling the officer what is wrong before a round
+   trip, not for safety — the server repeats every one of them, and it is the
+   server that compares the current password.
+===================================================== */
+/* The signed-in account, rather than the literal that used to sit in the markup.
+   staff_login.html stores this on a successful sign-in. */
+const officerEmailBox = document.getElementById('adminEmailField');
+if (officerEmailBox) officerEmailBox.value = localStorage.getItem('userEmail') || '';
+
+const officerPasswordForm = document.getElementById('officerPasswordForm');
+if (officerPasswordForm) {
+    officerPasswordForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const current = document.getElementById('currentPassword').value;
+        const next = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (!current || !next || !confirm) {
+            showToast('Fill in all three boxes to change your password.', 'error');
+            return;
+        }
+        if (next.length < 8) {
+            showToast('Your new password must be at least 8 characters.', 'error');
+            return;
+        }
+        if (next !== confirm) {
+            showToast('The new password and its confirmation do not match.', 'error');
+            return;
+        }
+        if (next === current) {
+            showToast('Your new password has to differ from your current one.', 'error');
+            return;
+        }
+
+        const restoreButton = setButtonLoading(document.getElementById('changePasswordBtn'), 'Changing...');
+
+        fetch('https://ztims-api.onrender.com/api/admin/me/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+            body: JSON.stringify({ currentPassword: current, newPassword: next })
+        })
+        .then(res => res.json().catch(() => ({ success: false, message: 'The server sent something unreadable.' })))
+        .then(data => {
+            if (data.success) {
+                showToast('Your password has been changed.', 'success');
+                officerPasswordForm.reset();
+            } else {
+                // The server's own wording: it distinguishes a wrong current
+                // password from one that is merely too short, and the officer
+                // needs to know which.
+                showToast(data.message || 'The server refused that change.', 'error');
+            }
+        })
+        .catch(err => {
+            // Nothing changed, and saying otherwise would leave an officer
+            // believing a password that still does not work.
+            console.error('Could not reach the server while changing the password:', err);
+            showToast('Could not reach the server, so your password is unchanged.', 'error');
+        })
+        .finally(restoreButton);
+    });
 }
 
 /* Creating establishment manager accounts and their directory moved to their own

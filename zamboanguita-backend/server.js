@@ -590,6 +590,49 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
 });
 
 /**
+ * POST: the Tourism Officer changes their own password.
+ *
+ * The officer's profile page had a Security panel with three password boxes and
+ * nowhere to send them — no route existed, so the only way an officer could ever
+ * change their own password was the forgot-password email, which needs SMTP
+ * credentials that are not configured. Establishment managers have had
+ * /api/establishment-managers/me/password all along; this is the same thing for
+ * the account that oversees them, and deliberately mirrors it.
+ *
+ * The current password is required, and checked, for the same reason it is
+ * there: an unattended signed-in browser must not be enough to lock the real
+ * officer out of the account that administers the whole system.
+ */
+app.post('/api/admin/me/password', requireAdmin, resetRateLimit, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
+        }
+        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+        }
+
+        const admin = await Admin.findById(req.auth.sub).select('+password');
+        if (!admin) return res.status(404).json({ success: false, message: 'Account not found.' });
+
+        if (!(await bcrypt.compare(currentPassword, admin.password))) {
+            return res.status(401).json({ success: false, message: 'That current password is not right.' });
+        }
+
+        admin.password = await bcrypt.hash(newPassword, 12);
+        admin.resetTokenHash = null;        // any reset link in flight is now void
+        admin.resetTokenExpires = null;
+        await admin.save();
+
+        console.log(`🔑 Tourism Officer changed their own password: ${admin.email}`);
+        return res.status(200).json({ success: true, message: 'Your password has been changed.' });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Officer password change failure:');
+    }
+});
+
+/**
  * POST: Tourist Officer creates a Tourist Establishment Manager account (managers do
  * not self-register — the Tourist Officer oversees the whole system and issues these
  * accounts directly)
