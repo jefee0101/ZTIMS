@@ -88,11 +88,30 @@
            one element most responsible for the site reading as an orange
            template. Ocean into teal carries the same emphasis and is legible
            in both themes. */
+        /* This sits on the film, not on the page, and the only place it is used
+           is the hero. Both palette blues it used to be made of are dark — which
+           was survivable while a heavy fade sat over the whole frame, and
+           vanished the moment that came down. Light now, so it reads on a bright
+           frame and a dark one alike.
+
+           No shadow on this one, of either kind. text-shadow draws in the text's
+           own colour, which is transparent here, so it draws nothing; and a
+           filter — the usual way round that — makes Chromium stop painting the
+           clipped background altogether, which renders the word as hollow
+           outlines. The shading behind it is what carries this, and it is
+           measured: the pale end of the gradient holds 3.8:1 or better at every
+           width against the brightest frame the clip can show. */
         .text-gradient {
-            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
+            background: linear-gradient(to right, #FFFFFF 0%, #A8E4F0 100%);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            /* The hero gives its headings a text-shadow, and this must not
+               inherit it. The fill here is transparent, so the shadow shows
+               THROUGH the letters instead of behind them — which painted the
+               word in near-black and left only a hairline of gradient along the
+               top edge. Hollow, embossed, and unreadable. */
+            text-shadow: none;
         }
         /* Likewise: a primary button is ocean into coastal blue. Gold is for the
            occasional highlight, not for every call to action. */
@@ -961,7 +980,14 @@ body { overflow-x: hidden; }
         video.loop = true;
         video.autoplay = true;
         video.playsInline = true;      // or iOS takes it fullscreen on play
+        /* The attributes as well as the properties. Safari decides whether a
+           film may start before any script has run, and it reads the markup to
+           do it — set only as properties, these arrive too late to count. */
+        video.setAttribute('muted', '');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('loop', '');
         video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
         video.setAttribute('aria-hidden', 'true');
         video.tabIndex = -1;
         video.preload = 'auto';
@@ -970,27 +996,51 @@ body { overflow-x: hidden; }
            The two above it are Cloudinary transformations, which are generated on
            first request — if either ever fails to build, the browser simply falls
            through to the file as uploaded rather than showing nothing. */
-        [
+        const SOURCES = [
             ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1789808713/Stuns.webm', 'video/webm'],
             ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1789808713/Stuns.mp4', 'video/mp4'],
             ['https://res.cloudinary.com/xeo3pvpw/video/upload/v1789808713/Stuns.mp4', 'video/mp4']
-        ].forEach(function (pair) {
+        ];
+
+        /* Counted, one by one. Running out of sources is not an error the browser
+           reports on the <video> — the specification has it stop and wait there
+           instead, in case another source is added later — so the only way to
+           know every candidate has failed is to watch each of them fail. */
+        let failures = 0;
+
+        SOURCES.forEach(function (pair) {
             const source = document.createElement('source');
             source.src = pair[0];
             source.type = pair[1];
+            source.addEventListener('error', function () {
+                failures += 1;
+                if (failures === SOURCES.length) video.remove();
+            });
             video.appendChild(source);
         });
 
-        // If every source fails, take the film back off and leave the still.
-        video.addEventListener('error', function () { video.remove(); }, true);
+        /* An error on the element itself means a source WAS chosen and then
+           failed to decode. Note the absence of `true`: this listened on the
+           capture phase, which is the only way an error from a <source> child
+           reaches its parent — and that was exactly wrong. The first source to
+           404 killed the whole element, at the precise moment the two fallbacks
+           underneath it were about to be tried, so a missing webm derivative
+           was enough to lose the film entirely. */
+        video.addEventListener('error', function () { video.remove(); });
 
         stage.appendChild(video);
 
-        // Autoplay can still be refused. Nothing is broken if it is — the still
-        // is underneath — so the rejection is swallowed rather than logged at
-        // the visitor.
-        const started = video.play();
-        if (started && typeof started.catch === 'function') started.catch(function () {});
+        /* Autoplay can be refused, and the first attempt can also simply be too
+           early — nothing is loaded yet the instant the element is appended. So
+           it is asked again once the browser says it has something to show.
+           Nothing is broken if it never starts: the still is underneath. */
+        function tryPlay() {
+            const started = video.play();
+            if (started && typeof started.catch === 'function') started.catch(function () {});
+        }
+        video.addEventListener('loadeddata', tryPlay);
+        video.addEventListener('canplay', tryPlay);
+        tryPlay();
 
         /* Nothing is gained by decoding frames for a hero that has been scrolled
            past, and on a laptop it is a measurable amount of battery. */
@@ -998,8 +1048,7 @@ body { overflow-x: hidden; }
             new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
                     if (entry.isIntersecting) {
-                        const again = video.play();
-                        if (again && typeof again.catch === 'function') again.catch(function () {});
+                        tryPlay();
                     } else {
                         video.pause();
                     }
