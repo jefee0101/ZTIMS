@@ -402,7 +402,7 @@ body { overflow-x: hidden; }
 
         <!-- ============ DESTINATIONS ============ -->
         <div data-view="spots">
-            <section class="relative h-[38vh] sm:h-[42vh] min-h-[260px] sm:min-h-[300px] w-full flex items-center overflow-hidden">
+            <section class="relative h-[38vh] sm:h-[42vh] min-h-[360px] sm:min-h-[340px] w-full flex items-center overflow-hidden">
                 <div class="absolute inset-0 z-0">
                     <img class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/44qtk4722/xxxxx.jpg" alt="Zamboanguita coastline"/>
                     <!-- A dark scrim, identical in both themes, because the text on it is
@@ -411,7 +411,26 @@ body { overflow-x: hidden; }
                      with it. Kept to the lower half so the picture still reads. -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
                 </div>
-                <div class="relative z-10 w-full">
+
+                <!-- The shoreline between the photograph and Browse. It is filled
+                     with Browse's own background, so the section below appears to
+                     rise into the picture; Browse itself is untouched markup and
+                     keeps every control it had. Decoration only: aria-hidden so a
+                     screen reader never announces it, and pointer-events:none in
+                     theme.css so it cannot intercept a tap meant for the buttons
+                     above it or the search field below. -->
+                <svg class="ztims-wave" viewBox="0 0 1440 120" preserveAspectRatio="none"
+                     aria-hidden="true" focusable="false">
+                    <path class="ztims-wave__back"
+                          d="M0,64 C220,18 430,102 700,74 C930,50 1160,8 1440,44 L1440,120 L0,120 Z"/>
+                    <path class="ztims-wave__front"
+                          d="M0,94 C260,52 470,116 720,92 C980,66 1200,44 1440,78 L1440,120 L0,120 Z"/>
+                </svg>
+
+                <!-- Bottom padding is the wave's height: the hero centres its
+                     content, and without this the buttons drift down onto the
+                     shoreline, where white text meets a pale fill. -->
+                <div class="relative z-10 w-full pb-20 sm:pb-24 lg:pb-28">
                   <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                     <div class="max-w-3xl">
                     <!-- An eyebrow, the name, one line, and the two things a

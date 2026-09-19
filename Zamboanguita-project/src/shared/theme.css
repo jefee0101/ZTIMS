@@ -240,6 +240,50 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 /* ==========================================================================
+   The coastline — a section transition
+   --------------------------------------------------------------------------
+   A wave shape that belongs to the section BELOW it, painted over the bottom
+   edge of the one above. Filled with the lower section's own background token,
+   so the two read as one surface rising into the photograph rather than two
+   blocks butted together, and so it follows the theme without being restated.
+
+   An <svg> rather than a border-radius or a skewed pseudo-element, because a
+   coastline is not an arc: the path can have two crests and an uneven trough,
+   which is what makes it read as water instead of as a rounded corner.
+   preserveAspectRatio="none" lets one path stretch from a phone to a desktop
+   while the height is set here, so the wave gets gentler on wide screens
+   instead of taller.
+
+   Two rules it must never break, both of which are why it is a decoration and
+   not a layer of the layout:
+     - pointer-events: none. It sits across the seam between a hero's buttons
+       and a search field, and it must not swallow a tap meant for either.
+     - It stays BEHIND the text of the section it overlays (z-index below the
+       hero's content), so if anything ever does overlap, the words win.
+   ========================================================================== */
+.ztims-wave {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* A hair past the edge: at some zoom levels a rounded-down height leaves a
+       one-pixel line of the photograph showing under the fill. */
+    bottom: -1px;
+    width: 100%;
+    height: 44px;
+    display: block;
+    pointer-events: none;
+    z-index: 5;
+}
+
+@media (min-width: 640px)  { .ztims-wave { height: 68px; } }
+@media (min-width: 1024px) { .ztims-wave { height: 92px; } }
+
+/* The swell behind the shoreline. Same colour, half-strength, offset — it is
+   what stops the curve looking like a single cut-out. */
+.ztims-wave__back  { fill: rgb(var(--ztims-surface-low) / 0.45); }
+.ztims-wave__front { fill: rgb(var(--ztims-surface-low)); }
+
+/* ==========================================================================
    Primary, used as text, on the night theme
    --------------------------------------------------------------------------
    Tailwind maps one colour name to both `bg-primary` and `text-primary`, so a
