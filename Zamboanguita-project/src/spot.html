@@ -789,10 +789,21 @@ body { overflow-x: hidden; }
                             time. It is used for this route only and is never saved.
                         </p>
 
-                        <p id="originLine" class="text-sm text-on-surface flex items-start gap-2">
-                            <span class="material-symbols-outlined !text-lg text-secondary shrink-0">my_location</span>
-                            <span id="originLabel">Asking for your location…</span>
-                        </p>
+                        <!-- Start and destination together, in that order, so the
+                             route reads as a journey rather than a pair of numbers
+                             with no ends on it. -->
+                        <div class="space-y-2">
+                            <p id="originLine" class="text-sm text-on-surface flex items-start gap-2">
+                                <span class="material-symbols-outlined !text-lg text-secondary shrink-0">my_location</span>
+                                <span><span class="text-label font-bold uppercase tracking-wider block">From</span>
+                                      <span id="originLabel">Asking for your location…</span></span>
+                            </p>
+                            <p class="text-sm text-on-surface flex items-start gap-2">
+                                <span class="material-symbols-outlined !text-lg text-primary shrink-0">place</span>
+                                <span><span class="text-label font-bold uppercase tracking-wider block">To</span>
+                                      <span id="destinationLabel">This destination</span></span>
+                            </p>
+                        </div>
 
                         <div id="manualOrigin" hidden class="space-y-2">
                             <label for="originSearch" class="block text-label font-bold uppercase tracking-wider">
@@ -815,14 +826,26 @@ body { overflow-x: hidden; }
 
                         <div id="modeRow" hidden class="flex flex-wrap gap-2"></div>
 
-                        <div id="routeStats" hidden class="grid grid-cols-2 gap-3">
-                            <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                                <p class="text-label uppercase tracking-widest font-bold mb-1">Distance</p>
-                                <p id="routeDistance" class="text-xl font-display font-bold text-on-surface">—</p>
+                        <div id="routeStats" hidden class="space-y-3">
+                            <!-- Which route these numbers belong to. The service
+                                 is asked for alternatives and the quickest is the
+                                 one shown, so this says so rather than leaving a
+                                 distance and a time with no provenance. -->
+                            <div id="routeChoice" hidden
+                                 class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                                <p class="text-label uppercase tracking-widest font-bold mb-1">Recommended route</p>
+                                <p id="routeVia" class="text-base font-display font-bold text-on-surface">—</p>
+                                <p id="routeWhy" class="text-support mt-0.5"></p>
                             </div>
-                            <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                                <p class="text-label uppercase tracking-widest font-bold mb-1">Estimated time</p>
-                                <p id="routeDuration" class="text-xl font-display font-bold text-on-surface">—</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                                    <p class="text-label uppercase tracking-widest font-bold mb-1">Distance</p>
+                                    <p id="routeDistance" class="text-xl font-display font-bold text-on-surface">—</p>
+                                </div>
+                                <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
+                                    <p class="text-label uppercase tracking-widest font-bold mb-1">Estimated time</p>
+                                    <p id="routeDuration" class="text-xl font-display font-bold text-on-surface">—</p>
+                                </div>
                             </div>
                         </div>
 
@@ -1077,6 +1100,14 @@ body { overflow-x: hidden; }
         const mapBox = document.getElementById('directionsMap');
         const openInMaps = document.getElementById('openInMapsBtn');
 
+        // The destination in words, so the panel names both ends of the journey.
+        // The listing's own address where it has one, its title otherwise.
+        const destinationLabel = document.getElementById('destinationLabel');
+        if (destinationLabel) {
+            destinationLabel.textContent =
+                String(spot.location || '').trim() || String(spot.title || '').trim() || 'This destination';
+        }
+
         // Held in this page only, for as long as the tab is open.
         let origin = null;
         let mode = 'car';
@@ -1188,6 +1219,36 @@ body { overflow-x: hidden; }
             });
         }
 
+        /* Says which of the routes the service offered is the one being shown, and
+           why it won. Everything here comes from the routing provider's own reply:
+           the road name it reports the route mostly follows, how many routes it
+           returned, and the gap between the quickest and the slowest by its own
+           estimate. Where it offers no names, the panel says how the choice was
+           made and nothing more — an invented description would be worse than
+           none. */
+        function paintRouteChoice(data) {
+            const box = document.getElementById('routeChoice');
+            const via = document.getElementById('routeVia');
+            const why = document.getElementById('routeWhy');
+            const compared = Number(data.routesCompared) || 1;
+            const saved = Number(data.secondsSavedOverSlowest) || 0;
+
+            if (!data.via && compared < 2) {
+                // One unnamed route: there is nothing to say that the distance and
+                // time below do not already say.
+                box.hidden = true;
+                return;
+            }
+
+            via.textContent = data.via ? ('via ' + data.via) : 'Quickest available route';
+            why.textContent = compared < 2
+                ? 'The only route available for this way of travelling.'
+                : saved > 60
+                    ? `Quickest of ${compared} routes — about ${formatDuration(saved)} faster than the slowest.`
+                    : `Quickest of ${compared} routes, which are all close in time.`;
+            box.hidden = false;
+        }
+
         async function requestRoute() {
             if (!origin) return;
 
@@ -1204,14 +1265,27 @@ body { overflow-x: hidden; }
 
                 document.getElementById('routeDistance').textContent = formatDistance(data.distanceMeters);
                 document.getElementById('routeDuration').textContent = formatDuration(data.durationSeconds);
+                paintRouteChoice(data);
                 routeStats.hidden = false;
                 setStatus('');
-                await drawRoute(data.geometry || []);
+
+                /* Drawing the route is a separate thing from knowing it. Leaflet
+                   comes off a CDN, and when that failed the exception landed in
+                   the catch below, which threw away a perfectly good distance and
+                   time and put a raw "Cannot read properties of undefined" where
+                   the visitor was reading. The numbers are what they came for; the
+                   picture is the bonus. */
+                try {
+                    await drawRoute(data.geometry || []);
+                } catch (mapError) {
+                    console.error('Could not draw the route:', mapError);
+                    setStatus('The map could not be drawn just now, but the route above is correct.');
+                }
             } catch (error) {
                 // No straight-line stand-in: an honest "unavailable" beats a number
                 // the visitor would plan their day around.
                 routeStats.hidden = true;
-                setStatus(error.message, 'error');
+                setStatus(error.message || 'Directions are unavailable right now.', 'error');
             }
         }
 

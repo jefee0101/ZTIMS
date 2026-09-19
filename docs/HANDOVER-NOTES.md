@@ -179,6 +179,13 @@ and Google Fonts. That shapes what any test here can honestly claim.
 - **That motorbike routes come back at all.** The Valhalla client is tested
   against stubbed responses in every shape the service returns, including both
   failure shapes — but no real request has ever left this sandbox. See 3.1.
+- **That the routers actually return more than one route here.** ZTIMS asks each
+  provider for alternatives and shows the quickest, but whether a given pair of
+  points in Zamboanguita *has* a second sensible route is a question only the
+  live service can answer. Where it returns one, the panel says so. Try a
+  destination reachable both along the coast and inland — if the Recommended
+  route panel never says "quickest of 2" or more anywhere, the alternatives are
+  not coming back and it is worth checking the provider's response directly.
 
 ### 3.1 Motorbike directions depend on a community server
 

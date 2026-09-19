@@ -2364,9 +2364,11 @@ async function routeWithValhalla(from, to, mode) {
                 ],
                 costing: profile,
                 units: 'kilometers',
-                // Only the distance, the time and the line are used here, so the
-                // turn-by-turn narrative is not worth asking for or parsing.
-                directions_type: 'none'
+                // Two more to compare against, same as the other routers.
+                alternates: 2,
+                // Enough of the narrative to name the road a route mostly follows;
+                // the written instructions themselves are never used.
+                directions_type: 'maneuvers'
             })
         });
     } catch (error) {
@@ -2375,59 +2377,127 @@ async function routeWithValhalla(from, to, mode) {
         // answer OpenRouteService gives by returning nothing, and the caller
         // already turns it into an honest "no route found" rather than
         // "the service is down".
-        if (error.upstreamStatus >= 400 && error.upstreamStatus < 500) return null;
+        if (error.upstreamStatus >= 400 && error.upstreamStatus < 500) return [];
         throw error;
     }
 
-    const summary = data?.trip?.summary;
-    if (!summary || !Number.isFinite(summary.length)) return null;
+    /* Valhalla puts the best route in `trip` and the rest in `alternates`, each
+       wrapped in its own `trip`. Flattened here so the handler compares them all
+       on equal terms rather than trusting the ordering. */
+    const trips = [data?.trip, ...(data?.alternates || []).map(a => a?.trip)];
 
-    // Requested in kilometres above; everything else in ZTIMS is in metres.
-    const distanceMeters = summary.length * 1000;
+    return trips
+        .filter(trip => Number.isFinite(trip?.summary?.length))
+        .map(trip => ({
+            // Requested in kilometres above; everything else in ZTIMS is metres.
+            distanceMeters: trip.summary.length * 1000,
+            durationSeconds: trip.summary.time,
+            geometry: (trip.legs || []).flatMap(leg => (leg.shape ? decodePolyline(leg.shape, 6) : [])),
+            via: viaRoadName(
+                (trip.legs || []).flatMap(leg => (leg.maneuvers || []).map(m => ({
+                    // Valhalla lists every name a road carries; the first is the
+                    // one people use. Its lengths are in the requested units.
+                    name: (m.street_names || [])[0],
+                    distance: Number.isFinite(m.length) ? m.length * 1000 : NaN
+                })))
+            )
+        }));
+}
 
-    const geometry = (data.trip.legs || [])
-        .flatMap(leg => (leg.shape ? decodePolyline(leg.shape, 6) : []));
+/* Every router below returns an ARRAY of candidate routes, and the handler picks
+   the quickest. Each one used to take `routes[0]` and never ask for a second, so
+   whatever the provider happened to list first was presented as the route — which
+   for a coastal municipality with an inland road and a shore road is a real
+   difference, not a rounding one. Asking for alternatives and comparing them is
+   the only way "the fastest route" can mean anything.
 
-    return { distanceMeters, durationSeconds: summary.time, geometry };
+   The comparison is on the provider's own numbers. Nothing here estimates. */
+
+/**
+ * The name to put on a route so it can be told apart from its alternative.
+ * Picks the road the route spends most of its distance on, which is how anybody
+ * would describe it out loud. Returns '' when the provider gives no names,
+ * and the page then says nothing rather than inventing a description.
+ */
+function viaRoadName(legs) {
+    const metresPerRoad = new Map();
+    for (const { name, distance } of legs) {
+        const road = String(name || '').trim();
+        if (!road || !Number.isFinite(distance)) continue;
+        metresPerRoad.set(road, (metresPerRoad.get(road) || 0) + distance);
+    }
+    let best = '', most = 0;
+    for (const [road, metres] of metresPerRoad) {
+        if (metres > most) { best = road; most = metres; }
+    }
+    return best;
 }
 
 async function routeWithOpenRouteService(from, to, mode) {
     const { profile } = ROUTING_MODES[mode];
-    const data = await fetchJson(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
-        method: 'POST',
-        headers: { Authorization: ORS_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coordinates: [[from.longitude, from.latitude], [to.longitude, to.latitude]] })
-    });
+    const coordinates = [[from.longitude, from.latitude], [to.longitude, to.latitude]];
+    const url = `https://api.openrouteservice.org/v2/directions/${profile}/geojson`;
+    const headers = { Authorization: ORS_API_KEY, 'Content-Type': 'application/json' };
 
-    const feature = data?.features?.[0];
-    const summary = feature?.properties?.summary;
+    const ask = body => fetchJson(url, { method: 'POST', headers, body: JSON.stringify(body) });
+
+    let data;
+    try {
+        data = await ask({
+            coordinates,
+            // Up to three, and only genuinely different ones: share_factor caps how
+            // much road two alternatives may have in common, weight_factor how much
+            // worse than the best an alternative may be before it is not worth
+            // offering. Both are OpenRouteService's own defaults' territory.
+            alternative_routes: { target_count: 3, share_factor: 0.6, weight_factor: 1.4 }
+        });
+    } catch (error) {
+        // Not every profile accepts alternatives, and a refusal must not cost the
+        // visitor their directions. One plain retry, then it is a real failure.
+        if (error.upstreamStatus >= 400 && error.upstreamStatus < 500) {
+            try { data = await ask({ coordinates }); }
+            catch (retry) {
+                if (retry.upstreamStatus >= 400 && retry.upstreamStatus < 500) return [];
+                throw retry;
+            }
+        } else throw error;
+    }
+
     // An empty summary is how OpenRouteService reports "these two points are not
     // connected by this kind of road" — an islet, or walking across a strait.
-    if (!feature || !summary || !Number.isFinite(summary.distance)) return null;
-
-    return {
-        distanceMeters: summary.distance,
-        durationSeconds: summary.duration,
-        geometry: toLeafletLine(feature.geometry?.coordinates)
-    };
+    return (data?.features || [])
+        .filter(f => Number.isFinite(f?.properties?.summary?.distance))
+        .map(f => ({
+            distanceMeters: f.properties.summary.distance,
+            durationSeconds: f.properties.summary.duration,
+            geometry: toLeafletLine(f.geometry?.coordinates),
+            via: viaRoadName(
+                (f.properties.segments || []).flatMap(s => s.steps || [])
+            )
+        }));
 }
 
 async function routeWithOsrm(from, to, mode) {
     const { profile } = ROUTING_MODES[mode];
     const path = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
     const data = await fetchJson(
-        `https://router.project-osrm.org/route/v1/${profile}/${path}?overview=full&geometries=geojson`,
+        `https://router.project-osrm.org/route/v1/${profile}/${path}`
+            + `?overview=full&geometries=geojson&alternatives=true&steps=true`,
         { headers: { 'User-Agent': GEOCODER_USER_AGENT } }
     );
 
-    const route = data?.code === 'Ok' ? data.routes?.[0] : null;
-    if (!route || !Number.isFinite(route.distance)) return null;
+    if (data?.code !== 'Ok') return [];
 
-    return {
-        distanceMeters: route.distance,
-        durationSeconds: route.duration,
-        geometry: toLeafletLine(route.geometry?.coordinates)
-    };
+    return (data.routes || [])
+        .filter(r => Number.isFinite(r.distance))
+        .map(r => ({
+            distanceMeters: r.distance,
+            durationSeconds: r.duration,
+            geometry: toLeafletLine(r.geometry?.coordinates),
+            via: viaRoadName(
+                (r.legs || []).flatMap(l => l.steps || [])
+            )
+        }));
 }
 
 /**
@@ -2465,16 +2535,30 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
     const router = ROUTING_MODES[mode].router;
 
     try {
-        const route = router === 'openrouteservice' ? await routeWithOpenRouteService(from, to, mode)
+        const routes = router === 'openrouteservice' ? await routeWithOpenRouteService(from, to, mode)
             : router === 'valhalla' ? await routeWithValhalla(from, to, mode)
             : await routeWithOsrm(from, to, mode);
 
-        if (!route) {
+        if (!routes || !routes.length) {
             return res.status(404).json({
                 success: false,
                 message: 'No road route could be found between those two points for that way of travelling.'
             });
         }
+
+        /* Quickest wins, on the provider's own estimate — not the shortest, and
+           not whichever the provider listed first. A route that is a kilometre
+           longer along the highway beats one that is shorter through the
+           barangay roads, which is the choice anybody driving would make.
+           Distance breaks a tie so the answer cannot wobble between two routes
+           the provider timed identically. */
+        const route = routes.reduce((best, candidate) => {
+            if (candidate.durationSeconds < best.durationSeconds) return candidate;
+            if (candidate.durationSeconds > best.durationSeconds) return best;
+            return candidate.distanceMeters < best.distanceMeters ? candidate : best;
+        });
+
+        const slowest = Math.max(...routes.map(r => r.durationSeconds));
 
         return res.status(200).json({
             success: true,
@@ -2482,7 +2566,14 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
             provider: router,
             distanceMeters: Math.round(route.distanceMeters),
             durationSeconds: Math.round(route.durationSeconds),
-            geometry: route.geometry
+            geometry: route.geometry,
+            // What the page needs to say which route this is and why it was
+            // chosen, rather than presenting a number with no provenance.
+            via: route.via || '',
+            routesCompared: routes.length,
+            // 0 when it was the only route, so the page can tell the difference
+            // between "the fastest of three" and "the only one there is".
+            secondsSavedOverSlowest: Math.round(slowest - route.durationSeconds)
         });
     } catch (error) {
         console.error('Routing request failed:', error.message);
