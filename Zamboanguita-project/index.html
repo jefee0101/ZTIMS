@@ -520,7 +520,12 @@ body { overflow-x: hidden; }
                      under one, which keeps the section from having no heading at all. -->
                 <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6 text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
 
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center sm:justify-center mb-4">
+                <!-- The gap the result count used to hold open. It sat between this
+                     row and the grid with 24px under it; now that it is sr-only it
+                     occupies no height at all, and the cards came up to meet the
+                     search box. This carries that space directly, with a little
+                     more of it, rather than padding an invisible element. -->
+                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center sm:justify-center mb-10 sm:mb-12">
                     <div class="relative w-full sm:flex-1 sm:max-w-md">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
                         <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
