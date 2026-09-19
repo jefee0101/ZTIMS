@@ -176,6 +176,41 @@ and Google Fonts. That shapes what any test here can honestly claim.
 - **The `focus.point` and `viewbox` biasing.** Both go to external services that
   are unreachable from here, so I could confirm the parameters are sent but not
   what they do to the ranking.
+- **That motorbike routes come back at all.** The Valhalla client is tested
+  against stubbed responses in every shape the service returns, including both
+  failure shapes — but no real request has ever left this sandbox. See 3.1.
+
+### 3.1 Motorbike directions depend on a community server
+
+Habal-habal is how most visitors actually travel, so *Motorbike* is one of the
+four modes on a destination's Get Directions. It cannot come from
+OpenRouteService: ORS has no motorcycle profile at all, and a car's estimate
+relabelled would be worse than none. It comes from **Valhalla**, which has a
+real `motorcycle` costing model.
+
+`VALHALLA_URL` in `zamboanguita-backend/server.js` defaults to
+`https://valhalla1.openstreetmap.de` — the **FOSSGIS community server**. That
+means motorbike works with nothing configured on Render, which is why it is the
+default, but it is a volunteer-run service under a fair-use policy and it is not
+yours.
+
+- **If it carries real traffic**, run your own Valhalla and set `VALHALLA_URL` to
+  it. Nothing else has to change.
+- **To turn motorbike off entirely**, set `VALHALLA_URL` to an empty string. The
+  mode then disappears from `/api/directions/capabilities` and the chip stops
+  being drawn — the page renders whatever the backend says it can calculate, so
+  there is never a mode whose time would have to be invented.
+
+**Confirm it on the live site:** open a destination with a pin, press Get
+Directions, and choose Motorbike. A distance and a time should appear, and they
+should differ from the car figures for the same route. The boot log names which
+service is answering for which modes.
+
+One thing motorbike loses: **Open in Maps** hands over to Google as *driving*.
+Google's directions URL has no motorcycle travel mode — its two-wheeler mode
+exists in the app in some countries but cannot be requested by link. ZTIMS's own
+distance and time stay the motorbike ones; only the handover to another app
+loses the distinction.
 
 ---
 

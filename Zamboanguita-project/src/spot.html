@@ -669,7 +669,15 @@ body { overflow-x: hidden; }
 
     // Google Maps takes over for turn-by-turn navigation — ZTIMS itself does not
     // provide that, it shows the route and hands the journey over.
-    const GOOGLE_TRAVEL_MODE = { car: 'driving', bicycle: 'bicycling', walking: 'walking' };
+    /* Google's directions URL takes driving, bicycling, walking or transit, and
+       has no motorcycle among them — its two-wheeler mode exists in the app in
+       some countries but cannot be asked for by link. So motorbike hands over as
+       driving, which is the closest road route Google will draw. ZTIMS's own
+       distance and time above it stay the motorbike ones; only the handover to
+       another app loses the distinction. */
+    const GOOGLE_TRAVEL_MODE = {
+        car: 'driving', motorbike: 'driving', bicycle: 'bicycling', walking: 'walking'
+    };
 
     // Leaflet and the marker styling come from the shared map module, so this
     // page and the tourism map cannot drift apart.

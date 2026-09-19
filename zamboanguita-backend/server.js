@@ -2213,23 +2213,64 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
 
 const ORS_API_KEY = (process.env.ORS_API_KEY || '').trim();
 
-// Only modes the configured provider genuinely routes for are ever offered. A mode
-// the service cannot compute would mean showing the visitor an invented number.
-// OpenRouteService has no motorcycle profile, so no motorcycle option is offered.
-// Showing one would mean handing the visitor a car's estimate under another name.
-const ORS_MODES = {
-    car: { profile: 'driving-car', label: 'Car' },
-    bicycle: { profile: 'cycling-regular', label: 'Bicycle' },
-    walking: { profile: 'foot-walking', label: 'Walking' }
+/* Valhalla, which is where the motorbike option comes from.
+ *
+ * Habal-habal is how most people actually reach these places, and it is not a
+ * car: it takes tracks and narrow barangay roads a car cannot, and its time
+ * over the same distance is genuinely different. OpenRouteService has no
+ * motorcycle profile at all, so for as long as ORS was the only router there
+ * was no honest way to offer the mode — a car's estimate under another name is
+ * worse than no estimate.
+ *
+ * Valhalla has a real `motorcycle` costing model, which is why it is here
+ * alongside ORS rather than replacing it. The default points at the FOSSGIS
+ * community server, so this works with nothing to configure; it is a shared
+ * volunteer-run service under a fair-use policy, so set VALHALLA_URL to your
+ * own instance if this ever carries real traffic. Setting it to an empty
+ * string turns the motorbike option off, and the browser stops offering it —
+ * capabilities below is what the page renders.
+ */
+const VALHALLA_URL = (
+    process.env.VALHALLA_URL !== undefined
+        ? process.env.VALHALLA_URL
+        : 'https://valhalla1.openstreetmap.de'
+).trim().replace(/\/+$/, '');
+
+/* One table now, because the modes no longer share a single provider. Each mode
+ * lists the profile name every router it can use knows it by, and the resolver
+ * below picks one per mode. A mode no configured router can compute is never
+ * offered — that rule has not changed, it just applies per mode instead of
+ * per site. */
+const MODES = {
+    car:       { label: 'Car',       ors: 'driving-car',     osrm: 'driving', valhalla: 'auto' },
+    motorbike: { label: 'Motorbike',                                          valhalla: 'motorcycle' },
+    bicycle:   { label: 'Bicycle',   ors: 'cycling-regular',                  valhalla: 'bicycle' },
+    walking:   { label: 'Walking',   ors: 'foot-walking',                     valhalla: 'pedestrian' }
 };
 
-// The public OSRM demo server only runs the car profile, so that is all it offers.
-const OSRM_MODES = {
-    car: { profile: 'driving', label: 'Car' }
-};
+/* Preference order, most accurate first. ORS is preferred where it has a
+ * profile because it is keyed and metered to this deployment rather than
+ * shared; OSRM's public demo runs the car profile only; Valhalla picks up what
+ * is left, which today means motorbike. */
+function resolveMode(mode) {
+    if (ORS_API_KEY && mode.ors) return { router: 'openrouteservice', profile: mode.ors };
+    if (!ORS_API_KEY && mode.osrm) return { router: 'osrm', profile: mode.osrm };
+    if (VALHALLA_URL && mode.valhalla) return { router: 'valhalla', profile: mode.valhalla };
+    return null;
+}
 
-const ROUTING_PROVIDER = ORS_API_KEY ? 'openrouteservice' : 'osrm';
-const ROUTING_MODES = ORS_API_KEY ? ORS_MODES : OSRM_MODES;
+const ROUTING_MODES = Object.fromEntries(
+    Object.entries(MODES)
+        .map(([id, mode]) => {
+            const resolved = resolveMode(mode);
+            return resolved ? [id, { label: mode.label, ...resolved }] : null;
+        })
+        .filter(Boolean)
+);
+
+// Kept for the startup banner and the route response, which both named a single
+// provider before any of this. It is the one serving the ordinary car route.
+const ROUTING_PROVIDER = ROUTING_MODES.car ? ROUTING_MODES.car.router : 'none';
 
 // Identifies ZTIMS to OpenStreetMap's geocoder, which its usage policy requires.
 const GEOCODER_USER_AGENT = `ZTIMS/1.0 (${process.env.PUBLIC_SITE_URL || 'https://ztims.vercel.app'})`;
@@ -2280,6 +2321,76 @@ async function fetchJson(url, options) {
  */
 const toLeafletLine = coordinates => (coordinates || []).map(([lng, lat]) => [lat, lng]);
 
+/**
+ * Valhalla returns its geometry as an encoded polyline rather than GeoJSON, and
+ * at six decimal places rather than the five the Google-derived format uses
+ * everywhere else. Decoding at the wrong precision does not fail — it silently
+ * produces a line about a tenth of a degree long, so it is stated explicitly at
+ * the call site rather than defaulted.
+ *
+ * Yields [latitude, longitude], which is Leaflet's order already.
+ */
+function decodePolyline(encoded, precision) {
+    const factor = Math.pow(10, precision);
+    const points = [];
+    let index = 0, lat = 0, lng = 0;
+
+    while (index < encoded.length) {
+        let result = 0, shift = 0, byte;
+        do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+        lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+        result = 0; shift = 0;
+        do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20);
+        lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+
+        points.push([lat / factor, lng / factor]);
+    }
+    return points;
+}
+
+async function routeWithValhalla(from, to, mode) {
+    const { profile } = ROUTING_MODES[mode];
+
+    let data;
+    try {
+        data = await fetchJson(`${VALHALLA_URL}/route`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'User-Agent': GEOCODER_USER_AGENT },
+            body: JSON.stringify({
+                locations: [
+                    { lat: from.latitude, lon: from.longitude },
+                    { lat: to.latitude, lon: to.longitude }
+                ],
+                costing: profile,
+                units: 'kilometers',
+                // Only the distance, the time and the line are used here, so the
+                // turn-by-turn narrative is not worth asking for or parsing.
+                directions_type: 'none'
+            })
+        });
+    } catch (error) {
+        // Valhalla says "these points are not connected by this kind of road"
+        // with a 4xx and an error code, not an empty result. That is the same
+        // answer OpenRouteService gives by returning nothing, and the caller
+        // already turns it into an honest "no route found" rather than
+        // "the service is down".
+        if (error.upstreamStatus >= 400 && error.upstreamStatus < 500) return null;
+        throw error;
+    }
+
+    const summary = data?.trip?.summary;
+    if (!summary || !Number.isFinite(summary.length)) return null;
+
+    // Requested in kilometres above; everything else in ZTIMS is in metres.
+    const distanceMeters = summary.length * 1000;
+
+    const geometry = (data.trip.legs || [])
+        .flatMap(leg => (leg.shape ? decodePolyline(leg.shape, 6) : []));
+
+    return { distanceMeters, durationSeconds: summary.time, geometry };
+}
+
 async function routeWithOpenRouteService(from, to, mode) {
     const { profile } = ROUTING_MODES[mode];
     const data = await fetchJson(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
@@ -2328,7 +2439,10 @@ app.get('/api/directions/capabilities', (req, res) => {
     return res.status(200).json({
         success: true,
         provider: ROUTING_PROVIDER,
-        modes: Object.entries(ROUTING_MODES).map(([id, mode]) => ({ id, label: mode.label }))
+        // The router is named per mode as well, because they can differ now.
+        modes: Object.entries(ROUTING_MODES).map(([id, mode]) => ({
+            id, label: mode.label, provider: mode.router
+        }))
     });
 });
 
@@ -2346,9 +2460,13 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
         return res.status(400).json({ success: false, message: 'That way of travelling is not available here.' });
     }
 
+    // Per mode, not per site: motorbike is served by a different router from the
+    // one answering for car, and both can be configured at once.
+    const router = ROUTING_MODES[mode].router;
+
     try {
-        const route = ROUTING_PROVIDER === 'openrouteservice'
-            ? await routeWithOpenRouteService(from, to, mode)
+        const route = router === 'openrouteservice' ? await routeWithOpenRouteService(from, to, mode)
+            : router === 'valhalla' ? await routeWithValhalla(from, to, mode)
             : await routeWithOsrm(from, to, mode);
 
         if (!route) {
@@ -2361,7 +2479,7 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
         return res.status(200).json({
             success: true,
             mode,
-            provider: ROUTING_PROVIDER,
+            provider: router,
             distanceMeters: Math.round(route.distanceMeters),
             durationSeconds: Math.round(route.durationSeconds),
             geometry: route.geometry
@@ -2513,9 +2631,28 @@ app.listen(PORT, () => {
           `    Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, then\n` +
           `    switch the preset to "signed" in the Cloudinary console.`);
 
-    console.log(ORS_API_KEY
-        ? ` 🧭 Travel directions: OpenRouteService (key ending ...${ORS_API_KEY.slice(-4)}) — car, bicycle, walking`
-        : ` 🧭 Travel directions: OSRM demo server — car only. Set ORS_API_KEY for bicycle and walking.`);
+    /* Printed from the resolved table rather than restated, because the modes on
+       offer now depend on two services and the banner was already one edit
+       behind the code once. */
+    const modesByRouter = Object.values(ROUTING_MODES).reduce((acc, mode) => {
+        (acc[mode.router] = acc[mode.router] || []).push(mode.label.toLowerCase());
+        return acc;
+    }, {});
+    const describe = router => ({
+        openrouteservice: `OpenRouteService (key ending ...${ORS_API_KEY.slice(-4)})`,
+        osrm: 'OSRM demo server',
+        valhalla: `Valhalla (${VALHALLA_URL})`
+    })[router] || router;
+
+    console.log(` 🧭 Travel directions: ` + (
+        Object.entries(modesByRouter)
+            .map(([router, labels]) => `${describe(router)} — ${labels.join(', ')}`)
+            .join('; ') || 'no routing service configured'
+    ));
+
+    if (!VALHALLA_URL) {
+        console.log(`    ↳ Motorbike is off: VALHALLA_URL is empty. Unset it to use the community server.`);
+    }
 
     if (!ORS_API_KEY) {
         // Separates "never set on this service" from "set under a slightly wrong
