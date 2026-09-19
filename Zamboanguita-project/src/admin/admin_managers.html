@@ -647,7 +647,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
-                    <nav class="flex text-label uppercase tracking-widest text-primary-container font-bold mb-2">
+                    <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
                         <span class="text-on-surface-variant">Accounts</span>
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h2>
@@ -930,11 +930,11 @@ body { overflow-x: hidden; }
                     <td class="px-6 py-4">${escapeHtml(contactEmailOf(manager))}</td>
                     <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-support font-bold ring-1 ring-inset ${ listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant ring-outline-variant/30' }">${listings}</span>
+                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-support font-bold ring-1 ring-inset ${ listings ? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface-variant ring-outline-variant/30' }">${listings}</span>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                            suspended ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary-container'
+                            suspended ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'
                         }">
                             <span class="material-symbols-outlined !text-xs">${suspended ? 'pause_circle' : 'check_circle'}</span>
                             ${suspended ? 'Suspended' : 'Active'}
@@ -952,7 +952,7 @@ body { overflow-x: hidden; }
                                 <span class="material-symbols-outlined !text-lg">key</span>
                             </button>
                             <button data-suspend="${escapeHtml(manager._id)}" title="${suspended ? 'Restore this account' : 'Suspend this account'}"
-                                    class="p-2 rounded-lg bg-surface-variant ${suspended ? 'text-primary-container' : 'text-on-surface-variant hover:text-error'} transition-colors flex">
+                                    class="p-2 rounded-lg bg-surface-variant ${suspended ? 'text-primary' : 'text-on-surface-variant hover:text-error'} transition-colors flex">
                                 <span class="material-symbols-outlined !text-lg">${suspended ? 'play_circle' : 'pause_circle'}</span>
                             </button>
                             <button data-delete="${escapeHtml(manager._id)}" title="Delete this account"

@@ -44,6 +44,11 @@
 :root {
     /* Identity */
     --ztims-primary: 11 79 108;          /* #0B4F6C  ocean blue   */
+    /* On the light theme the fill colour and the text colour genuinely are the
+       same: #0B4F6C reads 8.9:1 on white. The token exists so that anything
+       wanting "primary, as text" can say so and get the right answer in both
+       themes — on the dark theme they have to differ. */
+    --ztims-primary-text: 11 79 108;     /* #0B4F6C */
     --ztims-primary-dim: 22 138 173;     /* #168AAD  coastal blue */
     --ztims-secondary: 22 138 173;       /* #168AAD               */
     /* #2A9D8F is the identity's teal and it is what the map markers use, but
@@ -107,6 +112,14 @@ body.dark-mode {
        buttons use. #0F7391 takes it to 5.4:1 and still reads as the same
        colour. Contrast wins over an exact hex. */
     --ztims-primary: 15 115 145;         /* #0F7391 */
+    /* The same blue said as text rather than as a surface, and the two cannot be
+       one value. #0F7391 is chosen above to carry white text; turned around and
+       used AS text it reads 2.86:1 on the surface — which is how every section
+       heading, row action and secondary button in the officer's portal came to
+       be barely legible on the night theme. #35A7CC is the same blue lightened
+       until it clears AA on all three dark grounds (5.6:1 on the surface, 6.4:1
+       on the background, 4.9:1 on a raised panel). */
+    --ztims-primary-text: 53 167 204;    /* #35A7CC */
     --ztims-primary-dim: 42 157 143;     /* #2A9D8F */
     --ztims-secondary: 22 138 173;       /* #168AAD */
     /* #2A9D8F measured 4.1:1 against the raised surface. This is the same
@@ -224,6 +237,23 @@ h1, h2, h3, h4, .font-display, .font-headline {
     font-size: 0.9375rem;
     line-height: 1.6;
     color: rgb(var(--ztims-on-surface-variant));
+}
+
+/* ==========================================================================
+   Primary, used as text, on the night theme
+   --------------------------------------------------------------------------
+   Tailwind maps one colour name to both `bg-primary` and `text-primary`, so a
+   token cannot tell the two apart — and on a dark theme they need different
+   values, because a blue that carries white text is too dark to BE text.
+
+   Overriding the utility is the narrow way to say that: (0,2,0) beats the
+   CDN's own (0,1,0) whatever order they load in, `bg-primary` is untouched, and
+   a page that really means the fill colour can still say `!text-primary`.
+   ========================================================================== */
+:root.dark .text-primary,
+html.dark .text-primary,
+body.dark-mode .text-primary {
+    color: rgb(var(--ztims-primary-text));
 }
 
 /* ==========================================================================
@@ -395,10 +425,11 @@ h1, h2, h3, h4, .font-display, .font-headline {
 
 /* The quiet one: same size and weight, no fill. For the second action in a
    pair, where a second filled button would make neither look like the answer. */
+/* Outlined, so its label IS the button — the fill colour would be 2.9:1 here. */
 .btn-secondary {
     background: rgb(var(--ztims-surface));
-    color: rgb(var(--ztims-primary));
-    border-color: rgb(var(--ztims-primary) / 0.45);
+    color: rgb(var(--ztims-primary-text));
+    border-color: rgb(var(--ztims-primary-text) / 0.45);
 }
 .btn-secondary:hover:not(:disabled) {
     background: rgb(var(--ztims-primary-container));
