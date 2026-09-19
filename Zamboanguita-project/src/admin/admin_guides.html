@@ -660,7 +660,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
-                    <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                    <nav class="flex text-label uppercase tracking-widest text-primary-container font-bold mb-2">
                         <span class="text-on-surface-variant">Municipal tourism</span>
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourist Guides</h2>
@@ -676,23 +676,23 @@ body { overflow-x: hidden; }
 
             <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Guide records</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Guide records</p>
                     <h5 id="statGuides" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Available</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Available</p>
                     <h5 id="statAvailable" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">can take new bookings</p>
+                    <p class="text-support mt-1">can take new bookings</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Unassigned</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Unassigned</p>
                     <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">not serving any spot yet</p>
+                    <p class="text-support mt-1">not serving any spot yet</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Spots needing a guide</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Spots needing a guide</p>
                     <h5 id="statGuidedSpots" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1" id="statUncovered">—</p>
+                    <p class="text-support mt-1" id="statUncovered">—</p>
                 </div>
             </div>
 
@@ -722,7 +722,7 @@ body { overflow-x: hidden; }
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
                                 <th class="px-6 py-4">Guide</th>
                                 <th class="px-6 py-4">Contact</th>
                                 <th class="px-6 py-4">Based in</th>
@@ -752,7 +752,7 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-start gap-4">
                 <div>
                     <h2 id="guideModalTitle" class="text-2xl font-black tracking-tight font-headline">New guide record</h2>
-                    <p class="text-xs text-on-surface-variant mt-1">
+                    <p class="text-support mt-1">
                         A record only — guides have no ZTIMS account and never sign in.
                     </p>
                 </div>
@@ -765,19 +765,19 @@ body { overflow-x: hidden; }
                 <input type="hidden" id="guideId" value=""/>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Full name</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Full name</label>
                     <input id="guideName" type="text" required placeholder="e.g., Juan Dela Cruz"
                            class="field"/>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
                         <input id="guideContact" type="tel" placeholder="09XX XXX XXXX"
                                class="field"/>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Based in</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Based in</label>
                         <input id="guideLocation" type="text" placeholder="e.g., Brgy. Najandig"
                                class="field"/>
                     </div>
@@ -785,19 +785,19 @@ body { overflow-x: hidden; }
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Guide fee (₱)</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Guide fee (₱)</label>
                         <input id="guideFee" type="number" min="0" step="1" placeholder="500"
                                class="field"/>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Maximum group size</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Maximum group size</label>
                         <input id="guideMaxGroup" type="number" min="1" step="1" placeholder="5"
                                class="field"/>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Status</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Status</label>
                     <select id="guideStatus" class="field">
                         <option value="available">Available — can take new bookings</option>
                         <option value="unavailable">Unavailable — temporarily not taking work</option>
@@ -811,7 +811,7 @@ body { overflow-x: hidden; }
                      why guide photos were nearly all empty. It takes a file now,
                      through the same signed upload the listing form uses. -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Photo</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Photo</label>
                     <div class="flex items-center gap-3">
                         <img id="guidePhotoPreview" hidden alt=""
                              class="w-16 h-16 rounded-xl object-cover border border-outline-variant/40 shrink-0"/>
@@ -829,7 +829,7 @@ body { overflow-x: hidden; }
                                     <span class="material-symbols-outlined !text-base">delete</span>Remove
                                 </button>
                             </div>
-                            <p id="guidePhotoStatus" class="text-[11px] text-on-surface-variant mt-1">JPG or PNG, up to 10MB. Optional.</p>
+                            <p id="guidePhotoStatus" class="text-support mt-1">JPG or PNG, up to 10MB. Optional.</p>
                         </div>
                     </div>
                     <input id="guidePhotoFile" type="file" accept="image/*" class="sr-only"/>
@@ -839,14 +839,14 @@ body { overflow-x: hidden; }
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">About this guide</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">About this guide</label>
                     <textarea id="guideBio" rows="3" placeholder="Languages spoken, specialities, years guiding…"
                               class="field resize-none"></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Spots this guide serves</label>
-                    <p class="text-[11px] text-on-surface-variant mb-2">
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Spots this guide serves</label>
+                    <p class="text-support mb-2">
                         Only spots marked as requiring a guide are listed. Tick every spot this guide can lead.
                     </p>
                     <div id="guideSpotList" class="max-h-52 overflow-y-auto space-y-1 bg-surface-variant border border-outline-variant/40 rounded-xl p-3"></div>
@@ -908,10 +908,13 @@ body { overflow-x: hidden; }
             return () => { btn.disabled = false; btn.innerHTML = original; };
         }
 
+        // Tokens, not Tailwind's own palette: green-400 and amber-400 are tuned
+        // for a dark ground and wash out on the light theme, and bg-white/10 is
+        // invisible on it entirely.
         const STATUS_STYLES = {
-            available: 'bg-green-500/15 text-green-400',
-            unavailable: 'bg-amber-500/15 text-amber-400',
-            inactive: 'bg-white/10 text-on-surface-variant'
+            available: 'bg-success/15 text-success',
+            unavailable: 'bg-gold/20 text-on-surface',
+            inactive: 'bg-surface-variant text-on-surface-variant'
         };
 
         const STATUS_CHOICES = [
@@ -1083,7 +1086,7 @@ body { overflow-x: hidden; }
                     <tr class="hover:bg-surface-variant/40 transition-colors">
                         <td class="px-6 py-4">
                             <p class="font-bold text-on-surface">${escapeHtml(guide.fullName)}</p>
-                            ${guide.bio ? `<p class="text-xs text-on-surface-variant line-clamp-1 max-w-xs">${escapeHtml(guide.bio)}</p>` : ''}
+                            ${guide.bio ? `<p class="text-support line-clamp-1 max-w-xs">${escapeHtml(guide.bio)}</p>` : ''}
                         </td>
                         <td class="px-6 py-4">${escapeHtml(guide.contactNumber || '—')}</td>
                         <td class="px-6 py-4">${escapeHtml(guide.location || '—')}</td>
@@ -1093,7 +1096,7 @@ body { overflow-x: hidden; }
                             ${spots.length
                                 ? `<div class="flex flex-wrap gap-1">${spots.map(t =>
                                     `<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold">${escapeHtml(t)}</span>`).join('')}</div>`
-                                : '<span class="text-xs text-on-surface-variant italic">not assigned</span>'}
+                                : '<span class="text-support italic">not assigned</span>'}
                         </td>
                         <td class="px-6 py-4 text-center">${statusSelect(guide)}</td>
                         <td class="px-6 py-4 text-right whitespace-nowrap">
@@ -1117,7 +1120,7 @@ body { overflow-x: hidden; }
             const chosen = new Set((selectedIds || []).map(String));
 
             if (guidedSpots.length === 0) {
-                list.innerHTML = `<p class="text-xs text-on-surface-variant italic">
+                list.innerHTML = `<p class="text-support italic">
                     No spot is marked as requiring a guide yet. Tick “Requires a tourist guide” on a destination first.
                 </p>`;
                 return;
@@ -1128,7 +1131,7 @@ body { overflow-x: hidden; }
                     <input type="checkbox" value="${escapeHtml(spot._id)}" ${chosen.has(String(spot._id)) ? 'checked' : ''}
                            class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
                     <span class="text-sm text-on-surface">${escapeHtml(spot.title)}</span>
-                    <span class="text-[11px] text-on-surface-variant">${escapeHtml(spot.location || '')}</span>
+                    <span class="text-support">${escapeHtml(spot.location || '')}</span>
                 </label>
             `).join('');
         }

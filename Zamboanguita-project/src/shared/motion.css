@@ -72,8 +72,20 @@
     to   { opacity: 1; transform: none; }
 }
 
+/* `backwards`, not `both`, and the difference matters beyond the animation.
+   An element with a transform animation filling forwards stays a containing
+   block for `position: fixed` descendants — Chromium keeps it even once the
+   animation has settled on `transform: none`, because the effect is still
+   applied. <main> carries this class, so anything fixed inside it was being
+   measured against main's box instead of the viewport; the maximized map came
+   out as a strip across the top of the page.
+
+   Nothing is lost by dropping the forwards half: the last keyframe is already
+   the element's natural state (opacity 1, no transform), so the settled
+   appearance is identical. `backwards` still covers the delay before it runs,
+   which is the half that prevents a flash of unstyled content. */
 .page-enter {
-    animation: ztimsPageIn var(--motion-base) var(--ease-entrance) both;
+    animation: ztimsPageIn var(--motion-base) var(--ease-entrance) backwards;
 }
 
 /* Content replacing a spinner. Without it the swap is a hard cut: the spinner

@@ -227,6 +227,44 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 /* ==========================================================================
+   Supporting text
+   --------------------------------------------------------------------------
+   Everything that explains rather than announces: descriptions, helper text
+   under a field, subtitles, captions, the small print beside a button.
+
+   It was being written three different ways — text-[10px], text-[11px] and
+   text-xs — with no rule about which meant what, so the same kind of sentence
+   came out at three sizes depending on which page you were on, and the 10px
+   ones were genuinely hard to read. Two sizes replace all three, split by the
+   only distinction that earns its keep:
+
+   .text-support  prose you actually read — 13px, up from 10-12px.
+   .text-label    the uppercase micro-labels that head a value ("DISTANCE",
+                  "ENTRANCE FEE") — 12px. These are wide-tracked and bold, and
+                  at 13px they start competing with the value underneath them,
+                  which is the thing meant to be read first.
+
+   Both take their colour from one token, so light mode is a consistent dark
+   slate and dark mode a consistent light tint, and neither has to be restated
+   per page. A page that deliberately wants something else — white over a
+   photograph, the primary colour for a link — keeps saying so in its own
+   markup, and the Tailwind utility still wins because the CDN loads after
+   this file.
+   ========================================================================== */
+.text-support {
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: rgb(var(--ztims-on-surface-variant));
+}
+
+.text-label {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    color: rgb(var(--ztims-on-surface-variant));
+}
+
+/* ==========================================================================
    Information, structured
    --------------------------------------------------------------------------
    A label, then the thing. "Address: Barangay Maluay, Zamboanguita, Negros
@@ -420,6 +458,18 @@ h1, h2, h3, h4, .font-display, .font-headline {
    putting anything back, which leaves a keyboard user with no idea where they
    are.
    ========================================================================== */
+/* Qualified by element on purpose. The Tailwind CLI wraps the forms plugin's
+   reset in :where(), which carries no specificity, so a bare `.field` beat it —
+   and every test built against the CLI passed. Production loads the Play CDN,
+   which emits the plain `[type='email']` instead: (0,1,0), the same as `.field`,
+   and injected into the head at runtime, therefore AFTER this file. It won on
+   source order, and the sign-in fields came out white on the night theme.
+
+   `input.field` is (0,1,1) and settles it. An `!bg-…` utility still overrides,
+   which is the escape hatch a page needs. */
+input.field,
+select.field,
+textarea.field,
 .field {
     width: 100%;
     min-height: 44px;
@@ -432,13 +482,22 @@ h1, h2, h3, h4, .font-display, .font-headline {
     transition: border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
                 box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
 }
+input.field::placeholder,
+select.field::placeholder,
+textarea.field::placeholder,
 .field::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
+input.field:focus,
+select.field:focus,
+textarea.field:focus,
 .field:focus {
     outline: none;
     border-color: rgb(var(--ztims-secondary));
     box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / 0.18);
 }
 /* Never colour alone: the field is also described by its message below it. */
+input.field[aria-invalid="true"],
+select.field[aria-invalid="true"],
+textarea.field[aria-invalid="true"],
 .field[aria-invalid="true"] {
     border-color: rgb(var(--ztims-error));
     box-shadow: 0 0 0 3px rgb(var(--ztims-error) / 0.15);

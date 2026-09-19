@@ -543,7 +543,7 @@ body { overflow-x: hidden; }
     <aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
-            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourist Establishment Manager Portal</p>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Establishment Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                     class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-white/5 transition-all">
@@ -660,7 +660,7 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
             const timer = setTimeout(() => {
@@ -817,10 +817,10 @@ body { overflow-x: hidden; }
                         </span>` : ''}
                     </div>
                     <div class="p-5 flex-1 flex flex-col gap-2">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-primary-container">${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}</span>
+                        <span class="text-label font-bold uppercase tracking-widest text-primary-container">${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}</span>
                         <h3 class="text-lg font-black text-on-surface leading-tight">${escapeHtml(spot.title)}</h3>
-                        <p class="text-xs text-on-surface-variant">${escapeHtml(spot.location)}</p>
-                        <p class="text-xs text-on-surface-variant line-clamp-2 flex-1">${escapeHtml(spot.description)}</p>
+                        <p class="text-support">${escapeHtml(spot.location)}</p>
+                        <p class="text-support line-clamp-2 flex-1">${escapeHtml(spot.description)}</p>
                         <div class="flex gap-2 pt-3">
                             <button class="btn btn-secondary flex-1">Edit</button>
                             <button class="btn btn-secondary flex-1">Delete</button>

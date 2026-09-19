@@ -543,7 +543,7 @@ body { overflow-x: hidden; }
     <aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
-            <p class="sidebar-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">Tourist Establishment Manager Portal</p>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Establishment Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                     class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-white/5 transition-all">
@@ -603,27 +603,27 @@ body { overflow-x: hidden; }
 
                     <form id="detailsForm" class="space-y-4">
                         <div>
-                            <label for="establishmentNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
+                            <label for="establishmentNameInput" class="block text-label font-bold uppercase tracking-wider mb-1">Establishment name</label>
                             <input id="establishmentNameInput" type="text" required
                                    class="field w-full"/>
-                            <p class="text-[11px] text-on-surface-variant mt-1.5">Shown on your listings and in the tourism office's records.</p>
+                            <p class="text-support mt-1.5">Shown on your listings and in the tourism office's records.</p>
                         </div>
 
                         <div>
-                            <label for="managerNameInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
+                            <label for="managerNameInput" class="block text-label font-bold uppercase tracking-wider mb-1">Manager's name</label>
                             <input id="managerNameInput" type="text" placeholder="The person visitors should ask for"
                                    class="field w-full"/>
                         </div>
 
                         <div>
-                            <label for="contactEmailInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email</label>
+                            <label for="contactEmailInput" class="block text-label font-bold uppercase tracking-wider mb-1">Public contact email</label>
                             <input id="contactEmailInput" type="email" placeholder="Leave blank to use your sign-in email"
                                    class="field w-full"/>
-                            <p class="text-[11px] text-on-surface-variant mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
+                            <p class="text-support mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
                         </div>
 
                         <div>
-                            <label for="phoneInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone</label>
+                            <label for="phoneInput" class="block text-label font-bold uppercase tracking-wider mb-1">Phone</label>
                             <input id="phoneInput" type="text" placeholder="09XX XXX XXXX"
                                    class="field w-full"/>
                         </div>
@@ -645,17 +645,17 @@ body { overflow-x: hidden; }
 
                         <form id="passwordForm" class="space-y-4">
                             <div>
-                                <label for="currentPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Current password</label>
+                                <label for="currentPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Current password</label>
                                 <input id="currentPasswordInput" type="password" required autocomplete="current-password"
                                        class="field w-full"/>
                             </div>
                             <div>
-                                <label for="newPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">New password</label>
+                                <label for="newPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">New password</label>
                                 <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"
                                        class="field w-full"/>
                             </div>
                             <div>
-                                <label for="confirmPasswordInput" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Repeat the new password</label>
+                                <label for="confirmPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Repeat the new password</label>
                                 <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password"
                                        class="field w-full"/>
                             </div>
@@ -683,7 +683,7 @@ body { overflow-x: hidden; }
                                 <dd id="accountCreated" class="text-on-surface font-bold text-right"></dd>
                             </div>
                         </dl>
-                        <p class="text-[11px] text-on-surface-variant pt-2">
+                        <p class="text-support pt-2">
                             Only the Municipal Tourism Office can change your sign-in email — ask them if it needs correcting.
                         </p>
                     </section>
@@ -712,7 +712,7 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             const timer = setTimeout(() => {
                 const note = target.querySelector('[data-slow]');

@@ -646,7 +646,7 @@ body { overflow-x: hidden; }
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
             <div class="space-y-1">
-                <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                <nav class="flex text-label uppercase tracking-widest text-primary-container font-bold mb-2">
                     <span class="text-on-surface-variant">Municipal tourism</span>
                 </nav>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
@@ -658,23 +658,23 @@ body { overflow-x: hidden; }
 
             <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Awaiting payment</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Awaiting payment</p>
                     <h5 id="statPending" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">visitors due at the counter</p>
+                    <p class="text-support mt-1">visitors due at the counter</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Confirmed</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Confirmed</p>
                     <h5 id="statConfirmed" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Needs a guide</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Needs a guide</p>
                     <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">confirmed, nobody assigned</p>
+                    <p class="text-support mt-1">confirmed, nobody assigned</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Collected</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Collected</p>
                     <h5 id="statCollected" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">recorded onsite payments</p>
+                    <p class="text-support mt-1">recorded onsite payments</p>
                 </div>
             </div>
 
@@ -707,7 +707,7 @@ body { overflow-x: hidden; }
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
                                 <th class="px-6 py-4">Reference</th>
                                 <th class="px-6 py-4">Visitor</th>
                                 <th class="px-6 py-4">Destination</th>
@@ -737,7 +737,7 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-start gap-4">
                 <div>
                     <h2 id="bookingRef" class="text-2xl font-black tracking-tight font-headline">—</h2>
-                    <p id="bookingWhen" class="text-xs text-on-surface-variant mt-1">—</p>
+                    <p id="bookingWhen" class="text-support mt-1">—</p>
                 </div>
                 <button id="closeBookingModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
                     <span class="material-symbols-outlined">close</span>
@@ -747,27 +747,27 @@ body { overflow-x: hidden; }
             <div id="bookingDetails" class="bg-surface-variant rounded-xl p-4 space-y-1.5 text-sm"></div>
 
             <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Guide</h3>
+                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Guide</h3>
                 <div class="flex gap-2">
                     <select id="assignGuideSelect" class="field flex-1"></select>
                     <button type="button" id="assignGuideBtn" class="btn btn-secondary shrink-0">Assign</button>
                 </div>
-                <p id="assignHint" class="text-[11px] text-on-surface-variant mt-1.5"></p>
+                <p id="assignHint" class="text-support mt-1.5"></p>
             </div>
 
             <div id="paymentSection">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Onsite payment</h3>
+                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Onsite payment</h3>
                 <div id="paymentRecorded" hidden class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-sm space-y-1"></div>
 
                 <form id="paymentForm" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Amount collected (₱)</label>
+                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Amount collected (₱)</label>
                             <input id="payAmount" type="number" min="0" step="1" required
                                    class="field"/>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Method</label>
+                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Method</label>
                             <select id="payMethod" class="field">
                                 <option value="cash">Cash</option>
                                 <option value="gcash">GCash</option>
@@ -776,12 +776,12 @@ body { overflow-x: hidden; }
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Official receipt number</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Official receipt number</label>
                         <input id="payReceipt" type="text" placeholder="OR-…"
                                class="field"/>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Remarks</label>
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Remarks</label>
                         <input id="payRemarks" type="text"
                                class="field"/>
                     </div>
@@ -793,13 +793,13 @@ body { overflow-x: hidden; }
             </div>
 
             <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Mark as</h3>
+                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Mark as</h3>
                 <div class="flex flex-wrap gap-2">
                     <button data-status="completed" class="booking-status-btn btn btn-secondary">Completed</button>
                     <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
                     <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
                 </div>
-                <p class="text-[11px] text-on-surface-variant mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
+                <p class="text-support mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
             </div>
 
             <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -927,15 +927,15 @@ body { overflow-x: hidden; }
                     <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}</td>
                     <td class="px-6 py-4">
                         <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
-                        <p class="text-xs">${escapeHtml(b.contactNumber)}</p>
-                        <p class="text-xs">${escapeHtml(countryName(b.nationality))}</p>
+                        <p class="text-support">${escapeHtml(b.contactNumber)}</p>
+                        <p class="text-support">${escapeHtml(countryName(b.nationality))}</p>
                     </td>
                     <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-xs">${escapeHtml(b.preferredTime)}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
                     <td class="px-6 py-4 text-center">${Number(b.visitors) || 0}</td>
                     <td class="px-6 py-4">${b.guideId
                         ? escapeHtml(b.guideId.fullName)
-                        : '<span class="text-xs italic text-on-surface-variant">not assigned</span>'}</td>
+                        : '<span class="text-support italic">not assigned</span>'}</td>
                     <td class="px-6 py-4 text-center">
                         <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
                     </td>

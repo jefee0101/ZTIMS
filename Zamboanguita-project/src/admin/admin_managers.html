@@ -647,7 +647,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
-                    <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                    <nav class="flex text-label uppercase tracking-widest text-primary-container font-bold mb-2">
                         <span class="text-on-surface-variant">Accounts</span>
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h2>
@@ -663,17 +663,17 @@ body { overflow-x: hidden; }
 
             <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Manager accounts</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Manager accounts</p>
                     <h5 id="statManagers" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Listings they publish</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Listings they publish</p>
                     <h5 id="statListings" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Yet to publish anything</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Yet to publish anything</p>
                     <h5 id="statIdle" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">accounts with no listing yet</p>
+                    <p class="text-support mt-1">accounts with no listing yet</p>
                 </div>
             </div>
 
@@ -697,7 +697,7 @@ body { overflow-x: hidden; }
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
                                 <th class="px-6 py-4">Establishment</th>
                                 <th class="px-6 py-4">Manager</th>
                                 <th class="px-6 py-4">Sign-in email</th>
@@ -728,7 +728,7 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-start gap-4">
                 <div>
                     <h2 class="text-2xl font-black tracking-tight font-headline">New manager account</h2>
-                    <p class="text-xs text-on-surface-variant mt-1">
+                    <p class="text-support mt-1">
                         Give the manager these details afterwards — they sign in through the staff sign-in page.
                     </p>
                 </div>
@@ -739,39 +739,39 @@ body { overflow-x: hidden; }
 
             <form id="createManagerForm" class="space-y-4 font-body">
                 <div>
-                    <label for="newManagerEstablishmentName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Establishment name</label>
+                    <label for="newManagerEstablishmentName" class="block text-label font-bold uppercase tracking-wider mb-1">Establishment name</label>
                     <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerName" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Manager's name</label>
+                    <label for="newManagerName" class="block text-label font-bold uppercase tracking-wider mb-1">Manager's name</label>
                     <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
                            class="field w-full"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">The person who actually runs the establishment.</p>
+                    <p class="text-support mt-1.5">The person who actually runs the establishment.</p>
                 </div>
                 <div>
-                    <label for="newManagerEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Sign-in email</label>
+                    <label for="newManagerEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Sign-in email</label>
                     <input id="newManagerEmail" type="email" required placeholder="manager@gmail.com" autocomplete="off"
                            class="field w-full"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">What they type to sign in. Never shown to visitors.</p>
+                    <p class="text-support mt-1.5">What they type to sign in. Never shown to visitors.</p>
                 </div>
                 <div>
-                    <label for="newManagerContactEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
+                    <label for="newManagerContactEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
                            class="field w-full"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
+                    <p class="text-support mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
                 </div>
                 <div>
-                    <label for="newManagerPhone" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
+                    <label for="newManagerPhone" class="block text-label font-bold uppercase tracking-wider mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
                            class="field w-full"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Shown to visitors on a listing that has no booking website.</p>
+                    <p class="text-support mt-1.5">Shown to visitors on a listing that has no booking website.</p>
                 </div>
                 <div>
-                    <label for="newManagerPassword" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Starting password</label>
+                    <label for="newManagerPassword" class="block text-label font-bold uppercase tracking-wider mb-1">Starting password</label>
                     <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
                            class="field w-full"/>
-                    <p class="text-[11px] text-on-surface-variant mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
+                    <p class="text-support mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
                 </div>
 
                 <p id="createManagerError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -807,7 +807,7 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
             const timer = setTimeout(() => {
@@ -930,9 +930,7 @@ body { overflow-x: hidden; }
                     <td class="px-6 py-4">${escapeHtml(contactEmailOf(manager))}</td>
                     <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${
-                            listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant text-on-surface-variant ring-outline-variant/30'
-                        }">${listings}</span>
+                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-support font-bold ring-1 ring-inset ${ listings ? 'bg-primary/10 text-primary-container ring-primary/20' : 'bg-surface-variant ring-outline-variant/30' }">${listings}</span>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -942,7 +940,7 @@ body { overflow-x: hidden; }
                             ${suspended ? 'Suspended' : 'Active'}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right text-xs">${escapeHtml(formatDate(manager.createdAt))}</td>
+                    <td class="px-6 py-4 text-right text-support">${escapeHtml(formatDate(manager.createdAt))}</td>
                     <td class="px-6 py-4">
                         <div class="flex justify-end gap-1.5">
                             <button data-edit="${escapeHtml(manager._id)}" title="Correct these details"

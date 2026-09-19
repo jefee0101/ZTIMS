@@ -334,8 +334,40 @@
             button.setAttribute('aria-pressed', expanded ? 'true' : 'false');
         }
 
+        /* Where the map sits while it is expanded.
+
+           `position: fixed` is measured against the nearest ancestor carrying a
+           transform, not against the viewport. Both entrance animations end on
+           `transform: none`, but they fill forwards, and Chromium treats an
+           element with a filling transform animation as a containing block even
+           when the matrix is the identity. On the destination page that ancestor
+           is <main class="page-enter">, so inset:0/100dvh resolved to main's box
+           and the maximized map came out as a strip across the top of the page.
+
+           Hanging the map off <body> for the duration settles it, and keeps
+           settling it if some future wrapper picks up a transform. Leaflet holds
+           the container by reference, so moving the node costs nothing — and
+           invalidateSize() below already runs after every change of shape. */
+        let anchor = null;
+
+        function portal(out) {
+            if (out) {
+                if (anchor || !mount.parentNode) return;
+                anchor = document.createComment('ztims-map');
+                mount.parentNode.insertBefore(anchor, mount);
+                document.body.appendChild(mount);
+            } else if (anchor) {
+                if (anchor.parentNode) {
+                    anchor.parentNode.insertBefore(mount, anchor);
+                    anchor.parentNode.removeChild(anchor);
+                }
+                anchor = null;
+            }
+        }
+
         function setExpanded(next) {
             expanded = next;
+            portal(expanded);
             mount.classList.toggle('ztims-map--expanded', expanded);
             // The page behind must not scroll while the map covers it.
             document.body.classList.toggle('ztims-map-locked', expanded);

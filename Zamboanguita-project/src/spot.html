@@ -347,19 +347,19 @@ body { overflow-x: hidden; }
         </button>
 
         <h3 class="text-xl font-display font-bold text-on-surface mb-1">Book a tourist guide</h3>
-        <p class="text-xs text-on-surface-variant mb-5">
+        <p class="text-support mb-5">
             No account needed. You will get a reference to bring to the Municipal Tourism Office,
             where you pay and the booking is confirmed.
         </p>
 
         <form id="guideBookingForm" class="space-y-3">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Full name</label>
+                <label class="block text-label font-bold uppercase tracking-wider mb-1">Full name</label>
                 <input id="bookName" type="text" required autocomplete="name"
                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
             </div>
             <div>
-                <label for="bookContact" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Contact number</label>
+                <label for="bookContact" class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
                 <!-- Visitors arrive from abroad, so the number needs the country it
                      belongs to. The office dials what is stored; a bare local number
                      from another country is not dialable. -->
@@ -396,18 +396,18 @@ body { overflow-x: hidden; }
                     <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567"
                            class="flex-1 min-w-0 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
-                <p class="text-[11px] text-on-surface-variant mt-1">Without the leading zero — the country code covers it.</p>
+                <p class="text-support mt-1">Without the leading zero — the country code covers it.</p>
             </div>
 
             <div>
-                <label for="bookEmail" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Email</label>
+                <label for="bookEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Email</label>
                 <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com"
                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-                <p class="text-[11px] text-on-surface-variant mt-1">Where the office confirms your booking.</p>
+                <p class="text-support mt-1">Where the office confirms your booking.</p>
             </div>
 
             <div>
-                <label for="bookNationality" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Nationality</label>
+                <label for="bookNationality" class="block text-label font-bold uppercase tracking-wider mb-1">Nationality</label>
                 <!-- The office reports domestic and foreign arrivals to the
                      Department of Tourism. A free-text box cannot be counted, so
                      this is a list and what is stored is the country code. It
@@ -418,35 +418,35 @@ body { overflow-x: hidden; }
                         class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
                     <option value="">Select nationality…</option>
                 </select>
-                <p class="text-[11px] text-on-surface-variant mt-1">Collected for the municipality's visitor statistics.</p>
+                <p class="text-support mt-1">Collected for the municipality's visitor statistics.</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Visitors</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Visitors</label>
                     <input id="bookVisitors" type="number" min="1" value="1" required
                            class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Date</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Date</label>
                     <input id="bookDate" type="date" required
                            class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Time</label>
+                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Time</label>
                     <input id="bookTime" type="time" required value="08:00"
                            class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
             </div>
-            <p id="bookGroupHint" class="text-[11px] text-on-surface-variant"></p>
+            <p id="bookGroupHint" class="text-support"></p>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
+                <label class="block text-label font-bold uppercase tracking-wider mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
                 <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
             </div>
 
-            <p class="text-[11px] text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
+            <p class="text-support bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
                 Payment must be completed onsite at the Municipal Tourism Office. ZTIMS does not take payment online.
                 Your guide is assigned by the office once payment is recorded.
             </p>
@@ -462,7 +462,7 @@ body { overflow-x: hidden; }
         <div id="bookingResult" hidden class="text-center space-y-3">
             <span class="material-symbols-outlined !text-5xl text-green-400">task_alt</span>
             <h4 class="text-lg font-display font-bold text-on-surface">Booking submitted</h4>
-            <p class="text-xs uppercase tracking-widest text-on-surface-variant">Reference</p>
+            <p class="text-label uppercase tracking-widest">Reference</p>
             <p id="bookingReference" class="text-2xl font-display font-black text-surface-bright tracking-wider select-all"></p>
             <p id="bookingSummary" class="text-sm text-on-surface-variant"></p>
             <p class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
@@ -488,7 +488,7 @@ body { overflow-x: hidden; }
     </button>
     <figure class="max-w-5xl w-full text-center">
         <img id="lightboxImage" src="" alt="" class="w-full max-h-[80vh] object-contain rounded-xl"/>
-        <figcaption id="lightboxCounter" class="text-white/70 text-xs mt-3 tracking-widest"></figcaption>
+        <figcaption id="lightboxCounter" class="text-white/70 text-support mt-3 tracking-widest"></figcaption>
     </figure>
 </div>
 
@@ -512,7 +512,7 @@ body { overflow-x: hidden; }
             '<div class="flex flex-col items-center justify-center gap-3 py-32 w-full text-center">' +
                 '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                 '<p class="text-sm opacity-80">' + message + '</p>' +
-                '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
             '</div>';
         const timer = setTimeout(() => {
             const note = target.querySelector('[data-slow]');
@@ -581,7 +581,7 @@ body { overflow-x: hidden; }
                    class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
                     <span class="material-symbols-outlined">open_in_new</span> Book Now
                 </a>
-                <p class="text-[11px] text-on-surface-variant text-center mt-3">
+                <p class="text-support text-center mt-3">
                     Booking is handled on ${escapeHtml(managerName(establishment) || 'the establishment')}'s own website. This opens in a new tab.
                 </p>
             `;
@@ -593,7 +593,7 @@ body { overflow-x: hidden; }
         if (managerName(establishment)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(establishment))}</p>`);
         // The person to ask for, when the office recorded one.
         if (establishment?.managerName) {
-            contactLines.push(`<p class="text-xs text-on-surface-variant">Managed by ${escapeHtml(establishment.managerName)}</p>`);
+            contactLines.push(`<p class="text-support">Managed by ${escapeHtml(establishment.managerName)}</p>`);
         }
         if (establishment?.phone) {
             contactLines.push(`<a href="tel:${escapeHtml(establishment.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
@@ -615,7 +615,7 @@ body { overflow-x: hidden; }
         return `
             <div class="w-full bg-surface-container-high border border-outline-variant/30 rounded-2xl py-5 px-4 text-center space-y-2">
                 <span class="material-symbols-outlined !text-2xl text-on-surface-variant">call</span>
-                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Get in touch</p>
+                <p class="text-label uppercase tracking-widest font-bold">Get in touch</p>
                 ${contactLines.join('')}
             </div>
         `;
@@ -776,7 +776,7 @@ body { overflow-x: hidden; }
                     </button>
 
                     <div id="directionsPanel" hidden class="space-y-4">
-                        <p class="text-[11px] text-on-surface-variant leading-relaxed">
+                        <p class="text-support leading-relaxed">
                             ZTIMS would like to use your current location to calculate directions and estimated travel
                             time. It is used for this route only and is never saved.
                         </p>
@@ -787,20 +787,20 @@ body { overflow-x: hidden; }
                         </p>
 
                         <div id="manualOrigin" hidden class="space-y-2">
-                            <label for="originSearch" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                            <label for="originSearch" class="block text-label font-bold uppercase tracking-wider">
                                 Enter your starting location
                             </label>
                             <div class="flex gap-2">
                                 <input id="originSearch" type="text" placeholder="Search starting location…"
                                        class="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                                 <button type="button" id="originSearchBtn"
-                                        class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                                        class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-support font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
                                     Search
                                 </button>
                             </div>
                             <div id="originResults" hidden class="bg-surface-container-high border border-outline-variant/40 rounded-xl p-1 max-h-44 overflow-y-auto"></div>
                             <button type="button" id="retryLocationBtn"
-                                    class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                                    class="text-support text-primary font-bold hover:underline flex items-center gap-1">
                                 <span class="material-symbols-outlined !text-base">my_location</span> Try my device location again
                             </button>
                         </div>
@@ -809,16 +809,16 @@ body { overflow-x: hidden; }
 
                         <div id="routeStats" hidden class="grid grid-cols-2 gap-3">
                             <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Distance</p>
+                                <p class="text-label uppercase tracking-widest font-bold mb-1">Distance</p>
                                 <p id="routeDistance" class="text-xl font-display font-bold text-on-surface">—</p>
                             </div>
                             <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Estimated time</p>
+                                <p class="text-label uppercase tracking-widest font-bold mb-1">Estimated time</p>
                                 <p id="routeDuration" class="text-xl font-display font-bold text-on-surface">—</p>
                             </div>
                         </div>
 
-                        <p id="directionsStatus" hidden class="text-xs text-on-surface-variant"></p>
+                        <p id="directionsStatus" hidden class="text-support"></p>
 
                         <div id="directionsMap" hidden class="relative z-0 h-64 sm:h-80 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-high"></div>
 
@@ -826,7 +826,7 @@ body { overflow-x: hidden; }
                            class="w-full bg-surface-container-high border border-outline-variant/40 text-on-surface px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
                             <span class="material-symbols-outlined !text-lg">open_in_new</span> Open in Maps
                         </a>
-                        <p class="text-[11px] text-on-surface-variant text-center">
+                        <p class="text-support text-center">
                             ZTIMS shows the route and the estimate. Turn-by-turn navigation continues in your maps app.
                         </p>
                     </div>
@@ -869,7 +869,7 @@ body { overflow-x: hidden; }
         // leads to a request the office cannot fulfil.
         const availability = info.guidesAvailable > 0
             ? ''
-            : `<p class="text-xs text-amber-400 mt-3">
+            : `<p class="text-support text-amber-400 mt-3">
                    No guide is free for this spot at the moment. Contact the Municipal Tourism Office to arrange a visit.
                </p>`;
 
@@ -883,11 +883,11 @@ body { overflow-x: hidden; }
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Guide fee</p>
+                        <p class="text-label uppercase tracking-widest font-bold mb-1">Guide fee</p>
                         <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(fee)}</p>
                     </div>
                     <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Maximum group</p>
+                        <p class="text-label uppercase tracking-widest font-bold mb-1">Maximum group</p>
                         <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(group)}</p>
                     </div>
                 </div>
@@ -903,18 +903,18 @@ body { overflow-x: hidden; }
                 </button>` : ''}
 
                 <details class="pt-1">
-                    <summary class="text-xs text-on-surface-variant cursor-pointer hover:text-on-surface transition-colors min-h-[44px] flex items-center">
+                    <summary class="text-support cursor-pointer hover:text-on-surface transition-colors min-h-[44px] flex items-center">
                         Already booked? Check a reference
                     </summary>
                     <div class="flex gap-2 mt-2">
                         <input id="lookupReference" type="text" placeholder="TG-0000-00000"
                                class="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface uppercase focus:outline-none focus:ring-1 focus:ring-primary"/>
                         <button type="button" id="lookupBtn"
-                                class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
+                                class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-support font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
                             Check
                         </button>
                     </div>
-                    <p id="lookupResult" hidden class="text-xs mt-2 text-on-surface-variant"></p>
+                    <p id="lookupResult" hidden class="text-support mt-2"></p>
                 </details>
             </section>
         `;
@@ -1378,7 +1378,7 @@ body { overflow-x: hidden; }
             <div class="px-5 sm:px-6 md:px-12 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 max-w-7xl mx-auto">
                 <div class="lg:col-span-2 space-y-8">
                     <div>
-                        <span class="text-primary text-xs font-bold uppercase tracking-widest block mb-2">${escapeHtml(spot.label || spot.category || '')}</span>
+                        <span class="text-primary text-label font-bold uppercase tracking-widest block mb-2">${escapeHtml(spot.label || spot.category || '')}</span>
                         <h2 class="text-2xl font-display font-bold text-on-surface mb-3">About this destination</h2>
                         ${describe(spot.description)}
                     </div>
@@ -1390,13 +1390,13 @@ body { overflow-x: hidden; }
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
                                 <span class="material-symbols-outlined text-accent !text-2xl mb-2">schedule</span>
-                                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Open</p>
+                                <p class="text-label uppercase tracking-widest font-bold mb-1">Open</p>
                                 <p class="text-on-surface font-bold">${escapeHtml(spot.workingDays || 'Everyday')}</p>
                                 <p class="text-on-surface-variant text-sm">${escapeHtml(spot.workingTime || 'All Day')}</p>
                             </div>
                             <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
                                 <span class="material-symbols-outlined text-accent !text-2xl mb-2">category</span>
-                                <p class="text-xs uppercase tracking-widest text-on-surface-variant font-bold mb-1">Category</p>
+                                <p class="text-label uppercase tracking-widest font-bold mb-1">Category</p>
                                 <p class="text-on-surface font-bold">${escapeHtml(spot.category || '—')}</p>
                             </div>
                         </div>

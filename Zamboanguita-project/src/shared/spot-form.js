@@ -179,7 +179,7 @@
     }
 
     function errorSlot(id) {
-        return '<p id="' + id + '" hidden class="text-[11px] text-error mt-1 flex items-start gap-1">' +
+        return '<p id="' + id + '" hidden class="text-support text-error mt-1 flex items-start gap-1">' +
             '<span class="material-symbols-outlined !text-sm shrink-0">error</span><span data-msg></span></p>';
     }
 
@@ -188,8 +188,7 @@
 
         const stepTabs = STEPS.map(function (step, index) {
             return '<button type="button" data-step-tab="' + index + '" ' +
-                'class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-[11px] font-bold ' +
-                'uppercase tracking-wider transition-all min-h-[44px]">' +
+                'class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-support font-bold ' + 'uppercase tracking-wider transition-all min-h-[44px]">' +
                 '<span class="material-symbols-outlined !text-base shrink-0">' + step.icon + '</span>' +
                 '<span class="truncate hidden sm:inline">' + step.label + '</span>' +
                 '<span class="sm:hidden">' + (index + 1) + '</span>' +
@@ -200,12 +199,10 @@
         '<div id="' + p + 'DraftBar" hidden class="mb-4 flex flex-wrap items-center gap-2 bg-surface-container-high ' +
             'border border-outline-variant/30 rounded-xl px-4 py-3">' +
             '<span class="material-symbols-outlined !text-base text-primary">history</span>' +
-            '<p class="text-xs text-on-surface flex-1 min-w-[12rem]">You have an unfinished listing from ' +
+            '<p class="text-support text-on-surface flex-1 min-w-[12rem]">You have an unfinished listing from ' +
                 '<b id="' + p + 'DraftWhen"></b>.</p>' +
-            '<button type="button" id="' + p + 'DraftRestore" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' +
-                'text-on-primary text-[11px] font-bold">Restore it</button>' +
-            '<button type="button" id="' + p + 'DraftDiscard" class="px-3 py-2 min-h-[40px] rounded-lg ' +
-                'border border-outline-variant/40 text-on-surface-variant text-[11px] font-bold">Discard</button>' +
+            '<button type="button" id="' + p + 'DraftRestore" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' + 'text-on-primary text-support font-bold">Restore it</button>' +
+            '<button type="button" id="' + p + 'DraftDiscard" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'border border-outline-variant/40 text-support font-bold">Discard</button>' +
         '</div>' +
 
         // ---- step rail ----
@@ -233,7 +230,7 @@
                         return '<option value="' + escapeHtml(c.value) + '">' + escapeHtml(c.label) + '</option>';
                     }).join('') +
                 '</select>' +
-                '<p class="text-[11px] text-on-surface-variant mt-1">Accommodation moves the listing under places to stay.</p>' +
+                '<p class="text-support mt-1">Accommodation moves the listing under places to stay.</p>' +
             '</div>' +
 
             '<div>' +
@@ -243,14 +240,14 @@
                     'class="' + INPUT + ' resize-none"></textarea>' +
                 '<div class="flex justify-between gap-2 mt-1">' +
                     errorSlot(p + 'DescriptionError') +
-                    '<span id="' + p + 'DescriptionCount" class="text-[11px] text-on-surface-variant shrink-0 ml-auto"></span>' +
+                    '<span id="' + p + 'DescriptionCount" class="text-support shrink-0 ml-auto"></span>' +
                 '</div>' +
             '</div>' +
 
             '<div>' +
                 '<label for="' + p + 'Label" class="' + LABEL + '">Tagline <span class="normal-case font-normal opacity-70">(optional)</span></label>' +
                 '<input id="' + p + 'Label" name="label" type="text" placeholder="e.g., Crystal Waters" class="' + INPUT + '"/>' +
-                '<p class="text-[11px] text-on-surface-variant mt-1">A short phrase shown under the name.</p>' +
+                '<p class="text-support mt-1">A short phrase shown under the name.</p>' +
             '</div>' +
         '</section>' +
 
@@ -265,7 +262,7 @@
 
             '<div>' +
                 '<h3 class="text-base sm:text-lg font-bold text-on-surface">Where should visitors arrive?</h3>' +
-                '<p class="text-xs text-on-surface-variant mt-1">' +
+                '<p class="text-support mt-1">' +
                     'Find the place, then put the pin on the gate or entrance people should head for. ' +
                     'ZTIMS works out the map position, the barangay and the directions from that.' +
                 '</p>' +
@@ -277,12 +274,11 @@
             '<div id="' + p + 'LocLegacy" hidden class="flex flex-wrap items-start gap-2 bg-surface-container-high ' +
                 'border border-outline-variant/40 rounded-xl px-4 py-3">' +
                 '<span class="material-symbols-outlined !text-base text-primary shrink-0">wrong_location</span>' +
-                '<p class="text-xs text-on-surface flex-1 min-w-[12rem]">' +
+                '<p class="text-support text-on-surface flex-1 min-w-[12rem]">' +
                     'This listing has no map location yet. Visitors cannot get directions to it until one is added — ' +
                     'everything else here can still be edited and saved.' +
                 '</p>' +
-                '<button type="button" id="' + p + 'LocLegacyAdd" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' +
-                    'text-on-primary text-[11px] font-bold">Add location</button>' +
+                '<button type="button" id="' + p + 'LocLegacyAdd" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' + 'text-on-primary text-support font-bold">Add location</button>' +
             '</div>' +
 
             /* ---------------- pick a way in ---------------- */
@@ -290,17 +286,17 @@
                 '<button type="button" id="' + p + 'LocWaySearch" class="' + WAY_BTN + '">' +
                     '<span class="material-symbols-outlined text-primary">search</span>' +
                     '<span class="font-bold text-on-surface">Search for the place</span>' +
-                    '<span class="text-[11px] text-on-surface-variant">By name, landmark or address. Easiest.</span>' +
+                    '<span class="text-support">By name, landmark or address. Easiest.</span>' +
                 '</button>' +
                 '<button type="button" id="' + p + 'LocWayHere" class="' + WAY_BTN + '">' +
                     '<span class="material-symbols-outlined text-primary">my_location</span>' +
                     '<span class="font-bold text-on-surface">I am at the location</span>' +
-                    '<span class="text-[11px] text-on-surface-variant">Use this device\'s position right now.</span>' +
+                    '<span class="text-support">Use this device\'s position right now.</span>' +
                 '</button>' +
                 '<button type="button" id="' + p + 'LocWayMap" class="' + WAY_BTN + '">' +
                     '<span class="material-symbols-outlined text-primary">map</span>' +
                     '<span class="font-bold text-on-surface">Pick on the map</span>' +
-                    '<span class="text-[11px] text-on-surface-variant">Tap the spot yourself.</span>' +
+                    '<span class="text-support">Tap the spot yourself.</span>' +
                 '</button>' +
             '</div>' +
 
@@ -313,19 +309,18 @@
                         '<input id="' + p + 'LocSearch" type="text" ' +
                             'placeholder="Resort, landmark, barangay or address…" ' +
                             'class="' + INPUT + ' flex-1"/>' +
-                        '<button type="button" id="' + p + 'LocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl ' +
-                            'bg-surface-variant border border-outline-variant/40 text-xs font-bold text-on-surface ' +
-                            'hover:bg-outline-variant/40 transition-all min-h-[44px]">Search</button>' +
+                        '<button type="button" id="' + p + 'LocSearchBtn" class="shrink-0 px-4 py-3 rounded-xl ' + 'bg-surface-variant border border-outline-variant/40 text-support font-bold text-on-surface ' + 'hover:bg-outline-variant/40 transition-all min-h-[44px]">Search</button>' +
                     '</div>' +
                     '<div id="' + p + 'LocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 ' +
                         'rounded-xl p-1 max-h-56 overflow-y-auto text-on-surface"></div>' +
-                    '<p class="text-[11px] text-on-surface-variant mt-1">Places in Zamboanguita are listed first.</p>' +
+                    '<p class="text-support mt-1">Places in Zamboanguita are listed first.</p>' +
                 '</div>' +
 
                 '<div>' +
-                    '<p id="' + p + 'LocMapHint' + '" class="text-xs text-on-surface mb-2 flex items-start gap-1.5">' +
+                    '<p id="' + p + 'LocMapHint' + '" class="text-support text-on-surface mb-2 flex items-start gap-1.5">' +
                         '<span class="material-symbols-outlined !text-base text-primary shrink-0">touch_app</span>' +
-                        '<span>Move the pin to the entrance visitors should arrive at.</span>' +
+                        '<span>Tap the map to drop a pin on the entrance visitors should ' +
+                        'arrive at, then drag it to adjust.</span>' +
                     '</p>' +
                     // Taller than it was, and tallest on a phone, where a pin is
                     // placed with a fingertip rather than a mouse.
@@ -337,24 +332,22 @@
                    more readily than it reads as a dot in the wrong place. */
                 '<div id="' + p + 'LocSanity" hidden class="flex items-start gap-2 bg-surface-container-low rounded-xl px-4 py-3">' +
                     '<span class="material-symbols-outlined !text-base text-primary shrink-0">location_on</span>' +
-                    '<p class="text-xs text-on-surface-variant flex-1 min-w-0">' +
-                        '<span class="block text-[11px] uppercase tracking-wider font-bold">This pin is at</span>' +
+                    '<p class="text-support flex-1 min-w-0">' +
+                        '<span class="block text-label uppercase tracking-wider font-bold">This pin is at</span>' +
                         '<span id="' + p + 'LocSanityText" class="text-on-surface break-words">Reading the address…</span>' +
                     '</p>' +
                 '</div>' +
 
-                '<p id="' + p + 'LocCheck" hidden class="text-xs flex items-start gap-1.5"></p>' +
+                '<p id="' + p + 'LocCheck" hidden class="text-support flex items-start gap-1.5"></p>' +
 
                 /* The pin says one barangay, the form says another. Offered as a
                    choice, because the geocoder is not always the one that is right. */
                 '<div id="' + p + 'LocMismatch" hidden class="bg-surface-container-high border border-outline-variant/40 ' +
                     'rounded-xl px-4 py-3 space-y-2">' +
-                    '<p id="' + p + 'LocMismatchText" class="text-xs text-on-surface"></p>' +
+                    '<p id="' + p + 'LocMismatchText" class="text-support text-on-surface"></p>' +
                     '<div class="flex flex-wrap gap-2">' +
-                        '<button type="button" id="' + p + 'LocMismatchUse" class="px-3 py-2 min-h-[40px] rounded-lg ' +
-                            'bg-primary text-on-primary text-[11px] font-bold"></button>' +
-                        '<button type="button" id="' + p + 'LocMismatchKeep" class="px-3 py-2 min-h-[40px] rounded-lg ' +
-                            'border border-outline-variant/40 text-on-surface text-[11px] font-bold">Adjust the pin</button>' +
+                        '<button type="button" id="' + p + 'LocMismatchUse" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'bg-primary text-on-primary text-support font-bold"></button>' +
+                        '<button type="button" id="' + p + 'LocMismatchKeep" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'border border-outline-variant/40 text-on-surface text-support font-bold">Adjust the pin</button>' +
                     '</div>' +
                 '</div>' +
 
@@ -367,7 +360,7 @@
                                 return '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
                             }).join('') +
                         '</select>' +
-                        '<p class="text-[11px] text-on-surface-variant mt-1">Filled in from the pin. Change it if it is wrong.</p>' +
+                        '<p class="text-support mt-1">Filled in from the pin. Change it if it is wrong.</p>' +
                         errorSlot(p + 'BarangayError') +
                     '</div>' +
                     '<div>' +
@@ -375,11 +368,11 @@
                             '<span class="normal-case font-normal opacity-70">(optional)</span></label>' +
                         '<input id="' + p + 'LocAddress" name="address" type="text" ' +
                             'placeholder="e.g., Sitio Bonbon, near the wharf" class="' + INPUT + '"/>' +
-                        '<p class="text-[11px] text-on-surface-variant mt-1">Anything you type here is kept as you typed it.</p>' +
+                        '<p class="text-support mt-1">Anything you type here is kept as you typed it.</p>' +
                     '</div>' +
                 '</div>' +
 
-                '<div class="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container-low rounded-xl px-4 py-3">' +
+                '<div class="flex items-center gap-2 text-support bg-surface-container-low rounded-xl px-4 py-3">' +
                     '<span class="material-symbols-outlined !text-base">public</span>' +
                     '<span><b class="text-on-surface">' + MUNICIPALITY + '</b>, ' + PROVINCE + '</span>' +
                 '</div>' +
@@ -389,11 +382,10 @@
                 /* Still here for whoever has a GPS reading off a handset, and out
                    of the way of everyone who does not. */
                 '<details id="' + p + 'LocAdvanced" class="rounded-xl border border-outline-variant/40 bg-surface-container-low">' +
-                    '<summary class="cursor-pointer px-4 py-3 text-[11px] font-bold uppercase tracking-wider ' +
-                        'text-on-surface-variant select-none min-h-[44px] flex items-center gap-1.5">' +
+                    '<summary class="cursor-pointer px-4 py-3 text-label font-bold uppercase tracking-wider ' + 'text-on-surface-variant select-none min-h-[44px] flex items-center gap-1.5">' +
                         '<span class="material-symbols-outlined !text-base">tune</span>Advanced location details</summary>' +
                     '<div class="px-4 pb-4 space-y-2">' +
-                        '<p class="text-[11px] text-on-surface-variant">' +
+                        '<p class="text-support">' +
                             'The pin is what gets saved. These are a readout of it, and you can type over them ' +
                             'if you are copying a reading from somewhere else.' +
                         '</p>' +
@@ -411,9 +403,7 @@
                 '</details>' +
 
                 '<div class="flex flex-wrap gap-2">' +
-                    '<button type="button" id="' + p + 'LocConfirm" class="inline-flex items-center gap-1.5 px-5 py-3 ' +
-                        'min-h-[48px] rounded-xl bg-primary text-on-primary text-xs font-bold hover:opacity-90 ' +
-                        'transition-all disabled:opacity-40">' +
+                    '<button type="button" id="' + p + 'LocConfirm" class="inline-flex items-center gap-1.5 px-5 py-3 ' + 'min-h-[48px] rounded-xl bg-primary text-on-primary text-support font-bold hover:opacity-90 ' + 'transition-all disabled:opacity-40">' +
                         '<span class="material-symbols-outlined !text-base">check_circle</span>' +
                         '<span id="' + p + 'LocConfirmLabel">Confirm location</span></button>' +
                     '<button type="button" id="' + p + 'LocChange" class="' + CHIP_BTN + ' !text-on-surface-variant">' +
@@ -421,7 +411,7 @@
                 '</div>' +
                 errorSlot(p + 'LocError') +
 
-                '<p id="' + p + 'LocStatus" hidden class="text-[11px] text-on-surface-variant"></p>' +
+                '<p id="' + p + 'LocStatus" hidden class="text-support"></p>' +
             '</div>' +
         '</section>' +
 
@@ -472,13 +462,13 @@
                     errorSlot(p + 'EntranceFeeError') +
                 '</div>' +
             '</div>' +
-            '<p class="text-[11px] text-on-surface-variant">Leave a fee at zero if there is nothing to pay.</p>' +
+            '<p class="text-support">Leave a fee at zero if there is nothing to pay.</p>' +
 
             '<div class="pt-1">' +
                 '<label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">' +
                     '<input id="' + p + 'TakesBookings" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 ' +
                         'bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>' +
-                    '<span class="text-xs font-bold uppercase tracking-wider text-on-surface">Visitors can book online</span>' +
+                    '<span class="text-label font-bold uppercase tracking-wider text-on-surface">Visitors can book online</span>' +
                 '</label>' +
                 '<div id="' + p + 'BookingRow" hidden class="mt-2">' +
                     '<label for="' + p + 'BookingUrl" class="' + LABEL + '">Booking link</label>' +
@@ -492,9 +482,9 @@
                     '<label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">' +
                         '<input id="' + p + 'RequiresGuide" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 ' +
                             'bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>' +
-                        '<span class="text-xs font-bold uppercase tracking-wider text-on-surface">Requires a tourist guide</span>' +
+                        '<span class="text-label font-bold uppercase tracking-wider text-on-surface">Requires a tourist guide</span>' +
                     '</label>' +
-                    '<p class="text-[11px] text-on-surface-variant mt-1">Visitors are told a guide is needed. Assign the ' +
+                    '<p class="text-support mt-1">Visitors are told a guide is needed. Assign the ' +
                         'guides themselves under Tourist Guides.</p>' +
                   '</div>'
                 : '') +
@@ -504,7 +494,7 @@
         '<section data-step="3" class="space-y-4" hidden>' +
             '<div class="flex items-center justify-between gap-2">' +
                 '<label class="' + LABEL + ' !mb-0">Photos</label>' +
-                '<span id="' + p + 'PhotoCounter" class="text-[11px] text-on-surface-variant font-bold"></span>' +
+                '<span id="' + p + 'PhotoCounter" class="text-support font-bold"></span>' +
             '</div>' +
 
             '<div class="flex flex-wrap gap-2">' +
@@ -518,9 +508,9 @@
             '</div>' +
 
             '<div id="' + p + 'PhotoGallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>' +
-            '<p id="' + p + 'PhotoEmptyHint" class="text-[11px] text-on-surface-variant">' +
+            '<p id="' + p + 'PhotoEmptyHint" class="text-support">' +
                 'The first photo becomes the cover. A listing with no photo shows a grey placeholder on the public page.</p>' +
-            '<p id="' + p + 'PhotoStatus" hidden class="text-[11px]"></p>' +
+            '<p id="' + p + 'PhotoStatus" hidden class="text-support"></p>' +
         '</section>' +
 
         '</div>' +
@@ -530,7 +520,7 @@
             '<p class="' + LABEL + '">What visitors will see</p>' +
             '<div id="' + p + 'Preview" class="rounded-2xl overflow-hidden bg-surface-container-low ' +
                 'border border-outline-variant/30 sticky top-0"></div>' +
-            '<p class="text-[11px] text-on-surface-variant mt-2">Updates as you type.</p>' +
+            '<p class="text-support mt-2">Updates as you type.</p>' +
         '</aside>' +
         '</div>' +
 
@@ -613,6 +603,7 @@
            entered, which is what Cancel puts back. */
         let pinMode = false;
         let pinBackup = null;
+        let expandControl = null;
         let pinControl = null;
         let locMethod = '';                 // '' | 'search' | 'here' | 'map'
         let detectedBarangay = '';          // what the geocoder made of the pin
@@ -826,15 +817,15 @@
                           '<span class="material-symbols-outlined !text-3xl">no_photography</span></div>') +
                 '</div>' +
                 '<div class="p-4">' +
-                    '<p class="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">' + escapeHtml(category) + '</p>' +
+                    '<p class="text-label font-bold uppercase tracking-widest text-primary mb-1">' + escapeHtml(category) + '</p>' +
                     '<h4 class="font-display font-bold text-on-surface leading-tight mb-1">' + escapeHtml(title) + '</h4>' +
-                    (label ? '<p class="text-[11px] text-on-surface-variant italic mb-1">' + escapeHtml(label) + '</p>' : '') +
-                    '<p class="text-[11px] text-on-surface-variant flex items-start gap-1 mb-2">' +
+                    (label ? '<p class="text-support italic mb-1">' + escapeHtml(label) + '</p>' : '') +
+                    '<p class="text-support flex items-start gap-1 mb-2">' +
                         '<span class="material-symbols-outlined !text-sm shrink-0">location_on</span>' +
                         '<span>' + escapeHtml(where) + '</span></p>' +
-                    '<p class="text-xs text-on-surface-variant line-clamp-3">' +
+                    '<p class="text-support line-clamp-3">' +
                         escapeHtml(description || 'No description yet.') + '</p>' +
-                    '<p class="text-[11px] font-bold text-on-surface mt-3">Entrance ' + formatPeso(entrance) + '</p>' +
+                    '<p class="text-support font-bold text-on-surface mt-3">Entrance ' + formatPeso(entrance) + '</p>' +
                 '</div>';
         }
 
@@ -1055,6 +1046,9 @@
                 marker.on('dragend', function () {
                     const at = marker.getLatLng();
                     writePoint(at.lat, at.lng);
+                    // Dragging is the other way a pin first gets a position, so
+                    // Confirm has to be re-enabled here too.
+                    paintPinControl();
                     describePoint({ lat: at.lat, lng: at.lng });
                     say('Pin moved. Check the address below still reads right.', 'ok');
                 });
@@ -1120,13 +1114,34 @@
                cannot place a pin. The mode check is the second guard: a plain
                click while looking around must not move anybody's listing. */
             map.on('click', function (event) {
-                if (!pinMode) return;
+                /* A click while merely looking used to do nothing whatsoever, and
+                   say nothing about why — so the obvious way to place a first pin
+                   looked like a map that did not work.
+
+                   Two situations were being treated as one. With no location set
+                   there is nothing a stray click can damage, and tapping the map
+                   is precisely how anyone expects to set one: take the click and
+                   switch into pin mode around it. With a location already set the
+                   separation earns its keep — a click while reading the map must
+                   not move a published listing — so say what to press instead. */
+                if (!pinMode) {
+                    if (readPoint()) {
+                        say('Press Pin location first, then tap the map to move the pin.');
+                        return;
+                    }
+                    enterPinMode();
+                }
+
                 writePoint(event.latlng.lat, event.latlng.lng);
                 placeMarker(event.latlng.lat, event.latlng.lng, false);
                 // Placed from a municipality-wide view, the pin is a guess at which
                 // building it is. Rather than refusing it, go in close enough that
                 // the guess can be corrected by looking.
                 if (map.getZoom() < PIN_ZOOM) map.setView([event.latlng.lat, event.latlng.lng], PIN_ZOOM);
+                // Confirm is disabled while there is nothing to confirm, which is
+                // the state pin mode starts in. Without this the button never came
+                // back: the pin went down and Confirm stayed grey.
+                paintPinControl();
                 say('Pin placed. Tap again or drag it to move it, then confirm.', 'ok');
                 describePoint({ lat: event.latlng.lat, lng: event.latlng.lng });
             });
@@ -1145,7 +1160,11 @@
                control is lost if the map module is missing; the picker itself
                carries on. */
             if (window.ZTIMS_MAP && window.ZTIMS_MAP.addExpandControl) {
-                window.ZTIMS_MAP.addExpandControl(map, el('LocMap'), function (expanded) {
+                // Kept, not discarded: close() collapses the map. While expanded
+                // the map hangs off <body> rather than sitting inside the dialog,
+                // so closing the form no longer takes it off screen with it — it
+                // would be left covering the page with no way back.
+                expandControl = window.ZTIMS_MAP.addExpandControl(map, el('LocMap'), function (expanded) {
                     // Full screen has no page behind it to scroll, so the wheel
                     // can do the obvious thing.
                     if (expanded) map.scrollWheelZoom.enable();
@@ -2115,6 +2134,12 @@
         }
 
         function close() {
+            // Before anything else: an expanded map is parked on <body> and
+            // outlives the dialog otherwise.
+            if (expandControl && expandControl.isExpanded && expandControl.isExpanded()) {
+                expandControl.collapse();
+            }
+            if (pinMode) leavePinMode();
             form.reset();
             photos = [];
             currentSpot = null;

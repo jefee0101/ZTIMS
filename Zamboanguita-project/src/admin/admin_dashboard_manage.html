@@ -647,7 +647,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap justify-between items-end gap-4">
                 <div class="space-y-1">
-                    <nav class="flex text-[10px] uppercase tracking-widest text-primary-container font-bold mb-2">
+                    <nav class="flex text-label uppercase tracking-widest text-primary-container font-bold mb-2">
                         <span class="text-on-surface-variant">Oversight</span>
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h2>
@@ -676,38 +676,38 @@ body { overflow-x: hidden; }
                             are not in the database yet, so the public site cannot show them.
                             Publishing adds only the missing ones — nothing is duplicated or overwritten.
                         </p>
-                        <p id="starterMissingNames" class="text-xs text-on-surface-variant mt-1"></p>
+                        <p id="starterMissingNames" class="text-support mt-1"></p>
                     </div>
                     <button id="importStarterBtn" class="btn btn-primary shrink-0">
                         <span class="material-symbols-outlined">publish</span> Publish them now
                     </button>
                 </div>
-                <p id="starterImportStatus" hidden class="text-xs mt-3"></p>
+                <p id="starterImportStatus" hidden class="text-support mt-3"></p>
             </div>
 
             <!-- Summary of what is live -->
             <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Published</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Published</p>
                     <h5 id="statTotal" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1"><span id="statSpots">0</span> spots · <span id="statStays">0</span> accommodations</p>
+                    <p class="text-support mt-1"><span id="statSpots">0</span> spots · <span id="statStays">0</span> accommodations</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Kept by the office</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Kept by the office</p>
                     <h5 id="statOffice" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1"><span id="statManaged">0</span> run by managers</p>
+                    <p class="text-support mt-1"><span id="statManaged">0</span> run by managers</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Need attention</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Need attention</p>
                     <h5 id="statIncomplete" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-xs text-on-surface-variant mt-1">missing a photo or a description</p>
+                    <p class="text-support mt-1">missing a photo or a description</p>
                 </div>
             </div>
 
             <!-- Filter Controls Panel -->
             <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-6">
                 <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-2">Categories:</span>
+                    <span class="text-label font-bold uppercase tracking-widest ml-2">Categories:</span>
                     <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
                         <button data-category="ALL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">All</button>
                         <button data-category="BEACH / DIVING" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Beach / Diving</button>
@@ -753,7 +753,7 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-start gap-4">
                 <div>
                     <h2 class="text-2xl font-black tracking-tight font-headline">Edit listing</h2>
-                    <p class="text-xs text-on-surface-variant mt-1">Kept by the Tourism Office, so the office maintains it.</p>
+                    <p class="text-support mt-1">Kept by the Tourism Office, so the office maintains it.</p>
                 </div>
                 <button id="closeEditModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex">
                     <span class="material-symbols-outlined text-2xl">close</span>
@@ -809,7 +809,7 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             const timer = setTimeout(() => {
                 const note = target.querySelector('[data-slow]');
@@ -1166,15 +1166,15 @@ body { overflow-x: hidden; }
                                  category on the server, so it could only ever restate it:
                                  ACCOMMODATION sat next to "Accommodation", and every other
                                  category next to "Tourist Spot". -->
-                            <span class="px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${categoryColour}">${escapeHtml(spot.category || 'General')}</span>
+                            <span class="px-2 py-0.5 text-label font-black rounded uppercase tracking-wider ${categoryColour}">${escapeHtml(spot.category || 'General')}</span>
                         </div>
 
-                        <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                        <p class="text-support flex items-center gap-1">
                             <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '—')}
                         </p>
                         <p class="text-sm text-on-surface-variant line-clamp-2">${escapeHtml(spot.description || '')}</p>
 
-                        <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-on-surface-variant pt-1">
+                        <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-support pt-1">
                             <span class="flex items-center gap-1.5">
                                 <span class="material-symbols-outlined !text-sm">${manager ? 'storefront' : 'account_balance'}</span>
                                 ${manager ? escapeHtml(manager) : 'Tourism Office'}

@@ -691,7 +691,7 @@ body { overflow-x: hidden; }
                         <path id="dynamic-chart-line" class="chart-line" fill="none" stroke="#FFB300" stroke-width="2.5" d="M0,100 L1000,100"></path>
                     </svg>
                 </div>
-                <div class="flex justify-between text-xs text-on-surface-variant font-mono mt-3 px-1" id="chart-labels-axis">
+                <div class="flex justify-between text-support font-mono mt-3 px-1" id="chart-labels-axis">
                     <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                 </div>
             </div>
@@ -702,7 +702,7 @@ body { overflow-x: hidden; }
                     <h3 class="text-lg font-bold flex items-center gap-2 text-on-surface" id="tab-title-display">
                         <span class="material-symbols-outlined text-accent">analytics</span> System Metric Details
                     </h3>
-                    <span class="text-xs text-on-surface-variant uppercase tracking-widest font-mono">Live Sync Logs</span>
+                    <span class="text-label uppercase tracking-widest font-mono">Live Sync Logs</span>
                 </div>
                 <div class="overflow-x-auto max-h-64 overflow-y-auto pr-2" id="tab-results-container">
                     <p class="text-sm text-on-surface-variant py-4 italic">Select any analytics card above to instantly break down registry details entries here.</p>
@@ -833,7 +833,7 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-xs opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
             const timer = setTimeout(() => {
@@ -1096,14 +1096,14 @@ body { overflow-x: hidden; }
                             <img src="${safeImageUrl(displayImg, fallbackImg)}" class="w-full h-52 object-cover" alt="${escapeHtml(spot.title || 'Spot')}" onerror="this.src='${fallbackImg}'"/>
                             <div class="p-6 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <span class="px-2 py-0.5 text-[10px] font-black rounded bg-gold/10 text-gold uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
+                                    <span class="px-2 py-0.5 text-label font-black rounded bg-gold/10 text-gold uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
                                     <h3 class="text-xl font-bold mt-2 text-on-surface">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
-                                    <p class="text-on-surface-variant text-xs flex items-center mt-1">
+                                    <p class="text-support flex items-center mt-1">
                                         <span class="material-symbols-outlined text-sm text-accent mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
                                     </p>
                                     <p class="text-on-surface-variant text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
                                 </div>
-                                <div class="border-t border-outline-variant/40 mt-4 pt-4 flex items-center justify-between text-xs text-on-surface-variant">
+                                <div class="border-t border-outline-variant/40 mt-4 pt-4 flex items-center justify-between text-support">
                                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-gold text-base">verified_user</span> Managed Active</span>
                                     <span>Live Database Entry</span>
                                 </div>
