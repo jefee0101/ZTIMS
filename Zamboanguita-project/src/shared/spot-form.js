@@ -15,6 +15,12 @@
    standalone HTML with inline scripts, and this keeps them that way.
    ========================================================================== */
 
+/* ztimsDialog comes from src/shared/ztims-dialog.js, which every page loading
+   this form also loads. Read as a bare name on purpose, not window.ztimsDialog:
+   that is what lets scripts/check-undefined.cjs report a page that forgot the
+   second script tag. */
+/* global ztimsDialog */
+
 (function () {
     'use strict';
 
@@ -1626,14 +1632,19 @@
             saveDraftSoon();
         }
 
-        /* Losing a located pin to a mis-tap is worse than one extra tap. A native
-           confirm rather than a dialog of our own: these forms already open inside
-           a dialog on two of the three pages, and a second overlay would have to
-           fight the first one for Escape and for stacking order. */
-        el('LocChange').addEventListener('click', function () {
+        /* Losing a located pin to a mis-tap is worse than one extra tap. This
+           form already opens inside a page modal on two of the three pages, so
+           the question goes through ztims-dialog.js, which stacks above that
+           modal and takes Escape before it does — a plain second overlay would
+           have closed both. The page must load ztims-dialog.js alongside this
+           file; npm run check flags one that does not. */
+        el('LocChange').addEventListener('click', async function () {
             if (!readPoint() && !locMethod) return;
-            const sure = window.confirm(
-                'Change location?\n\nThe location currently set for this listing will be removed.');
+            const sure = await ztimsDialog.confirm({
+                title: 'Change location?',
+                message: 'The location currently set for this listing will be removed.',
+                confirmLabel: 'Change location'
+            });
             if (!sure) return;
             clearLocation();
         });
@@ -1893,13 +1904,22 @@
                 failed.length ? 'error' : '');
         });
 
-        el('AddPhotoUrlBtn').addEventListener('click', function () {
-            const url = prompt('Paste the photo link (it must start with http:// or https://)');
+        el('AddPhotoUrlBtn').addEventListener('click', async function () {
+            const url = await ztimsDialog.prompt({
+                title: 'Add a photo by link',
+                message: 'Paste the address of a photo that is already online.',
+                label: 'Photo link',
+                type: 'url',
+                placeholder: 'https://…',
+                help: 'It must start with http:// or https://.',
+                confirmLabel: 'Add photo',
+                validate: function (value) {
+                    return /^https?:\/\//i.test(value.trim())
+                        ? ''
+                        : 'That does not look like a photo link. It should start with http:// or https://.';
+                }
+            });
             if (url === null) return;
-            if (!/^https?:\/\//i.test(url.trim())) {
-                setPhotoStatus('That does not look like a photo link. It should start with http:// or https://.', 'error');
-                return;
-            }
             setPhotoStatus('');
             addPhotos([url]);
         });

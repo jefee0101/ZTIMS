@@ -752,6 +752,9 @@ body { overflow-x: hidden; }
      Leaflet loader. Loaded before the form, which uses it when present. -->
 <script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
+<!-- The site's own confirm/prompt, in place of the browser's. The form above
+     asks through it before clearing a pin and when adding a photo by link. -->
+<script type="module" src="../shared/ztims-dialog.js"></script>
 
 
     <script>

@@ -1054,10 +1054,22 @@ body { overflow-x: hidden; }
             const listings = listingCounts[String(id)] || 0;
             const name = nameOf(manager) || manager.email;
 
-            const question = suspended
-                ? `Restore ${name}?\n\nThey will be able to sign in again, and their ${listings} listing${listings === 1 ? '' : 's'} will return to the public site.`
-                : `Suspend ${name}?\n\nThey will not be able to sign in, and their ${listings} listing${listings === 1 ? '' : 's'} will be hidden from the public site.\n\nNothing is deleted — you can restore the account at any time.`;
-            if (!confirm(question)) return;
+            const listingWord = `${listings} listing${listings === 1 ? '' : 's'}`;
+            const sure = await ztimsDialog.confirm(suspended
+                ? {
+                    title: `Restore ${name}?`,
+                    message: `They will be able to sign in again, and their ${listingWord} will return to the public site.`,
+                    confirmLabel: 'Restore account',
+                    icon: 'how_to_reg'
+                }
+                : {
+                    title: `Suspend ${name}?`,
+                    message: `They will not be able to sign in, and their ${listingWord} will be hidden from the public site.\n\n` +
+                        `Nothing is deleted — you can restore the account at any time.`,
+                    confirmLabel: 'Suspend account',
+                    icon: 'person_off'
+                });
+            if (!sure) return;
 
             try {
                 const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
@@ -1077,15 +1089,22 @@ body { overflow-x: hidden; }
             if (!manager) return;
             const name = nameOf(manager) || manager.email;
 
-            const typed = prompt(
-                `Issue a new password for ${name}?\n\n` +
-                `Their current password stops working immediately. Leave this blank to have one generated, ` +
-                `or type one of at least 8 characters.`, '');
+            // Blank and cancelled are different answers: blank asks the server
+            // to generate one, cancelled (null) does nothing.
+            const typed = await ztimsDialog.prompt({
+                title: `Issue a new password for ${name}?`,
+                message: 'Their current password stops working immediately.',
+                label: 'New password',
+                optional: true,
+                placeholder: 'Leave blank to have one generated',
+                help: 'At least 8 characters. Deliberately readable — you have to pass it on.',
+                confirmLabel: 'Issue password',
+                icon: 'key',
+                validate: value => value.trim() && value.trim().length < 8
+                    ? 'A password must be at least 8 characters.'
+                    : ''
+            });
             if (typed === null) return;
-            if (typed.trim() && typed.trim().length < 8) {
-                showToast('A password must be at least 8 characters.', 'error');
-                return;
-            }
 
             try {
                 const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}/password`, {
@@ -1107,20 +1126,44 @@ body { overflow-x: hidden; }
             const manager = managerById(id);
             if (!manager) return;
 
-            const establishmentName = prompt('Establishment name', nameOf(manager));
-            if (establishmentName === null) return;
-            const managerName = prompt("Manager's name", manager.managerName || '');
-            if (managerName === null) return;
-            const contactEmail = prompt('Public contact email (blank uses the sign-in email)', manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''));
-            if (contactEmail === null) return;
-            const phone = prompt('Phone', manager.phone || '');
-            if (phone === null) return;
+            // One form with the same four fields as the "New manager account"
+            // modal above, rather than four questions in a row. Cancelling
+            // anywhere changes nothing.
+            const values = await ztimsDialog.form({
+                title: 'Edit manager details',
+                message: 'The sign-in email and password are changed from their own actions, not here.',
+                confirmLabel: 'Save changes',
+                icon: 'manage_accounts',
+                fields: [
+                    {
+                        name: 'establishmentName', label: 'Establishment name', required: true,
+                        value: nameOf(manager), placeholder: 'e.g., Basay Beach Resort'
+                    },
+                    {
+                        name: 'managerName', label: "Manager's name",
+                        value: manager.managerName || '', placeholder: 'e.g., Maria Santos',
+                        help: 'The person who actually runs the establishment.'
+                    },
+                    {
+                        name: 'contactEmail', label: 'Public contact email', optional: true, type: 'email',
+                        value: manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''),
+                        placeholder: 'Same as sign-in email if left blank',
+                        help: 'Shown to visitors on a listing with no booking website, alongside the phone number.'
+                    },
+                    {
+                        name: 'phone', label: 'Phone', optional: true,
+                        value: manager.phone || '', placeholder: '09XX XXX XXXX',
+                        help: 'Shown to visitors on a listing that has no booking website.'
+                    }
+                ]
+            });
+            if (values === null) return;
 
             try {
                 await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
                     method: 'PATCH',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ establishmentName, managerName, contactEmail, phone })
+                    body: JSON.stringify(values)
                 }, button, '');
                 await loadDirectory();
             } catch (error) {
@@ -1144,7 +1187,14 @@ body { overflow-x: hidden; }
                 return;
             }
 
-            if (!confirm(`Delete ${name} permanently?\n\nThe account and its sign-in are removed for good. This cannot be undone.`)) return;
+            const sure = await ztimsDialog.confirm({
+                title: `Delete ${name} permanently?`,
+                message: 'The account and its sign-in are removed for good. This cannot be undone.',
+                confirmLabel: 'Delete account',
+                cancelLabel: 'Keep it',
+                tone: 'danger'
+            });
+            if (!sure) return;
 
             try {
                 await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}`, {
@@ -1334,5 +1384,8 @@ body { overflow-x: hidden; }
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
+<!-- The site's own confirm/prompt, in place of the browser's: the suspend,
+     delete, new-password and edit-details questions on each account row. -->
+<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>

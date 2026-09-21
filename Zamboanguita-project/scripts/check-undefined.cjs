@@ -16,8 +16,11 @@ const walk = require('acorn-walk');
 
 const ROOT = path.resolve(__dirname, '..');
 
+// alert, confirm and prompt are deliberately NOT here. The browser's own boxes
+// were replaced by src/shared/ztims-dialog.js, so a bare call to one of them
+// is a regression this check should report, not a global it should excuse.
 const BUILTINS = new Set([
-    'alert', 'confirm', 'prompt', 'fetch', 'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval',
+    'fetch', 'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval',
     'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'encodeURIComponent', 'decodeURIComponent',
     'encodeURI', 'decodeURI', 'String', 'Number', 'Boolean', 'Array', 'Object', 'Date', 'Math',
     'JSON', 'Promise', 'Error', 'TypeError', 'RangeError', 'Map', 'Set', 'WeakMap', 'WeakSet',

@@ -771,6 +771,9 @@ body { overflow-x: hidden; }
      Leaflet loader. Loaded before the form, which uses it when present. -->
 <script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
+<!-- The site's own confirm/prompt, in place of the browser's. Used by the
+     form above and by this page's take-down question. -->
+<script type="module" src="../shared/ztims-dialog.js"></script>
 
 
     <script>
@@ -1306,11 +1309,15 @@ body { overflow-x: hidden; }
             const name = spot ? spot.title : 'this listing';
             const manager = spot ? managerOf(spot) : '';
 
-            if (!confirm(
-                `Take down "${name}"?\n\n` +
-                (manager ? `It is run by ${manager}, who will lose the listing too.\n\n` : '') +
-                `It disappears from the public site immediately. This cannot be undone.`
-            )) return;
+            const sure = await ztimsDialog.confirm({
+                title: `Take down "${name}"?`,
+                message: (manager ? `It is run by ${manager}, who will lose the listing too.\n\n` : '') +
+                    `It disappears from the public site immediately. This cannot be undone.`,
+                confirmLabel: 'Take it down',
+                cancelLabel: 'Keep it',
+                tone: 'danger'
+            });
+            if (!sure) return;
 
             const restoreButton = setButtonLoading(button, 'Removing...');
             try {

@@ -584,7 +584,7 @@ body.dark-mode .text-primary {
    --------------------------------------------------------------------------
    There was no button system: each page sized and coloured its own, so the
    same action was a pill on one screen and a square on the next, and orange
-   was the default fill everywhere. These are the four buttons ZTIMS actually
+   was the default fill everywhere. These are the five buttons ZTIMS actually
    needs. They are opt-in — existing markup keeps working untouched — so a page
    can be moved onto them one button at a time.
 
@@ -650,6 +650,21 @@ body.dark-mode .text-primary {
     color: #3A2A05;
 }
 .btn-highlight:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* The confirming button of a "Delete this?" dialog (src/shared/ztims-dialog.js).
+   Tinted and outlined rather than filled: the dark theme's error red is a
+   light one chosen to read AS TEXT on a dark ground, and white on it would be
+   well under AA. Drawn this way the label carries the colour, and the tint
+   still says this one is not the safe answer. */
+.btn-danger {
+    background: rgb(var(--ztims-error) / 0.10);
+    color: rgb(var(--ztims-error));
+    border-color: rgb(var(--ztims-error) / 0.40);
+}
+.btn-danger:hover:not(:disabled) {
+    background: rgb(var(--ztims-error) / 0.18);
+    border-color: rgb(var(--ztims-error));
+}
 
 /* A button that is working. The spinner is supplied by the page; this only
    stops the press registering twice. */

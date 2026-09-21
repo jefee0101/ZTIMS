@@ -619,6 +619,9 @@ body { overflow-x: hidden; }
      Leaflet loader. Loaded before the form, which uses it when present. -->
 <script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
+<!-- The site's own confirm/prompt, in place of the browser's. Used by the
+     form above and by this page's delete and duplicate-listing questions. -->
+<script type="module" src="../shared/ztims-dialog.js"></script>
 
 
     <script>
@@ -796,10 +799,13 @@ body { overflow-x: hidden; }
             const duplicate = findLikelyDuplicate(payload, editingId);
             if (duplicate) {
                 const where = duplicate.barangay ? `${duplicate.category}, ${duplicate.barangay}` : duplicate.category;
-                const proceed = confirm(
-                    `This looks like a listing you already have: "${duplicate.title}" (${where}).\n\n` +
-                    `Publish "${payload.title}" anyway as a separate listing?`
-                );
+                const proceed = await ztimsDialog.confirm({
+                    title: 'Is this a listing you already have?',
+                    message: `It looks like "${duplicate.title}" (${where}).\n\n` +
+                        `Publish "${payload.title}" anyway, as a separate listing?`,
+                    confirmLabel: 'Publish anyway',
+                    cancelLabel: 'Go back'
+                });
                 if (!proceed) {
                     const cancelled = new Error('Publishing was cancelled.');
                     cancelled.silent = true;
@@ -827,7 +833,15 @@ body { overflow-x: hidden; }
         }
 
         async function deleteSpot(id, button) {
-            if (!confirm('Delete this listing permanently? This cannot be undone.')) return;
+            const spot = mySpots.find(item => String(item._id) === String(id));
+            const sure = await ztimsDialog.confirm({
+                title: spot ? `Delete "${spot.title}"?` : 'Delete this listing?',
+                message: 'It disappears from the public site immediately. This cannot be undone.',
+                confirmLabel: 'Delete listing',
+                cancelLabel: 'Keep it',
+                tone: 'danger'
+            });
+            if (!sure) return;
             const restoreButton = setButtonLoading(button, 'Deleting...');
             try {
                 const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
