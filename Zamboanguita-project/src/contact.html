@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Our History</title>
+    <title>Explore Zamboanguita | Contact Us</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -147,6 +147,11 @@ body { overflow-x: hidden; }
     <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
+    <style>
+        /* The honeypot: off-screen rather than display:none, because some
+           bots skip fields that are not rendered at all. */
+        .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+    </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
@@ -378,7 +383,7 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg">location_on</span>
                     <span class="hidden min-[420px]:inline">Destinations</span>
                 </a>
-                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
@@ -399,224 +404,152 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="flex-1">
-
-        <section class="pt-10 sm:pt-14 pb-0">
+        <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-6xl mx-auto px-5 sm:px-6 md:px-10">
+
                 <a href="../index.html" class="inline-flex items-center gap-1.5 text-label font-bold uppercase tracking-widest hover:text-primary transition-colors min-h-[44px]">
                     <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
                 </a>
+
+                <header class="mt-4 sm:mt-6 mb-8 sm:mb-10 max-w-3xl">
+                    <p class="text-label font-bold uppercase tracking-widest text-primary mb-3">Contact Us</p>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05]">
+                        Tell us what you <span class="text-gradient">think.</span>
+                    </h1>
+                    <p class="text-on-surface-variant mt-4 leading-relaxed">
+                        A listing that is out of date, a page that does not work on your phone, an idea for the
+                        site — it all goes to the Municipal Tourism Office, and it is how ZTIMS gets better. No
+                        account needed; your name and email are optional.
+                    </p>
+                </header>
+
+                <!-- The form first on a phone, because it is what the page is for;
+                     the office details sit beside it from lg up, where there is
+                     room for both without either scrolling out of view. -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+
+                    <div class="lg:col-span-7 order-1">
+                        <form id="feedbackForm" class="rounded-[1.5rem] bg-surface border border-outline-variant/30 p-5 sm:p-8 space-y-5" novalidate>
+
+                            <div>
+                                <label for="fbTopic" class="field-label">What is it about?</label>
+                                <select id="fbTopic" name="topic" class="field" required>
+                                    <option value="suggestion">A suggestion for the site</option>
+                                    <option value="listing">A listing is wrong or out of date</option>
+                                    <option value="problem">Something is not working</option>
+                                    <option value="booking">A guide booking</option>
+                                    <option value="other">Something else</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="fbMessage" class="field-label">Your message</label>
+                                <textarea id="fbMessage" name="message" class="field min-h-[9rem] resize-y" rows="6" maxlength="2000" required
+                                          placeholder="Say which page or destination, and what you expected to happen."></textarea>
+                                <div class="flex justify-between gap-3 mt-1">
+                                    <p id="fbMessageError" class="field-error" hidden></p>
+                                    <p class="field-help ml-auto"><span id="fbCount">0</span> / 2000</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="fbName" class="field-label">Your name <span class="normal-case font-normal tracking-normal opacity-70">(optional)</span></label>
+                                    <input id="fbName" name="name" type="text" class="field" maxlength="120" autocomplete="name"/>
+                                </div>
+                                <div>
+                                    <label for="fbEmail" class="field-label">Email <span class="normal-case font-normal tracking-normal opacity-70">(optional)</span></label>
+                                    <input id="fbEmail" name="email" type="email" class="field" maxlength="254" autocomplete="email" placeholder="So we can reply"/>
+                                    <p id="fbEmailError" class="field-error" hidden></p>
+                                </div>
+                            </div>
+
+                            <!-- A field no person sees or fills. Bots that fill every input
+                                 fill this one, and the server quietly drops the message. -->
+                            <div class="hp" aria-hidden="true">
+                                <label for="fbWebsite">Website</label>
+                                <input id="fbWebsite" name="website" type="text" tabindex="-1" autocomplete="off"/>
+                            </div>
+
+                            <p id="fbFormError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
+                                <button id="fbSubmit" type="submit" class="btn btn-primary w-full sm:w-auto">
+                                    <span class="material-symbols-outlined !text-base">send</span> Send feedback
+                                </button>
+                                <p class="text-support">
+                                    By sending, you agree to the <a href="privacy.html" class="underline underline-offset-4 hover:text-primary">Privacy Policy</a>.
+                                    Please do not include passwords or card numbers.
+                                </p>
+                            </div>
+                        </form>
+
+                        <!-- Shown in the form's place once it has been sent. -->
+                        <div id="feedbackSent" hidden class="rounded-[1.5rem] bg-surface border border-outline-variant/30 p-6 sm:p-10 text-center">
+                            <span class="material-symbols-outlined !text-5xl text-success">mark_email_read</span>
+                            <h2 class="text-2xl font-display font-extrabold text-on-surface mt-3">Thank you — it's with the office.</h2>
+                            <p id="feedbackSentNote" class="text-on-surface-variant mt-2 max-w-md mx-auto"></p>
+                            <div class="flex flex-wrap justify-center gap-2 mt-6">
+                                <a href="../index.html" class="btn btn-primary">Back to destinations</a>
+                                <button id="feedbackAgain" type="button" class="btn btn-secondary">Send another</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="lg:col-span-5 order-2 space-y-4">
+                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                            <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-3">Municipal Tourism Office</p>
+                            <address class="not-italic space-y-3 text-on-surface-variant">
+                                <p class="flex gap-3">
+                                    <span class="material-symbols-outlined text-primary !text-xl shrink-0">location_on</span>
+                                    <span>Municipal Hall, Poblacion<br>Zamboanguita, Negros Oriental 6218<br>Philippines</span>
+                                </p>
+                                <p class="flex gap-3">
+                                    <span class="material-symbols-outlined text-primary !text-xl shrink-0">schedule</span>
+                                    <span>Monday to Friday<br>8:00 AM – 5:00 PM</span>
+                                </p>
+                                <!-- CONFIRM WITH THE OFFICE BEFORE LAUNCH: the address and hours are the
+                                     usual ones for a municipal hall, not supplied by the office. The same
+                                     text is in shared/site-footer.js and privacy.html.
+                                     Phone and email are deliberately absent until the office
+                                     supplies them: a wrong number for a government office is
+                                     worse than none. Add them here as
+                                     <p class="flex gap-3"><span class="material-symbols-outlined text-primary !text-xl shrink-0">call</span><a href="tel:+63...">...</a></p>
+                                     and mirror them in shared/site-footer.js. -->
+                            </address>
+                        </div>
+
+                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                            <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-3">What happens next</p>
+                            <ol class="space-y-3 text-on-surface-variant">
+                                <li class="flex gap-3">
+                                    <span class="w-7 h-7 rounded-full bg-primary/15 text-primary font-bold text-sm flex items-center justify-center shrink-0">1</span>
+                                    <span>Your message lands in the Tourism Office's inbox the moment you send it.</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="w-7 h-7 rounded-full bg-primary/15 text-primary font-bold text-sm flex items-center justify-center shrink-0">2</span>
+                                    <span>An officer reads it on the next working day and checks the listing or page you mentioned.</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="w-7 h-7 rounded-full bg-primary/15 text-primary font-bold text-sm flex items-center justify-center shrink-0">3</span>
+                                    <span>If you left an email, they reply there. Either way, a fix shows up on the site.</span>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                            <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2">Before you write</p>
+                            <p class="text-support mb-3">Your question may already be answered.</p>
+                            <ul class="space-y-1">
+                                <li><a href="faq.html#guides" class="inline-flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-primary hover:text-accent transition-colors"><span class="material-symbols-outlined !text-base">help</span> How do I book a guide, and where do I pay?</a></li>
+                                <li><a href="faq.html#directions" class="inline-flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-primary hover:text-accent transition-colors"><span class="material-symbols-outlined !text-base">help</span> Does the site track my location?</a></li>
+                                <li><a href="faq.html#establishments" class="inline-flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-primary hover:text-accent transition-colors"><span class="material-symbols-outlined !text-base">help</span> How do I get my establishment listed?</a></li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
             </div>
         </section>
-
-            <!--
-                 Sits below the destinations, as the third section of the main
-                 page. The Cebuano phrases are the point of the story, so they
-                 are marked rather than buried in the paragraph. -->
-            <section class="py-10 sm:py-16 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-
-                    <div class="order-2 lg:order-1">
-                        <div class="w-16 h-1 bg-primary mb-6 sm:mb-8"></div>
-
-                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05] mb-4 sm:mb-6">
-                            How <span class="text-gradient">Zamboanguita</span><br class="hidden sm:block"/> Came To Be.
-                        </h2>
-
-                        <p class="text-base sm:text-lg text-on-surface font-medium leading-relaxed mb-5">
-                            A town rooted in history and replete with natural resources, Zamboanguita derived its
-                            name from an incident involving a <i>coguita</i> (octopus).
-                        </p>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
-                                would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
-                                &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
-                                nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
-                                in their fishing net, which they then separated from their catch as it had tentacles and
-                                no gills.
-                            </p>
-                            <p>
-                                The leader of the Moro group then ordered one of his men to go to the beach and find a
-                                tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
-                                Since then, every time an octopus was caught, it was hung on that particular tree.
-                                Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
-                                When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
-                                shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
-                                from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
-                                across the Dipolog Strait: the Zamboanga Peninsula.
-                            </p>
-                        </div>
-
-                        <!-- The name's journey, pulled out of the paragraph above so it
-                             can be read at a glance. -->
-                        <div class="flex flex-wrap items-center gap-2 my-6 text-support font-bold">
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Sab-ongan ug coguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Zamboangaguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-primary text-on-primary">Zamboanguita</span>
-                        </div>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">location_on</span>
-                                <span>
-                                    Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at
-                                    approximately 9&deg;6&prime;N latitude and 123&deg;12&prime;E longitude, about 28
-                                    kilometers south of Dumaguete City.
-                                </span>
-                            </p>
-                            <p>
-                                In Zamboanguita, we prioritize high-end experiences that leave no footprint, only
-                                memories. We partner with local guardians to ensure that the beauty we share today
-                                remains untainted for the narratives of tomorrow.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="order-1 lg:order-2">
-                        <div class="aspect-[4/3] lg:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
-                            <img class="w-full h-full object-cover" loading="lazy"
-                                 src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg"
-                                 alt="The coast of Zamboanguita, Negros Oriental"/>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============ AT A GLANCE ============
-                 The municipal facts a visitor actually asks about, as a panel
-                 rather than a paragraph, so any one of them can be found at speed. -->
-            <section class="py-10 sm:py-14 bg-surface-container-low">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <div class="w-16 h-1 bg-primary mb-6"></div>
-                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-2">
-                        The municipality at a glance
-                    </h2>
-                    <p class="text-on-surface-variant mb-7 max-w-2xl">
-                        Zamboanguita — <i>Lungsod sa Zamboanguita</i> in Cebuano — is a coastal municipality
-                        in the province of Negros Oriental, established in 1866.
-                    </p>
-
-                    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Founded</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">1866</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Population</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">30,412</dd>
-                            <dd class="text-support mt-0.5">2024 census</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Land area</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">85.86 km²</dd>
-                            <dd class="text-support mt-0.5">33.15 sq mi</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Barangays</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">11</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Elevation</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">170 m</dd>
-                            <dd class="text-support mt-0.5">rising to 1,846 m</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Languages</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">Cebuano</dd>
-                            <dd class="text-support mt-0.5">and Tagalog</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">ZIP code</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">6218</dd>
-                            <dd class="text-support mt-0.5">dialling +63 (0)35</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Time zone</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">UTC+8</dd>
-                            <dd class="text-support mt-0.5">PST, no daylight saving</dd>
-                        </div>
-                    </dl>
-                </div>
-            </section>
-
-            <!-- ============ WHERE IT IS ============ -->
-            <section class="py-10 sm:py-14 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            Where it is
-                        </h2>
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Zamboanguita sits at the southern tip of Negros Oriental, about
-                                <b class="text-on-surface">28 kilometres</b> down the coast from Dumaguete,
-                                facing the island province of Siquijor across the strait.
-                            </p>
-                            <p>
-                                Its neighbours are <b class="text-on-surface">Siaton</b> to the west and
-                                <b class="text-on-surface">Dauin</b> to the north and east. The municipality
-                                belongs to the 3rd district of Negros Oriental, in the Negros Island Region.
-                            </p>
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">explore</span>
-                                <span>9°06′00″N, 123°11′56″E — the land runs from the shoreline up to a
-                                    highest point of 1,846 metres.</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            The barangays
-                        </h2>
-                        <p class="text-on-surface-variant leading-relaxed mb-4">
-                            Zamboanguita is divided into eleven barangays. Each is made up of puroks, and
-                            several contain sitios of their own.
-                        </p>
-                        <ul class="flex flex-wrap gap-2">
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Basak</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Calango</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Jumao-as</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Lutoban</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Malongcay Diot</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Maluay</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Mayabon</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nabago</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Najandig</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nasig-id</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Poblacion</li>
-                        </ul>
-
-                        <div class="mt-7 bg-surface-container-high border border-outline-variant/20 rounded-xl p-5">
-                            <p class="text-label uppercase tracking-widest font-bold mb-1">Town fiesta</p>
-                            <p class="text-on-surface font-bold">San Isidro Labrador</p>
-                            <p class="text-on-surface-variant text-sm">Celebrated every 15 May.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Wikipedia's text is CC BY-SA, which asks for attribution. Saying where
-                 the figures came from is also how a reader knows when to re-check them. -->
-            <section class="py-8 bg-surface-container-low border-t border-outline-variant/15">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <p class="text-support leading-relaxed">
-                        Municipal figures on this page are drawn from the
-                        <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer"
-                           class="text-accent font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
-                        available under CC BY-SA, which cites the Philippine Statistics Authority for the
-                        census and land area. Population and area figures change with each census.
-                        The barangay list is the exception: it has been corrected locally and no longer
-                        matches that article.
-                    </p>
-                </div>
-            </section>
-
     </main>
 
     <!-- Drawn by shared/site-footer.js, the same on every visitor page.
@@ -624,7 +557,144 @@ body { overflow-x: hidden; }
     <footer data-site-footer data-root="../"></footer>
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
+<script>
+(function () {
+    const API_BASE = "https://ztims-api.onrender.com/api";
 
-<!-- Write-a-review dialog -->
+    const form = document.getElementById('feedbackForm');
+    const sent = document.getElementById('feedbackSent');
+    const sentNote = document.getElementById('feedbackSentNote');
+    const again = document.getElementById('feedbackAgain');
+    const topic = document.getElementById('fbTopic');
+    const message = document.getElementById('fbMessage');
+    const name = document.getElementById('fbName');
+    const email = document.getElementById('fbEmail');
+    const website = document.getElementById('fbWebsite');
+    const count = document.getElementById('fbCount');
+    const submit = document.getElementById('fbSubmit');
+    const formError = document.getElementById('fbFormError');
+    const messageError = document.getElementById('fbMessageError');
+    const emailError = document.getElementById('fbEmailError');
+
+    const MIN_MESSAGE = 10;
+
+    // The ZTIMS page the visitor came from, so an officer can find "the listing
+    // with the wrong fee" without asking which one. Only a page on this site:
+    // arriving from elsewhere says nothing about the site and is not ours to note.
+    function referringPage() {
+        try {
+            const from = new URL(document.referrer);
+            return from.origin === window.location.origin ? from.href : '';
+        } catch (e) { return ''; }
+    }
+
+    // A topic in the URL (contact.html?topic=listing) preselects it, so a
+    // "report this listing" link elsewhere can land on the right choice.
+    const preset = new URLSearchParams(window.location.search).get('topic');
+    if (preset && Array.prototype.some.call(topic.options, o => o.value === preset)) topic.value = preset;
+
+    function setFieldError(field, box, text) {
+        box.textContent = text || '';
+        box.hidden = !text;
+        if (text) field.setAttribute('aria-invalid', 'true');
+        else field.removeAttribute('aria-invalid');
+    }
+
+    function setFormError(text) {
+        formError.textContent = text || '';
+        formError.hidden = !text;
+    }
+
+    message.addEventListener('input', function () {
+        count.textContent = String(message.value.length);
+        if (message.value.trim().length >= MIN_MESSAGE) setFieldError(message, messageError, '');
+    });
+    email.addEventListener('input', function () { setFieldError(email, emailError, ''); });
+
+    function validate() {
+        let ok = true;
+        if (message.value.trim().length < MIN_MESSAGE) {
+            setFieldError(message, messageError, 'Please write a little more — at least ' + MIN_MESSAGE + ' characters, so the office knows what to look at.');
+            ok = false;
+        }
+        const address = email.value.trim();
+        if (address && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+            setFieldError(email, emailError, 'That email address does not look complete.');
+            ok = false;
+        }
+        return ok;
+    }
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        setFormError('');
+        if (!validate()) {
+            (message.getAttribute('aria-invalid') ? message : email).focus();
+            return;
+        }
+
+        const originalHTML = submit.innerHTML;
+        submit.disabled = true;
+        submit.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span> Sending…';
+
+        // The API sleeps on Render's free tier; after 5s say so rather than
+        // leaving the button spinning in silence.
+        const slowTimer = setTimeout(function () {
+            setFormError('Still sending — the server is waking up, which can take up to a minute.');
+        }, 5000);
+
+        try {
+            const response = await fetch(API_BASE + '/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: topic.value,
+                    message: message.value.trim(),
+                    name: name.value.trim(),
+                    email: email.value.trim(),
+                    website: website.value,
+                    page: referringPage()
+                })
+            });
+            clearTimeout(slowTimer);
+            setFormError('');
+
+            let data = null;
+            try { data = await response.json(); } catch (e) { /* no body */ }
+
+            if (!response.ok) {
+                setFormError((data && data.message) || (response.status === 429
+                    ? 'That is a lot of messages from one connection. Please wait a while and try again.'
+                    : 'The office could not take your message just now. Please try again in a moment.'));
+                return;
+            }
+
+            sentNote.textContent = email.value.trim()
+                ? 'An officer will read it on the next working day and reply to ' + email.value.trim() + ' if there is anything to tell you.'
+                : 'An officer will read it on the next working day. You did not leave an email, so there will be no reply — but the fix will show on the site.';
+            form.hidden = true;
+            sent.hidden = false;
+            sent.scrollIntoView({ block: 'nearest' });
+            if (typeof showToast === 'function') showToast('Feedback sent. Thank you.', 'success');
+        } catch (error) {
+            clearTimeout(slowTimer);
+            setFormError('Could not reach the server. Check your connection and try again.');
+        } finally {
+            submit.disabled = false;
+            submit.innerHTML = originalHTML;
+        }
+    });
+
+    again.addEventListener('click', function () {
+        form.reset();
+        count.textContent = '0';
+        setFieldError(message, messageError, '');
+        setFieldError(email, emailError, '');
+        sent.hidden = true;
+        form.hidden = false;
+        message.focus();
+    });
+})();
+</script>
 </body>
 </html>

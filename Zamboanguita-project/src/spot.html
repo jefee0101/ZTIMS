@@ -492,9 +492,10 @@ body { overflow-x: hidden; }
     </figure>
 </div>
 
-<footer class="w-full py-10 px-8 bg-surface-container-low border-t border-outline-variant/10 mt-16 transition-colors duration-300">
-    <p class="text-center text-sm text-on-surface-variant">© 2026 Zamboanguita Tourism Information Management System</p>
-</footer>
+<!-- Drawn by shared/site-footer.js, the same on every visitor page.
+     data-root is the way back to the project root from here. -->
+<footer data-site-footer data-root="../" class="mt-16"></footer>
+<script type="module" src="./shared/site-footer.js"></script>
 
 <!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
      the category markers. Loaded before the page script, which uses it. -->

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Guide Bookings</title>
+<title>Explore Zamboanguita Admin | Feedback</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -653,190 +653,120 @@ body { overflow-x: hidden; }
                 <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
                     <span class="text-on-surface-variant">Municipal tourism</span>
                 </nav>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Feedback</h2>
                 <p class="text-on-surface-variant text-sm max-w-2xl">
-                    Visitors submit these without an account and bring the reference to the office.
-                    Record the payment at the counter to confirm a booking, then assign a guide.
+                    What visitors sent from the public site's Contact Us page. Mark a message read once
+                    you have seen it and resolved once it is dealt with — nothing here is ever deleted.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 sm:gap-4">
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Awaiting payment</p>
-                    <h5 id="statPending" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">visitors due at the counter</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">New</p>
+                    <h5 id="statNew" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-support mt-1">not yet opened</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Confirmed</p>
-                    <h5 id="statConfirmed" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Read</p>
+                    <h5 id="statRead" class="text-3xl font-black text-on-surface">—</h5>
+                    <p class="text-support mt-1">seen, still open</p>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Needs a guide</p>
-                    <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">confirmed, nobody assigned</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Collected</p>
-                    <h5 id="statCollected" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">recorded onsite payments</p>
+                    <p class="text-label font-bold uppercase tracking-widest mb-1">Resolved</p>
+                    <h5 id="statResolved" class="text-3xl font-black text-on-surface">—</h5>
                 </div>
             </div>
 
             <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                 <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2 min-w-0">
-                    <span class="material-symbols-outlined text-accent !text-lg shrink-0">confirmation_number</span>
-                    <span class="truncate">Bookings</span>
+                    <span class="material-symbols-outlined text-accent !text-lg shrink-0">forum</span>
+                    <span class="truncate">Messages</span>
                 </h3>
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-auto">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="bookingSearch" type="search" placeholder="Search a reference or name"
+                        <input id="feedbackSearch" type="search" placeholder="Search a message, name or email"
                                class="field !pl-10 w-full sm:w-72"/>
                     </div>
-                    <select id="bookingStatusFilter" class="field w-full sm:w-auto">
-                        <option value="all">All statuses</option>
-                        <option value="pending_payment">Pending payment</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="no_show">No show</option>
+                    <select id="feedbackStatusFilter" class="field w-full sm:w-auto">
+                        <option value="open">Open (new and read)</option>
+                        <option value="new">New only</option>
+                        <option value="read">Read only</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="all">Everything</option>
                     </select>
-                    <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
+                    <select id="feedbackTopicFilter" class="field w-full sm:w-auto">
+                        <option value="all">All topics</option>
+                        <option value="listing">Listing wrong / out of date</option>
+                        <option value="problem">Something not working</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="booking">Guide booking</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button id="refreshFeedbackBtn" class="btn btn-secondary min-h-[44px]">
                         <span class="material-symbols-outlined !text-base">refresh</span> Refresh
                     </button>
                 </div>
             </div>
 
-            <div class="rounded-[2rem] glass-panel overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Reference</th>
-                                <th class="px-6 py-4">Visitor</th>
-                                <th class="px-6 py-4">Destination</th>
-                                <th class="px-6 py-4">When</th>
-                                <th class="px-6 py-4 text-center">Visitors</th>
-                                <th class="px-6 py-4">Guide</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bookingTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
-                        Showing <span id="bookingShown" class="text-on-surface font-bold">0</span>
-                        of <span id="bookingTotal" class="text-on-surface font-bold">0</span> bookings
-                    </p>
-                </div>
-            </div>
+            <!-- Cards, not a table: a message is a paragraph, and a paragraph in a
+                 table cell is either truncated or makes every row a different
+                 height. Each card is the whole message with its actions beneath. -->
+            <div id="feedbackList" class="space-y-3"></div>
+
+            <p id="feedbackError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
         </div>
     </main>
-
-    <!-- One booking: its details, the payment, and the guide -->
-    <div id="bookingModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
-        <div class="ztims-modal w-full max-w-lg p-5 sm:p-8 space-y-5 overflow-y-auto">
-            <div class="flex justify-between items-start gap-4">
-                <div>
-                    <h2 id="bookingRef" class="text-2xl font-black tracking-tight font-headline">—</h2>
-                    <p id="bookingWhen" class="text-support mt-1">—</p>
-                </div>
-                <button id="closeBookingModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-
-            <div id="bookingDetails" class="bg-surface-variant rounded-xl p-4 space-y-1.5 text-sm"></div>
-
-            <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Guide</h3>
-                <div class="flex gap-2">
-                    <select id="assignGuideSelect" class="field flex-1"></select>
-                    <button type="button" id="assignGuideBtn" class="btn btn-secondary shrink-0">Assign</button>
-                </div>
-                <p id="assignHint" class="text-support mt-1.5"></p>
-            </div>
-
-            <div id="paymentSection">
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Onsite payment</h3>
-                <div id="paymentRecorded" hidden class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-sm space-y-1"></div>
-
-                <form id="paymentForm" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Amount collected (₱)</label>
-                            <input id="payAmount" type="number" min="0" step="1" required
-                                   class="field"/>
-                        </div>
-                        <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Method</label>
-                            <select id="payMethod" class="field">
-                                <option value="cash">Cash</option>
-                                <option value="gcash">GCash</option>
-                                <option value="bank">Bank transfer</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Official receipt number</label>
-                        <input id="payReceipt" type="text" placeholder="OR-…"
-                               class="field"/>
-                    </div>
-                    <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Remarks</label>
-                        <input id="payRemarks" type="text"
-                               class="field"/>
-                    </div>
-                    <button type="submit" id="recordPaymentBtn"
-                            class="btn btn-primary w-full min-h-[44px]">
-                        Record payment and confirm
-                    </button>
-                </form>
-            </div>
-
-            <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Mark as</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button data-status="completed" class="booking-status-btn btn btn-secondary">Completed</button>
-                    <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
-                    <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
-                </div>
-                <p class="text-support mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
-            </div>
-
-            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
-        </div>
-    </div>
 
     <script>
         const API_BASE = "https://ztims-api.onrender.com/api";
 
-        let allBookings = [];
-        let allGuides = [];
-        let openBooking = null;
+        let allFeedback = [];
 
         const authHeaders = extra =>
             Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
 
+        // Every message here was typed by someone on the internet, so it is
+        // escaped before it reaches innerHTML rather than trusted as markup.
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
-        const formatPeso = amount =>
-            `₱${(Number(amount) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-        const STATUS_LABEL = {
-            pending_payment: 'Pending payment', confirmed: 'Confirmed',
-            completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show'
+        const TOPIC_LABEL = {
+            listing: 'Listing wrong / out of date', problem: 'Something not working',
+            suggestion: 'Suggestion', booking: 'Guide booking', other: 'Other'
         };
+        const TOPIC_ICON = {
+            listing: 'edit_location_alt', problem: 'bug_report', suggestion: 'lightbulb', booking: 'confirmation_number', other: 'chat'
+        };
+        const STATUS_LABEL = { new: 'New', read: 'Read', resolved: 'Resolved' };
         const STATUS_STYLE = {
-            pending_payment: 'bg-amber-500/15 text-amber-400',
-            confirmed: 'bg-green-500/15 text-green-400',
-            completed: 'bg-secondary-container/25 text-on-secondary-container',
-            cancelled: 'bg-error/15 text-error',
-            no_show: 'bg-white/10 text-on-surface-variant'
+            new: 'bg-amber-500/15 text-amber-400',
+            read: 'bg-secondary-container/25 text-on-secondary-container',
+            resolved: 'bg-green-500/15 text-green-400'
         };
+
+        // Shared with the sidebar's Log Out, so both doors behave identically.
+        function signOutStaff() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
+
+        // Who is signed in, in the corner, with the way out of the portal.
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: 'Tourist Officer',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
 
         function guardOfficerSession() {
             if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
@@ -852,241 +782,167 @@ body { overflow-x: hidden; }
             setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        function setBookingError(message) {
-            const box = document.getElementById('bookingError');
+        function setFeedbackError(message) {
+            const box = document.getElementById('feedbackError');
             box.textContent = message || '';
             box.hidden = !message;
         }
 
-        async function loadEverything() {
-            const body = document.getElementById('bookingTableBody');
-            body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Loading bookings…</td></tr>`;
-            try {
-                const [bookingsRes, guidesRes] = await Promise.all([
-                    fetch(`${API_BASE}/guide-bookings`, { headers: authHeaders() }),
-                    fetch(`${API_BASE}/guides`, { headers: authHeaders() })
-                ]);
-                if (bookingsRes.status === 401) { handleExpiredSession(); return; }
-                if (!bookingsRes.ok) throw new Error('The server refused the booking list.');
+        function formatWhen(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return date.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+        }
 
-                allBookings = await bookingsRes.json();
-                allGuides = guidesRes.ok ? await guidesRes.json() : [];
+        async function loadFeedback() {
+            const list = document.getElementById('feedbackList');
+            list.innerHTML = `<div class="glass-panel rounded-2xl px-6 py-10 text-center text-on-surface-variant">Loading messages…</div>`;
+            setFeedbackError('');
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, { headers: authHeaders() });
+                if (response.status === 401) { handleExpiredSession(); return; }
+                if (!response.ok) throw new Error('The server refused the feedback list.');
+                allFeedback = await response.json();
                 renderStats();
-                renderTable();
+                renderList();
             } catch (error) {
-                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
+                list.innerHTML = '';
+                setFeedbackError(error.message);
             }
         }
 
         function renderStats() {
-            const pending = allBookings.filter(b => b.status === 'pending_payment').length;
-            const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
-            const unassigned = allBookings.filter(b => b.status === 'confirmed' && !b.guideId).length;
-            const collected = allBookings.reduce((sum, b) => sum + (b.payment ? Number(b.payment.amount) || 0 : 0), 0);
-
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statConfirmed').textContent = confirmed;
-            document.getElementById('statUnassigned').textContent = unassigned;
-            document.getElementById('statCollected').textContent = formatPeso(collected);
+            const by = status => allFeedback.filter(f => f.status === status).length;
+            document.getElementById('statNew').textContent = by('new');
+            document.getElementById('statRead').textContent = by('read');
+            document.getElementById('statResolved').textContent = by('resolved');
         }
 
-        /* A booking stores the country code; the officer reads country names.
-           Bookings taken before nationality was collected have none, and an
-           em dash is the honest answer for those — not a guess, and not a blank
-           that reads as a rendering fault. */
-        function countryName(code) {
-            if (!code) return '\u2014';
-            const named = window.ZTIMS_COUNTRIES && window.ZTIMS_COUNTRIES.nameOf(code);
-            // A code with no name is still worth showing: it is what is on file.
-            return named || String(code);
-        }
-
-        function visibleBookings() {
-            const query = document.getElementById('bookingSearch').value.trim().toLowerCase();
-            const status = document.getElementById('bookingStatusFilter').value;
-            return allBookings.filter(booking => {
-                if (status !== 'all' && booking.status !== status) return false;
+        function visibleFeedback() {
+            const query = (document.getElementById('feedbackSearch').value || '').trim().toLowerCase();
+            const status = document.getElementById('feedbackStatusFilter').value;
+            const topic = document.getElementById('feedbackTopicFilter').value;
+            return allFeedback.filter(f => {
+                if (status === 'open' ? f.status === 'resolved' : (status !== 'all' && f.status !== status)) return false;
+                if (topic !== 'all' && f.topic !== topic) return false;
                 if (!query) return true;
-                return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title,
-                        booking.nationality, countryName(booking.nationality)]
+                return [f.message, f.name, f.email, f.page]
                     .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
             });
         }
 
-        function renderTable() {
-            const body = document.getElementById('bookingTableBody');
-            const rows = visibleBookings();
-            document.getElementById('bookingShown').textContent = rows.length;
-            document.getElementById('bookingTotal').textContent = allBookings.length;
+        // The page a visitor wrote from is a URL they did not type, but it is
+        // still only ever shown as text and linked when it is plainly http(s).
+        function pageLink(page) {
+            if (!page) return '';
+            let href = null;
+            try {
+                const parsed = new URL(page);
+                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') href = parsed.href;
+            } catch (e) { /* not a URL */ }
+            const label = escapeHtml(page.replace(/^https?:\/\//, '').slice(0, 80));
+            return href
+                ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-primary hover:text-accent underline underline-offset-2 break-all"><span class="material-symbols-outlined !text-sm">open_in_new</span>${label}</a>`
+                : `<span class="break-all">${label}</span>`;
+        }
 
-            if (rows.length === 0) {
-                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">${
-                    allBookings.length === 0 ? 'No guide bookings yet.' : 'No booking matches that search.'
-                }</td></tr>`;
+        function renderList() {
+            const list = document.getElementById('feedbackList');
+            const items = visibleFeedback();
+
+            if (items.length === 0) {
+                list.innerHTML = `<div class="glass-panel rounded-2xl px-6 py-10 text-center text-on-surface-variant">${
+                    allFeedback.length === 0 ? 'No feedback yet. Messages from the public Contact Us page will appear here.' : 'No message matches that filter.'
+                }</div>`;
                 return;
             }
 
-            body.innerHTML = rows.map(b => `
-                <tr class="hover:bg-surface-variant/40 transition-colors">
-                    <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}</td>
-                    <td class="px-6 py-4">
-                        <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
-                        <p class="text-support">${escapeHtml(b.contactNumber)}</p>
-                        <p class="text-support">${escapeHtml(countryName(b.nationality))}</p>
-                    </td>
-                    <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
-                    <td class="px-6 py-4 text-center">${Number(b.visitors) || 0}</td>
-                    <td class="px-6 py-4">${b.guideId
-                        ? escapeHtml(b.guideId.fullName)
-                        : '<span class="text-support italic">not assigned</span>'}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button data-open="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
-                    </td>
-                </tr>
-            `).join('');
+            list.innerHTML = items.map(f => {
+                const status = STATUS_LABEL[f.status] ? f.status : 'new';
+                const topic = TOPIC_LABEL[f.topic] ? f.topic : 'other';
+                const who = f.name ? escapeHtml(f.name) : '<span class="italic opacity-70">No name given</span>';
+                const mail = f.email
+                    ? `<a href="mailto:${escapeHtml(f.email)}" class="text-primary hover:text-accent underline underline-offset-2 break-all">${escapeHtml(f.email)}</a>`
+                    : '<span class="italic opacity-70">no email — cannot reply</span>';
+                const handled = f.statusUpdatedAt
+                    ? `<span class="text-support">· ${escapeHtml(STATUS_LABEL[status])} ${escapeHtml(formatWhen(f.statusUpdatedAt))}${f.statusUpdatedByEmail ? ' by ' + escapeHtml(f.statusUpdatedByEmail) : ''}</span>`
+                    : '';
+
+                const actions = status === 'resolved'
+                    ? `<button type="button" class="btn btn-secondary" data-action="read" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">undo</span> Reopen</button>`
+                    : (status === 'new'
+                        ? `<button type="button" class="btn btn-secondary" data-action="read" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">drafts</span> Mark read</button>`
+                        : '') +
+                      `<button type="button" class="btn btn-primary" data-action="resolved" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">task_alt</span> Mark resolved</button>`;
+
+                return `
+                <article class="glass-panel rounded-2xl p-5 sm:p-6 ${status === 'new' ? 'border-l-4 !border-l-amber-400' : ''}">
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                            <span class="material-symbols-outlined !text-sm">${TOPIC_ICON[topic]}</span>${escapeHtml(TOPIC_LABEL[topic])}
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[status]}">${escapeHtml(STATUS_LABEL[status])}</span>
+                        <span class="text-support ml-auto">${escapeHtml(formatWhen(f.createdAt))}</span>
+                    </div>
+                    <p class="text-on-surface whitespace-pre-line break-words leading-relaxed">${escapeHtml(f.message)}</p>
+                    <div class="mt-4 pt-4 border-t border-outline-variant/20 flex flex-col lg:flex-row lg:items-end gap-4">
+                        <div class="flex-1 space-y-1 text-sm text-on-surface-variant">
+                            <p><span class="text-label font-bold uppercase tracking-widest mr-2">From</span>${who} <span class="opacity-60">·</span> ${mail}</p>
+                            ${f.page ? `<p><span class="text-label font-bold uppercase tracking-widest mr-2">Page</span>${pageLink(f.page)}</p>` : ''}
+                            ${handled ? `<p>${handled}</p>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-2 shrink-0">${actions}</div>
+                    </div>
+                </article>`;
+            }).join('');
         }
 
-        /* ---- one booking -------------------------------------------------- */
-
-        function openBookingModal(id) {
-            const booking = allBookings.find(b => String(b._id) === String(id));
-            if (!booking) return;
-            openBooking = booking;
-            setBookingError('');
-
-            document.getElementById('bookingRef').textContent = booking.reference;
-            document.getElementById('bookingWhen').textContent =
-                `${booking.preferredDate} at ${booking.preferredTime} · ${STATUS_LABEL[booking.status] || booking.status}`;
-
-            document.getElementById('bookingDetails').innerHTML = `
-                <p><span class="text-on-surface-variant">Visitor:</span> <b class="text-on-surface">${escapeHtml(booking.fullName)}</b></p>
-                <p><span class="text-on-surface-variant">Contact:</span> ${escapeHtml(booking.contactNumber)}</p>
-                <p><span class="text-on-surface-variant">Nationality:</span> ${escapeHtml(countryName(booking.nationality))}</p>
-                ${booking.email ? `<p><span class="text-on-surface-variant">Email:</span> ${escapeHtml(booking.email)}</p>` : ''}
-                <p><span class="text-on-surface-variant">Destination:</span> ${escapeHtml(booking.spotId?.title || '—')}</p>
-                <p><span class="text-on-surface-variant">Visitors:</span> ${Number(booking.visitors) || 0}</p>
-                ${booking.notes ? `<p><span class="text-on-surface-variant">Notes:</span> ${escapeHtml(booking.notes)}</p>` : ''}
-            `;
-
-            // Only guides who can actually take this booking are offered.
-            const eligible = allGuides.filter(guide =>
-                guide.status === 'available' &&
-                (guide.assignedSpots || []).some(spot => String(spot._id || spot) === String(booking.spotId?._id || booking.spotId)) &&
-                Number(guide.maxGroupSize) >= Number(booking.visitors));
-
-            const select = document.getElementById('assignGuideSelect');
-            select.innerHTML = `<option value="">— no guide assigned —</option>` + eligible.map(guide =>
-                `<option value="${escapeHtml(guide._id)}" ${String(booking.guideId?._id) === String(guide._id) ? 'selected' : ''}>${escapeHtml(guide.fullName)} · ${formatPeso(guide.guideFee)} · up to ${guide.maxGroupSize}</option>`
-            ).join('');
-
-            document.getElementById('assignHint').textContent = eligible.length
-                ? `${eligible.length} guide${eligible.length === 1 ? '' : 's'} can take this party at this destination.`
-                : 'No available guide is assigned to this destination with room for this party.';
-
-            const paid = booking.payment;
-            document.getElementById('paymentForm').hidden = Boolean(paid);
-            const recorded = document.getElementById('paymentRecorded');
-            recorded.hidden = !paid;
-            if (paid) {
-                recorded.innerHTML = `
-                    <p class="font-bold text-green-400">${formatPeso(paid.amount)} collected</p>
-                    <p class="text-on-surface-variant">${escapeHtml(paid.method || 'cash')}${paid.receiptNumber ? ` · OR ${escapeHtml(paid.receiptNumber)}` : ''}</p>
-                    <p class="text-on-surface-variant">${new Date(paid.paidAt).toLocaleString()}</p>
-                    <p class="text-on-surface-variant">Recorded by ${escapeHtml(paid.recordedByEmail || 'the office')}</p>
-                    ${paid.remarks ? `<p class="text-on-surface-variant">${escapeHtml(paid.remarks)}</p>` : ''}
-                `;
-            } else {
-                // Pre-fill with the fee of the guide most likely to take it.
-                document.getElementById('payAmount').value = eligible.length ? eligible[0].guideFee : '';
-                document.getElementById('payReceipt').value = '';
-                document.getElementById('payRemarks').value = '';
-            }
-
-            document.getElementById('bookingModal').hidden = false;
-        }
-
-        function closeBookingModal() {
-            document.getElementById('bookingModal').hidden = true;
-            openBooking = null;
-        }
-
-        async function send(url, options, onDone) {
+        async function setStatus(id, status, button) {
+            const originalHTML = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span> Saving…';
             try {
-                const response = await fetch(url, options);
+                const response = await fetch(`${API_BASE}/feedback/${encodeURIComponent(id)}/status`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ status })
+                });
                 if (response.status === 401) { handleExpiredSession(); return; }
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.message || `The server refused (status ${response.status}).`);
-                setBookingError('');
-                showToast(result.message || 'Saved.', 'success');
-                await loadEverything();
-                if (onDone) onDone(result);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'The server refused that change.');
+
+                const index = allFeedback.findIndex(f => f._id === id);
+                if (index !== -1 && data.feedback) allFeedback[index] = data.feedback;
+                renderStats();
+                renderList();
+                showToast(data.message || `Marked ${status}.`, 'success', { duration: 2500 });
             } catch (error) {
-                setBookingError(error.message);
+                showToast(error.message, 'error');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
             }
         }
 
         function wire() {
-            document.getElementById('closeBookingModalBtn').addEventListener('click', closeBookingModal);
-            document.getElementById('bookingModal').addEventListener('click', event => {
-                if (event.target === document.getElementById('bookingModal')) closeBookingModal();
-            });
-            document.addEventListener('keydown', event => {
-                if (event.key === 'Escape' && !document.getElementById('bookingModal').hidden) closeBookingModal();
-            });
+            mountPortalAccountMenu();
+            document.getElementById('feedbackSearch').addEventListener('input', renderList);
+            document.getElementById('feedbackStatusFilter').addEventListener('change', renderList);
+            document.getElementById('feedbackTopicFilter').addEventListener('change', renderList);
+            document.getElementById('refreshFeedbackBtn').addEventListener('click', loadFeedback);
 
-            document.getElementById('bookingTableBody').addEventListener('click', event => {
-                const open = event.target.closest('[data-open]');
-                if (open) openBookingModal(open.dataset.open);
-            });
-            document.getElementById('bookingSearch').addEventListener('input', renderTable);
-            document.getElementById('bookingStatusFilter').addEventListener('change', renderTable);
-            document.getElementById('refreshBookingsBtn').addEventListener('click', loadEverything);
-
-            document.getElementById('assignGuideBtn').addEventListener('click', () => {
-                if (!openBooking) return;
-                const guideId = document.getElementById('assignGuideSelect').value;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/assign`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ guideId: guideId || null })
-                }, () => closeBookingModal());
-            });
-
-            document.getElementById('paymentForm').addEventListener('submit', event => {
-                event.preventDefault();
-                if (!openBooking) return;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/payment`, {
-                    method: 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({
-                        amount: Number(document.getElementById('payAmount').value) || 0,
-                        method: document.getElementById('payMethod').value,
-                        receiptNumber: document.getElementById('payReceipt').value.trim(),
-                        remarks: document.getElementById('payRemarks').value.trim()
-                    })
-                }, () => closeBookingModal());
-            });
-
-            document.querySelectorAll('.booking-status-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    if (!openBooking) return;
-                    send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/status`, {
-                        method: 'PATCH',
-                        headers: authHeaders({ 'Content-Type': 'application/json' }),
-                        body: JSON.stringify({ status: button.dataset.status })
-                    }, () => closeBookingModal());
-                });
+            // One listener for every card's buttons, so re-rendering the list
+            // never leaves a button unwired.
+            document.getElementById('feedbackList').addEventListener('click', event => {
+                const button = event.target.closest('button[data-action]');
+                if (!button) return;
+                setStatus(button.dataset.id, button.dataset.action, button);
             });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             if (!guardOfficerSession()) return;
             wire();
-            loadEverything();
+            loadFeedback();
         });
     </script>
 
@@ -1173,6 +1029,5 @@ body { overflow-x: hidden; }
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
-<script type="module" src="../shared/countries.js"></script>
 </body>
 </html>

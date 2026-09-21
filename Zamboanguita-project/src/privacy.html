@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Our History</title>
+    <title>Explore Zamboanguita | Privacy Policy</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -147,6 +147,40 @@ body { overflow-x: hidden; }
     <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
+    <style>
+        /* Long-form text. Tailwind's CDN build has no typography plugin, and
+           a policy is the one place on the site that is mostly paragraphs, so
+           the article sets its own rhythm once rather than classing every tag. */
+        .doc { color: rgb(var(--ztims-on-surface-variant)); line-height: 1.7; }
+        .doc h2 {
+            color: rgb(var(--ztims-on-surface));
+            font-family: Poppins, sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            margin: 2.5rem 0 0.75rem;
+            scroll-margin-top: 5.5rem;   /* clears the sticky header on a jump */
+        }
+        .doc h2:first-child { margin-top: 0; }
+        .doc h3 { color: rgb(var(--ztims-on-surface)); font-weight: 700; margin: 1.5rem 0 0.4rem; }
+        .doc p { margin: 0 0 1rem; }
+        .doc ul { margin: 0 0 1rem 1.25rem; list-style: disc; }
+        .doc li { margin-bottom: 0.4rem; }
+        .doc li::marker { color: rgb(var(--ztims-accent)); }
+        .doc strong { color: rgb(var(--ztims-on-surface)); font-weight: 600; }
+        .doc a { color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; }
+        .doc a:hover { color: rgb(var(--ztims-accent)); }
+
+        /* The "on this page" list. A sticky rail beside the text from lg up;
+           a row of chips you can swipe through on a phone, where a rail would
+           cost the width the text needs. */
+        .toc a { display: flex; align-items: center; min-height: 44px; padding: 0 0.85rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; color: rgb(var(--ztims-on-surface-variant)); transition: color 150ms, background-color 150ms; }
+        .toc a:hover { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .10); }
+        .toc a.is-current { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .14); box-shadow: inset 0 0 0 1px rgb(var(--ztims-accent) / .30); }
+        @media (min-width: 1024px) {
+            .toc a { white-space: normal; min-height: 40px; border-radius: 0.75rem; }
+        }
+    </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
@@ -378,7 +412,7 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg">location_on</span>
                     <span class="hidden min-[420px]:inline">Destinations</span>
                 </a>
-                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
@@ -399,224 +433,196 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="flex-1">
-
-        <section class="pt-10 sm:pt-14 pb-0">
+        <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-6xl mx-auto px-5 sm:px-6 md:px-10">
+
                 <a href="../index.html" class="inline-flex items-center gap-1.5 text-label font-bold uppercase tracking-widest hover:text-primary transition-colors min-h-[44px]">
                     <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
                 </a>
-            </div>
-        </section>
 
-            <!--
-                 Sits below the destinations, as the third section of the main
-                 page. The Cebuano phrases are the point of the story, so they
-                 are marked rather than buried in the paragraph. -->
-            <section class="py-10 sm:py-16 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-
-                    <div class="order-2 lg:order-1">
-                        <div class="w-16 h-1 bg-primary mb-6 sm:mb-8"></div>
-
-                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05] mb-4 sm:mb-6">
-                            How <span class="text-gradient">Zamboanguita</span><br class="hidden sm:block"/> Came To Be.
-                        </h2>
-
-                        <p class="text-base sm:text-lg text-on-surface font-medium leading-relaxed mb-5">
-                            A town rooted in history and replete with natural resources, Zamboanguita derived its
-                            name from an incident involving a <i>coguita</i> (octopus).
-                        </p>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
-                                would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
-                                &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
-                                nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
-                                in their fishing net, which they then separated from their catch as it had tentacles and
-                                no gills.
-                            </p>
-                            <p>
-                                The leader of the Moro group then ordered one of his men to go to the beach and find a
-                                tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
-                                Since then, every time an octopus was caught, it was hung on that particular tree.
-                                Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
-                                When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
-                                shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
-                                from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
-                                across the Dipolog Strait: the Zamboanga Peninsula.
-                            </p>
-                        </div>
-
-                        <!-- The name's journey, pulled out of the paragraph above so it
-                             can be read at a glance. -->
-                        <div class="flex flex-wrap items-center gap-2 my-6 text-support font-bold">
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Sab-ongan ug coguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Zamboangaguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-primary text-on-primary">Zamboanguita</span>
-                        </div>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">location_on</span>
-                                <span>
-                                    Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at
-                                    approximately 9&deg;6&prime;N latitude and 123&deg;12&prime;E longitude, about 28
-                                    kilometers south of Dumaguete City.
-                                </span>
-                            </p>
-                            <p>
-                                In Zamboanguita, we prioritize high-end experiences that leave no footprint, only
-                                memories. We partner with local guardians to ensure that the beauty we share today
-                                remains untainted for the narratives of tomorrow.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="order-1 lg:order-2">
-                        <div class="aspect-[4/3] lg:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
-                            <img class="w-full h-full object-cover" loading="lazy"
-                                 src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg"
-                                 alt="The coast of Zamboanguita, Negros Oriental"/>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============ AT A GLANCE ============
-                 The municipal facts a visitor actually asks about, as a panel
-                 rather than a paragraph, so any one of them can be found at speed. -->
-            <section class="py-10 sm:py-14 bg-surface-container-low">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <div class="w-16 h-1 bg-primary mb-6"></div>
-                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-2">
-                        The municipality at a glance
-                    </h2>
-                    <p class="text-on-surface-variant mb-7 max-w-2xl">
-                        Zamboanguita — <i>Lungsod sa Zamboanguita</i> in Cebuano — is a coastal municipality
-                        in the province of Negros Oriental, established in 1866.
+                <header class="mt-4 sm:mt-6 mb-8 sm:mb-10 max-w-3xl">
+                    <p class="text-label font-bold uppercase tracking-widest text-primary mb-3">Information</p>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05]">
+                        Privacy <span class="text-gradient">Policy</span>
+                    </h1>
+                    <p class="text-on-surface-variant mt-4 leading-relaxed">
+                        ZTIMS is built to collect as little as possible. There are no visitor accounts, no
+                        advertising trackers and no online payments. This page lists exactly what the site does
+                        handle, why, and who else sees it.
                     </p>
+                    <p class="text-support mt-3">Last updated 21 September 2026</p>
+                </header>
 
-                    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Founded</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">1866</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Population</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">30,412</dd>
-                            <dd class="text-support mt-0.5">2024 census</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Land area</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">85.86 km²</dd>
-                            <dd class="text-support mt-0.5">33.15 sq mi</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Barangays</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">11</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Elevation</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">170 m</dd>
-                            <dd class="text-support mt-0.5">rising to 1,846 m</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Languages</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">Cebuano</dd>
-                            <dd class="text-support mt-0.5">and Tagalog</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">ZIP code</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">6218</dd>
-                            <dd class="text-support mt-0.5">dialling +63 (0)35</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Time zone</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">UTC+8</dd>
-                            <dd class="text-support mt-0.5">PST, no daylight saving</dd>
-                        </div>
-                    </dl>
-                </div>
-            </section>
-
-            <!-- ============ WHERE IT IS ============ -->
-            <section class="py-10 sm:py-14 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            Where it is
-                        </h2>
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Zamboanguita sits at the southern tip of Negros Oriental, about
-                                <b class="text-on-surface">28 kilometres</b> down the coast from Dumaguete,
-                                facing the island province of Siquijor across the strait.
-                            </p>
-                            <p>
-                                Its neighbours are <b class="text-on-surface">Siaton</b> to the west and
-                                <b class="text-on-surface">Dauin</b> to the north and east. The municipality
-                                belongs to the 3rd district of Negros Oriental, in the Negros Island Region.
-                            </p>
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">explore</span>
-                                <span>9°06′00″N, 123°11′56″E — the land runs from the shoreline up to a
-                                    highest point of 1,846 metres.</span>
-                            </p>
-                        </div>
+                <!-- The short version, up front. Most people want to know three things
+                     and will not read ten sections to find them. -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-10 max-w-3xl lg:max-w-none">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-primary !text-2xl">person_off</span>
+                        <p class="font-bold text-on-surface mt-2">No visitor accounts</p>
+                        <p class="text-support mt-1">You browse without signing up, and nothing is kept about you for browsing.</p>
                     </div>
+                    <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-primary !text-2xl">location_off</span>
+                        <p class="font-bold text-on-surface mt-2">Your location is not stored</p>
+                        <p class="text-support mt-1">It is used for one directions request, if you allow it, then discarded.</p>
+                    </div>
+                    <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-primary !text-2xl">credit_card_off</span>
+                        <p class="font-bold text-on-surface mt-2">No online payment</p>
+                        <p class="text-support mt-1">Guide fees are paid at the office counter. We never ask for card details.</p>
+                    </div>
+                </div>
 
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            The barangays
-                        </h2>
-                        <p class="text-on-surface-variant leading-relaxed mb-4">
-                            Zamboanguita is divided into eleven barangays. Each is made up of puroks, and
-                            several contain sitios of their own.
+                <div class="lg:grid lg:grid-cols-12 lg:gap-12">
+
+                    <nav class="toc lg:col-span-3 mb-8 lg:mb-0" aria-label="On this page">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2 hidden lg:block">On this page</p>
+                        <ul class="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 lg:sticky lg:top-24">
+                            <li><a href="#who">Who we are</a></li>
+                            <li><a href="#collect">What we collect and why</a></li>
+                            <li><a href="#browser">What stays in your browser</a></li>
+                            <li><a href="#third-parties">Services that see requests</a></li>
+                            <li><a href="#sharing">Who we share with</a></li>
+                            <li><a href="#retention">How long we keep it</a></li>
+                            <li><a href="#security">How it is protected</a></li>
+                            <li><a href="#rights">Your rights</a></li>
+                            <li><a href="#children">Children</a></li>
+                            <li><a href="#changes">Changes and contact</a></li>
+                        </ul>
+                    </nav>
+
+                    <article class="doc lg:col-span-8 max-w-3xl">
+                        <h2 id="who">1. Who we are</h2>
+                        <p>
+                            The Zamboanguita Tourism Information Management System (ZTIMS) is operated by the
+                            <strong>Municipal Tourism Office of Zamboanguita</strong>, Negros Oriental, Philippines,
+                            which is the personal information controller for anything described here. We follow the
+                            <strong>Data Privacy Act of 2012 (Republic Act No. 10173)</strong> and its implementing
+                            rules.
                         </p>
-                        <ul class="flex flex-wrap gap-2">
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Basak</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Calango</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Jumao-as</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Lutoban</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Malongcay Diot</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Maluay</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Mayabon</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nabago</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Najandig</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nasig-id</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Poblacion</li>
+
+                        <h2 id="collect">2. What we collect and why</h2>
+                        <p>Browsing the site collects nothing about you. Personal information reaches us only when you choose to send it:</p>
+
+                        <h3>When you request a tourist guide</h3>
+                        <ul>
+                            <li><strong>Your name, contact number and email</strong> — so the Tourism Office can recognise you at the counter and reach you about the booking.</li>
+                            <li><strong>Your nationality</strong> — the Office reports the number of domestic and foreign arrivals to provincial and national tourism bodies. Only the count is reported, never who you are.</li>
+                            <li><strong>Group size, preferred date and time, and any notes you add</strong> — to plan the tour and assign a guide.</li>
                         </ul>
 
-                        <div class="mt-7 bg-surface-container-high border border-outline-variant/20 rounded-xl p-5">
-                            <p class="text-label uppercase tracking-widest font-bold mb-1">Town fiesta</p>
-                            <p class="text-on-surface font-bold">San Isidro Labrador</p>
-                            <p class="text-on-surface-variant text-sm">Celebrated every 15 May.</p>
+                        <h3>When you send feedback</h3>
+                        <ul>
+                            <li><strong>Your message and the topic you chose.</strong></li>
+                            <li><strong>Your name and email, only if you give them.</strong> Both are optional; leave them blank and the message is still read, we just cannot reply.</li>
+                            <li><strong>The ZTIMS page you came from</strong>, when your browser passes it on, so the officer knows which listing or page you mean. Only pages on this site are noted.</li>
+                        </ul>
+
+                        <h3>When you ask for directions from where you are</h3>
+                        <ul>
+                            <li>If you press the button to route from your current location and your browser allows it, <strong>your coordinates are sent to our server once, used to calculate that route, and discarded.</strong> They are never written to the database, never attached to a booking, and never used to work out where you have been.</li>
+                            <li>You can always type a starting point instead, and the site works without location permission.</li>
+                        </ul>
+
+                        <h3>Technical information</h3>
+                        <ul>
+                            <li>Like any website, our server sees the <strong>IP address</strong> each request comes from. It is used to limit how fast one connection can submit bookings, feedback and route requests, and appears in the hosting provider's ordinary server logs. We do not use it to identify or profile you.</li>
+                            <li>There are <strong>no analytics or advertising cookies</strong> and no third-party tracking scripts.</li>
+                        </ul>
+
+                        <h2 id="browser">3. What stays in your browser</h2>
+                        <p>The site remembers a little on your own device, in your browser's local storage, and none of it is sent to us:</p>
+                        <ul>
+                            <li><strong>Your theme choice</strong> (dark or light), so the next page opens the way you left it.</li>
+                            <li>For Tourism Office staff and establishment managers only, the <strong>sign-in token</strong> that keeps them signed in to their portal. Visitors never have one.</li>
+                        </ul>
+                        <p>Clearing your browser's site data removes all of it.</p>
+
+                        <h2 id="third-parties">4. Services that see requests</h2>
+                        <p>
+                            ZTIMS relies on a few outside services to work. Your browser or our server talks to them
+                            directly, so they see the requests involved. We never send them your name, email or
+                            booking details; the most any of them receives is the coordinates of a route you asked for.
+                        </p>
+                        <ul>
+                            <li><strong>OpenStreetMap</strong> — the map images. Your browser fetches the tiles for the area you are looking at.</li>
+                            <li><strong>OpenRouteService, OSRM and Valhalla</strong> — calculate routes. Our server sends them the start and end coordinates of a directions request and nothing else. Which one is used depends on the travel mode.</li>
+                            <li><strong>OpenRouteService and Nominatim (OpenStreetMap)</strong> — turn a typed place name into coordinates for the address search, and the other way round when a manager pins a location.</li>
+                            <li><strong>Cloudinary</strong> — hosts the listing photographs. Your browser loads them from there.</li>
+                            <li><strong>Google Fonts, Tailwind CSS and unpkg</strong> — deliver the site's typefaces, styles and map library. Your browser fetches these files from them.</li>
+                            <li><strong>Vercel</strong> (this site), <strong>Render</strong> (our server) and <strong>MongoDB Atlas</strong> (our database) — host the system. Bookings and feedback are stored in the database.</li>
+                        </ul>
+                        <p>Each of these has its own privacy policy that covers what it logs on its own side.</p>
+
+                        <h2 id="sharing">5. Who we share with</h2>
+                        <ul>
+                            <li><strong>We do not sell or rent</strong> personal information, and we do not use it for marketing.</li>
+                            <li><strong>Your assigned tourist guide</strong> is told the name the booking is under, the group size, and the date and time — what they need to meet you.</li>
+                            <li><strong>Tourism reporting</strong> to provincial and national bodies uses counts only (for example, how many domestic and foreign visitors booked in a month), never individual records.</li>
+                            <li>We will disclose information where <strong>the law requires</strong> it, and only to the extent required.</li>
+                        </ul>
+
+                        <h2 id="retention">6. How long we keep it</h2>
+                        <ul>
+                            <li><strong>Guide bookings</strong> are municipal tourism records and are kept as such. A cancelled booking is marked cancelled, not erased, so the record of what happened stays complete.</li>
+                            <li><strong>Feedback</strong> is kept while it is being acted on and afterwards as a record of what was reported and fixed.</li>
+                            <li><strong>Your location</strong> for a directions request is not kept at all.</li>
+                        </ul>
+
+                        <h2 id="security">7. How it is protected</h2>
+                        <ul>
+                            <li>Everything between your browser, this site and our server travels over <strong>HTTPS</strong>.</li>
+                            <li>Bookings and feedback can only be read by <strong>signed-in Tourism Office staff</strong>. Establishment managers see only their own listings, never bookings or feedback.</li>
+                            <li>Public forms are rate-limited to blunt abuse. Secret keys for outside services are kept on the server and never sent to the browser.</li>
+                        </ul>
+                        <p>No system is perfectly secure. If you believe your information has been exposed, tell us through the <a href="contact.html">Contact Us</a> page and we will investigate.</p>
+
+                        <h2 id="rights">8. Your rights</h2>
+                        <p>Under the Data Privacy Act you may:</p>
+                        <ul>
+                            <li><strong>Ask what we hold about you</strong> and get a copy.</li>
+                            <li><strong>Have it corrected</strong> if it is wrong — for example, a misspelled name on a booking.</li>
+                            <li><strong>Ask for it to be erased or blocked</strong> where the law allows; note that a completed booking is a municipal record and may need to be kept.</li>
+                            <li><strong>Object</strong> to a use you were not told about here, and <strong>complain</strong> to the National Privacy Commission if you are not satisfied with our answer.</li>
+                        </ul>
+                        <p>
+                            To exercise any of these, contact the Municipal Tourism Office through the
+                            <a href="contact.html">Contact Us</a> page or in person at the Municipal Hall. Quote your
+                            booking reference if you have one; it lets us find the record without asking for anything more.
+                        </p>
+
+                        <h2 id="children">9. Children</h2>
+                        <p>
+                            The site is written for the general public and asks for no age. A guide booking should be
+                            made by an adult in the group, who is the person named on it.
+                        </p>
+
+                        <h2 id="changes">10. Changes and contact</h2>
+                        <p>
+                            When this policy changes, the date at the top is updated. Significant changes will be
+                            noted on this page for a period afterwards.
+                        </p>
+                        <!-- CONFIRM WITH THE OFFICE BEFORE LAUNCH: address not yet supplied by the
+                             office; the same text is in shared/site-footer.js and contact.html. -->
+                        <p>
+                            Municipal Tourism Office, Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218 —
+                            or the <a href="contact.html">Contact Us</a> page.
+                        </p>
+
+                        <div class="mt-10 p-5 sm:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div class="flex-1">
+                                <p class="font-bold text-on-surface">See also</p>
+                                <p class="text-support">The rules for using the site, and answers to the questions we hear most.</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <a href="terms.html" class="btn btn-secondary">Terms &amp; Conditions</a>
+                                <a href="faq.html" class="btn btn-secondary">FAQ</a>
+                            </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
-            </section>
-
-            <!-- Wikipedia's text is CC BY-SA, which asks for attribution. Saying where
-                 the figures came from is also how a reader knows when to re-check them. -->
-            <section class="py-8 bg-surface-container-low border-t border-outline-variant/15">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <p class="text-support leading-relaxed">
-                        Municipal figures on this page are drawn from the
-                        <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer"
-                           class="text-accent font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
-                        available under CC BY-SA, which cites the Philippine Statistics Authority for the
-                        census and land area. Population and area figures change with each census.
-                        The barangay list is the exception: it has been corrected locally and no longer
-                        matches that article.
-                    </p>
-                </div>
-            </section>
-
+            </div>
+        </section>
     </main>
 
     <!-- Drawn by shared/site-footer.js, the same on every visitor page.
@@ -624,7 +630,39 @@ body { overflow-x: hidden; }
     <footer data-site-footer data-root="../"></footer>
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
+<script>
+/* Marks the "on this page" link for the section under the reader, so the
+   list says where you are as well as where you can go. Headings are watched
+   in a band near the top of the viewport rather than the whole of it: with
+   the whole viewport, two or three short sections are "visible" at once and
+   the highlight flickers between them. */
+(function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
 
-<!-- Write-a-review dialog -->
+    var byId = {};
+    links.forEach(function (link) { byId[link.getAttribute('href').slice(1)] = link; });
+
+    function setCurrent(id) {
+        links.forEach(function (link) {
+            var on = link.getAttribute('href') === '#' + id;
+            link.classList.toggle('is-current', on);
+            if (on) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+        });
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) setCurrent(entry.target.id);
+        });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+    Object.keys(byId).forEach(function (id) {
+        var heading = document.getElementById(id);
+        if (heading) observer.observe(heading);
+    });
+})();
+</script>
 </body>
 </html>

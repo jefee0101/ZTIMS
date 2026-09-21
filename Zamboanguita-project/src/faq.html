@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Our History</title>
+    <title>Explore Zamboanguita | Frequently Asked Questions</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -147,6 +147,67 @@ body { overflow-x: hidden; }
     <link rel="stylesheet" href="./shared/theme.css"/>
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="./shared/motion.css"/>
+    <style>
+        .faq-heading {
+            color: rgb(var(--ztims-on-surface));
+            font-family: Poppins, sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.75rem;
+            scroll-margin-top: 5.5rem;   /* clears the sticky header on a jump */
+        }
+
+        /* Native <details>: it opens without JavaScript, the browser handles the
+           keyboard, and find-in-page can see inside it. The only work here is
+           making the question look pressable and the answer read as prose. */
+        .faq {
+            border: 1px solid rgb(var(--ztims-outline) / .6);
+            border-radius: 1rem;
+            background: rgb(var(--ztims-surface));
+            margin-bottom: 0.6rem;
+            transition: border-color 150ms;
+        }
+        .faq[open] { border-color: rgb(var(--ztims-accent) / .5); }
+        .faq summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 56px;
+            padding: 0.9rem 1.1rem;
+            font-weight: 600;
+            color: rgb(var(--ztims-on-surface));
+            border-radius: 1rem;
+        }
+        .faq summary::-webkit-details-marker { display: none; }
+        .faq summary::after {
+            content: 'expand_more';
+            font-family: 'Material Symbols Outlined';
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            color: rgb(var(--ztims-accent));
+            transition: transform 200ms;
+        }
+        .faq[open] summary::after { transform: rotate(180deg); }
+        .faq-answer {
+            padding: 0 1.1rem 1.1rem;
+            color: rgb(var(--ztims-on-surface-variant));
+            line-height: 1.65;
+        }
+        .faq-answer p + p { margin-top: 0.6rem; }
+        .faq-answer a { color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; }
+        .faq-answer a:hover { color: rgb(var(--ztims-accent)); }
+
+        .toc a { display: flex; align-items: center; min-height: 44px; padding: 0 0.85rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; color: rgb(var(--ztims-on-surface-variant)); transition: color 150ms, background-color 150ms; }
+        .toc a:hover { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .10); }
+        .toc a.is-current { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .14); box-shadow: inset 0 0 0 1px rgb(var(--ztims-accent) / .30); }
+        @media (min-width: 1024px) {
+            .toc a { white-space: normal; min-height: 40px; border-radius: 0.75rem; }
+        }
+    </style>
 </head>
 <body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
 
@@ -378,7 +439,7 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg">location_on</span>
                     <span class="hidden min-[420px]:inline">Destinations</span>
                 </a>
-                <a href="history.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
@@ -399,224 +460,247 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="flex-1">
-
-        <section class="pt-10 sm:pt-14 pb-0">
+        <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-6xl mx-auto px-5 sm:px-6 md:px-10">
+
                 <a href="../index.html" class="inline-flex items-center gap-1.5 text-label font-bold uppercase tracking-widest hover:text-primary transition-colors min-h-[44px]">
                     <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
                 </a>
+
+                <header class="mt-4 sm:mt-6 mb-8 sm:mb-10 max-w-3xl">
+                    <p class="text-label font-bold uppercase tracking-widest text-primary mb-3">Information</p>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05]">
+                        Frequently Asked <span class="text-gradient">Questions</span>
+                    </h1>
+                    <p class="text-on-surface-variant mt-4 leading-relaxed">
+                        The questions visitors, guides and establishments ask the Tourism Office most. If yours is
+                        not here, <a href="contact.html" class="text-primary font-semibold hover:text-accent underline underline-offset-4">send it to us</a>
+                        and we will answer — and probably add it.
+                    </p>
+                </header>
+
+                <!-- Filter as you type. One municipality's FAQ is short enough to
+                     search in the browser, and a visitor on a phone should not have
+                     to open ten accordions to find the one about payment. -->
+                <div class="relative max-w-3xl mb-8">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none">search</span>
+                    <input id="faqSearch" type="search" class="field !pl-12 !rounded-full" placeholder="Search the questions — try “payment” or “guide”"
+                           aria-label="Search the questions" autocomplete="off"/>
+                </div>
+                <p id="faqEmpty" hidden class="text-on-surface-variant mb-8">
+                    Nothing matches that. Try another word, or <a href="contact.html" class="text-primary font-semibold underline underline-offset-4">ask us directly</a>.
+                </p>
+
+                <div class="lg:grid lg:grid-cols-12 lg:gap-12">
+
+                    <nav class="toc lg:col-span-3 mb-8 lg:mb-0" aria-label="Topics">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2 hidden lg:block">Topics</p>
+                        <ul class="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 lg:sticky lg:top-24">
+                            <li><a href="#visiting">Visiting &amp; browsing</a></li>
+                            <li><a href="#guides">Tourist guides &amp; booking</a></li>
+                            <li><a href="#directions">Map &amp; directions</a></li>
+                            <li><a href="#establishments">For establishments</a></li>
+                            <li><a href="#site">About this site</a></li>
+                        </ul>
+                    </nav>
+
+                    <div id="faqList" class="lg:col-span-8 max-w-3xl space-y-10">
+
+                        <section class="faq-group" aria-labelledby="visiting">
+                            <h2 id="visiting" class="faq-heading">Visiting &amp; browsing</h2>
+
+                            <details class="faq">
+                                <summary>Do I need an account to use ZTIMS?</summary>
+                                <div class="faq-answer">
+                                    <p>No. Visitors never sign up or sign in. Browsing, directions and guide bookings all work without one. The sign-in link in the footer is for Tourism Office staff and the managers of listed establishments.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Is the site free?</summary>
+                                <div class="faq-answer">
+                                    <p>Yes. ZTIMS is a service of the Municipal Tourism Office. The only fee anywhere in the system is a tourist guide's fee, and that is paid in cash at the office, not on the site.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Are the fees and opening hours on a listing up to date?</summary>
+                                <div class="faq-answer">
+                                    <p>Each listing is maintained by the establishment itself or by the Tourism Office, and we keep them as current as we can — but prices and hours do change. For anything that would spoil your day if it were wrong, confirm with the establishment before you go. If you find a listing that is out of date, <a href="contact.html">tell us</a> and we will check it.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>How do I find a specific kind of place, like a dive site or a waterfall?</summary>
+                                <div class="faq-answer">
+                                    <p>On the <a href="../index.html">Destinations</a> page, use the category chips to narrow the grid, or type into the search box — it matches names, descriptions and barangays as you type.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Where is Zamboanguita?</summary>
+                                <div class="faq-answer">
+                                    <p>On the south-eastern coast of Negros Oriental, about 28 kilometres south of Dumaguete City. The <a href="history.html">Our History</a> page tells the story of the town and its name.</p>
+                                </div>
+                            </details>
+                        </section>
+
+                        <section class="faq-group" aria-labelledby="guides">
+                            <h2 id="guides" class="faq-heading">Tourist guides &amp; booking</h2>
+
+                            <details class="faq">
+                                <summary>How do I book a tourist guide?</summary>
+                                <div class="faq-answer">
+                                    <p>Open the destination's page. If it requires a guide, you will see the guide fee and a booking form: your name, contact number, email, nationality, group size, and the date and time you would like. Submit it and you get a reference number such as <span class="font-mono">TG-2026-00012</span>.</p>
+                                    <p>Then come to the Municipal Tourism Office, quote the reference, and pay the fee at the counter. The officer records the payment, confirms the booking and assigns your guide.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Can I pay online?</summary>
+                                <div class="faq-answer">
+                                    <p>No, and we never ask for card or e-wallet details. Payment is in person at the Municipal Tourism Office. A booking is not confirmed until the officer has recorded your payment.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Is my booking confirmed as soon as I submit it?</summary>
+                                <div class="faq-answer">
+                                    <p>Not yet — it is a request. It becomes confirmed when you pay at the office. Until then no guide is held for you, so try to come by before your preferred date.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>How do I check my booking?</summary>
+                                <div class="faq-answer">
+                                    <p>Quote your reference number on the destination page's booking section, or at the office. The site shows only the destination, date, time, group size and status against a reference — never the name or contact details on it — so a reference alone cannot expose anyone.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Why does the site need my nationality?</summary>
+                                <div class="faq-answer">
+                                    <p>The Tourism Office reports how many domestic and foreign visitors it served to the provincial and national tourism offices. Only the count is reported; your name is never attached to it. See the <a href="privacy.html#collect">Privacy Policy</a>.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Can I choose my guide?</summary>
+                                <div class="faq-answer">
+                                    <p>The Tourism Office assigns guides, matching availability and group size. If you have a preference, put it in the notes and the officer will do their best.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>What if I have to cancel or I miss the tour?</summary>
+                                <div class="faq-answer">
+                                    <p>Let the office know as early as you can, quoting your reference. The booking is marked cancelled (or no-show) rather than deleted, so the record stays clear. Ask at the counter about the refund of a fee already paid.</p>
+                                </div>
+                            </details>
+                        </section>
+
+                        <section class="faq-group" aria-labelledby="directions">
+                            <h2 id="directions" class="faq-heading">Map &amp; directions</h2>
+
+                            <details class="faq">
+                                <summary>How do I get directions to a destination?</summary>
+                                <div class="faq-answer">
+                                    <p>Every destination page has a Directions panel. Route from your current location, or type a starting point, pick a travel mode, and the route is drawn on the map with its distance and estimated time.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Does the site track my location?</summary>
+                                <div class="faq-answer">
+                                    <p>No. If you allow it, your position is sent once to calculate the route you asked for and then discarded. It is never stored and never linked to a booking. You can always type a starting point instead.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Why is a travel mode missing — motorbike, or bicycle?</summary>
+                                <div class="faq-answer">
+                                    <p>The site only offers the modes its routing services can currently calculate. If a provider is unavailable, its mode is left out rather than shown and then failing. Car is always available.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>How accurate are the routes and travel times?</summary>
+                                <div class="faq-answer">
+                                    <p>They are calculated from OpenStreetMap road data by outside routing services and are guidance, not a promise. Times assume normal conditions. Check road, sea and weather conditions yourself, especially for boat crossings and the upland barangays.</p>
+                                </div>
+                            </details>
+                        </section>
+
+                        <section class="faq-group" aria-labelledby="establishments">
+                            <h2 id="establishments" class="faq-heading">For establishments</h2>
+
+                            <details class="faq">
+                                <summary>How do I get my resort, dive shop or restaurant listed?</summary>
+                                <div class="faq-answer">
+                                    <p>Ask at the Municipal Tourism Office. The office creates a Tourist Establishment Manager account for you, and you sign in to add and keep up your own listing — description, photos, fees, hours, contact details and the pin on the map. What you publish goes live straight away; the office can unpublish a listing while it checks something.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>I manage a listing and forgot my password.</summary>
+                                <div class="faq-answer">
+                                    <p>The Tourism Office can set a new password on your account — ask at the counter, or <a href="contact.html">contact us</a> from the email address on the account. You will be given a temporary password to change once you are in.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Why is my listing not showing on the public site?</summary>
+                                <div class="faq-answer">
+                                    <p>Either it is unpublished — by you, or by the Tourism Office while something is checked — or the establishment account is marked inactive. Your portal shows the status of each listing. If you cannot see why, <a href="contact.html">contact us</a>.</p>
+                                </div>
+                            </details>
+                        </section>
+
+                        <section class="faq-group" aria-labelledby="site">
+                            <h2 id="site" class="faq-heading">About this site</h2>
+
+                            <details class="faq">
+                                <summary>Why is the first page load slow sometimes?</summary>
+                                <div class="faq-answer">
+                                    <p>The server goes to sleep when nobody has used it for a while, and waking it can take up to a minute. The page tells you when this is happening. Once it is awake, everything is quick again — nothing is broken and nothing you typed is lost.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>How do I switch between dark and light mode?</summary>
+                                <div class="faq-answer">
+                                    <p>Use the sun/moon button at the top right. The choice is remembered on your device.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>I found a mistake, or something is broken. Where do I report it?</summary>
+                                <div class="faq-answer">
+                                    <p>On the <a href="contact.html">Contact Us</a> page. Pick the topic that fits — a wrong listing, a problem with the site, a suggestion — and describe it. Leave your email if you would like a reply.</p>
+                                </div>
+                            </details>
+
+                            <details class="faq">
+                                <summary>Who runs ZTIMS?</summary>
+                                <div class="faq-answer">
+                                    <p>The Municipal Tourism Office of Zamboanguita, Negros Oriental. See the <a href="terms.html">Terms &amp; Conditions</a> and <a href="privacy.html">Privacy Policy</a> for how the site is run and what it keeps.</p>
+                                </div>
+                            </details>
+                        </section>
+
+                        <div class="p-5 sm:p-6 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div class="flex-1">
+                                <p class="font-bold text-on-surface">Still have a question?</p>
+                                <p class="text-support">Send it to the Tourism Office. Questions asked often end up on this page.</p>
+                            </div>
+                            <a href="contact.html" class="btn btn-primary">
+                                <span class="material-symbols-outlined !text-base">forum</span> Contact us
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
-
-            <!--
-                 Sits below the destinations, as the third section of the main
-                 page. The Cebuano phrases are the point of the story, so they
-                 are marked rather than buried in the paragraph. -->
-            <section class="py-10 sm:py-16 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
-
-                    <div class="order-2 lg:order-1">
-                        <div class="w-16 h-1 bg-primary mb-6 sm:mb-8"></div>
-
-                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05] mb-4 sm:mb-6">
-                            How <span class="text-gradient">Zamboanguita</span><br class="hidden sm:block"/> Came To Be.
-                        </h2>
-
-                        <p class="text-base sm:text-lg text-on-surface font-medium leading-relaxed mb-5">
-                            A town rooted in history and replete with natural resources, Zamboanguita derived its
-                            name from an incident involving a <i>coguita</i> (octopus).
-                        </p>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
-                                would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
-                                &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
-                                nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
-                                in their fishing net, which they then separated from their catch as it had tentacles and
-                                no gills.
-                            </p>
-                            <p>
-                                The leader of the Moro group then ordered one of his men to go to the beach and find a
-                                tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
-                                Since then, every time an octopus was caught, it was hung on that particular tree.
-                                Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
-                                When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
-                                shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
-                                from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
-                                across the Dipolog Strait: the Zamboanga Peninsula.
-                            </p>
-                        </div>
-
-                        <!-- The name's journey, pulled out of the paragraph above so it
-                             can be read at a glance. -->
-                        <div class="flex flex-wrap items-center gap-2 my-6 text-support font-bold">
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Sab-ongan ug coguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface">Zamboangaguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 rounded-full bg-primary text-on-primary">Zamboanguita</span>
-                        </div>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">location_on</span>
-                                <span>
-                                    Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at
-                                    approximately 9&deg;6&prime;N latitude and 123&deg;12&prime;E longitude, about 28
-                                    kilometers south of Dumaguete City.
-                                </span>
-                            </p>
-                            <p>
-                                In Zamboanguita, we prioritize high-end experiences that leave no footprint, only
-                                memories. We partner with local guardians to ensure that the beauty we share today
-                                remains untainted for the narratives of tomorrow.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="order-1 lg:order-2">
-                        <div class="aspect-[4/3] lg:aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
-                            <img class="w-full h-full object-cover" loading="lazy"
-                                 src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg"
-                                 alt="The coast of Zamboanguita, Negros Oriental"/>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============ AT A GLANCE ============
-                 The municipal facts a visitor actually asks about, as a panel
-                 rather than a paragraph, so any one of them can be found at speed. -->
-            <section class="py-10 sm:py-14 bg-surface-container-low">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <div class="w-16 h-1 bg-primary mb-6"></div>
-                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-2">
-                        The municipality at a glance
-                    </h2>
-                    <p class="text-on-surface-variant mb-7 max-w-2xl">
-                        Zamboanguita — <i>Lungsod sa Zamboanguita</i> in Cebuano — is a coastal municipality
-                        in the province of Negros Oriental, established in 1866.
-                    </p>
-
-                    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Founded</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">1866</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Population</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">30,412</dd>
-                            <dd class="text-support mt-0.5">2024 census</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Land area</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">85.86 km²</dd>
-                            <dd class="text-support mt-0.5">33.15 sq mi</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Barangays</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">11</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Elevation</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">170 m</dd>
-                            <dd class="text-support mt-0.5">rising to 1,846 m</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Languages</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">Cebuano</dd>
-                            <dd class="text-support mt-0.5">and Tagalog</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">ZIP code</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">6218</dd>
-                            <dd class="text-support mt-0.5">dialling +63 (0)35</dd>
-                        </div>
-                        <div class="bg-surface border border-outline-variant/20 rounded-xl p-4 sm:p-5">
-                            <dt class="text-label uppercase tracking-widest font-bold mb-1">Time zone</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">UTC+8</dd>
-                            <dd class="text-support mt-0.5">PST, no daylight saving</dd>
-                        </div>
-                    </dl>
-                </div>
-            </section>
-
-            <!-- ============ WHERE IT IS ============ -->
-            <section class="py-10 sm:py-14 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            Where it is
-                        </h2>
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Zamboanguita sits at the southern tip of Negros Oriental, about
-                                <b class="text-on-surface">28 kilometres</b> down the coast from Dumaguete,
-                                facing the island province of Siquijor across the strait.
-                            </p>
-                            <p>
-                                Its neighbours are <b class="text-on-surface">Siaton</b> to the west and
-                                <b class="text-on-surface">Dauin</b> to the north and east. The municipality
-                                belongs to the 3rd district of Negros Oriental, in the Negros Island Region.
-                            </p>
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">explore</span>
-                                <span>9°06′00″N, 123°11′56″E — the land runs from the shoreline up to a
-                                    highest point of 1,846 metres.</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            The barangays
-                        </h2>
-                        <p class="text-on-surface-variant leading-relaxed mb-4">
-                            Zamboanguita is divided into eleven barangays. Each is made up of puroks, and
-                            several contain sitios of their own.
-                        </p>
-                        <ul class="flex flex-wrap gap-2">
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Basak</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Calango</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Jumao-as</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Lutoban</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Malongcay Diot</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Maluay</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Mayabon</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nabago</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Najandig</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Nasig-id</li>
-                            <li class="px-3 py-2 rounded-full bg-surface-container-high text-on-surface text-xs font-bold">Poblacion</li>
-                        </ul>
-
-                        <div class="mt-7 bg-surface-container-high border border-outline-variant/20 rounded-xl p-5">
-                            <p class="text-label uppercase tracking-widest font-bold mb-1">Town fiesta</p>
-                            <p class="text-on-surface font-bold">San Isidro Labrador</p>
-                            <p class="text-on-surface-variant text-sm">Celebrated every 15 May.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Wikipedia's text is CC BY-SA, which asks for attribution. Saying where
-                 the figures came from is also how a reader knows when to re-check them. -->
-            <section class="py-8 bg-surface-container-low border-t border-outline-variant/15">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <p class="text-support leading-relaxed">
-                        Municipal figures on this page are drawn from the
-                        <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer"
-                           class="text-accent font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
-                        available under CC BY-SA, which cites the Philippine Statistics Authority for the
-                        census and land area. Population and area figures change with each census.
-                        The barangay list is the exception: it has been corrected locally and no longer
-                        matches that article.
-                    </p>
-                </div>
-            </section>
-
     </main>
 
     <!-- Drawn by shared/site-footer.js, the same on every visitor page.
@@ -624,7 +708,85 @@ body { overflow-x: hidden; }
     <footer data-site-footer data-root="../"></footer>
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
+<script>
+/* Marks the "on this page" link for the section under the reader, so the
+   list says where you are as well as where you can go. Headings are watched
+   in a band near the top of the viewport rather than the whole of it: with
+   the whole viewport, two or three short sections are "visible" at once and
+   the highlight flickers between them. */
+(function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
 
-<!-- Write-a-review dialog -->
+    var byId = {};
+    links.forEach(function (link) { byId[link.getAttribute('href').slice(1)] = link; });
+
+    function setCurrent(id) {
+        links.forEach(function (link) {
+            var on = link.getAttribute('href') === '#' + id;
+            link.classList.toggle('is-current', on);
+            if (on) link.setAttribute('aria-current', 'location');
+            else link.removeAttribute('aria-current');
+        });
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) setCurrent(entry.target.id);
+        });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+    Object.keys(byId).forEach(function (id) {
+        var heading = document.getElementById(id);
+        if (heading) observer.observe(heading);
+    });
+})();
+</script>
+<script>
+/* Filters the questions as you type. Matching is on the question and its
+   answer together, so "cash" finds the payment question even though the word
+   is only in the answer. A group whose questions are all hidden hides too, so
+   the headings do not stand over nothing. */
+(function () {
+    var input = document.getElementById('faqSearch');
+    var empty = document.getElementById('faqEmpty');
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.faq-group'));
+    if (!input || !groups.length) return;
+
+    function normalise(text) { return String(text || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+    var items = [];
+    groups.forEach(function (group) {
+        Array.prototype.slice.call(group.querySelectorAll('.faq')).forEach(function (item) {
+            items.push({ el: item, group: group, text: normalise(item.textContent) });
+        });
+    });
+
+    function apply() {
+        var query = normalise(input.value);
+        var shown = 0;
+        items.forEach(function (item) {
+            var hit = !query || item.text.indexOf(query) !== -1;
+            item.el.hidden = !hit;
+            // A match found by typing is what the reader came for, so it is
+            // opened for them; clearing the box closes it again.
+            if (query && hit) item.el.open = true;
+            else if (!query) item.el.open = false;
+            if (hit) shown += 1;
+        });
+        groups.forEach(function (group) {
+            var any = Array.prototype.some.call(group.querySelectorAll('.faq'), function (item) { return !item.hidden; });
+            group.hidden = !any;
+        });
+        empty.hidden = shown > 0;
+    }
+
+    input.addEventListener('input', apply);
+
+    // A link straight to a question (#guides) still lands on the heading, but
+    // if someone arrives with a query in the box (browser restore), honour it.
+    if (input.value) apply();
+})();
+</script>
 </body>
 </html>

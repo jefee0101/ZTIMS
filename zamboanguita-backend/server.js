@@ -459,6 +459,33 @@ const PaymentSchema = new mongoose.Schema({
 
 const Payment = mongoose.model('Payment', PaymentSchema);
 
+// 9. Feedback — what a visitor sends from the public Contact Us page. No
+//    account stands behind it, so it carries only what they chose to type:
+//    a topic, the message, and a name and email if they want a reply.
+//    Nothing is deleted; a message the office has dealt with is marked
+//    resolved, the same way a booking that came to nothing is marked cancelled.
+const FEEDBACK_TOPICS = ['suggestion', 'listing', 'problem', 'booking', 'other'];
+const FEEDBACK_STATUSES = ['new', 'read', 'resolved'];
+const FEEDBACK_MESSAGE_MAX = 2000;
+
+const FeedbackSchema = new mongoose.Schema({
+    topic: { type: String, enum: FEEDBACK_TOPICS, default: 'other', index: true },
+    message: { type: String, required: true, trim: true, maxlength: FEEDBACK_MESSAGE_MAX },
+    name: { type: String, default: '', trim: true, maxlength: 120 },
+    email: { type: String, default: '', lowercase: true, trim: true, maxlength: 254 },
+    // The page they came from, when the browser says. Helps an officer find
+    // "the listing with the wrong fee" without asking which one.
+    page: { type: String, default: '', trim: true, maxlength: 500 },
+
+    status: { type: String, enum: FEEDBACK_STATUSES, default: 'new', index: true },
+    statusUpdatedAt: { type: Date, default: null },
+    // Who last changed the status, kept by email so the record survives the
+    // account being renamed later.
+    statusUpdatedByEmail: { type: String, default: '' }
+}, { timestamps: true });
+
+const Feedback = mongoose.model('Feedback', FeedbackSchema);
+
 const requireAuth = (req, res, next) => {
     const authorization = req.get('authorization') || '';
     const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
@@ -2195,6 +2222,119 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
         return res.status(200).json({ success: true, message: `${booking.reference} is now ${status.replace('_', ' ')}.`, booking });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Booking status failure:');
+    }
+});
+
+/* ==========================================
+   4d. VISITOR FEEDBACK
+   ------------------------------------------
+   The Contact Us page. A visitor types what is wrong or what they would like,
+   and it lands in the Tourism Office's inbox in the portal. There is no email
+   relay in between: the office reads it where it manages everything else, and
+   a message cannot go astray because a mailbox was full or a password expired.
+========================================== */
+
+// The second write anyone on the internet can make (bookings are the first),
+// so it is held exactly as tightly: ten an hour is plenty for a person, and a
+// resort or the office itself behind one shared connection, and nothing for a
+// script.
+const feedbackRateLimit = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'That is a lot of messages from one connection. Please wait a while and try again, or visit the Municipal Tourism Office.' }
+});
+
+/**
+ * POST: a visitor sends feedback. No account, no login.
+ */
+app.post('/api/feedback', feedbackRateLimit, async (req, res) => {
+    try {
+        const body = req.body || {};
+
+        // The form carries a field no person can see. A submission that fills
+        // it came from a bot, and is answered exactly as a real one would be so
+        // the bot learns nothing — it is just never saved.
+        if (String(body.website || '').trim()) {
+            return res.status(201).json({ success: true, message: 'Thank you. Your feedback has been received.' });
+        }
+
+        const topic = String(body.topic || '').trim().toLowerCase();
+        const message = String(body.message || '').trim();
+        const name = String(body.name || '').trim().slice(0, 120);
+        const email = String(body.email || '').trim().toLowerCase();
+        const page = String(body.page || '').trim().slice(0, 500);
+
+        if (message.length < 10) {
+            return res.status(400).json({ success: false, message: 'Please write a little more, so the office knows what to look at.' });
+        }
+        if (message.length > FEEDBACK_MESSAGE_MAX) {
+            return res.status(400).json({ success: false, message: `Please keep the message under ${FEEDBACK_MESSAGE_MAX} characters.` });
+        }
+        // Optional, but if given it has to be usable: an officer who replies to
+        // a half-typed address is replying to nobody.
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'That email address does not look complete. Leave it blank if you do not want a reply.' });
+        }
+
+        const feedback = await Feedback.create({
+            topic: FEEDBACK_TOPICS.includes(topic) ? topic : 'other',
+            message,
+            name,
+            email,
+            page
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Thank you. Your feedback has been received.',
+            id: feedback._id
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Feedback submission failure:');
+    }
+});
+
+/* ---- everything below is the Tourism Office's ---------------------------- */
+
+app.get('/api/feedback', requireAdmin, async (req, res) => {
+    try {
+        const query = {};
+        if (FEEDBACK_STATUSES.includes(req.query.status)) query.status = req.query.status;
+        if (FEEDBACK_TOPICS.includes(req.query.topic)) query.topic = req.query.topic;
+
+        const items = await Feedback.find(query).sort({ createdAt: -1 }).limit(500).lean();
+        return res.status(200).json(items);
+    } catch (error) {
+        console.error('❌ Feedback list failure:', error);
+        return res.status(500).json([]);
+    }
+});
+
+/**
+ * PATCH: the officer marks a message read or resolved, or reopens it.
+ * Nothing is deleted — a resolved message is the record of what was fixed.
+ */
+app.patch('/api/feedback/:id/status', requireAdmin, async (req, res) => {
+    try {
+        const status = String((req.body || {}).status || '').trim();
+        if (!FEEDBACK_STATUSES.includes(status)) {
+            return res.status(400).json({ success: false, message: `Status must be one of: ${FEEDBACK_STATUSES.join(', ')}.` });
+        }
+
+        const feedback = await Feedback.findById(req.params.id);
+        if (!feedback) return res.status(404).json({ success: false, message: 'Feedback not found.' });
+
+        const officer = await Admin.findById(req.auth.sub).select('email');
+        feedback.status = status;
+        feedback.statusUpdatedAt = new Date();
+        feedback.statusUpdatedByEmail = officer ? officer.email : '';
+        await feedback.save();
+
+        return res.status(200).json({ success: true, message: `Marked ${status}.`, feedback });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Feedback status failure:');
     }
 });
 
