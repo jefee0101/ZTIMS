@@ -309,6 +309,22 @@
             /* ---------------- the working area ---------------- */
             '<div id="' + p + 'LocWork" hidden class="space-y-4">' +
 
+                /* The same three ways in, as a row of chips. Once one had been
+                   chosen the chooser above was gone, and the only way to another
+                   was "Change location", which throws the pin away and asks first.
+                   Someone whose search found nothing, or whose phone put them
+                   on the wrong street, needs the other two without starting
+                   over — so these switch the way in and leave the pin where it is. */
+                '<div id="' + p + 'LocWays" class="flex flex-wrap items-center gap-2" role="group" aria-label="How to find the location">' +
+                    '<span class="text-label font-bold uppercase tracking-wider mr-1">Find it by</span>' +
+                    '<button type="button" id="' + p + 'LocSwitchSearch" data-way="search" class="' + CHIP_BTN + '">' +
+                        '<span class="material-symbols-outlined !text-base">search</span>Search</button>' +
+                    '<button type="button" id="' + p + 'LocSwitchHere" data-way="here" class="' + CHIP_BTN + '">' +
+                        '<span class="material-symbols-outlined !text-base">my_location</span>My position</button>' +
+                    '<button type="button" id="' + p + 'LocSwitchMap" data-way="map" class="' + CHIP_BTN + '">' +
+                        '<span class="material-symbols-outlined !text-base">touch_app</span>Tap the map</button>' +
+                '</div>' +
+
                 '<div id="' + p + 'LocFind" hidden>' +
                     '<label for="' + p + 'LocSearch" class="' + LABEL + '">Search for the place</label>' +
                     '<div class="flex gap-2">' +
@@ -526,7 +542,6 @@
             '<p class="' + LABEL + '">What visitors will see</p>' +
             '<div id="' + p + 'Preview" class="rounded-2xl overflow-hidden bg-surface-container-low ' +
                 'border border-outline-variant/30 sticky top-0"></div>' +
-            '<p class="text-support mt-2">Updates as you type.</p>' +
         '</aside>' +
         '</div>' +
 
@@ -973,8 +988,26 @@
             el('LocChoose').hidden = working;
             el('LocWork').hidden = !working;
             el('LocFind').hidden = locMethod !== 'search';
+            paintWays();
             if (working) refreshMap();
             paintLocation();
+        }
+
+        // The chip for the way currently in use reads as pressed; the others as
+        // places to go. aria-pressed carries the same for a screen reader.
+        function paintWays() {
+            ['LocSwitchSearch', 'LocSwitchHere', 'LocSwitchMap'].forEach(function (id) {
+                const chip = el(id);
+                if (!chip) return;
+                const way = chip.getAttribute('data-way');
+                // The map chip means "a tap will place the pin", so it is only
+                // pressed while that is true — not after the pin was confirmed.
+                const on = way === locMethod && (way !== 'map' || pinMode);
+                chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+                chip.classList.toggle('!bg-primary', on);
+                chip.classList.toggle('!text-on-primary', on);
+                chip.classList.toggle('!border-primary', on);
+            });
         }
 
         // Everything that reads off the current pin: the confirm button, the
@@ -1042,13 +1075,21 @@
             });
         });
 
-        /* Draggable only while pinning. A marker that can be dragged at any time
-           means the location can be changed by a slip of the hand on a map
-           somebody opened to look at. */
+        /* Draggable while pinning, and while the pin has not been agreed to yet.
+           A search result or a phone's position lands near the place, not on
+           the gate, and every message after one says to drag the pin onto the
+           entrance — which it could not be, because dragging was pin mode only.
+           The guard stays where it matters: a confirmed pin, and a listing's
+           saved one, cannot be moved by a slip of the hand on a map somebody
+           opened to look at. Any drag un-confirms it, so the two never overlap. */
+        function pinIsLoose() {
+            return pinMode || (Boolean(readPoint()) && !locationConfirmed);
+        }
+
         function placeMarker(lat, lng, recentre) {
             if (!map) return;
             if (!marker) {
-                marker = window.L.marker([lat, lng], { draggable: pinMode }).addTo(map);
+                marker = window.L.marker([lat, lng], { draggable: pinIsLoose() }).addTo(map);
                 marker.on('dragend', function () {
                     const at = marker.getLatLng();
                     writePoint(at.lat, at.lng);
@@ -1061,7 +1102,7 @@
             } else {
                 marker.setLatLng([lat, lng]);
             }
-            setMarkerDraggable(pinMode);
+            setMarkerDraggable(pinIsLoose());
             paintMarkerState();
             if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), PIN_ZOOM));
         }
@@ -1132,7 +1173,7 @@
                    not move a published listing — so say what to press instead. */
                 if (!pinMode) {
                     if (readPoint()) {
-                        say('Press Pin location first, then tap the map to move the pin.');
+                        say('Press "Tap the map" above, or Pin location on the map, then tap where the pin should go.');
                         return;
                     }
                     enterPinMode();
@@ -1363,15 +1404,17 @@
             setMarkerDraggable(true);
             paintMarkerState();
             paintPinControl();
+            paintWays();
             say('Tap the map where visitors should arrive, then confirm.', 'ok');
         }
 
         function leavePinMode() {
             pinMode = false;
             pinBackup = null;
-            setMarkerDraggable(false);
+            setMarkerDraggable(pinIsLoose());
             paintMarkerState();
             paintPinControl();
+            paintWays();
         }
 
         /* The same checks the form's own Confirm button runs, because there is
@@ -1405,38 +1448,53 @@
             saveDraftSoon();
         }
 
-        /* ------------------------------------------------- the three ways in */
+        /* ------------------------------------------------- the three ways in
+           Each is a function rather than a handler, because two sets of buttons
+           lead to it: the big chooser shown before anything is set, and the row
+           of chips above the map once something is. Switching never clears the
+           pin — a pin found by search can still be nudged by tapping the map,
+           and a phone's position can be corrected by a search. Only pin mode is
+           left, and left with the pin where it is, because it was the map's
+           way of asking for a tap and the tap is no longer what is wanted. */
 
-        el('LocWaySearch').addEventListener('click', function () {
+        function chooseSearch() {
+            if (pinMode) leavePinMode();
             locMethod = 'search';
             setLocPhase();
             say('');
             el('LocSearch').focus();
-        });
+        }
 
-        el('LocWayMap').addEventListener('click', async function () {
+        async function chooseMap() {
             locMethod = 'map';
             setLocPhase();
             // Choosing this is itself the deliberate act, so pin mode starts here
             // rather than asking for a second press of the same intent.
             try { await ensureMap(); } catch (error) { /* say() already reported it */ }
             enterPinMode();
-        });
+        }
 
-        el('LocLegacyAdd').addEventListener('click', function () {
-            locMethod = 'search';
-            setLocPhase();
-            el('LocSearch').focus();
-        });
+        el('LocWaySearch').addEventListener('click', chooseSearch);
+        el('LocSwitchSearch').addEventListener('click', chooseSearch);
+        el('LocWayMap').addEventListener('click', chooseMap);
+        el('LocSwitchMap').addEventListener('click', chooseMap);
+        el('LocWayHere').addEventListener('click', chooseHere);
+        el('LocSwitchHere').addEventListener('click', chooseHere);
+
+        el('LocLegacyAdd').addEventListener('click', chooseSearch);
 
         /* The device's own position, asked for only when it is offered as the
            answer and used only as this listing's location. ZTIMS keeps no record
            of where whoever filled the form happened to be standing. */
-        el('LocWayHere').addEventListener('click', function () {
+        function chooseHere() {
             if (!navigator.geolocation) {
                 say('This device cannot report its position. Search for the place, or pick it on the map instead.', 'error');
                 return;
             }
+            // Where to go back to if the device cannot answer: the way that was
+            // in use, or the chooser when there was none.
+            const previous = locMethod;
+            if (pinMode) leavePinMode();
             locMethod = 'here';
             setLocPhase();
             say('Asking this device where it is. The position is used to place this listing and nothing else.');
@@ -1450,19 +1508,24 @@
                     placeMarker(lat, lng, true);
                 } catch (error) { /* the pin stands even if the map will not load */ }
                 await describePoint({ lat: lat, lng: lng });
+                // A phone indoors, or one that answered from cell towers rather
+                // than GPS, can be a street or two out. The radius is said out
+                // loud so a wide one is treated as a starting point, not the answer.
+                const radius = Math.round(Number(position.coords.accuracy) || 0);
+                const rough = radius > 50 ? ' This reading is only accurate to about ' + radius + ' m, so check the pin against the map.' : '';
                 say(insideZamboanguita(lat, lng)
-                    ? 'Position found. Drag the pin onto the entrance, then confirm.'
+                    ? 'Position found. Drag the pin onto the entrance, then confirm.' + rough
                     : 'Position found, but it is outside ' + MUNICIPALITY + '. Move the pin to the place you are listing.',
-                    insideZamboanguita(lat, lng) ? 'ok' : 'error');
+                    insideZamboanguita(lat, lng) ? (rough ? undefined : 'ok') : 'error');
             }, function (error) {
-                locMethod = '';
+                locMethod = previous;
                 setLocPhase();
                 say(error && error.code === 1
                     ? 'Location access was not allowed. You can search for the place, or choose it on the map instead.'
                     : 'We could not read this device\'s position. You can search for the place, or choose it on the map instead.',
                     'error');
             }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-        });
+        }
 
         /* ------------------------------------------------------------ search */
 
@@ -1598,6 +1661,8 @@
             }
 
             locationConfirmed = true;
+            // Agreed to, so it stays put until someone deliberately picks it up again.
+            setMarkerDraggable(pinIsLoose());
             paintLocation();
             setFieldError(null, p + 'LocError', '');
 

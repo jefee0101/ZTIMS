@@ -879,15 +879,21 @@ textarea.field[aria-invalid="true"],
    obvious at a glance that a tap here will move the listing. */
 .ztims-map--pinning { box-shadow: inset 0 0 0 3px rgb(var(--ztims-accent)); }
 
-/* A pin being chosen should not look like one already agreed to. */
+/* A pin being chosen should not look like one already agreed to.
+
+   The pulse is on the glow, never on transform: Leaflet places every marker
+   with an inline translate3d(), and a CSS animation outranks an inline style,
+   so animating transform here drew the pin at the pane's origin instead of
+   where it was tapped for as long as pin mode lasted — the tap looked as if it
+   had done nothing, and the pin only jumped to the right place on Confirm. */
 .ztims-pin--choosing {
     filter: drop-shadow(0 0 0 rgb(var(--ztims-accent)))
             drop-shadow(0 2px 6px rgb(var(--ztims-accent) / 0.55));
     animation: ztimsPinChoosing 1.4s var(--ease-standard, ease) infinite;
 }
 @keyframes ztimsPinChoosing {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-3px); }
+    0%, 100% { filter: drop-shadow(0 0 0 rgb(var(--ztims-accent))) drop-shadow(0 2px 6px rgb(var(--ztims-accent) / 0.55)); }
+    50%      { filter: drop-shadow(0 0 2px rgb(var(--ztims-accent))) drop-shadow(0 4px 10px rgb(var(--ztims-accent) / 0.85)); }
 }
 /* The one looping animation in the system, and it stops with the mode. Anyone
    who asked for less motion gets the drop shadow and no movement. */
