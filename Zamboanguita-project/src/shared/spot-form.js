@@ -2083,7 +2083,10 @@
                 await options.onSubmit(payload, { editingId: editingId, spot: currentSpot });
                 clearDraft();
             } catch (error) {
-                setFormError(error.message || 'That could not be saved.');
+                // A page can throw a silent, expected cancellation (e.g. the
+                // manager backed out of a duplicate-listing prompt) — that isn't
+                // a save failure, so it gets no error banner.
+                if (!error || !error.silent) setFormError((error && error.message) || 'That could not be saved.');
             } finally {
                 button.disabled = false;
                 button.innerHTML = originalHTML;

@@ -743,9 +743,70 @@ body { overflow-x: hidden; }
             }
         }
 
+        // A manager's own listings only (mySpots is already scoped to ?mine=true) —
+        // this is a duplicate-content nudge, not an authorization control, so it
+        // lives here rather than in the backend's write path.
+        function normalizeForCompare(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function titleOverlap(a, b) {
+            if (!a || !b) return 0;
+            if (a === b) return 1;
+            const wordsA = a.split(' ').filter(Boolean);
+            const wordsB = b.split(' ').filter(Boolean);
+            if (!wordsA.length || !wordsB.length) return 0;
+            const setB = new Set(wordsB);
+            const shared = wordsA.filter(word => setB.has(word)).length;
+            return shared / Math.max(wordsA.length, wordsB.length);
+        }
+
+        // Flags a listing already on this account that looks like the same place:
+        // an identical title always counts; a near-identical title only counts
+        // alongside a matching category, since two different spots can share a
+        // generic name.
+        function findLikelyDuplicate(payload, editingId) {
+            const newTitle = normalizeForCompare(payload.title);
+            const newCategory = String(payload.category || '').trim();
+            const newBarangay = normalizeForCompare(payload.barangay);
+            let best = null;
+            let bestScore = 0;
+            mySpots.forEach(spot => {
+                if (editingId && String(spot._id) === String(editingId)) return;
+                const overlap = titleOverlap(newTitle, normalizeForCompare(spot.title));
+                const sameCategory = String(spot.category || '').trim() === newCategory;
+                const sameBarangay = Boolean(newBarangay) && normalizeForCompare(spot.barangay) === newBarangay;
+                const isCandidate = overlap === 1 || (overlap >= 0.6 && sameCategory) || (overlap >= 0.45 && sameCategory && sameBarangay);
+                if (isCandidate && overlap > bestScore) {
+                    bestScore = overlap;
+                    best = spot;
+                }
+            });
+            return best;
+        }
+
         // The form collects and validates; this page only knows where to send it.
         async function saveSpot(payload, context) {
             const editingId = context.editingId;
+
+            const duplicate = findLikelyDuplicate(payload, editingId);
+            if (duplicate) {
+                const where = duplicate.barangay ? `${duplicate.category}, ${duplicate.barangay}` : duplicate.category;
+                const proceed = confirm(
+                    `This looks like a listing you already have: "${duplicate.title}" (${where}).\n\n` +
+                    `Publish "${payload.title}" anyway as a separate listing?`
+                );
+                if (!proceed) {
+                    const cancelled = new Error('Publishing was cancelled.');
+                    cancelled.silent = true;
+                    throw cancelled;
+                }
+            }
+
             const response = await fetch(
                 editingId ? `${API_BASE}/spots/${encodeURIComponent(editingId)}` : `${API_BASE}/spots`,
                 {
