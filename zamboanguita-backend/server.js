@@ -1,5 +1,6 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 const cors = require('cors');
 const nodemailer = require('nodemailer'); // Added for handling Forgot Password emails
 const bcrypt = require('bcryptjs');
@@ -7,8 +8,23 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { MongoRateLimitStore } = require('./rate-limit-store');
+// Read before db.js, which takes DATABASE_URL from the environment as it loads.
 require('dotenv').config();
+const { PostgresRateLimitStore } = require('./rate-limit-store');
+const db = require('./db');
+// Named as the Mongoose models they replaced, so each route reads as it did.
+// TourismOfficer was `Admin`; the table is tourism_officers.
+const {
+    officers: TourismOfficer,
+    managers: EstablishmentManager,
+    spots: Spot,
+    guides: TouristGuide,
+    bookings: GuideBooking,
+    payments: Payment,
+    feedback: Feedback,
+    MAX_SPOT_IMAGES, GUIDE_STATUSES, BOOKING_STATUSES,
+    FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
+} = require('./models');
 
 const app = express();
 
@@ -59,13 +75,13 @@ app.use(cors((req, callback) => {
 }));
 // This blanket limit stays in each instance's own memory, deliberately. It runs
 // on every request, including ones that never touch the database, and counting
-// it in MongoDB would add a database round trip to all of them. It is a rough
+// it in the database would add a database round trip to all of them. It is a rough
 // cushion against a flood, not a security control, so a count per instance is
 // good enough. The limits that do guard something — login, password reset,
 // the public forms, the metered routing providers — use sharedRateLimit below.
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 150, standardHeaders: true, legacyHeaders: false }));
 
-/* A limit counted in MongoDB, so it holds across every running instance of the
+/* A limit counted in the database, so it holds across every running instance of the
    API rather than per instance (see rate-limit-store.js for why that matters
    on a serverless host). `name` must be unique to each limiter.
 
@@ -78,7 +94,7 @@ function sharedRateLimit(name, options) {
         standardHeaders: true,
         legacyHeaders: false,
         ...options,
-        store: new MongoRateLimitStore(name),
+        store: new PostgresRateLimitStore(name),
         passOnStoreError: true
     });
 }
@@ -88,203 +104,47 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000 }));
 
 /* ==========================================
-   2. DATABASE CONFIGURATION & CONNECT
+   2. DATABASE
 ========================================== */
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboanguita';
 
-/* Connected once and remembered, rather than on every call.
+/* Postgres, on Supabase. The connection is in db.js and the records in
+   models.js; both explain themselves. Nothing connects here at startup: the
+   pool opens its first connection when the first query needs one, which is
+   the only moment a serverless instance reliably has. A route that never
+   touches the database — /api/directions/capabilities — never waits on it.
 
-   On a long-running host this is the same thing either way: the process starts,
-   connects, and serves until it stops. On a serverless host it is not. Each
-   instance runs this module from scratch, and an instance is reused for many
-   requests before it is discarded — so connecting per request would open a new
-   pool every time and leave it behind. A free Atlas cluster has a few hundred
-   connections in total; that pattern exhausts them, and the failure looks like
-   random timeouts rather than anything to do with connections.
+   ZTIMS ran on MongoDB before this. db/schema.sql is the whole data model now,
+   and scripts/copy-from-mongo.js is how the records came across. */
 
-   Holding the PROMISE rather than a boolean is what makes it safe: several
-   requests can arrive on a cold instance before the first connection finishes,
-   and they all wait on the same one instead of starting their own. A failure
-   clears it, so the next request retries rather than being stuck for the life
-   of the instance. */
-let connectionPromise = null;
+/* `npm run migrate`: creates any missing tables (db/schema.sql, which is safe
+   to run again) and then the first Tourism Officer, if INITIAL_ADMIN_EMAIL and
+   INITIAL_ADMIN_PASSWORD are set. Run by a person, deliberately — see
+   migrate.js for why none of this happens at startup.
 
-function connectToDatabase() {
-    if (connectionPromise) return connectionPromise;
-
-    connectionPromise = mongoose.connect(MONGO_URI, {
-        // Small on purpose. Many short-lived instances each holding a large pool
-        // is precisely what runs a free cluster out of connections.
-        maxPoolSize: 5,
-        serverSelectionTimeoutMS: 10000
-    })
-        .then(connection => {
-            console.log('✅ Connected safely to MongoDB database system.');
-            return connection;
-        })
-        .catch(error => {
-            connectionPromise = null;
-            console.error('❌ MongoDB Connection Error Encountered:', error);
-            throw error;
-        });
-
-    return connectionPromise;
-}
-
-/* Start connecting on the first request an instance sees, but do NOT hold the
-   request up waiting for it.
-
-   Awaiting here was the obvious version and the wrong one: it made every route
-   depend on the database, including the ones that never touch it.
-   /api/directions/capabilities just reports which travel modes are configured,
-   and it answered perfectly well with the database down until the wait was put
-   in front of it — the page that asks which modes to draw would have gone blank
-   over an unrelated outage.
-
-   Nothing is lost by not waiting. Mongoose queues model operations until the
-   connection is ready, so a route that does query the database still waits for
-   it, automatically, and one that does not answers immediately. */
-app.use((req, res, next) => {
-    // Already logged inside; swallowed here so a connection failure cannot
-    // surface as an unhandled rejection.
-    connectToDatabase().catch(() => {});
-    next();
-});
-
-/* The three startup tasks are NOT run here any more.
-
-   They were: two one-time reshapings of existing documents, and the creation of
-   the first Tourism Officer. All three have already run against the live
-   database. On a serverless host there is no startup to hang them on — they
-   would re-run on every cold instance, and bootstrapAdmin would race with
-   itself across instances that all believe they are first.
-
-   They are `npm run migrate` now, run deliberately by a person. */
+   MongoDB needed two more steps here, reshaping stored documents in place
+   (resortName → establishmentName, ownerId → managedBy). In Postgres the table
+   definitions are that history, and the copy script translated the old shapes
+   on the way across, so neither exists any more. */
 async function runMigrations() {
-    await connectToDatabase();
-    await migrateEstablishmentNames();
-    await migrateSpotManagement();
+    const schema = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
+    await db.query(schema);
+    console.log('🗄️  Tables are in place (db/schema.sql).');
     await bootstrapAdmin();
 }
 
 /* ==========================================
-   3. DATA SCHEMA & MODELS
+   3. RECORDS
+   The definitions are in models.js, each one mirroring the Mongoose schema it
+   replaced, field for field.
 ========================================== */
 
-// 2. Admin Authentication Schema
-const AdminSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
-    // See the password reset section: only the token's hash is ever stored.
-    resetTokenHash: { type: String, default: null, select: false },
-    resetTokenExpires: { type: Date, default: null, select: false }
-}, { collection: 'admins' }); 
-
-const Admin = mongoose.model('Admin', AdminSchema);
-
-
-
-// 3b. Tourist Establishment Manager account (manages only their own tourist spots
-//     and accommodations). Formerly called "Resort Owner" — the stored collection
-//     keeps its original name on purpose: renaming it would orphan every account
-//     already registered in Atlas. Only the wording and the code changed.
-const EstablishmentManagerSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
-    establishmentName: { type: String, trim: true },
-    // The pre-rename name of the same field. Still declared so accounts created
-    // before the rename keep reading correctly even if the migration below has
-    // not run yet; new accounts never write it.
-    resortName: { type: String, trim: true },
-    // The person who actually runs the place, and the address visitors should
-    // write to. The email above is the sign-in address and is never shown
-    // publicly; this one is, on listings that have no booking website.
-    managerName: { type: String, default: "", trim: true },
-    contactEmail: { type: String, default: "", lowercase: true, trim: true },
-    phone: { type: String, default: "" },
-    // Suspended accounts cannot sign in, and their listings drop off the public
-    // site until the Tourist Officer restores them. Nothing is deleted, so a
-    // seasonal closure or a change of management is reversible.
-    active: { type: Boolean, default: true },
-
-    // Whether the business is trading, which the establishment reports itself.
-    // Deliberately separate from `active` above: that is the office's switch over
-    // the account, this is the establishment's statement about its own operations.
-    // Keeping them apart lets a place report that it has closed without that
-    // reading as a sanction, and lets the office suspend an account that is
-    // trading perfectly well.
-    //   active   - operating normally
-    //   inactive - temporarily not operating (off season, repairs)
-    //   closed   - permanently stopped
-    // A closure is recorded, never erased: the account and its listings remain.
-    operationalStatus: {
-        type: String,
-        enum: ['active', 'inactive', 'closed'],
-        default: 'active',
-        index: true
-    },
-    // Raised when the establishment reports its own change, cleared once the
-    // officer has acted. This is the queue that drives municipal oversight - it is
-    // how a closure reaches the office instead of sitting unnoticed.
-    statusNeedsReview: { type: Boolean, default: false },
-    statusNote: { type: String, default: "" },
-    statusUpdatedAt: { type: Date, default: null },
-    resetTokenHash: { type: String, default: null, select: false },
-    resetTokenExpires: { type: Date, default: null, select: false }
-}, { collection: 'resortOwners', timestamps: true });
-
-// One field, two possible spellings on disk. Everything downstream reads this.
-EstablishmentManagerSchema.virtual('displayName').get(function () {
-    return this.establishmentName || this.resortName || '';
-});
-
-// Written async rather than with a next() callback: Mongoose 9 — which this
-// project installs — removed callback-style document middleware, and a hook
-// declaring next there throws "next is not a function" on every single save.
-EstablishmentManagerSchema.pre('validate', async function () {
-    if (!this.establishmentName && this.resortName) this.establishmentName = this.resortName;
-    if (!this.establishmentName) {
-        throw new Error('An establishment name is required.');
-    }
-});
-
-const EstablishmentManager = mongoose.model('EstablishmentManager', EstablishmentManagerSchema);
-
-/**
- * One-time, idempotent rename of resortName -> establishmentName on existing
- * accounts. Runs at startup, costs nothing once there is nothing left to move,
- * and never blocks boot: if it fails, the schema above still reads the old field.
- */
-async function migrateEstablishmentNames() {
-    try {
-        const result = await EstablishmentManager.collection.updateMany(
-            { resortName: { $exists: true }, establishmentName: { $in: [null, ''] } },
-            [{ $set: { establishmentName: '$resortName' } }]
-        );
-        if (result.modifiedCount) {
-            console.log(`🔤 Renamed resortName -> establishmentName on ${result.modifiedCount} account(s).`);
-        }
-    } catch (error) {
-        console.warn('⚠️ establishmentName migration skipped:', error.message);
-    }
-}
-
-/**
- * Moves listings from the old `ownerId` field to `managedBy`.
- *
- * Nobody owns a listing in ZTIMS — a manager is assigned to maintain one — and
- * the old name said otherwise. Done in two steps on purpose: copy every value
- * across first, and only remove the old field from documents that now carry the
- * new one. A half-finished run therefore leaves listings readable under both
- * names rather than under neither.
- */
 /**
  * Creates the first Tourism Officer account from the environment.
  *
  * .env.example has documented INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD
  * since the beginning, but nothing ever read them — and /api/admin/create is
  * behind requireAdmin, so an officer account could only be made by an officer
- * who already existed. With no admin in the database, or with the password
+ * who already existed. With no officer in the database, or with the password
  * forgotten, there was no way in at all.
  *
  * Creating is safe to leave switched on: it only ever fills a gap. Changing the
@@ -313,10 +173,10 @@ async function bootstrapAdmin() {
     }
 
     try {
-        const existing = await Admin.findOne({ email });
+        const existing = await TourismOfficer.findOne({ email }, { secrets: true });
 
         if (!existing) {
-            await new Admin({ email, password: await bcrypt.hash(password, 12) }).save();
+            await TourismOfficer.create({ email, password: await bcrypt.hash(password, 12) });
             console.log(`🛡️  Tourism Officer account created for ${email}.`);
             console.log('    Sign in, then REMOVE INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD.');
             return;
@@ -328,160 +188,19 @@ async function bootstrapAdmin() {
             // problems; clearing this stops an old emailed link still working.
             existing.resetTokenHash = null;
             existing.resetTokenExpires = null;
-            await existing.save();
+            await TourismOfficer.save(existing);
             console.warn(`🔑 PASSWORD RESET: ${email} now uses INITIAL_ADMIN_PASSWORD.`);
             console.warn('    Remove ADMIN_PASSWORD_RESET, INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD now.');
             return;
         }
 
         console.log(`🛡️  ${email} already exists — left untouched.`);
-        console.log('    To change its password, set ADMIN_PASSWORD_RESET=true and redeploy.');
+        console.log('    To change its password, set ADMIN_PASSWORD_RESET=true and run npm run migrate again.');
     } catch (error) {
         console.error('❌ Could not create the Tourism Officer account:', error.message);
     }
 }
 
-async function migrateSpotManagement() {
-    try {
-        const copied = await Spot.collection.updateMany(
-            { ownerId: { $exists: true }, managedBy: { $exists: false } },
-            [{ $set: { managedBy: '$ownerId' } }]
-        );
-        if (copied.modifiedCount) {
-            console.log(`🔤 Moved ownerId -> managedBy on ${copied.modifiedCount} listing(s).`);
-        }
-
-        const cleaned = await Spot.collection.updateMany(
-            { ownerId: { $exists: true }, managedBy: { $exists: true } },
-            { $unset: { ownerId: '' } }
-        );
-        if (cleaned.modifiedCount) {
-            console.log(`🧹 Dropped the old ownerId field from ${cleaned.modifiedCount} listing(s).`);
-        }
-    } catch (error) {
-        console.warn('⚠️ managedBy migration skipped:', error.message);
-    }
-}
-
-
-
-const MAX_SPOT_IMAGES = 30;
-
-// 5. Spot Schema — covers both tourist spots and accommodations, managed either by
-//    the Tourist Officer (municipal-level, no manager) or by a Tourist Establishment
-//    Manager account.
-const SpotSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    // The short place label on cards and in search. Editors no longer ask for it
-    // separately — it is filled from the Location Information below.
-    location: { type: String, required: [true, 'Fill in the Location Information so the listing has a place to show.'] },
-    category: { type: String, required: true },
-    description: { type: String, required: true },
-    // Cover image, shown on cards and at the top of the detail page. Kept as its own
-    // field so spots created before galleries existed still display.
-    imageUrl: { type: String },
-    // The full gallery. Only the links live here — the files themselves are hosted
-    // externally, since 30 photos inlined would exceed both the 1MB request limit
-    // and MongoDB's 16MB document cap many times over.
-    images: {
-        type: [String],
-        default: [],
-        validate: {
-            validator: list => list.length <= MAX_SPOT_IMAGES,
-            message: `A spot can have at most ${MAX_SPOT_IMAGES} photos.`
-        }
-    },
-    // Booking happens on the establishment's own website — this is where "Book Now" sends
-    // the visitor. Blank means the detail page shows contact details instead.
-    bookingUrl: { type: String, default: "" },
-    // Whether this is a place to stay or a place to visit. Editors no longer ask
-    // for it — it follows the category, which already carries ACCOMMODATION.
-    type: { type: String, enum: ['spot', 'accommodation'], default: 'spot' },
-    label: { type: String, default: "" },
-    workingDays: { type: String, default: "Everyday" },
-    workingTime: { type: String, default: "All Day" },
-    travelFee: { type: Number, default: 0 },
-    entranceFee: { type: Number, default: 0 },
-
-    // Where this place actually is. The establishment or the Tourism Office records
-    // it once; from then on every visitor's directions, distance and travel time are
-    // worked out from it per request. Nothing about the journey is stored here —
-    // there is deliberately no travelTime field, because the answer depends entirely
-    // on who is asking and from where.
-    //
-    // All optional: listings published before this existed keep working and simply
-    // have no directions until someone sets a point on the map.
-    address: { type: String, default: "" },
-    barangay: { type: String, default: "" },
-    municipality: { type: String, default: "Zamboanguita" },
-    province: { type: String, default: "Negros Oriental" },
-    latitude: { type: Number, default: null, min: -90, max: 90 },
-    longitude: { type: Number, default: null, min: -180, max: 180 },
-
-    // Which Tourist Establishment Manager account is assigned to maintain this
-    // listing. Null means the Tourism Office maintains it directly.
-    //
-    // Nobody owns anything here. ZTIMS records who is responsible for keeping a
-    // listing accurate, and that is all this field means — which is why it is not
-    // called an owner. The municipality's authority over the public listing does
-    // not pass to whoever is assigned to it.
-    managedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'EstablishmentManager', default: null, index: true },
-
-    // Whether the public sees this listing. Municipal tourism records are taken
-    // down by changing this, never by deleting them: a spot closed for a season,
-    // or a festival site between years, has to be restorable, and the record has
-    // to survive either way.
-    //   published   - live on the public site
-    //   unpublished - hidden for now, fully restorable
-    //   archived    - retired; kept for the record
-    // Only the Tourism Officer may change it; an establishment manages its
-    // listing's information, not whether the municipality publishes it.
-    status: { type: String, enum: ['published', 'unpublished', 'archived'], default: 'published', index: true },
-    statusNote: { type: String, default: "" },
-    statusUpdatedAt: { type: Date, default: null },
-
-    // Whether the municipality requires a tourist guide here. A municipal
-    // decision, so only the Tourism Office sets it — which guides serve the spot
-    // is recorded on the guide, not duplicated into this document.
-    requiresGuide: { type: Boolean, default: false, index: true }
-}, { timestamps: true });
-
-const Spot = mongoose.model('Spot', SpotSchema);
-
-// 6. Tourist Guide — a municipal tourism record, not a ZTIMS account.
-//    Guides do not sign in. The Tourism Office keeps these records the way it
-//    keeps any other tourism information, which is why there is no password,
-//    no email sign-in, and no role attached to them anywhere.
-const GUIDE_STATUSES = ['available', 'unavailable', 'inactive'];
-
-const TouristGuideSchema = new mongoose.Schema({
-    fullName: { type: String, required: true, trim: true },
-    photoUrl: { type: String, default: "" },
-    contactNumber: { type: String, default: "" },
-    // General area rather than a precise address: this is a person, and a pin on
-    // their home is not tourism information.
-    location: { type: String, default: "" },
-    bio: { type: String, default: "" },
-    guideFee: { type: Number, default: 0, min: 0 },
-    maxGroupSize: { type: Number, default: 1, min: 1 },
-
-    //   available   — can be assigned to new bookings
-    //   unavailable — temporarily not taking work
-    //   inactive    — no longer taking new bookings
-    // Inactive never erases anything: past bookings keep pointing at the guide
-    // who actually led them.
-    status: { type: String, enum: GUIDE_STATUSES, default: 'available', index: true },
-
-    // The spots this guide serves. Held here rather than on the spot so a guide's
-    // details live in one place and a spot never carries a stale copy of them.
-    assignedSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }]
-}, { timestamps: true });
-
-const TouristGuide = mongoose.model('TouristGuide', TouristGuideSchema);
-
-// 7. Guide booking — submitted by a visitor with no ZTIMS account.
-//    The reference is the visitor's only handle on it: they quote it at the
-//    Municipal Tourism Office, pay there, and the officer confirms it.
 /* The set of ISO 3166-1 alpha-2 codes a booking's nationality may be. Mirrors
    the list in Zamboanguita-project/src/shared/countries.js, which also carries
    the display names the browser needs. The two deploy separately (Render and
@@ -500,95 +219,6 @@ const COUNTRY_CODES = new Set((
     'VN VU WF WS YE YT ZA ZM ZW'
 ).trim().split(/\s+/));
 
-const BOOKING_STATUSES = ['pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show'];
-
-const GuideBookingSchema = new mongoose.Schema({
-    reference: { type: String, required: true, unique: true, index: true },
-
-    // Where and when. The spot is fixed at submission; the visitor does not pick
-    // a guide, so guideId stays null until the Tourism Office assigns one.
-    spotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', required: true, index: true },
-    guideId: { type: mongoose.Schema.Types.ObjectId, ref: 'TouristGuide', default: null, index: true },
-
-    // Only what is needed to hold a booking and recognise the person at the
-    // counter. No account is created from any of this.
-    fullName: { type: String, required: true, trim: true },
-    contactNumber: { type: String, required: true, trim: true },
-    email: { type: String, required: true, lowercase: true, trim: true },
-
-    /* Nationality as an ISO 3166-1 alpha-2 code, because the office reports
-       domestic and foreign arrivals upward and free text cannot be counted.
-       The code outlives a country being renamed; the name is only presentation.
-
-       Required by the POST route below, but deliberately NOT required here.
-       Every booking the officer touches — assigning a guide, recording payment,
-       changing status — goes through booking.save(), and a required field would
-       make each of those throw on any booking taken before this existed. The
-       officer would be unable to confirm them, which is a worse outcome than an
-       older booking having no nationality on file. */
-    nationality: { type: String, default: '', uppercase: true, trim: true, index: true },
-
-    visitors: { type: Number, required: true, min: 1 },
-    preferredDate: { type: String, required: true },   // YYYY-MM-DD, as the form sends it
-    preferredTime: { type: String, required: true },   // HH:MM, 24-hour
-    notes: { type: String, default: "" },
-
-    //   pending_payment — submitted, not yet paid for at the office
-    //   confirmed       — the officer recorded payment and accepted it
-    //   cancelled / completed / no_show — after the fact
-    // Nothing is ever deleted; a booking that came to nothing is recorded as such.
-    status: { type: String, enum: BOOKING_STATUSES, default: 'pending_payment', index: true },
-    statusNote: { type: String, default: "" },
-    statusUpdatedAt: { type: Date, default: null }
-}, { timestamps: true });
-
-const GuideBooking = mongoose.model('GuideBooking', GuideBookingSchema);
-
-// 8. Payment — kept separate from the booking, because it is a different event
-//    with its own record: who took the money, when, against which receipt.
-//    There is no online payment anywhere in ZTIMS; this is a record of cash
-//    taken at the counter.
-const PaymentSchema = new mongoose.Schema({
-    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'GuideBooking', required: true, index: true },
-    amount: { type: Number, required: true, min: 0 },
-    method: { type: String, default: 'cash' },
-    receiptNumber: { type: String, default: "" },
-    paidAt: { type: Date, default: Date.now },
-    // The officer who took it, kept by id and email so the record survives the
-    // account being renamed later.
-    recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
-    recordedByEmail: { type: String, default: "" },
-    remarks: { type: String, default: "" }
-}, { timestamps: true });
-
-const Payment = mongoose.model('Payment', PaymentSchema);
-
-// 9. Feedback — what a visitor sends from the public Contact Us page. No
-//    account stands behind it, so it carries only what they chose to type:
-//    a topic, the message, and a name and email if they want a reply.
-//    Nothing is deleted; a message the office has dealt with is marked
-//    resolved, the same way a booking that came to nothing is marked cancelled.
-const FEEDBACK_TOPICS = ['suggestion', 'listing', 'problem', 'booking', 'other'];
-const FEEDBACK_STATUSES = ['new', 'read', 'resolved'];
-const FEEDBACK_MESSAGE_MAX = 2000;
-
-const FeedbackSchema = new mongoose.Schema({
-    topic: { type: String, enum: FEEDBACK_TOPICS, default: 'other', index: true },
-    message: { type: String, required: true, trim: true, maxlength: FEEDBACK_MESSAGE_MAX },
-    name: { type: String, default: '', trim: true, maxlength: 120 },
-    email: { type: String, default: '', lowercase: true, trim: true, maxlength: 254 },
-    // The page they came from, when the browser says. Helps an officer find
-    // "the listing with the wrong fee" without asking which one.
-    page: { type: String, default: '', trim: true, maxlength: 500 },
-
-    status: { type: String, enum: FEEDBACK_STATUSES, default: 'new', index: true },
-    statusUpdatedAt: { type: Date, default: null },
-    // Who last changed the status, kept by email so the record survives the
-    // account being renamed later.
-    statusUpdatedByEmail: { type: String, default: '' }
-}, { timestamps: true });
-
-const Feedback = mongoose.model('Feedback', FeedbackSchema);
 
 const requireAuth = (req, res, next) => {
     const authorization = req.get('authorization') || '';
@@ -669,7 +299,7 @@ const resetRateLimit = sharedRateLimit('reset', {
 ========================================== */
 
 /**
- * 🌟 POST: Add and register a brand new Admin into MongoDB
+ * 🌟 POST: Add a new Tourism Officer account
  * Target URL: http://localhost:5000/api/admin/create
  */
 app.post('/api/admin/create', requireAdmin, async (req, res) => {
@@ -683,20 +313,18 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
         const normalizedEmail = email.toLowerCase().trim();
 
         // Check if an admin with this email already exists
-        const existingAdmin = await Admin.findOne({ email: normalizedEmail });
+        const existingAdmin = await TourismOfficer.findOne({ email: normalizedEmail });
         if (existingAdmin) {
             return res.status(409).json({ success: false, message: 'This email is already registered as an admin.' });
         }
 
         const passwordHash = await bcrypt.hash(password, 12);
-        const newAdmin = new Admin({ 
-            email: normalizedEmail, 
+        await TourismOfficer.create({
+            email: normalizedEmail,
             password: passwordHash
         });
-        
-        await newAdmin.save();
 
-        console.log(`🛡️ New Administrator saved directly to MongoDB 'admins' collection: ${normalizedEmail}`);
+        console.log(`🛡️ New Tourism Officer account created: ${normalizedEmail}`);
         return res.status(201).json({ success: true, message: 'New admin successfully added!' });
     } catch (error) {
         console.error("❌ Add Admin Endpoint Failure:", error);
@@ -705,12 +333,12 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
 });
 
 /**
- * 🌟 GET: Fetch list of all system administrators from MongoDB
+ * 🌟 GET: List every Tourism Officer account (never the password hashes)
  * Target URL: http://localhost:5000/api/admin/list
  */
 app.get('/api/admin/list', requireAdmin, async (req, res) => {
     try {
-        const adminList = await Admin.find({}, { password: 0 });
+        const adminList = await TourismOfficer.find({}, { sort: { createdAt: 1 } });
         return res.status(200).json(adminList);
     } catch (error) {
         console.error("❌ Get Admin List Endpoint Failure:", error);
@@ -742,7 +370,7 @@ app.post('/api/admin/me/password', requireAdmin, resetRateLimit, async (req, res
             return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
         }
 
-        const admin = await Admin.findById(req.auth.sub).select('+password');
+        const admin = await TourismOfficer.findById(req.auth.sub, { secrets: true });
         if (!admin) return res.status(404).json({ success: false, message: 'Account not found.' });
 
         if (!(await bcrypt.compare(currentPassword, admin.password))) {
@@ -752,7 +380,7 @@ app.post('/api/admin/me/password', requireAdmin, resetRateLimit, async (req, res
         admin.password = await bcrypt.hash(newPassword, 12);
         admin.resetTokenHash = null;        // any reset link in flight is now void
         admin.resetTokenExpires = null;
-        await admin.save();
+        await TourismOfficer.save(admin);
 
         console.log(`🔑 Tourism Officer changed their own password: ${admin.email}`);
         return res.status(200).json({ success: true, message: 'Your password has been changed.' });
@@ -785,7 +413,7 @@ async function createEstablishmentManager(req, res) {
         }
 
         const passwordHash = await bcrypt.hash(password, 12);
-        const newManager = new EstablishmentManager({
+        await EstablishmentManager.create({
             email: normalizedEmail,
             password: passwordHash,
             establishmentName: establishmentName.trim(),
@@ -795,7 +423,6 @@ async function createEstablishmentManager(req, res) {
             contactEmail: (req.body.contactEmail || normalizedEmail).toLowerCase().trim(),
             phone: phone || ""
         });
-        await newManager.save();
 
         console.log(`🏨 New Tourist Establishment Manager account created by Tourist Officer: ${normalizedEmail}`);
         return res.status(201).json({ success: true, message: 'Establishment manager account created!' });
@@ -810,12 +437,10 @@ async function createEstablishmentManager(req, res) {
  */
 async function listEstablishmentManagers(req, res) {
     try {
-        const managers = await EstablishmentManager.find({}, { password: 0 });
-        // Always answer with establishmentName, whatever the document holds, so no
-        // caller has to know which spelling it was saved under.
+        // Oldest first, the order MongoDB returned them in. Never the hashes.
+        const managers = await EstablishmentManager.find({}, { sort: { createdAt: 1 } });
         return res.status(200).json(managers.map(manager => ({
-            ...manager.toObject(),
-            establishmentName: manager.displayName,
+            ...manager,
             contactEmail: manager.contactEmail || manager.email
         })));
     } catch (error) {
@@ -850,7 +475,9 @@ function reportWriteFailure(res, error, context) {
     }
     if (error && error.code === 11000) {
         const field = Object.keys(error.keyPattern || error.keyValue || {})[0] || 'value';
-        return res.status(409).json({ success: false, message: `That ${field} is already registered.` });
+        // db.js names the specific case when it knows it ("Payment for that
+        // booking was already recorded"); otherwise, the generic wording.
+        return res.status(409).json({ success: false, message: error.specific || `That ${field} is already registered.` });
     }
     return res.status(500).json({
         success: false,
@@ -862,7 +489,7 @@ function reportWriteFailure(res, error, context) {
 function managerProfile(manager) {
     return {
         _id: manager._id,
-        establishmentName: manager.displayName,
+        establishmentName: manager.establishmentName,
         managerName: manager.managerName || '',
         email: manager.email,
         contactEmail: manager.contactEmail || manager.email,
@@ -912,9 +539,9 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
         manager.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
         manager.statusUpdatedAt = new Date();
         if (changed) manager.statusNeedsReview = true;
-        await manager.save();
+        await EstablishmentManager.save(manager);
 
-        const listings = await Spot.countDocuments({ managedBy: manager._id });
+        const listings = await Spot.count({ managedBy: manager._id });
         console.log(`🏷️ ${manager.email} reported operationalStatus=${status}`);
 
         return res.status(200).json({
@@ -939,7 +566,6 @@ async function applyManagerDetails(manager, body) {
         const name = body.establishmentName.trim();
         if (!name) throw new Error('The establishment needs a name.');
         manager.establishmentName = name;
-        manager.resortName = undefined;     // the pre-rename copy would go stale
     }
     if (typeof body.managerName === 'string') manager.managerName = body.managerName.trim();
     if (typeof body.phone === 'string') manager.phone = body.phone.trim();
@@ -951,7 +577,7 @@ async function applyManagerDetails(manager, body) {
         // Blank means "use the sign-in address", which is what the public side reads.
         manager.contactEmail = contact || manager.email;
     }
-    await manager.save();
+    await EstablishmentManager.save(manager);
     return manager;
 }
 
@@ -977,7 +603,7 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
             return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
         }
 
-        const manager = await EstablishmentManager.findById(req.auth.sub).select('+password');
+        const manager = await EstablishmentManager.findById(req.auth.sub, { secrets: true });
         if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
 
         // Proving the current password is what stops a borrowed, still-signed-in
@@ -989,7 +615,7 @@ app.post('/api/establishment-managers/me/password', requireEstablishmentManager,
         manager.password = await bcrypt.hash(newPassword, 12);
         manager.resetTokenHash = null;      // any reset link in flight is now void
         manager.resetTokenExpires = null;
-        await manager.save();
+        await EstablishmentManager.save(manager);
 
         console.log(`🔑 Establishment manager changed their own password: ${manager.email}`);
         return res.status(200).json({ success: true, message: 'Your password has been changed.' });
@@ -1031,7 +657,7 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
 
         await applyManagerDetails(manager, req.body);
 
-        const listings = await Spot.countDocuments({ managedBy: manager._id });
+        const listings = await Spot.count({ managedBy: manager._id });
         console.log(`🏨 Officer updated ${manager.email} (active: ${manager.active !== false})`);
         return res.status(200).json({
             success: true,
@@ -1063,7 +689,7 @@ app.post('/api/establishment-managers/:id/password', requireAdmin, async (req, r
         manager.password = await bcrypt.hash(newPassword, 12);
         manager.resetTokenHash = null;
         manager.resetTokenExpires = null;
-        await manager.save();
+        await EstablishmentManager.save(manager);
 
         console.log(`🔑 Officer issued a new password for ${manager.email}`);
         return res.status(200).json({
@@ -1087,7 +713,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
         const manager = await EstablishmentManager.findById(req.params.id);
         if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
 
-        const listings = await Spot.countDocuments({ managedBy: manager._id });
+        const listings = await Spot.count({ managedBy: manager._id });
         if (listings > 0) {
             return res.status(409).json({
                 success: false,
@@ -1095,7 +721,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
             });
         }
 
-        await manager.deleteOne();
+        await EstablishmentManager.deleteById(manager._id);
         console.log(`🗑️ Officer deleted establishment manager account ${manager.email}`);
         return res.status(200).json({ success: true, message: 'Account deleted.' });
     } catch (error) {
@@ -1134,17 +760,17 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
         let resolvedRole = requestedRole;
 
         if (requestedRole === 'staff') {
-            account = await Admin.findOne({ email: normalizedEmail }).select('+password');
+            account = await TourismOfficer.findOne({ email: normalizedEmail }, { secrets: true });
             resolvedRole = 'admin';
 
             if (!account) {
-                account = await EstablishmentManager.findOne({ email: normalizedEmail }).select('+password');
+                account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
                 resolvedRole = 'establishment_manager';
             }
         } else if (requestedRole === 'admin') {
-            account = await Admin.findOne({ email: normalizedEmail }).select('+password');
+            account = await TourismOfficer.findOne({ email: normalizedEmail }, { secrets: true });
         } else {
-            account = await EstablishmentManager.findOne({ email: normalizedEmail }).select('+password');
+            account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
             resolvedRole = 'establishment_manager';
         }
 
@@ -1178,14 +804,14 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
-                name: account.fullName || account.displayName || account.email.split('@')[0],
+                name: account.fullName || account.establishmentName || account.email.split('@')[0],
                 fullName: account.fullName || "",
                 phone: account.phone || "",
                 nationality: account.nationality || "",
-                establishmentName: account.displayName || "",
+                establishmentName: account.establishmentName || "",
                 // Pre-rename key, still sent so a page cached from before the rename
                 // keeps showing the establishment's name instead of a blank.
-                resortName: account.displayName || ""
+                resortName: account.establishmentName || ""
             }
         };
 
@@ -1226,15 +852,17 @@ if (!mailConfigured) {
  * left with an account that dies the moment its password is forgotten. Tourists
  * who signed up through Google are skipped — they have no password here — and a
  * suspended manager cannot reset their way back in.
- * Returns the account document, or null.
+ * Returns { account, table } — the table being where the account is saved back —
+ * or null.
  */
 async function findResettableAccount(email, withResetFields) {
-    const withFields = query => (withResetFields ? query.select('+resetTokenHash +resetTokenExpires') : query);
+    const options = { secrets: Boolean(withResetFields) };
 
-    const manager = await withFields(EstablishmentManager.findOne({ email }));
-    if (manager) return manager.active === false ? null : manager;
+    const manager = await EstablishmentManager.findOne({ email }, options);
+    if (manager) return manager.active === false ? null : { account: manager, table: EstablishmentManager };
 
-    return withFields(Admin.findOne({ email }));
+    const officer = await TourismOfficer.findOne({ email }, options);
+    return officer ? { account: officer, table: TourismOfficer } : null;
 }
 
 /**
@@ -1255,7 +883,8 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        const user = await findResettableAccount(normalizedEmail, false);
+        const found = await findResettableAccount(normalizedEmail, false);
+        const user = found && found.account;
 
         // An address with no resettable account gets exactly the same answer as
         // one that has, so this cannot be used to find out who is registered.
@@ -1266,7 +895,7 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         user.resetTokenHash = hashResetToken(token);
         user.resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
-        await user.save();
+        await found.table.save(user);
 
         // Must point at the deployed site, not a local dev server, or the link in
         // the email is useless to everyone but the developer.
@@ -1294,7 +923,7 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
             // The token is useless if the email never left, so don't leave it live.
             user.resetTokenHash = null;
             user.resetTokenExpires = null;
-            await user.save();
+            await found.table.save(user);
             console.error('Reset email failed to send:', mailError);
             return res.status(502).json({ success: false, message: 'Could not send the reset email just now. Please try again in a moment.' });
         }
@@ -1322,7 +951,8 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
             return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
         }
 
-        const user = await findResettableAccount(String(email).toLowerCase().trim(), true);
+        const found = await findResettableAccount(String(email).toLowerCase().trim(), true);
+        const user = found && found.account;
 
         // One message for every way this can fail — a wrong token, an expired one,
         // an already-used one or an unknown email are indistinguishable from outside.
@@ -1343,7 +973,7 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
         // Spent immediately, so the same link cannot be replayed.
         user.resetTokenHash = null;
         user.resetTokenExpires = null;
-        await user.save();
+        await found.table.save(user);
 
         console.log(`🔑 Password reset completed for ${user.email}`);
         return res.status(200).json({ success: true, message: 'Your password has been changed. You can sign in with it now.' });
@@ -1381,9 +1011,7 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
         }
         // The establishment's public-facing details come along so the officer's
         // oversight page can show who maintains each listing without a request per row.
-        const foundSpots = await Spot.find(query)
-            .populate('managedBy', 'establishmentName resortName managerName contactEmail phone active operationalStatus')
-            .sort({ createdAt: -1 });
+        const foundSpots = await Spot.findWithManagers(query);
 
         // A suspended establishment's listings leave the public site, but the
         // Tourist Officer still sees them — otherwise the listings they just hid
@@ -1393,18 +1021,18 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
             : foundSpots.filter(isPubliclyVisible);
 
         return res.status(200).json(visibleSpots.map(spot => {
-            const plain = spot.toObject();
-            const manager = plain.managedBy;
+            const manager = spot.managedBy;
             return {
-                ...plain,
+                ...spot,
                 // No assigned manager means the Tourism Office maintains this listing.
-                managerName: manager ? (manager.establishmentName || manager.resortName || '') : '',
+                managerName: manager ? (manager.establishmentName || '') : '',
                 managerContact: manager ? (manager.managerName || '') : '',
                 managerEmail: manager ? (manager.contactEmail || '') : '',
                 managerPhone: manager ? (manager.phone || '') : ''
             };
         }));
     } catch (error) {
+        console.error('❌ Listing list failure:', error);
         return res.status(500).json([]);
     }
 });
@@ -1691,10 +1319,11 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         const managedBy = isEstablishmentManager(req.auth.role)
             ? req.auth.sub
             : (req.body.managedBy || null);
-        const scoped = scopeSpotPayload(req.body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
+        // The record's identity and history are the database's to set, never a request's.
+        const { _id, createdAt, updatedAt, ...body } = req.body;
+        const scoped = scopeSpotPayload(body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
         const prepared = deriveSpotType(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
-        const newSpot = new Spot({ ...prepared, managedBy });
-        const savedSpot = await newSpot.save();
+        const savedSpot = await Spot.create({ ...prepared, managedBy });
         return res.status(201).json(savedSpot);
     } catch (error) {
         return reportWriteFailure(res, error, 'Publishing a spot failed:');
@@ -1709,7 +1338,7 @@ app.get('/api/spots/:id', async (req, res) => {
     try {
         // Only the establishment's public-facing contact details — never the
         // sign-in email or password hash, since this route is open to anyone.
-        const spot = await Spot.findById(req.params.id).populate('managedBy', 'establishmentName resortName managerName contactEmail phone active operationalStatus');
+        const spot = await Spot.findByIdWithManager(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
         // The same single rule the listing page uses, so the two cannot disagree.
         if (!isPubliclyVisible(spot)) {
@@ -1744,7 +1373,7 @@ app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
         spot.status = status;
         spot.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
         spot.statusUpdatedAt = new Date();
-        await spot.save();
+        await Spot.save(spot);
 
         console.log(`📋 Officer set ${spot.title} to ${status}`);
         return res.status(200).json({
@@ -1773,11 +1402,13 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         const verdict = authorizeSpotWrite(req.auth, spot);
         if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
 
-        // Which establishment maintains a listing is never reassigned from here.
-        const { managedBy, ownerId, ...updates } = req.body;
+        // Which establishment maintains a listing is never reassigned from here,
+        // and a listing's id and history are never the request's to change: the
+        // update is saved against the id in the URL, whatever the body carries.
+        const { managedBy, ownerId, _id, createdAt, updatedAt, ...updates } = req.body;
         const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
         Object.assign(spot, deriveSpotType(deriveSpotLocation(prepared, spot.location)));
-        const savedSpot = await spot.save();
+        const savedSpot = await Spot.save(spot);
         return res.status(200).json(savedSpot);
     } catch (error) {
         return reportWriteFailure(res, error, 'Saving a spot failed:');
@@ -1792,9 +1423,17 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         const verdict = authorizeSpotWrite(req.auth, spot);
         if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
 
-        await spot.deleteOne();
+        await Spot.deleteById(spot._id);
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
+        // MongoDB let a listing be deleted out from under its guide bookings;
+        // the database refuses now, since those bookings must keep their destination.
+        if (error && error.code === 'STILL_REFERENCED') {
+            return res.status(409).json({
+                success: false,
+                message: 'This listing has guide bookings on record, so it cannot be deleted. Archive it instead — the record is kept and the public no longer sees it.'
+            });
+        }
         return res.status(500).json({ error: error.message });
     }
 });
@@ -1847,7 +1486,7 @@ function applyGuideDetails(guide, body) {
         // Only ids that are real, and each one once.
         const valid = body.assignedSpots
             .map(id => String(id || '').trim())
-            .filter(id => mongoose.isValidObjectId(id));
+            .filter(id => db.isId(id));
         guide.assignedSpots = [...new Set(valid)];
     }
     return guide;
@@ -1855,9 +1494,7 @@ function applyGuideDetails(guide, body) {
 
 app.get('/api/guides', requireAdmin, async (req, res) => {
     try {
-        const guides = await TouristGuide.find()
-            .populate('assignedSpots', 'title location status')
-            .sort({ fullName: 1 });
+        const guides = await TouristGuide.listWithSpots();
         return res.status(200).json(guides);
     } catch (error) {
         console.error('❌ Guide list failure:', error);
@@ -1867,8 +1504,7 @@ app.get('/api/guides', requireAdmin, async (req, res) => {
 
 app.post('/api/guides', requireAdmin, async (req, res) => {
     try {
-        const guide = applyGuideDetails(new TouristGuide(), req.body);
-        await guide.save();
+        const guide = await TouristGuide.create(applyGuideDetails({}, req.body));
         console.log(`🧭 Officer added guide ${guide.fullName}`);
         return res.status(201).json({ success: true, message: `${guide.fullName} added.`, guide });
     } catch (error) {
@@ -1882,7 +1518,7 @@ app.put('/api/guides/:id', requireAdmin, async (req, res) => {
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
 
         applyGuideDetails(guide, req.body);
-        await guide.save();
+        await TouristGuide.save(guide);
         return res.status(200).json({ success: true, message: `${guide.fullName} updated.`, guide });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide update failure:');
@@ -1902,7 +1538,7 @@ app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
 
         guide.status = req.body.status;
-        await guide.save();
+        await TouristGuide.save(guide);
         return res.status(200).json({ success: true, message: `${guide.fullName} is now ${guide.status}.`, guide });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide status failure:');
@@ -1918,15 +1554,14 @@ app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
  */
 app.get('/api/spots/:id/guide-requirement', async (req, res) => {
     try {
-        const spot = await Spot.findById(req.params.id).select('title requiresGuide status');
+        const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ success: false, message: 'Spot not found.' });
 
         if (!spot.requiresGuide) {
             return res.status(200).json({ success: true, requiresGuide: false });
         }
 
-        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' })
-            .select('guideFee maxGroupSize');
+        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' });
 
         const fees = guides.map(g => g.guideFee).sort((a, b) => a - b);
         return res.status(200).json({
@@ -1974,13 +1609,9 @@ const bookingRateLimit = sharedRateLimit('booking', {
  */
 async function nextBookingReference() {
     const prefix = `TG-${new Date().getFullYear()}-`;
-    const latest = await GuideBooking
-        .findOne({ reference: new RegExp('^' + prefix) })
-        .sort({ reference: -1 })
-        .select('reference')
-        .lean();
+    const latest = await GuideBooking.latestReference(prefix);
 
-    const previous = latest ? Number(String(latest.reference).slice(prefix.length)) : 0;
+    const previous = latest ? Number(String(latest).slice(prefix.length)) : 0;
     return prefix + String((Number.isFinite(previous) ? previous : 0) + 1).padStart(5, '0');
 }
 
@@ -2055,7 +1686,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
             return res.status(400).json({ success: false, message: 'That date has already passed.' });
         }
 
-        const spot = await Spot.findById(body.spotId).populate('managedBy', 'active operationalStatus');
+        const spot = await Spot.findByIdWithManager(body.spotId);
         if (!spot) return res.status(404).json({ success: false, message: 'That destination could not be found.' });
         if (!spot.requiresGuide) {
             return res.status(400).json({ success: false, message: 'This destination does not require a tourist guide, so there is nothing to book.' });
@@ -2066,7 +1697,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
 
         // A group larger than any available guide can take would be accepted and
         // then refused at the counter, so it is refused here instead.
-        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' }).select('maxGroupSize');
+        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' });
         if (guides.length === 0) {
             return res.status(409).json({
                 success: false,
@@ -2120,7 +1751,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
 app.get('/api/guide-bookings/reference/:reference', async (req, res) => {
     try {
         const reference = String(req.params.reference || '').trim().toUpperCase();
-        const booking = await GuideBooking.findOne({ reference }).populate('spotId', 'title');
+        const booking = await GuideBooking.findByReferenceWithSpot(reference);
         if (!booking) return res.status(404).json({ success: false, message: 'No booking found with that reference.' });
 
         return res.status(200).json({
@@ -2140,19 +1771,15 @@ app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
         const query = {};
         if (BOOKING_STATUSES.includes(req.query.status)) query.status = req.query.status;
 
-        const bookings = await GuideBooking.find(query)
-            .populate('spotId', 'title location')
-            .populate('guideId', 'fullName contactNumber guideFee maxGroupSize status')
-            .sort({ createdAt: -1 })
-            .limit(500);
+        const bookings = await GuideBooking.listForOffice(query, { limit: 500 });
 
         // The payment belongs to a separate record, so it is fetched alongside
         // rather than duplicated onto the booking.
-        const payments = await Payment.find({ bookingId: { $in: bookings.map(b => b._id) } });
+        const payments = await Payment.find({ bookingId: { in: bookings.map(b => b._id) } });
         const byBooking = new Map(payments.map(p => [String(p.bookingId), p]));
 
         return res.status(200).json(bookings.map(booking => ({
-            ...booking.toObject(),
+            ...booking,
             payment: byBooking.get(String(booking._id)) || null
         })));
     } catch (error) {
@@ -2177,7 +1804,7 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
 
         if (req.body.guideId === null || req.body.guideId === '') {
             booking.guideId = null;
-            await booking.save();
+            await GuideBooking.save(booking);
             return res.status(200).json({ success: true, message: 'Guide unassigned.', booking });
         }
 
@@ -2197,12 +1824,12 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
         }
 
         const clash = await GuideBooking.findOne({
-            _id: { $ne: booking._id },
+            _id: { ne: booking._id },
             guideId: guide._id,
             status: 'confirmed',
             preferredDate: booking.preferredDate,
             preferredTime: booking.preferredTime
-        }).select('reference');
+        });
         if (clash) {
             return res.status(409).json({
                 success: false,
@@ -2211,14 +1838,14 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
         }
 
         booking.guideId = guide._id;
-        await booking.save();
+        await GuideBooking.save(booking);
 
         const sameDay = await GuideBooking.find({
-            _id: { $ne: booking._id },
+            _id: { ne: booking._id },
             guideId: guide._id,
             status: 'confirmed',
             preferredDate: booking.preferredDate
-        }).select('reference preferredTime');
+        });
 
         console.log(`🧭 ${guide.fullName} assigned to ${booking.reference}`);
         return res.status(200).json({
@@ -2240,8 +1867,13 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
  */
 app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
     try {
-        const booking = await GuideBooking.findById(req.params.id).populate('guideId', 'fullName');
+        const booking = await GuideBooking.findById(req.params.id);
         if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+        // The reply names the assigned guide, as it always has.
+        if (booking.guideId) {
+            const assigned = await TouristGuide.findById(booking.guideId);
+            booking.guideId = assigned ? { _id: assigned._id, fullName: assigned.fullName } : booking.guideId;
+        }
         if (booking.status === 'cancelled') {
             return res.status(409).json({ success: false, message: 'That booking was cancelled. Reinstate it before recording payment.' });
         }
@@ -2259,22 +1891,28 @@ app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
         // Read from the account rather than the token: sessions carry only an id
         // and a role, and a receipt that cannot say who took the money is not a
         // record of anything.
-        const officer = await Admin.findById(req.auth.sub).select('email');
+        const officer = await TourismOfficer.findById(req.auth.sub);
 
-        const payment = await Payment.create({
-            bookingId: booking._id,
-            amount,
-            method: String(req.body.method || 'cash').trim() || 'cash',
-            receiptNumber: String(req.body.receiptNumber || '').trim(),
-            paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
-            recordedBy: req.auth.sub,
-            recordedByEmail: officer ? officer.email : '',
-            remarks: String(req.body.remarks || '').trim().slice(0, 500)
+        // The payment and the confirmation it causes are one event: both are
+        // recorded, or neither is. MongoDB could leave a payment against an
+        // unconfirmed booking if the second write failed.
+        const payment = await db.transaction(async client => {
+            const recorded = await Payment.create({
+                bookingId: booking._id,
+                amount,
+                method: String(req.body.method || 'cash').trim() || 'cash',
+                receiptNumber: String(req.body.receiptNumber || '').trim(),
+                paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
+                recordedBy: req.auth.sub,
+                recordedByEmail: officer ? officer.email : '',
+                remarks: String(req.body.remarks || '').trim().slice(0, 500)
+            }, { client });
+
+            booking.status = 'confirmed';
+            booking.statusUpdatedAt = new Date();
+            await GuideBooking.save(booking, { client });
+            return recorded;
         });
-
-        booking.status = 'confirmed';
-        booking.statusUpdatedAt = new Date();
-        await booking.save();
 
         console.log(`💵 Payment recorded for ${booking.reference} by ${payment.recordedByEmail || req.auth.sub}`);
         return res.status(201).json({
@@ -2317,7 +1955,7 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
         booking.status = status;
         booking.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
         booking.statusUpdatedAt = new Date();
-        await booking.save();
+        await GuideBooking.save(booking);
 
         return res.status(200).json({ success: true, message: `${booking.reference} is now ${status.replace('_', ' ')}.`, booking });
     } catch (error) {
@@ -2402,7 +2040,7 @@ app.get('/api/feedback', requireAdmin, async (req, res) => {
         if (FEEDBACK_STATUSES.includes(req.query.status)) query.status = req.query.status;
         if (FEEDBACK_TOPICS.includes(req.query.topic)) query.topic = req.query.topic;
 
-        const items = await Feedback.find(query).sort({ createdAt: -1 }).limit(500).lean();
+        const items = await Feedback.find(query, { sort: { createdAt: -1 }, limit: 500 });
         return res.status(200).json(items);
     } catch (error) {
         console.error('❌ Feedback list failure:', error);
@@ -2424,11 +2062,11 @@ app.patch('/api/feedback/:id/status', requireAdmin, async (req, res) => {
         const feedback = await Feedback.findById(req.params.id);
         if (!feedback) return res.status(404).json({ success: false, message: 'Feedback not found.' });
 
-        const officer = await Admin.findById(req.auth.sub).select('email');
+        const officer = await TourismOfficer.findById(req.auth.sub);
         feedback.status = status;
         feedback.statusUpdatedAt = new Date();
         feedback.statusUpdatedByEmail = officer ? officer.email : '';
-        await feedback.save();
+        await Feedback.save(feedback);
 
         return res.status(200).json({ success: true, message: `Marked ${status}.`, feedback });
     } catch (error) {
@@ -2960,6 +2598,10 @@ function printStartupBanner(port) {
     } else {
         console.log(` 🚀 Serverless instance started (no port of its own).`);
     }
+    // Host and database name only — the URL's password is never printed.
+    console.log(process.env.DATABASE_URL
+        ? ` 🗄️  Database: ${db.describeDatabase()}${process.env.DATABASE_CA_CERT ? ' (certificate verified)' : ''}`
+        : ` 🗄️  Database: DATABASE_URL is not set — using ${db.describeDatabase()}, which only exists on a developer's machine.`);
     // Says which routing service this process actually loaded. ROUTING_PROVIDER is
     // decided once at startup from the environment, so a key added to the host after
     // the process began shows nothing until it restarts — this line is how you tell
@@ -3025,4 +2667,4 @@ module.exports = app;
 // Hung off the app so `npm run migrate` can reach them without a second copy of
 // the connection logic. An Express app is a function, so it carries properties.
 module.exports.runMigrations = runMigrations;
-module.exports.connectToDatabase = connectToDatabase;
+module.exports.closeDatabase = db.closePool;

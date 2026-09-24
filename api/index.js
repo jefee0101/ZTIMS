@@ -9,7 +9,7 @@
  * The server itself stays in zamboanguita-backend/, unchanged in shape and
  * still runnable on its own with `npm start` — see the note at the bottom of
  * server.js for how it tells the two apart. Vercel traces this require and
- * ships server.js, rate-limit-store.js and the backend's node_modules with the
- * function.
+ * ships server.js, db.js, models.js, rate-limit-store.js and the backend's
+ * node_modules with the function.
  */
 module.exports = require('../zamboanguita-backend/server');

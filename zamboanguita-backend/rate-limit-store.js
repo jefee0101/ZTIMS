@@ -1,4 +1,4 @@
-/* A hit counter for express-rate-limit that lives in MongoDB.
+/* A hit counter for express-rate-limit that lives in the database.
  *
  * The library's default store keeps its counts in the memory of the process
  * that happens to handle the request. That was fine while the API was one
@@ -7,36 +7,28 @@
  * attempts, and a fresh instance starts every visitor back at zero. For the
  * login and password-reset limits that is the whole point gone.
  *
- * Every instance reads and writes the same document here instead, so a limit
- * of 10 means 10 however many instances are running.
+ * Every instance reads and writes the same row here instead, so a limit of 10
+ * means 10 however many instances are running.
  *
- * One document per (limiter, client) pair:
+ * One row per (limiter, client) pair, in the rate_limits table:
  *
- *   { _id: 'login:203.0.113.7', hits: 3, expiresAt: <end of this window> }
+ *   key 'login:203.0.113.7' · hits 3 · expires_at <end of this window>
  *
- * The TTL index only tidies up. MongoDB sweeps expired documents about once a
- * minute, so one can outlive its window by up to that long — which is why
- * increment() checks expiresAt itself rather than trusting a document's mere
- * existence to mean the window is still open.
+ * The time comes from the database, not the instance, so every instance agrees
+ * on when a window ends even if their clocks do not.
  */
-const mongoose = require('mongoose');
+const { query } = require('./db');
 
-const RateLimitHitSchema = new mongoose.Schema({
-    _id: String,
-    hits: { type: Number, default: 0 },
-    expiresAt: { type: Date, required: true }
-}, { versionKey: false });
+// How often an increment also sweeps expired rows away. Expired rows are
+// already ignored, so this is tidying, not correctness — once in a hundred
+// requests keeps the table small without a scheduled job.
+const SWEEP_CHANCE = 0.01;
 
-RateLimitHitSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-const RateLimitHit = mongoose.models.RateLimitHit
-    || mongoose.model('RateLimitHit', RateLimitHitSchema, 'ratelimits');
-
-class MongoRateLimitStore {
+class PostgresRateLimitStore {
     /* `prefix` keeps each limiter's counts apart. Two limiters sharing a
        prefix would add their hits together for the same visitor. */
     constructor(prefix) {
-        if (!prefix) throw new Error('MongoRateLimitStore needs a prefix.');
+        if (!prefix) throw new Error('PostgresRateLimitStore needs a prefix.');
         this.prefix = `${prefix}:`;
         this.localKeys = false;
         this.windowMs = 60 * 1000;
@@ -47,55 +39,54 @@ class MongoRateLimitStore {
     }
 
     async get(key) {
-        const doc = await RateLimitHit.findById(this.prefix + key).lean();
-        if (!doc || doc.expiresAt <= new Date()) return undefined;
-        return { totalHits: doc.hits, resetTime: doc.expiresAt };
+        const { rows } = await query(
+            `select hits, expires_at from rate_limits where key = $1 and expires_at > now()`,
+            [this.prefix + key]
+        );
+        return rows[0] ? { totalHits: rows[0].hits, resetTime: rows[0].expires_at } : undefined;
     }
 
-    /* Counting and starting a new window happen in one atomic update, so two
+    /* Counting and starting a new window happen in one statement, so two
        instances handling the same visitor at the same moment cannot both read
-       "2" and both write "3".
+       "2" and both write "3": the second waits for the first's row lock.
 
-       Both $cond branches test the document's expiresAt as it was *before*
-       this update — within one $set stage every expression sees the input
-       document — so they always agree on whether the window is still open.
-       An upserted document has no expiresAt at all, which compares as not
-       open, so a first visit starts a window at one hit. */
+       Inside DO UPDATE, `rate_limits.` is the row as it was before this
+       statement, for every expression alike — so both CASEs always agree on
+       whether the window was still open. */
     async increment(key) {
-        const now = new Date();
-        const windowOpen = { $gt: ['$expiresAt', now] };
-
-        const doc = await RateLimitHit.findOneAndUpdate(
-            { _id: this.prefix + key },
-            [{
-                $set: {
-                    hits: { $cond: [windowOpen, { $add: [{ $ifNull: ['$hits', 0] }, 1] }, 1] },
-                    expiresAt: { $cond: [windowOpen, '$expiresAt', new Date(now.getTime() + this.windowMs)] }
-                }
-            }],
-            // Mongoose 9 refuses an array update unless told it is a pipeline.
-            { upsert: true, new: true, updatePipeline: true, lean: true }
+        const { rows } = await query(
+            `insert into rate_limits (key, hits, expires_at)
+                 values ($1, 1, now() + $2 * interval '1 millisecond')
+             on conflict (key) do update set
+                 hits = case when rate_limits.expires_at > now() then rate_limits.hits + 1 else 1 end,
+                 expires_at = case when rate_limits.expires_at > now() then rate_limits.expires_at else excluded.expires_at end
+             returning hits, expires_at`,
+            [this.prefix + key, this.windowMs]
         );
 
-        return { totalHits: doc.hits, resetTime: doc.expiresAt };
+        if (Math.random() < SWEEP_CHANCE) {
+            query(`delete from rate_limits where expires_at < now()`).catch(() => {});
+        }
+
+        return { totalHits: rows[0].hits, resetTime: rows[0].expires_at };
     }
 
     /* Used when a limiter is set to skip successful or failed requests. None
        here are, but the interface requires it. */
     async decrement(key) {
-        await RateLimitHit.updateOne(
-            { _id: this.prefix + key, hits: { $gt: 0 }, expiresAt: { $gt: new Date() } },
-            { $inc: { hits: -1 } }
+        await query(
+            `update rate_limits set hits = hits - 1 where key = $1 and hits > 0 and expires_at > now()`,
+            [this.prefix + key]
         );
     }
 
     async resetKey(key) {
-        await RateLimitHit.deleteOne({ _id: this.prefix + key });
+        await query(`delete from rate_limits where key = $1`, [this.prefix + key]);
     }
 
     async resetAll() {
-        await RateLimitHit.deleteMany({ _id: { $regex: `^${this.prefix}` } });
+        await query(`delete from rate_limits where key like $1`, [this.prefix + '%']);
     }
 }
 
-module.exports = { MongoRateLimitStore, RateLimitHit };
+module.exports = { PostgresRateLimitStore };
