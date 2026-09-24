@@ -2,3 +2,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+
+# Records the MongoDB copy could not bring across, saved in full by
+# zamboanguita-backend/scripts/copy-from-mongo.js. They hold personal details.
+copy-skipped-*.json
