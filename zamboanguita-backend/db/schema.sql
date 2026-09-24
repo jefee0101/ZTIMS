@@ -248,6 +248,10 @@ create table if not exists public.payments (
     updated_at          timestamptz not null default now()
 );
 
+-- Removing an officer clears recorded_by on their payments; this keeps that
+-- from reading the whole table.
+create index if not exists payments_recorded_by_idx on public.payments (recorded_by);
+
 
 -- ---------------------------------------------------------------------------
 -- Feedback from the public Contact Us page. Resolved, never deleted.
