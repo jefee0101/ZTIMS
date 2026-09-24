@@ -5,28 +5,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 ZTIMS — the Zamboanguita Tourism Information Management System, a site for one
-Philippine municipality. Two independently deployed halves live in this repo:
+Philippine municipality. Two halves live in this repo:
 
-- `Zamboanguita-project/` — the frontend, deployed to **Vercel**.
-- `zamboanguita-backend/` — the API, deployed to **Render** at
-  `ztims-api.onrender.com`.
+- `Zamboanguita-project/` — the frontend (static pages, Vite build).
+- `zamboanguita-backend/` — the API (Express + Mongoose).
 
-They deploy separately and share no files. Where the same fact must exist on
-both sides (see "Duplicated facts" below), it is duplicated by hand, not
-imported.
+Both deploy together as one **Vercel** project whose Root Directory is the
+repo root: `vercel.json` builds the frontend into `Zamboanguita-project/dist`
+and rewrites `/api/*` to `api/index.js`, which is nothing but
+`require('../zamboanguita-backend/server')`. So pages and API share one
+origin. The API still runs on its own too (`npm start`, the `Dockerfile`) —
+`server.js` only binds a port when run directly. It was previously on Render
+at `ztims-api.onrender.com`; see `docs/HANDOVER-NOTES.md` for the move.
 
-The repo root (`ztims/`) also has its own `package.json`
-(`@supabase/supabase-js`, `express`, ...) with no source files behind it, and
-`Zamboanguita-project/index.js` imports a `./supabase.js` that does not exist
-anywhere in the tree. This is leftover from an earlier, abandoned auth
-prototype — ignore it. Real auth is the JWT system in
-`zamboanguita-backend/server.js`, called from `staff_login.html`.
+`vercel.json` pins every build setting so the dashboard's don't matter,
+except the Root Directory, which only the dashboard can set — and Vercel
+reads `vercel.json` only from there. The function is pinned to `sin1`
+(Singapore) because the Atlas cluster is in AWS `ap-southeast-1`; the default
+(`iad1`, Washington) would put every database round trip across the Pacific.
+The build uses `npm ci`, so a `package.json` change must come with its
+`package-lock.json`, or the deploy fails at install.
+
+The halves share no source files. Where the same fact must exist on both
+sides (see "Duplicated facts" below), it is duplicated by hand, not imported.
+
+The repo root's own `package.json` (`@supabase/supabase-js`, `express` 5, ...),
+its committed `node_modules/`, and `Zamboanguita-project/index.js` (which
+imports a `./supabase.js` that does not exist) are leftover from an earlier,
+abandoned auth prototype — ignore them; the build never installs them. Real
+auth is the JWT system in `zamboanguita-backend/server.js`, called from
+`staff_login.html`.
 
 ## Commands
 
 Frontend (`Zamboanguita-project/`):
 ```
-npm run dev      # vite dev server on :3000
+npm run dev      # vite dev server on :3000; proxies /api to the live site,
+                  # or to a local API with ZTIMS_API=http://localhost:8080
 npm run build    # vite build — every src/**/*.html page must be wired into
                   # vite.config.js's glob-generated `pages` map or it's dropped
                   # from dist/ silently (see that file's own comment)
@@ -53,6 +68,8 @@ Backend (`zamboanguita-backend/`):
 ```
 npm run dev           # nodemon server.js
 npm start              # node server.js
+npm run migrate        # node migrate.js — the one-off data migrations and
+                       # first-officer bootstrap (not run at startup)
 npm run create-admin   # node create-admin.js
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
@@ -98,20 +115,27 @@ purpose — see the header comment in `spot-form.js`:
 - `photo-upload.js`, `countries.js`, `nav-active.js`, `motion.css` — smaller
   per-concern shared pieces.
 
-Each page hardcodes `const API_BASE = "https://ztims-api.onrender.com/api"`
-independently (see `staff_login.html`, `spot.html`, `admin/*.html`,
-`resort/*.html`) — there is no shared config file for this. Pointing a page at
-a local backend during development means editing that constant in that file.
+Each page sets its own `const API_BASE = "/api"` (`admin_analystic.html`
+calls it `BASE_API_URL`; `admin_profile.html` writes `/api/...` into its
+fetches) — same-origin, since Vercel serves the API beside the pages. There is
+no shared config file for this, and none is needed: to use a local backend in
+development, set `ZTIMS_API` for the dev server's proxy rather than editing
+pages.
 
 ## Backend architecture
 
-Single file, `zamboanguita-backend/server.js` (~2700 lines), Express +
-Mongoose against MongoDB. Structure, top to bottom:
+Essentially one file, `zamboanguita-backend/server.js` (~3000 lines), Express +
+Mongoose against MongoDB, plus `rate-limit-store.js` and `migrate.js` beside
+it. Structure, top to bottom:
 
-1. Middleware: `helmet`, CORS allow-list (`CORS_ORIGIN` env, plus any
-   `*.vercel.app` origin for preview deploys — see `previewOriginPattern`),
-   global rate limit, JSON body parsing capped at 1MB (photos go straight
-   browser → Cloudinary, never through this API).
+1. Middleware: `helmet`, CORS (a page's own origin, the `CORS_ORIGIN` env
+   allow-list, and any `*.vercel.app` origin for preview deploys — see
+   `isSameOrigin` / `previewOriginPattern`), rate limits, JSON body parsing
+   capped at 1MB (photos go straight browser → Cloudinary, never through this
+   API). The limits that guard something (login, password reset, bookings,
+   feedback, directions) go through `sharedRateLimit`, which counts in
+   MongoDB (`rate-limit-store.js`) so they hold across serverless instances;
+   only the blanket per-request limit stays in memory, on purpose.
 2. Mongoose schemas/models: `Admin`, `EstablishmentManager`, `Spot`,
    `TouristGuide`, `GuideBooking`, `Payment`.
 3. Auth middleware chains: `requireAuth` (valid JWT) →
@@ -142,13 +166,15 @@ provider-fallback layer, not a single API call:
 - `/api/directions/capabilities` tells the frontend which modes are live, so
   a page only ever renders what the backend can actually calculate.
 
-Startup does three migrations/bootstraps in sequence before serving
-(`migrateEstablishmentNames`, `migrateSpotManagement`, `bootstrapAdmin`) — see
-`mongoose.connect(...).then(...)` near the top of `server.js`. `bootstrapAdmin`
-reads `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD` to create the first
-officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true` to force a
-reset on an existing one — both are meant to be deleted from the environment
-once used.
+A serverless host has no single startup, so nothing runs at boot: the
+database connection is opened lazily and cached (`connectToDatabase`), and
+the three migrations/bootstraps (`migrateEstablishmentNames`,
+`migrateSpotManagement`, `bootstrapAdmin`) run only when someone runs
+`npm run migrate` (see `runMigrations` and the header of `migrate.js`).
+`bootstrapAdmin` reads `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD` to create
+the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
+to force a reset on an existing one — both are meant to be deleted from the
+environment once used.
 
 ## Duplicated facts (keep both sides in step by hand)
 

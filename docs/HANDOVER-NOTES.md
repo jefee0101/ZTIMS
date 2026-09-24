@@ -297,6 +297,55 @@ loses the distinction.
 
 ---
 
+## 3.4 Moving the API from Render to Vercel — the cut-over
+
+The code is done and needs nothing more. What is left is four dashboard
+steps, and **the order matters**, because two of them only take effect
+together.
+
+Why the order: `vercel.json` sits at the repo root, and Vercel reads it only
+from the project's Root Directory. Today that is `Zamboanguita-project`, so the
+file is ignored and every deploy behaves exactly as before. After the setting
+changes, a deploy of code *without* `vercel.json` at the root would have no idea
+how to build the site. So the setting change and the code must land together.
+
+1. **Environment variables** — Vercel → project `ztims` → Settings →
+   Environment Variables. Copy every variable from Render's Environment tab
+   (the full list, with what each one does, is `zamboanguita-backend/.env.example`).
+   Tick both *Production* and *Preview*. At minimum `MONGO_URI` and `JWT_SECRET`:
+   without `JWT_SECRET` every `/api` call fails. Use **the same** `JWT_SECRET`
+   as Render, so staff already signed in are not signed out by the move.
+   `CORS_ORIGIN` is no longer needed — the site and API share one origin now.
+2. **Root Directory** — Settings → Build and Deployment → Root Directory:
+   clear it (the repo root). Framework Preset: *Other*. Leave the build,
+   output and install overrides off; `vercel.json` sets all three.
+3. **Try it on a preview first.** Deployments → the latest deploy of the
+   branch → Redeploy (it was built before step 2, under the old setting).
+   On its preview URL check: `/api/directions/capabilities` returns JSON;
+   the landing page shows the destinations; staff sign-in works.
+4. **Merge to `main`.** Production deploys by itself. Check the same three
+   things on `ztims.vercel.app`.
+
+Already true, nothing to do: Atlas Network Access allows `0.0.0.0/0`, which
+Vercel needs (its functions have no fixed IPs). `npm run migrate` is not needed
+either — every migration has already run against the live database.
+
+**If production breaks:** Deployments → the last good deployment → *Instant
+Rollback*. It was built with the old setting and still points at Render, so it
+works as it did — which is why Render should stay up for a week or so before
+it is shut down.
+
+Two behaviours that are new and on purpose:
+
+- The first request after a quiet spell is slow (a cold start: loading the
+  function and opening the database connection), but nothing sleeps for the
+  30–60 seconds Render's free tier did.
+- The function runs in `sin1` (Singapore), next to the Atlas cluster in
+  `ap-southeast-1`. If the cluster ever moves region, move `regions` in
+  `vercel.json` with it.
+
+---
+
 ## 3.5 Planned next: move the database to Supabase
 
 Decided, not started. Written down here because it changes the shape of the
@@ -324,6 +373,10 @@ Specific things that will not survive a mechanical translation:
 - `migrateEstablishmentNames` and `migrateSpotManagement` exist because
   documents were reshaped in place. In Postgres that history is the schema, so
   they should not be ported — they should be folded into the initial tables.
+- `ratelimits` is not data. It holds the shared rate-limit counters
+  (`rate-limit-store.js`), every document expires within an hour, and it
+  needs a Postgres equivalent only if the counters move too — an unlogged
+  table, or leaving that one small store on something else entirely.
 - Two collection pairs look like duplicates and are not: `admins` vs
   `tourismOfficers`, `resortOwners` vs `establishmentManagers`. The code reads
   `admins` and `resortOwners`; the other two are leftovers. Establish which

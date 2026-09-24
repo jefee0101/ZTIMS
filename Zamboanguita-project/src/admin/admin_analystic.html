@@ -780,7 +780,7 @@ body { overflow-x: hidden; }
             return escapeHtml(fallback || '');
         }
 
-        const BASE_API_URL = 'https://ztims-api.onrender.com/api';
+        const BASE_API_URL = '/api';
         const SPOTS_URL = `${BASE_API_URL}/spots`;
         /* Photo uploads go straight from the browser to Cloudinary; MongoDB only
            stores the resulting links. This page used to take a single image URL

@@ -840,7 +840,7 @@ function renderTableRows(admins) {
 
 function loadAdminDirectory() {
     const doneLoading = showLoading(document.getElementById('adminListTableBody'), 'Loading Tourism Officers...', 2);
-    fetch('https://ztims-api.onrender.com/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
+    fetch('/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
     .then(res => res.json())
     .then(admins => {
         knownAdmins = Array.isArray(admins) ? admins : [];
@@ -871,7 +871,7 @@ function submitNewAdmin() {
     const payload = { email, password };
     const restoreButton = setButtonLoading(document.getElementById('addAdminBtn'), 'Creating...');
 
-    fetch('https://ztims-api.onrender.com/api/admin/create', {
+    fetch('/api/admin/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
         body: JSON.stringify(payload)
@@ -941,7 +941,7 @@ if (officerPasswordForm) {
 
         const restoreButton = setButtonLoading(document.getElementById('changePasswordBtn'), 'Changing...');
 
-        fetch('https://ztims-api.onrender.com/api/admin/me/password', {
+        fetch('/api/admin/me/password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
             body: JSON.stringify({ currentPassword: current, newPassword: next })
