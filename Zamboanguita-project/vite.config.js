@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync } from 'fs';
 import process from 'node:process';
 
 // Every page under src/ is a standalone HTML entry point, so they all have to be
@@ -31,24 +31,7 @@ const apiProxy = {
   }
 };
 
-// src/shared/theme.js is a classic, render-blocking <script> in every page's
-// <head>: it has to set the theme before the first paint, and a module script
-// always waits until after. Vite bundles only module scripts and leaves a
-// classic one's tag alone, so this copies the file into dist/ at the same path,
-// where each page's relative src="…shared/theme.js" still finds it.
-const classicScripts = ['src/shared/theme.js'];
-const copyClassicScripts = {
-  name: 'ztims-copy-classic-scripts',
-  apply: 'build',
-  generateBundle() {
-    for (const fileName of classicScripts) {
-      this.emitFile({ type: 'asset', fileName, source: readFileSync(new URL(fileName, import.meta.url), 'utf8') });
-    }
-  }
-};
-
 export default defineConfig({
-  plugins: [copyClassicScripts],
   server: {
     port: 3000,
     proxy: apiProxy
