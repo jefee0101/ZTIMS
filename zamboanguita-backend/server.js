@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { MongoRateLimitStore } = require('./rate-limit-store');
 require('dotenv').config();
 
 const app = express();
@@ -45,7 +46,31 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+// This blanket limit stays in each instance's own memory, deliberately. It runs
+// on every request, including ones that never touch the database, and counting
+// it in MongoDB would add a database round trip to all of them. It is a rough
+// cushion against a flood, not a security control, so a count per instance is
+// good enough. The limits that do guard something — login, password reset,
+// the public forms, the metered routing providers — use sharedRateLimit below.
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 150, standardHeaders: true, legacyHeaders: false }));
+
+/* A limit counted in MongoDB, so it holds across every running instance of the
+   API rather than per instance (see rate-limit-store.js for why that matters
+   on a serverless host). `name` must be unique to each limiter.
+
+   If the database cannot be reached the request is let through rather than
+   refused with a 500. Every limited route but directions needs the database
+   itself, so it fails on its own anyway, and directions — which does not —
+   keeps working through a database outage. */
+function sharedRateLimit(name, options) {
+    return rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        ...options,
+        store: new MongoRateLimitStore(name),
+        passOnStoreError: true
+    });
+}
 
 // FORCE explicit body-parser rules across ALL incoming payload formats
 app.use(express.json({ limit: '1mb' }));
@@ -622,11 +647,9 @@ const hashResetToken = token => crypto.createHash('sha256').update(token).digest
 const GENERIC_RESET_REPLY = 'If that email has an account, a reset link is on its way. Check your inbox and spam folder.';
 
 // Password reset is a high-value target, so it gets a tighter limit than login.
-const resetRateLimit = rateLimit({
+const resetRateLimit = sharedRateLimit('reset', {
     windowMs: 15 * 60 * 1000,
     limit: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: { success: false, message: 'Too many password reset attempts. Please wait a few minutes and try again.' }
 });
 
@@ -1077,7 +1100,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
  * Establishment Manager. Visitors browse without one.
  * Target URL: http://localhost:5000/api/login
  */
-app.post('/api/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }), async (req, res) => {
+app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limit: 10 }), async (req, res) => {
     try {
         const { email, password, role } = req.body; 
         console.log(`➡️ Login attempt received for: ${email} | Role Context: ${role || 'staff'}`);
@@ -1925,11 +1948,9 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
 
 // Public submission is the one write anyone on the internet can make, so it is
 // held tighter than the browsing routes.
-const bookingRateLimit = rateLimit({
+const bookingRateLimit = sharedRateLimit('booking', {
     windowMs: 60 * 60 * 1000,
     limit: 10,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: { success: false, message: 'Too many booking requests from this connection. Please try again later, or call the Municipal Tourism Office.' }
 });
 
@@ -2306,11 +2327,9 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
 // so it is held exactly as tightly: ten an hour is plenty for a person, and a
 // resort or the office itself behind one shared connection, and nothing for a
 // script.
-const feedbackRateLimit = rateLimit({
+const feedbackRateLimit = sharedRateLimit('feedback', {
     windowMs: 60 * 60 * 1000,
     limit: 10,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: { success: false, message: 'That is a lot of messages from one connection. Please wait a while and try again, or visit the Municipal Tourism Office.' }
 });
 
@@ -2498,11 +2517,9 @@ const ROUTING_TIMEOUT_MS = 12000;
 // Routing providers meter their free tiers, and each visitor action is one call.
 // Generous enough to switch modes freely, tight enough that a loop cannot burn the
 // day's quota. Keyed per IP by the trust-proxy setting configured at the top.
-const directionsRateLimit = rateLimit({
+const directionsRateLimit = sharedRateLimit('directions', {
     windowMs: 60 * 1000,
     limit: 40,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: { success: false, message: 'Too many directions requests. Please wait a moment and try again.' }
 });
 
