@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci --prefix zamboanguita-backend --omit=dev && npm ci --prefix Zamboanguita-project",
+  "buildCommand": "npm run build --prefix Zamboanguita-project",
+  "outputDirectory": "Zamboanguita-project/dist",
+  "regions": ["sin1"],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
+  ]
+}
