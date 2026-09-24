@@ -35,11 +35,15 @@ The build uses `npm ci`, so a `package.json` change must come with its
 The halves share no source files. Where the same fact must exist on both
 sides (see "Duplicated facts" below), it is duplicated by hand, not imported.
 
-The repo root's own `package.json` (`@supabase/supabase-js`, `express` 5, ...),
-its committed `node_modules/`, and `Zamboanguita-project/index.js` (which
-imports a `./supabase.js` that does not exist) are leftover from an earlier,
-abandoned auth prototype — ignore them; the build never installs them. Real
-auth is the JWT system in `zamboanguita-backend/server.js`, called from
+The repo root has no `package.json` and no `node_modules/` on purpose. An
+earlier, abandoned Supabase auth prototype left a root `package.json`
+(`@supabase/supabase-js`, `express` 5, ...), a committed root `node_modules/`
+and `Zamboanguita-project/index.js`; all three have been deleted. Don't
+recreate them: Node resolves modules upward, so anything installed at the
+root gets picked up by the backend whenever its own install lacks a package.
+If a root `package.json` is ever needed, never give it `"type": "module"` —
+the Node runtime reads the nearest one, and the backend is CommonJS. Real auth
+is the JWT system in `zamboanguita-backend/server.js`, called from
 `staff_login.html`.
 
 ## Commands
