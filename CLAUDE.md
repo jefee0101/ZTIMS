@@ -8,7 +8,7 @@ ZTIMS — the Zamboanguita Tourism Information Management System, a site for one
 Philippine municipality. Two halves live in this repo:
 
 - `Zamboanguita-project/` — the frontend (static pages, Vite build).
-- `zamboanguita-backend/` — the API (Express + Mongoose).
+- `zamboanguita-backend/` — the API (Express + Postgres on Supabase, via `pg`).
 
 Both deploy together as one **Vercel** project whose Root Directory is the
 repo root: `vercel.json` builds the frontend into `Zamboanguita-project/dist`
@@ -25,8 +25,10 @@ runs its commands from the subfolder, and the install fails. The frontend
 install passes `--include=dev` because Vite is a devDependency, and a
 `NODE_ENV=production` in the project's variables would otherwise make npm
 skip it (`vite: not found`). The function is pinned to `sin1`
-(Singapore) because the Atlas cluster is in AWS `ap-southeast-1`; the default
-(`iad1`, Washington) would put every database round trip across the Pacific.
+(Singapore) because the database is in AWS `ap-southeast-1` (Supabase's
+"Southeast Asia (Singapore)"); the default (`iad1`, Washington) would put every
+database round trip across the Pacific. If the database moves region, move
+`regions` with it.
 The build uses `npm ci`, so a `package.json` change must come with its
 `package-lock.json`, or the deploy fails at install.
 
@@ -72,9 +74,11 @@ Backend (`zamboanguita-backend/`):
 ```
 npm run dev           # nodemon server.js
 npm start              # node server.js
-npm run migrate        # node migrate.js — the one-off data migrations and
-                       # first-officer bootstrap (not run at startup)
+npm run migrate        # node migrate.js — applies db/schema.sql (idempotent)
+                       # and the first-officer bootstrap (not run at startup)
 npm run create-admin   # node create-admin.js
+npm run copy-from-mongo -- --dry-run   # the one-time MongoDB → Postgres copy;
+                       # see scripts/copy-from-mongo.js before running it for real
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
 with what it defaults to when unset — most integrations degrade gracefully
@@ -128,20 +132,47 @@ pages.
 
 ## Backend architecture
 
-Essentially one file, `zamboanguita-backend/server.js` (~3000 lines), Express +
-Mongoose against MongoDB, plus `rate-limit-store.js` and `migrate.js` beside
-it. Structure, top to bottom:
+`zamboanguita-backend/server.js` (~2700 lines, Express) holds the routes. The
+data lives in Postgres on Supabase (it moved off MongoDB Atlas; see
+`docs/HANDOVER-NOTES.md` §3.5), in three files beside it:
+
+- `db/schema.sql` — every table, constraint, index and trigger. Idempotent;
+  `npm run migrate` or the Supabase SQL Editor applies it. Row Level Security is
+  on for every table with **no policies**, on purpose: only the API (connecting
+  as the table owner) can read anything, and Supabase's public REST API returns
+  nothing. Don't add policies unless the browser is meant to read a table
+  directly — nothing in ZTIMS does.
+- `db.js` — the connection pool (small, lazy, serverless-safe; strips `sslmode`
+  from the URL because node-postgres would otherwise verify Supabase's
+  certificate against public authorities and fail) and a small `Table` class.
+  Routes get rows back as the same plain objects Mongoose used to give them
+  (`_id`, camelCase), and `Table.save(doc)` writes only the fields that changed.
+  That's what let the move leave every page untouched. Postgres errors are
+  translated into the shapes routes already handled (`code: 11000` for a
+  duplicate, `ValidationError` for a bad value, `STILL_REFERENCED` for a delete
+  that a reference blocks).
+- `models.js` — one `Table` per record type, field for field what the Mongoose
+  schemas were, plus the few joined queries (a listing with its establishment,
+  a booking with its destination and guide). `server.js` imports them under the
+  old model names (`Spot`, `GuideBooking`, …; `Admin` became `TourismOfficer`)
+  so each route reads as it did.
+
+Ids are text, 24 hex characters: the records copied from MongoDB kept their
+ObjectIds, so shared links and signed-in sessions survived the move. Table names
+say what the records are (`tourism_officers`, `establishment_managers`), which
+the old collection names (`admins`, `resortOwners`) did not.
+
+`server.js`, top to bottom:
 
 1. Middleware: `helmet`, CORS (a page's own origin, the `CORS_ORIGIN` env
    allow-list, and any `*.vercel.app` origin for preview deploys — see
    `isSameOrigin` / `previewOriginPattern`), rate limits, JSON body parsing
    capped at 1MB (photos go straight browser → Cloudinary, never through this
    API). The limits that guard something (login, password reset, bookings,
-   feedback, directions) go through `sharedRateLimit`, which counts in
-   MongoDB (`rate-limit-store.js`) so they hold across serverless instances;
-   only the blanket per-request limit stays in memory, on purpose.
-2. Mongoose schemas/models: `Admin`, `EstablishmentManager`, `Spot`,
-   `TouristGuide`, `GuideBooking`, `Payment`.
+   feedback, directions) go through `sharedRateLimit`, which counts in the
+   `rate_limits` table (`rate-limit-store.js`) so they hold across serverless
+   instances; only the blanket per-request limit stays in memory, on purpose.
+2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
 3. Auth middleware chains: `requireAuth` (valid JWT) →
    `requireAdmin`/`requireEstablishmentManager`/`requireStaff` (role checks)
    and `optionalAuth` (attaches `req.auth` if present, never blocks). Roles:
@@ -171,10 +202,13 @@ provider-fallback layer, not a single API call:
   a page only ever renders what the backend can actually calculate.
 
 A serverless host has no single startup, so nothing runs at boot: the
-database connection is opened lazily and cached (`connectToDatabase`), and
-the three migrations/bootstraps (`migrateEstablishmentNames`,
-`migrateSpotManagement`, `bootstrapAdmin`) run only when someone runs
-`npm run migrate` (see `runMigrations` and the header of `migrate.js`).
+database pool in `db.js` opens its first connection when the first query
+needs one (a route that never queries, like `/api/directions/capabilities`,
+never waits on the database), and the schema and `bootstrapAdmin` run only
+when someone runs `npm run migrate` (see `runMigrations` and the header of
+`migrate.js`). MongoDB's two in-place reshapings (`resortName` →
+`establishmentName`, `ownerId` → `managedBy`) are gone: the copy script
+translated both on the way across, and the schema is that history now.
 `bootstrapAdmin` reads `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD` to create
 the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
 to force a reset on an existing one — both are meant to be deleted from the

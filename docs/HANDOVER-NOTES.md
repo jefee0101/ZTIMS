@@ -348,71 +348,118 @@ Two behaviours that are new and on purpose:
 - The first request after a quiet spell is slow (a cold start: loading the
   function and opening the database connection), but nothing sleeps for the
   30–60 seconds Render's free tier did.
-- The function runs in `sin1` (Singapore), next to the Atlas cluster in
-  `ap-southeast-1`. If the cluster ever moves region, move `regions` in
-  `vercel.json` with it.
+- The function runs in `sin1` (Singapore), next to the database in
+  `ap-southeast-1` — the Atlas cluster, and the Supabase project that replaces
+  it, which is why §3.5 says to create that in Singapore too. If the database
+  ever moves region, move `regions` in `vercel.json` with it.
 
 ---
 
-## 3.5 Planned next: move the database to Supabase
+## 3.5 Moving the database from MongoDB to Supabase — the switch-over
 
-Decided, not started. Written down here because it changes the shape of the
-backend more than anything else on this list, and because the repo already
-carries wreckage from an earlier attempt that must not be mistaken for a head
-start.
+The code is done: the API reads and writes Postgres (`db/schema.sql`, `db.js`,
+`models.js`), and `scripts/copy-from-mongo.js` brings the records across. It
+was tested against a real Postgres holding a copy of the live data (personal
+details masked): every API route, and every page in a browser, signed in as an
+officer and as a manager.
 
-**Order matters.** The API is moving to Vercel first. Do not start the database
-migration until that is deployed and verified — two moving foundations at once
-and a failure tells you nothing about which one broke.
+It was a rewrite of the data layer rather than a driver swap, and the notes that
+planned it still explain the choices: the API still does all authorization
+(Express, not Row Level Security policies), ZTIMS keeps its own sign-in (not
+Supabase Auth), and the tables were designed rather than transliterated.
 
-**This is a rewrite of the data layer, not a swap.** Supabase is PostgreSQL;
-ZTIMS is Mongoose documents. Nine collections have to become tables with real
-columns, foreign keys and constraints: `spots`, `admins`, `tourismOfficers`,
-`establishmentManagers`, `resortOwners`, `touristguides`, `guidebookings`,
-`payments`, `feedbacks`. `server.js` is ~2,850 lines and nearly every route
-touches a Mongoose model.
+**Order matters.** Once the site runs on Postgres, its records are newer than
+MongoDB's, and the copy must never run over them again (the script refuses
+unless told `--replace`, for exactly this reason). So:
 
-Specific things that will not survive a mechanical translation:
+1. **Create the Supabase project.** supabase.com → New project. Region:
+   **Southeast Asia (Singapore)** — the API runs in Vercel's Singapore region,
+   and every request makes several database round trips; anywhere else puts
+   each of them overseas. Keep the database password somewhere safe.
+2. **Get two connection strings.** Project → **Connect**:
+   - *Transaction pooler* (port **6543**) — this one goes to Vercel.
+   - *Session pooler* (port 5432) — for running the scripts below from a laptop.
+   Replace `[YOUR-PASSWORD]` in each.
+3. **Try the copy, writing nothing.** On a machine with Node and this repo:
+   ```
+   cd zamboanguita-backend && npm install
+   MONGO_URI='<the Atlas URI>' npm run copy-from-mongo -- --dry-run
+   ```
+   Read the report. On 24 September 2026 the live data gave exactly this, and
+   it is expected:
+   - **2 payments NOT copied** (₱500 on 17 Sep, ₱500 on 21 Sep). Both point at
+     bookings that no longer exist in MongoDB, and one names an officer id that
+     does not exist either — the look of test records whose bookings were
+     removed by hand. They are saved whole in `copy-skipped-<time>.json`
+     (git-ignored; it has personal details). If they were real money, stop and
+     decide what they belong to before going on.
+   - **"Example Resort" repaired:** it points at establishment account
+     `6aaa83ac…`, which does not exist — the account was evidently deleted and
+     re-created (the live "Example Resort" account is `6aae22ec…`). It is copied
+     as maintained by the Tourism Office, which is how the site already shows it.
+     Re-assign it to the right account afterwards if it should be theirs.
+   - **2 spots with no `status`** ("Sea Horizon Resort", "Example Resort") are
+     copied as published, which is how Mongoose already read them.
+   - `tourismOfficers` (1 document) is not copied: it is an older copy of the
+     same officer as `admins`. `establishmentManagers` is empty.
+4. **Copy for real** — a practice run, which you can repeat as often as you like:
+   ```
+   MONGO_URI='<the Atlas URI>' DATABASE_URL='<session pooler URI>' npm run copy-from-mongo
+   ```
+   It creates the tables itself (from `db/schema.sql`), copies in one
+   transaction, and checks each table's count afterwards. Running it again
+   needs `-- --replace`.
+5. **Point a preview at it.** Vercel → Settings → Environment Variables → add
+   `DATABASE_URL` = the *transaction pooler* URI, ticked for **Preview only** for
+   now. Push the branch (or create a new deployment of it). On the preview URL:
+   the destinations load, both an officer and a manager can sign in with their
+   existing passwords, and saving a listing works. Everything written on the
+   preview goes into Supabase — it is a practice copy, which step 6 replaces.
+6. **Switch.** Pick a quiet moment; the gap between this step's copy and the
+   deploy finishing is the only window in which something written to the live
+   site could be missed.
+   1. Run the copy again with `-- --replace`, so Supabase has the latest records.
+   2. Add `DATABASE_URL` for **Production** as well.
+   3. Merge to `main`. When the production deploy is ready, check the same
+      three things on `ztims.vercel.app`.
+7. **Afterwards.** Remove `MONGO_URI` from Vercel (nothing reads it now). Keep
+   the Atlas cluster for a few weeks as a record of the old data, then pause
+   or delete it.
 
-- `select: false` on every password field. Postgres has no such notion — every
-  query must name its columns, or a hash reaches somewhere it should not.
-- Sparse unique indexes (`googleId`), Mongoose defaults, and `timestamps: true`
-  all become explicit DDL.
-- `migrateEstablishmentNames` and `migrateSpotManagement` exist because
-  documents were reshaped in place. In Postgres that history is the schema, so
-  they should not be ported — they should be folded into the initial tables.
-- `ratelimits` is not data. It holds the shared rate-limit counters
-  (`rate-limit-store.js`), every document expires within an hour, and it
-  needs a Postgres equivalent only if the counters move too — an unlogged
-  table, or leaving that one small store on something else entirely.
-- Two collection pairs look like duplicates and are not: `admins` vs
-  `tourismOfficers`, `resortOwners` vs `establishmentManagers`. The code reads
-  `admins` and `resortOwners`; the other two are leftovers. Establish which
-  rows are real BEFORE designing tables, or the wrong pair gets migrated.
+**If production breaks:** Deployments → the last good deployment → *Instant
+Rollback*. It still runs on MongoDB, so it works as before — but anything
+written on Supabase in the meantime would not be in MongoDB. Roll back only for
+something serious, and plan to copy forward by hand what was written in between.
 
-**The leftover Supabase code is not a starting point.** The repo root
-`package.json` lists `@supabase/supabase-js`, and `Zamboanguita-project/index.js`
-imports a `./supabase.js` that does not exist anywhere. That is an abandoned
-auth prototype from before the JWT system, as `CLAUDE.md` says. Delete it rather
-than build on it.
+**Two catches worth knowing:**
 
-**Two decisions to make deliberately, not by drift:**
+- A free Supabase project **pauses after a week with no activity**. A paused
+  project refuses connections until someone presses *Restore* in the
+  dashboard. For a defence, open the site the day before; check the current
+  terms for how long pausing takes.
+- The API connects encrypted but, by default, does not *verify* Supabase's
+  certificate (Supabase signs it with its own authority, not a public one). To
+  verify it too: Supabase → Database settings → SSL configuration → download the
+  certificate, and put its contents in a `DATABASE_CA_CERT` variable. The
+  startup log line `🗄️ Database: … (certificate verified)` confirms it took.
 
-1. *Who enforces authorization.* Today it is Express middleware
-   (`requireAdmin`, `requireEstablishmentManager`), and the standing constraint
-   in section 4 says it is enforced server-side. Supabase invites the opposite
-   shape — the browser talking to Postgres directly with Row Level Security. RLS
-   is a legitimate server-side control, but it means the anon key ships in page
-   source and every rule has to be rewritten as a policy. Keeping Express and
-   swapping only the driver is the smaller, safer move.
-2. *Whether to adopt Supabase Auth.* The current JWT system works and matches
-   the roles ZTIMS actually has. Replacing it re-opens sign-in, tokens and the
-   no-tourist-accounts rule for no gain.
+**What changed underneath, briefly, for whoever maintains this next:**
 
-**One free-tier catch worth knowing before committing:** a free Supabase project
-pauses after a period of inactivity, which is the same class of problem as the
-Render sleep this whole move is meant to escape. Check the current terms before
-the defence, and wake it the day before.
+- `admins` → `tourism_officers`, `resortOwners` → `establishment_managers`:
+  the new names say what the records are. The sign-in role is still `admin` in
+  tokens, so sessions survive; `server.js` imports the officer table as
+  `TourismOfficer`.
+- A guide's `assignedSpots` array became its own table, `tourist_guide_spots`,
+  so every entry is a destination that exists. The API still shows it as an
+  array on the guide.
+- References are now enforced. Deleting a listing that has guide bookings is
+  refused (409) — MongoDB allowed it and left the bookings pointing at nothing.
+  Archive such a listing instead; that was always the intended way.
+- Recording a payment and confirming its booking now happen in one
+  transaction, and a second payment for the same booking is refused by the
+  database itself, not only by the route.
+- `ratelimits` became the `rate_limits` table. Not data; rows expire within an
+  hour and are swept as the API runs.
 
 ## 4. Standing constraints, so nobody undoes them later
 
