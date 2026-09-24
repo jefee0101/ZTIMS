@@ -297,6 +297,62 @@ loses the distinction.
 
 ---
 
+## 3.5 Planned next: move the database to Supabase
+
+Decided, not started. Written down here because it changes the shape of the
+backend more than anything else on this list, and because the repo already
+carries wreckage from an earlier attempt that must not be mistaken for a head
+start.
+
+**Order matters.** The API is moving to Vercel first. Do not start the database
+migration until that is deployed and verified — two moving foundations at once
+and a failure tells you nothing about which one broke.
+
+**This is a rewrite of the data layer, not a swap.** Supabase is PostgreSQL;
+ZTIMS is Mongoose documents. Nine collections have to become tables with real
+columns, foreign keys and constraints: `spots`, `admins`, `tourismOfficers`,
+`establishmentManagers`, `resortOwners`, `touristguides`, `guidebookings`,
+`payments`, `feedbacks`. `server.js` is ~2,850 lines and nearly every route
+touches a Mongoose model.
+
+Specific things that will not survive a mechanical translation:
+
+- `select: false` on every password field. Postgres has no such notion — every
+  query must name its columns, or a hash reaches somewhere it should not.
+- Sparse unique indexes (`googleId`), Mongoose defaults, and `timestamps: true`
+  all become explicit DDL.
+- `migrateEstablishmentNames` and `migrateSpotManagement` exist because
+  documents were reshaped in place. In Postgres that history is the schema, so
+  they should not be ported — they should be folded into the initial tables.
+- Two collection pairs look like duplicates and are not: `admins` vs
+  `tourismOfficers`, `resortOwners` vs `establishmentManagers`. The code reads
+  `admins` and `resortOwners`; the other two are leftovers. Establish which
+  rows are real BEFORE designing tables, or the wrong pair gets migrated.
+
+**The leftover Supabase code is not a starting point.** The repo root
+`package.json` lists `@supabase/supabase-js`, and `Zamboanguita-project/index.js`
+imports a `./supabase.js` that does not exist anywhere. That is an abandoned
+auth prototype from before the JWT system, as `CLAUDE.md` says. Delete it rather
+than build on it.
+
+**Two decisions to make deliberately, not by drift:**
+
+1. *Who enforces authorization.* Today it is Express middleware
+   (`requireAdmin`, `requireEstablishmentManager`), and the standing constraint
+   in section 4 says it is enforced server-side. Supabase invites the opposite
+   shape — the browser talking to Postgres directly with Row Level Security. RLS
+   is a legitimate server-side control, but it means the anon key ships in page
+   source and every rule has to be rewritten as a policy. Keeping Express and
+   swapping only the driver is the smaller, safer move.
+2. *Whether to adopt Supabase Auth.* The current JWT system works and matches
+   the roles ZTIMS actually has. Replacing it re-opens sign-in, tokens and the
+   no-tourist-accounts rule for no gain.
+
+**One free-tier catch worth knowing before committing:** a free Supabase project
+pauses after a period of inactivity, which is the same class of problem as the
+Render sleep this whole move is meant to escape. Check the current terms before
+the defence, and wake it the day before.
+
 ## 4. Standing constraints, so nobody undoes them later
 
 These are decisions already made. They are written down because each one is the
