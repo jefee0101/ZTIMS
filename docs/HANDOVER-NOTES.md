@@ -300,14 +300,21 @@ loses the distinction.
 ## 3.4 Moving the API from Render to Vercel — the cut-over
 
 The code is done and needs nothing more. What is left is four dashboard
-steps, and **the order matters**, because two of them only take effect
-together.
+steps, and **the order matters**.
 
-Why the order: `vercel.json` sits at the repo root, and Vercel reads it only
-from the project's Root Directory. Today that is `Zamboanguita-project`, so the
-file is ignored and every deploy behaves exactly as before. After the setting
-changes, a deploy of code *without* `vercel.json` at the root would have no idea
-how to build the site. So the setting change and the code must land together.
+Why the order: `vercel.json` sits at the repo root, and its commands name
+paths from there (`zamboanguita-backend/`, `Zamboanguita-project/`). Vercel
+applies that file even while the Root Directory is still `Zamboanguita-project`
+— but it runs the commands from inside that folder, where neither path exists,
+and the build fails at install (`missing_lock_file`). This happened: the
+branch's first preview failed exactly so. A failed build is never promoted, so
+production is not broken by it, only not updated — but the Root Directory has
+to be the repo root before anything built from this code can ship.
+
+Something else that happened on the first real build: a `NODE_ENV=production`
+copied over from Render made npm skip the frontend's build tools, and the build
+stopped at `vite: not found`. The install now asks for them explicitly
+(`--include=dev`), so that variable is harmless — leave it or delete it.
 
 1. **Environment variables** — Vercel → project `ztims` → Settings →
    Environment Variables. Copy every variable from Render's Environment tab
@@ -319,9 +326,10 @@ how to build the site. So the setting change and the code must land together.
 2. **Root Directory** — Settings → Build and Deployment → Root Directory:
    clear it (the repo root). Framework Preset: *Other*. Leave the build,
    output and install overrides off; `vercel.json` sets all three.
-3. **Try it on a preview first.** Deployments → the latest deploy of the
-   branch → Redeploy (it was built before step 2, under the old setting).
-   On its preview URL check: `/api/directions/capabilities` returns JSON;
+3. **Try it on a preview first.** Build the branch fresh — push to it, or
+   create a new deployment of it. Not *Redeploy* on a deploy built before
+   step 2: a redeploy reuses that deploy's settings, old Root Directory
+   included, and fails the same way again. On its preview URL check: `/api/directions/capabilities` returns JSON;
    the landing page shows the destinations; staff sign-in works.
 4. **Merge to `main`.** Production deploys by itself. Check the same three
    things on `ztims.vercel.app`.

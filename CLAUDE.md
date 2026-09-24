@@ -19,8 +19,12 @@ origin. The API still runs on its own too (`npm start`, the `Dockerfile`) —
 at `ztims-api.onrender.com`; see `docs/HANDOVER-NOTES.md` for the move.
 
 `vercel.json` pins every build setting so the dashboard's don't matter,
-except the Root Directory, which only the dashboard can set — and Vercel
-reads `vercel.json` only from there. The function is pinned to `sin1`
+except the Root Directory, which only the dashboard can set. It must be the
+repo root: with a subfolder there, Vercel still applies this `vercel.json` but
+runs its commands from the subfolder, and the install fails. The frontend
+install passes `--include=dev` because Vite is a devDependency, and a
+`NODE_ENV=production` in the project's variables would otherwise make npm
+skip it (`vite: not found`). The function is pinned to `sin1`
 (Singapore) because the Atlas cluster is in AWS `ap-southeast-1`; the default
 (`iad1`, Washington) would put every database round trip across the Pacific.
 The build uses `npm ci`, so a `package.json` change must come with its
