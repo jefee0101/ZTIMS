@@ -218,7 +218,7 @@ h1, h2, h3, h4, .font-display, .font-headline {
     content: '';
     flex: 0 0 1.5rem;
     height: 2px;
-    border-radius: 2px;
+    border-radius: 0;
     background: rgb(var(--ztims-gold));
 }
 
@@ -504,7 +504,7 @@ body.dark-mode .text-primary {
 .info-card {
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
-    border-radius: 0.875rem;
+    border-radius: 0;
     padding: 1rem 1.125rem;
     box-shadow: var(--ztims-shadow-card);
 }
@@ -543,7 +543,7 @@ body.dark-mode .text-primary {
     align-items: center;
     gap: 0.3rem;
     padding: 0.25rem 0.625rem;
-    border-radius: 999px;
+    border-radius: 0;
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -576,7 +576,7 @@ body.dark-mode .text-primary {
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid rgb(var(--ztims-secondary));
     outline-offset: 2px;
-    border-radius: 0.375rem;
+    border-radius: 0;
 }
 
 /* ==========================================================================
@@ -598,7 +598,7 @@ body.dark-mode .text-primary {
     gap: 0.45rem;
     min-height: 44px;
     padding: 0.7rem 1.25rem;
-    border-radius: 0.75rem;
+    border-radius: 0;
     border: 1px solid transparent;
     font-family: var(--ztims-font-body);
     font-size: 0.8125rem;
@@ -676,7 +676,7 @@ body.dark-mode .text-primary {
 .ztims-card {
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
-    border-radius: 1rem;
+    border-radius: 0;
     box-shadow: var(--ztims-shadow-card);
     overflow: hidden;
 }
@@ -735,7 +735,7 @@ select.field,
 textarea.field,
 .field {
     padding: 0.7rem 0.875rem;
-    border-radius: 0.75rem;
+    border-radius: 0;
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
     color: rgb(var(--ztims-on-surface));
@@ -788,19 +788,13 @@ textarea.field[aria-invalid="true"],
 .ztims-modal {
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
-    border-radius: 1.125rem;
+    border-radius: 0;
     box-shadow: var(--ztims-shadow-raised);
     /* No width here. A confirm dialog and the four-step listing editor are
        legitimately different sizes, and the page is what knows which — this
        used to impose 44rem on both. The height ceiling is shared, because a
        dialog taller than the screen is unusable at any width. */
     max-height: min(95vh, 60rem);
-}
-
-/* A dialog opened on a phone should not be a floating card with slivers of
-   page around it. */
-@media (max-width: 480px) {
-    .ztims-modal { border-radius: 1rem; }
 }
 
 .ztims-modal__head {
@@ -826,7 +820,7 @@ textarea.field[aria-invalid="true"],
     background: rgb(var(--ztims-surface));
     border: 1px solid rgb(var(--ztims-outline));
     border-left: 3px solid rgb(var(--cat, var(--ztims-cat-notice)));
-    border-radius: 0.75rem;
+    border-radius: 0;
     padding: 1rem 1.125rem;
 }
 .notice-date { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); }
@@ -855,7 +849,7 @@ textarea.field[aria-invalid="true"],
     gap: 0.35rem;
     min-height: 44px;                 /* a thumb, on the phone this is used from */
     padding: 0.55rem 0.9rem;
-    border-radius: 0.7rem;
+    border-radius: 0;
     border: 1px solid rgb(var(--ztims-outline));
     background: rgb(var(--ztims-surface));
     color: rgb(var(--ztims-on-surface));

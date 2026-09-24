@@ -17,6 +17,8 @@
       darkMode: "class",
       theme: {
         extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
           colors: {
               "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
               "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
@@ -346,7 +348,7 @@ body { overflow-x: hidden; }
             'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
             'display:flex', 'align-items:flex-start', 'gap:.65rem',
             'padding:.85rem 1rem',
-            'border-radius:.9rem',
+            'border-radius:0',
             'border-left:4px solid ' + settings.accent,
             'background:rgb(var(--ztims-surface))',
             'color:rgb(var(--ztims-on-surface))',
@@ -441,7 +443,7 @@ body { overflow-x: hidden; }
         button.title = options.name || options.email || 'Account';
         button.style.cssText = [
             'display:flex', 'align-items:center', 'justify-content:center',
-            'width:2.5rem', 'height:2.5rem', 'border-radius:9999px',
+            'width:2.5rem', 'height:2.5rem', 'border-radius:0',
             'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
             'color:rgb(var(--ztims-accent))',
             'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
@@ -471,7 +473,7 @@ body { overflow-x: hidden; }
         menu.style.cssText = [
             'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
             'min-width:15rem', 'padding:.4rem',
-            'border-radius:1rem', 'background:rgba(10,25,47,.98)', 'color:#F4F6F9',
+            'border-radius:0', 'background:rgba(10,25,47,.98)', 'color:#F4F6F9',
             'box-shadow:0 18px 40px -18px rgba(0,0,0,.75)',
             'font-size:.85rem'
         ].join(';');
@@ -501,7 +503,7 @@ body { overflow-x: hidden; }
             if (item.href) entry.href = item.href; else entry.type = 'button';
             entry.style.cssText = [
                 'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
-                'padding:.6rem .75rem', 'border:0', 'border-radius:.7rem',
+                'padding:.6rem .75rem', 'border:0', 'border-radius:0',
                 'background:none', 'color:' + (item.danger ? '#FF8A80' : 'inherit'),
                 'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
             ].join(';');

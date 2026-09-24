@@ -91,7 +91,7 @@
         .ztims-dialog__lead { display: flex; align-items: flex-start; gap: 1rem; }
         .ztims-dialog__icon {
             flex-shrink: 0;
-            width: 2.75rem; height: 2.75rem; border-radius: 0.875rem;
+            width: 2.75rem; height: 2.75rem; border-radius: 0;
             display: flex; align-items: center; justify-content: center;
             background: rgb(var(--ztims-primary-container));
         }
@@ -141,7 +141,7 @@
             color: rgb(var(--ztims-error)) !important;
             background: rgb(var(--ztims-error) / 0.10);
             border: 1px solid rgb(var(--ztims-error) / 0.25);
-            border-radius: 0.75rem;
+            border-radius: 0;
             padding: 0.7rem 0.9rem;
             margin: 1rem 0 0;
             white-space: pre-line;

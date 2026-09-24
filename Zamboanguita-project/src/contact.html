@@ -42,7 +42,8 @@
                         "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
                         "success": "rgb(var(--ztims-success) / <alpha-value>)"
                     },
-                    borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
                     fontFamily: {
                         headline: ["Poppins", "sans-serif"],
                         display: ["Poppins", "sans-serif"],
@@ -306,7 +307,7 @@ body { overflow-x: hidden; }
             'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
             'display:flex', 'align-items:flex-start', 'gap:.65rem',
             'padding:.85rem 1rem',
-            'border-radius:.9rem',
+            'border-radius:0',
             'border-left:4px solid ' + settings.accent,
             'background:rgb(var(--ztims-surface))',
             'color:rgb(var(--ztims-on-surface))',
@@ -429,7 +430,7 @@ body { overflow-x: hidden; }
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
                     <div class="lg:col-span-7 order-1">
-                        <form id="feedbackForm" class="rounded-[1.5rem] bg-surface border border-outline-variant/30 p-5 sm:p-8 space-y-5" novalidate>
+                        <form id="feedbackForm" class="rounded-none bg-surface border border-outline-variant/30 p-5 sm:p-8 space-y-5" novalidate>
 
                             <div>
                                 <label for="fbTopic" class="field-label">What is it about?</label>
@@ -485,7 +486,7 @@ body { overflow-x: hidden; }
                         </form>
 
                         <!-- Shown in the form's place once it has been sent. -->
-                        <div id="feedbackSent" hidden class="rounded-[1.5rem] bg-surface border border-outline-variant/30 p-6 sm:p-10 text-center">
+                        <div id="feedbackSent" hidden class="rounded-none bg-surface border border-outline-variant/30 p-6 sm:p-10 text-center">
                             <span class="material-symbols-outlined !text-5xl text-success">mark_email_read</span>
                             <h2 class="text-2xl font-display font-extrabold text-on-surface mt-3">Thank you — it's with the office.</h2>
                             <p id="feedbackSentNote" class="text-on-surface-variant mt-2 max-w-md mx-auto"></p>
@@ -497,7 +498,7 @@ body { overflow-x: hidden; }
                     </div>
 
                     <aside class="lg:col-span-5 order-2 space-y-4">
-                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                        <div class="rounded-none bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
                             <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-3">Municipal Tourism Office</p>
                             <address class="not-italic space-y-3 text-on-surface-variant">
                                 <p class="flex gap-3">
@@ -519,7 +520,7 @@ body { overflow-x: hidden; }
                             </address>
                         </div>
 
-                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                        <div class="rounded-none bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
                             <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-3">What happens next</p>
                             <ol class="space-y-3 text-on-surface-variant">
                                 <li class="flex gap-3">
@@ -537,7 +538,7 @@ body { overflow-x: hidden; }
                             </ol>
                         </div>
 
-                        <div class="rounded-[1.5rem] bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
+                        <div class="rounded-none bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
                             <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2">Before you write</p>
                             <p class="text-support mb-3">Your question may already be answered.</p>
                             <ul class="space-y-1">

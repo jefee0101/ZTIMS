@@ -70,12 +70,8 @@
                         "on-error-container": "rgb(var(--ztims-on-primary) / <alpha-value>)",
                         "tertiary-dim": "rgb(var(--ztims-accent) / <alpha-value>)"
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
                     "fontFamily": {
                         "headline": ["Poppins", "sans-serif"],
                         "body": ["Inter", "sans-serif"],

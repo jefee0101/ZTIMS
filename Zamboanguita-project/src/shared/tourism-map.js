@@ -126,7 +126,9 @@
         style.textContent = `
         .ztims-pin {
             width: 34px; height: 34px;
-            border-radius: 50% 50% 50% 0;
+            /* A square turned on its corner: a diamond whose lowest point
+               marks the spot, sharp-edged like the rest of the site. */
+            border-radius: 0;
             transform: rotate(-45deg);
             background: var(--pin, #455A64);
             border: 2px solid rgba(255,255,255,.9);
@@ -139,10 +141,12 @@
             font-size: 18px;
             line-height: 1;
         }
-        .ztims-pin--origin { border-radius: 50%; transform: none; }
+        .ztims-pin--origin { border-radius: 0; transform: none; }
         .ztims-pin--origin > span { transform: none; }
 
-        .leaflet-popup-content-wrapper { border-radius: 14px; }
+        .leaflet-popup-content-wrapper { border-radius: 0; }
+        /* Leaflet's own stylesheet rounds its zoom buttons and layer box. */
+        .leaflet-bar, .leaflet-bar a, .leaflet-control-layers { border-radius: 0 !important; }
         .leaflet-popup-content { margin: 14px 16px; min-width: 190px; }
         .ztims-popup__category {
             font-size: 10px; font-weight: 700; letter-spacing: .1em;
@@ -154,7 +158,7 @@
         .ztims-popup__actions a {
             flex: 1 1 auto; text-align: center; white-space: nowrap;
             padding: 9px 12px; min-height: 40px; box-sizing: border-box;
-            border-radius: 999px; font-size: 11px; font-weight: 700; text-decoration: none;
+            border-radius: 0; font-size: 11px; font-weight: 700; text-decoration: none;
         }
         .ztims-popup__actions .is-primary { background: #0B4F6C; color: #fff; }
         .ztims-popup__actions .is-secondary { border: 1px solid #CDD8E2; color: #0B4F6C; }
@@ -164,7 +168,7 @@
             font-size: 11px; font-weight: 700; align-items: center;
         }
         .ztims-legend span.dot {
-            width: 10px; height: 10px; border-radius: 999px; display: inline-block; margin-right: 5px;
+            width: 10px; height: 10px; border-radius: 0; display: inline-block; margin-right: 5px;
         }
 
         /* Expanded view. Fixed rather than the Fullscreen API: Safari on iPhone
@@ -187,7 +191,7 @@
         .ztims-expand {
             background: #fff; color: #222;
             border: 2px solid rgba(0,0,0,.2);
-            border-radius: 6px;
+            border-radius: 0;
             width: 40px; height: 40px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.3);

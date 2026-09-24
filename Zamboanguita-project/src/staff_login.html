@@ -24,6 +24,8 @@
       darkMode: "class",
       theme: {
         extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
           colors: {
               "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
               "primaryHover": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
@@ -247,7 +249,7 @@ body { overflow-x: hidden; }
             'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
             'display:flex', 'align-items:flex-start', 'gap:.65rem',
             'padding:.85rem 1rem',
-            'border-radius:.9rem',
+            'border-radius:0',
             'border-left:4px solid ' + settings.accent,
             'background:rgb(var(--ztims-surface))',
             'color:rgb(var(--ztims-on-surface))',

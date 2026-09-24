@@ -42,7 +42,8 @@
                         "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
                         "success": "rgb(var(--ztims-success) / <alpha-value>)"
                     },
-                    borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
                     fontFamily: {
                         headline: ["Poppins", "sans-serif"],
                         display: ["Poppins", "sans-serif"],
@@ -174,11 +175,11 @@ body { overflow-x: hidden; }
         /* The "on this page" list. A sticky rail beside the text from lg up;
            a row of chips you can swipe through on a phone, where a rail would
            cost the width the text needs. */
-        .toc a { display: flex; align-items: center; min-height: 44px; padding: 0 0.85rem; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; color: rgb(var(--ztims-on-surface-variant)); transition: color 150ms, background-color 150ms; }
+        .toc a { display: flex; align-items: center; min-height: 44px; padding: 0 0.85rem; border-radius: 0; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; color: rgb(var(--ztims-on-surface-variant)); transition: color 150ms, background-color 150ms; }
         .toc a:hover { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .10); }
         .toc a.is-current { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-accent) / .14); box-shadow: inset 0 0 0 1px rgb(var(--ztims-accent) / .30); }
         @media (min-width: 1024px) {
-            .toc a { white-space: normal; min-height: 40px; border-radius: 0.75rem; }
+            .toc a { white-space: normal; min-height: 40px; border-radius: 0; }
         }
     </style>
 </head>
@@ -335,7 +336,7 @@ body { overflow-x: hidden; }
             'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
             'display:flex', 'align-items:flex-start', 'gap:.65rem',
             'padding:.85rem 1rem',
-            'border-radius:.9rem',
+            'border-radius:0',
             'border-left:4px solid ' + settings.accent,
             'background:rgb(var(--ztims-surface))',
             'color:rgb(var(--ztims-on-surface))',
