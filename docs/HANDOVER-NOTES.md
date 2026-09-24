@@ -329,11 +329,14 @@ Specific things that will not survive a mechanical translation:
   `admins` and `resortOwners`; the other two are leftovers. Establish which
   rows are real BEFORE designing tables, or the wrong pair gets migrated.
 
-**The leftover Supabase code is not a starting point.** The repo root
-`package.json` lists `@supabase/supabase-js`, and `Zamboanguita-project/index.js`
-imports a `./supabase.js` that does not exist anywhere. That is an abandoned
-auth prototype from before the JWT system, as `CLAUDE.md` says. Delete it rather
-than build on it.
+**There is no earlier Supabase code to start from.** An abandoned auth
+prototype from before the JWT system left a root `package.json` listing
+`@supabase/supabase-js`, a committed root `node_modules/`, and a
+`Zamboanguita-project/index.js` importing a `./supabase.js` that never
+existed. All of it has been deleted, so the migration starts from a clean
+root. Install the Supabase client in `zamboanguita-backend/`, where the code
+that uses it will live, not at the repo root (see `CLAUDE.md` for why the root
+stays empty).
 
 **Two decisions to make deliberately, not by drift:**
 

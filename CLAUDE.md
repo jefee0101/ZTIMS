@@ -15,12 +15,16 @@ They deploy separately and share no files. Where the same fact must exist on
 both sides (see "Duplicated facts" below), it is duplicated by hand, not
 imported.
 
-The repo root (`ztims/`) also has its own `package.json`
-(`@supabase/supabase-js`, `express`, ...) with no source files behind it, and
-`Zamboanguita-project/index.js` imports a `./supabase.js` that does not exist
-anywhere in the tree. This is leftover from an earlier, abandoned auth
-prototype — ignore it. Real auth is the JWT system in
-`zamboanguita-backend/server.js`, called from `staff_login.html`.
+The repo root has no `package.json` and no `node_modules/` on purpose. An
+earlier, abandoned Supabase auth prototype left a root `package.json`
+(`@supabase/supabase-js`, `express` 5, ...), a committed root `node_modules/`
+and `Zamboanguita-project/index.js`; all three have been deleted. Don't
+recreate them: Node resolves modules upward, so anything installed at the
+root gets picked up by the backend whenever its own install lacks a package.
+If a root `package.json` is ever needed, never give it `"type": "module"` —
+the Node runtime reads the nearest one, and the backend is CommonJS. Real auth
+is the JWT system in `zamboanguita-backend/server.js`, called from
+`staff_login.html`.
 
 ## Commands
 
