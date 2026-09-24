@@ -342,13 +342,9 @@ body { overflow-x: hidden; }
 
         <!-- ============ DESTINATIONS ============ -->
         <div data-view="spots">
-            <!-- Hero and Browse share one stage so they can share ONE piece of
-                 media. The picture used to be duplicated — a copy in the hero and
-                 a matching copy in the cove — which is fine for a still but not
-                 for a film: two <video> elements are two downloads that drift out
-                 of step, and the join would show two different frames meeting.
-                 A single layer behind both removes the problem rather than
-                 managing it. -->
+            <!-- The hero's picture lives on a layer of its own (the stage),
+                 exactly the hero's size, so the script at the foot of this page
+                 can lay the film over the still without touching the hero. -->
             <div class="ztims-stage">
                 <div class="ztims-stage__media" aria-hidden="true">
                     <!-- The still is the floor, not a placeholder: it is what a
@@ -365,9 +361,8 @@ body { overflow-x: hidden; }
 
             <section class="ztims-hero relative w-full flex items-center overflow-hidden">
 
-                <!-- Bottom padding is the wave's height: the hero centres its
-                     content, and without this the buttons drift down onto the
-                     shoreline, where white text meets a pale fill. -->
+                <!-- The bottom padding lifts the centred content a little off
+                     the hero's lower edge. -->
                 <div class="relative z-10 w-full pb-10 sm:pb-12 lg:pb-14">
                   <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                     <div class="max-w-3xl">
@@ -405,33 +400,18 @@ body { overflow-x: hidden; }
                 </div>
             </section>
 
-            <!-- ztims-browse, not bg-surface-container-low: the section's colour
-                 has to stop short of its own top edge so the stage behind shows
-                 through the cove. Same colour everywhere below that. -->
+            <!-- Its own section on its own colour, starting on a straight line
+                 under the hero (theme.css, "The hero — a plain rectangle"). -->
             <section id="browse" class="ztims-browse relative py-8 sm:py-10">
-              <!-- The cove: the hero's photograph continuing into this section,
-                   with this section's own colour painted back over it in a curve.
-                   Decoration only — aria-hidden, and pointer-events:none in
-                   theme.css so it cannot take a tap meant for the search below.
-                   Everything in this section is the same markup it always was. -->
-              <div class="ztims-cove" aria-hidden="true">
-                  <svg class="ztims-cove__curve" viewBox="0 0 1440 240" preserveAspectRatio="none" focusable="false">
-                      <!-- Narrow screens: shoulders of a few per cent, so the opening
-                           stays at least as wide as the heading. -->
-                      <path class="is-narrow" d="M0,0 C 28,4 52,186 88,196 L1352,196 C 1388,186 1412,4 1440,0 L1440,240 L0,240 Z"/>
-                      <!-- Wide screens: room for the curve to fall away properly. -->
-                      <path class="is-wide" d="M0,0 C 96,6 150,164 232,172 L1208,172 C 1290,164 1344,6 1440,0 L1440,240 L0,240 Z"/>
-                  </svg>
-              </div>
               <!-- Same container AND the same gutter as the header, so the heading,
                    the filters and the cards line up with the wordmark at any width.
-                   relative z-10 keeps every control above the cove behind it. -->
+                   relative z-10 keeps every control above the stage behind it. -->
               <div class="relative z-10 max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                 <!-- One line, not two. The old heading named the categories the
                      filter below already lists, so the sentence carries the section
                      on its own — and it is the heading now rather than a caption
                      under one, which keeps the section from having no heading at all. -->
-                <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6 text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
+                <h2 class="rise text-on-surface text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6 text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
 
                 <!-- The gap the result count used to hold open. It sat between this
                      row and the grid with 24px under it; now that it is sr-only it
