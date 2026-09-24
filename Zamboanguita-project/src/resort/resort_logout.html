@@ -2,6 +2,7 @@
 <html class="dark" lang="en">
 <head>
     <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Signed Out - Zamboanguita</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
@@ -17,6 +18,8 @@
             darkMode: "class",
             theme: {
                 extend: {
+                    transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+                    transitionDuration: { DEFAULT: '220ms' },
                     colors: {
                         "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
                         "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
@@ -77,90 +80,6 @@ body { overflow-x: hidden; }
 </head>
 <body class="bg-background text-on-surface min-h-screen flex flex-col overflow-x-hidden">
 
-<script>
-/* ==========================================================
-   THEME (dark / light)
-   Every page used to do this its own way — three different class names, four
-   different toggle functions, and the sign-in page following none of them, so
-   choosing light on one page did nothing on the next. This is the single
-   implementation: it stores one choice and applies every class convention the
-   pages' stylesheets rely on, so all of them respond to it.
-
-   window.toggleTheme()            flips and remembers the choice
-   window.toggleDarkMode()         the same, under the name inline onclick uses
-   window.applyTheme('dark'|'light')
-   ========================================================== */
-(function () {
-    var STORAGE_KEY = 'theme';
-
-    function apply(theme) {
-        var dark = theme !== 'light';
-        var root = document.documentElement;
-
-        // Pages define their palette against one of these three, depending on
-        // when they were written. Setting all of them keeps every page correct
-        // without rewriting each stylesheet.
-        root.classList.toggle('dark', dark);
-        root.classList.toggle('light-mode', !dark);
-        if (document.body) {
-            document.body.classList.toggle('light-mode', !dark);
-            document.body.classList.toggle('dark-mode', dark);
-        }
-
-        // A moon while dark, a sun while light — the same way round everywhere.
-        var glyph = dark ? 'dark_mode' : 'light_mode';
-        ['themeIcon', 'themeToggleIcon'].forEach(function (id) {
-            var icon = document.getElementById(id);
-            if (icon) icon.textContent = glyph;
-        });
-
-        var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
-        ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
-            var button = document.getElementById(id);
-            if (!button) return;
-            button.title = label;
-            button.setAttribute('aria-label', label);
-            bindToggle(button);
-        });
-    }
-
-    /* The landing page's theme button had no handler at all — no onclick, no
-       listener — so choosing light mode there did nothing. Every other page
-       wired it, each in its own way, and the one that forgot failed silently.
-       Binding here means no page can forget again.
-
-       Bound at most once per button, and never over a button that already
-       carries an inline onclick: two handlers would toggle twice and land back
-       where they started, which looks exactly like a button that does nothing. */
-    function bindToggle(button) {
-        if (button.getAttribute('data-theme-bound')) return;
-        if (button.getAttribute('onclick')) return;
-        button.setAttribute('data-theme-bound', '1');
-        button.addEventListener('click', function () { window.toggleTheme(); });
-    }
-
-    function current() {
-        try { return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'; }
-        catch (e) { return 'dark'; }   // private browsing
-    }
-
-    window.applyTheme = apply;
-
-    window.toggleTheme = function () {
-        var next = current() === 'light' ? 'dark' : 'light';
-        try { localStorage.setItem(STORAGE_KEY, next); } catch (e) { /* private browsing */ }
-        apply(next);
-    };
-
-    // Pages written earlier call this name from an inline onclick.
-    window.toggleDarkMode = window.toggleTheme;
-
-    apply(current());
-    // The body classes cannot be set before the body exists, so they are applied
-    // again once it does. The html class above already prevents the flash.
-    document.addEventListener('DOMContentLoaded', function () { apply(current()); });
-})();
-</script>
 
     <main class="page-enter relative flex-grow flex items-center justify-center p-6 md:p-12">
         <div class="relative z-10 w-full max-w-xl">

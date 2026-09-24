@@ -2,6 +2,7 @@
 <html class="dark" lang="en">
 <head>
     <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Establishment Manager | My Establishment</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
@@ -17,6 +18,8 @@
       darkMode: "class",
       theme: {
         extend: {
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
           colors: {
               "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
               "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
@@ -43,39 +46,7 @@
     </script>
 
     <style>
-    :root {
-        --color-surface: rgb(var(--ztims-surface));
-        --color-background: rgb(var(--ztims-background));
-        --color-surface-variant: rgb(var(--ztims-surface-variant));
-        --color-on-surface: rgb(var(--ztims-on-surface));
-        --color-on-surface-variant: rgb(var(--ztims-on-surface-variant));
-    }
-    .light-mode, [class*="light-mode"] {
-        --color-surface: rgb(var(--ztims-surface)) !important;
-        --color-background: rgb(var(--ztims-background)) !important;
-        --color-surface-variant: rgb(var(--ztims-surface-variant)) !important;
-        --color-on-surface: rgb(var(--ztims-on-surface)) !important;
-        --color-on-surface-variant: rgb(var(--ztims-on-surface-variant)) !important;
-    }
-    body, main, header, aside, div, section, button, h1, h2, h3, h4, h5, p, span, a, table, tr, td, th, input, select, textarea {
-        transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
-    }
-    .light-mode { background: rgb(var(--ztims-background)) !important; color: rgb(var(--ztims-on-surface)) !important; }
-    .light-mode main { background: rgb(var(--ztims-background)) !important; }
-    .light-mode aside { background: rgb(var(--ztims-surface)) !important; border-color: rgb(var(--ztims-outline)) !important; }
-    .light-mode header { background: rgba(255, 255, 255, 0.9) !important; border-color: rgb(var(--ztims-outline)) !important; }
-    .glass-panel { background: var(--color-surface); border: 1px solid rgb(var(--ztims-outline)); }
-    .light-mode .glass-panel { background: rgb(var(--ztims-surface)) !important; border-color: rgb(var(--ztims-outline)) !important; }
-    .light-mode h1, .light-mode h2, .light-mode h3, .light-mode h4, .light-mode h5,
-    .light-mode p, .light-mode span:not(.material-symbols-outlined), .light-mode a, .light-mode td, .light-mode th {
-        color: rgb(var(--ztims-on-surface)) !important;
-    }
-    .light-mode input, .light-mode select, .light-mode textarea {
-        background: rgb(var(--ztims-surface)) !important;
-        color: rgb(var(--ztims-on-surface)) !important;
-        border: 1px solid rgb(var(--ztims-outline)) !important;
-    }
-    .light-mode aside a:hover { background-color: rgb(var(--ztims-surface-variant)) !important; color: rgb(var(--ztims-primary)) !important; }
+
     
 /* ==========================================================
    COLLAPSIBLE SIDEBAR — identical on every portal page, and the
@@ -92,15 +63,15 @@
        sliding. Everything animates on the same curve and duration so the rail, the
        header, the content and the labels move as one piece. */
     aside, header, main {
-        transition: width .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), margin-left .3s cubic-bezier(.4, 0, .2, 1) !important;
+        transition: width var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), margin-left var(--dur-moderate) var(--ease-standard) !important;
     }
     aside .sidebar-label,
     aside .sidebar-brand-full {
         opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
-        transition: opacity .2s ease .06s, max-width .3s cubic-bezier(.4, 0, .2, 1) !important;
+        transition: opacity var(--dur-fast) var(--ease-standard) 60ms, max-width var(--dur-moderate) var(--ease-standard) !important;
     }
     aside a, aside button:not(#sidebarToggleBtn) {
-        transition: gap .3s cubic-bezier(.4, 0, .2, 1), padding .3s cubic-bezier(.4, 0, .2, 1), color .2s ease, background-color .2s ease !important;
+        transition: gap var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard) !important;
     }
     body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
     body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
@@ -131,11 +102,11 @@
         width: 17rem !important;
         max-width: 86vw !important;
         transform: translateX(-100%);
-        transition: transform .28s cubic-bezier(.4, 0, .2, 1) !important;
+        transition: transform var(--dur-moderate) var(--ease-decelerate) !important;
     }
     body.nav-open aside {
         transform: none;
-        box-shadow: 0 0 45px rgba(0, 0, 0, .55);
+        box-shadow: var(--ztims-shadow-overlay);
     }
     header, main {
         width: 100% !important;
@@ -148,7 +119,7 @@
         background: rgb(var(--ztims-background) / .6);
         opacity: 0;
         pointer-events: none;
-        transition: opacity .28s ease;
+        transition: opacity var(--dur-moderate) var(--ease-standard);
     }
     body.nav-open #navScrim { opacity: 1; pointer-events: auto; }
     body.nav-open { overflow: hidden; }
@@ -195,90 +166,6 @@ body { overflow-x: hidden; }
 
 <body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
 
-<script>
-/* ==========================================================
-   THEME (dark / light)
-   Every page used to do this its own way — three different class names, four
-   different toggle functions, and the sign-in page following none of them, so
-   choosing light on one page did nothing on the next. This is the single
-   implementation: it stores one choice and applies every class convention the
-   pages' stylesheets rely on, so all of them respond to it.
-
-   window.toggleTheme()            flips and remembers the choice
-   window.toggleDarkMode()         the same, under the name inline onclick uses
-   window.applyTheme('dark'|'light')
-   ========================================================== */
-(function () {
-    var STORAGE_KEY = 'theme';
-
-    function apply(theme) {
-        var dark = theme !== 'light';
-        var root = document.documentElement;
-
-        // Pages define their palette against one of these three, depending on
-        // when they were written. Setting all of them keeps every page correct
-        // without rewriting each stylesheet.
-        root.classList.toggle('dark', dark);
-        root.classList.toggle('light-mode', !dark);
-        if (document.body) {
-            document.body.classList.toggle('light-mode', !dark);
-            document.body.classList.toggle('dark-mode', dark);
-        }
-
-        // A moon while dark, a sun while light — the same way round everywhere.
-        var glyph = dark ? 'dark_mode' : 'light_mode';
-        ['themeIcon', 'themeToggleIcon'].forEach(function (id) {
-            var icon = document.getElementById(id);
-            if (icon) icon.textContent = glyph;
-        });
-
-        var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
-        ['themeToggleBtn', 'themeToggleButton'].forEach(function (id) {
-            var button = document.getElementById(id);
-            if (!button) return;
-            button.title = label;
-            button.setAttribute('aria-label', label);
-            bindToggle(button);
-        });
-    }
-
-    /* The landing page's theme button had no handler at all — no onclick, no
-       listener — so choosing light mode there did nothing. Every other page
-       wired it, each in its own way, and the one that forgot failed silently.
-       Binding here means no page can forget again.
-
-       Bound at most once per button, and never over a button that already
-       carries an inline onclick: two handlers would toggle twice and land back
-       where they started, which looks exactly like a button that does nothing. */
-    function bindToggle(button) {
-        if (button.getAttribute('data-theme-bound')) return;
-        if (button.getAttribute('onclick')) return;
-        button.setAttribute('data-theme-bound', '1');
-        button.addEventListener('click', function () { window.toggleTheme(); });
-    }
-
-    function current() {
-        try { return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'; }
-        catch (e) { return 'dark'; }   // private browsing
-    }
-
-    window.applyTheme = apply;
-
-    window.toggleTheme = function () {
-        var next = current() === 'light' ? 'dark' : 'light';
-        try { localStorage.setItem(STORAGE_KEY, next); } catch (e) { /* private browsing */ }
-        apply(next);
-    };
-
-    // Pages written earlier call this name from an inline onclick.
-    window.toggleDarkMode = window.toggleTheme;
-
-    apply(current());
-    // The body classes cannot be set before the body exists, so they are applied
-    // again once it does. The html class above already prevents the flash.
-    document.addEventListener('DOMContentLoaded', function () { apply(current()); });
-})();
-</script>
 
 <script>
 /* ==========================================================
@@ -347,13 +234,15 @@ body { overflow-x: hidden; }
             'display:flex', 'align-items:flex-start', 'gap:.65rem',
             'padding:.85rem 1rem',
             'border-radius:.9rem',
-            'border-left:4px solid ' + settings.accent,
-            'background:rgb(var(--ztims-surface))',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-strong))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
             'color:rgb(var(--ztims-on-surface))',
-            'border:1px solid rgb(var(--ztims-outline))',
-            'box-shadow:0 12px 32px -12px rgba(0,0,0,.6)',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
             'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
-            'animation:toastIn .22s cubic-bezier(.4,0,.2,1)'
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
         ].join(';');
 
         var icon = document.createElement('span');
@@ -381,7 +270,7 @@ body { overflow-x: hidden; }
         var timer = null;
         function dismiss() {
             if (timer) clearTimeout(timer);
-            toast.style.animation = 'toastOut .2s ease forwards';
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
             setTimeout(function () { toast.remove(); }, 200);
         }
         close.addEventListener('click', dismiss);
@@ -445,7 +334,7 @@ body { overflow-x: hidden; }
             'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
             'color:rgb(var(--ztims-accent))',
             'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
-            'transition:transform .15s ease'
+            'transition:transform var(--dur-fast) var(--ease-standard)'
         ].join(';');
 
         if (options.imageUrl) {
@@ -471,13 +360,20 @@ body { overflow-x: hidden; }
         menu.style.cssText = [
             'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
             'min-width:15rem', 'padding:.4rem',
-            'border-radius:1rem', 'background:rgba(10,25,47,.98)', 'color:#F4F6F9',
-            'box-shadow:0 18px 40px -18px rgba(0,0,0,.75)',
+            'border-radius:var(--radius-lg, 1rem)',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-strong))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'border:1px solid var(--glass-hairline)',
+            'color:rgb(var(--ztims-on-surface))',
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'transform-origin:top right',
+            'animation:ztimsMenuIn var(--dur-base, 220ms) var(--ease-decelerate, ease-out)',
             'font-size:.85rem'
         ].join(';');
 
         var header = document.createElement('div');
-        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgba(169,188,208,.18);margin-bottom:.3rem';
+        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgb(var(--ztims-outline));margin-bottom:.3rem';
         var nameLine = document.createElement('div');
         nameLine.textContent = options.name || options.email;
         nameLine.style.cssText = 'font-weight:800;word-break:break-word';
@@ -485,7 +381,7 @@ body { overflow-x: hidden; }
         if (options.email && options.name) {
             var emailLine = document.createElement('div');
             emailLine.textContent = options.email;
-            emailLine.style.cssText = 'font-size:.75rem;color:#A9BCD0;word-break:break-all;margin-top:.1rem';
+            emailLine.style.cssText = 'font-size:.75rem;color:rgb(var(--ztims-on-surface-variant));word-break:break-all;margin-top:.1rem';
             header.appendChild(emailLine);
         }
         menu.appendChild(header);
@@ -502,7 +398,7 @@ body { overflow-x: hidden; }
             entry.style.cssText = [
                 'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
                 'padding:.6rem .75rem', 'border:0', 'border-radius:.7rem',
-                'background:none', 'color:' + (item.danger ? '#FF8A80' : 'inherit'),
+                'background:none', 'color:' + (item.danger ? 'rgb(var(--ztims-error))' : 'inherit'),
                 'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
             ].join(';');
             entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
@@ -510,7 +406,7 @@ body { overflow-x: hidden; }
             label.textContent = item.label;   // text, never markup
             entry.appendChild(label);
 
-            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgba(255,255,255,.07)'; });
+            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgb(var(--ztims-on-surface) / .06)'; });
             entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
             entry.addEventListener('click', function () {
                 close();
@@ -540,13 +436,13 @@ body { overflow-x: hidden; }
 </script>
     <div id="navScrim" aria-hidden="true"></div>
 
-    <aside class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
+    <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
             <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Establishment Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
-                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-white/5 transition-all">
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
                 <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
             </button>
         </div>
@@ -568,9 +464,9 @@ body { overflow-x: hidden; }
         </div>
     </aside>
 
-    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/20 transition-colors duration-300">
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 glass-nav border-b border-outline-variant/20 transition-colors duration-300">
         <button id="navOpenBtn" type="button" aria-label="Open navigation" aria-expanded="false"
-                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-white/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
+                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-on-surface/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
             <span class="material-symbols-outlined">menu</span>
         </button>
         <div class="flex items-center gap-3">
@@ -914,8 +810,6 @@ body { overflow-x: hidden; }
 
         document.addEventListener('DOMContentLoaded', () => {
             mountPortalAccountMenu();
-            const icon = document.getElementById('themeIcon');
-            if (icon) icon.textContent = localStorage.getItem('theme') === 'light' ? 'light_mode' : 'dark_mode';
 
             if (!guardEstablishmentManagerSession()) return;
 
