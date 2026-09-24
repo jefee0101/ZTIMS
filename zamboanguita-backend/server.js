@@ -37,14 +37,25 @@ app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
 app.use(helmet());
-app.use(cors({
-    origin(origin, callback) {
-        // No Origin header means a non-browser client (curl, Postman, health checks).
-        if (!origin || isAllowedOrigin(origin)) return callback(null, true);
-        return callback(new Error(`Origin ${origin} is not allowed by CORS`));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+// On Vercel the site and this API share one origin, and a page calling its own
+// origin is not a cross-origin request at all. Browsers still send an Origin
+// header on a same-origin POST, though, so without this check every login and
+// every save would depend on the site's address also being on the allow-list —
+// and would break the day the site moved to a custom domain. A page elsewhere
+// cannot fake this: its browser sends its own Origin and the API's own Host.
+const isSameOrigin = (req, origin) => origin === `${req.protocol}://${req.get('host')}`;
+
+app.use(cors((req, callback) => {
+    const origin = req.get('origin');
+    // No Origin header means a non-browser client (curl, Postman, health checks).
+    if (!origin || isSameOrigin(req, origin) || isAllowedOrigin(origin)) {
+        return callback(null, {
+            origin: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+            allowedHeaders: ['Content-Type', 'Authorization']
+        });
+    }
+    return callback(new Error(`Origin ${origin} is not allowed by CORS`));
 }));
 // This blanket limit stays in each instance's own memory, deliberately. It runs
 // on every request, including ones that never touch the database, and counting
