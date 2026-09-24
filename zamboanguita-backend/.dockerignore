@@ -1,0 +1,18 @@
+# Keep these out of the image.
+#
+# node_modules above all: `COPY . .` would otherwise drop a locally-installed
+# tree straight over the one npm ci just built, replacing a clean production
+# install with whatever is on someone's laptop — including the dev
+# dependencies and, if the laptop is a different platform, the wrong binaries.
+node_modules
+npm-debug.log
+
+# Secrets never belong in an image. The real values are set as environment
+# variables on the host; .env.example stays out because it is documentation,
+# not configuration.
+.env
+.env.*
+
+.git
+.gitignore
+*.md
