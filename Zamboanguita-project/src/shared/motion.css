@@ -101,8 +101,11 @@ html.theme-switching::view-transition-new(root) {
 
 /* Staggered, for a page that introduces itself line by line. Each element sets
    its own --rise-delay. */
+/* No `opacity: 0` of its own: the `both` fill already holds the first frame
+   while the element waits for its delay. A resting opacity of 0 turns any
+   other rule that replaces this animation into content that fades in and
+   then vanishes — which is what the landing page's cards once did. */
 .rise {
-    opacity: 0;
     animation: ztimsRise var(--dur-slow) var(--ease-decelerate) both;
     animation-delay: var(--rise-delay, 0s);
 }
@@ -143,16 +146,18 @@ html.theme-switching::view-transition-new(root) {
    stepped; everything after arrives with the eighth, so a long list never
    keeps anyone waiting. `backwards` for the same containing-block reason as
    .page-enter. */
-.ztims-stagger > * {
+/* A child that already has an entrance of its own (.rise, with its own
+   delay) keeps it rather than being given a second one. */
+.ztims-stagger > :not(.rise) {
     animation: ztimsRise var(--dur-slow) var(--ease-decelerate) backwards;
 }
-.ztims-stagger > *:nth-child(2) { animation-delay: calc(var(--stagger-step) * 1); }
-.ztims-stagger > *:nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
-.ztims-stagger > *:nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
-.ztims-stagger > *:nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
-.ztims-stagger > *:nth-child(6) { animation-delay: calc(var(--stagger-step) * 5); }
-.ztims-stagger > *:nth-child(7) { animation-delay: calc(var(--stagger-step) * 6); }
-.ztims-stagger > *:nth-child(n+8) { animation-delay: calc(var(--stagger-step) * 7); }
+.ztims-stagger > :not(.rise):nth-child(2) { animation-delay: calc(var(--stagger-step) * 1); }
+.ztims-stagger > :not(.rise):nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
+.ztims-stagger > :not(.rise):nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
+.ztims-stagger > :not(.rise):nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
+.ztims-stagger > :not(.rise):nth-child(6) { animation-delay: calc(var(--stagger-step) * 5); }
+.ztims-stagger > :not(.rise):nth-child(7) { animation-delay: calc(var(--stagger-step) * 6); }
+.ztims-stagger > :not(.rise):nth-child(n+8) { animation-delay: calc(var(--stagger-step) * 7); }
 
 /* --------------------------------------------------------------------------
    Dialogs
