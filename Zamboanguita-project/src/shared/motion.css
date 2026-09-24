@@ -1,72 +1,122 @@
 /* ==========================================================================
    Motion — named once, and switched off in one place
    --------------------------------------------------------------------------
-   Before this there were three easings and six durations across fourteen
-   pages, doing what should be two or three decisions. And every page carried
-   its own prefers-reduced-motion block covering exactly one animation: the
-   landing page turned off .rise, the portals turned off the toast, and nothing
-   anywhere turned off the hover scales, the sidebar slide, the card zooms or
-   the analytics glow — which looped forever.
-
    Load this on every page. It is the only place motion is defined and the only
    place it is turned off.
+
+   -- Duration: set by how far something travels, and how big it is --------
+     micro interactions (120–180ms)
+       --dur-instant    120ms   press feedback; lands before the finger lifts
+       --dur-fast       160ms   colour and opacity: hovers, focus rings
+     standard UI (180–250ms)
+       --dur-base       200ms   a card lifting, a menu or dropdown opening
+       --dur-moderate   240ms   a page settling, a toast, the theme switch
+     larger panels (250–350ms)
+       --dur-slow       300ms   a dialog, a drawer, an entrance
+       --dur-slower     350ms   the slowest thing allowed; a photo drifting
+
+   Nothing takes longer than 350ms. Exits take roughly two thirds of their
+   entrance: leaving is not something to watch.
+
+   -- Easing: set by what the movement means --------------------------------
+     --ease-standard    cubic-bezier(.2, 0, 0, 1)
+         Something moving under your control — hover, press, toggling.
+         Starts briskly, settles gently.
+     --ease-decelerate  cubic-bezier(.05, .7, .1, 1)
+         Something arriving — a page, a dialog, a card. Fast in, long soft
+         landing, so it is readable almost at once.
+     --ease-accelerate  cubic-bezier(.3, 0, .8, .15)
+         Something leaving. Starts slowly and gets out of the way.
+     --ease-spring      cubic-bezier(.34, 1.56, .64, 1)
+         A small overshoot, for small things only: a toggle's knob, a badge
+         appearing. Never on anything larger than a button.
+     linear is for spinners and nothing else — a loop has no start or end.
+
+   Only transform and opacity are animated for movement, because the browser
+   can run those on the compositor without re-laying out the page. Colours
+   transition, but never width, height, top or left.
    ========================================================================== */
 
 :root {
-    /* Chosen to agree with what the pages already use: duration-300 appears 83
-       times in the markup, so the base is 300ms rather than a rounder number
-       that would quietly disagree with every Tailwind class on the site. */
-    --motion-fast: 150ms;
-    --motion-base: 300ms;
-    --motion-slow: 450ms;
+    --dur-instant: 120ms;
+    --dur-fast: 160ms;
+    --dur-base: 200ms;
+    --dur-moderate: 240ms;
+    --dur-slow: 300ms;
+    --dur-slower: 350ms;
 
-    /* Standard: things moving under your finger, and colour changes.
-       Entrance: things arriving, which want a softer landing. */
-    --ease-standard: cubic-bezier(.4, 0, .2, 1);
-    --ease-entrance: cubic-bezier(.16, .84, .44, 1);
+    --ease-standard: cubic-bezier(.2, 0, 0, 1);
+    --ease-decelerate: cubic-bezier(.05, .7, .1, 1);
+    --ease-accelerate: cubic-bezier(.3, 0, .8, .15);
+    --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+
+    /* The step between items in a staggered entrance, and the most items that
+       wait for it — the ninth card of a grid should not arrive half a second
+       after the first. */
+    --stagger-step: 40ms;
+
+    /* The names the markup already uses, kept pointing at the scale above. */
+    --motion-fast: var(--dur-fast);
+    --motion-base: var(--dur-moderate);
+    --motion-slow: var(--dur-slow);
+    --ease-entrance: var(--ease-decelerate);
 }
 
 /* --------------------------------------------------------------------------
-   Page to page
+   Page to page, and theme to theme
    --------------------------------------------------------------------------
-   ZTIMS is a multi-page site, so every click was a full reload and a flash of
-   background. This hands the crossfade to the browser.
+   ZTIMS is a multi-page site, so every click is a full load. The browser
+   crossfades between pages instead of flashing. A browser without View
+   Transitions ignores the rule and navigates exactly as before.
 
-   One at-rule and nothing else: a browser that does not support it ignores the
-   rule entirely and navigates exactly as it did before, so there is no
-   fallback to write and nothing to feature-detect.
+   theme.js uses the same mechanism for switching light and dark: one
+   composited crossfade of the whole page, rather than every element on it
+   animating its own colours.
    -------------------------------------------------------------------------- */
 @view-transition {
     navigation: auto;
 }
 
-::view-transition-old(root),
+::view-transition-old(root) {
+    animation-duration: var(--dur-base);
+    animation-timing-function: var(--ease-accelerate);
+}
 ::view-transition-new(root) {
-    animation-duration: var(--motion-base);
+    animation-duration: var(--dur-moderate);
+    animation-timing-function: var(--ease-decelerate);
+}
+
+/* The theme switch is a pure crossfade of equal length both ways: the page is
+   not leaving, only changing colour. */
+html.theme-switching::view-transition-old(root),
+html.theme-switching::view-transition-new(root) {
+    animation-duration: var(--dur-moderate);
     animation-timing-function: var(--ease-standard);
 }
 
 /* --------------------------------------------------------------------------
    Arriving
    -------------------------------------------------------------------------- */
-
-/* Staggered, for a page that introduces itself line by line. Each element sets
-   its own --rise-delay. */
 @keyframes ztimsRise {
-    from { opacity: 0; transform: translateY(0.7rem); }
+    from { opacity: 0; transform: translateY(0.75rem); }
     to   { opacity: 1; transform: none; }
 }
 
+/* Staggered, for a page that introduces itself line by line. Each element sets
+   its own --rise-delay. */
+/* No `opacity: 0` of its own: the `both` fill already holds the first frame
+   while the element waits for its delay. A resting opacity of 0 turns any
+   other rule that replaces this animation into content that fades in and
+   then vanishes — which is what the landing page's cards once did. */
 .rise {
-    opacity: 0;
-    animation: ztimsRise var(--motion-slow) var(--ease-entrance) both;
+    animation: ztimsRise var(--dur-slow) var(--ease-decelerate) both;
     animation-delay: var(--rise-delay, 0s);
 }
 
 /* For the pages that have no reason to introduce themselves line by line —
-   the officer's tables, the establishment portal. The whole of main lifts once.
-   Deliberately shorter and smaller than .rise: it should register as the page
-   having settled, not as an animation someone has to sit through. */
+   the officer's tables, the establishment portal. The whole of main settles
+   once: shorter and smaller than .rise, so it registers as the page arriving,
+   not as an animation someone has to sit through. */
 @keyframes ztimsPageIn {
     from { opacity: 0; transform: translateY(0.4rem); }
     to   { opacity: 1; transform: none; }
@@ -75,28 +125,112 @@
 /* `backwards`, not `both`, and the difference matters beyond the animation.
    An element with a transform animation filling forwards stays a containing
    block for `position: fixed` descendants — Chromium keeps it even once the
-   animation has settled on `transform: none`, because the effect is still
-   applied. <main> carries this class, so anything fixed inside it was being
-   measured against main's box instead of the viewport; the maximized map came
-   out as a strip across the top of the page.
-
-   Nothing is lost by dropping the forwards half: the last keyframe is already
-   the element's natural state (opacity 1, no transform), so the settled
-   appearance is identical. `backwards` still covers the delay before it runs,
-   which is the half that prevents a flash of unstyled content. */
+   animation has settled on `transform: none`. <main> carries this class, so
+   anything fixed inside it was measured against main instead of the viewport:
+   the maximized map came out as a strip across the top of the page. The last
+   keyframe is the element's natural state anyway, so nothing is lost. */
 .page-enter {
-    animation: ztimsPageIn var(--motion-base) var(--ease-entrance) backwards;
+    animation: ztimsPageIn var(--dur-moderate) var(--ease-decelerate) backwards;
 }
 
-/* Content replacing a spinner. Without it the swap is a hard cut: the spinner
-   vanishes and a full grid appears in the same frame. */
+/* Content replacing a spinner. Without it the swap is a hard cut. */
 @keyframes ztimsFadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
 
 .ztims-fade-in {
-    animation: ztimsFadeIn var(--motion-base) var(--ease-standard) both;
+    animation: ztimsFadeIn var(--dur-moderate) var(--ease-standard) both;
+}
+
+/* A grid whose items arrive one after another. Put .ztims-stagger on the
+   container; each child animates as it is inserted, so a list rendered by
+   script staggers without the script doing anything. The first eight are
+   stepped; everything after arrives with the eighth, so a long list never
+   keeps anyone waiting. `backwards` for the same containing-block reason as
+   .page-enter. */
+/* A child that already has an entrance of its own (.rise, with its own
+   delay) keeps it rather than being given a second one. */
+.ztims-stagger > :not(.rise) {
+    animation: ztimsRise var(--dur-slow) var(--ease-decelerate) backwards;
+}
+.ztims-stagger > :not(.rise):nth-child(2) { animation-delay: calc(var(--stagger-step) * 1); }
+.ztims-stagger > :not(.rise):nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
+.ztims-stagger > :not(.rise):nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
+.ztims-stagger > :not(.rise):nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
+.ztims-stagger > :not(.rise):nth-child(6) { animation-delay: calc(var(--stagger-step) * 5); }
+.ztims-stagger > :not(.rise):nth-child(7) { animation-delay: calc(var(--stagger-step) * 6); }
+.ztims-stagger > :not(.rise):nth-child(n+8) { animation-delay: calc(var(--stagger-step) * 7); }
+
+/* --------------------------------------------------------------------------
+   Dialogs
+   --------------------------------------------------------------------------
+   A dialog arrives: it scales up from just under full size and fades in, on
+   the decelerate curve, so it is legible within the first few frames. The
+   scrim behind it fades on its own, slightly quicker. Both run every time the
+   element goes from hidden to shown — no script has to trigger them.
+   -------------------------------------------------------------------------- */
+@keyframes ztimsDialogIn {
+    from { opacity: 0; transform: translateY(0.5rem) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+}
+
+.ztims-modal {
+    animation: ztimsDialogIn var(--dur-slow) var(--ease-decelerate) backwards;
+}
+
+.ztims-scrim {
+    animation: ztimsFadeIn var(--dur-base) var(--ease-standard) backwards;
+}
+
+/* A menu drops from the control that opened it: a short scale from its own
+   corner (the element sets transform-origin), on the base step, because it
+   is small and the pointer is already waiting on it. The portals' account
+   menu uses this. */
+@keyframes ztimsMenuIn {
+    from { opacity: 0; transform: translateY(-0.25rem) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+}
+
+.ztims-menu {
+    transform-origin: top right;
+    animation: ztimsMenuIn var(--dur-base) var(--ease-decelerate) backwards;
+}
+
+/* --------------------------------------------------------------------------
+   Small things appearing
+   -------------------------------------------------------------------------- */
+@keyframes ztimsPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* A badge, a count, a status chip that has just changed. The spring is
+   allowed here because the thing is small; on a card it would wobble. */
+.ztims-pop {
+    animation: ztimsPop var(--dur-base) var(--ease-spring) backwards;
+}
+
+/* --------------------------------------------------------------------------
+   Waiting
+   -------------------------------------------------------------------------- */
+/* A placeholder block while content loads: a light that passes across it,
+   left to right, slowly enough not to demand attention. */
+@keyframes ztimsShimmer {
+    from { background-position: 150% 0; }
+    to   { background-position: -50% 0; }
+}
+
+.ztims-skeleton {
+    border-radius: 0;
+    background:
+        linear-gradient(100deg,
+            transparent 30%,
+            rgb(var(--ztims-on-surface) / 0.06) 50%,
+            transparent 70%)
+        0 0 / 200% 100%,
+        rgb(var(--ztims-on-surface) / 0.06);
+    animation: ztimsShimmer 1.4s linear infinite;
 }
 
 /* --------------------------------------------------------------------------
@@ -105,10 +239,8 @@
    Someone who has asked their system for less motion gets the site still —
    all of it, not the one animation each page happened to remember.
 
-   Not display:none and not animation:none on everything: a duration of
-   almost-zero lets animations still fire their end events, so anything built
-   on them keeps working. Nothing here relies on that today, but the next thing
-   someone writes might.
+   Durations go to almost-zero rather than `none`, so anything listening for
+   an animation's end event still hears it.
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
     *,
@@ -126,24 +258,36 @@
        their animation is cut to nothing. */
     .rise,
     .page-enter,
-    .ztims-fade-in {
+    .ztims-fade-in,
+    .ztims-stagger > *,
+    .ztims-modal,
+    .ztims-scrim,
+    .ztims-menu,
+    .ztims-pop {
         opacity: 1 !important;
         transform: none !important;
         animation: none !important;
     }
 
-    /* A frozen spinner reads as a crashed page. This one keeps turning, slowly:
-       it is small, it is expected, and it is the only thing on screen saying
-       the request has not finished. */
+    /* A frozen spinner reads as a crashed page. This one keeps turning,
+       slowly: it is small, it is expected, and it is the only thing on screen
+       saying the request has not finished. The skeleton's shimmer stops; the
+       grey block alone says "loading". */
     .animate-spin {
         animation: spin 1.8s linear infinite !important;
     }
+    .ztims-skeleton { animation: none !important; }
 
-    /* Hover effects stop moving things about, but keep their colour change so
-       it is still obvious what is interactive. */
-    .glass-panel:hover,
+    /* Hovers stop moving things about, but keep their colour change, so it is
+       still obvious what is interactive. */
+    .glass-card:hover,
+    .card-destination:hover,
+    .card-destination:hover img,
+    .btn:hover,
+    .btn:active,
     .group:hover img,
-    [class*="hover:scale"]:hover {
+    [class*="hover:scale"]:hover,
+    [class*="hover:-translate"]:hover {
         transform: none !important;
     }
 

@@ -37,20 +37,28 @@
        service's. The glyphs come from Material Symbols, which every page
        already loads, so the markers look like the rest of the system rather
        than like a second design dropped on top of it. */
-    /* Category colours, drawn from the Coastal Tourism palette rather than from
-       four unrelated material hues. Written as hex, not tokens, because Leaflet
-       builds these markers as inline SVG and canvas fills where a CSS variable
-       would not resolve — so this is the one place the palette is repeated, and
-       it is repeated deliberately. Ocean for a place to stay, teal for a natural
-       attraction, coastal blue for the sea, gold for what the municipality keeps. */
+    /* Category colours: the same brand colours the category badges use
+       (theme.css, --ztims-cat-*), so a place is the same colour on its card
+       and on the map. Everything here lands in an inline style or in CSS, so
+       the tokens resolve.
+
+         colour   the pin's fill and the legend dot
+         glyph    the icon on the pin — navy on gold, because white on gold is
+                  1.95:1 and the icon is the only thing saying what the place is
+         ink      the name beside the pin, which sits on the tiles: a deep
+                  shade of the same hue, 4.5:1 or better even on the night
+                  theme's dimmed tiles, before the white halo helps
+         cat      the category's token in theme.css, for text on the page's
+                  own surfaces — the popup is glass in the page's theme, so its
+                  category line uses --ztims-cat-*-ink, light on the night theme */
     const CATEGORIES = {
-        'BEACH / DIVING': { label: 'Beach / Diving', icon: 'scuba_diving', colour: '#168AAD' },
-        'MOUNTAIN': { label: 'Mountain', icon: 'landscape', colour: '#2A9D8F' },
-        'CULTURAL': { label: 'Cultural', icon: 'museum', colour: '#F4B942' },
-        'ACCOMMODATION': { label: 'Accommodation', icon: 'hotel', colour: '#0B4F6C' }
+        'BEACH / DIVING': { cat: 'notice',     label: 'Beach / Diving', icon: 'scuba_diving', colour: 'rgb(var(--brand-navy))',    glyph: '#fff',                   ink: 'rgb(var(--brand-navy))' },
+        'MOUNTAIN':       { cat: 'attraction', label: 'Mountain',       icon: 'landscape',    colour: 'rgb(var(--brand-teal))',    glyph: '#fff',                   ink: 'rgb(0 90 105)' },
+        'CULTURAL':       { cat: 'municipal',  label: 'Cultural',       icon: 'museum',       colour: 'rgb(var(--brand-saffron))', glyph: 'rgb(var(--brand-navy))', ink: 'rgb(110 78 22)' },
+        'ACCOMMODATION':  { cat: 'stay',       label: 'Accommodation',  icon: 'hotel',        colour: 'rgb(var(--brand-blue))',    glyph: '#fff',                   ink: 'rgb(40 85 121)' }
     };
 
-    const FALLBACK_CATEGORY = { label: 'Tourist spot', icon: 'photo_camera', colour: '#667085' };
+    const FALLBACK_CATEGORY = { cat: null, label: 'Tourist spot', icon: 'photo_camera', colour: 'rgb(82 82 91)', glyph: '#fff', ink: 'rgb(82 82 91)' };
 
     function categoryOf(spot) {
         const key = String((spot && spot.category) || '').trim().toUpperCase();
@@ -130,38 +138,43 @@
                marks the spot, sharp-edged like the rest of the site. */
             border-radius: 0;
             transform: rotate(-45deg);
-            background: var(--pin, #455A64);
-            border: 2px solid rgba(255,255,255,.9);
-            box-shadow: 0 3px 8px rgba(0,0,0,.35);
+            background: var(--pin, rgb(82 82 91));
+            border: 2px solid rgb(255 255 255 / .92);
+            box-shadow: 0 3px 8px rgb(0 0 0 / .30);
             display: flex; align-items: center; justify-content: center;
         }
         .ztims-pin > span {
             transform: rotate(45deg);
-            color: #fff;
+            color: var(--pin-glyph, #fff);
             font-size: 18px;
             line-height: 1;
         }
         .ztims-pin--origin { border-radius: 0; transform: none; }
         .ztims-pin--origin > span { transform: none; }
 
-        .leaflet-popup-content-wrapper { border-radius: 0; }
-        /* Leaflet's own stylesheet rounds its zoom buttons and layer box. */
-        .leaflet-bar, .leaflet-bar a, .leaflet-control-layers { border-radius: 0 !important; }
+        /* Popups, zoom buttons and attribution are glass, in the page's theme;
+           see "The map" in theme.css. */
         .leaflet-popup-content { margin: 14px 16px; min-width: 190px; }
         .ztims-popup__category {
             font-size: 10px; font-weight: 700; letter-spacing: .1em;
             text-transform: uppercase; margin: 0 0 4px;
         }
-        .ztims-popup__title { font-size: 15px; font-weight: 700; margin: 0 0 4px; color: #17212B; }
-        .ztims-popup__where { font-size: 12px; color: #667085; margin: 0 0 10px; }
+        .ztims-popup__title { font-size: 15px; font-weight: 700; margin: 0 0 4px; color: rgb(var(--ztims-on-surface)); }
+        .ztims-popup__where { font-size: 12px; color: rgb(var(--ztims-on-surface-variant)); margin: 0 0 10px; }
         .ztims-popup__actions { display: flex; flex-wrap: wrap; gap: 6px; }
         .ztims-popup__actions a {
             flex: 1 1 auto; text-align: center; white-space: nowrap;
             padding: 9px 12px; min-height: 40px; box-sizing: border-box;
             border-radius: 0; font-size: 11px; font-weight: 700; text-decoration: none;
+            transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease),
+                        border-color var(--dur-fast, 160ms) var(--ease-standard, ease),
+                        transform var(--dur-instant, 120ms) var(--ease-standard, ease);
         }
-        .ztims-popup__actions .is-primary { background: #0B4F6C; color: #fff; }
-        .ztims-popup__actions .is-secondary { border: 1px solid #CDD8E2; color: #0B4F6C; }
+        .ztims-popup__actions a:active { transform: scale(.97); }
+        .ztims-popup__actions .is-primary { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+        .ztims-popup__actions .is-primary:hover { background: rgb(var(--ztims-primary-dim)); }
+        .ztims-popup__actions .is-secondary { border: 1px solid rgb(var(--ztims-primary-text) / .40); color: rgb(var(--ztims-primary-text)); }
+        .ztims-popup__actions .is-secondary:hover { background: rgb(var(--ztims-primary) / .10); }
 
         .ztims-legend {
             display: flex; flex-wrap: wrap; gap: 6px 14px;
@@ -188,15 +201,22 @@
         }
         body.ztims-map-locked { overflow: hidden; }
 
+        /* A floating control: the same glass as the zoom buttons beside it. */
         .ztims-expand {
-            background: #fff; color: #222;
-            border: 2px solid rgba(0,0,0,.2);
+            background: rgb(var(--glass-fill, 255 255 255) / var(--glass-alpha-strong, .9));
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            backdrop-filter: blur(12px) saturate(160%);
+            color: rgb(var(--ztims-on-surface, 17 17 17));
+            border: 1px solid var(--glass-hairline, rgb(0 0 0 / .15));
             border-radius: 0;
             width: 40px; height: 40px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.3);
+            cursor: pointer; box-shadow: var(--ztims-shadow-raised, 0 1px 5px rgb(0 0 0 / .3));
+            transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease),
+                        transform var(--dur-instant, 120ms) var(--ease-standard, ease);
         }
-        .ztims-expand:hover { background: #f4f4f4; }
+        .ztims-expand:hover { background: rgb(var(--glass-fill, 255 255 255)); }
+        .ztims-expand:active { transform: scale(.94); }
         .ztims-expand .material-symbols-outlined { font-size: 20px; line-height: 1; }
 
         /* The always-on name beside each pin. Leaflet's tooltip default is a
@@ -206,6 +226,7 @@
         .leaflet-tooltip.ztims-label {
             background: transparent;
             border: 0;
+            border-radius: 0;
             box-shadow: none;
             padding: 0;
             margin: 0;
@@ -233,7 +254,7 @@
         const meta = categoryOf(spot);
         return window.L.divIcon({
             className: '',       // no Leaflet default box around the pin
-            html: '<div class="ztims-pin" style="--pin:' + meta.colour + '">' +
+            html: '<div class="ztims-pin" style="--pin:' + meta.colour + ';--pin-glyph:' + meta.glyph + '">' +
                       '<span class="material-symbols-outlined">' + meta.icon + '</span>' +
                   '</div>',
             iconSize: [34, 34],
@@ -262,7 +283,7 @@
         if (!title) return marker;
 
         marker.bindTooltip(
-            '<span style="color:' + meta.colour + '">' + escapeHtml(title) + '</span>',
+            '<span style="color:' + meta.ink + '">' + escapeHtml(title) + '</span>',
             { permanent: true, direction: 'top', className: 'ztims-label', opacity: 1 }
         );
         return marker;
@@ -281,7 +302,7 @@
         injectStyles();
         return window.L.divIcon({
             className: '',
-            html: '<div class="ztims-pin ztims-pin--origin" style="--pin:#1565C0">' +
+            html: '<div class="ztims-pin ztims-pin--origin" style="--pin:rgb(var(--brand-rose))">' +
                       '<span class="material-symbols-outlined">person_pin_circle</span>' +
                   '</div>',
             iconSize: [30, 30],
@@ -417,7 +438,7 @@
         const directionsHref = detailHref + separator + 'directions=1';
 
         return '' +
-            '<p class="ztims-popup__category" style="color:' + meta.colour + '">' +
+            '<p class="ztims-popup__category" style="color:' + (meta.cat ? 'rgb(var(--ztims-cat-' + meta.cat + '-ink))' : 'rgb(var(--ztims-on-surface-variant))') + '">' +
                 escapeHtml(meta.label) + '</p>' +
             '<p class="ztims-popup__title">' + escapeHtml(spot.title || 'Untitled listing') + '</p>' +
             '<p class="ztims-popup__where">' + escapeHtml(where) + '</p>' +
@@ -529,7 +550,7 @@
         // element, and overwriting className silently threw them away.
         host.classList.add('ztims-legend', 'text-on-surface-variant');
         host.innerHTML = entries.map(function (meta) {
-            return '<span><span class="dot" style="background:' + meta.colour + '"></span>' +
+            return '<span><span class="dot" style="background:' + (meta.cat ? 'rgb(var(--ztims-cat-' + meta.cat + '))' : meta.colour) + '"></span>' +
                 escapeHtml(meta.label) + '</span>';
         }).join('');
     }

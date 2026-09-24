@@ -116,16 +116,82 @@ purpose — see the header comment in `spot-form.js`:
 - `tourism-map.js` — Leaflet + OpenStreetMap tiles + ZTIMS's own category
   markers. Never calls a routing provider directly; hands off to the backend's
   `/api/directions/route`.
-- `theme.css` — the single source of the color palette (RGB-triple custom
-  properties so Tailwind opacity modifiers like `/40` keep working), consumed
-  by every page's own inline `tailwind.config`.
+- `theme.css` — the design system: the single source of the color palette
+  (RGB-triple custom properties so Tailwind opacity modifiers like `/40` keep
+  working, consumed by every page's own inline `tailwind.config`) and the
+  reusable components (`.glass*`, `.btn-*`, `.ztims-card`, `.cat-badge`,
+  `.tone-*`, `.ztims-modal`, fields). See "Design system" below.
+- `theme.js` — light/dark, for every page: a classic, render-blocking
+  `<script src>` placed right after `<meta charset>` so the first frame is
+  already the right theme. It must stay classic (a module would run after
+  paint), which is why `vite.config.js` copies it into `dist/` itself — Vite
+  only bundles module scripts. Pages keep calling `toggleTheme()` /
+  `toggleDarkMode()`; no page reads `localStorage.theme` itself any more.
+- `motion.css` — the duration and easing scale, and every shared animation
+  (page enter, `.ztims-stagger`, dialogs, menus, skeletons), plus the one
+  `prefers-reduced-motion` switch-off.
 - `site-footer.js` — the visitor pages' footer (Explore / Information /
   Contact Us columns, office address, quiet staff sign-in link), drawn into a
   `<footer data-site-footer data-root="../">` placeholder so seven pages
   share one copy. The office's phone and email are deliberately absent until
   the office supplies them — see the comment in `src/contact.html`.
-- `photo-upload.js`, `countries.js`, `nav-active.js`, `motion.css` — smaller
-  per-concern shared pieces.
+- `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
+  smaller per-concern shared pieces.
+
+### Design system
+
+Glassmorphism over one five-colour identity (`--brand-*` in `theme.css`),
+each colour with one job — the full table is at the top of `theme.css`:
+blue `#30638E` primary actions, links, active navigation; navy `#003D5B`
+primary's pressed state and the hero; teal `#00798C` secondary actions (map,
+directions), focus, success; coral `#D1495B` the visitor's position and route
+on a map, errors, destructive actions; gold `#EDAE49` highlights and
+"waiting" status, as a fill with navy on it. Categories reuse the same five
+on badges, map pins and legends (Mountain teal, Beach/Diving navy, Cultural
+gold, Accommodation blue). The grounds are true white and true black; the
+brand colours carry identity, not the backgrounds.
+
+- **Theme.** A visitor's toggle choice wins; otherwise the device's
+  `prefers-color-scheme` is followed live. The choice is stored only when it
+  differs from the device, so choosing the device's own theme goes back to
+  "follow the device". All in `theme.js`.
+- **Glass.** Translucent fill, hairline border, lit top edge, soft navy-tinted
+  shadow, over a fixed ambient glow of the brand colours (`body::before`).
+  `backdrop-filter` blur only on surfaces content scrolls behind — `.glass-nav`
+  (header, sidebar), modals, menus, toasts; cards (`.glass-card`,
+  `.glass-panel`, `.ztims-card`) are translucent without blur, for scrolling
+  performance on phones.
+- **Contrast.** Every text/background token pair is ≥ 4.5:1 in both themes,
+  including over the brightest part of the glow. Saffron is never text on
+  white (1.95:1) — it has an ink shade (`--ztims-gold-text`), as does each
+  category (`--ztims-cat-*-ink`). Don't use Tailwind's own palette
+  (`text-amber-400`, `bg-white/10`, …) for status or tints: those were tuned for
+  one theme. Use `.tone-warning|success|info|danger|neutral` (+ `.tone-pill`),
+  `.cat-badge .cat-*`, and `on-surface/…` tints.
+- **Foundations.** Type scale `--text-display|title|heading|body|support|label|micro`,
+  weights `--weight-*`, a 4px spacing grid `--space-*`, radii `--radius-sm|md|lg|xl`
+  (all 0: corners are square everywhere by decision, and each page's Tailwind
+  config maps every `rounded-*` to 0 — the hero's curved cove is the one curve),
+  three elevations `--ztims-shadow-card|raised|overlay`. Icons are Material
+  Symbols Outlined, never meaning on their own; `.icon-chip` tints one by tone
+  or category.
+- **Components.** Buttons `.btn` + `.btn-primary|secondary|ghost|accent|highlight|danger`
+  (+ `.btn-sm`); fields `.field`, `.glass-field` (search over the hero);
+  surfaces `.glass-panel`, `.glass-card`, `.ztims-card`, `.ztims-modal`;
+  `.ztims-dropdown` for anything that opens from a control; `.ztims-table`;
+  `.ztims-empty` for "nothing here yet" (add a `.tone-*` for a failed load);
+  `.tone-*`/`.tone-pill` for status; `.cat-badge .cat-*` for categories.
+  Leaflet's zoom, attribution and popups are restyled in theme.css ("The map");
+  pins and legends take their colours from `tourism-map.js`'s `CATEGORIES`.
+- **Motion.** Durations 120/160 ms (micro), 200/240 ms (standard UI), 300/350 ms
+  (dialogs, larger panels) — `--dur-*` — and easing by
+  meaning (`--ease-standard` for things under the user's control,
+  `--ease-decelerate` for arrivals, `--ease-accelerate` for exits,
+  `--ease-spring` only for small things). Only transform and opacity move.
+  Each page's `tailwind.config` points Tailwind's default transition curve at
+  `--ease-standard`, so `transition-all duration-300` follows the system too.
+  Page-to-page and theme switches crossfade via View Transitions.
+  `prefers-reduced-motion` stills everything from `motion.css` alone.
 
 Each page sets its own `const API_BASE = "/api"` (`admin_analystic.html`
 calls it `BASE_API_URL`; `admin_profile.html` writes `/api/...` into its

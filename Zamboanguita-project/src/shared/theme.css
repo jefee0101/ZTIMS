@@ -1,160 +1,318 @@
 /* ==========================================================================
-   Zamboanguita Coastal Tourism — the palette, in one place
+   ZTIMS design system — colour, glass, and the rules that hold them together
    --------------------------------------------------------------------------
-   Before this, fifteen pages each carried their own `tailwind.config` with the
-   colours written out as hex. They disagreed: `primary` was forest green on the
-   officer's pages, burnt orange on the public ones, and #59ee50 on one. There
-   was no palette, only fifteen opinions, which is why the site read as a
-   generic admin tool with an orange accent rather than as one municipality's
-   tourism portal.
+   Every page's `tailwind.config` points at the tokens below, and every shared
+   component is defined in this file, so the whole system's look changes from
+   here and nowhere else. Motion lives next door in motion.css; the light/dark
+   switch in theme.js.
 
-   Now every page's config points at these tokens, so the whole system changes
-   colour from this file and nothing else.
+   -- The palette --------------------------------------------------------
+   Five brand colours, each with one job:
+
+     #30638E  blue      primary     the action: primary buttons, links, the
+                                    active navigation item, info status
+     #003D5B  navy      deep        navigation's ground in the hero, primary's
+                                    hover/pressed state, secondary text on gold
+     #00798C  teal      secondary   secondary actions (map, directions), focus
+                                    rings, eyebrows, success status
+     #D1495B  coral     accent      the visitor's own position and route on a
+                                    map, errors, destructive actions
+     #EDAE49  gold      highlight   the one thing a screen wants noticed, stars,
+                                    "waiting" status, decorative rules — as a
+                                    fill with navy on it, never as text on white
+
+   Categories reuse the same five (Mountain teal, Beach/Diving navy, Cultural
+   gold, Accommodation blue), on badges, map pins and legends alike. The
+   ambient glow behind the glass is the only purely decorative use.
+
+   The surfaces are real white in the light theme and real black in the dark,
+   as asked. The colour comes from the brand, not from a tinted background.
+
+   -- The rule every value here was checked against -------------------------
+   Text reads at 4.5:1 or better on every surface it can land on, including the
+   worst case of a glass panel over the brightest patch of the ambient glow.
+   Where a brand colour fails that as TEXT, it keeps its exact hex as a fill,
+   ring or icon and gets a text-safe shade of the same hue for words:
+
+     saffron as text on white is 1.95:1   →  --ztims-gold-text  #8A6320 (5.4)
+     rose as text on white is 4.36:1      →  --ztims-error      #BE3C4E (5.3)
+     teal as text on the pale blue tint   →  --ztims-accent     #006E80 (5.1)
+     blue as text on black is 3.3:1       →  --ztims-primary-text #7EA7CE (7.0)
+     teal as text on black is 4.1:1       →  --ztims-accent     #4DB8C8 (7.6)
+
+   Fills keep the brand: white on #30638E is 6.4:1, white on #00798C 5.1:1,
+   navy on #EDAE49 5.9:1.
 
    -- Why channels and not hex --------------------------------------------
-   The tokens are `R G B` triples rather than `#RRGGBB` so that the configs can
-   say `rgb(var(--ztims-primary) / <alpha-value>)`. That is what makes the 303
-   opacity modifiers already in the markup — border-outline-variant/40 and its
-   kind — keep working. A bare `var(--x)` cannot carry an alpha, and the four
-   pages that already did that had those borders silently falling back to
-   opaque. This fixes them.
-
-   -- The identity ---------------------------------------------------------
-   Ocean blue and teal carry it. Warm sand and white are the surfaces. Gold and
-   orange are accents and stay accents: they belong on a highlighted notice or a
-   rating star, not on every button.
-
-   Dark mode is a night ocean, not an inverted daytime one — deep blue-greens
-   rather than black, and text that is off-white rather than pure.
+   The tokens are `R G B` triples so that the page configs can say
+   `rgb(var(--ztims-primary) / <alpha-value>)`, which is what keeps the opacity
+   modifiers in the markup (border-outline-variant/40 and its kind) working.
    ========================================================================== */
 
 /* The browser draws things we do not: scrollbars, the panel a <select> opens,
-   the calendar a date field opens, the spinners on a number field. Without
-   color-scheme it draws all of them light, so on the night theme a dropdown
-   opened as a white sheet over a dark page. Declaring the scheme is also what
-   tells Chrome which autofill colours to reach for.
-
-   Set per theme rather than `light dark`, because ZTIMS has its own toggle and
-   the two must not disagree: a visitor who chose light on a machine set to dark
-   would otherwise get light pages with dark scrollbars. */
+   the calendar a date field opens. color-scheme makes it draw them in the
+   right theme. Set per theme rather than `light dark`, because the site's own
+   toggle can disagree with the device and the two must not mix. */
 :root { color-scheme: light; }
 :root.dark, html.dark, body.dark-mode { color-scheme: dark; }
+
+/* ------------------------------------------------------------ brand ---- */
+/* The five, named once. Everything below is built from these. */
+:root {
+    --brand-saffron: 237 174 73;         /* #EDAE49 */
+    --brand-rose: 209 73 91;             /* #D1495B */
+    --brand-teal: 0 121 140;             /* #00798C */
+    --brand-blue: 48 99 142;             /* #30638E */
+    --brand-navy: 0 61 91;               /* #003D5B */
+}
 
 /* -------------------------------------------------------------- light ---- */
 :root {
     /* Identity */
-    --ztims-primary: 11 79 108;          /* #0B4F6C  ocean blue   */
-    /* On the light theme the fill colour and the text colour genuinely are the
-       same: #0B4F6C reads 8.9:1 on white. The token exists so that anything
-       wanting "primary, as text" can say so and get the right answer in both
-       themes — on the dark theme they have to differ. */
-    --ztims-primary-text: 11 79 108;     /* #0B4F6C */
-    --ztims-primary-dim: 22 138 173;     /* #168AAD  coastal blue */
-    --ztims-secondary: 22 138 173;       /* #168AAD               */
-    /* #2A9D8F is the identity's teal and it is what the map markers use, but
-       as TEXT it measures 3.0:1 on the sand ground — under AA for anything that
-       is not large. Light mode darkens it to #1C7064, which clears 4.5:1 on all
-       three light surfaces: sand 5.3, surface-variant 5.0, white 5.9. The first
-       attempt at #1F7A6E cleared sand but came in at 4.35 on surface-variant,
-       which is where the avatars sit. Dark mode keeps the brighter teal. */
-    --ztims-accent: 28 112 100;          /* #1C7064 */
-    --ztims-gold: 244 185 66;            /* #F4B942               */
-    --ztims-orange: 242 140 40;          /* #F28C28               */
+    --ztims-primary: var(--brand-blue);          /* fills: white on it 6.4:1  */
+    --ztims-primary-text: var(--brand-blue);     /* as text on white 6.4:1    */
+    --ztims-primary-dim: var(--brand-navy);      /* hover / pressed primary   */
+    --ztims-secondary: var(--brand-teal);        /* rings, gradients, fills   */
+    --ztims-accent: 0 110 128;                   /* #006E80  teal, as text    */
+    --ztims-gold: var(--brand-saffron);          /* fills, stars, rules       */
+    --ztims-gold-text: 138 99 32;                /* #8A6320  saffron, as text */
+    /* `orange` is kept as a name because the page configs use it; the palette
+       has no orange, so it is the warm accent — rose. */
+    --ztims-orange: var(--brand-rose);
 
-    /* Surfaces: warm sand behind, white on top */
-    --ztims-background: 247 243 232;     /* #F7F3E8 */
-    --ztims-surface: 255 255 255;        /* #FFFFFF */
-    --ztims-surface-low: 251 248 241;    /* #FBF8F1 */
-    --ztims-surface-high: 255 255 255;   /* #FFFFFF */
-    --ztims-surface-variant: 240 235 225; /* #F0EBE1 */
+    /* Surfaces — real white */
+    --ztims-background: 255 255 255;             /* #FFFFFF */
+    --ztims-surface: 255 255 255;                /* #FFFFFF */
+    --ztims-surface-low: 247 247 248;            /* #F7F7F8 */
+    --ztims-surface-high: 255 255 255;           /* #FFFFFF */
+    --ztims-surface-variant: 241 242 244;        /* #F1F2F4 */
 
-    /* Text */
-    --ztims-on-surface: 23 33 43;        /* #17212B */
-    /* #667085 came in at 4.49:1 on sand — under 4.5 by a hundredth, which is
-       still under. #545E73 is 5.9:1 and reads as the same quiet grey. */
-    --ztims-on-surface-variant: 84 94 115; /* #545E73 */
-    --ztims-on-primary: 255 255 255;     /* #FFFFFF */
+    /* Text — near-black, and a quiet grey that still reads 6.7:1 at worst */
+    --ztims-on-surface: 11 11 12;                /* #0B0B0C */
+    --ztims-on-surface-variant: 82 82 91;        /* #52525B */
+    --ztims-on-primary: 255 255 255;
 
-    /* Lines — a soft blue-grey, never black */
-    --ztims-outline: 205 216 226;        /* #CDD8E2 */
+    /* Lines */
+    --ztims-outline: 228 228 231;                /* #E4E4E7 */
 
-    /* Tinted containers, for a quiet emphasis that is not a filled button */
-    --ztims-primary-container: 226 240 246;   /* #E2F0F6 */
-    --ztims-secondary-container: 223 242 240; /* #DFF2F0 */
-    --ztims-on-secondary-container: 11 79 108;/* #0B4F6C */
+    /* Tinted containers: a quiet emphasis that is not a filled button */
+    --ztims-primary-container: 234 240 245;      /* #EAF0F5  blue, 10%  */
+    --ztims-secondary-container: 227 241 243;    /* #E3F1F3  teal, 10%  */
+    --ztims-on-secondary-container: var(--brand-navy);
 
-    --ztims-error: 198 40 40;            /* #C62828 */
-    --ztims-success: 27 122 106;         /* #1B7A6A */
+    --ztims-error: 190 60 78;                    /* #BE3C4E  rose, as text: 5.3 */
+    --ztims-success: 0 110 128;                  /* teal: the palette has no green */
 
-    /* Category identity. Used on badges, markers and small indicators — never
-       to flood a whole card. */
-    --ztims-cat-attraction: 42 157 143;  /* teal   */
-    --ztims-cat-stay: 11 79 108;         /* ocean  */
-    --ztims-cat-food: 242 140 40;        /* orange */
-    --ztims-cat-municipal: 244 185 66;   /* gold   */
-    --ztims-cat-notice: 22 138 173;      /* coastal*/
+    /* Categories: the colour of a badge, marker or dot, and the ink its label
+       is written in — the same hue, but only the ink has to be readable. */
+    --ztims-cat-attraction: var(--brand-teal);   --ztims-cat-attraction-ink: 0 110 128;
+    --ztims-cat-stay: var(--brand-blue);         --ztims-cat-stay-ink: var(--brand-blue);
+    --ztims-cat-food: var(--brand-rose);         --ztims-cat-food-ink: 190 60 78;
+    --ztims-cat-municipal: var(--brand-saffron); --ztims-cat-municipal-ink: 138 99 32;
+    --ztims-cat-notice: var(--brand-navy);       --ztims-cat-notice-ink: var(--brand-navy);
 
-    /* Elevation. Light mode gets a real shadow; dark mode leans on surface
-       steps instead, because a black shadow on a dark ground is invisible. */
-    --ztims-shadow-card: 0 1px 2px rgb(23 33 43 / 0.04), 0 4px 16px rgb(23 33 43 / 0.06);
-    --ztims-shadow-raised: 0 2px 4px rgb(23 33 43 / 0.06), 0 12px 28px rgb(23 33 43 / 0.10);
+    /* -- Glass --------------------------------------------------------------
+       Frosted white over a white page would be invisible, so the page carries
+       a faint wash of the brand colours (the ambient layer, below) and glass
+       lets it through. `--glass-alpha` is how much of the surface is opaque:
+       enough that text on it never depends on what is behind. */
+    --glass-fill: 255 255 255;
+    --glass-alpha: 0.62;                         /* panels and cards          */
+    --glass-alpha-strong: 0.78;                  /* navigation, search fields */
+    /* Anything that opens OVER content — dialogs, dropdowns, menus, toasts,
+       map popups — is nearly opaque, or the text behind it ghosts through
+       the text on it. */
+    --glass-alpha-overlay: 0.92;
+    --glass-edge: rgb(255 255 255 / 0.75);       /* the lit top edge          */
+    --glass-hairline: rgb(11 11 12 / 0.07);      /* the outline               */
+    --glass-blur: 18px;
+    --glass-saturate: 160%;
+
+    /* Elevation, tinted navy rather than grey so shadows belong to the palette.
+       Three steps; nothing in the system needs a fourth. */
+    --ztims-shadow-card: 0 1px 2px rgb(0 61 91 / 0.05), 0 8px 24px -8px rgb(0 61 91 / 0.12);
+    --ztims-shadow-raised: 0 2px 6px rgb(0 61 91 / 0.06), 0 18px 40px -12px rgb(0 61 91 / 0.22);
+    --ztims-shadow-overlay: 0 4px 12px rgb(0 61 91 / 0.08), 0 32px 64px -16px rgb(0 61 91 / 0.30);
+
+    /* The ambient layer: the brand, blurred into the page. */
+    --ambient-blue: 0.16;
+    --ambient-teal: 0.12;
+    --ambient-saffron: 0.14;
+    --ambient-rose: 0.08;
 }
 
 /* --------------------------------------------------------------- dark ---- */
-/* The theme script sets `.dark` on <html>, and `.light-mode` for the other.
-   Both are honoured so no page has to change how it toggles. */
+/* theme.js sets `.dark` on <html> (and `.dark-mode` on <body>); both are
+   honoured so no page has to change how it asks. */
 :root.dark,
 html.dark,
 body.dark-mode {
-    /* #168AAD is the coastal blue the identity asks for, and it stays the
-       accent. Filled primary surfaces use a slightly deeper blue instead:
-       white on #168AAD is 3.98:1, which is under AA for the 12px bold text the
-       buttons use. #0F7391 takes it to 5.4:1 and still reads as the same
-       colour. Contrast wins over an exact hex. */
-    --ztims-primary: 15 115 145;         /* #0F7391 */
-    /* The same blue said as text rather than as a surface, and the two cannot be
-       one value. #0F7391 is chosen above to carry white text; turned around and
-       used AS text it reads 2.86:1 on the surface — which is how every section
-       heading, row action and secondary button in the officer's portal came to
-       be barely legible on the night theme. #35A7CC is the same blue lightened
-       until it clears AA on all three dark grounds (5.6:1 on the surface, 6.4:1
-       on the background, 4.9:1 on a raised panel). */
-    --ztims-primary-text: 53 167 204;    /* #35A7CC */
-    --ztims-primary-dim: 42 157 143;     /* #2A9D8F */
-    --ztims-secondary: 22 138 173;       /* #168AAD */
-    /* #2A9D8F measured 4.1:1 against the raised surface. This is the same
-       teal the markers use in dark, and it reads at 6:1. */
-    --ztims-accent: 61 190 174;          /* #3DBEAE */
-    --ztims-gold: 244 185 66;
-    --ztims-orange: 242 140 40;
+    --ztims-primary: var(--brand-blue);          /* fills keep the brand: 6.4 */
+    --ztims-primary-text: 126 167 206;           /* #7EA7CE  blue, as text: 7.0 on the panels */
+    --ztims-primary-dim: 63 111 154;             /* #3F6F9A  hover fill, white on it 4.6 */
+    --ztims-secondary: var(--brand-teal);
+    --ztims-accent: 77 184 200;                  /* #4DB8C8  teal, as text: 7.6 */
+    --ztims-gold: var(--brand-saffron);
+    --ztims-gold-text: var(--brand-saffron);     /* saffron reads 9:1 on black as it is */
+    --ztims-orange: var(--brand-rose);
 
-    --ztims-background: 7 26 36;         /* #071A24  night ocean */
-    --ztims-surface: 13 39 51;           /* #0D2733 */
-    --ztims-surface-low: 10 32 42;       /* #0A202A */
-    --ztims-surface-high: 18 49 65;      /* #123141 */
-    --ztims-surface-variant: 18 49 65;   /* #123141 */
+    /* Surfaces — real black, and three steps of near-black above it */
+    --ztims-background: 0 0 0;                   /* #000000 */
+    --ztims-surface: 14 14 16;                   /* #0E0E10 */
+    --ztims-surface-low: 8 8 10;                 /* #08080A */
+    --ztims-surface-high: 24 24 27;              /* #18181B */
+    --ztims-surface-variant: 28 28 31;           /* #1C1C1F */
 
-    --ztims-on-surface: 245 247 250;     /* #F5F7FA */
-    --ztims-on-surface-variant: 147 169 184; /* #93A9B8 */
+    --ztims-on-surface: 245 245 247;             /* #F5F5F7 */
+    --ztims-on-surface-variant: 161 161 170;     /* #A1A1AA  6.2:1 at worst */
     --ztims-on-primary: 255 255 255;
 
-    --ztims-outline: 30 63 79;           /* #1E3F4F */
+    --ztims-outline: 42 42 46;                   /* #2A2A2E */
 
-    --ztims-primary-container: 15 58 74;      /* #0F3A4A */
-    --ztims-secondary-container: 18 67 63;    /* #12433F */
-    --ztims-on-secondary-container: 167 232 223; /* #A7E8DF */
+    /* Containers lean on navy and teal, deep enough to sit under light text */
+    --ztims-primary-container: 10 37 54;         /* #0A2536 */
+    --ztims-secondary-container: 6 46 53;        /* #062E35 */
+    --ztims-on-secondary-container: 166 221 229; /* #A6DDE5 */
 
-    --ztims-error: 255 128 128;          /* readable on a dark ground */
-    --ztims-success: 90 200 180;
+    --ztims-error: 236 118 132;                  /* #EC7684  rose, as text: 6.1 at worst */
+    --ztims-success: 77 184 200;
 
-    --ztims-cat-attraction: 61 190 174;
-    --ztims-cat-stay: 61 155 190;
-    --ztims-cat-food: 245 160 80;
-    --ztims-cat-municipal: 244 185 66;
-    --ztims-cat-notice: 61 178 210;
+    --ztims-cat-attraction: 77 184 200;          --ztims-cat-attraction-ink: 77 184 200;
+    --ztims-cat-stay: 126 167 206;               --ztims-cat-stay-ink: 126 167 206;
+    --ztims-cat-food: 236 118 132;               --ztims-cat-food-ink: 236 118 132;
+    --ztims-cat-municipal: var(--brand-saffron); --ztims-cat-municipal-ink: var(--brand-saffron);
+    --ztims-cat-notice: 94 150 190;              --ztims-cat-notice-ink: 94 150 190;
 
-    --ztims-shadow-card: 0 1px 2px rgb(0 0 0 / 0.30), 0 4px 16px rgb(0 0 0 / 0.25);
-    --ztims-shadow-raised: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px rgb(0 0 0 / 0.35);
+    /* Dark glass is smoked, not frosted: a near-black fill that lets the glow
+       through, edged in a faint light line — on black, a shadow alone would
+       be invisible, so the edge does the separating. */
+    --glass-fill: 20 20 23;
+    --glass-alpha: 0.60;
+    --glass-alpha-strong: 0.76;
+    --glass-alpha-overlay: 0.90;
+    --glass-edge: rgb(255 255 255 / 0.09);
+    --glass-hairline: rgb(255 255 255 / 0.08);
+
+    --ztims-shadow-card: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px -8px rgb(0 0 0 / 0.6);
+    --ztims-shadow-raised: 0 2px 6px rgb(0 0 0 / 0.5), 0 18px 40px -12px rgb(0 0 0 / 0.7);
+    --ztims-shadow-overlay: 0 4px 12px rgb(0 0 0 / 0.5), 0 32px 64px -16px rgb(0 0 0 / 0.8);
+
+    /* On black the same wash reads as light, so it is allowed to be stronger. */
+    --ambient-blue: 0.26;
+    --ambient-teal: 0.18;
+    --ambient-saffron: 0.09;
+    --ambient-rose: 0.10;
+}
+
+/* ==========================================================================
+   Foundations
+   --------------------------------------------------------------------------
+   Corners are square, everywhere, by decision: cards, buttons, fields,
+   dropdowns, dialogs, navigation, badges, toasts, map controls. The radius
+   tokens stay as names so every component still says which step it would
+   use, but each one is 0 — change them here, and nowhere else, if that
+   decision is ever revisited. Each page's tailwind.config maps every
+   rounded-* utility to 0 as well, so markup classes agree. (The hero's cove
+   is an SVG curve, not a radius, and is the one curve on the site.)
+
+     --radius-sm    chips, small controls, focus rings
+     --radius-md    buttons, fields
+     --radius-lg    cards, panels
+     --radius-xl    dialogs
+   ========================================================================== */
+:root {
+    --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    --radius-pill: 0;
+}
+
+/* The ambient layer: the brand colours, blurred into the page behind
+   everything. It is what glass is frosting — without it a translucent white
+   panel on a white page is just a white panel.
+
+   Fixed, so it stays put while content scrolls over it (which is what makes
+   the glass visibly glass), and never takes a click. Drawn once, by the page,
+   not by each panel. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(42rem 34rem at 6% -8%,   rgb(var(--brand-blue) / var(--ambient-blue)),       transparent 70%),
+        radial-gradient(38rem 30rem at 104% 10%, rgb(var(--brand-teal) / var(--ambient-teal)),       transparent 70%),
+        radial-gradient(36rem 30rem at -4% 104%, rgb(var(--brand-saffron) / var(--ambient-saffron)), transparent 70%),
+        radial-gradient(32rem 28rem at 98% 100%, rgb(var(--brand-rose) / var(--ambient-rose)),       transparent 70%);
+}
+
+/* ==========================================================================
+   Glass
+   --------------------------------------------------------------------------
+   The one recipe, and the rule for where the blur goes.
+
+   .glass        translucent surface, hairline, lit top edge, card shadow.
+                 What panels and cards are made of.
+   .glass-blur   adds backdrop-filter. Only for surfaces that content SCROLLS
+                 BEHIND — navigation bars, modals, menus, anything over the
+                 hero film. Behind a card there is only the ambient layer,
+                 which is already a blur, so blurring it again costs the GPU
+                 and changes nothing a person can see. Forty blurred cards
+                 is how glass designs make phones stutter.
+   .glass-nav    the navigation recipe: stronger fill, blurred, no radius.
+   .glass-card   a glass card you can act on: it lifts on hover.
+   ========================================================================== */
+.glass,
+.glass-card,
+.glass-panel {
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
+    border: 1px solid var(--glass-hairline);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-card);
+    border-radius: 0;
+}
+
+.glass-blur,
+.glass-nav {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+.glass-nav {
+    background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
+    border-color: var(--glass-hairline);
+}
+
+/* Browsers without backdrop-filter get a solid surface rather than a
+   see-through one — readable is the requirement, frosted is the style. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-blur, .glass-nav { background: rgb(var(--ztims-surface)); }
+}
+
+/* Only something you can act on moves. A panel that holds a table does not
+   lift when the pointer crosses it; a destination card does. */
+.glass-card {
+    transition: transform var(--dur-base, 220ms) var(--ease-standard, ease),
+                box-shadow var(--dur-base, 220ms) var(--ease-standard, ease),
+                border-color var(--dur-fast, 150ms) var(--ease-standard, ease);
+}
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-raised);
+    border-color: rgb(var(--ztims-secondary) / 0.35);
+}
+
+/* The officer's and manager's portals are built from .glass-panel. Their
+   hover now brightens the edge instead of lifting the whole panel — large
+   surfaces that jump under a passing pointer read as instability. */
+.glass-panel {
+    transition: border-color var(--dur-fast, 150ms) var(--ease-standard, ease),
+                box-shadow var(--dur-base, 220ms) var(--ease-standard, ease);
+}
+.glass-panel:hover {
+    border-color: rgb(var(--ztims-secondary) / 0.30);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-raised);
 }
 
 /* ==========================================================================
@@ -183,6 +341,82 @@ body {
 h1, h2, h3, h4, .font-display, .font-headline {
     font-family: var(--ztims-font-display);
     letter-spacing: -0.01em;
+}
+
+/* -- Type scale -------------------------------------------------------------
+   Seven sizes and four weights; a new component picks from these. The order
+   of importance on any page is the order of this list: the page title, then
+   the numbers and names that are the page's content, then its actions, then
+   what explains them.
+
+     --text-display  clamp 1.75–2.5rem  600   the page title (.page-title)
+     --text-title    1.25rem            600   a panel's or dialog's heading
+     --text-heading  1.0625rem          600   a card's name, a table's subject
+     --text-body     0.9375rem          400   what is read
+     --text-support  0.8125rem          400   what explains (.text-support)
+     --text-label    0.75rem            700   uppercase labels, column heads,
+                                              tracking 0.06em (.text-label)
+     --text-micro    0.625rem           700   counts on a badge, nothing longer */
+:root {
+    --text-display: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+    --text-title: 1.25rem;
+    --text-heading: 1.0625rem;
+    --text-body: 0.9375rem;
+    --text-support: 0.8125rem;
+    --text-label: 0.75rem;
+    --text-micro: 0.625rem;
+
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    --leading-tight: 1.15;
+    --leading-snug: 1.35;
+    --leading-body: 1.6;
+
+    /* -- Spacing: a 4px grid ------------------------------------------------
+       The same steps as Tailwind's own (1 = 4px), named so that CSS written
+       here uses the grid the markup already uses:
+         --space-1 4  --space-2 8  --space-3 12  --space-4 16  --space-5 20
+         --space-6 24 --space-8 32 --space-10 40 --space-12 48
+       Inside a card: 20px (5). Between cards: 16–24px (4–6). Between a page's
+       sections: 32–48px (8–12). */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+}
+
+/* -- Icons ------------------------------------------------------------------
+   One family (Material Symbols Outlined), outlined rather than filled, at a
+   weight that matches the text beside it. An icon never carries meaning on
+   its own: it sits next to a word, or has an aria-label.
+
+   .icon-chip is the icon in a tinted square, for the head of a stat or a
+   panel — tinted by the tone or category class it is given, so it takes its
+   colour from the same place a status or badge does. */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+    user-select: none;
+}
+
+.icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0;
+    color: rgb(var(--tone-ink, var(--cat-ink, var(--ztims-primary-text))));
+    background: rgb(var(--tone, var(--cat, var(--ztims-primary))) / 0.12);
 }
 
 /* ==========================================================================
@@ -224,9 +458,9 @@ h1, h2, h3, h4, .font-display, .font-headline {
 
 .page-title {
     font-family: var(--ztims-font-display);
-    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
-    line-height: 1.15;
-    font-weight: 600;
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    font-weight: var(--weight-semibold);
     color: rgb(var(--ztims-on-surface));
     margin: 0;
 }
@@ -309,8 +543,8 @@ h1, h2, h3, h4, .font-display, .font-headline {
        the white heading sits, is the very bottom of this layer. Had the still
        and the film both failed, the heading would have been white on sand. */
     background: linear-gradient(160deg,
-        rgb(var(--ztims-secondary)) 0%,
-        rgb(var(--ztims-primary)) 100%);
+        rgb(var(--brand-navy)) 0%,
+        rgb(var(--brand-blue)) 100%);
 }
 
 .ztims-stage__poster,
@@ -443,6 +677,13 @@ body.dark-mode .text-primary {
     color: rgb(var(--ztims-primary-text));
 }
 
+/* The same problem the other way round, on the day theme: saffron and rose
+   are fills on white, not text — 1.95:1 and 4.36:1. Written as text, they
+   take the readable shade of the same hue. `bg-gold` and `bg-orange` keep the
+   brand hex. */
+html:not(.dark) .text-gold { color: rgb(var(--ztims-gold-text)); }
+html:not(.dark) .text-orange { color: rgb(var(--ztims-error)); }
+
 /* A hand, for the one or two places that greet rather than label. Kept as a
    token so the face is named once; the page that uses it is what loads it. The
    fallbacks matter more than usual here — if the webfont never arrives, a
@@ -482,13 +723,13 @@ body.dark-mode .text-primary {
    this file.
    ========================================================================== */
 .text-support {
-    font-size: 0.8125rem;
+    font-size: var(--text-support);
     line-height: 1.55;
     color: rgb(var(--ztims-on-surface-variant));
 }
 
 .text-label {
-    font-size: 0.75rem;
+    font-size: var(--text-label);
     line-height: 1.4;
     letter-spacing: 0.06em;
     color: rgb(var(--ztims-on-surface-variant));
@@ -502,11 +743,11 @@ body.dark-mode .text-primary {
    something you can find at a glance.
    ========================================================================== */
 .info-card {
-    background: rgb(var(--ztims-surface));
-    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
+    border: 1px solid var(--glass-hairline);
     border-radius: 0;
     padding: 1rem 1.125rem;
-    box-shadow: var(--ztims-shadow-card);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-card);
 }
 
 .info-label {
@@ -549,15 +790,17 @@ body.dark-mode .text-primary {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     background: rgb(var(--cat) / 0.12);
-    color: rgb(var(--cat));
-    border: 1px solid rgb(var(--cat) / 0.28);
+    /* The label is written in the category's ink — the same hue, at the shade
+       that reads. Saffron's own hex is 1.95:1 on white. */
+    color: rgb(var(--cat-ink, var(--cat)));
+    border: 1px solid rgb(var(--cat) / 0.30);
 }
 
-.cat-attraction { --cat: var(--ztims-cat-attraction); }
-.cat-stay       { --cat: var(--ztims-cat-stay); }
-.cat-food       { --cat: var(--ztims-cat-food); }
-.cat-municipal  { --cat: var(--ztims-cat-municipal); }
-.cat-notice     { --cat: var(--ztims-cat-notice); }
+.cat-attraction { --cat: var(--ztims-cat-attraction); --cat-ink: var(--ztims-cat-attraction-ink); }
+.cat-stay       { --cat: var(--ztims-cat-stay);       --cat-ink: var(--ztims-cat-stay-ink); }
+.cat-food       { --cat: var(--ztims-cat-food);       --cat-ink: var(--ztims-cat-food-ink); }
+.cat-municipal  { --cat: var(--ztims-cat-municipal);  --cat-ink: var(--ztims-cat-municipal-ink); }
+.cat-notice     { --cat: var(--ztims-cat-notice);     --cat-ink: var(--ztims-cat-notice-ink); }
 
 /* On a dark ground a 12% tint of the category colour is nearly the surface, so
    it is lifted and the border carries more of the work. */
@@ -565,6 +808,42 @@ body.dark-mode .text-primary {
     background: rgb(var(--cat) / 0.18);
     border-color: rgb(var(--cat) / 0.40);
 }
+
+/* ==========================================================================
+   Status tones
+   --------------------------------------------------------------------------
+   A booking's or a message's state, as a pill or a line of text. Same recipe
+   as the category badges: a tint of the colour behind, the text in the shade
+   of it that reads on this theme. Tailwind's own amber-400 and green-400 were
+   picked for the dark theme and are 1.5:1 on white.
+
+     .tone-warning   waiting on someone      saffron
+     .tone-success   done, paid, resolved    teal
+     .tone-info      seen, in progress       blue
+     .tone-danger    cancelled, failed       rose
+     .tone-neutral   no longer in play       grey
+
+   .tone-* sets the colour; add .tone-pill for the tinted pill around it.
+   ========================================================================== */
+.tone-warning { --tone: var(--brand-saffron);       --tone-ink: var(--ztims-gold-text); }
+.tone-success { --tone: var(--ztims-success);       --tone-ink: var(--ztims-success); }
+.tone-info    { --tone: var(--ztims-primary);       --tone-ink: var(--ztims-primary-text); }
+.tone-danger  { --tone: var(--ztims-error);         --tone-ink: var(--ztims-error); }
+.tone-neutral { --tone: var(--ztims-on-surface-variant); --tone-ink: var(--ztims-on-surface-variant); }
+
+.tone-warning, .tone-success, .tone-info, .tone-danger, .tone-neutral {
+    color: rgb(var(--tone-ink));
+}
+
+/* One line, always: a status broken over two lines in a narrow table column
+   reads as two statuses. */
+.tone-pill {
+    display: inline-block;
+    white-space: nowrap;
+    background: rgb(var(--tone) / 0.14);
+    box-shadow: inset 0 0 0 1px rgb(var(--tone) / 0.28);
+}
+:root.dark .tone-pill { background: rgb(var(--tone) / 0.18); }
 
 /* ==========================================================================
    Focus
@@ -592,6 +871,7 @@ body.dark-mode .text-primary {
    common device is a phone.
    ========================================================================== */
 .btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -606,10 +886,36 @@ body.dark-mode .text-primary {
     line-height: 1;
     cursor: pointer;
     text-decoration: none;
-    transition: background-color var(--motion-fast, 150ms) var(--ease-standard, ease),
-                border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
-                color var(--motion-fast, 150ms) var(--ease-standard, ease),
-                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
+    user-select: none;
+    /* Colour on the fast step; the lift and shadow on the base step, so the
+       colour lands first and the movement settles after it. */
+    transition: background-color var(--dur-fast, 150ms) var(--ease-standard, ease),
+                border-color var(--dur-fast, 150ms) var(--ease-standard, ease),
+                color var(--dur-fast, 150ms) var(--ease-standard, ease),
+                box-shadow var(--dur-base, 220ms) var(--ease-standard, ease),
+                transform var(--dur-base, 220ms) var(--ease-standard, ease),
+                filter var(--dur-fast, 150ms) var(--ease-standard, ease);
+}
+
+/* Pressed: the button gives, instantly — feedback that has to be felt before
+   the finger lifts, so it uses the shortest step there is. */
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: var(--dur-instant, 100ms);
+}
+
+/* A button hidden with the `hidden` attribute stays hidden. .btn's own
+   display would otherwise beat the browser's [hidden] rule, and a form's
+   "Publish" would show on step one. */
+.btn[hidden] { display: none !important; }
+
+/* The compact size, for actions that sit inside a notice or a row. Still 40px:
+   the smallest a finger can reliably hit. */
+.btn-sm {
+    min-height: 40px;
+    padding: 0.5rem 0.875rem;
+    font-size: var(--text-support);
+    border-radius: 0;
 }
 
 /* Disabled has to look unavailable without becoming unreadable — a control
@@ -617,45 +923,60 @@ body.dark-mode .text-primary {
 .btn:disabled,
 .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 
+/* The action. Blue into navy, lit from the top edge like the glass around it.
+   White on either end of the gradient reads 6.4:1 and better. */
 .btn-primary {
-    background: rgb(var(--ztims-primary));
+    background: linear-gradient(180deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-primary-dim)) 140%);
     color: rgb(var(--ztims-on-primary));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 6px 16px -6px rgb(var(--ztims-primary) / 0.55);
 }
-.btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-secondary)); }
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 10px 22px -8px rgb(var(--ztims-primary) / 0.65);
+}
 
-/* The quiet one: same size and weight, no fill. For the second action in a
-   pair, where a second filled button would make neither look like the answer. */
-/* Outlined, so its label IS the button — the fill colour would be 2.9:1 here. */
+/* The quiet one: glass, outlined in its own text colour. For the second action
+   in a pair, where a second filled button would make neither the answer. */
 .btn-secondary {
-    background: rgb(var(--ztims-surface));
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
     color: rgb(var(--ztims-primary-text));
-    border-color: rgb(var(--ztims-primary-text) / 0.45);
+    border-color: rgb(var(--ztims-primary-text) / 0.40);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 .btn-secondary:hover:not(:disabled) {
     background: rgb(var(--ztims-primary-container));
-    border-color: rgb(var(--ztims-primary));
+    border-color: rgb(var(--ztims-primary-text) / 0.70);
 }
+
+/* Borderless, for actions that sit inside something else — a row's "Edit",
+   a panel's "View all". */
+.btn-ghost {
+    background: transparent;
+    color: rgb(var(--ztims-primary-text));
+}
+.btn-ghost:hover:not(:disabled) { background: rgb(var(--ztims-primary) / 0.10); }
 
 /* Directions and other map actions, so they read as belonging to the map. */
 .btn-accent {
-    background: rgb(var(--ztims-accent));
+    background: rgb(var(--ztims-secondary));
     color: rgb(var(--ztims-on-primary));
+    box-shadow: 0 6px 16px -6px rgb(var(--ztims-secondary) / 0.55);
 }
-.btn-accent:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-accent:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
 
-/* The one place gold is allowed to be a fill: an action the office wants
-   noticed. Dark ink on gold, because white on gold is unreadable. */
+/* The one place saffron is a fill: an action the office wants noticed. Navy
+   ink on saffron (5.9:1), because white on it is 1.95:1. */
 .btn-highlight {
-    background: rgb(var(--ztims-gold));
-    color: #3A2A05;
+    background: rgb(var(--brand-saffron));
+    color: rgb(var(--brand-navy));
+    box-shadow: 0 6px 16px -6px rgb(var(--brand-saffron) / 0.6);
 }
-.btn-highlight:hover:not(:disabled) { filter: brightness(1.06); }
+.btn-highlight:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
 
 /* The confirming button of a "Delete this?" dialog (src/shared/ztims-dialog.js).
-   Tinted and outlined rather than filled: the dark theme's error red is a
-   light one chosen to read AS TEXT on a dark ground, and white on it would be
-   well under AA. Drawn this way the label carries the colour, and the tint
-   still says this one is not the safe answer. */
+   Tinted and outlined: the label carries the rose, the tint says this one is
+   not the safe answer, and nothing depends on white text on a light rose. */
 .btn-danger {
     background: rgb(var(--ztims-error) / 0.10);
     color: rgb(var(--ztims-error));
@@ -674,27 +995,28 @@ body.dark-mode .text-primary {
    Cards
    ========================================================================== */
 .ztims-card {
-    background: rgb(var(--ztims-surface));
-    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
+    border: 1px solid var(--glass-hairline);
     border-radius: 0;
-    box-shadow: var(--ztims-shadow-card);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-card);
     overflow: hidden;
 }
 
 /* A destination is a place you might go, so its card lifts a little when you
-   consider it. Small and quick: 2px and 200ms, not a jump. */
+   consider it. Small and quick: 3px on the base step, not a jump. The photo
+   drifts in more slowly than the card moves, which is what gives it depth. */
 .card-destination {
     display: block;
-    transition: transform var(--motion-base, 300ms) var(--ease-standard, ease),
-                box-shadow var(--motion-base, 300ms) var(--ease-standard, ease),
-                border-color var(--motion-base, 300ms) var(--ease-standard, ease);
+    transition: transform var(--dur-base, 220ms) var(--ease-standard, ease),
+                box-shadow var(--dur-base, 220ms) var(--ease-standard, ease),
+                border-color var(--dur-fast, 150ms) var(--ease-standard, ease);
 }
 .card-destination:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--ztims-shadow-raised);
-    border-color: rgb(var(--ztims-accent) / 0.5);
+    transform: translateY(-3px);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-raised);
+    border-color: rgb(var(--ztims-secondary) / 0.45);
 }
-.card-destination img { transition: transform 600ms var(--ease-standard, ease); }
+.card-destination img { transition: transform var(--dur-slower, 350ms) var(--ease-decelerate, ease); }
 .card-destination:hover img { transform: scale(1.05); }
 
 /* ==========================================================================
@@ -713,9 +1035,10 @@ body.dark-mode .text-primary {
 .field {
     width: 100%;
     min-height: 44px;
-    font-size: 0.9375rem;
-    transition: border-color var(--motion-fast, 150ms) var(--ease-standard, ease),
-                box-shadow var(--motion-fast, 150ms) var(--ease-standard, ease);
+    font-size: var(--text-body);
+    transition: border-color var(--dur-fast, 160ms) var(--ease-standard, ease),
+                box-shadow var(--dur-fast, 160ms) var(--ease-standard, ease),
+                background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
 }
 
 /* Colour and the box it is painted in, qualified by element on purpose, and
@@ -736,9 +1059,16 @@ textarea.field,
 .field {
     padding: 0.7rem 0.875rem;
     border-radius: 0;
-    background: rgb(var(--ztims-surface));
+    /* Glass, but nearly opaque: what is typed must never depend on what is
+       behind the field. */
+    background: rgb(var(--ztims-surface) / 0.86);
     border: 1px solid rgb(var(--ztims-outline));
     color: rgb(var(--ztims-on-surface));
+}
+input.field:hover:not(:focus):not(:disabled),
+select.field:hover:not(:focus):not(:disabled),
+textarea.field:hover:not(:focus):not(:disabled) {
+    border-color: rgb(var(--ztims-on-surface-variant) / 0.45);
 }
 input.field::placeholder,
 select.field::placeholder,
@@ -780,16 +1110,26 @@ textarea.field[aria-invalid="true"],
 /* ==========================================================================
    Modals
    ========================================================================== */
+/* The page behind a dialog steps back: dimmed toward navy on the day theme,
+   toward black on the night one, and softened so the dialog is the only sharp
+   thing on screen. */
 .ztims-scrim {
-    background: rgb(4 18 26 / 0.55);
-    backdrop-filter: blur(3px);
+    background: rgb(var(--brand-navy) / 0.28);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
 }
+:root.dark .ztims-scrim { background: rgb(0 0 0 / 0.62); }
 
+/* A dialog is the strongest glass in the system: the page scrolls behind it,
+   so it earns the blur, and the fill is the strong one so a form inside it
+   never depends on what is underneath. */
 .ztims-modal {
-    background: rgb(var(--ztims-surface));
-    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--glass-fill) / var(--glass-alpha-overlay));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-hairline);
     border-radius: 0;
-    box-shadow: var(--ztims-shadow-raised);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay);
     /* No width here. A confirm dialog and the four-step listing editor are
        legitimately different sizes, and the page is what knows which — this
        used to impose 44rem on both. The height ceiling is shared, because a
@@ -800,7 +1140,7 @@ textarea.field[aria-invalid="true"],
 .ztims-modal__head {
     display: flex; align-items: flex-start; gap: 1rem;
     padding: 1.125rem 1.25rem;
-    border-bottom: 1px solid rgb(var(--ztims-outline));
+    border-bottom: 1px solid var(--glass-hairline);
 }
 .ztims-modal__title {
     font-family: var(--ztims-font-display);
@@ -817,10 +1157,11 @@ textarea.field[aria-invalid="true"],
    decoration.
    ========================================================================== */
 .notice {
-    background: rgb(var(--ztims-surface));
-    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
+    border: 1px solid var(--glass-hairline);
     border-left: 3px solid rgb(var(--cat, var(--ztims-cat-notice)));
     border-radius: 0;
+    box-shadow: inset 0 1px 0 var(--glass-edge);
     padding: 1rem 1.125rem;
 }
 .notice-date { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); }
@@ -850,8 +1191,10 @@ textarea.field[aria-invalid="true"],
     min-height: 44px;                 /* a thumb, on the phone this is used from */
     padding: 0.55rem 0.9rem;
     border-radius: 0;
-    border: 1px solid rgb(var(--ztims-outline));
-    background: rgb(var(--ztims-surface));
+    border: 1px solid var(--glass-hairline);
+    background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
     color: rgb(var(--ztims-on-surface));
     font-family: var(--ztims-font-body);
     font-size: 0.8125rem;
@@ -865,9 +1208,9 @@ textarea.field[aria-invalid="true"],
 .ztims-pinbar__btn[hidden] { display: none; }
 .ztims-pinbar__btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.ztims-pinbar__btn--start   { background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-primary)); }
+.ztims-pinbar__btn--start   { color: rgb(var(--ztims-primary-text)); }
 .ztims-pinbar__btn--confirm { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); border-color: transparent; }
-.ztims-pinbar__btn--cancel  { background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface-variant)); }
+.ztims-pinbar__btn--cancel  { color: rgb(var(--ztims-on-surface-variant)); }
 
 /* While pinning, the map says so — a tinted rule round the edge, so it is
    obvious at a glance that a tap here will move the listing. */
@@ -975,3 +1318,218 @@ html :where(input, select, textarea):focus {
                 0 0 0 3px rgb(var(--ztims-secondary) / 0.18) !important;
     -webkit-text-fill-color: rgb(var(--ztims-on-surface)) !important;
 }
+
+/* ==========================================================================
+   Switching theme
+   --------------------------------------------------------------------------
+   theme.js adds .theme-transition to <html> for the moment of a switch, in
+   browsers without View Transitions (which crossfade the whole page instead —
+   see motion.css). Colours ease across; nothing moves.
+
+   This replaces the rule every portal page used to carry permanently —
+   `div, span, p, … { transition: background-color .4s }` — which made every
+   hover on every element pay for a theme change that happens once a visit.
+   ========================================================================== */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+    transition-duration: var(--dur-moderate, 300ms) !important;
+    transition-timing-function: var(--ease-standard, ease) !important;
+    transition-delay: 0s !important;
+}
+
+/* ==========================================================================
+   Dropdowns and menus
+   --------------------------------------------------------------------------
+   Anything that opens over the page from a control — search suggestions, a
+   menu — is strong glass with the blur, because content sits behind it. It
+   drops from its control on the base step (motion.css, .ztims-menu). Options
+   highlight with a tint of the text colour, which works on either theme.
+
+       <div class="ztims-dropdown" role="listbox"> … </div>
+   ========================================================================== */
+.ztims-dropdown {
+    background: rgb(var(--glass-fill) / var(--glass-alpha-overlay));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-hairline);
+    border-radius: 0;
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay);
+    color: rgb(var(--ztims-on-surface));
+    transform-origin: top center;
+    animation: ztimsMenuIn var(--dur-base, 200ms) var(--ease-decelerate, ease-out) backwards;
+}
+.ztims-dropdown [role="option"],
+.ztims-dropdown [role="menuitem"] {
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.ztims-dropdown [role="option"]:hover,
+.ztims-dropdown [role="option"][aria-selected="true"],
+.ztims-dropdown [role="menuitem"]:hover {
+    background: rgb(var(--ztims-on-surface) / 0.06);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ztims-dropdown { background: rgb(var(--ztims-surface)); }
+}
+
+/* ==========================================================================
+   Search fields
+   --------------------------------------------------------------------------
+   The landing page's search and category filter sit over the hero's picture
+   on a wide screen, so they are glass with the blur — strong enough that the
+   placeholder still reads over the brightest frame.
+   ========================================================================== */
+.glass-field {
+    background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-hairline);
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-card);
+    color: rgb(var(--ztims-on-surface));
+    transition: border-color var(--dur-fast, 160ms) var(--ease-standard, ease),
+                box-shadow var(--dur-fast, 160ms) var(--ease-standard, ease),
+                background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.glass-field:hover { background: rgb(var(--glass-fill) / 0.92); }
+.glass-field:focus {
+    outline: none;
+    border-color: rgb(var(--ztims-secondary));
+    box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 3px rgb(var(--ztims-secondary) / 0.22);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-field { background: rgb(var(--ztims-surface)); }
+}
+
+/* ==========================================================================
+   Tables
+   --------------------------------------------------------------------------
+   The officer's registers. The head is a quiet band in the label style, rows
+   are divided by a hairline, and a row answers the pointer with a tint — the
+   same tint an option in a dropdown uses. The panel around the table is the
+   glass; the table itself adds none, so rows stay crisp.
+
+       <table class="ztims-table …">
+   ========================================================================== */
+.ztims-table { width: 100%; border-collapse: collapse; }
+.ztims-table thead tr {
+    background: rgb(var(--ztims-on-surface) / 0.035);
+    border-bottom: 1px solid rgb(var(--ztims-outline));
+}
+.ztims-table th {
+    font-size: var(--text-label);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--ztims-on-surface-variant));
+}
+.ztims-table tbody tr {
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.ztims-table tbody tr + tr { border-top: 1px solid rgb(var(--ztims-outline) / 0.7); }
+.ztims-table tbody tr:hover { background: rgb(var(--ztims-on-surface) / 0.03); }
+
+/* ==========================================================================
+   Empty states
+   --------------------------------------------------------------------------
+   "Nothing here yet" is information, not an error, so it gets a calm, dashed
+   glass box rather than a stray grey sentence floating in a gap. The text
+   inside keeps whatever it already says.
+
+       <p class="ztims-empty">No feedback yet.</p>
+   ========================================================================== */
+.ztims-empty {
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+    font-size: var(--text-support);
+    line-height: var(--leading-body);
+    color: rgb(var(--ztims-on-surface-variant));
+    background: rgb(var(--glass-fill) / var(--glass-alpha));
+    border: 1px dashed rgb(var(--ztims-on-surface-variant) / 0.35);
+    border-radius: 0;
+}
+/* A load that failed, in the same place, says so in its tone. */
+.ztims-empty[class*="tone-"] {
+    color: rgb(var(--tone-ink));
+    border-color: rgb(var(--tone) / 0.40);
+    background: rgb(var(--tone) / 0.06);
+}
+/* An icon, if the empty state has one, sits above the words, quiet. */
+.ztims-empty > .material-symbols-outlined {
+    display: block;
+    margin: 0 auto var(--space-2);
+    font-size: 2rem;
+    color: rgb(var(--ztims-primary-text) / 0.55);
+}
+
+/* ==========================================================================
+   The map
+   --------------------------------------------------------------------------
+   Leaflet's own controls, restyled as floating glass in the page's theme: the
+   zoom buttons, the attribution, and the popup a pin opens. The tiles are
+   OpenStreetMap's and stay light — a map whose water and roads change colour
+   with the theme stops matching every other map a visitor knows — but on the
+   night theme they are dimmed a step, so the map is not a floodlight in a
+   dark page. Pins, labels and the route are not dimmed; they sit above the
+   tile pane.
+   ========================================================================== */
+div.leaflet-container {
+    font-family: var(--ztims-font-body);
+    background: rgb(var(--ztims-surface-variant));
+}
+:root.dark .leaflet-container .leaflet-tile-pane { filter: brightness(0.82) contrast(1.05) saturate(0.9); }
+
+.leaflet-container .leaflet-bar {
+    border: 1px solid var(--glass-hairline) !important;
+    border-radius: 0 !important;
+    box-shadow: var(--ztims-shadow-raised) !important;
+    overflow: hidden;
+}
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-bar a:hover {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+    color: rgb(var(--ztims-on-surface));
+    border-bottom-color: var(--glass-hairline) !important;
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.leaflet-container .leaflet-bar a:hover { background: rgb(var(--glass-fill)); }
+/* leaflet.css rounds the first and last zoom button per corner. */
+.leaflet-container .leaflet-bar,
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-control-layers { border-radius: 0 !important; }
+.leaflet-container .leaflet-bar a.leaflet-disabled { color: rgb(var(--ztims-on-surface-variant) / 0.5); }
+
+.leaflet-container .leaflet-control-attribution {
+    /* Nearly opaque: it is small print over a map, 3.8:1 at the glass alpha. */
+    background: rgb(var(--glass-fill) / 0.92) !important;
+    color: rgb(var(--ztims-on-surface-variant)) !important;
+    border-top-left-radius:0;
+}
+.leaflet-container .leaflet-control-attribution a { color: rgb(var(--ztims-primary-text)) !important; }
+
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
+    background: rgb(var(--glass-fill) / var(--glass-alpha-overlay));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    color: rgb(var(--ztims-on-surface));
+    box-shadow: var(--ztims-shadow-overlay);
+}
+.leaflet-container .leaflet-popup-content-wrapper {
+    border: 1px solid var(--glass-hairline);
+    border-radius: 0;
+}
+.leaflet-container .leaflet-popup-close-button { color: rgb(var(--ztims-on-surface-variant)) !important; }
+/* Opening a popup fades it in on the base step. Opacity only, and on the
+   parts inside the popup: Leaflet positions .leaflet-popup itself with a
+   transform, and an animation on that transform would throw it to the
+   corner of the map for the length of the animation. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip-container { animation: ztimsFadeIn var(--dur-base, 200ms) var(--ease-standard, ease) backwards; }
+

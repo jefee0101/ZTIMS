@@ -207,8 +207,8 @@
             '<span class="material-symbols-outlined !text-base text-primary">history</span>' +
             '<p class="text-support text-on-surface flex-1 min-w-[12rem]">You have an unfinished listing from ' +
                 '<b id="' + p + 'DraftWhen"></b>.</p>' +
-            '<button type="button" id="' + p + 'DraftRestore" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' + 'text-on-primary text-support font-bold">Restore it</button>' +
-            '<button type="button" id="' + p + 'DraftDiscard" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'border border-outline-variant/40 text-support font-bold">Discard</button>' +
+            '<button type="button" id="' + p + 'DraftRestore" class="btn btn-primary btn-sm">Restore it</button>' +
+            '<button type="button" id="' + p + 'DraftDiscard" class="btn btn-secondary btn-sm">Discard</button>' +
         '</div>' +
 
         // ---- step rail ----
@@ -284,7 +284,7 @@
                     'This listing has no map location yet. Visitors cannot get directions to it until one is added — ' +
                     'everything else here can still be edited and saved.' +
                 '</p>' +
-                '<button type="button" id="' + p + 'LocLegacyAdd" class="px-3 py-2 min-h-[40px] rounded-lg bg-primary ' + 'text-on-primary text-support font-bold">Add location</button>' +
+                '<button type="button" id="' + p + 'LocLegacyAdd" class="btn btn-primary btn-sm">Add location</button>' +
             '</div>' +
 
             /* ---------------- pick a way in ---------------- */
@@ -368,8 +368,8 @@
                     'rounded-xl px-4 py-3 space-y-2">' +
                     '<p id="' + p + 'LocMismatchText" class="text-support text-on-surface"></p>' +
                     '<div class="flex flex-wrap gap-2">' +
-                        '<button type="button" id="' + p + 'LocMismatchUse" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'bg-primary text-on-primary text-support font-bold"></button>' +
-                        '<button type="button" id="' + p + 'LocMismatchKeep" class="px-3 py-2 min-h-[40px] rounded-lg ' + 'border border-outline-variant/40 text-on-surface text-support font-bold">Adjust the pin</button>' +
+                        '<button type="button" id="' + p + 'LocMismatchUse" class="btn btn-primary btn-sm"></button>' +
+                        '<button type="button" id="' + p + 'LocMismatchKeep" class="btn btn-secondary btn-sm">Adjust the pin</button>' +
                     '</div>' +
                 '</div>' +
 
@@ -425,7 +425,7 @@
                 '</details>' +
 
                 '<div class="flex flex-wrap gap-2">' +
-                    '<button type="button" id="' + p + 'LocConfirm" class="inline-flex items-center gap-1.5 px-5 py-3 ' + 'min-h-[48px] rounded-xl bg-primary text-on-primary text-support font-bold hover:opacity-90 ' + 'transition-all disabled:opacity-40">' +
+                    '<button type="button" id="' + p + 'LocConfirm" class="btn btn-primary min-h-[48px]">' +
                         '<span class="material-symbols-outlined !text-base">check_circle</span>' +
                         '<span id="' + p + 'LocConfirmLabel">Confirm location</span></button>' +
                     '<button type="button" id="' + p + 'LocChange" class="' + CHIP_BTN + ' !text-on-surface-variant">' +
@@ -550,14 +550,10 @@
             'rounded-xl px-4 py-3"></p>' +
 
         '<div class="flex flex-wrap gap-3 pt-5 mt-5 border-t border-outline-variant/20">' +
-            '<button type="button" id="' + p + 'CancelBtn" class="flex-1 min-w-[7rem] bg-outline-variant ' +
-                'hover:bg-outline-variant/80 text-on-surface font-bold py-3.5 rounded-full transition-all min-h-[48px]">Cancel</button>' +
-            '<button type="button" id="' + p + 'BackBtn" hidden class="flex-1 min-w-[7rem] border border-outline-variant/50 ' +
-                'text-on-surface font-bold py-3.5 rounded-full transition-all min-h-[48px]">Back</button>' +
-            '<button type="button" id="' + p + 'NextBtn" class="flex-[2] min-w-[9rem] bg-primary text-on-primary ' +
-                'font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02] min-h-[48px]">Next</button>' +
-            '<button type="submit" id="' + p + 'SubmitBtn" hidden class="flex-[2] min-w-[9rem] bg-primary text-on-primary ' +
-                'font-bold py-3.5 rounded-full transition-all shadow-lg hover:scale-[1.02] min-h-[48px]">Publish</button>' +
+            '<button type="button" id="' + p + 'CancelBtn" class="btn btn-ghost flex-1 min-w-[7rem] min-h-[48px]">Cancel</button>' +
+            '<button type="button" id="' + p + 'BackBtn" hidden class="btn btn-secondary flex-1 min-w-[7rem] min-h-[48px]">Back</button>' +
+            '<button type="button" id="' + p + 'NextBtn" class="btn btn-primary flex-[2] min-w-[9rem] min-h-[48px]">Next</button>' +
+            '<button type="submit" id="' + p + 'SubmitBtn" hidden class="btn btn-primary flex-[2] min-w-[9rem] min-h-[48px]">Publish</button>' +
         '</div>';
     }
 
@@ -956,7 +952,7 @@
             if (!status) return;
             status.textContent = message || '';
             status.hidden = !message;
-            status.style.color = tone === 'error' ? '#f87171' : (tone === 'ok' ? '#4ade80' : '');
+            status.style.color = tone === 'error' ? 'rgb(var(--ztims-error))' : (tone === 'ok' ? 'rgb(var(--ztims-success))' : '');
         }
 
         // The same rule the API applies, so the form refuses what the server would.
@@ -1029,8 +1025,10 @@
             sanity.hidden = false;
             confirmBtn.disabled = false;
             el('LocConfirmLabel').textContent = locationConfirmed ? 'Location confirmed' : 'Confirm location';
-            confirmBtn.classList.toggle('!bg-surface-variant', locationConfirmed);
-            confirmBtn.classList.toggle('!text-on-surface', locationConfirmed);
+            // Once confirmed it steps down from the filled action to the quiet
+            // one: there is nothing left to press it for.
+            confirmBtn.classList.toggle('btn-primary', !locationConfirmed);
+            confirmBtn.classList.toggle('btn-secondary', locationConfirmed);
             paintPinControl();
 
             check.hidden = false;
