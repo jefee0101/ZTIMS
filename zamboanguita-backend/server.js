@@ -56,12 +56,80 @@ app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000
 ========================================== */
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zamboanguita';
 
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('✅ Connected safely to MongoDB database system.');
-        return migrateEstablishmentNames().then(migrateSpotManagement).then(bootstrapAdmin);
+/* Connected once and remembered, rather than on every call.
+
+   On a long-running host this is the same thing either way: the process starts,
+   connects, and serves until it stops. On a serverless host it is not. Each
+   instance runs this module from scratch, and an instance is reused for many
+   requests before it is discarded — so connecting per request would open a new
+   pool every time and leave it behind. A free Atlas cluster has a few hundred
+   connections in total; that pattern exhausts them, and the failure looks like
+   random timeouts rather than anything to do with connections.
+
+   Holding the PROMISE rather than a boolean is what makes it safe: several
+   requests can arrive on a cold instance before the first connection finishes,
+   and they all wait on the same one instead of starting their own. A failure
+   clears it, so the next request retries rather than being stuck for the life
+   of the instance. */
+let connectionPromise = null;
+
+function connectToDatabase() {
+    if (connectionPromise) return connectionPromise;
+
+    connectionPromise = mongoose.connect(MONGO_URI, {
+        // Small on purpose. Many short-lived instances each holding a large pool
+        // is precisely what runs a free cluster out of connections.
+        maxPoolSize: 5,
+        serverSelectionTimeoutMS: 10000
     })
-    .catch(err => console.error('❌ MongoDB Connection Error Encountered:', err));
+        .then(connection => {
+            console.log('✅ Connected safely to MongoDB database system.');
+            return connection;
+        })
+        .catch(error => {
+            connectionPromise = null;
+            console.error('❌ MongoDB Connection Error Encountered:', error);
+            throw error;
+        });
+
+    return connectionPromise;
+}
+
+/* Start connecting on the first request an instance sees, but do NOT hold the
+   request up waiting for it.
+
+   Awaiting here was the obvious version and the wrong one: it made every route
+   depend on the database, including the ones that never touch it.
+   /api/directions/capabilities just reports which travel modes are configured,
+   and it answered perfectly well with the database down until the wait was put
+   in front of it — the page that asks which modes to draw would have gone blank
+   over an unrelated outage.
+
+   Nothing is lost by not waiting. Mongoose queues model operations until the
+   connection is ready, so a route that does query the database still waits for
+   it, automatically, and one that does not answers immediately. */
+app.use((req, res, next) => {
+    // Already logged inside; swallowed here so a connection failure cannot
+    // surface as an unhandled rejection.
+    connectToDatabase().catch(() => {});
+    next();
+});
+
+/* The three startup tasks are NOT run here any more.
+
+   They were: two one-time reshapings of existing documents, and the creation of
+   the first Tourism Officer. All three have already run against the live
+   database. On a serverless host there is no startup to hang them on — they
+   would re-run on every cold instance, and bootstrapAdmin would race with
+   itself across instances that all believe they are first.
+
+   They are `npm run migrate` now, run deliberately by a person. */
+async function runMigrations() {
+    await connectToDatabase();
+    await migrateEstablishmentNames();
+    await migrateSpotManagement();
+    await bootstrapAdmin();
+}
 
 /* ==========================================
    3. DATA SCHEMA & MODELS
@@ -2848,10 +2916,22 @@ app.use((err, req, res, next) => {
    6. DEPLOYMENT PORT INITIALIZER
 ========================================== */
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, () => {
+
+/* What the banner says, wherever this is running.
+
+   `port` is given when this process owns a port and is listening on it, and
+   left out on a serverless host, where there is no port to print and claiming
+   one would be a lie. Everything else — which routing service loaded, whether
+   uploads are signed — is worth printing in both cases, because it is how you
+   tell a missing environment variable from a broken one without guessing. */
+function printStartupBanner(port) {
     console.log(`=================================================`);
-    console.log(` 🚀 Server actively streaming data loops at:`);
-    console.log(`     👉 http://localhost:${PORT}`);
+    if (port) {
+        console.log(` 🚀 Server actively streaming data loops at:`);
+        console.log(`     👉 http://localhost:${port}`);
+    } else {
+        console.log(` 🚀 Serverless instance started (no port of its own).`);
+    }
     // Says which routing service this process actually loaded. ROUTING_PROVIDER is
     // decided once at startup from the environment, so a key added to the host after
     // the process began shows nothing until it restarts — this line is how you tell
@@ -2896,4 +2976,25 @@ app.listen(PORT, () => {
         console.log(`    ${Object.keys(process.env).length} environment variables are visible to this process.`);
     }
     console.log(`=================================================`);
-});
+}
+
+/* Two ways in, and which one is in use decides whether this process listens.
+
+   Run directly — `npm start`, `npm run dev`, or the Dockerfile's `node
+   server.js` — and it binds a port and serves, exactly as before.
+
+   Required as a module — which is what a serverless host does, handing each
+   request to the exported app — and it must NOT listen. There is no port to
+   take, and binding one would either fail or hold the instance open. */
+if (require.main === module) {
+    app.listen(PORT, () => printStartupBanner(PORT));
+} else {
+    printStartupBanner();
+}
+
+module.exports = app;
+
+// Hung off the app so `npm run migrate` can reach them without a second copy of
+// the connection logic. An Express app is a function, so it carries properties.
+module.exports.runMigrations = runMigrations;
+module.exports.connectToDatabase = connectToDatabase;
