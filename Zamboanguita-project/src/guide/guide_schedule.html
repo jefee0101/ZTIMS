@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tourist Guide | Schedule &amp; Availability</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/guide-portal.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- The sidebar and header are drawn by ../shared/guide-portal.js. -->
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1200px] mx-auto space-y-8">
+
+            <div class="space-y-1">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Schedule &amp; Availability</h2>
+                <p class="text-on-surface-variant max-w-2xl">
+                    The tours assigned to you, and when you can take more. The Municipal Tourism Office only
+                    assigns you bookings on the days you mark as working, and never on a day you have taken off.
+                </p>
+            </div>
+
+            <div id="scheduleLoading"></div>
+
+            <div id="scheduleContent" hidden class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+                <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4 lg:col-span-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">calendar_month</span> My tours
+                        </h3>
+                        <label class="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer min-h-[44px]">
+                            <input id="showPast" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
+                            Show past tours
+                        </label>
+                    </div>
+                    <div id="tourList" class="space-y-6"></div>
+                </section>
+
+                <div class="space-y-8 lg:col-span-2">
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">event_available</span> Availability
+                        </h3>
+
+                        <form id="availabilityForm" class="space-y-5">
+                            <fieldset class="space-y-2">
+                                <legend class="text-label font-bold uppercase tracking-wider mb-2">Taking new bookings?</legend>
+                                <label class="flex items-start gap-3 cursor-pointer p-3 border border-outline-variant/40 min-h-[44px]">
+                                    <input type="radio" name="status" value="available" class="mt-1 text-primary focus:ring-primary"/>
+                                    <span><span class="font-bold text-on-surface block">Available</span>
+                                        <span class="text-support">The office can assign me tours on my working days.</span></span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer p-3 border border-outline-variant/40 min-h-[44px]">
+                                    <input type="radio" name="status" value="unavailable" class="mt-1 text-primary focus:ring-primary"/>
+                                    <span><span class="font-bold text-on-surface block">Unavailable</span>
+                                        <span class="text-support">Pause new bookings for now. Tours already assigned stay assigned.</span></span>
+                                </label>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend class="text-label font-bold uppercase tracking-wider mb-2">Working days</legend>
+                                <div id="dayChoices" class="grid grid-cols-4 sm:grid-cols-7 lg:grid-cols-4 xl:grid-cols-7 gap-2"></div>
+                            </fieldset>
+
+                            <p id="availabilityMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                            <button type="submit" id="saveAvailabilityBtn" class="btn btn-primary w-full min-h-[44px]">Save availability</button>
+                        </form>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">event_busy</span> Days off
+                        </h3>
+                        <p class="text-support">A single day you cannot guide — leave, a fiesta, an appointment.</p>
+
+                        <form id="timeOffForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label for="offDateInput" class="block text-label font-bold uppercase tracking-wider mb-1">Date</label>
+                                <input id="offDateInput" type="date" required class="field w-full"/>
+                            </div>
+                            <div>
+                                <label for="offNoteInput" class="block text-label font-bold uppercase tracking-wider mb-1">Reason <span class="normal-case font-normal opacity-70">(optional)</span></label>
+                                <input id="offNoteInput" type="text" maxlength="200" placeholder="e.g., family event" class="field w-full"/>
+                            </div>
+                            <p id="timeOffMessage" hidden class="text-sm rounded-xl px-4 py-3 sm:col-span-2"></p>
+                            <button type="submit" id="addTimeOffBtn" class="btn btn-secondary sm:col-span-2 min-h-[44px]">
+                                <span class="material-symbols-outlined !text-base">add</span> Add day off
+                            </button>
+                        </form>
+
+                        <ul id="timeOffList" class="divide-y divide-outline-variant/30"></ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let myBookings = [];
+        let myTimeOff = [];
+
+        const STATUS_TONE = {
+            pending_payment: ['tone-warning', 'Awaiting payment'],
+            confirmed: ['tone-info', 'Confirmed'],
+            completed: ['tone-success', 'Completed'],
+            no_show: ['tone-danger', 'No-show'],
+            cancelled: ['tone-neutral', 'Cancelled']
+        };
+
+        function renderTours() {
+            const P = window.GuidePortal;
+            const today = new Date().toISOString().slice(0, 10);
+            const showPast = document.getElementById('showPast').checked;
+            const list = myBookings.filter(b => showPast || b.preferredDate >= today);
+            // Past tours read newest first; upcoming ones soonest first.
+            if (showPast) list.sort((a, b) => (b.preferredDate + b.preferredTime).localeCompare(a.preferredDate + a.preferredTime));
+
+            const box = document.getElementById('tourList');
+            if (!list.length) {
+                box.innerHTML = `<div class="ztims-empty">${showPast
+                    ? 'No tours have been assigned to you yet.'
+                    : 'No upcoming tours. The office will assign them here as visitors book.'}</div>`;
+                return;
+            }
+
+            const byDate = new Map();
+            list.forEach(b => {
+                if (!byDate.has(b.preferredDate)) byDate.set(b.preferredDate, []);
+                byDate.get(b.preferredDate).push(b);
+            });
+
+            box.innerHTML = [...byDate.entries()].map(([date, tours]) => `
+                <div>
+                    <h4 class="text-label font-bold uppercase tracking-widest mb-2 ${date === today ? 'text-primary' : ''}">
+                        ${date === today ? 'Today · ' : ''}${P.escapeHtml(P.formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }))}
+                    </h4>
+                    <ul class="space-y-2">${tours.map(b => {
+                        const [tone, label] = STATUS_TONE[b.status] || ['tone-neutral', b.status];
+                        return `
+                        <li class="border border-outline-variant/40 p-4 space-y-1.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <p class="font-black text-on-surface">${P.escapeHtml(P.formatTime(b.preferredTime))} · ${P.escapeHtml(b.spot.title)}</p>
+                                <span class="tone-pill ${tone} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${label}</span>
+                            </div>
+                            <p class="text-sm text-on-surface-variant">
+                                ${b.visitors} visitor${b.visitors === 1 ? '' : 's'} · ${P.escapeHtml(b.fullName)}
+                                ${b.contactNumber ? ` · <a class="underline" href="tel:${P.escapeHtml(b.contactNumber.replace(/[^\d+]/g, ''))}">${P.escapeHtml(b.contactNumber)}</a>` : ''}
+                            </p>
+                            ${b.notes ? `<p class="text-support">“${P.escapeHtml(b.notes)}”</p>` : ''}
+                            <p class="text-support">Reference ${P.escapeHtml(b.reference)}</p>
+                        </li>`;
+                    }).join('')}</ul>
+                </div>`).join('');
+        }
+
+        function fillAvailability(guide) {
+            const P = window.GuidePortal;
+            document.querySelectorAll('input[name="status"]').forEach(radio => {
+                radio.checked = radio.value === guide.status;
+            });
+            const working = new Set(guide.availableDays || []);
+            document.getElementById('dayChoices').innerHTML = P.weekdays.map(day => `
+                <label class="flex flex-col items-center gap-1 cursor-pointer border border-outline-variant/40 py-2 min-h-[44px] has-[:checked]:bg-primary/10 has-[:checked]:border-primary">
+                    <input type="checkbox" name="day" value="${day.value}" ${working.has(day.value) ? 'checked' : ''}
+                           class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
+                    <span class="text-xs font-bold text-on-surface" title="${day.label}">${day.short}</span>
+                </label>`).join('');
+        }
+
+        function renderTimeOff() {
+            const P = window.GuidePortal;
+            const list = document.getElementById('timeOffList');
+            if (!myTimeOff.length) {
+                list.innerHTML = '<li class="py-3 text-support italic">No days off coming up.</li>';
+                return;
+            }
+            list.innerHTML = myTimeOff.map(day => `
+                <li class="py-3 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="font-bold text-on-surface">${P.escapeHtml(P.formatDate(day.offDate))}</p>
+                        ${day.note ? `<p class="text-support">${P.escapeHtml(day.note)}</p>` : ''}
+                    </div>
+                    <button type="button" data-remove="${P.escapeHtml(day._id)}" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">
+                        <span class="material-symbols-outlined !text-base">delete</span> Remove
+                    </button>
+                </li>`).join('');
+        }
+
+        async function saveAvailability(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('availabilityMessage', '');
+            const status = (document.querySelector('input[name="status"]:checked') || {}).value;
+            const availableDays = [...document.querySelectorAll('input[name="day"]:checked')].map(box => box.value);
+            if (!availableDays.length) {
+                P.showMessage('availabilityMessage', 'Choose at least one working day, or set yourself as unavailable instead.', 'error');
+                return;
+            }
+            const restore = P.setButtonLoading(document.getElementById('saveAvailabilityBtn'), 'Saving...');
+            try {
+                const { result } = await P.api('/guides/me/availability', { method: 'PATCH', body: { status, availableDays } });
+                fillAvailability(result.guide);
+                P.showMessage('availabilityMessage', result.message);
+            } catch (error) {
+                P.showMessage('availabilityMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        async function addTimeOff(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('timeOffMessage', '');
+            const restore = P.setButtonLoading(document.getElementById('addTimeOffBtn'), 'Adding...');
+            try {
+                const { result } = await P.api('/guides/me/time-off', {
+                    method: 'POST',
+                    body: {
+                        offDate: document.getElementById('offDateInput').value,
+                        note: document.getElementById('offNoteInput').value.trim()
+                    }
+                });
+                myTimeOff = myTimeOff.concat(result.day).sort((a, b) => a.offDate.localeCompare(b.offDate));
+                renderTimeOff();
+                document.getElementById('timeOffForm').reset();
+                P.showToast(result.message, 'success');
+            } catch (error) {
+                P.showMessage('timeOffMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        async function removeTimeOff(id, button) {
+            const P = window.GuidePortal;
+            button.disabled = true;
+            try {
+                const { result } = await P.api(`/guides/me/time-off/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                myTimeOff = myTimeOff.filter(day => String(day._id) !== String(id));
+                renderTimeOff();
+                P.showToast(result.message, 'success');
+            } catch (error) {
+                button.disabled = false;
+                P.showToast(error.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const P = window.GuidePortal;
+            if (!P || !P.start()) return;
+
+            document.getElementById('offDateInput').min = new Date().toISOString().slice(0, 10);
+            document.getElementById('availabilityForm').addEventListener('submit', saveAvailability);
+            document.getElementById('timeOffForm').addEventListener('submit', addTimeOff);
+            document.getElementById('showPast').addEventListener('change', renderTours);
+            document.getElementById('timeOffList').addEventListener('click', event => {
+                const button = event.target.closest('[data-remove]');
+                if (button) removeTimeOff(button.dataset.remove, button);
+            });
+
+            const loading = document.getElementById('scheduleLoading');
+            const done = P.showLoading(loading, 'Loading your schedule...');
+            try {
+                const [{ result: me }, { result: data }, { result: off }] = await Promise.all([
+                    P.api('/guides/me'),
+                    P.api('/guides/me/bookings'),
+                    P.api('/guides/me/time-off')
+                ]);
+                done();
+                loading.innerHTML = '';
+                P.rememberGuide(me.guide);
+                myBookings = data.bookings || [];
+                myTimeOff = off.timeOff || [];
+                fillAvailability(me.guide);
+                renderTours();
+                renderTimeOff();
+                document.getElementById('scheduleContent').hidden = false;
+            } catch (error) {
+                done();
+                P.showLoadError(loading, 'your schedule', error);
+            }
+        });
+    </script>
+    <script type="module" src="../shared/guide-portal.js"></script>
+</body>
+</html>

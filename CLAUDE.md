@@ -100,7 +100,7 @@ server-independent HTML pages under `src/` (`index.html` at the root, plus
 `src/spot.html`, `src/history.html`, `src/staff_login.html`, the
 information pages `src/terms.html`, `src/privacy.html`, `src/faq.html`,
 `src/contact.html` (visitor feedback form → `POST /api/feedback`),
-`src/admin/*.html`, `src/resort/*.html`, `src/user/*.html`), each loading
+`src/admin/*.html`, `src/resort/*.html`, `src/guide/*.html`, `src/user/*.html`), each loading
 Tailwind from the CDN and its own inline `<script>` blocks. `src/App.jsx` /
 `src/main.jsx` are the unused default Vite+React template — `index.html` has
 no `#root` element, so nothing mounts them. Don't build new features as React
@@ -135,6 +135,12 @@ purpose — see the header comment in `spot-form.js`:
   `<footer data-site-footer data-root="../">` placeholder so seven pages
   share one copy. The office's phone and email are deliberately absent until
   the office supplies them — see the comment in `src/contact.html`.
+- `guide-portal.js` + `guide-portal.css` — the Tourist Guide portal's frame
+  (sidebar, header, account menu, phone drawer) and helpers, shared by the four
+  `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
+  Profile). Unlike the officer's and manager's pages, which each carry that
+  frame inline, the guide pages draw it from here. Loaded as a module, so page
+  code calls `window.GuidePortal` only inside `DOMContentLoaded`.
 - `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -244,15 +250,21 @@ the old collection names (`admins`, `resortOwners`) did not.
    instances; only the blanket per-request limit stays in memory, on purpose.
 2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
 3. Auth middleware chains: `requireAuth` (valid JWT) →
-   `requireAdmin`/`requireEstablishmentManager`/`requireStaff` (role checks)
-   and `optionalAuth` (attaches `req.auth` if present, never blocks). Roles:
-   `admin` (Tourism Officer) and `establishment_manager` (Tourist
-   Establishment Manager) — `'resort_owner'` is a legacy spelling of the
-   latter, kept only so tokens issued before a rename don't get rejected
-   mid-session; nothing issues it anymore. There is deliberately no `tourist`
-   role or tourist account at all — visitors browse without logging in.
+   `requireAdmin`/`requireEstablishmentManager`/`requireStaff`/`requireGuide`
+   (role checks) and `optionalAuth` (attaches `req.auth` if present, never
+   blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
+   Establishment Manager) and `tourist_guide` (Tourist Guide) —
+   `'resort_owner'` is a legacy spelling of the manager role, kept only so
+   tokens issued before a rename don't get rejected mid-session; nothing
+   issues it anymore. `requireStaff` (officer or manager) deliberately
+   excludes guides: it guards listing writes and upload signing. There is
+   deliberately no `tourist` role or tourist account at all — visitors browse
+   without logging in. All three sign in on the one staff page; the login
+   route searches officers, then managers, then guides, so `emailTakenBy`
+   refuses any sign-in email another account already uses.
 4. Routes, grouped by resource: admin, establishment-managers, login/forgot/
-   reset-password, spots (listings), guides, guide-bookings, payments,
+   reset-password, spots (listings), guides (see "Tourist guides" below),
+   guide-bookings, payments,
    feedback (public `POST /api/feedback`, rate-limited with a honeypot;
    officer inbox `GET`/`PATCH …/status` read in `src/admin/admin_feedback.html`),
    and `/api/directions/*`.
@@ -270,6 +282,37 @@ provider-fallback layer, not a single API call:
 - Geocoding: OpenRouteService's geocoder (key set) → Nominatim (unset).
 - `/api/directions/capabilities` tells the frontend which modes are live, so
   a page only ever renders what the backend can actually calculate.
+
+### Tourist guides
+
+One role, `tourist_guide`, with a **scope** on the record (`tourist_guides.scope`):
+`municipal` covers the whole municipality; `barangay` + `barangay` covers one
+barangay. The screens are the same for both — the scope only filters:
+- a barangay guide can be given only destinations whose `spots.barangay` is
+  theirs (`checkGuideScope` on save; re-checked when a booking is assigned,
+  since a listing's barangay can change). A listing with a blank barangay can
+  only go to a municipal guide.
+- a guide's dashboard counts bookings in their jurisdiction
+  (`bookings.listInJurisdiction`) — counts only; visitor names and numbers are
+  shown only for bookings assigned to that guide.
+
+The guide proposes, the office disposes. A guide keeps their own availability
+(status available/unavailable, working days, `guide_time_off`) and languages,
+files reports (`guide_reports`: tour completed, headcount, incident, tourist
+feedback — `barangay` is derived server-side, and filing never changes a
+booking), and asks for changes to their contact number and bio
+(`guide_profile_requests`, one pending at a time, applied only when the
+officer approves). The office assigns every booking, approves every change,
+reviews every report (rolled up per barangay on `admin_guides.html`), and alone
+sets name, scope, fee, group size, destinations, photo and `inactive`. Guide
+sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
+a guide record without one has `email`/`password_hash` null.
+
+Languages are rows, not a list: `languages` (unique on `lower(name)`) and
+`guide_languages`, written by `setGuideLanguages`. That is what makes
+`GET /api/guides/search?language=&date=` ("who speaks Korean and is free
+Saturday") a join. "Free" is decided by `isGuideFreeOn` — the same function the
+assign route uses, so the search never offers a guide assignment would refuse.
 
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
@@ -293,9 +336,12 @@ environment once used.
   wildly-wrong pins and to bias search ranking, not as proof a pin is inside
   the municipality.
 - **Barangay list**: `BARANGAYS` in `spot-form.js`, mirrored in the chips/count
-  on `src/history.html`. The dropdown only accepts a name in this list, and
-  reverse-geocoding is matched against it — a missing barangay makes
-  auto-detection silently fail for listings in it.
+  on `src/history.html` and in `BARANGAYS` in `server.js` (which validates a
+  guide's barangay scope and serves the list to the guide portal and the
+  officer's Tourist Guides page, so those pages keep no copy). The dropdown
+  only accepts a name in this list, and reverse-geocoding is matched against
+  it — a missing barangay makes auto-detection silently fail for listings in
+  it, and makes a barangay guide for it impossible to create.
 - **Country list**: `src/shared/countries.js` (names) vs `COUNTRY_CODES` in
   `server.js` (codes only, validates what the form sends). Checked by
   `npm run check` in the frontend.
@@ -318,3 +364,23 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - The hero video on `index.html` intentionally has no dark scrim over it
   (readability is carried by per-letter text-shadow/stroke instead) — see the
   large comment block in that file before changing hero text treatment.
+
+## What to do 
+Make it one role with a scope, not two roles
+
+Create a single Tour Guide role, and give the account an assignment scope:
+
+scope = municipal → covers the whole municipality
+scope = barangay + barangay_id → covers only that barangay
+
+Everything else (login, dashboard, schedule, languages, profile) is the same code. The scope just filters what they see and what the officer can assign them to. Two separate roles means two sets of pages, two permission tables, and double the bugs — and in your defense a panelist will ask "why are these different users if the screens are identical?" The scope answer is clean: same function, different jurisdiction.
+
+Per module
+
+Dashboard / reports — barangay guide sees only tours in their barangay; municipal guide sees all. Same query, different WHERE. Reports they file (tour completed, headcount, incident, tourist feedback) should roll up to the officer, and barangay reports should also be filterable by barangay so the officer can see which barangay is actually getting traffic. That rollup is a real finding for your Chapter IV.
+
+Schedule & availability — let the guide set availability, but only the officer confirms an assignment. Guide proposes, officer disposes. Prevents double-booking and keeps your "managed by the tourist officer" claim true in the data, not just on paper.
+
+Languages — make it a many-to-many table (guide_languages), not a text field. Then the officer can search "who speaks Korean and is free Saturday" — that single query is probably the most impressive thing you can demo.
+
+Profile — officer approves edits, guide can't self-verify.

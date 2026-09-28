@@ -526,8 +526,10 @@ body { overflow-x: hidden; }
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourist Guides</h2>
                     <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Guides are municipal tourism records, not accounts — they never sign in to ZTIMS.
-                        You keep their details here and assign them to the spots that require a guide.
+                        Every guide has a scope: the whole municipality, or one barangay. A barangay guide can
+                        only be given destinations in their barangay. Give a guide a sign-in and they keep their
+                        own availability and languages in the guide portal and file reports to you; you still
+                        assign every booking and approve any change to their record.
                     </p>
                 </div>
                 <button id="openCreateGuideBtn" class="btn btn-primary min-h-[44px]">
@@ -567,6 +569,11 @@ body { overflow-x: hidden; }
                         <input id="guideSearch" type="search" placeholder="Search a guide or spot"
                                class="field !pl-10 w-full sm:w-72"/>
                     </div>
+                    <select id="scopeFilter" class="field w-full sm:w-auto" aria-label="Scope">
+                        <option value="all">Every scope</option>
+                        <option value="municipal">Municipal guides</option>
+                        <option value="barangay">Barangay guides</option>
+                    </select>
                     <select id="statusFilter" class="field w-full sm:w-auto">
                         <option value="all">All statuses</option>
                         <option value="available">Available</option>
@@ -586,11 +593,12 @@ body { overflow-x: hidden; }
                             <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
                                 <th class="px-6 py-4">Guide</th>
                                 <th class="px-6 py-4">Contact</th>
-                                <th class="px-6 py-4">Based in</th>
+                                <th class="px-6 py-4">Scope</th>
                                 <th class="px-6 py-4 text-right">Fee</th>
                                 <th class="px-6 py-4 text-center">Max group</th>
                                 <th class="px-6 py-4">Assigned spots</th>
                                 <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4">Portal sign-in</th>
                                 <th class="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -604,6 +612,87 @@ body { overflow-x: hidden; }
                     </p>
                 </div>
             </div>
+
+            <!-- Who speaks X and is free on Y — decided by the same rule assignment uses. -->
+            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+                <div>
+                    <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-accent">person_search</span> Find a guide
+                    </h3>
+                    <p class="text-support mt-1">Who speaks a language and is free on a date — by their working days, days off and confirmed tours.</p>
+                </div>
+                <form id="findGuideForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label for="findLanguage" class="block text-label font-bold uppercase tracking-wider mb-1">Speaks</label>
+                        <input id="findLanguage" type="text" required list="knownLanguages" placeholder="e.g., Korean" class="field w-full"/>
+                        <datalist id="knownLanguages"></datalist>
+                    </div>
+                    <div>
+                        <label for="findDate" class="block text-label font-bold uppercase tracking-wider mb-1">Free on</label>
+                        <input id="findDate" type="date" class="field w-full"/>
+                    </div>
+                    <div>
+                        <label for="findTime" class="block text-label font-bold uppercase tracking-wider mb-1">At <span class="normal-case font-normal opacity-70">(optional)</span></label>
+                        <input id="findTime" type="time" class="field w-full"/>
+                    </div>
+                    <button type="submit" id="findGuideBtn" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">search</span> Find
+                    </button>
+                </form>
+                <div id="findResults"></div>
+            </section>
+
+            <!-- Changes guides have asked for; nothing changes until approved here. -->
+            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+                <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-accent">rule</span> Profile changes waiting for you
+                    <span id="requestCount" class="tone-pill tone-warning text-[11px] font-bold px-2 py-0.5" hidden></span>
+                </h3>
+                <ul id="requestList" class="divide-y divide-outline-variant/30"></ul>
+            </section>
+
+            <!-- What guides report, rolled up by barangay. -->
+            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">summarize</span> Guide reports by barangay
+                        </h3>
+                        <p class="text-support mt-1">What guides on the ground report: tours completed, visitors counted, incidents and tourist feedback.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <select id="reportBarangayFilter" class="field w-full sm:w-auto" aria-label="Barangay"><option value="">Every barangay</option></select>
+                        <select id="reportTypeFilter" class="field w-full sm:w-auto" aria-label="Report type">
+                            <option value="">Every kind</option>
+                            <option value="tour_completed">Tour completed</option>
+                            <option value="headcount">Headcount</option>
+                            <option value="incident">Incident</option>
+                            <option value="tourist_feedback">Tourist feedback</option>
+                        </select>
+                        <select id="reportStatusFilter" class="field w-full sm:w-auto" aria-label="Review status">
+                            <option value="">New and reviewed</option>
+                            <option value="new">New only</option>
+                            <option value="reviewed">Reviewed only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="ztims-table w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
+                                <th class="px-4 py-3">Barangay</th>
+                                <th class="px-4 py-3 text-right">Tours completed</th>
+                                <th class="px-4 py-3 text-right">Visitors counted</th>
+                                <th class="px-4 py-3 text-right">Incidents</th>
+                                <th class="px-4 py-3 text-right">Feedback</th>
+                                <th class="px-4 py-3 text-right">Unreviewed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rollupBody" class="divide-y divide-outline-variant/20 text-on-surface-variant"></tbody>
+                    </table>
+                </div>
+                <ul id="reportList" class="divide-y divide-outline-variant/30"></ul>
+            </section>
         </div>
     </main>
 
@@ -614,7 +703,7 @@ body { overflow-x: hidden; }
                 <div>
                     <h2 id="guideModalTitle" class="text-2xl font-black tracking-tight font-headline">New guide record</h2>
                     <p class="text-support mt-1">
-                        A record only — guides have no ZTIMS account and never sign in.
+                        The guide's record. Their portal sign-in is issued separately, from the table.
                     </p>
                 </div>
                 <button id="closeGuideModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
@@ -630,6 +719,21 @@ body { overflow-x: hidden; }
                     <input id="guideName" type="text" required placeholder="e.g., Juan Dela Cruz"
                            class="field"/>
                 </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="guideScope" class="block text-label font-bold uppercase tracking-wider mb-1">Scope</label>
+                        <select id="guideScope" class="field">
+                            <option value="municipal">Municipal — the whole municipality</option>
+                            <option value="barangay">Barangay — one barangay only</option>
+                        </select>
+                    </div>
+                    <div id="guideBarangayWrap" hidden>
+                        <label for="guideBarangay" class="block text-label font-bold uppercase tracking-wider mb-1">Stationed in barangay</label>
+                        <select id="guideBarangay" class="field">
+                            <option value="">Choose a barangay</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -638,8 +742,8 @@ body { overflow-x: hidden; }
                                class="field"/>
                     </div>
                     <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Based in</label>
-                        <input id="guideLocation" type="text" placeholder="e.g., Brgy. Najandig"
+                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Meeting point / area</label>
+                        <input id="guideLocation" type="text" placeholder="e.g., Sitio Bonbon jump-off"
                                class="field"/>
                     </div>
                 </div>
@@ -701,9 +805,19 @@ body { overflow-x: hidden; }
 
                 <div>
                     <label class="block text-label font-bold uppercase tracking-wider mb-1">About this guide</label>
-                    <textarea id="guideBio" rows="3" placeholder="Languages spoken, specialities, years guiding…"
+                    <textarea id="guideBio" rows="3" placeholder="Specialities, years guiding…"
                               class="field resize-none"></textarea>
                 </div>
+                <div>
+                    <label for="guideLanguages" class="block text-label font-bold uppercase tracking-wider mb-1">Languages spoken</label>
+                    <input id="guideLanguages" type="text" placeholder="e.g., English, Filipino, Cebuano" class="field"/>
+                    <p class="text-support mt-1">Separate with commas. A guide with a portal sign-in keeps this up to date themselves.</p>
+                </div>
+                <fieldset>
+                    <legend class="block text-label font-bold uppercase tracking-wider mb-1">Working days</legend>
+                    <div id="guideDays" class="grid grid-cols-4 sm:grid-cols-7 gap-2"></div>
+                    <p class="text-support mt-1">Bookings are only assigned on these days. A guide with a sign-in keeps this themselves.</p>
+                </fieldset>
 
                 <div>
                     <label class="block text-label font-bold uppercase tracking-wider mb-1">Spots this guide serves</label>
@@ -733,6 +847,15 @@ body { overflow-x: hidden; }
 
         let allGuides = [];
         let guidedSpots = [];       // spots the office has marked as requiring a guide
+
+        // Zamboanguita's barangays, for a barangay guide's scope. Served by the API
+        // (GET /api/guides/reports) from its own list, so this page keeps no copy.
+        let BARANGAYS = [];
+        const WEEKDAYS = [
+            { value: 'mon', short: 'Mon' }, { value: 'tue', short: 'Tue' }, { value: 'wed', short: 'Wed' },
+            { value: 'thu', short: 'Thu' }, { value: 'fri', short: 'Fri' }, { value: 'sat', short: 'Sat' },
+            { value: 'sun', short: 'Sun' }
+        ];
 
         function authHeaders(extra) {
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
@@ -870,7 +993,7 @@ body { overflow-x: hidden; }
 
         async function loadEverything() {
             const body = document.getElementById('guideTableBody');
-            body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Loading guide records…</td></tr>`;
+            body.innerHTML = `<tr><td colspan="9" class="px-6 py-10 text-center text-on-surface-variant">Loading guide records…</td></tr>`;
 
             try {
                 const [guidesRes, spotsRes] = await Promise.all([
@@ -887,9 +1010,14 @@ body { overflow-x: hidden; }
 
                 renderStats();
                 renderTable();
+                renderKnownLanguages();
             } catch (error) {
-                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
+                body.innerHTML = `<tr><td colspan="9" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
             }
+            // The panels below the table load on their own, so one failing never
+            // empties the directory.
+            loadRequests();
+            loadReports();
         }
 
         function renderStats() {
@@ -914,12 +1042,15 @@ body { overflow-x: hidden; }
         function visibleGuides() {
             const query = document.getElementById('guideSearch').value.trim().toLowerCase();
             const status = document.getElementById('statusFilter').value;
+            const scope = document.getElementById('scopeFilter').value;
 
             return allGuides.filter(guide => {
                 if (status !== 'all' && guide.status !== status) return false;
+                if (scope !== 'all' && (guide.scope || 'municipal') !== scope) return false;
                 if (!query) return true;
                 const spotNames = (guide.assignedSpots || []).map(s => s.title || '').join(' ');
-                return [guide.fullName, guide.location, guide.contactNumber, spotNames]
+                return [guide.fullName, guide.location, guide.barangay, guide.contactNumber, guide.email,
+                        (guide.languages || []).join(' '), spotNames]
                     .filter(Boolean)
                     .some(field => String(field).toLowerCase().includes(query));
             });
@@ -933,7 +1064,7 @@ body { overflow-x: hidden; }
             document.getElementById('guideTotal').textContent = allGuides.length;
 
             if (rows.length === 0) {
-                body.innerHTML = `<tr><td colspan="8" class="p-4"><div class="ztims-empty">${
+                body.innerHTML = `<tr><td colspan="9" class="p-4"><div class="ztims-empty">${
                     allGuides.length === 0
                         ? 'No guide records yet. Add the first one with “New guide record”.'
                         : 'No guide matches that search.'
@@ -947,10 +1078,19 @@ body { overflow-x: hidden; }
                     <tr class="hover:bg-surface-variant/40 transition-colors">
                         <td class="px-6 py-4">
                             <p class="font-bold text-on-surface">${escapeHtml(guide.fullName)}</p>
-                            ${guide.bio ? `<p class="text-support line-clamp-1 max-w-xs">${escapeHtml(guide.bio)}</p>` : ''}
+                            ${(guide.languages || []).length
+                                ? `<p class="text-support line-clamp-1 max-w-xs">${escapeHtml(guide.languages.join(', '))}</p>`
+                                : '<p class="text-support italic">no languages listed</p>'}
                         </td>
                         <td class="px-6 py-4">${escapeHtml(guide.contactNumber || '—')}</td>
-                        <td class="px-6 py-4">${escapeHtml(guide.location || '—')}</td>
+                        <td class="px-6 py-4">
+                            ${guide.scope === 'barangay'
+                                ? `<span class="tone-pill tone-warning text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">Barangay</span>
+                                   <p class="text-on-surface mt-1">Brgy. ${escapeHtml(guide.barangay || '—')}</p>`
+                                : `<span class="tone-pill tone-info text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">Municipal</span>
+                                   <p class="text-on-surface mt-1">Whole municipality</p>`}
+                            ${guide.location ? `<p class="text-support">${escapeHtml(guide.location)}</p>` : ''}
+                        </td>
                         <td class="px-6 py-4 text-right font-bold text-on-surface">${formatPeso(guide.guideFee)}</td>
                         <td class="px-6 py-4 text-center">${Number(guide.maxGroupSize) || 1}</td>
                         <td class="px-6 py-4">
@@ -960,7 +1100,16 @@ body { overflow-x: hidden; }
                                 : '<span class="text-support italic">not assigned</span>'}
                         </td>
                         <td class="px-6 py-4 text-center">${statusSelect(guide)}</td>
-                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                        <td class="px-6 py-4">
+                            ${guide.hasAccount
+                                ? `<p class="text-on-surface break-all">${escapeHtml(guide.email)}</p>
+                                   <button type="button" data-withdraw="${escapeHtml(guide._id)}" class="text-xs text-error underline min-h-[32px]">Withdraw sign-in</button>`
+                                : '<span class="text-support italic">none</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-right whitespace-nowrap space-x-2">
+                            <button data-signin="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">
+                                <span class="material-symbols-outlined !text-base">key</span>${guide.hasAccount ? 'Sign-in' : 'Give sign-in'}
+                            </button>
                             <button data-edit="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">Edit</button>
                         </td>
                     </tr>
@@ -976,9 +1125,15 @@ body { overflow-x: hidden; }
             box.hidden = !message;
         }
 
+        const sameBarangay = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+        /* The scope decides which destinations are on offer: a barangay guide sees
+           only the ones in their barangay. The server holds the same rule. */
         function renderSpotChoices(selectedIds) {
             const list = document.getElementById('guideSpotList');
             const chosen = new Set((selectedIds || []).map(String));
+            const scope = document.getElementById('guideScope').value;
+            const barangay = document.getElementById('guideBarangay').value;
 
             if (guidedSpots.length === 0) {
                 list.innerHTML = `<p class="text-support italic">
@@ -986,15 +1141,47 @@ body { overflow-x: hidden; }
                 </p>`;
                 return;
             }
+            if (scope === 'barangay' && !barangay) {
+                list.innerHTML = '<p class="text-support italic">Choose the barangay first — a barangay guide serves only its destinations.</p>';
+                return;
+            }
 
-            list.innerHTML = guidedSpots.map(spot => `
+            const offered = scope === 'barangay'
+                ? guidedSpots.filter(spot => sameBarangay(spot.barangay, barangay))
+                : guidedSpots;
+            if (!offered.length) {
+                list.innerHTML = `<p class="text-support italic">No destination in ${escapeHtml(barangay)} requires a guide yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = offered.map(spot => `
                 <label class="flex items-center gap-2.5 py-2 cursor-pointer min-h-[44px]">
                     <input type="checkbox" value="${escapeHtml(spot._id)}" ${chosen.has(String(spot._id)) ? 'checked' : ''}
                            class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
                     <span class="text-sm text-on-surface">${escapeHtml(spot.title)}</span>
-                    <span class="text-support">${escapeHtml(spot.location || '')}</span>
+                    <span class="text-support">${escapeHtml(spot.barangay ? 'Brgy. ' + spot.barangay : 'no barangay set')}</span>
                 </label>
             `).join('');
+        }
+
+        function checkedSpotIds() {
+            return [...document.querySelectorAll('#guideSpotList input:checked')].map(box => box.value);
+        }
+
+        function syncScopeFields() {
+            const barangayScope = document.getElementById('guideScope').value === 'barangay';
+            document.getElementById('guideBarangayWrap').hidden = !barangayScope;
+            renderSpotChoices(checkedSpotIds());
+        }
+
+        function renderDayChoices(days) {
+            const working = new Set(days || WEEKDAYS.map(d => d.value));
+            document.getElementById('guideDays').innerHTML = WEEKDAYS.map(day => `
+                <label class="flex flex-col items-center gap-1 cursor-pointer border border-outline-variant/40 py-2 min-h-[44px]">
+                    <input type="checkbox" value="${day.value}" ${working.has(day.value) ? 'checked' : ''}
+                           class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
+                    <span class="text-xs font-bold text-on-surface">${day.short}</span>
+                </label>`).join('');
         }
 
         function openGuideModal(guide) {
@@ -1008,6 +1195,14 @@ body { overflow-x: hidden; }
             document.getElementById('guideStatus').value = guide?.status || 'available';
             setGuidePhoto(guide?.photoUrl || '');
             document.getElementById('guideBio').value = guide?.bio || '';
+            document.getElementById('guideLanguages').value = (guide?.languages || []).join(', ');
+
+            document.getElementById('guideBarangay').innerHTML = '<option value="">Choose a barangay</option>' +
+                BARANGAYS.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+            document.getElementById('guideScope').value = guide?.scope || 'municipal';
+            document.getElementById('guideBarangay').value = guide?.barangay || '';
+            document.getElementById('guideBarangayWrap').hidden = document.getElementById('guideScope').value !== 'barangay';
+            renderDayChoices(guide?.availableDays);
 
             renderSpotChoices((guide?.assignedSpots || []).map(s => s._id || s));
             setGuideError('');
@@ -1024,6 +1219,7 @@ body { overflow-x: hidden; }
             setGuideError('');
 
             const id = document.getElementById('guideId').value;
+            const scope = document.getElementById('guideScope').value;
             const payload = {
                 fullName: document.getElementById('guideName').value.trim(),
                 contactNumber: document.getElementById('guideContact').value.trim(),
@@ -1033,10 +1229,16 @@ body { overflow-x: hidden; }
                 status: document.getElementById('guideStatus').value,
                 photoUrl: document.getElementById('guidePhoto').value.trim(),
                 bio: document.getElementById('guideBio').value.trim(),
-                assignedSpots: [...document.querySelectorAll('#guideSpotList input:checked')].map(box => box.value)
+                scope,
+                barangay: scope === 'barangay' ? document.getElementById('guideBarangay').value : '',
+                languages: document.getElementById('guideLanguages').value.split(',').map(s => s.trim()).filter(Boolean),
+                availableDays: [...document.querySelectorAll('#guideDays input:checked')].map(box => box.value),
+                assignedSpots: checkedSpotIds()
             };
 
             if (!payload.fullName) { setGuideError('The guide needs a name.'); return; }
+            if (scope === 'barangay' && !payload.barangay) { setGuideError('Choose the barangay this guide is stationed in.'); return; }
+            if (!payload.availableDays.length) { setGuideError('Tick at least one working day, or set the guide unavailable.'); return; }
 
             const restore = setButtonLoading(document.getElementById('saveGuideBtn'), 'Saving...');
             try {
@@ -1088,6 +1290,264 @@ body { overflow-x: hidden; }
             }
         }
 
+        /* ---- small shared fetch for the panels ---------------------------- */
+
+        async function officeCall(path, options) {
+            const settings = options || {};
+            const response = await fetch(`${API_BASE}${path}`, {
+                method: settings.method || 'GET',
+                headers: authHeaders(settings.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+                body: settings.body !== undefined ? JSON.stringify(settings.body) : undefined
+            });
+            if (response.status === 401) { handleExpiredSession(); throw new Error('Your session has expired.'); }
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) throw new Error(result.message || `The server refused (status ${response.status}).`);
+            return result;
+        }
+
+        /* ---- portal sign-in ------------------------------------------------ */
+
+        async function manageSignIn(id) {
+            const guide = allGuides.find(g => String(g._id) === String(id));
+            if (!guide) return;
+
+            // Blank password: a new sign-in gets one generated; an existing one
+            // keeps its password.
+            const values = await ztimsDialog.form({
+                title: guide.hasAccount ? `Sign-in for ${guide.fullName}` : `Give ${guide.fullName} a sign-in`,
+                message: guide.hasAccount
+                    ? 'Change the email they sign in with, or type a new password for a guide who is locked out.'
+                    : 'They sign in on the staff page and land in the guide portal.',
+                confirmLabel: guide.hasAccount ? 'Save sign-in' : 'Issue sign-in',
+                icon: 'key',
+                fields: [
+                    { name: 'email', label: 'Sign-in email', type: 'email', required: true, value: guide.email || '', placeholder: 'name@example.com' },
+                    {
+                        name: 'newPassword', label: 'Password', optional: true,
+                        placeholder: guide.hasAccount ? 'Leave blank to keep their password' : 'Leave blank to have one generated',
+                        help: 'At least 8 characters. Deliberately readable — you have to pass it on.'
+                    }
+                ],
+                validate: values => values.newPassword && values.newPassword.trim().length < 8 ? 'A password must be at least 8 characters.' : ''
+            });
+            if (values === null) return;
+
+            try {
+                const result = await officeCall(`/guides/${encodeURIComponent(id)}/account`, {
+                    method: 'POST',
+                    body: { email: values.email.trim(), newPassword: (values.newPassword || '').trim() }
+                });
+                await loadEverything();
+                // Shown once — the server keeps only a hash of it.
+                showToast(result.newPassword
+                    ? `Sign-in for ${guide.fullName}\nEmail: ${result.email}\nPassword: ${result.newPassword}\n\nPass this on now — it cannot be read again.`
+                    : result.message, 'success', { duration: result.newPassword ? 0 : 4000 });
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function withdrawSignIn(id) {
+            const guide = allGuides.find(g => String(g._id) === String(id));
+            if (!guide) return;
+            const sure = await ztimsDialog.confirm({
+                title: `Withdraw ${guide.fullName}'s sign-in?`,
+                message: 'They are signed out of the guide portal at once. Their record, bookings and reports all stay.',
+                confirmLabel: 'Withdraw sign-in',
+                cancelLabel: 'Keep it',
+                tone: 'danger'
+            });
+            if (!sure) return;
+            try {
+                const result = await officeCall(`/guides/${encodeURIComponent(id)}/account`, { method: 'DELETE' });
+                await loadEverything();
+                showToast(result.message, 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        /* ---- find a guide ---------------------------------------------------- */
+
+        function renderKnownLanguages() {
+            const names = new Map();
+            allGuides.forEach(g => (g.languages || []).forEach(name => names.set(name.toLowerCase(), name)));
+            document.getElementById('knownLanguages').innerHTML = [...names.values()].sort()
+                .map(name => `<option value="${escapeHtml(name)}"></option>`).join('');
+        }
+
+        async function findGuide(event) {
+            event.preventDefault();
+            const box = document.getElementById('findResults');
+            const params = new URLSearchParams({ language: document.getElementById('findLanguage').value.trim() });
+            const date = document.getElementById('findDate').value;
+            const time = document.getElementById('findTime').value;
+            if (date) params.set('date', date);
+            if (date && time) params.set('time', time);
+
+            const restore = setButtonLoading(document.getElementById('findGuideBtn'), 'Finding...');
+            try {
+                const result = await officeCall(`/guides/search?${params}`);
+                const free = result.results.filter(r => r.free);
+                const when = date
+                    ? `free on ${new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}${time ? ' at ' + time : ''}`
+                    : 'currently available';
+                box.innerHTML = !result.results.length
+                    ? `<div class="ztims-empty">No guide lists ${escapeHtml(result.language)}.</div>`
+                    : `<p class="text-sm text-on-surface mb-3"><strong>${free.length}</strong> of ${result.results.length}
+                        ${escapeHtml(result.language)} speaker${result.results.length === 1 ? '' : 's'} ${escapeHtml(when)}.</p>
+                       <ul class="divide-y divide-outline-variant/30">${result.results.map(r => `
+                        <li class="py-3 flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-on-surface">${escapeHtml(r.fullName)}
+                                    <span class="text-support font-normal">· ${r.scope === 'barangay' ? 'Brgy. ' + escapeHtml(r.barangay) : 'Municipal'}</span></p>
+                                <p class="text-support">${escapeHtml((r.languages || []).join(', '))}${r.contactNumber ? ' · ' + escapeHtml(r.contactNumber) : ''}</p>
+                                ${r.reason ? `<p class="text-sm text-on-surface-variant">${escapeHtml(r.reason)}</p>` : ''}
+                            </div>
+                            <span class="tone-pill ${r.free ? 'tone-success' : 'tone-neutral'} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${r.free ? 'Free' : 'Not free'}</span>
+                        </li>`).join('')}</ul>`;
+            } catch (error) {
+                box.innerHTML = `<p class="text-sm text-error">${escapeHtml(error.message)}</p>`;
+            } finally {
+                restore();
+            }
+        }
+
+        /* ---- profile change requests ------------------------------------------ */
+
+        const REQUEST_LABELS = { contactNumber: 'Contact number', bio: 'About' };
+
+        async function loadRequests() {
+            const list = document.getElementById('requestList');
+            try {
+                const { requests } = await officeCall('/guides/profile-requests');
+                const count = document.getElementById('requestCount');
+                count.hidden = !requests.length;
+                count.textContent = requests.length;
+                list.innerHTML = !requests.length
+                    ? '<li class="py-3 text-support italic">Nothing waiting.</li>'
+                    : requests.map(r => `
+                        <li class="py-4 space-y-2">
+                            <p class="font-bold text-on-surface">${escapeHtml(r.guide.fullName)}
+                                <span class="text-support font-normal">· asked ${escapeHtml(new Date(r.createdAt).toLocaleDateString())}</span></p>
+                            ${Object.entries(r.changes || {}).map(([field, value]) => `
+                                <div class="grid grid-cols-1 sm:grid-cols-[8rem_1fr_1fr] gap-1 sm:gap-3 text-sm">
+                                    <span class="text-label uppercase tracking-wider">${escapeHtml(REQUEST_LABELS[field] || field)}</span>
+                                    <span class="text-on-surface-variant line-through whitespace-pre-line">${escapeHtml(r.current[field] || '(blank)')}</span>
+                                    <span class="text-on-surface font-bold whitespace-pre-line">${escapeHtml(value || '(blank)')}</span>
+                                </div>`).join('')}
+                            ${r.note ? `<p class="text-support">“${escapeHtml(r.note)}”</p>` : ''}
+                            <div class="flex gap-2">
+                                <button type="button" data-approve="${escapeHtml(r._id)}" class="btn btn-primary !min-h-[40px] !px-3 !py-2 !text-xs">Approve</button>
+                                <button type="button" data-reject="${escapeHtml(r._id)}" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">Reject</button>
+                            </div>
+                        </li>`).join('');
+            } catch (error) {
+                list.innerHTML = `<li class="py-3 text-sm text-error">${escapeHtml(error.message)}</li>`;
+            }
+        }
+
+        async function decideRequest(id, decision, button) {
+            let reviewNote = '';
+            if (decision === 'reject') {
+                const typed = await ztimsDialog.prompt({
+                    title: 'Reject this change?',
+                    message: 'The guide\'s record stays as it is.',
+                    label: 'Reason', optional: true, placeholder: 'Optional',
+                    confirmLabel: 'Reject'
+                });
+                if (typed === null) return;
+                reviewNote = typed.trim();
+            }
+            button.disabled = true;
+            try {
+                const result = await officeCall(`/guides/profile-requests/${encodeURIComponent(id)}`, {
+                    method: 'PATCH', body: { decision, reviewNote }
+                });
+                showToast(result.message, 'success');
+                await loadEverything();
+            } catch (error) {
+                button.disabled = false;
+                showToast(error.message, 'error');
+            }
+        }
+
+        /* ---- reports, rolled up by barangay ------------------------------------ */
+
+        const REPORT_TYPES = {
+            tour_completed: ['tone-success', 'Tour completed'],
+            headcount: ['tone-info', 'Headcount'],
+            incident: ['tone-danger', 'Incident'],
+            tourist_feedback: ['tone-warning', 'Tourist feedback']
+        };
+
+        async function loadReports() {
+            const params = new URLSearchParams();
+            const barangay = document.getElementById('reportBarangayFilter').value;
+            const type = document.getElementById('reportTypeFilter').value;
+            const status = document.getElementById('reportStatusFilter').value;
+            if (barangay) params.set('barangay', barangay);
+            if (type) params.set('type', type);
+            if (status) params.set('status', status);
+
+            const list = document.getElementById('reportList');
+            try {
+                const result = await officeCall(`/guides/reports?${params}`);
+                if (result.barangays && result.barangays.length) {
+                    BARANGAYS = result.barangays;
+                    const select = document.getElementById('reportBarangayFilter');
+                    const kept = select.value;
+                    select.innerHTML = '<option value="">Every barangay</option>' +
+                        BARANGAYS.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('') +
+                        '<option value="none">Not tied to a barangay</option>';
+                    select.value = kept;
+                }
+
+                document.getElementById('rollupBody').innerHTML = result.byBarangay.map(row => `
+                    <tr${row.reports ? '' : ' class="opacity-60"'}>
+                        <td class="px-4 py-2.5 font-bold text-on-surface">${row.barangay ? escapeHtml(row.barangay) : '<span class="italic font-normal">Not tied to a barangay</span>'}</td>
+                        <td class="px-4 py-2.5 text-right">${row.toursCompleted}</td>
+                        <td class="px-4 py-2.5 text-right font-bold text-on-surface">${row.visitorsCounted}</td>
+                        <td class="px-4 py-2.5 text-right ${row.incidents ? 'tone-danger font-bold' : ''}">${row.incidents}</td>
+                        <td class="px-4 py-2.5 text-right">${row.feedback}</td>
+                        <td class="px-4 py-2.5 text-right ${row.unreviewed ? 'tone-warning font-bold' : ''}">${row.unreviewed}</td>
+                    </tr>`).join('');
+
+                list.innerHTML = !result.reports.length
+                    ? '<li class="py-3 text-support italic">No reports match.</li>'
+                    : result.reports.slice(0, 50).map(r => {
+                        const [tone, label] = REPORT_TYPES[r.reportType] || ['tone-neutral', r.reportType];
+                        return `
+                        <li class="py-3 space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="tone-pill ${tone} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${label}</span>
+                                <span class="text-sm font-bold text-on-surface">${escapeHtml(r.reportDate)}</span>
+                                <span class="text-support">${escapeHtml(r.guide.fullName)}${r.barangay ? ' · Brgy. ' + escapeHtml(r.barangay) : ''}</span>
+                                <span class="ml-auto">${r.status === 'reviewed'
+                                    ? `<span class="text-support">Reviewed by ${escapeHtml(r.reviewedByEmail || 'the office')}</span>`
+                                    : `<button type="button" data-review="${escapeHtml(r._id)}" class="btn btn-secondary !min-h-[36px] !px-3 !py-1 !text-xs">Mark reviewed</button>`}</span>
+                            </div>
+                            ${r.bookingReference ? `<p class="text-support">${escapeHtml(r.bookingReference)} · ${escapeHtml(r.spotTitle)}</p>` : ''}
+                            ${r.headcount !== null && r.headcount !== undefined ? `<p class="text-sm">${r.headcount} visitor${r.headcount === 1 ? '' : 's'}</p>` : ''}
+                            ${r.details ? `<p class="text-sm whitespace-pre-line">${escapeHtml(r.details)}</p>` : ''}
+                        </li>`;
+                    }).join('');
+            } catch (error) {
+                list.innerHTML = `<li class="py-3 text-sm text-error">${escapeHtml(error.message)}</li>`;
+            }
+        }
+
+        async function markReviewed(id, button) {
+            button.disabled = true;
+            try {
+                await officeCall(`/guides/reports/${encodeURIComponent(id)}`, { method: 'PATCH', body: { status: 'reviewed' } });
+                await loadReports();
+            } catch (error) {
+                button.disabled = false;
+                showToast(error.message, 'error');
+            }
+        }
+
         /* ---- wiring ------------------------------------------------------ */
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -1097,9 +1557,15 @@ body { overflow-x: hidden; }
             document.getElementById('closeGuideModalBtn').addEventListener('click', closeGuideModal);
             document.getElementById('cancelGuideBtn').addEventListener('click', closeGuideModal);
             document.getElementById('guideForm').addEventListener('submit', saveGuide);
+            document.getElementById('guideScope').addEventListener('change', syncScopeFields);
+            document.getElementById('guideBarangay').addEventListener('change', syncScopeFields);
             document.getElementById('refreshGuidesBtn').addEventListener('click', loadEverything);
             document.getElementById('guideSearch').addEventListener('input', renderTable);
             document.getElementById('statusFilter').addEventListener('change', renderTable);
+            document.getElementById('scopeFilter').addEventListener('change', renderTable);
+            document.getElementById('findGuideForm').addEventListener('submit', findGuide);
+            ['reportBarangayFilter', 'reportTypeFilter', 'reportStatusFilter'].forEach(id =>
+                document.getElementById(id).addEventListener('change', loadReports));
 
             document.getElementById('guideModal').addEventListener('click', event => {
                 if (event.target === document.getElementById('guideModal')) closeGuideModal();
@@ -1111,12 +1577,27 @@ body { overflow-x: hidden; }
             document.getElementById('guideTableBody').addEventListener('click', event => {
                 const edit = event.target.closest('[data-edit]');
                 if (edit) openGuideModal(allGuides.find(g => String(g._id) === edit.dataset.edit));
+                const signIn = event.target.closest('[data-signin]');
+                if (signIn) manageSignIn(signIn.dataset.signin);
+                const withdraw = event.target.closest('[data-withdraw]');
+                if (withdraw) withdrawSignIn(withdraw.dataset.withdraw);
             });
 
             // Delegated, so the dropdowns survive every redraw of the table.
             document.getElementById('guideTableBody').addEventListener('change', event => {
                 const select = event.target.closest('[data-status-for]');
                 if (select) setGuideStatus(select.dataset.statusFor, select.value, select);
+            });
+
+            document.getElementById('requestList').addEventListener('click', event => {
+                const approve = event.target.closest('[data-approve]');
+                if (approve) decideRequest(approve.dataset.approve, 'approve', approve);
+                const reject = event.target.closest('[data-reject]');
+                if (reject) decideRequest(reject.dataset.reject, 'reject', reject);
+            });
+            document.getElementById('reportList').addEventListener('click', event => {
+                const review = event.target.closest('[data-review]');
+                if (review) markReviewed(review.dataset.review, review);
             });
 
             loadEverything();
@@ -1207,5 +1688,6 @@ body { overflow-x: hidden; }
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/photo-upload.js"></script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>

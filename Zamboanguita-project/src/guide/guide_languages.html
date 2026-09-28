@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tourist Guide | Languages</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/guide-portal.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- The sidebar and header are drawn by ../shared/guide-portal.js. -->
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[900px] mx-auto space-y-8">
+
+            <div class="space-y-1">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Languages</h2>
+                <p class="text-on-surface-variant max-w-2xl">
+                    The languages you can guide a tour in. The Municipal Tourism Office searches by language when it matches
+                    you with visitors, so list only the ones you are comfortable leading a whole tour in.
+                </p>
+            </div>
+
+            <div id="languagesLoading"></div>
+
+            <section id="languagesContent" hidden class="glass-panel rounded-2xl p-5 sm:p-8 space-y-6">
+                <div>
+                    <h3 class="text-label font-bold uppercase tracking-wider mb-3">You speak</h3>
+                    <ul id="chosenList" class="flex flex-wrap gap-2" aria-live="polite"></ul>
+                </div>
+
+                <div>
+                    <h3 class="text-label font-bold uppercase tracking-wider mb-3">Common in Zamboanguita</h3>
+                    <div id="suggestions" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <form id="addLanguageForm" class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <label for="languageInput" class="block text-label font-bold uppercase tracking-wider mb-1">Another language</label>
+                        <input id="languageInput" type="text" maxlength="40" list="languageOptions" placeholder="e.g., Hiligaynon"
+                               class="field w-full"/>
+                        <datalist id="languageOptions"></datalist>
+                    </div>
+                    <button type="submit" class="btn btn-secondary sm:self-end min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">add</span> Add
+                    </button>
+                </form>
+
+                <p id="languagesMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                <button type="button" id="saveLanguagesBtn" class="btn btn-primary w-full min-h-[44px]">Save languages</button>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Offered as one-tap choices. The local languages first, then the ones
+        // visitors to Negros Oriental most often speak. Anything else is typed.
+        const SUGGESTED = ['English', 'Filipino', 'Cebuano', 'Hiligaynon', 'Korean', 'Japanese',
+            'Mandarin Chinese', 'German', 'French', 'Spanish', 'Russian'];
+        const MORE = ['Tagalog', 'Waray', 'Italian', 'Dutch', 'Arabic', 'Hindi', 'Cantonese', 'Portuguese',
+            'Swedish', 'Hebrew', 'Vietnamese', 'Thai', 'Indonesian', 'Malay'];
+
+        let chosen = [];
+        let saved = '';
+
+        const same = (a, b) => a.toLowerCase() === b.toLowerCase();
+
+        function render() {
+            const P = window.GuidePortal;
+            const list = document.getElementById('chosenList');
+            list.innerHTML = chosen.length
+                ? chosen.map((name, index) => `
+                    <li class="inline-flex items-center gap-1 pl-3 pr-1 py-1 bg-primary/10 border border-primary/30 text-on-surface font-bold text-sm">
+                        ${P.escapeHtml(name)}
+                        <button type="button" data-drop="${index}" aria-label="Remove ${P.escapeHtml(name)}"
+                                class="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center text-on-surface-variant hover:text-error">
+                            <span class="material-symbols-outlined !text-base">close</span>
+                        </button>
+                    </li>`).join('')
+                : '<li class="text-support italic">None listed yet. Tap a language below or type one.</li>';
+
+            document.getElementById('suggestions').innerHTML = SUGGESTED
+                .filter(name => !chosen.some(c => same(c, name)))
+                .map(name => `
+                    <button type="button" data-add="${P.escapeHtml(name)}"
+                            class="px-3 py-1.5 min-h-[40px] border border-outline-variant/50 text-sm text-on-surface-variant hover:text-accent hover:border-accent transition-colors">
+                        + ${P.escapeHtml(name)}
+                    </button>`).join('') || '<span class="text-support italic">All listed.</span>';
+
+            const unsaved = JSON.stringify(chosen) !== saved;
+            document.getElementById('saveLanguagesBtn').textContent = unsaved ? 'Save languages' : 'Saved';
+        }
+
+        function add(name) {
+            const clean = String(name || '').trim().replace(/\s+/g, ' ');
+            if (!clean) return;
+            if (chosen.some(c => same(c, clean))) {
+                window.GuidePortal.showMessage('languagesMessage', `${clean} is already listed.`, 'error');
+                return;
+            }
+            if (chosen.length >= 20) {
+                window.GuidePortal.showMessage('languagesMessage', 'List at most 20 languages.', 'error');
+                return;
+            }
+            window.GuidePortal.showMessage('languagesMessage', '');
+            chosen.push(clean);
+            render();
+        }
+
+        async function save() {
+            const P = window.GuidePortal;
+            P.showMessage('languagesMessage', '');
+            const restore = P.setButtonLoading(document.getElementById('saveLanguagesBtn'), 'Saving...');
+            try {
+                const { result } = await P.api('/guides/me/languages', { method: 'PUT', body: { languages: chosen } });
+                chosen = (result.guide.languages || []).slice();
+                saved = JSON.stringify(chosen);
+                restore();
+                render();
+                P.showToast(result.message, 'success');
+            } catch (error) {
+                restore();
+                P.showMessage('languagesMessage', error.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const P = window.GuidePortal;
+            if (!P || !P.start()) return;
+
+            document.getElementById('languageOptions').innerHTML =
+                SUGGESTED.concat(MORE).map(name => `<option value="${P.escapeHtml(name)}"></option>`).join('');
+            document.getElementById('addLanguageForm').addEventListener('submit', event => {
+                event.preventDefault();
+                const input = document.getElementById('languageInput');
+                add(input.value);
+                input.value = '';
+                input.focus();
+            });
+            document.getElementById('suggestions').addEventListener('click', event => {
+                const button = event.target.closest('[data-add]');
+                if (button) add(button.dataset.add);
+            });
+            document.getElementById('chosenList').addEventListener('click', event => {
+                const button = event.target.closest('[data-drop]');
+                if (!button) return;
+                chosen.splice(Number(button.dataset.drop), 1);
+                render();
+            });
+            document.getElementById('saveLanguagesBtn').addEventListener('click', save);
+
+            const loading = document.getElementById('languagesLoading');
+            const done = P.showLoading(loading, 'Loading your languages...');
+            try {
+                const { result } = await P.api('/guides/me');
+                done();
+                loading.innerHTML = '';
+                P.rememberGuide(result.guide);
+                chosen = (result.guide.languages || []).slice();
+                saved = JSON.stringify(chosen);
+                render();
+                document.getElementById('languagesContent').hidden = false;
+            } catch (error) {
+                done();
+                P.showLoadError(loading, 'your languages', error);
+            }
+        });
+    </script>
+    <script type="module" src="../shared/guide-portal.js"></script>
+</body>
+</html>

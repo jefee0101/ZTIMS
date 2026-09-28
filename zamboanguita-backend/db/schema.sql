@@ -157,7 +157,10 @@ create index if not exists spots_created_at_idx on public.spots (created_at desc
 
 
 -- ---------------------------------------------------------------------------
--- Tourist guides: municipal records, not accounts. Guides do not sign in.
+-- Tourist guides: municipal records the Tourism Office keeps. A guide may also
+-- be given a sign-in (email + password below) for the guide portal, where they
+-- keep their own availability and languages; everything else stays the
+-- office's to set. A guide without a sign-in has email and password_hash null.
 -- ---------------------------------------------------------------------------
 create table if not exists public.tourist_guides (
     id                  text primary key default public.ztims_new_id(),
@@ -178,6 +181,98 @@ create table if not exists public.tourist_guides (
 );
 
 create index if not exists tourist_guides_status_idx on public.tourist_guides (status);
+
+-- Added with the guide portal. Separate statements, so a database created
+-- before them gains them here and one created after is left alone.
+--
+-- One kind of account, Tourist Guide, with a scope — the guide's jurisdiction:
+--   municipal  the whole municipality; stationed at the Municipal Tourism Office
+--   barangay   only the barangay named in `barangay`, where they are stationed
+-- The screens are the same for both; the scope filters what a guide sees and
+-- which destinations the office may assign them. `barangay` is the name, the
+-- same text spots.barangay holds, so the two compare directly. The API checks
+-- it against the barangay list and requires it for a barangay scope, since
+-- that rule depends on another column.
+alter table public.tourist_guides
+    add column if not exists scope text not null default 'municipal'
+        constraint tourist_guides_scope check (scope in ('municipal', 'barangay'));
+alter table public.tourist_guides
+    add column if not exists barangay text not null default '';
+-- The weekdays the guide works. A booking on any other day is not assigned to them.
+alter table public.tourist_guides
+    add column if not exists available_days text[] not null default '{mon,tue,wed,thu,fri,sat,sun}'
+        constraint tourist_guides_available_days
+        check (available_days <@ array['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']::text[]);
+-- The sign-in. Null until the office issues one.
+alter table public.tourist_guides
+    add column if not exists email text
+        constraint tourist_guides_email_normalised
+        check (email is null or (email <> '' and email = lower(btrim(email))));
+alter table public.tourist_guides
+    add column if not exists password_hash text;
+alter table public.tourist_guides
+    add column if not exists reset_token_hash text;
+alter table public.tourist_guides
+    add column if not exists reset_token_expires timestamptz;
+
+create unique index if not exists tourist_guides_email_key
+    on public.tourist_guides (email) where email is not null;
+create index if not exists tourist_guides_scope_idx on public.tourist_guides (scope, barangay);
+
+-- Single days a guide is off (leave, a fiesta, sick). Kept by the guide in the
+-- portal; the office cannot assign them a booking on one of these dates.
+create table if not exists public.guide_time_off (
+    id                  text primary key default public.ztims_new_id(),
+    guide_id            text not null references public.tourist_guides (id) on delete cascade,
+    off_date            date not null,
+    note                text not null default ''
+                        constraint guide_time_off_note_length check (char_length(note) <= 200),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint guide_time_off_once_a_day unique (guide_id, off_date)
+);
+
+-- Languages, and who speaks them. A table of their own rather than a list on
+-- the guide, so "who speaks Korean" is a join, and "Korean" and "korean" are
+-- one language rather than two.
+create table if not exists public.languages (
+    id                  text primary key default public.ztims_new_id(),
+    name                text not null
+                        constraint languages_name_length check (char_length(btrim(name)) between 1 and 40),
+    created_at          timestamptz not null default now()
+);
+
+create unique index if not exists languages_name_key on public.languages (lower(name));
+
+create table if not exists public.guide_languages (
+    guide_id            text not null references public.tourist_guides (id) on delete cascade,
+    language_id         text not null references public.languages (id) on delete cascade,
+    primary key (guide_id, language_id)
+);
+
+create index if not exists guide_languages_language_idx on public.guide_languages (language_id);
+
+-- A guide cannot change their own record: they ask, and the office approves.
+-- `changes` holds only the fields a guide may propose (contact number, bio).
+-- One open request per guide at a time.
+create table if not exists public.guide_profile_requests (
+    id                  text primary key default public.ztims_new_id(),
+    guide_id            text not null references public.tourist_guides (id) on delete cascade,
+    changes             jsonb not null,
+    note                text not null default ''
+                        constraint guide_profile_requests_note_length check (char_length(note) <= 500),
+    status              text not null default 'pending'
+                        constraint guide_profile_requests_status check (status in ('pending', 'approved', 'rejected')),
+    review_note         text not null default '',
+    reviewed_by_email   text not null default '',
+    reviewed_at         timestamptz,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create unique index if not exists guide_profile_requests_one_pending
+    on public.guide_profile_requests (guide_id) where status = 'pending';
+create index if not exists guide_profile_requests_status_idx on public.guide_profile_requests (status);
 
 -- Which spots each guide serves. MongoDB held this as an array on the guide;
 -- here it is a table of its own so every entry is a real spot. `position`
@@ -228,6 +323,38 @@ create index if not exists guide_bookings_status_idx on public.guide_bookings (s
 create index if not exists guide_bookings_nationality_idx on public.guide_bookings (nationality);
 create index if not exists guide_bookings_created_at_idx on public.guide_bookings (created_at desc);
 
+
+-- What a guide reports to the office: a tour completed, a headcount, an
+-- incident, or feedback a tourist gave them. `barangay` is where it happened,
+-- set by the API from the booking's destination or the guide's own barangay,
+-- never taken from the guide — it is what the office's per-barangay rollup
+-- counts. Filing a report never changes a booking; the office does that.
+create table if not exists public.guide_reports (
+    id                  text primary key default public.ztims_new_id(),
+    guide_id            text not null references public.tourist_guides (id) on delete cascade,
+    booking_id          text references public.guide_bookings (id) on delete set null,
+    report_type         text not null
+                        constraint guide_reports_type
+                        check (report_type in ('tour_completed', 'headcount', 'incident', 'tourist_feedback')),
+    report_date         date not null,
+    headcount           integer
+                        constraint guide_reports_headcount check (headcount is null or headcount >= 0),
+    barangay            text not null default '',
+    details             text not null default ''
+                        constraint guide_reports_details_length check (char_length(details) <= 2000),
+    status              text not null default 'new'
+                        constraint guide_reports_status check (status in ('new', 'reviewed')),
+    reviewed_by_email   text not null default '',
+    reviewed_at         timestamptz,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create index if not exists guide_reports_guide_idx on public.guide_reports (guide_id);
+create index if not exists guide_reports_booking_idx on public.guide_reports (booking_id);
+create index if not exists guide_reports_barangay_idx on public.guide_reports (barangay);
+create index if not exists guide_reports_status_idx on public.guide_reports (status);
+create index if not exists guide_reports_report_date_idx on public.guide_reports (report_date desc);
 
 -- ---------------------------------------------------------------------------
 -- Payments: a record of cash taken at the counter. ZTIMS takes no money
@@ -301,7 +428,7 @@ declare
 begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
-        'guide_bookings', 'payments', 'feedback'
+        'guide_time_off', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -312,7 +439,7 @@ begin
 
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
-        'guide_bookings', 'payments', 'feedback', 'rate_limits'
+        'guide_time_off', 'languages', 'guide_languages', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback', 'rate_limits'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

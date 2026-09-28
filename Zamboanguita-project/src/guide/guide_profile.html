@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tourist Guide | My Profile</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/guide-portal.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- The sidebar and header are drawn by ../shared/guide-portal.js. -->
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1000px] mx-auto space-y-8">
+
+            <div class="space-y-1">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Profile</h2>
+                <p class="text-on-surface-variant max-w-2xl">
+                    Your guide record, as the Municipal Tourism Office keeps it. You can ask for your contact
+                    number and "about you" to be changed; the office approves the change before it shows.
+                    For anything else, speak to the office.
+                </p>
+            </div>
+
+            <div id="profileLoading"></div>
+
+            <div id="profileContent" hidden class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-6">
+                    <div class="flex items-center gap-4">
+                        <img id="profilePhoto" hidden alt="" class="w-20 h-20 object-cover border border-outline-variant/40 shrink-0"/>
+                        <div id="profilePhotoEmpty" class="w-20 h-20 bg-surface-variant border border-outline-variant/40 shrink-0 flex items-center justify-center">
+                            <span class="material-symbols-outlined !text-4xl text-on-surface-variant">person</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p id="profileName" class="text-2xl font-black text-on-surface break-words"></p>
+                            <p id="profileStation" class="text-sm text-primary font-bold"></p>
+                            <span id="profileStatus" class="tone-pill text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 inline-block mt-1"></span>
+                        </div>
+                    </div>
+
+                    <dl class="text-sm divide-y divide-outline-variant/30">
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Scope</dt><dd id="profileType" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Stationed at</dt><dd id="profileBase" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Contact number</dt><dd id="profileContact" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Guide fee</dt><dd id="profileFee" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Largest group</dt><dd id="profileGroup" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Languages</dt><dd id="profileLanguages" class="text-on-surface font-bold text-right"></dd></div>
+                        <div class="flex justify-between gap-4 py-2.5"><dt class="text-on-surface-variant">Working days</dt><dd id="profileDays" class="text-on-surface font-bold text-right"></dd></div>
+                    </dl>
+
+                    <div>
+                        <h3 class="text-label font-bold uppercase tracking-wider mb-2">Destinations you guide</h3>
+                        <ul id="profileSpots" class="flex flex-wrap gap-2"></ul>
+                    </div>
+
+                    <div id="profileBioWrap" hidden>
+                        <h3 class="text-label font-bold uppercase tracking-wider mb-2">About you</h3>
+                        <p id="profileBio" class="text-sm text-on-surface-variant whitespace-pre-line"></p>
+                    </div>
+                </section>
+
+                <div class="space-y-8">
+                    <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">edit</span> Ask for a change
+                        </h3>
+
+                        <div id="pendingRequest" hidden class="tone-warning border border-current/30 p-4 space-y-2 text-sm">
+                            <p class="font-bold flex items-center gap-2"><span class="material-symbols-outlined !text-lg">hourglass_top</span> Waiting for the office</p>
+                            <dl id="pendingChanges" class="space-y-1 text-on-surface"></dl>
+                            <button type="button" id="withdrawRequestBtn" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">Withdraw request</button>
+                        </div>
+
+                        <form id="requestForm" class="space-y-4">
+                            <div>
+                                <label for="requestContact" class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
+                                <input id="requestContact" type="tel" maxlength="40" placeholder="09XX XXX XXXX" class="field w-full"/>
+                            </div>
+                            <div>
+                                <label for="requestBio" class="block text-label font-bold uppercase tracking-wider mb-1">About you</label>
+                                <textarea id="requestBio" rows="4" maxlength="2000" class="field w-full resize-none"
+                                          placeholder="Your specialities, years guiding, what visitors enjoy on your tours"></textarea>
+                            </div>
+                            <div>
+                                <label for="requestNote" class="block text-label font-bold uppercase tracking-wider mb-1">Note to the office <span class="normal-case font-normal opacity-70">(optional)</span></label>
+                                <input id="requestNote" type="text" maxlength="500" placeholder="e.g., new SIM since June" class="field w-full"/>
+                            </div>
+                            <p id="requestMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                            <button type="submit" id="sendRequestBtn" class="btn btn-primary w-full min-h-[44px]">Send for approval</button>
+                        </form>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">lock</span> Password
+                        </h3>
+                        <form id="passwordForm" class="space-y-4">
+                            <div>
+                                <label for="currentPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Current password</label>
+                                <input id="currentPasswordInput" type="password" required autocomplete="current-password" class="field w-full"/>
+                            </div>
+                            <div>
+                                <label for="newPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">New password</label>
+                                <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="field w-full"/>
+                            </div>
+                            <div>
+                                <label for="confirmPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Repeat the new password</label>
+                                <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password" class="field w-full"/>
+                            </div>
+                            <p id="passwordMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                            <button type="submit" id="savePasswordBtn" class="btn btn-secondary w-full min-h-[44px]">Change password</button>
+                        </form>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-3">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">badge</span> Account
+                        </h3>
+                        <dl class="text-sm space-y-2">
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-on-surface-variant">Sign-in email</dt>
+                                <dd id="signInEmail" class="text-on-surface font-bold text-right break-all"></dd>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <dt class="text-on-surface-variant">Guide since</dt>
+                                <dd id="guideSince" class="text-on-surface font-bold text-right"></dd>
+                            </div>
+                        </dl>
+                        <p class="text-support pt-2">
+                            Your name, scope, fee, group size, destinations, photo and sign-in email are kept by the
+                            Municipal Tourism Office. Your availability and languages are yours to keep current; contact number and "about you" change once the office approves.
+                        </p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const STATUS_LABEL = {
+            available: ['tone-success', 'Available'],
+            unavailable: ['tone-warning', 'Unavailable'],
+            inactive: ['tone-neutral', 'Inactive']
+        };
+
+        function fillProfile(guide) {
+            const P = window.GuidePortal;
+            const photo = document.getElementById('profilePhoto');
+            photo.hidden = !guide.photoUrl;
+            document.getElementById('profilePhotoEmpty').hidden = Boolean(guide.photoUrl);
+            if (guide.photoUrl) photo.src = guide.photoUrl;
+
+            document.getElementById('profileName').textContent = guide.fullName;
+            document.getElementById('profileStation').textContent = P.stationLabel(guide);
+            const [tone, label] = STATUS_LABEL[guide.status] || STATUS_LABEL.inactive;
+            const status = document.getElementById('profileStatus');
+            status.className = `tone-pill ${tone} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 inline-block mt-1`;
+            status.textContent = label;
+
+            document.getElementById('profileType').textContent =
+                guide.scope === 'barangay' ? `Barangay ${guide.barangay} only` : 'Whole municipality';
+            document.getElementById('profileBase').textContent = guide.scope === 'barangay'
+                ? `Barangay ${guide.barangay}`
+                : 'Municipal Tourism Office';
+            document.getElementById('profileContact').textContent = guide.contactNumber || '—';
+            document.getElementById('profileFee').textContent =
+                `₱${(Number(guide.guideFee) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('profileGroup').textContent =
+                `${guide.maxGroupSize} visitor${guide.maxGroupSize === 1 ? '' : 's'}`;
+            document.getElementById('profileLanguages').textContent = (guide.languages || []).join(', ') || '—';
+            const days = new Set(guide.availableDays || []);
+            document.getElementById('profileDays').textContent =
+                P.weekdays.filter(d => days.has(d.value)).map(d => d.short).join(', ') || '—';
+
+            const spots = guide.assignedSpots || [];
+            document.getElementById('profileSpots').innerHTML = spots.length
+                ? spots.map(s => `<li class="px-2.5 py-1 bg-secondary-container/20 text-on-secondary-container text-xs font-bold">${P.escapeHtml(s.title)}</li>`).join('')
+                : '<li class="text-support italic">None yet — the office assigns these.</li>';
+
+            document.getElementById('profileBioWrap').hidden = !guide.bio;
+            document.getElementById('profileBio').textContent = guide.bio || '';
+            document.getElementById('signInEmail').textContent = guide.email || '';
+            document.getElementById('guideSince').textContent =
+                P.formatDate(guide.createdAt, { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        /* ---- asking for a change --------------------------------------------
+           The form starts from the record as it is now; only what differs is
+           sent, and nothing changes until the office approves. */
+        const REQUEST_LABELS = { contactNumber: 'Contact number', bio: 'About you' };
+
+        function fillRequest(guide) {
+            const P = window.GuidePortal;
+            const pending = guide.pendingProfileRequest;
+            document.getElementById('pendingRequest').hidden = !pending;
+            document.getElementById('requestForm').hidden = Boolean(pending);
+            if (pending) {
+                document.getElementById('pendingChanges').innerHTML = Object.entries(pending.changes || {}).map(([field, value]) => `
+                    <div><dt class="text-label uppercase tracking-wider">${P.escapeHtml(REQUEST_LABELS[field] || field)}</dt>
+                    <dd class="whitespace-pre-line">${P.escapeHtml(value || '(blank)')}</dd></div>`).join('') +
+                    `<p class="text-support">Sent ${P.escapeHtml(P.formatDate(pending.createdAt, { month: 'short', day: 'numeric', year: 'numeric' }))}</p>`;
+            }
+            document.getElementById('requestContact').value = guide.contactNumber || '';
+            document.getElementById('requestBio').value = guide.bio || '';
+            document.getElementById('requestNote').value = '';
+        }
+
+        async function reloadProfile() {
+            const { result } = await window.GuidePortal.api('/guides/me');
+            window.GuidePortal.rememberGuide(result.guide);
+            fillProfile(result.guide);
+            fillRequest(result.guide);
+        }
+
+        async function sendRequest(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('requestMessage', '');
+            const restore = P.setButtonLoading(document.getElementById('sendRequestBtn'), 'Sending...');
+            try {
+                const { result } = await P.api('/guides/me/profile-request', {
+                    method: 'POST',
+                    body: {
+                        contactNumber: document.getElementById('requestContact').value.trim(),
+                        bio: document.getElementById('requestBio').value.trim(),
+                        note: document.getElementById('requestNote').value.trim()
+                    }
+                });
+                P.showToast(result.message, 'success');
+                await reloadProfile();
+            } catch (error) {
+                P.showMessage('requestMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        async function withdrawRequest() {
+            const P = window.GuidePortal;
+            const button = document.getElementById('withdrawRequestBtn');
+            button.disabled = true;
+            try {
+                const { result } = await P.api('/guides/me/profile-request', { method: 'DELETE' });
+                P.showToast(result.message, 'success');
+                await reloadProfile();
+            } catch (error) {
+                P.showToast(error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('passwordMessage', '');
+            const currentPassword = document.getElementById('currentPasswordInput').value;
+            const newPassword = document.getElementById('newPasswordInput').value;
+            if (newPassword.length < 8) {
+                P.showMessage('passwordMessage', 'Your new password must be at least 8 characters.', 'error');
+                return;
+            }
+            if (newPassword !== document.getElementById('confirmPasswordInput').value) {
+                P.showMessage('passwordMessage', 'Those two passwords do not match.', 'error');
+                return;
+            }
+            const restore = P.setButtonLoading(document.getElementById('savePasswordBtn'), 'Changing...');
+            try {
+                // 401 here means the current password was wrong, not a lost session.
+                await P.api('/guides/me/password', { method: 'POST', body: { currentPassword, newPassword }, keep401: true });
+                document.getElementById('passwordForm').reset();
+                P.showMessage('passwordMessage', 'Your password has been changed. Use the new one next time you sign in.');
+            } catch (error) {
+                P.showMessage('passwordMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const P = window.GuidePortal;
+            if (!P || !P.start()) return;
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            document.getElementById('requestForm').addEventListener('submit', sendRequest);
+            document.getElementById('withdrawRequestBtn').addEventListener('click', withdrawRequest);
+
+            const loading = document.getElementById('profileLoading');
+            const done = P.showLoading(loading, 'Loading your profile...');
+            try {
+                const { result } = await P.api('/guides/me');
+                done();
+                loading.innerHTML = '';
+                P.rememberGuide(result.guide);
+                fillProfile(result.guide);
+                fillRequest(result.guide);
+                document.getElementById('profileContent').hidden = false;
+            } catch (error) {
+                done();
+                P.showLoadError(loading, 'your profile', error);
+            }
+        });
+    </script>
+    <script type="module" src="../shared/guide-portal.js"></script>
+</body>
+</html>

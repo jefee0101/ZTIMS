@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tourist Guide | Dashboard</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/guide-portal.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+    <!-- The sidebar and header are drawn by ../shared/guide-portal.js. -->
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1200px] mx-auto space-y-8">
+
+            <div class="space-y-1">
+                <p class="text-label uppercase tracking-widest text-primary font-bold" id="stationLine">Tourist guide</p>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface" id="greeting">Dashboard</h2>
+                <p class="text-on-surface-variant max-w-2xl">
+                    Your tours and the reports you file, and the guided-tour traffic in your jurisdiction.
+                    Reports go straight to the Municipal Tourism Office.
+                </p>
+            </div>
+
+            <div id="dashboardLoading"></div>
+
+            <div id="dashboardContent" hidden class="space-y-8">
+                <div id="unavailableNotice" hidden class="glass-panel rounded-2xl p-5 flex items-start gap-3 tone-warning">
+                    <span class="material-symbols-outlined">event_busy</span>
+                    <p class="text-sm">You are marked <strong>unavailable</strong>, so the office will not assign you new bookings.
+                        Change it under <a class="underline font-bold" href="guide_schedule.html">Schedule &amp; Availability</a> when you are ready.</p>
+                </div>
+
+                <!-- My tours -->
+                <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="glass-panel rounded-2xl p-5">
+                        <p class="text-label font-bold uppercase tracking-widest mb-1">My upcoming tours</p>
+                        <h5 id="statUpcoming" class="text-3xl font-black text-on-surface">—</h5>
+                        <p class="text-support mt-1" id="statUpcomingNote">from today on</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5">
+                        <p class="text-label font-bold uppercase tracking-widest mb-1">Tours completed</p>
+                        <h5 id="statCompleted" class="text-3xl font-black text-on-surface">—</h5>
+                        <p class="text-support mt-1" id="statThisMonth">—</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5">
+                        <p class="text-label font-bold uppercase tracking-widest mb-1">Visitors guided</p>
+                        <h5 id="statVisitors" class="text-3xl font-black text-on-surface">—</h5>
+                        <p class="text-support mt-1">on your completed tours</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-5">
+                        <p class="text-label font-bold uppercase tracking-widest mb-1">No-shows · cancelled</p>
+                        <h5 id="statMissed" class="text-3xl font-black text-on-surface">—</h5>
+                        <p class="text-support mt-1">your bookings that did not go ahead</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 lg:col-span-2 space-y-4">
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">bar_chart</span> My completed tours, last six months
+                        </h3>
+                        <div id="monthChart" class="space-y-2"></div>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">event</span> Next tour
+                        </h3>
+                        <div id="nextTour"></div>
+                        <a href="guide_schedule.html" class="btn btn-secondary w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">calendar_month</span> Full schedule
+                        </a>
+                    </section>
+                </div>
+
+                <!-- The jurisdiction -->
+                <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
+                    <div>
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">map</span> Guided tours in <span id="jurisdictionName">your area</span>
+                        </h3>
+                        <p class="text-support mt-1">Every guide booking at a destination in your jurisdiction, whoever guides it. Counts only.</p>
+                    </div>
+                    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                        <div class="bg-surface-variant/60 p-3"><dt class="text-label uppercase tracking-wider">Upcoming</dt><dd id="areaUpcoming" class="text-2xl font-black text-on-surface">—</dd></div>
+                        <div class="bg-surface-variant/60 p-3"><dt class="text-label uppercase tracking-wider tone-warning">Still need a guide</dt><dd id="areaUnassigned" class="text-2xl font-black text-on-surface">—</dd></div>
+                        <div class="bg-surface-variant/60 p-3"><dt class="text-label uppercase tracking-wider">Tours completed</dt><dd id="areaCompleted" class="text-2xl font-black text-on-surface">—</dd></div>
+                        <div class="bg-surface-variant/60 p-3"><dt class="text-label uppercase tracking-wider">Visitors</dt><dd id="areaVisitors" class="text-2xl font-black text-on-surface">—</dd></div>
+                    </dl>
+                    <div>
+                        <h4 class="text-label font-bold uppercase tracking-wider mb-3">Visitors by destination (completed tours)</h4>
+                        <div id="byDestination"></div>
+                    </div>
+                </section>
+
+                <!-- Reports -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4 lg:col-span-2">
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">edit_note</span> File a report
+                        </h3>
+                        <form id="reportForm" class="space-y-4">
+                            <div>
+                                <label for="reportType" class="block text-label font-bold uppercase tracking-wider mb-1">What are you reporting?</label>
+                                <select id="reportType" class="field w-full">
+                                    <option value="tour_completed">Tour completed</option>
+                                    <option value="headcount">Headcount</option>
+                                    <option value="incident">Incident</option>
+                                    <option value="tourist_feedback">Tourist feedback</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="reportBooking" class="block text-label font-bold uppercase tracking-wider mb-1">
+                                    Booking <span id="reportBookingOptional" class="normal-case font-normal opacity-70">(optional)</span>
+                                </label>
+                                <select id="reportBooking" class="field w-full"></select>
+                            </div>
+                            <div id="reportBarangayWrap" hidden>
+                                <label for="reportBarangay" class="block text-label font-bold uppercase tracking-wider mb-1">
+                                    Barangay <span class="normal-case font-normal opacity-70">(where it happened)</span>
+                                </label>
+                                <select id="reportBarangay" class="field w-full"></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="reportDate" class="block text-label font-bold uppercase tracking-wider mb-1">Date</label>
+                                    <input id="reportDate" type="date" class="field w-full"/>
+                                </div>
+                                <div id="reportHeadcountWrap">
+                                    <label for="reportHeadcount" class="block text-label font-bold uppercase tracking-wider mb-1">Visitors</label>
+                                    <input id="reportHeadcount" type="number" min="0" step="1" class="field w-full"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="reportDetails" class="block text-label font-bold uppercase tracking-wider mb-1">Details</label>
+                                <textarea id="reportDetails" rows="4" maxlength="2000" class="field w-full resize-none"
+                                          placeholder="What happened, what the tourist said, anything the office should know."></textarea>
+                            </div>
+                            <p id="reportMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                            <button type="submit" id="sendReportBtn" class="btn btn-primary w-full min-h-[44px]">
+                                <span class="material-symbols-outlined !text-base">send</span> Send to the Tourism Office
+                            </button>
+                            <p class="text-support">Reporting a tour completed does not close the booking — the office does that when they review it.</p>
+                        </form>
+                    </section>
+
+                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4 lg:col-span-3">
+                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">summarize</span> Reports you have filed
+                        </h3>
+                        <ul id="myReports" class="divide-y divide-outline-variant/30"></ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const REPORT_TYPES = {
+            tour_completed: ['tone-success', 'Tour completed'],
+            headcount: ['tone-info', 'Headcount'],
+            incident: ['tone-danger', 'Incident'],
+            tourist_feedback: ['tone-warning', 'Tourist feedback']
+        };
+        let me = null;
+        let myBookings = [];
+
+        function barList(items, unit, emptyText) {
+            const P = window.GuidePortal;
+            if (!items.length) return `<div class="ztims-empty">${P.escapeHtml(emptyText)}</div>`;
+            const top = Math.max(...items.map(i => i.count), 1);
+            return `<ul class="space-y-3">${items.slice(0, 8).map(item => `
+                <li>
+                    <div class="flex justify-between gap-3 text-sm mb-1">
+                        <span class="text-on-surface font-bold truncate">${P.escapeHtml(item.name)}</span>
+                        <span class="text-on-surface-variant shrink-0">${item.count} ${unit}${item.count === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="h-2 bg-surface-variant"><div class="h-2 bg-primary" style="width:${Math.round(item.count / top * 100)}%"></div></div>
+                </li>`).join('')}</ul>`;
+        }
+
+        function renderMonths(months) {
+            const P = window.GuidePortal;
+            const top = Math.max(...months.map(m => m.tours), 1);
+            document.getElementById('monthChart').innerHTML = `
+                <div class="grid grid-cols-6 gap-2 sm:gap-4 items-end h-48" role="img"
+                     aria-label="${P.escapeHtml(months.map(m => `${m.month}: ${m.tours} tours`).join(', '))}">
+                    ${months.map(m => `
+                        <div class="flex flex-col items-center justify-end h-full gap-1">
+                            <span class="text-xs font-bold text-on-surface">${m.tours}</span>
+                            <div class="w-full max-w-[3rem] bg-primary" style="height:${Math.max(m.tours / top * 100, m.tours ? 6 : 1)}%"
+                                 title="${m.visitors} visitor${m.visitors === 1 ? '' : 's'}"></div>
+                        </div>`).join('')}
+                </div>
+                <div class="grid grid-cols-6 gap-2 sm:gap-4 text-center text-support">
+                    ${months.map(m => `<span>${P.escapeHtml(P.formatDate(m.month + '-01', { month: 'short', year: '2-digit' }))}</span>`).join('')}
+                </div>`;
+        }
+
+        function renderNextTour() {
+            const P = window.GuidePortal;
+            const today = new Date().toISOString().slice(0, 10);
+            const next = myBookings.find(b => b.preferredDate >= today && ['confirmed', 'pending_payment'].includes(b.status));
+            const box = document.getElementById('nextTour');
+            if (!next) {
+                box.innerHTML = '<div class="ztims-empty">No upcoming tours assigned to you yet.</div>';
+                return;
+            }
+            box.innerHTML = `
+                <div class="space-y-2">
+                    <p class="text-2xl font-black text-on-surface">${P.escapeHtml(P.formatDate(next.preferredDate))}</p>
+                    <p class="text-on-surface font-bold">${P.escapeHtml(P.formatTime(next.preferredTime))} · ${P.escapeHtml(next.spot.title)}</p>
+                    <p class="text-sm text-on-surface-variant">${next.visitors} visitor${next.visitors === 1 ? '' : 's'} · booked under ${P.escapeHtml(next.fullName)}</p>
+                    <span class="tone-pill ${next.status === 'confirmed' ? 'tone-success' : 'tone-warning'} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 inline-block">
+                        ${next.status === 'confirmed' ? 'Confirmed' : 'Awaiting payment at the office'}
+                    </span>
+                </div>`;
+        }
+
+        function renderDashboard(data) {
+            const P = window.GuidePortal;
+            const mine = data.mine;
+            const area = data.area;
+            document.getElementById('greeting').textContent = `Welcome, ${(me.fullName || '').split(' ')[0] || 'guide'}`;
+            document.getElementById('stationLine').textContent = P.stationLabel(me);
+            document.getElementById('unavailableNotice').hidden = me.status !== 'unavailable';
+
+            document.getElementById('statUpcoming').textContent = mine.upcoming;
+            document.getElementById('statUpcomingNote').textContent = `${mine.confirmed} confirmed · ${mine.awaitingPayment} awaiting payment`;
+            document.getElementById('statCompleted').textContent = mine.completed;
+            document.getElementById('statThisMonth').textContent = `${mine.toursThisMonth} this month`;
+            document.getElementById('statVisitors').textContent = mine.visitorsGuided;
+            document.getElementById('statMissed').textContent = `${mine.noShow} · ${mine.cancelled}`;
+            renderMonths(mine.byMonth);
+            renderNextTour();
+
+            document.getElementById('jurisdictionName').textContent = data.jurisdiction;
+            document.getElementById('areaUpcoming').textContent = area.upcoming;
+            document.getElementById('areaUnassigned').textContent = area.unassignedUpcoming;
+            document.getElementById('areaCompleted').textContent = area.completed;
+            document.getElementById('areaVisitors').textContent = area.visitors;
+            document.getElementById('byDestination').innerHTML =
+                barList(area.byDestination, 'visitor', 'No completed guided tours here yet.');
+        }
+
+        /* ---- reports ---------------------------------------------------- */
+        function renderReportForm(barangays) {
+            const P = window.GuidePortal;
+            const today = new Date().toISOString().slice(0, 10);
+            // Past and today's tours are the ones there is anything to report on.
+            const reportable = myBookings.filter(b => b.preferredDate <= today && b.status !== 'cancelled')
+                .sort((a, b) => b.preferredDate.localeCompare(a.preferredDate));
+            document.getElementById('reportBooking').innerHTML = '<option value="">Not about one booking</option>' +
+                reportable.map(b => `<option value="${P.escapeHtml(b._id)}" data-date="${P.escapeHtml(b.preferredDate)}" data-visitors="${b.visitors}">
+                    ${P.escapeHtml(b.reference)} · ${P.escapeHtml(P.formatDate(b.preferredDate, { month: 'short', day: 'numeric' }))} · ${P.escapeHtml(b.spot.title)}</option>`).join('');
+
+            // A municipal guide covers every barangay, so may say which one; a
+            // barangay guide's reports are always from their own.
+            const wrap = document.getElementById('reportBarangayWrap');
+            wrap.hidden = me.scope === 'barangay';
+            document.getElementById('reportBarangay').innerHTML = '<option value="">Municipality-wide / not one barangay</option>' +
+                (barangays || []).map(name => `<option value="${P.escapeHtml(name)}">${P.escapeHtml(name)}</option>`).join('');
+
+            const date = document.getElementById('reportDate');
+            date.max = today;
+            date.value = today;
+            syncReportForm();
+        }
+
+        function syncReportForm() {
+            const type = document.getElementById('reportType').value;
+            const booking = document.getElementById('reportBooking');
+            const chosen = booking.selectedOptions[0];
+            document.getElementById('reportBookingOptional').hidden = type === 'tour_completed';
+            document.getElementById('reportHeadcountWrap').hidden = !['tour_completed', 'headcount'].includes(type);
+            // The booking decides the barangay, so the picker only matters without one.
+            if (me.scope !== 'barangay') document.getElementById('reportBarangayWrap').hidden = Boolean(booking.value);
+            if (chosen && chosen.dataset.date) {
+                document.getElementById('reportDate').value = chosen.dataset.date;
+                const headcount = document.getElementById('reportHeadcount');
+                if (!headcount.value) headcount.value = chosen.dataset.visitors;
+            }
+        }
+
+        function renderMyReports(reports) {
+            const P = window.GuidePortal;
+            const list = document.getElementById('myReports');
+            if (!reports.length) {
+                list.innerHTML = '<li class="py-3 text-support italic">Nothing filed yet.</li>';
+                return;
+            }
+            list.innerHTML = reports.slice(0, 15).map(r => {
+                const [tone, label] = REPORT_TYPES[r.reportType] || ['tone-neutral', r.reportType];
+                return `
+                <li class="py-3 space-y-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="tone-pill ${tone} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${label}</span>
+                        <span class="text-sm font-bold text-on-surface">${P.escapeHtml(P.formatDate(r.reportDate))}</span>
+                        ${r.barangay ? `<span class="text-support">Brgy. ${P.escapeHtml(r.barangay)}</span>` : ''}
+                        <span class="ml-auto text-support">${r.status === 'reviewed' ? 'Reviewed by the office' : 'Waiting for the office'}</span>
+                    </div>
+                    ${r.bookingReference ? `<p class="text-support">${P.escapeHtml(r.bookingReference)} · ${P.escapeHtml(r.spotTitle)}</p>` : ''}
+                    ${r.headcount !== null && r.headcount !== undefined ? `<p class="text-sm text-on-surface-variant">${r.headcount} visitor${r.headcount === 1 ? '' : 's'}</p>` : ''}
+                    ${r.details ? `<p class="text-sm text-on-surface-variant whitespace-pre-line">${P.escapeHtml(r.details)}</p>` : ''}
+                </li>`;
+            }).join('');
+        }
+
+        async function loadMyReports() {
+            const { result } = await window.GuidePortal.api('/guides/me/reports');
+            renderMyReports(result.reports || []);
+        }
+
+        async function sendReport(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('reportMessage', '');
+            const type = document.getElementById('reportType').value;
+            const bookingId = document.getElementById('reportBooking').value;
+            if (type === 'tour_completed' && !bookingId) {
+                P.showMessage('reportMessage', 'Choose the booking whose tour was completed.', 'error');
+                return;
+            }
+            const body = {
+                reportType: type,
+                bookingId: bookingId || undefined,
+                reportDate: document.getElementById('reportDate').value,
+                details: document.getElementById('reportDetails').value.trim()
+            };
+            if (['tour_completed', 'headcount'].includes(type)) body.headcount = document.getElementById('reportHeadcount').value;
+            if (!bookingId && me.scope !== 'barangay') body.barangay = document.getElementById('reportBarangay').value || undefined;
+
+            const restore = P.setButtonLoading(document.getElementById('sendReportBtn'), 'Sending...');
+            try {
+                const { result } = await P.api('/guides/me/reports', { method: 'POST', body });
+                document.getElementById('reportDetails').value = '';
+                document.getElementById('reportHeadcount').value = '';
+                document.getElementById('reportBooking').value = '';
+                syncReportForm();
+                P.showToast(result.message, 'success');
+                await loadMyReports();
+            } catch (error) {
+                P.showMessage('reportMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const P = window.GuidePortal;
+            if (!P || !P.start()) return;
+
+            document.getElementById('reportForm').addEventListener('submit', sendReport);
+            document.getElementById('reportType').addEventListener('change', syncReportForm);
+            document.getElementById('reportBooking').addEventListener('change', () => {
+                document.getElementById('reportHeadcount').value = '';
+                syncReportForm();
+            });
+
+            const loading = document.getElementById('dashboardLoading');
+            const done = P.showLoading(loading, 'Loading your dashboard...');
+            try {
+                const [{ result: profile }, { result: data }, { result: filed }] = await Promise.all([
+                    P.api('/guides/me'),
+                    P.api('/guides/me/bookings'),
+                    P.api('/guides/me/reports')
+                ]);
+                done();
+                loading.innerHTML = '';
+                me = profile.guide;
+                myBookings = data.bookings || [];
+                P.rememberGuide(me);
+                renderDashboard(data);
+                renderReportForm(profile.barangays);
+                renderMyReports(filed.reports || []);
+                document.getElementById('dashboardContent').hidden = false;
+            } catch (error) {
+                done();
+                P.showLoadError(loading, 'your dashboard', error);
+            }
+        });
+    </script>
+    <script type="module" src="../shared/guide-portal.js"></script>
+</body>
+</html>
