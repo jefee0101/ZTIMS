@@ -530,10 +530,10 @@ body { overflow-x: hidden; }
                 <!-- The report the office sends out, so it is where the page opens. -->
                 <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="true" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">summarize</span>Arrivals Report</button>
-                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
                 <button role="tab" id="tab-enter" aria-controls="panel-enter" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
+                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
                 <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">landscape</span>Attractions</button>
             </div>
@@ -741,7 +741,7 @@ body { overflow-x: hidden; }
         }
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['forma4', 'tracker', 'enter', 'attractions'];
+        const TABS = ['forma4', 'enter', 'tracker', 'attractions'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
