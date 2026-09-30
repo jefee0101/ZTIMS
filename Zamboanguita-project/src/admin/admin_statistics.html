@@ -566,14 +566,75 @@ body { overflow-x: hidden; }
                         <select id="trKind" class="field w-56"><option value="accommodation">Accommodations</option><option value="attraction">Attractions</option></select></label>
                     <p class="text-support flex-1 min-w-[14rem]">Reports are due by the 5th of the following month. Pick a cell to open that month's report.</p>
                 </div>
-                <div class="flex flex-wrap gap-2 text-xs font-bold" aria-label="Legend">
-                    <span class="tone-pill tone-success px-2 py-0.5">Submitted</span>
-                    <span class="tone-pill tone-warning px-2 py-0.5">Late</span>
-                    <span class="tone-pill tone-danger px-2 py-0.5">Missing</span>
-                    <span class="tone-pill tone-info px-2 py-0.5">Due soon</span>
-                    <span class="tone-pill tone-neutral px-2 py-0.5">Not due / municipal total</span>
-                    <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Locked</span>
-                </div>
+                <!-- What the colours mean: the legend, explained once. Closed, it
+                     still shows the short legend; the choice is remembered. -->
+                <details id="trackerHelp" class="glass-panel group" open>
+                    <summary class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none">
+                        <span class="flex items-center gap-2 font-bold text-on-surface">
+                            <span class="material-symbols-outlined text-accent !text-xl">help</span>What the colours mean
+                        </span>
+                        <span class="flex flex-wrap items-center gap-2 text-xs font-bold group-open:hidden" aria-hidden="true">
+                            <span class="tone-pill tone-success px-2 py-0.5">Submitted</span>
+                            <span class="tone-pill tone-warning px-2 py-0.5">Late</span>
+                            <span class="tone-pill tone-danger px-2 py-0.5">Missing</span>
+                            <span class="tone-pill tone-info px-2 py-0.5">Due soon</span>
+                            <span class="tone-pill tone-neutral px-2 py-0.5">Not due / municipal total</span>
+                            <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Locked</span>
+                        </span>
+                        <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180 ml-auto">expand_more</span>
+                    </summary>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 px-5 pb-5">
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-success cursor-default shrink-0" aria-hidden="true">✓</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Submitted</p>
+                            <p class="text-support">Sent in on time, by the 5th.</p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-warning cursor-default shrink-0" aria-hidden="true">Late</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Late</p>
+                            <p class="text-support">Sent in, but after the 5th.</p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-danger cursor-default shrink-0" aria-hidden="true">!</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Missing</p>
+                            <p class="text-support">The 5th has passed and nothing was sent. <b>These need follow-up.</b></p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-info cursor-default shrink-0" aria-hidden="true">Due</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Due soon</p>
+                            <p class="text-support">The month is over and the report is due, but it's not the 5th yet. Not late.</p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-neutral cursor-default shrink-0" aria-hidden="true">–</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Not due</p>
+                            <p class="text-support">That month hasn't ended yet, so nothing is expected.</p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-neutral cursor-default shrink-0" aria-hidden="true">Total</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Municipal total</p>
+                            <p class="text-support">For this month, the office entered one total for the whole town from the paper Form A4, instead of separate reports from each place. So no single place needs to report that month.</p>
+                        </div>
+                    </li>
+                    <li class="ztims-card p-4 flex items-start gap-3">
+                        <span class="st-cell tone-pill tone-success cursor-default shrink-0" aria-hidden="true">🔒✓</span>
+                        <div class="space-y-1">
+                            <p class="font-bold text-on-surface">Locked</p>
+                            <p class="text-support">That report has already been sent to the province, so its numbers can't be changed by accident. Only the Tourism Officer can unlock it to fix a mistake, and the change is recorded. Lock months on the <b>Arrivals Report</b> tab.</p>
+                        </div>
+                    </li>
+                    </ul>
+                </details>
                 <div id="trackerHost" class="glass-panel overflow-x-auto"></div>
             </section>
 
@@ -608,6 +669,7 @@ body { overflow-x: hidden; }
         .stats-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
         .st-cell { display: inline-flex; min-width: 2.6rem; justify-content: center; font-size: .72rem; font-weight: 800; padding: .25rem .35rem; cursor: pointer; }
         .st-cell:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+        #trackerHelp summary::-webkit-details-marker { display: none; }
     </style>
 
     <script type="module" src="../shared/stat-form.js"></script>
@@ -963,6 +1025,13 @@ body { overflow-x: hidden; }
             document.getElementById('faDownload').addEventListener('click', downloadExcel);
             document.getElementById('faLock').addEventListener('click', lockMonths);
             document.getElementById('faConfirmLock').addEventListener('change', e => { document.getElementById('faLock').disabled = !e.target.checked; });
+
+            // Remember whether "What the colours mean" was closed.
+            const help = document.getElementById('trackerHelp');
+            try { if (localStorage.getItem('trackerHelpClosed') === '1') help.open = false; } catch (e) { /* private browsing */ }
+            help.addEventListener('toggle', () => {
+                try { localStorage.setItem('trackerHelpClosed', help.open ? '0' : '1'); } catch (e) { /* private browsing */ }
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
