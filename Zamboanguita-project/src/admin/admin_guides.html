@@ -530,10 +530,7 @@ body { overflow-x: hidden; }
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourist Guides</h2>
                     <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Every guide has a scope: the whole municipality, or one barangay. A barangay guide can
-                        only be given destinations in their barangay. Give a guide a sign-in and they keep their
-                        own availability and languages in the guide portal and file reports to you; you still
-                        assign every booking and approve any change to their record.
+                        Find a guide, keep their records up to date, and answer what they send you.
                     </p>
                 </div>
                 <button id="openCreateGuideBtn" class="btn btn-primary min-h-[44px]">
@@ -541,129 +538,131 @@ body { overflow-x: hidden; }
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Guide records</p>
-                    <h5 id="statGuides" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Available</p>
-                    <h5 id="statAvailable" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">can take new bookings</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Unassigned</p>
-                    <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">not serving any spot yet</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Spots needing a guide</p>
-                    <h5 id="statGuidedSpots" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1" id="statUncovered">—</p>
-                </div>
+            <!-- How it works: the whole arrangement, once, in plain words. It
+                 used to be a paragraph above the page; folded, it is one line. -->
+            <details id="howItWorks" class="glass-panel group" open>
+                <summary class="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none">
+                    <span class="flex items-center gap-2 font-bold text-on-surface">
+                        <span class="material-symbols-outlined text-accent !text-xl">help</span>How tourist guides work
+                    </span>
+                    <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+                </summary>
+                <ol class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 1 · You</p>
+                        <p class="font-bold text-on-surface">Add the guide</p>
+                        <p class="text-support">Press <b>New guide record</b>. Choose whether they cover the whole municipality or one barangay. A barangay guide can only be given destinations in that barangay.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 2 · You</p>
+                        <p class="font-bold text-on-surface">Give them a sign-in</p>
+                        <p class="text-support">Optional. With a sign-in, the guide keeps their own working days, days off and languages up to date in the guide portal.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 3 · You</p>
+                        <p class="font-bold text-on-surface">Assign their tours</p>
+                        <p class="text-support">Done on <a href="admin_bookings.html" class="underline font-bold">Guide Bookings</a>. ZTIMS refuses a guide who is off or already booked at that time.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 4 · The guide</p>
+                        <p class="font-bold text-on-surface">Sends you changes and reports</p>
+                        <p class="text-support">A new phone number or bio waits under <b>Change requests</b> until you approve it. Tour reports arrive under <b>Reports</b>.</p>
+                    </li>
+                </ol>
+            </details>
+
+            <!-- Tabs: the directory, then the two things guides send in, each
+                 with how many are waiting on you. -->
+            <div role="tablist" aria-label="Tourist guides" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-guides" aria-controls="panel-guides" aria-selected="true" class="gd-tab">
+                    <span class="material-symbols-outlined !text-base">person_search</span>Guides</button>
+                <button role="tab" id="tab-requests" aria-controls="panel-requests" aria-selected="false" class="gd-tab">
+                    <span class="material-symbols-outlined !text-base">rule</span>Change requests <span id="requestCount" class="gd-count">0</span></button>
+                <button role="tab" id="tab-reports" aria-controls="panel-reports" aria-selected="false" class="gd-tab">
+                    <span class="material-symbols-outlined !text-base">summarize</span>Reports <span id="reportCount" class="gd-count">0</span></button>
             </div>
 
-            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-accent !text-lg">hiking</span> Guide directory
-                </h3>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="guideSearch" type="search" placeholder="Search a guide or spot"
-                               class="field !pl-10 w-full sm:w-72"/>
-                    </div>
-                    <select id="scopeFilter" class="field w-full sm:w-auto" aria-label="Scope">
-                        <option value="all">Every scope</option>
-                        <option value="municipal">Municipal guides</option>
-                        <option value="barangay">Barangay guides</option>
-                    </select>
-                    <select id="statusFilter" class="field w-full sm:w-auto">
-                        <option value="all">All statuses</option>
-                        <option value="available">Available</option>
-                        <option value="unavailable">Unavailable</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                    <button id="refreshGuidesBtn" class="btn btn-secondary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
+            <!-- ============ Guides: the directory and "find a guide" in one ============ -->
+            <section role="tabpanel" id="panel-guides" aria-labelledby="tab-guides" class="space-y-4">
+                <!-- The numbers, in one line rather than four cards. -->
+                <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
+                    <span><b id="statGuides" class="text-on-surface">—</b> guides</span>
+                    <span><b id="statAvailable" class="text-on-surface">—</b> available</span>
+                    <span><b id="statUnassigned" class="text-on-surface">—</b> not given a destination yet</span>
+                    <span><b id="statGuidedSpots" class="text-on-surface">—</b> destinations need a guide: <span id="statUncovered">—</span></span>
+                </p>
+
+                <!-- One search. Type to narrow the list; pick a language and a
+                     date to see who is free — by the same rule assignment uses. -->
+                <div class="glass-panel p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,2fr)_repeat(4,minmax(8rem,1fr))_auto] gap-3 items-end">
+                    <label class="block">
+                        <span class="field-label">Search</span>
+                        <span class="relative block">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
+                            <input id="guideSearch" type="search" placeholder="Name, barangay, destination or phone"
+                                   class="field !pl-10 w-full" autocomplete="off"/>
+                        </span>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Speaks</span>
+                        <select id="findLanguage" class="field w-full"><option value="">Any language</option></select>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Free on <span class="normal-case font-normal opacity-70">(optional)</span></span>
+                        <input id="findDate" type="date" class="field w-full"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">At <span class="normal-case font-normal opacity-70">(optional)</span></span>
+                        <input id="findTime" type="time" class="field w-full" disabled/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Show</span>
+                        <select id="statusFilter" class="field w-full">
+                            <option value="all">All guides</option>
+                            <option value="available">Available</option>
+                            <option value="unavailable">Unavailable</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </label>
+                    <button id="clearFindBtn" type="button" class="btn btn-secondary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">close</span> Clear
                     </button>
                 </div>
-            </div>
+                <p id="findSummary" class="text-sm text-on-surface" role="status" aria-live="polite"></p>
 
-            <div class="rounded-none glass-panel overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="ztims-table w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Guide</th>
-                                <th class="px-6 py-4">Contact</th>
-                                <th class="px-6 py-4">Scope</th>
-                                <th class="px-6 py-4 text-right">Fee</th>
-                                <th class="px-6 py-4 text-center">Max group</th>
-                                <th class="px-6 py-4">Assigned spots</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4">Portal sign-in</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="guideTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
+                <div class="glass-panel overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="ztims-table w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
+                                    <th class="px-5 py-4">Guide</th>
+                                    <th class="px-5 py-4">Covers</th>
+                                    <th class="px-5 py-4 text-right">Fee</th>
+                                    <th class="px-5 py-4 text-center">Status</th>
+                                    <th id="freeColumn" class="px-5 py-4" hidden>Free?</th>
+                                    <th class="px-5 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guideTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
+                        </table>
+                    </div>
+                    <p class="px-5 py-4 border-t border-outline-variant/30 text-on-surface-variant text-sm">
                         Showing <span id="guideShown" class="text-on-surface font-bold">0</span>
-                        of <span id="guideTotal" class="text-on-surface font-bold">0</span> guide records
+                        of <span id="guideTotal" class="text-on-surface font-bold">0</span> guides
                     </p>
                 </div>
-            </div>
-
-            <!-- Who speaks X and is free on Y — decided by the same rule assignment uses. -->
-            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
-                <div>
-                    <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
-                        <span class="material-symbols-outlined text-accent">person_search</span> Find a guide
-                    </h3>
-                    <p class="text-support mt-1">Who speaks a language and is free on a date — by their working days, days off and confirmed tours.</p>
-                </div>
-                <form id="findGuideForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-                    <div>
-                        <label for="findLanguage" class="block text-label font-bold uppercase tracking-wider mb-1">Speaks</label>
-                        <input id="findLanguage" type="text" required list="knownLanguages" placeholder="e.g., Korean" class="field w-full"/>
-                        <datalist id="knownLanguages"></datalist>
-                    </div>
-                    <div>
-                        <label for="findDate" class="block text-label font-bold uppercase tracking-wider mb-1">Free on</label>
-                        <input id="findDate" type="date" class="field w-full"/>
-                    </div>
-                    <div>
-                        <label for="findTime" class="block text-label font-bold uppercase tracking-wider mb-1">At <span class="normal-case font-normal opacity-70">(optional)</span></label>
-                        <input id="findTime" type="time" class="field w-full"/>
-                    </div>
-                    <button type="submit" id="findGuideBtn" class="btn btn-primary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">search</span> Find
-                    </button>
-                </form>
-                <div id="findResults"></div>
             </section>
 
-            <!-- Changes guides have asked for; nothing changes until approved here. -->
-            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
-                <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-accent">rule</span> Profile changes waiting for you
-                    <span id="requestCount" class="tone-pill tone-warning text-[11px] font-bold px-2 py-0.5" hidden></span>
-                </h3>
+            <!-- ============ Change requests: nothing changes until approved here ============ -->
+            <section role="tabpanel" id="panel-requests" aria-labelledby="tab-requests" class="glass-panel p-5 sm:p-6 space-y-3" hidden>
+                <p class="text-support">Guides can ask to change their phone number or their "About" text. The old value is crossed out; the new one is in bold. Nothing changes until you press <b>Approve</b>.</p>
                 <ul id="requestList" class="divide-y divide-outline-variant/30"></ul>
             </section>
 
-            <!-- What guides report, rolled up by barangay. -->
-            <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
+            <!-- ============ Reports: what guides file, rolled up by barangay ============ -->
+            <section role="tabpanel" id="panel-reports" aria-labelledby="tab-reports" class="glass-panel p-5 sm:p-6 space-y-5" hidden>
                 <div class="flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                        <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">summarize</span> Guide reports by barangay
-                        </h3>
-                        <p class="text-support mt-1">What guides on the ground report: tours completed, visitors counted, incidents and tourist feedback.</p>
-                    </div>
+                    <p class="text-support max-w-2xl">What guides on the ground report: tours completed, visitors counted, incidents and tourist feedback. The table shows which barangays are getting visitors; the list below it is every report, newest first.</p>
                     <div class="flex flex-wrap gap-3">
                         <select id="reportBarangayFilter" class="field w-full sm:w-auto" aria-label="Barangay"><option value="">Every barangay</option></select>
                         <select id="reportTypeFilter" class="field w-full sm:w-auto" aria-label="Report type">
@@ -689,7 +688,7 @@ body { overflow-x: hidden; }
                                 <th class="px-4 py-3 text-right">Visitors counted</th>
                                 <th class="px-4 py-3 text-right">Incidents</th>
                                 <th class="px-4 py-3 text-right">Feedback</th>
-                                <th class="px-4 py-3 text-right">Unreviewed</th>
+                                <th class="px-4 py-3 text-right">Not yet reviewed</th>
                             </tr>
                         </thead>
                         <tbody id="rollupBody" class="divide-y divide-outline-variant/20 text-on-surface-variant"></tbody>
@@ -699,6 +698,20 @@ body { overflow-x: hidden; }
             </section>
         </div>
     </main>
+
+    <style>
+        /* The same tabs as Guide Bookings and Statistics. */
+        .gd-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                  color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px;
+                  transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+        .gd-tab:hover { color: rgb(var(--ztims-on-surface)); }
+        .gd-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+        .gd-count { display: inline-flex; min-width: 1.5rem; justify-content: center; padding: 0 .4rem; font-size: .72rem; font-weight: 800;
+                    background: rgb(var(--ztims-on-surface) / .08); color: rgb(var(--ztims-on-surface)); }
+        /* Gold fill with navy on it: the design system's "waiting" signal. */
+        .gd-count.has-work { background: rgb(var(--brand-saffron)); color: rgb(var(--brand-navy)); }
+        #howItWorks summary::-webkit-details-marker { display: none; }
+    </style>
 
     <!-- Add or edit a guide record -->
     <div id="guideModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
@@ -997,7 +1010,7 @@ body { overflow-x: hidden; }
 
         async function loadEverything() {
             const body = document.getElementById('guideTableBody');
-            body.innerHTML = `<tr><td colspan="9" class="px-6 py-10 text-center text-on-surface-variant">Loading guide records…</td></tr>`;
+            body.innerHTML = `<tr><td colspan="${tableColumns()}" class="px-6 py-10 text-center text-on-surface-variant">Loading guides…</td></tr>`;
 
             try {
                 const [guidesRes, spotsRes] = await Promise.all([
@@ -1013,13 +1026,14 @@ body { overflow-x: hidden; }
                 guidedSpots = spots.filter(spot => spot.requiresGuide);
 
                 renderStats();
-                renderTable();
                 renderKnownLanguages();
+                // A save can change who is free, so a date being searched is asked again.
+                if (document.getElementById('findDate').value) refreshAvailability(); else renderTable();
             } catch (error) {
-                body.innerHTML = `<tr><td colspan="9" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
+                body.innerHTML = `<tr><td colspan="${tableColumns()}" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
             }
-            // The panels below the table load on their own, so one failing never
-            // empties the directory.
+            // The other tabs load on their own, so one failing never empties the
+            // directory.
             loadRequests();
             loadReports();
         }
@@ -1043,78 +1057,111 @@ body { overflow-x: hidden; }
                 : `${uncovered} with no available guide`;
         }
 
+        /* ---- the directory and "find a guide", in one --------------------
+           Typing narrows the list; "Speaks" narrows it to one language. Picking
+           a date asks the server who is free that day — isGuideFreeOn, the rule
+           assignment itself uses — and adds a "Free?" column, free guides first. */
+
+        let availability = null;   // Map of guide id → { free, reason } for the chosen date, or null
+
+        function tableColumns() { return availability ? 6 : 5; }
+
+        function chosenLanguage() { return document.getElementById('findLanguage').value; }
+
         function visibleGuides() {
             const query = document.getElementById('guideSearch').value.trim().toLowerCase();
             const status = document.getElementById('statusFilter').value;
-            const scope = document.getElementById('scopeFilter').value;
+            const language = chosenLanguage().toLowerCase();
 
-            return allGuides.filter(guide => {
+            const rows = allGuides.filter(guide => {
                 if (status !== 'all' && guide.status !== status) return false;
-                if (scope !== 'all' && (guide.scope || 'municipal') !== scope) return false;
+                if (language && !(guide.languages || []).some(name => name.toLowerCase() === language)) return false;
                 if (!query) return true;
                 const spotNames = (guide.assignedSpots || []).map(s => s.title || '').join(' ');
+                const scopeWords = guide.scope === 'barangay' ? 'barangay' : 'municipal whole municipality';
                 return [guide.fullName, guide.location, guide.barangay, guide.contactNumber, guide.email,
-                        (guide.languages || []).join(' '), spotNames]
+                        (guide.languages || []).join(' '), spotNames, scopeWords]
                     .filter(Boolean)
                     .some(field => String(field).toLowerCase().includes(query));
             });
+            if (availability) {
+                const isFree = guide => (availability.get(String(guide._id)) || {}).free ? 1 : 0;
+                rows.sort((a, b) => isFree(b) - isFree(a));
+            }
+            return rows;
+        }
+
+        function describeDate() {
+            const date = document.getElementById('findDate').value;
+            const time = document.getElementById('findTime').value;
+            if (!date) return '';
+            const day = new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+            return time ? `${day} at ${time}` : day;
+        }
+
+        function renderFindSummary(rows) {
+            const box = document.getElementById('findSummary');
+            const language = chosenLanguage();
+            const when = describeDate();
+            if (!language && !when) { box.textContent = ''; return; }
+            const who = `${rows.length} guide${rows.length === 1 ? '' : 's'}${language ? ` who speak${rows.length === 1 ? 's' : ''} ${language}` : ''}`;
+            if (!when || !availability) { box.innerHTML = `<b>${escapeHtml(who)}</b>.`; return; }
+            const free = rows.filter(g => (availability.get(String(g._id)) || {}).free).length;
+            box.innerHTML = `<b>${free}</b> of ${escapeHtml(who)} ${free === 1 ? 'is' : 'are'} free on <b>${escapeHtml(when)}</b>.`;
         }
 
         function renderTable() {
             const body = document.getElementById('guideTableBody');
             const rows = visibleGuides();
 
+            document.getElementById('freeColumn').hidden = !availability;
             document.getElementById('guideShown').textContent = rows.length;
             document.getElementById('guideTotal').textContent = allGuides.length;
+            renderFindSummary(rows);
 
             if (rows.length === 0) {
-                body.innerHTML = `<tr><td colspan="9" class="p-4"><div class="ztims-empty">${
+                body.innerHTML = `<tr><td colspan="${tableColumns()}" class="p-4"><div class="ztims-empty">${
                     allGuides.length === 0
-                        ? 'No guide records yet. Add the first one with “New guide record”.'
-                        : 'No guide matches that search.'
+                        ? 'No guides yet. Add the first one with “New guide record”.'
+                        : 'No guide matches. Try fewer choices, or press Clear.'
                 }</div></td></tr>`;
                 return;
             }
 
             body.innerHTML = rows.map(guide => {
                 const spots = (guide.assignedSpots || []).map(s => s.title).filter(Boolean);
+                const verdict = availability ? (availability.get(String(guide._id)) || { free: false, reason: '' }) : null;
                 return `
-                    <tr class="hover:bg-surface-variant/40 transition-colors">
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-surface-variant/40 transition-colors align-top">
+                        <td class="px-5 py-4">
                             <p class="font-bold text-on-surface">${escapeHtml(guide.fullName)}</p>
-                            ${(guide.languages || []).length
-                                ? `<p class="text-support line-clamp-1 max-w-xs">${escapeHtml(guide.languages.join(', '))}</p>`
-                                : '<p class="text-support italic">no languages listed</p>'}
+                            <p class="text-support">${(guide.languages || []).length ? escapeHtml(guide.languages.join(', ')) : '<i>No languages listed</i>'}</p>
+                            ${guide.contactNumber ? `<p class="text-support">${escapeHtml(guide.contactNumber)}</p>` : ''}
                         </td>
-                        <td class="px-6 py-4">${escapeHtml(guide.contactNumber || '—')}</td>
-                        <td class="px-6 py-4">
-                            ${guide.scope === 'barangay'
-                                ? `<span class="tone-pill tone-warning text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">Barangay</span>
-                                   <p class="text-on-surface mt-1">Brgy. ${escapeHtml(guide.barangay || '—')}</p>`
-                                : `<span class="tone-pill tone-info text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">Municipal</span>
-                                   <p class="text-on-surface mt-1">Whole municipality</p>`}
-                            ${guide.location ? `<p class="text-support">${escapeHtml(guide.location)}</p>` : ''}
+                        <td class="px-5 py-4">
+                            <p class="text-on-surface font-bold">${guide.scope === 'barangay' ? 'Brgy. ' + escapeHtml(guide.barangay || '—') : 'Whole municipality'}</p>
+                            <p class="text-support">${spots.length ? escapeHtml(spots.join(', ')) : '<i>No destination yet</i>'}</p>
                         </td>
-                        <td class="px-6 py-4 text-right font-bold text-on-surface">${formatPeso(guide.guideFee)}</td>
-                        <td class="px-6 py-4 text-center">${Number(guide.maxGroupSize) || 1}</td>
-                        <td class="px-6 py-4">
-                            ${spots.length
-                                ? `<div class="flex flex-wrap gap-1">${spots.map(t =>
-                                    `<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold">${escapeHtml(t)}</span>`).join('')}</div>`
-                                : '<span class="text-support italic">not assigned</span>'}
+                        <td class="px-5 py-4 text-right whitespace-nowrap">
+                            <p class="font-bold text-on-surface">${formatPeso(guide.guideFee)}</p>
+                            <p class="text-support">up to ${Number(guide.maxGroupSize) || 1} ${(Number(guide.maxGroupSize) || 1) === 1 ? 'person' : 'people'}</p>
                         </td>
-                        <td class="px-6 py-4 text-center">${statusSelect(guide)}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-4 text-center">${statusSelect(guide)}</td>
+                        ${verdict ? `<td class="px-5 py-4 max-w-[16rem]">
+                            <span class="tone-pill ${verdict.free ? 'tone-success' : 'tone-neutral'} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${verdict.free ? 'Free' : 'Not free'}</span>
+                            ${!verdict.free && verdict.reason ? `<p class="text-support mt-1">${escapeHtml(verdict.reason)}</p>` : ''}
+                        </td>` : ''}
+                        <td class="px-5 py-4 text-right">
+                            <div class="flex flex-wrap justify-end gap-2">
+                                <button data-edit="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">Edit</button>
+                                <button data-signin="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">
+                                    <span class="material-symbols-outlined !text-base">key</span>${guide.hasAccount ? 'Sign-in' : 'Give sign-in'}
+                                </button>
+                            </div>
                             ${guide.hasAccount
-                                ? `<p class="text-on-surface break-all">${escapeHtml(guide.email)}</p>
-                                   <button type="button" data-withdraw="${escapeHtml(guide._id)}" class="text-xs text-error underline min-h-[32px]">Withdraw sign-in</button>`
-                                : '<span class="text-support italic">none</span>'}
-                        </td>
-                        <td class="px-6 py-4 text-right whitespace-nowrap space-x-2">
-                            <button data-signin="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">
-                                <span class="material-symbols-outlined !text-base">key</span>${guide.hasAccount ? 'Sign-in' : 'Give sign-in'}
-                            </button>
-                            <button data-edit="${escapeHtml(guide._id)}" class="btn btn-secondary min-h-[44px]">Edit</button>
+                                ? `<p class="text-support mt-2 break-all">Signs in as ${escapeHtml(guide.email)} ·
+                                   <button type="button" data-withdraw="${escapeHtml(guide._id)}" class="text-error underline min-h-[32px]">Withdraw</button></p>`
+                                : ''}
                         </td>
                     </tr>
                 `;
@@ -1376,45 +1423,62 @@ body { overflow-x: hidden; }
         function renderKnownLanguages() {
             const names = new Map();
             allGuides.forEach(g => (g.languages || []).forEach(name => names.set(name.toLowerCase(), name)));
-            document.getElementById('knownLanguages').innerHTML = [...names.values()].sort()
-                .map(name => `<option value="${escapeHtml(name)}"></option>`).join('');
+            const select = document.getElementById('findLanguage');
+            const kept = select.value;
+            select.innerHTML = '<option value="">Any language</option>' + [...names.values()].sort()
+                .map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+            select.value = [...names.values()].includes(kept) ? kept : '';
         }
 
-        async function findGuide(event) {
-            event.preventDefault();
-            const box = document.getElementById('findResults');
-            const params = new URLSearchParams({ language: document.getElementById('findLanguage').value.trim() });
+        // Asks the server who is free on the chosen date (and time), then redraws.
+        let availabilityAsked = 0;
+        async function refreshAvailability() {
             const date = document.getElementById('findDate').value;
-            const time = document.getElementById('findTime').value;
-            if (date) params.set('date', date);
-            if (date && time) params.set('time', time);
+            const timeInput = document.getElementById('findTime');
+            timeInput.disabled = !date;
+            if (!date) { timeInput.value = ''; availability = null; renderTable(); return; }
 
-            const restore = setButtonLoading(document.getElementById('findGuideBtn'), 'Finding...');
+            const params = new URLSearchParams({ date });
+            if (chosenLanguage()) params.set('language', chosenLanguage());
+            if (timeInput.value) params.set('time', timeInput.value);
+            const asked = ++availabilityAsked;
+            document.getElementById('findSummary').textContent = 'Checking who is free…';
             try {
                 const result = await officeCall(`/guides/search?${params}`);
-                const free = result.results.filter(r => r.free);
-                const when = date
-                    ? `free on ${new Date(date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}${time ? ' at ' + time : ''}`
-                    : 'currently available';
-                box.innerHTML = !result.results.length
-                    ? `<div class="ztims-empty">No guide lists ${escapeHtml(result.language)}.</div>`
-                    : `<p class="text-sm text-on-surface mb-3"><strong>${free.length}</strong> of ${result.results.length}
-                        ${escapeHtml(result.language)} speaker${result.results.length === 1 ? '' : 's'} ${escapeHtml(when)}.</p>
-                       <ul class="divide-y divide-outline-variant/30">${result.results.map(r => `
-                        <li class="py-3 flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                                <p class="font-bold text-on-surface">${escapeHtml(r.fullName)}
-                                    <span class="text-support font-normal">· ${r.scope === 'barangay' ? 'Brgy. ' + escapeHtml(r.barangay) : 'Municipal'}</span></p>
-                                <p class="text-support">${escapeHtml((r.languages || []).join(', '))}${r.contactNumber ? ' · ' + escapeHtml(r.contactNumber) : ''}</p>
-                                ${r.reason ? `<p class="text-sm text-on-surface-variant">${escapeHtml(r.reason)}</p>` : ''}
-                            </div>
-                            <span class="tone-pill ${r.free ? 'tone-success' : 'tone-neutral'} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${r.free ? 'Free' : 'Not free'}</span>
-                        </li>`).join('')}</ul>`;
+                if (asked !== availabilityAsked) return;   // a newer question has been asked since
+                availability = new Map(result.results.map(r => [String(r._id), { free: r.free, reason: r.reason }]));
             } catch (error) {
-                box.innerHTML = `<p class="text-sm text-error">${escapeHtml(error.message)}</p>`;
-            } finally {
-                restore();
+                if (asked !== availabilityAsked) return;
+                availability = null;
+                showToast(error.message, 'error');
             }
+            renderTable();
+        }
+
+        function clearFind() {
+            document.getElementById('guideSearch').value = '';
+            document.getElementById('findLanguage').value = '';
+            document.getElementById('findDate').value = '';
+            document.getElementById('findTime').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            refreshAvailability();
+        }
+
+        /* ---- tabs ---------------------------------------------------------- */
+
+        const TABS = ['guides', 'requests', 'reports'];
+        function showTab(name) {
+            for (const t of TABS) {
+                document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
+                document.getElementById('panel-' + t).hidden = t !== name;
+            }
+            try { sessionStorage.setItem('guidesTab', name); } catch (e) { /* private browsing */ }
+        }
+
+        function setCount(id, n) {
+            const badge = document.getElementById(id);
+            badge.textContent = n;
+            badge.classList.toggle('has-work', n > 0);
         }
 
         /* ---- profile change requests ------------------------------------------ */
@@ -1425,9 +1489,7 @@ body { overflow-x: hidden; }
             const list = document.getElementById('requestList');
             try {
                 const { requests } = await officeCall('/guides/profile-requests');
-                const count = document.getElementById('requestCount');
-                count.hidden = !requests.length;
-                count.textContent = requests.length;
+                setCount('requestCount', requests.length);
                 list.innerHTML = !requests.length
                     ? '<li class="py-3 text-support italic">Nothing waiting.</li>'
                     : requests.map(r => `
@@ -1507,6 +1569,7 @@ body { overflow-x: hidden; }
                     select.value = kept;
                 }
 
+                setCount('reportCount', result.byBarangay.reduce((sum, row) => sum + (row.unreviewed || 0), 0));
                 document.getElementById('rollupBody').innerHTML = result.byBarangay.map(row => `
                     <tr${row.reports ? '' : ' class="opacity-60"'}>
                         <td class="px-4 py-2.5 font-bold text-on-surface">${row.barangay ? escapeHtml(row.barangay) : '<span class="italic font-normal">Not tied to a barangay</span>'}</td>
@@ -1563,11 +1626,28 @@ body { overflow-x: hidden; }
             document.getElementById('guideForm').addEventListener('submit', saveGuide);
             document.getElementById('guideScope').addEventListener('change', syncScopeFields);
             document.getElementById('guideBarangay').addEventListener('change', syncScopeFields);
-            document.getElementById('refreshGuidesBtn').addEventListener('click', loadEverything);
             document.getElementById('guideSearch').addEventListener('input', renderTable);
             document.getElementById('statusFilter').addEventListener('change', renderTable);
-            document.getElementById('scopeFilter').addEventListener('change', renderTable);
-            document.getElementById('findGuideForm').addEventListener('submit', findGuide);
+            document.getElementById('findLanguage').addEventListener('change', () =>
+                document.getElementById('findDate').value ? refreshAvailability() : renderTable());
+            document.getElementById('findDate').addEventListener('change', refreshAvailability);
+            document.getElementById('findTime').addEventListener('change', refreshAvailability);
+            document.getElementById('clearFindBtn').addEventListener('click', clearFind);
+
+            for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+            // A reload keeps the tab that was open; arriving from the sidebar opens Guides.
+            try {
+                const nav = performance.getEntriesByType('navigation')[0];
+                const kept = nav && nav.type === 'reload' ? sessionStorage.getItem('guidesTab') : null;
+                if (TABS.includes(kept)) showTab(kept);
+            } catch (e) { /* private browsing */ }
+
+            // Remember whether the "How it works" box was closed.
+            const help = document.getElementById('howItWorks');
+            try { if (localStorage.getItem('guidesHelpClosed') === '1') help.open = false; } catch (e) { /* private browsing */ }
+            help.addEventListener('toggle', () => {
+                try { localStorage.setItem('guidesHelpClosed', help.open ? '0' : '1'); } catch (e) { /* private browsing */ }
+            });
             ['reportBarangayFilter', 'reportTypeFilter', 'reportStatusFilter'].forEach(id =>
                 document.getElementById(id).addEventListener('change', loadReports));
 
