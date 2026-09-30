@@ -5,7 +5,7 @@
 <script src="../shared/theme.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 
-<title>Zamboanguita Admin | Platform Analytics</title>
+<title>Zamboanguita Admin | Dashboard</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -466,9 +466,9 @@ body { overflow-x: hidden; }
         </div>
 
         <nav class="flex-1 space-y-2 font-body">
-            <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
-                <span class="material-symbols-outlined text-accent">analytics</span>
-                <span class="sidebar-label">Analytics</span>
+            <a title="Dashboard" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-accent">space_dashboard</span>
+                <span class="sidebar-label">Dashboard</span>
             </a>
             <a title="Statistics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
@@ -521,76 +521,114 @@ body { overflow-x: hidden; }
     </div>
 </header>
 
-    <!-- Main Workspace Container -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1400px] mx-auto space-y-8">
+        <div class="max-w-[1400px] mx-auto space-y-10">
 
-            <!-- Operational System KPI Slots -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div onclick="switchMetricTab('spots')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-spots">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-accent">location_on</span> Published Spots</p>
-                    <h2 class="text-3xl font-bold text-on-surface" id="metric-spots">0</h2>
+            <!-- Title -->
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <div class="space-y-1">
+                    <p class="text-label uppercase tracking-widest font-bold text-on-surface-variant">Municipal tourism</p>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Dashboard</h2>
+                    <p id="dashGreeting" class="text-on-surface-variant text-sm">Here is what needs you today.</p>
                 </div>
-                <div onclick="switchMetricTab('managers')" class="glass-panel p-6 rounded-2xl cursor-pointer transition-all border-2 border-transparent" id="card-managers">
-                    <p class="text-on-surface-variant text-sm mb-2 flex items-center gap-1"><span class="material-symbols-outlined text-sm text-accent">storefront</span> Tourist Establishment Managers</p>
-                    <h2 class="text-3xl font-bold text-on-surface" id="metric-managers">0</h2>
-                </div>
+                <button onclick="openAddSpotModal()" class="btn btn-primary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base">add</span> Add new spot
+                </button>
             </div>
 
-            <!-- Analytics Dynamic Timeline Grid Layout -->
-            <div class="glass-panel p-8 rounded-2xl">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-on-surface" id="chart-title-heading">Booking Trends</h3>
-                    <span class="text-xs text-accent font-mono bg-surface-variant px-3 py-1 rounded-full border border-outline-variant/30" id="chart-date-range">Last 7 Days</span>
+            <!-- 1. Needs your attention: each card is a count and the page where it is dealt with -->
+            <section aria-labelledby="attnHeading" class="space-y-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 id="attnHeading" class="text-xl font-extrabold text-on-surface">Needs your attention</h3>
+                    <p class="text-support">
+                        <span id="attnSummary">Checking…</span>
+                        · <button id="dashRefresh" type="button" class="font-bold text-primary underline-offset-2 hover:underline">Refresh</button>
+                    </p>
                 </div>
-                <div class="relative h-48 flex items-end gap-1">
-                    <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
-                        <div class="border-t border-outline-variant w-full h-px"></div>
-                        <div class="border-t border-outline-variant w-full h-px"></div>
-                        <div class="border-t border-outline-variant w-full h-px"></div>
+                <div id="attnGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+            </section>
+
+            <!-- 2. Today's tours, and the month's Form A4 reports -->
+            <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+                <div class="glass-panel p-5 sm:p-6 space-y-4 xl:col-span-3 min-w-0">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 class="text-lg font-extrabold text-on-surface">Today's tours</h3>
+                        <a href="admin_bookings.html" data-tab-key="bookingsTab" data-tab="upcoming" class="text-sm font-bold text-primary">All upcoming tours →</a>
                     </div>
-                    <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
-                        <defs>
-                            <linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0%" stop-color="#EDAE49" stop-opacity="0.3"></stop>
-                                <stop offset="100%" stop-color="#EDAE49" stop-opacity="0"></stop>
-                            </linearGradient>
-                        </defs>
-                        <path id="dynamic-chart-area" fill="url(#lineGrad)" d="M0,100 L1000,100 Z"></path>
-                        <path id="dynamic-chart-line" class="chart-line" fill="none" stroke="#EDAE49" stroke-width="2.5" d="M0,100 L1000,100"></path>
-                    </svg>
+                    <div id="toursToday" class="overflow-x-auto"></div>
                 </div>
-                <div class="flex justify-between text-support font-mono mt-3 px-1" id="chart-labels-axis">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                </div>
-            </div>
 
-            <!-- Injected Database Tab Target Panel -->
-            <section class="glass-panel p-6 rounded-2xl">
-                <div class="flex items-center justify-between border-b border-outline-variant/30 pb-3 mb-4">
-                    <h3 class="text-lg font-bold flex items-center gap-2 text-on-surface" id="tab-title-display">
-                        <span class="material-symbols-outlined text-accent">analytics</span> System Metric Details
-                    </h3>
-                    <span class="text-label uppercase tracking-widest font-mono">Live Sync Logs</span>
-                </div>
-                <div class="overflow-x-auto max-h-64 overflow-y-auto pr-2" id="tab-results-container">
-                    <p class="text-sm text-on-surface-variant py-4 italic">Select any analytics card above to instantly break down registry details entries here.</p>
+                <div class="glass-panel p-5 sm:p-6 flex flex-col gap-4 xl:col-span-2">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 id="reportsHeading" class="text-lg font-extrabold text-on-surface">Monthly reports</h3>
+                        <span id="reportsDue" class="tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1"></span>
+                    </div>
+                    <div id="reportsBody" class="space-y-3 text-sm"></div>
+                    <div class="flex-1"></div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="tracker" class="btn btn-secondary min-h-[44px]">Open the tracker</a>
+                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="forma4" class="btn btn-ghost min-h-[44px]">Form A4 →</a>
+                    </div>
                 </div>
             </section>
 
-            <!-- Grid Display Array for Registered Destination Points -->
-            <section>
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-extrabold text-on-surface">Live System Destination Entries</h2>
-                    <button onclick="openAddSpotModal()" class="btn btn-primary">
-                        <span class="material-symbols-outlined text-sm font-bold">add</span> Add New Spot
-                    </button>
+            <!-- 3. Tourism at a glance: Form A4, counts only -->
+            <section aria-labelledby="glanceHeading" class="space-y-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-3">
+                    <h3 id="glanceHeading" class="text-xl font-extrabold text-on-surface">Tourism at a glance</h3>
+                    <div class="flex items-center gap-2 text-support">
+                        <label for="glanceYear" class="font-bold">Year</label>
+                        <select id="glanceYear" class="field !w-auto !py-1.5"></select>
+                        <span>· from Form A4, accommodations only</span>
+                    </div>
                 </div>
-                <div id="adminSpotsContainer" class="ztims-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <div id="glanceTiles" class="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
+                    <figure class="glass-panel p-5 sm:p-6 space-y-4 xl:col-span-3 min-w-0 m-0">
+                        <figcaption class="flex flex-wrap items-baseline justify-between gap-2">
+                            <span id="monthsTitle" class="text-lg font-extrabold text-on-surface">Guest arrivals by month</span>
+                            <span id="monthsNote" class="text-support"></span>
+                        </figcaption>
+                        <div id="monthsChart"></div>
+                        <div id="monthsLegend" class="flex flex-wrap gap-4 text-support"></div>
+                    </figure>
+
+                    <figure class="glass-panel p-5 sm:p-6 space-y-4 xl:col-span-2 m-0">
+                        <figcaption class="flex flex-wrap items-baseline justify-between gap-2">
+                            <span id="countriesTitle" class="text-lg font-extrabold text-on-surface">Top countries</span>
+                            <span class="text-support">Guests from abroad</span>
+                        </figcaption>
+                        <div id="countriesList" class="space-y-3"></div>
+                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="forma4" class="inline-block text-sm font-bold text-primary">Every country, in Form A4 →</a>
+                    </figure>
                 </div>
+            </section>
+
+            <!-- 4. Listings, in one line -->
+            <section class="glass-panel p-5 sm:p-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+                <h3 class="text-lg font-extrabold text-on-surface">Your listings</h3>
+                <div id="listingCounts" class="flex flex-wrap gap-x-7 gap-y-2 text-sm text-on-surface-variant flex-1"></div>
+                <a href="admin_dashboard_manage.html" class="text-sm font-bold text-primary">Go to Destinations →</a>
             </section>
         </div>
     </main>
+
+    <style>
+        .attn-card { display: flex; flex-direction: column; gap: .6rem; padding: 1.25rem; min-height: 11rem; color: inherit; text-decoration: none;
+                     transition: transform var(--dur-fast, 160ms) var(--ease-standard, ease), box-shadow var(--dur-fast, 160ms) var(--ease-standard, ease); }
+        .attn-card:hover { transform: translateY(-2px); box-shadow: var(--ztims-shadow-raised); }
+        .attn-card:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+        .attn-card.is-done { opacity: .72; }
+        .attn-card.is-done:hover { opacity: 1; }
+        .bar-a { background: rgb(var(--brand-blue)); }
+        .bar-a.is-top { background: rgb(var(--brand-navy)); }
+        :root.dark .bar-a.is-top { background: rgb(var(--ztims-primary-text)); }
+        .bar-b { background: rgb(var(--ztims-on-surface) / .18); }
+        .country-bar { background: rgb(var(--brand-teal)); }
+        .track { background: rgb(var(--ztims-on-surface) / .07); }
+    </style>
 
     <!-- Destination Management Entry Form Shell Modal -->
     <div id="addSpotModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
@@ -629,9 +667,9 @@ body { overflow-x: hidden; }
     <script>
         /* ==========================================================
            ESCAPING
-           These lists render text written by establishment managers and
-           visitors. Anything that reaches innerHTML is escaped, so a title or
-           a description containing markup is shown rather than run.
+           Everything below renders text written by managers, guides and
+           visitors. Anything that reaches innerHTML is escaped, so a name or
+           a message containing markup is shown rather than run.
            ========================================================== */
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, ch => (
@@ -639,26 +677,14 @@ body { overflow-x: hidden; }
             ));
         }
 
-        function safeImageUrl(value, fallback) {
-            const candidate = String(value || '').trim();
-            if (/^https?:\/\//i.test(candidate)) return escapeHtml(candidate);
-            return escapeHtml(fallback || '');
-        }
-
         const BASE_API_URL = '/api';
         const SPOTS_URL = `${BASE_API_URL}/spots`;
-        /* Photo uploads go straight from the browser to Cloudinary; MongoDB only
-           stores the resulting links. This page used to take a single image URL
-           and no gallery at all. */
+        /* Photo uploads go straight from the browser to Cloudinary; the database
+           only stores the resulting links. */
         const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
         const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
 
         let spotForm = null;
-        const MANAGERS_URL = `${BASE_API_URL}/establishment-managers`;
-
-        let systemSpots = [];
-        let systemManagers = [];
-
 
         // Only the Tourist Officer belongs here. Without this the page's whole
         // shell loaded for anyone with the address — the API refused the data,
@@ -694,222 +720,420 @@ body { overflow-x: hidden; }
             });
         }
 
+        const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` });
 
-        /* ========================================================
-            DATABASE ENGINE INTEGRATION & METRICS AGGREGATION
-        ======================================================== */
-        // The API sleeps on Render's free tier, so a cold start can take most of a
-        // minute — after 5s the spinner says so rather than looking frozen.
-        function showLoading(target, message, colspan) {
-            const spinner =
-                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
-                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
-                    '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
-                '</div>';
-            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
-            const timer = setTimeout(() => {
-                const note = target.querySelector('[data-slow]');
-                if (note) note.classList.remove('hidden');
-            }, 5000);
-            return () => clearTimeout(timer);
+        function handleExpiredSession() {
+            showToast('Your session has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        function setButtonLoading(btn, label) {
-            if (!btn) return () => {};
-            const originalHTML = btn.innerHTML;
-            const wasDisabled = btn.disabled;
-            btn.disabled = true;
-            btn.innerHTML =
-                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-            return () => {
-                btn.innerHTML = originalHTML;
-                btn.disabled = wasDisabled;
+        // One read. Resolves to the JSON, or null when that source failed — a
+        // dashboard with one broken card is still a dashboard.
+        let sessionExpired = false;
+        async function getJson(path) {
+            try {
+                const res = await fetch(`${BASE_API_URL}${path}`, { headers: authHeaders() });
+                if (res.status === 401) { sessionExpired = true; return null; }
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        /* ==========================================================
+           DATES — the office is in Manila, whatever the browser says
+           ========================================================== */
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                        'August', 'September', 'October', 'November', 'December'];
+        const SHORT = MONTHS.map(m => m.slice(0, 3));
+
+        function manilaToday() {
+            const now = new Date(Date.now() + 8 * 3600 * 1000);   // UTC+8, no daylight saving
+            return { y: now.getUTCFullYear(), m: now.getUTCMonth() + 1, d: now.getUTCDate(),
+                     key: now.toISOString().slice(0, 10), weekday: now.getUTCDay() };
+        }
+        const dayKey = value => String(value || '').slice(0, 10);
+        const fmt = n => (Number(n) || 0).toLocaleString('en-US');
+        const plural = (n, one, many) => (n === 1 ? one : many);
+
+        // Sets which tab a page opens on, then follows the link: Guide Bookings
+        // and Statistics both remember their tab in sessionStorage.
+        function wireTabLinks(root) {
+            root.querySelectorAll('a[data-tab-key]').forEach(link => {
+                link.addEventListener('click', () => {
+                    try { sessionStorage.setItem(link.dataset.tabKey, link.dataset.tab); } catch (e) { /* private browsing */ }
+                });
+            });
+        }
+
+        /* ==========================================================
+           1. NEEDS YOUR ATTENTION
+           ========================================================== */
+        function attentionCard(c) {
+            const failed = c.count === null;
+            const done = !failed && c.count === 0;
+            const tone = failed ? 'tone-neutral' : done ? 'tone-success' : c.tone;
+            const pill = failed ? 'Could not check' : done ? 'All done' : c.pill;
+            const detail = failed ? 'This could not be checked just now. Refresh to try again.' : done ? c.doneText : c.detail;
+            const tabAttrs = c.tabKey ? ` data-tab-key="${c.tabKey}" data-tab="${c.tab}"` : '';
+            return `
+            <a href="${c.href}"${tabAttrs} class="attn-card ztims-card${done ? ' is-done' : ''}">
+                <span class="flex items-center justify-between gap-3">
+                    <span class="icon-chip ${tone}"><span class="material-symbols-outlined">${c.icon}</span></span>
+                    <span class="${tone} tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1">${escapeHtml(pill)}</span>
+                </span>
+                <span class="flex items-baseline gap-2.5">
+                    <span class="text-4xl font-black tracking-tight text-on-surface leading-none">${failed ? '—' : fmt(c.count)}</span>
+                    <span class="font-bold text-on-surface">${escapeHtml(c.count === 1 ? c.one : c.many)}</span>
+                </span>
+                <span class="text-support">${escapeHtml(detail)}</span>
+                <span class="mt-auto text-sm font-bold text-primary">${escapeHtml(c.go)} →</span>
+            </a>`;
+        }
+
+        function renderAttention(d, today) {
+            const b = d.bookings;
+            const due = d.reports;
+            const count = (list, test) => (list ? list.filter(test).length : null);
+
+            const unpaid = count(b, x => x.status === 'pending_payment');
+            const noGuide = count(b, x => x.status === 'confirmed' && !x.guideId);
+            const pastOpen = count(b, x => x.status === 'confirmed' && dayKey(x.preferredDate) < today.key);
+            const firstNoGuide = b && b.filter(x => x.status === 'confirmed' && !x.guideId)
+                .sort((p, q) => dayKey(p.preferredDate).localeCompare(dayKey(q.preferredDate)))[0];
+
+            const cards = [
+                { icon: 'payments', tone: 'tone-warning', pill: 'Waiting', count: unpaid,
+                  one: 'visitor waiting to pay', many: 'visitors waiting to pay',
+                  detail: 'Booked on the website, not yet paid at the counter.',
+                  doneText: 'Nobody is waiting to pay.', go: 'Collect payment',
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'pay' },
+                { icon: 'person_add', tone: 'tone-warning', pill: 'To do', count: noGuide,
+                  one: 'paid booking needs a guide', many: 'paid bookings need a guide',
+                  detail: firstNoGuide
+                      ? `Next: ${firstNoGuide.spotId?.title || 'a destination'} · ${friendlyDay(firstNoGuide.preferredDate)} · ${firstNoGuide.visitors} ${plural(Number(firstNoGuide.visitors), 'visitor', 'visitors')}.`
+                      : 'Paid bookings with nobody assigned yet.',
+                  doneText: 'Every paid booking has a guide.', go: 'Assign a guide',
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'assign' },
+                { icon: 'schedule', tone: 'tone-danger', pill: 'Overdue', count: pastOpen,
+                  one: 'past tour not closed', many: 'past tours not closed',
+                  detail: 'The tour date has passed. Mark each Completed or No show.',
+                  doneText: 'Every past tour is closed.', go: 'Close them',
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'upcoming' },
+                { icon: 'description', tone: due && due.overdue ? 'tone-danger' : 'tone-warning',
+                  pill: due ? (due.overdue ? 'Overdue' : `Due ${due.dueShort}`) : '',
+                  count: due ? due.missing.length : null,
+                  one: `${due ? due.monthName : ''} report missing`, many: `${due ? due.monthName : ''} reports missing`,
+                  detail: due ? `Accommodations still to send their monthly counts. Due ${due.dueLong}.` : '',
+                  doneText: due ? `Every accommodation has sent its ${due.monthName} report.` : '', go: 'Open the tracker',
+                  href: 'admin_statistics.html', tabKey: 'statsTab', tab: 'tracker' },
+                { icon: 'edit_note', tone: 'tone-info', pill: 'To approve', count: d.profileRequests ? d.profileRequests.length : null,
+                  one: 'guide profile change', many: 'guide profile changes',
+                  detail: 'Guides asked to update their contact number or bio.',
+                  doneText: 'No profile changes waiting.', go: 'Review on Tourist Guides', href: 'admin_guides.html' },
+                { icon: 'assignment', tone: 'tone-info', pill: 'New', count: d.guideReports ? d.guideReports.length : null,
+                  one: 'guide report to read', many: 'guide reports to read',
+                  detail: 'Tour, headcount, incident and feedback reports filed by guides.',
+                  doneText: 'Every guide report has been read.', go: 'Read on Tourist Guides', href: 'admin_guides.html' },
+                { icon: 'forum', tone: 'tone-info', pill: 'New', count: d.feedback ? d.feedback.length : null,
+                  one: 'new visitor message', many: 'new visitor messages',
+                  detail: 'Sent from the Contact Us page.',
+                  doneText: 'No new messages.', go: 'Read feedback', href: 'admin_feedback.html' },
+                { icon: 'storefront', tone: 'tone-info', pill: 'To review', count: count(d.managers, m => m.statusNeedsReview),
+                  one: 'establishment status change', many: 'establishment status changes',
+                  detail: 'An establishment reported it is closed, inactive or open again.',
+                  doneText: 'No status changes to review.', go: 'Review on Managers', href: 'admin_managers.html' },
+                { icon: 'wrong_location', tone: 'tone-warning', pill: 'Fix', count: count(d.spots, s => s.status !== 'archived' && (s.latitude == null || s.longitude == null)),
+                  one: 'listing without a map pin', many: 'listings without a map pin',
+                  detail: 'Visitors cannot get directions to these yet.',
+                  doneText: 'Every listing is on the map.', go: 'Add the pins', href: 'admin_dashboard_manage.html' }
+            ];
+
+            // Work first, in the order above; the "all done" cards after it.
+            const waiting = cards.filter(c => c.count > 0);
+            const rest = cards.filter(c => !(c.count > 0));
+            const grid = document.getElementById('attnGrid');
+            grid.innerHTML = waiting.concat(rest).map(attentionCard).join('');
+            wireTabLinks(grid);
+
+            const things = waiting.length;
+            const time = new Date().toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+            document.getElementById('attnSummary').textContent =
+                `${things ? `${things} ${plural(things, 'thing', 'things')} waiting` : 'Nothing waiting'} · updated ${time}`;
+        }
+
+        function friendlyDay(value) {
+            const [y, m, d] = dayKey(value).split('-').map(Number);
+            if (!y) return '—';
+            return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-PH', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+        }
+
+        /* ==========================================================
+           2. TODAY'S TOURS, AND THE MONTH'S REPORTS
+           ========================================================== */
+        function renderTours(bookings, today) {
+            const box = document.getElementById('toursToday');
+            if (!bookings) { box.innerHTML = '<div class="ztims-empty tone-danger">The bookings could not be loaded.</div>'; return; }
+            const rows = bookings
+                .filter(b => b.status === 'confirmed' && dayKey(b.preferredDate) === today.key)
+                .sort((a, b) => String(a.preferredTime).localeCompare(String(b.preferredTime)));
+            if (!rows.length) { box.innerHTML = '<div class="ztims-empty">No confirmed tours today.</div>'; return; }
+            box.innerHTML = `
+            <table class="ztims-table w-full text-left border-collapse text-sm">
+                <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
+                    <th class="px-3 py-3">Time</th><th class="px-3 py-3">Destination</th><th class="px-3 py-3">Visitor</th>
+                    <th class="px-3 py-3 text-center">Group</th><th class="px-3 py-3">Guide</th>
+                </tr></thead>
+                <tbody class="divide-y divide-outline-variant/20">${rows.map(b => `
+                    <tr>
+                        <td class="px-3 py-3 font-extrabold text-on-surface tabular-nums">${escapeHtml(b.preferredTime)}</td>
+                        <td class="px-3 py-3 font-semibold text-on-surface">${escapeHtml(b.spotId?.title || '—')}</td>
+                        <td class="px-3 py-3 text-on-surface-variant">${escapeHtml(b.fullName)}</td>
+                        <td class="px-3 py-3 text-center">${Number(b.visitors) || 0}</td>
+                        <td class="px-3 py-3">${b.guideId ? escapeHtml(b.guideId.fullName) : '<span class="tone-danger font-bold">No guide yet</span>'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
+        }
+
+        /* The month whose reports are being collected now: the one that just
+           ended. Reports for it are due on the 5th of this month (Manila). */
+        function reportPeriod(today) {
+            const month = today.m === 1 ? 12 : today.m - 1;
+            const year = today.m === 1 ? today.y - 1 : today.y;
+            const dueDate = new Date(Date.UTC(today.y, today.m - 1, 5));
+            return {
+                year, month, monthName: MONTHS[month - 1],
+                overdue: today.d > 5,
+                dueShort: dueDate.toLocaleDateString('en-PH', { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+                dueLong: dueDate.toLocaleDateString('en-PH', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' })
             };
         }
 
-        // The tiles ship hardcoded zeros in the markup, which read as real figures
-        // while the request is still out — swap in a spinner until the data lands.
-        let hasLoadedMetricsOnce = false;
-        function showMetricSpinners() {
-            ['metric-spots', 'metric-managers'].forEach(id => {
-                const tile = document.getElementById(id);
-                if (tile) {
-                    tile.innerHTML = '<span class="inline-block w-6 h-6 rounded-full border-[3px] border-current border-t-transparent animate-spin opacity-60 align-[-4px]"></span>';
-                }
-            });
+        function summariseReports(tracker, period) {
+            if (!tracker) return null;
+            const entries = tracker.places.map(p => ({ title: p.title, status: p.months[period.month - 1].status }));
+            const municipal = entries.some(e => e.status === 'municipal_total');
+            const counted = entries.filter(e => e.status !== 'municipal_total');
+            return {
+                ...period,
+                municipal,
+                total: counted.length,
+                sent: counted.filter(e => e.status === 'submitted' || e.status === 'late').length,
+                missing: municipal ? [] : counted.filter(e => e.status === 'missing' || e.status === 'due').map(e => e.title)
+            };
         }
 
-        async function fetchAndSyncPlatformMetrics() {
-            // Skipped on the 30s refresh so the tiles don't blink every interval.
-            if (!hasLoadedMetricsOnce) showMetricSpinners();
-            hasLoadedMetricsOnce = true;
-            try {
-                const [spotsRes, managersRes] = await Promise.all([
-                    fetch(SPOTS_URL).catch(() => null),
-                    fetch(MANAGERS_URL, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } }).catch(() => null)
-                ]);
-
-                systemSpots = spotsRes && spotsRes.ok ? await spotsRes.json() : [];
-                systemManagers = managersRes && managersRes.ok ? await managersRes.json() : [];
-
-                calculateCalculatedFields();
-            } catch (err) {
-                console.error("Critical error mapping remote database entries:", err);
-                // Still render, or the tiles would spin forever on a failed load.
-                calculateCalculatedFields();
+        function renderReports(r) {
+            const heading = document.getElementById('reportsHeading');
+            const pill = document.getElementById('reportsDue');
+            const body = document.getElementById('reportsBody');
+            if (!r) {
+                heading.textContent = 'Monthly reports';
+                pill.hidden = true;
+                body.innerHTML = '<div class="ztims-empty tone-danger">The report tracker could not be loaded.</div>';
+                return;
             }
+            heading.textContent = `${r.monthName} reports`;
+            pill.hidden = false;
+            pill.className = `${r.missing.length ? (r.overdue ? 'tone-danger' : 'tone-warning') : 'tone-success'} tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1`;
+            pill.textContent = r.missing.length ? (r.overdue ? `Was due ${r.dueShort}` : `Due ${r.dueLong}`) : 'All in';
+
+            if (r.municipal) {
+                body.innerHTML = `<p class="text-on-surface-variant">${r.monthName} ${r.year} is recorded as the municipality's total from the printed sheet.</p>`;
+                return;
+            }
+            if (!r.total) {
+                body.innerHTML = '<div class="ztims-empty">No accommodations are listed yet.</div>';
+                return;
+            }
+            const segments = Array.from({ length: r.total }, (_, i) =>
+                `<span class="h-2.5 ${i < r.sent ? 'country-bar' : 'track'}"></span>`).join('');
+            body.innerHTML = `
+                <p class="flex items-baseline gap-2"><span class="text-4xl font-black text-on-surface leading-none">${r.sent}</span>
+                   <span class="font-bold text-on-surface">of ${r.total} ${plural(r.total, 'accommodation has', 'accommodations have')} reported</span></p>
+                <div class="grid gap-1" style="grid-template-columns: repeat(${r.total}, minmax(0, 1fr))" aria-hidden="true">${segments}</div>
+                ${r.missing.length ? `
+                <div class="text-support">
+                    <p class="font-bold text-on-surface">Not yet in:</p>
+                    <p>${r.missing.map(escapeHtml).join(' · ')}</p>
+                </div>` : `<p class="text-support">Every accommodation has sent its ${r.monthName} report.</p>`}`;
         }
 
-        function calculateCalculatedFields() {
-            document.getElementById('metric-spots').innerText = systemSpots.length;
+        /* ==========================================================
+           3. TOURISM AT A GLANCE — counts only, from Form A4
+           ========================================================== */
+        const formA4Cache = new Map();
+        async function formA4(year) {
+            if (!formA4Cache.has(year)) formA4Cache.set(year, getJson(`/statistics/form-a4?year=${year}`));
+            return formA4Cache.get(year);
+        }
 
-            document.getElementById('metric-managers').innerText = systemManagers.length;
+        function summariseYear(a4) {
+            if (!a4) return null;
+            const monthly = Array(12).fill(0);
+            const bySection = { philippine: 0, foreign: 0 };
+            const countries = [];
+            for (const res of a4.residences) {
+                const totals = a4.counts[res.code].total;
+                const sum = totals.reduce((a, b) => a + b, 0);
+                totals.forEach((v, i) => { monthly[i] += v; });
+                if (bySection[res.section] !== undefined) bySection[res.section] += sum;
+                if (res.section === 'foreign' && sum > 0) countries.push({ name: res.name, total: sum });
+            }
+            countries.sort((a, b) => b.total - a.total);
+            return {
+                monthly, countries,
+                arrivals: monthly.reduce((a, b) => a + b, 0),
+                philippine: bySection.philippine, foreign: bySection.foreign,
+                guestNights: (a4.dae.guestNights || []).reduce((a, b) => a + (b || 0), 0)
+            };
+        }
 
+        async function renderGlance(year) {
+            const [a4, prev] = await Promise.all([formA4(year), formA4(year - 1)]);
+            const cur = summariseYear(a4);
+            const last = summariseYear(prev);
+            const tiles = document.getElementById('glanceTiles');
+            const chart = document.getElementById('monthsChart');
+            const list = document.getElementById('countriesList');
+            document.getElementById('monthsTitle').textContent = `Guest arrivals by month, ${year}`;
+            document.getElementById('countriesTitle').textContent = `Top countries, ${year}`;
 
-            const currentTab = window.currentActiveTab || 'spots';
-            switchMetricTab(currentTab);
+            if (!cur) {
+                const failed = '<div class="ztims-empty tone-danger">Form A4 could not be loaded.</div>';
+                tiles.innerHTML = ''; chart.innerHTML = failed; list.innerHTML = failed;
+                document.getElementById('monthsNote').textContent = '';
+                document.getElementById('monthsLegend').innerHTML = '';
+                return;
+            }
+
+            const tile = (label, value, sub) => `
+                <div class="glass-panel p-5 space-y-1">
+                    <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${label}</p>
+                    <p class="text-3xl font-black text-on-surface tabular-nums">${fmt(value)}</p>
+                    <p class="text-support">${sub}</p>
+                </div>`;
+            tiles.innerHTML =
+                tile('Guest arrivals', cur.arrivals, last && last.arrivals ? `${fmt(last.arrivals)} in ${year - 1}` : `January–December ${year}`) +
+                tile('Philippine residents', cur.philippine, `of the ${fmt(cur.arrivals)}`) +
+                tile('From abroad', cur.foreign, 'non-Philippine residents') +
+                tile('Guest nights', cur.guestNights, 'nights spent in Zamboanguita');
+
+            // The bars: this year, with last year beside it when there is one.
+            const showLast = last && last.arrivals > 0;
+            const max = Math.max(1, ...cur.monthly, ...(showLast ? last.monthly : []));
+            const top = Math.max(...cur.monthly);
+            const withData = cur.monthly.map((v, i) => ({ v, i })).filter(x => x.v > 0);
+            document.getElementById('monthsNote').textContent = withData.length
+                ? (() => {
+                    const busiest = withData.reduce((a, b) => (b.v > a.v ? b : a));
+                    const quietest = withData.reduce((a, b) => (b.v < a.v ? b : a));
+                    return `Busiest: ${SHORT[busiest.i]} ${fmt(busiest.v)} · Quietest: ${SHORT[quietest.i]} ${fmt(quietest.v)}`;
+                })()
+                : '';
+
+            if (!cur.arrivals) {
+                chart.innerHTML = `<div class="ztims-empty">No reports for ${year} yet. They appear here as establishments send them.</div>`;
+            } else {
+                chart.innerHTML = `
+                <div class="grid gap-1.5 sm:gap-2.5 items-end border-b border-outline-variant/60" style="grid-template-columns: repeat(12, minmax(0, 1fr)); height: 15rem">
+                    ${cur.monthly.map((v, i) => `
+                    <div class="h-full flex flex-col justify-end items-center gap-1" title="${MONTHS[i]} ${year}: ${fmt(v)}${showLast ? ` · ${year - 1}: ${fmt(last.monthly[i])}` : ''}">
+                        <span class="text-[10px] sm:text-[11px] font-bold text-on-surface-variant tabular-nums">${v ? fmt(v) : ''}</span>
+                        <div class="w-full flex items-end gap-0.5" style="height: calc(100% - 1.25rem)">
+                            ${showLast ? `<div class="bar-b flex-1" style="height: ${(last.monthly[i] / max * 100).toFixed(1)}%"></div>` : ''}
+                            <div class="bar-a flex-1${v === top && v > 0 ? ' is-top' : ''}" style="height: ${(v / max * 100).toFixed(1)}%"></div>
+                        </div>
+                    </div>`).join('')}
+                </div>
+                <div class="grid gap-1.5 sm:gap-2.5 text-center text-support mt-2" style="grid-template-columns: repeat(12, minmax(0, 1fr))">
+                    ${SHORT.map(m => `<span>${m}</span>`).join('')}
+                </div>`;
+            }
+            document.getElementById('monthsLegend').innerHTML = showLast
+                ? `<span class="flex items-center gap-2"><span class="inline-block w-3 h-3 bar-a"></span>${year}</span>
+                   <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 bar-b"></span>${year - 1}</span>`
+                : '';
+
+            const topCountries = cur.countries.slice(0, 8);
+            list.innerHTML = topCountries.length
+                ? topCountries.map(c => `
+                    <div class="grid items-center gap-3 text-sm" style="grid-template-columns: 7.5rem minmax(0, 1fr) 3.5rem">
+                        <span class="font-semibold text-on-surface truncate">${escapeHtml(c.name)}</span>
+                        <span class="track h-3.5 block"><span class="country-bar h-full block" style="width: ${(c.total / topCountries[0].total * 100).toFixed(1)}%"></span></span>
+                        <span class="text-right font-extrabold text-on-surface tabular-nums">${fmt(c.total)}</span>
+                    </div>`).join('')
+                : `<div class="ztims-empty">No guests from abroad recorded for ${year} yet.</div>`;
+        }
+
+        /* ==========================================================
+           4. LISTINGS
+           ========================================================== */
+        function renderListings(spots) {
+            const box = document.getElementById('listingCounts');
+            if (!spots) { box.innerHTML = '<span class="tone-danger">The listings could not be loaded.</span>'; return; }
+            const live = spots.filter(s => s.status !== 'archived');
+            const n = (count, label) => `<span><b class="text-xl text-on-surface">${fmt(count)}</b> ${label}</span>`;
+            box.innerHTML = [
+                n(live.filter(s => s.status === 'published').length, 'published'),
+                n(live.filter(s => s.status === 'unpublished').length, 'unpublished'),
+                n(live.filter(s => s.managedBy).length, 'kept by establishments'),
+                n(live.filter(s => !s.managedBy).length, 'kept by the office')
+            ].join(' ');
+        }
+
+        /* ==========================================================
+           LOADING
+           ========================================================== */
+        async function loadDashboard() {
+            const today = manilaToday();
+            document.getElementById('dashGreeting').textContent =
+                `Here is what needs you today, ${new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}.`;
+            const period = reportPeriod(today);
+
+            const [bookings, spots, managers, feedback, profileRequests, guideReports, tracker] = await Promise.all([
+                getJson('/guide-bookings'),
+                getJson('/spots'),
+                getJson('/establishment-managers'),
+                getJson('/feedback?status=new'),
+                getJson('/guides/profile-requests'),
+                getJson('/guides/reports?status=new'),
+                getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`)
+            ]);
+            if (sessionExpired) { handleExpiredSession(); return; }
+
+            const reports = summariseReports(tracker, period);
+            renderAttention({
+                bookings: Array.isArray(bookings) ? bookings : null,
+                spots: Array.isArray(spots) ? spots : null,
+                managers: Array.isArray(managers) ? managers : null,
+                feedback: Array.isArray(feedback) ? feedback : null,
+                profileRequests: profileRequests && Array.isArray(profileRequests.requests) ? profileRequests.requests : null,
+                guideReports: guideReports && Array.isArray(guideReports.reports) ? guideReports.reports : null,
+                reports
+            }, today);
+            renderTours(Array.isArray(bookings) ? bookings : null, today);
+            renderReports(reports);
+            renderListings(Array.isArray(spots) ? spots : null);
+        }
+
+        // The year picker: this year and the two before. It opens on the latest
+        // year that has any Form A4 figures, so January does not open on zeros.
+        async function setUpGlance() {
+            const { y } = manilaToday();
+            const select = document.getElementById('glanceYear');
+            select.innerHTML = [y, y - 1, y - 2].map(v => `<option value="${v}">${v}</option>`).join('');
+            const thisYear = summariseYear(await formA4(y));
+            select.value = String(thisYear && thisYear.arrivals ? y : y - 1);
+            select.addEventListener('change', () => renderGlance(Number(select.value)));
+            await renderGlance(Number(select.value));
         }
 
         /* ========================================================
-            DYNAMIC WAVE CHART GENERATOR ALGORITHM ENGINE
-        ======================================================== */
-        function updateTrendsChart(metricType) {
-            const chartTitle = document.getElementById('chart-title-heading');
-            const chartRange = document.getElementById('chart-date-range');
-            const labelsAxis = document.getElementById('chart-labels-axis');
-            const pathLine = document.getElementById('dynamic-chart-line');
-            const pathArea = document.getElementById('dynamic-chart-area');
-            
-            if (!pathLine || !pathArea) return;
-
-            const daysArray = [];
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                daysArray.push({
-                    dateString: d.toISOString().substring(0, 10),
-                    label: dayNames[d.getDay()],
-                    value: 0
-                });
-            }
-
-            if (metricType === 'spots') {
-                chartTitle.innerText = "Destinations Published";
-                chartRange.innerText = "New Listings / Day";
-
-                systemSpots.forEach(spot => {
-                    const created = (spot.createdAt || "").substring(0, 10);
-                    const match = daysArray.find(d => d.dateString === created);
-                    if (match) match.value += 1;
-                });
-            } else if (metricType === 'managers') {
-                chartTitle.innerText = "Tourist Establishment Manager Accounts";
-                chartRange.innerText = "New Accounts Issued / Day";
-
-                systemManagers.forEach(manager => {
-                    const created = (manager.createdAt || "").substring(0, 10);
-                    const match = daysArray.find(d => d.dateString === created);
-                    if (match) match.value += 1;
-                });
-            }
-
-            // The chart draws into a 1000-wide viewBox, so the last day lands exactly
-            // on the right edge. Derived from the array rather than hard-coded, so
-            // changing the range does not silently squash the line.
-            const widthStep = 1000 / Math.max(daysArray.length - 1, 1);
-            const maxValue = Math.max(...daysArray.map(d => d.value), 1);
-            const coordinates = [];
-
-            daysArray.forEach((day, index) => {
-                const x = index * widthStep;
-                let y = 85 - ((day.value / maxValue) * 70);
-                if (isNaN(y)) y = 85; 
-                coordinates.push({ x, y });
-            });
-
-            let linePathString = `M ${coordinates[0].x} ${coordinates[0].y}`;
-            for (let i = 0; i < coordinates.length - 1; i++) {
-                const p0 = coordinates[i];
-                const p1 = coordinates[i + 1];
-                const cpX1 = p0.x + (widthStep / 2);
-                const cpY1 = p0.y;
-                const cpX2 = p1.x - (widthStep / 2);
-                const cpY2 = p1.y;
-                linePathString += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
-            }
-
-            pathLine.setAttribute('d', linePathString);
-            const areaPathString = `${linePathString} L 1000 100 L 0 100 Z`;
-            pathArea.setAttribute('d', areaPathString);
-        }
-
-        function switchMetricTab(metricType) {
-            window.currentActiveTab = metricType;
-
-            ['spots', 'managers'].forEach(type => {
-                const card = document.getElementById(`card-${type}`);
-                if (card) card.classList.remove('border-gold/80', 'bg-gold/5');
-            });
-            
-            const activeCard = document.getElementById(`card-${metricType}`);
-            if (activeCard) activeCard.classList.add('border-gold/80', 'bg-gold/5');
-
-            updateTrendsChart(metricType);
-
-            const titleDisplay = document.getElementById('tab-title-display');
-            const resultsContainer = document.getElementById('tab-results-container');
-            let htmlPayload = "";
-
-            if (metricType === 'spots') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-gold">location_on</span> Published Destinations`;
-                if (systemSpots.length === 0) {
-                    htmlPayload = `<p class="ztims-empty col-span-full">No destinations published yet.</p>`;
-                } else {
-                    htmlPayload = `<table class="ztims-table w-full min-w-[28rem] text-left text-sm">
-                        <thead>
-                            <tr class="text-on-surface-variant border-b border-outline-variant/40"><th class="py-2">Destination</th><th>Location</th><th>Category</th><th class="text-right">Entrance</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-outline-variant/40">`;
-                    systemSpots.forEach(spot => {
-                        // No Type column: it is derived from the category, so it only
-                        // ever repeated it one cell to the right.
-                        const fee = Number(spot.entranceFee || 0).toFixed(2);
-                        htmlPayload += `<tr class="hover:bg-surface-variant/50"><td class="py-3 font-bold text-on-surface-variant">${escapeHtml(spot.title || 'Untitled')}</td><td class="text-on-surface-variant">${escapeHtml(spot.location || '—')}</td><td class="text-on-surface-variant">${escapeHtml(spot.category || '—')}</td><td class="text-right font-bold text-on-surface">₱${fee}</td></tr>`;
-                    });
-                    htmlPayload += `</tbody></table>`;
-                }
-            } 
-            else if (metricType === 'managers') {
-                titleDisplay.innerHTML = `<span class="material-symbols-outlined text-gold">storefront</span> Registered Tourist Establishment Managers`;
-                if (systemManagers.length === 0) {
-                    htmlPayload = `<p class="ztims-empty col-span-full">No establishment manager accounts created yet.</p>`;
-                } else {
-                    htmlPayload = `<table class="ztims-table w-full min-w-[28rem] text-left text-sm">
-                        <thead>
-                            <tr class="text-on-surface-variant border-b border-outline-variant/40"><th class="py-2">Resort</th><th>Contact Email</th><th>Phone</th><th class="text-right">Listings</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-outline-variant/40">`;
-                    systemManagers.forEach(manager => {
-                        // The reference arrives populated, so it may be an object or a bare id.
-                        const assignedId = entry => {
-                            const assigned = entry.managedBy;
-                            if (!assigned) return '';
-                            return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
-                        };
-                        const listings = systemSpots.filter(spot => assignedId(spot) === String(manager._id)).length;
-                        htmlPayload += `<tr class="hover:bg-surface-variant/50"><td class="py-3 font-bold text-on-surface-variant">${escapeHtml(manager.establishmentName || manager.resortName || 'Unnamed establishment')}</td><td class="text-on-surface-variant">${escapeHtml(manager.email || '—')}</td><td class="text-on-surface-variant">${escapeHtml(manager.phone || '—')}</td><td class="text-right font-bold text-on-surface">${listings}</td></tr>`;
-                    });
-                    htmlPayload += `</tbody></table>`;
-                }
-            } 
-
-            resultsContainer.innerHTML = htmlPayload;
-        }
-
-        /* ========================================================
-            SPOT DESTINATIONS MANAGER INTERFACE LIFECYCLES
+            ADD NEW SPOT — the shared listing form, in a dialog
         ======================================================== */
         function openAddSpotModal() {
             document.getElementById('addSpotModal').classList.remove('hidden');
@@ -925,10 +1149,7 @@ body { overflow-x: hidden; }
         async function publishNewSpot(payload) {
             const response = await fetch(SPOTS_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-                },
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
                 body: JSON.stringify(payload)
             });
             const result = await response.json().catch(() => ({}));
@@ -938,65 +1159,9 @@ body { overflow-x: hidden; }
 
             showToast(`${payload.title} published. It is live on the main page now.`, 'success');
             closeAddSpotModal();
-            loadSpotsPreview();
+            loadDashboard();
         }
 
-        async function loadSpotsPreview() {
-            const container = document.getElementById('adminSpotsContainer');
-            if (!container) return;
-
-            const doneLoading = showLoading(container, 'Loading destinations...');
-
-            try {
-                const response = await fetch(SPOTS_URL);
-                if (!response.ok) throw new Error("Could not parse cluster database collection array.");
-                
-                const spots = await response.json();
-                container.innerHTML = ''; 
-
-                if (spots.length === 0) {
-                    container.innerHTML = `<p class="text-on-surface-variant col-span-3 text-center py-12 font-medium">No live system spots active. Use the button above to publish the first destination!</p>`;
-                    return;
-                }
-
-                spots.forEach(spot => {
-                    const fallbackImg = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80';
-                    const displayImg = spot.imageUrl || spot.image || fallbackImg;
-                    
-                    const cardMarkup = `
-                        <div class="glass-panel rounded-2xl overflow-hidden flex flex-col transition-all duration-300">
-                            <img src="${safeImageUrl(displayImg, fallbackImg)}" class="w-full h-52 object-cover" alt="${escapeHtml(spot.title || 'Spot')}" onerror="this.src='${fallbackImg}'"/>
-                            <div class="p-6 flex-1 flex flex-col justify-between">
-                                <div>
-                                    <span class="px-2 py-0.5 text-label font-black rounded bg-gold/10 text-gold uppercase tracking-wider">${escapeHtml(spot.category || 'General')}</span>
-                                    <h3 class="text-xl font-bold mt-2 text-on-surface">${escapeHtml(spot.title || 'Untitled Spot')}</h3>
-                                    <p class="text-support flex items-center mt-1">
-                                        <span class="material-symbols-outlined text-sm text-accent mr-1">location_on</span>${escapeHtml(spot.location || 'Zamboanguita')}
-                                    </p>
-                                    <p class="text-on-surface-variant text-sm mt-3 line-clamp-3">${escapeHtml(spot.description || 'No summary description mapped.')}</p>
-                                </div>
-                                <div class="border-t border-outline-variant/40 mt-4 pt-4 flex items-center justify-between text-support">
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-gold text-base">verified_user</span> Managed Active</span>
-                                    <span>Live Database Entry</span>
-                                </div>
-                            </div>
-                        </div>`;
-                    container.insertAdjacentHTML('beforeend', cardMarkup);
-                });
-
-            } catch (err) {
-                console.error("Error drawing destination items profiles:", err);
-                container.innerHTML = `<p class="text-error text-sm col-span-3 text-center py-6 font-mono">Failed loading destinations preview. Verify API cluster connection.</p>`;
-            } finally {
-                doneLoading();
-            }
-        }
-
-
-        /* ========================================================
-            THEME DISPLAY INTERACTION MANAGER
-        ======================================================== */
-        var currentActiveTab = 'spots';
         // Kept separate so a missing module costs the editor and nothing else:
         // an early return here cannot skip the page's own loading.
         function mountListingForm() {
@@ -1029,11 +1194,14 @@ body { overflow-x: hidden; }
 
             mountPortalAccountMenu();
             mountListingForm();
+            wireTabLinks(document);
+            document.getElementById('dashRefresh').addEventListener('click', loadDashboard);
 
-            await fetchAndSyncPlatformMetrics();
-            loadSpotsPreview();
+            loadDashboard();
+            setUpGlance();
 
-            setInterval(fetchAndSyncPlatformMetrics, 30000);
+            // Every two minutes while the page is on screen; a hidden tab waits.
+            setInterval(() => { if (!document.hidden) loadDashboard(); }, 120000);
         });
     </script>
 

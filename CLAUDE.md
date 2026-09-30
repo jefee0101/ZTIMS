@@ -114,7 +114,7 @@ modules), loaded via `<script src="...">` on the pages that need them, on
 purpose — see the header comment in `spot-form.js`:
 - `spot-form.js` (~2200 lines) — the one listing form used by the
   establishment portal, the officer's Destinations page, and the officer's
-  Analytics quick-add. Owns barangay list, validation, the location picker
+  Dashboard quick-add. Owns barangay list, validation, the location picker
   and its Zamboanguita bounding-box sanity check.
 - `tourism-map.js` — Leaflet + OpenStreetMap tiles + ZTIMS's own category
   markers. Never calls a routing provider directly; hands off to the backend's
@@ -205,6 +205,16 @@ brand colours carry identity, not the backgrounds.
   `--ease-standard`, so `transition-all duration-300` follows the system too.
   Page-to-page and theme switches crossfade via View Transitions.
   `prefers-reduced-motion` stills everything from `motion.css` alone.
+
+The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
+(the file keeps its old name so sign-in and bookmarks still land on it). It holds
+no data of its own: it reads the officer's existing endpoints (guide bookings,
+spots, establishment managers, feedback, guide profile requests and reports,
+`/api/statistics/tracker` and `/form-a4`) and shows what is waiting on each —
+every card links to the page where it is dealt with, opening Guide Bookings or
+Statistics on the right tab through their `sessionStorage` tab keys — plus
+today's tours, the month just ended's Form A4 reports, and Form A4 counts by
+month and by country. Counts only, like the statistics themselves.
 
 Each page sets its own `const API_BASE = "/api"` (`admin_analystic.html`
 calls it `BASE_API_URL`; `admin_profile.html` writes `/api/...` into its
