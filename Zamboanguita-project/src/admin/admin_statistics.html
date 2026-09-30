@@ -519,26 +519,47 @@ body { overflow-x: hidden; }
                 </nav>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h2>
                 <p class="text-on-surface-variant text-sm max-w-3xl">
-                    The monthly counts behind Form A4, the Report on the Regional Distribution of Travelers, and the
-                    visitors at the attractions the office manages. Everything here is a count; totals are added up
+                    The Arrivals Report (the province's Form A4, the Report on the Regional Distribution of
+                    Travelers), the monthly counts behind it, and the visitors at the attractions the office manages. Everything here is a count; totals are added up
                     for you, and nothing is ever deleted.
                 </p>
             </div>
 
             <!-- Tabs -->
             <div role="tablist" aria-label="Statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
-                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="true" class="stats-tab">
+                <!-- The report the office sends out, so it is where the page opens. -->
+                <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="true" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">summarize</span>Arrivals Report</button>
+                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
                 <button role="tab" id="tab-enter" aria-controls="panel-enter" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
                 <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">landscape</span>Attractions</button>
-                <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">summarize</span>Form A4</button>
             </div>
 
+            <!-- ============ Arrivals Report (Form A4) ============ -->
+            <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4">
+                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <label class="block"><span class="field-label">Year</span><select id="faYear" class="field w-32"></select></label>
+                    <label class="block"><span class="field-label">From</span><select id="faFrom" class="field w-40"></select></label>
+                    <label class="block"><span class="field-label">To</span><select id="faTo" class="field w-40"></select></label>
+                    <button id="faGenerate" type="button" class="btn btn-primary min-h-[44px]"><span class="material-symbols-outlined !text-base">summarize</span>Generate report</button>
+                    <button id="faDownload" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">download</span>Download Excel</button>
+                </div>
+                <div id="formA4Host" class="space-y-4"></div>
+                <div class="glass-panel p-4 space-y-3">
+                    <h3 class="font-bold">Sent to the province?</h3>
+                    <p class="text-support">Marking the months as sent locks their reports, so figures already reported cannot change quietly. The officer can unlock a single report to correct it; every change is recorded.</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have sent these months to the province</label>
+                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Lock these months</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- ============ Tracker ============ -->
-            <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4">
+            <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4" hidden>
                 <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                     <label class="block"><span class="field-label">Year</span><select id="trYear" class="field w-32"></select></label>
                     <label class="block"><span class="field-label">Places</span>
@@ -570,29 +591,9 @@ body { overflow-x: hidden; }
             <section role="tabpanel" id="panel-attractions" aria-labelledby="tab-attractions" class="space-y-4" hidden>
                 <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                     <label class="block"><span class="field-label">Year</span><select id="atYear" class="field w-32"></select></label>
-                    <p class="text-support flex-1 min-w-[14rem]">Visitors counted at each attraction, kept apart from Form A4: a guest who stays at a resort and visits the falls would otherwise be counted twice.</p>
+                    <p class="text-support flex-1 min-w-[14rem]">Visitors counted at each attraction, kept apart from the Arrivals Report: a guest who stays at a resort and visits the falls would otherwise be counted twice.</p>
                 </div>
                 <div id="attractionsHost" class="glass-panel overflow-x-auto"></div>
-            </section>
-
-            <!-- ============ Form A4 ============ -->
-            <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4" hidden>
-                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
-                    <label class="block"><span class="field-label">Year</span><select id="faYear" class="field w-32"></select></label>
-                    <label class="block"><span class="field-label">From</span><select id="faFrom" class="field w-40"></select></label>
-                    <label class="block"><span class="field-label">To</span><select id="faTo" class="field w-40"></select></label>
-                    <button id="faGenerate" type="button" class="btn btn-primary min-h-[44px]"><span class="material-symbols-outlined !text-base">summarize</span>Generate report</button>
-                    <button id="faDownload" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">download</span>Download Excel</button>
-                </div>
-                <div id="formA4Host" class="space-y-4"></div>
-                <div class="glass-panel p-4 space-y-3">
-                    <h3 class="font-bold">Sent to the province?</h3>
-                    <p class="text-support">Marking the months as sent locks their reports, so figures already reported cannot change quietly. The officer can unlock a single report to correct it; every change is recorded.</p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have sent these months to the province</label>
-                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Lock these months</button>
-                    </div>
-                </div>
             </section>
 
             <p id="statsError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
@@ -678,13 +679,14 @@ body { overflow-x: hidden; }
         }
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['tracker', 'enter', 'attractions', 'forma4'];
+        const TABS = ['forma4', 'tracker', 'enter', 'attractions'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
                 document.getElementById('panel-' + t).hidden = t !== name;
             }
             try { sessionStorage.setItem('statsTab', name); } catch (e) {}
+            if (name === 'forma4') generateForm();
             if (name === 'tracker') loadTracker();
             if (name === 'attractions') loadAttractions();
             if (name === 'enter') loadEntry();
@@ -829,7 +831,7 @@ body { overflow-x: hidden; }
             }
         }
 
-        // ---------------------------------------------------------- Form A4
+        // ---------------------------------------------------------- Arrivals Report (Form A4)
         function formRange() {
             return { year: document.getElementById('faYear').value, from: document.getElementById('faFrom').value, to: document.getElementById('faTo').value };
         }
@@ -919,7 +921,7 @@ body { overflow-x: hidden; }
                 a.download = name ? name[1] : `Form_A4_Zamboanguita_${year}.xlsx`;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-                showToast('Form A4 downloaded.', 'success');
+                showToast('Arrivals Report (Form A4) downloaded.', 'success');
             } catch (e) {
                 showToast(e.message, 'error');
             } finally {
@@ -967,9 +969,14 @@ body { overflow-x: hidden; }
             if (!guardOfficerSession()) return;
             mountPortalAccountMenu();
             wire();
-            let first = 'tracker';
-            try { first = sessionStorage.getItem('statsTab') || 'tracker'; } catch (e) {}
-            showTab(TABS.includes(first) ? first : 'tracker');
+            // Coming here from the sidebar always opens the Arrivals Report; only
+            // a reload goes back to the tab that was open.
+            let first = 'forma4';
+            try {
+                const nav = performance.getEntriesByType('navigation')[0];
+                if (nav && nav.type === 'reload') first = sessionStorage.getItem('statsTab') || first;
+            } catch (e) {}
+            showTab(TABS.includes(first) ? first : 'forma4');
         });
     </script>
 
