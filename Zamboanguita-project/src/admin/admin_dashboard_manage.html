@@ -528,9 +528,8 @@ body { overflow-x: hidden; }
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h2>
                     <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Everything published to the public site — tourist spots and accommodations alike,
-                        whether the Tourism Office keeps them or an establishment manager does.
-                        Listings are edited by whoever manages them; take one down here when it is no longer available.
+                        Everything on the public site, whether the office keeps it or a manager does.
+                        Take a listing down here when it is no longer available.
                     </p>
                 </div>
                 <button id="refreshBtn" class="btn btn-secondary">
@@ -561,24 +560,12 @@ body { overflow-x: hidden; }
                 <p id="starterImportStatus" hidden class="text-support mt-3"></p>
             </div>
 
-            <!-- Summary of what is live -->
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Published</p>
-                    <h5 id="statTotal" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1"><span id="statSpots">0</span> spots · <span id="statStays">0</span> accommodations</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Kept by the office</p>
-                    <h5 id="statOffice" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1"><span id="statManaged">0</span> run by managers</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Need attention</p>
-                    <h5 id="statIncomplete" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">missing a photo or a description</p>
-                </div>
-            </div>
+            <!-- Summary of what is live, in one line rather than three cards -->
+            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
+                <span><b id="statTotal" class="text-on-surface">—</b> published (<span id="statSpots">0</span> spots, <span id="statStays">0</span> accommodations)</span>
+                <span><b id="statOffice" class="text-on-surface">—</b> kept by the office, <b id="statManaged" class="text-on-surface">0</b> run by managers</span>
+                <span><b id="statIncomplete" class="text-on-surface">—</b> missing a photo or a description</span>
+            </p>
 
             <!-- Filter Controls Panel -->
             <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-6">

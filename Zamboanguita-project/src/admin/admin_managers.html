@@ -537,21 +537,12 @@ body { overflow-x: hidden; }
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Manager accounts</p>
-                    <h5 id="statManagers" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Listings they publish</p>
-                    <h5 id="statListings" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Yet to publish anything</p>
-                    <h5 id="statIdle" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">accounts with no listing yet</p>
-                </div>
-            </div>
+            <!-- The numbers, in one line rather than three cards. -->
+            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
+                <span><b id="statManagers" class="text-on-surface">—</b> manager accounts</span>
+                <span><b id="statListings" class="text-on-surface">—</b> listings they publish</span>
+                <span><b id="statIdle" class="text-on-surface">—</b> yet to publish anything</span>
+            </p>
 
             <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                 <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2">
@@ -574,15 +565,11 @@ body { overflow-x: hidden; }
                     <table class="ztims-table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Establishment</th>
-                                <th class="px-6 py-4">Manager</th>
-                                <th class="px-6 py-4">Sign-in email</th>
-                                <th class="px-6 py-4">Public contact</th>
-                                <th class="px-6 py-4">Phone</th>
-                                <th class="px-6 py-4 text-center">Listings</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Account created</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
+                                <th class="px-5 py-4">Establishment</th>
+                                <th class="px-5 py-4">Contact</th>
+                                <th class="px-5 py-4 text-center">Listings</th>
+                                <th class="px-5 py-4 text-center">Status</th>
+                                <th class="px-5 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="managerTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
@@ -781,7 +768,7 @@ body { overflow-x: hidden; }
 
             if (rows.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="9" class="p-4"><div class="ztims-empty">
+                    <tr><td colspan="5" class="p-4"><div class="ztims-empty">
                         <span class="material-symbols-outlined">storefront</span>
                         ${managers.length === 0
                             ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
@@ -794,47 +781,27 @@ body { overflow-x: hidden; }
                 const listings = listingCounts[String(manager._id)] || 0;
                 const suspended = manager.active === false;
                 return `
-                <tr class="hover:bg-on-surface/[0.03] transition-colors ${suspended ? 'opacity-60' : ''}">
-                    <td class="px-6 py-4 font-bold text-on-surface">
-                        <span class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary !text-lg">storefront</span>
-                            ${escapeHtml(nameOf(manager) || 'Unnamed establishment')}
-                        </span>
+                <tr class="hover:bg-on-surface/[0.03] transition-colors align-top">
+                    <td class="px-5 py-4 ${suspended ? 'opacity-60' : ''}">
+                        <p class="font-bold text-on-surface">${escapeHtml(nameOf(manager) || 'Unnamed establishment')}</p>
+                        <p class="text-support">${escapeHtml(manager.managerName || 'No manager name')}</p>
+                        <p class="text-support">Account since ${escapeHtml(formatDate(manager.createdAt))}</p>
                     </td>
-                    <td class="px-6 py-4">${escapeHtml(manager.managerName || '—')}</td>
-                    <td class="px-6 py-4">${escapeHtml(manager.email || '—')}</td>
-                    <td class="px-6 py-4">${escapeHtml(contactEmailOf(manager))}</td>
-                    <td class="px-6 py-4">${escapeHtml(manager.phone || '—')}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center rounded-md px-2.5 py-1 text-support font-bold ring-1 ring-inset ${ listings ? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface-variant ring-outline-variant/30' }">${listings}</span>
+                    <td class="px-5 py-4 ${suspended ? 'opacity-60' : ''}">
+                        <p class="text-on-surface [overflow-wrap:anywhere]">Signs in as ${escapeHtml(manager.email || '—')}</p>
+                        ${contactEmailOf(manager) !== (manager.email || '—') ? `<p class="text-support [overflow-wrap:anywhere]">Public: ${escapeHtml(contactEmailOf(manager))}</p>` : ''}
+                        ${manager.phone ? `<p class="text-support">${escapeHtml(manager.phone)}</p>` : ''}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                            suspended ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'
-                        }">
-                            <span class="material-symbols-outlined !text-xs">${suspended ? 'pause_circle' : 'check_circle'}</span>
-                            ${suspended ? 'Suspended' : 'Active'}
-                        </span>
+                    <td class="px-5 py-4 text-center font-bold ${listings ? 'text-on-surface' : 'text-on-surface-variant'}">${listings}</td>
+                    <td class="px-5 py-4 text-center">
+                        <span class="tone-pill ${suspended ? 'tone-danger' : 'tone-success'} text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">${suspended ? 'Suspended' : 'Active'}</span>
                     </td>
-                    <td class="px-6 py-4 text-right text-support">${escapeHtml(formatDate(manager.createdAt))}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex justify-end gap-1.5">
-                            <button data-edit="${escapeHtml(manager._id)}" title="Correct these details"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-on-surface transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">edit</span>
-                            </button>
-                            <button data-password="${escapeHtml(manager._id)}" title="Issue a new password"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-accent transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">key</span>
-                            </button>
-                            <button data-suspend="${escapeHtml(manager._id)}" title="${suspended ? 'Restore this account' : 'Suspend this account'}"
-                                    class="p-2 rounded-lg bg-surface-variant ${suspended ? 'text-primary' : 'text-on-surface-variant hover:text-error'} transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">${suspended ? 'play_circle' : 'pause_circle'}</span>
-                            </button>
-                            <button data-delete="${escapeHtml(manager._id)}" title="Delete this account"
-                                    class="p-2 rounded-lg bg-surface-variant text-on-surface-variant hover:text-error transition-colors flex">
-                                <span class="material-symbols-outlined !text-lg">delete</span>
-                            </button>
+                    <td class="px-5 py-4">
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <button data-edit="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">Edit</button>
+                            <button data-password="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">New password</button>
+                            <button data-suspend="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">${suspended ? 'Restore' : 'Suspend'}</button>
+                            <button data-delete="${escapeHtml(manager._id)}" class="btn btn-danger btn-sm">Delete</button>
                         </div>
                     </td>
                 </tr>`;
@@ -890,7 +857,7 @@ body { overflow-x: hidden; }
                 document.getElementById('shownCount').textContent = 0;
                 document.getElementById('totalCount').textContent = 0;
                 tbody.innerHTML = `
-                    <tr><td colspan="9" class="px-6 py-16 text-center">
+                    <tr><td colspan="5" class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-4xl block mb-2 text-error/70">cloud_off</span>
                         <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
                         <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}

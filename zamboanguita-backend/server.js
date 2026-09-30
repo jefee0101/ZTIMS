@@ -2151,21 +2151,20 @@ app.get('/api/guides', requireAdmin, async (req, res) => {
 
 /**
  * GET: "who speaks Korean and is free on Saturday the 12th?" Every guide who
- * speaks the language, each marked free or not on the date with the reason —
- * decided by isGuideFreeOn, the same rule assignment enforces. Optionally only
- * guides who serve one destination.
+ * speaks the language (every guide, when no language is given), each marked
+ * free or not on the date with the reason — decided by isGuideFreeOn, the same
+ * rule assignment enforces. Optionally only guides who serve one destination.
  */
 app.get('/api/guides/search', requireAdmin, async (req, res) => {
     try {
         const language = String(req.query.language || '').trim();
         const date = String(req.query.date || '').trim();
         const time = String(req.query.time || '').trim();
-        if (!language) return res.status(400).json({ success: false, message: 'Choose a language.' });
         if (date && !isCalendarDate(date)) return res.status(400).json({ success: false, message: 'That date is not valid.' });
         if (time && !/^\d{2}:\d{2}$/.test(time)) return res.status(400).json({ success: false, message: 'That time is not valid.' });
 
-        let guides = await findGuidesSpeaking(language);
-        if (db.isId(req.query.spotId)) guides = guides.filter(g => (g.assignedSpots || []).map(String).includes(String(req.query.spotId)));
+        let guides = language ? await findGuidesSpeaking(language) : await TouristGuide.listWithSpots();
+        if (db.isId(req.query.spotId)) guides = guides.filter(g => (g.assignedSpots || []).map(s => String(s._id || s)).includes(String(req.query.spotId)));
 
         const results = [];
         for (const guide of guides) {

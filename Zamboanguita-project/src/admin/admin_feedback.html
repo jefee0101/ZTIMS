@@ -532,22 +532,12 @@ body { overflow-x: hidden; }
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">New</p>
-                    <h5 id="statNew" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">not yet opened</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Read</p>
-                    <h5 id="statRead" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">seen, still open</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Resolved</p>
-                    <h5 id="statResolved" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-            </div>
+            <!-- The numbers, in one line rather than three cards. -->
+            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
+                <span><b id="statNew" class="text-on-surface">—</b> new (not yet opened)</span>
+                <span><b id="statRead" class="text-on-surface">—</b> read, still open</span>
+                <span><b id="statResolved" class="text-on-surface">—</b> resolved</span>
+            </p>
 
             <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                 <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2 min-w-0">
