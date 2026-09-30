@@ -970,12 +970,16 @@ body { overflow-x: hidden; }
             mountPortalAccountMenu();
             wire();
             // Coming here from the sidebar always opens the Arrivals Report; only
-            // a reload goes back to the tab that was open.
+            // a reload goes back to the tab that was open. A link that names a
+            // tab in its address (the Dashboard's "Open the tracker" is
+            // admin_statistics.html#tracker) opens that tab instead.
             let first = 'forma4';
             try {
                 const nav = performance.getEntriesByType('navigation')[0];
                 if (nav && nav.type === 'reload') first = sessionStorage.getItem('statsTab') || first;
             } catch (e) {}
+            const asked = window.location.hash.slice(1);
+            if (TABS.includes(asked)) first = asked;
             showTab(TABS.includes(first) ? first : 'forma4');
         });
     </script>

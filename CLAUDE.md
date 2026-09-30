@@ -211,8 +211,9 @@ The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 no data of its own: it reads the officer's existing endpoints (guide bookings,
 spots, establishment managers, feedback, guide profile requests and reports,
 `/api/statistics/tracker` and `/form-a4`) and shows what is waiting on each —
-every card links to the page where it is dealt with, opening Guide Bookings or
-Statistics on the right tab through their `sessionStorage` tab keys — plus
+every card links to the page where it is dealt with, opening Guide Bookings on
+the right tab through its `bookingsTab` session key and Statistics through the
+tab named in the link's address (`admin_statistics.html#tracker`) — plus
 today's tours, the month just ended's Form A4 reports, and Form A4 counts by
 month and by country. Counts only, like the statistics themselves.
 

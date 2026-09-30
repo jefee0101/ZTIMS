@@ -566,8 +566,8 @@ body { overflow-x: hidden; }
                     <div id="reportsBody" class="space-y-3 text-sm"></div>
                     <div class="flex-1"></div>
                     <div class="flex flex-wrap gap-2">
-                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="tracker" class="btn btn-secondary min-h-[44px]">Open the tracker</a>
-                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="forma4" class="btn btn-ghost min-h-[44px]">Form A4 →</a>
+                        <a href="admin_statistics.html#tracker" class="btn btn-secondary min-h-[44px]">Open the tracker</a>
+                        <a href="admin_statistics.html#forma4" class="btn btn-ghost min-h-[44px]">Arrivals Report →</a>
                     </div>
                 </div>
             </section>
@@ -601,7 +601,7 @@ body { overflow-x: hidden; }
                             <span class="text-support">Guests from abroad</span>
                         </figcaption>
                         <div id="countriesList" class="space-y-3"></div>
-                        <a href="admin_statistics.html" data-tab-key="statsTab" data-tab="forma4" class="inline-block text-sm font-bold text-primary">Every country, in Form A4 →</a>
+                        <a href="admin_statistics.html#forma4" class="inline-block text-sm font-bold text-primary">Every country, in the Arrivals Report →</a>
                     </figure>
                 </div>
             </section>
@@ -828,7 +828,7 @@ body { overflow-x: hidden; }
                   one: `${due ? due.monthName : ''} report missing`, many: `${due ? due.monthName : ''} reports missing`,
                   detail: due ? `Accommodations still to send their monthly counts. Due ${due.dueLong}.` : '',
                   doneText: due ? `Every accommodation has sent its ${due.monthName} report.` : '', go: 'Open the tracker',
-                  href: 'admin_statistics.html', tabKey: 'statsTab', tab: 'tracker' },
+                  href: 'admin_statistics.html#tracker' },
                 { icon: 'edit_note', tone: 'tone-info', pill: 'To approve', count: d.profileRequests ? d.profileRequests.length : null,
                   one: 'guide profile change', many: 'guide profile changes',
                   detail: 'Guides asked to update their contact number or bio.',
