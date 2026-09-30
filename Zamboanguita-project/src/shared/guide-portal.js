@@ -8,9 +8,9 @@
    guides are managed by the Tourism Officer on the Tourist Guides page.
 
    The guide proposes, the office disposes. A guide keeps their availability
-   and languages and files reports; the office assigns every booking. Changes
-   to their own record (contact number, bio) are requests the office approves.
-   Everything else is shown read-only. The server enforces all of it; the
+   and languages, edits their own contact number and bio, and files reports;
+   the office assigns every booking. Everything else on their record is shown
+   read-only. The server enforces all of it; the
    read-only screens only save a guide from typing into a field that would be
    refused.
 

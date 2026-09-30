@@ -61,8 +61,8 @@
             <div class="space-y-1">
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Profile</h2>
                 <p class="text-on-surface-variant max-w-2xl">
-                    Your guide record, as the Municipal Tourism Office keeps it. To change anything on it,
-                    such as a new contact number, speak to the office and they will update it.
+                    Your guide record. You can change your contact number and "About you" yourself;
+                    the rest is kept by the Municipal Tourism Office.
                 </p>
             </div>
 
@@ -104,6 +104,26 @@
                 </section>
 
                 <div class="space-y-8">
+                    <!-- Saved straight away: no approval needed for these two. -->
+                    <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
+                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-accent">edit</span> My details
+                        </h3>
+                        <form id="detailsForm" class="space-y-4">
+                            <div>
+                                <label for="detailsContact" class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
+                                <input id="detailsContact" type="tel" maxlength="40" autocomplete="tel" placeholder="e.g., 0917 123 4567" class="field w-full"/>
+                            </div>
+                            <div>
+                                <label for="detailsBio" class="block text-label font-bold uppercase tracking-wider mb-1">About you</label>
+                                <textarea id="detailsBio" rows="4" maxlength="2000" class="field w-full resize-none"
+                                          placeholder="Your specialities, years guiding, what visitors enjoy on your tours"></textarea>
+                            </div>
+                            <p id="detailsMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+                            <button type="submit" id="saveDetailsBtn" class="btn btn-primary w-full min-h-[44px]">Save my details</button>
+                        </form>
+                    </section>
+
                     <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
                         <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
                             <span class="material-symbols-outlined text-accent">lock</span> Password
@@ -141,8 +161,8 @@
                             </div>
                         </dl>
                         <p class="text-support pt-2">
-                            Your name, contact number, "about you", scope, fee, group size, destinations, photo and
-                            sign-in email are kept by the Municipal Tourism Office. Your availability and languages are
+                            Your name, scope, fee, group size, destinations, photo and sign-in email are kept by the
+                            Municipal Tourism Office. Your contact number, "About you", availability and languages are
                             yours to keep current.
                         </p>
                     </section>
@@ -194,11 +214,36 @@
 
             document.getElementById('profileBioWrap').hidden = !guide.bio;
             document.getElementById('profileBio').textContent = guide.bio || '';
+            document.getElementById('detailsContact').value = guide.contactNumber || '';
+            document.getElementById('detailsBio').value = guide.bio || '';
             document.getElementById('signInEmail').textContent = guide.email || '';
             document.getElementById('guideSince').textContent =
                 P.formatDate(guide.createdAt, { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
+
+        async function saveDetails(event) {
+            event.preventDefault();
+            const P = window.GuidePortal;
+            P.showMessage('detailsMessage', '');
+            const restore = P.setButtonLoading(document.getElementById('saveDetailsBtn'), 'Saving...');
+            try {
+                const { result } = await P.api('/guides/me/details', {
+                    method: 'PATCH',
+                    body: {
+                        contactNumber: document.getElementById('detailsContact').value,
+                        bio: document.getElementById('detailsBio').value
+                    }
+                });
+                P.rememberGuide(result.guide);
+                fillProfile(result.guide);
+                P.showMessage('detailsMessage', result.message);
+            } catch (error) {
+                P.showMessage('detailsMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
 
         async function changePassword(event) {
             event.preventDefault();
@@ -230,6 +275,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const P = window.GuidePortal;
             if (!P || !P.start()) return;
+            document.getElementById('detailsForm').addEventListener('submit', saveDetails);
             document.getElementById('passwordForm').addEventListener('submit', changePassword);
 
             const loading = document.getElementById('profileLoading');

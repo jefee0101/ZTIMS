@@ -209,7 +209,7 @@ brand colours carry identity, not the backgrounds.
 The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 (the file keeps its old name so sign-in and bookmarks still land on it). It holds
 no data of its own: it reads the officer's existing endpoints (guide bookings,
-spots, establishment managers, feedback, guide profile requests and reports,
+spots, establishment managers, feedback, guide reports,
 `/api/statistics/tracker` and `/form-a4`) and shows what is waiting on each —
 every card links to the page where it is dealt with, opening Guide Bookings on
 the right tab through its `bookingsTab` session key and Statistics through the
@@ -319,13 +319,14 @@ The guide proposes, the office disposes. A guide keeps their own availability
 (status available/unavailable and working days) and languages, and files
 reports (`guide_reports`: tour completed, headcount, incident, tourist
 feedback — `barangay` is derived server-side, and filing never changes a
-booking). The office assigns every booking, reviews every report (rolled up
-per barangay on `admin_guides.html`), and alone sets name, contact number,
-bio, scope, fee, group size, destinations, photo and `inactive`. Single days
-off (`guide_time_off`) and guide-requested profile changes
+booking), and edits their own contact number and bio directly
+(`PATCH /api/guides/me/details`, no approval). The office assigns every
+booking, reviews every report (rolled up per barangay on `admin_guides.html`),
+and alone sets name, scope, fee, group size, destinations, photo and
+`inactive` — the fields that decide what a guide may be assigned. Single days
+off (`guide_time_off`) and office-approved profile changes
 (`guide_profile_requests`) were taken out: a guide who cannot work sets
-themselves Unavailable, and a changed phone number or bio is edited by the
-office. `schema.sql` drops both tables on the next migrate. Guide
+themselves Unavailable. `schema.sql` drops both tables on the next migrate. Guide
 sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
 a guide record without one has `email`/`password_hash` null.
 
@@ -445,4 +446,4 @@ Schedule & availability — let the guide set availability, but only the officer
 
 Languages — make it a many-to-many table (guide_languages), not a text field. Then the officer can search "who speaks Korean and is free Saturday" — that single query is probably the most impressive thing you can demo.
 
-Profile — officer approves edits, guide can't self-verify.
+Profile — the guide edits their own contact number and bio directly (no approval step); the officer keeps name, scope, fee, group size, destinations and photo.

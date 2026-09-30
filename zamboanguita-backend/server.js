@@ -1814,6 +1814,36 @@ app.put('/api/guides/me/languages', requireGuide, async (req, res) => {
     }
 });
 
+/**
+ * PATCH: the guide's own contact number and "about you", saved straight away.
+ * Only these two: name, scope, fee, group size, destinations and photo stay the
+ * office's, because they decide what the guide may be assigned. Anything else in
+ * the body is ignored.
+ */
+app.patch('/api/guides/me/details', requireGuide, async (req, res) => {
+    try {
+        const guide = await loadSignedInGuide(req, res);
+        if (!guide) return;
+
+        if (typeof req.body.contactNumber === 'string') {
+            const contactNumber = req.body.contactNumber.trim();
+            if (contactNumber.length > 40) return res.status(400).json({ success: false, message: 'That contact number is too long.' });
+            guide.contactNumber = contactNumber;
+        }
+        if (typeof req.body.bio === 'string') {
+            const bio = req.body.bio.trim();
+            if (bio.length > 2000) return res.status(400).json({ success: false, message: 'Keep "About you" under 2000 characters.' });
+            guide.bio = bio;
+        }
+
+        await TouristGuide.save(guide);
+        console.log(`✏️ Guide ${guide.email} updated their contact details`);
+        return res.status(200).json({ success: true, message: 'Your details have been saved.', guide: await fullGuideProfile(guide) });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Guide details failure:');
+    }
+});
+
 app.post('/api/guides/me/password', requireGuide, resetRateLimit, async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
