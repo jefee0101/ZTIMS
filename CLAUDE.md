@@ -83,6 +83,9 @@ npm run migrate        # node migrate.js — applies db/schema.sql (idempotent)
 npm run create-admin   # node create-admin.js
 npm run copy-from-mongo -- --dry-run   # the one-time MongoDB → Postgres copy;
                        # see scripts/copy-from-mongo.js before running it for real
+npm run import-form-a4 -- db/form-a4-2025.json --dry-run
+                       # loads a paper Form A4 year as locked municipal totals;
+                       # skips months already recorded (see the script's header)
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
 with what it defaults to when unset — most integrations degrade gracefully
@@ -141,6 +144,10 @@ purpose — see the header comment in `spot-form.js`:
   Profile). Unlike the officer's and manager's pages, which each carry that
   frame inline, the guide pages draw it from here. Loaded as a module, so page
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
+- `stat-form.js` — the monthly statistics report form (Form A4 counts by
+  country of residence and sex, plus rooms and guest nights for an
+  accommodation), used by `src/resort/resort_statistics.html` and the
+  officer's `src/admin/admin_statistics.html`. See "Tourism statistics" below.
 - `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -267,7 +274,8 @@ the old collection names (`admins`, `resortOwners`) did not.
    guide-bookings, payments,
    feedback (public `POST /api/feedback`, rate-limited with a honeypot;
    officer inbox `GET`/`PATCH …/status` read in `src/admin/admin_feedback.html`),
-   and `/api/directions/*`.
+   `/api/directions/*`, and `/api/statistics/*` — mounted from `statistics.js`
+   (see "Tourism statistics" below).
 
 Directions (`/api/directions/route|search|reverse|capabilities`) is a
 provider-fallback layer, not a single API call:
@@ -313,6 +321,45 @@ Languages are rows, not a list: `languages` (unique on `lower(name)`) and
 `GET /api/guides/search?language=&date=` ("who speaks Korean and is free
 Saturday") a join. "Free" is decided by `isGuideFreeOn` — the same function the
 assign route uses, so the search never offers a guide assignment would refuse.
+
+### Tourism statistics
+
+The office's Form A4 ("Report on the Regional Distribution of Travelers",
+sent to the province each month) and the visitor counts at the attractions,
+collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
+`statistics.js`, the Excel file in `statistics-excel.js`, four tables in
+`schema.sql` (`residences`, `monthly_reports`, `monthly_report_counts`,
+`report_changes`), 18 tables in all.
+
+- **Counts and totals only.** No revenue, no percentages, anywhere — the
+  office asked for both to stay out. DAE-2 is shown as its counts (rooms,
+  room-nights available/occupied/not occupied, guest nights), not as rates.
+- **Nothing from bookings.** Establishments report their own already-totalled
+  month; ZTIMS never derives these figures from guide bookings.
+- **Who reports.** A manager, for the listings they manage. The officer, for
+  the places the office keeps (listings with no manager) and on anyone's
+  behalf. `kind` comes from the listing: an accommodation reports arrivals,
+  rooms and nights; an attraction reports visitors only, and attraction
+  visitors are never part of Form A4.
+- **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
+  plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
+  `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only
+  in the database — the form fetches it — so unlike the booking form's
+  country list it is not duplicated anywhere.
+- **Rules the API enforces**, whatever the page does: one live report per
+  place per month; male + female = total; room-nights occupied ≤ rooms × days
+  in the month; guest nights ≥ arrivals; no month that hasn't started. Due on
+  the 5th of the following month, Manila time (`DEADLINE_DAY`); late reports
+  are accepted and marked late.
+- **Stored permanently.** Reports are voided with a reason, never deleted;
+  every create, update, void, lock and unlock is a `report_changes` row with
+  the before and after. Locking marks months as sent to the province; a locked
+  report refuses changes until the officer unlocks it, with a reason.
+- **Municipal totals.** A month with a `municipal_total` report (a year kept on
+  paper, loaded by `scripts/import-form-a4.js`) refuses per-place reports, so
+  its guests are never counted twice; voiding it opens the month again. Those
+  months have no sex split, and Form A4's "volume per sex" is left blank for
+  them rather than shown as 0.
 
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
@@ -360,7 +407,9 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - No `tourist` role, no tourist accounts, no online payment anywhere — guide
   payment is recorded at the counter by staff.
 - Tourism records (spots/listings) are never hard-deleted, only marked
-  inactive.
+  inactive. Statistics reports likewise: voided, never deleted.
+- Tourism statistics hold counts and totals only — no revenue and no
+  percentages.
 - The hero video on `index.html` intentionally has no dark scrim over it
   (readability is carried by per-letter text-shadow/stroke instead) — see the
   large comment block in that file before changing hero text treatment.

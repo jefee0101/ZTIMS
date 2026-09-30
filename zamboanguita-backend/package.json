@@ -9,13 +9,15 @@
     "dev": "nodemon server.js",
     "migrate": "node migrate.js",
     "create-admin": "node create-admin.js",
-    "copy-from-mongo": "node scripts/copy-from-mongo.js"
+    "copy-from-mongo": "node scripts/copy-from-mongo.js",
+    "import-form-a4": "node scripts/import-form-a4.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
+    "exceljs": "^4.4.0",
     "express": "^4.22.2",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",

@@ -420,6 +420,196 @@ create index if not exists rate_limits_expires_at_idx on public.rate_limits (exp
 
 
 -- ---------------------------------------------------------------------------
+-- Tourism statistics: the monthly counts behind Form A4, "Report on the
+-- Regional Distribution of Travelers", and visitor counts at attractions.
+--
+-- Counts only. There is no column for money (revenue, rates, fees taken) and
+-- none for a guest's name or any detail about one person, and there must never
+-- be one: an establishment reports how many guests came from where, nothing
+-- more. There are no percentages either; every figure is a count, and every
+-- total is added up when it is asked for, never stored.
+--
+-- Reports are kept for good. A report entered by mistake is voided, not
+-- deleted, and every change is written to report_changes.
+-- ---------------------------------------------------------------------------
+
+-- The rows of Form A4, in the form's own order. Countries are keyed by their
+-- two-letter ISO code; the form's other rows by a word. The pages read this
+-- list from the API, so the form and the server can never disagree about it.
+create table if not exists public.residences (
+    code                text primary key,
+    name                text not null,
+    -- philippine: residents of the Philippines. foreign: non-Philippine
+    -- residents, grouped by continent and region. overseas_filipino and
+    -- unspecified: the form's last two rows.
+    section             text not null
+                        constraint residences_section
+                        check (section in ('philippine', 'foreign', 'overseas_filipino', 'unspecified')),
+    continent           text not null,
+    region              text not null,
+    sort_order          integer not null
+);
+
+insert into public.residences (code, name, section, continent, region, sort_order) values
+    ('ph-filipino', 'Filipino nationality', 'philippine', 'Philippine residents', 'Philippine residents', 10),
+    ('ph-foreign', 'Foreign nationality', 'philippine', 'Philippine residents', 'Philippine residents', 20),
+    ('BN', 'Brunei', 'foreign', 'Asia', 'ASEAN', 30),
+    ('KH', 'Cambodia', 'foreign', 'Asia', 'ASEAN', 40),
+    ('ID', 'Indonesia', 'foreign', 'Asia', 'ASEAN', 50),
+    ('LA', 'Laos', 'foreign', 'Asia', 'ASEAN', 60),
+    ('MY', 'Malaysia', 'foreign', 'Asia', 'ASEAN', 70),
+    ('MM', 'Myanmar', 'foreign', 'Asia', 'ASEAN', 80),
+    ('SG', 'Singapore', 'foreign', 'Asia', 'ASEAN', 90),
+    ('TH', 'Thailand', 'foreign', 'Asia', 'ASEAN', 100),
+    ('VN', 'Vietnam', 'foreign', 'Asia', 'ASEAN', 110),
+    ('CN', 'China', 'foreign', 'Asia', 'East Asia', 120),
+    ('HK', 'Hong Kong', 'foreign', 'Asia', 'East Asia', 130),
+    ('JP', 'Japan', 'foreign', 'Asia', 'East Asia', 140),
+    ('KR', 'Korea', 'foreign', 'Asia', 'East Asia', 150),
+    ('MO', 'Macau', 'foreign', 'Asia', 'East Asia', 160),
+    ('TW', 'Taiwan', 'foreign', 'Asia', 'East Asia', 170),
+    ('BD', 'Bangladesh', 'foreign', 'Asia', 'South Asia', 180),
+    ('IN', 'India', 'foreign', 'Asia', 'South Asia', 190),
+    ('IR', 'Iran', 'foreign', 'Asia', 'South Asia', 200),
+    ('NP', 'Nepal', 'foreign', 'Asia', 'South Asia', 210),
+    ('PK', 'Pakistan', 'foreign', 'Asia', 'South Asia', 220),
+    ('LK', 'Sri Lanka', 'foreign', 'Asia', 'South Asia', 230),
+    ('BH', 'Bahrain', 'foreign', 'Asia', 'Middle East', 240),
+    ('EG', 'Egypt', 'foreign', 'Asia', 'Middle East', 250),
+    ('OM', 'Oman', 'foreign', 'Asia', 'Middle East', 260),
+    ('JO', 'Jordan', 'foreign', 'Asia', 'Middle East', 270),
+    ('KW', 'Kuwait', 'foreign', 'Asia', 'Middle East', 280),
+    ('QA', 'Qatar', 'foreign', 'Asia', 'Middle East', 290),
+    ('SA', 'Saudi Arabia', 'foreign', 'Asia', 'Middle East', 300),
+    ('AE', 'United Arab Emirates', 'foreign', 'Asia', 'Middle East', 310),
+    ('CA', 'Canada', 'foreign', 'America', 'North America', 320),
+    ('MX', 'Mexico', 'foreign', 'America', 'North America', 330),
+    ('US', 'USA', 'foreign', 'America', 'North America', 340),
+    ('AR', 'Argentina', 'foreign', 'America', 'South America', 350),
+    ('BR', 'Brazil', 'foreign', 'America', 'South America', 360),
+    ('CO', 'Colombia', 'foreign', 'America', 'South America', 370),
+    ('PE', 'Peru', 'foreign', 'America', 'South America', 380),
+    ('VE', 'Venezuela', 'foreign', 'America', 'South America', 390),
+    ('AD', 'Andorra', 'foreign', 'Europe', 'Western Europe', 400),
+    ('AT', 'Austria', 'foreign', 'Europe', 'Western Europe', 410),
+    ('BE', 'Belgium', 'foreign', 'Europe', 'Western Europe', 420),
+    ('FR', 'France', 'foreign', 'Europe', 'Western Europe', 430),
+    ('DE', 'Germany', 'foreign', 'Europe', 'Western Europe', 440),
+    ('LU', 'Luxembourg', 'foreign', 'Europe', 'Western Europe', 450),
+    ('NL', 'Netherlands', 'foreign', 'Europe', 'Western Europe', 460),
+    ('CH', 'Switzerland', 'foreign', 'Europe', 'Western Europe', 470),
+    ('DK', 'Denmark', 'foreign', 'Europe', 'Northern Europe', 480),
+    ('FI', 'Finland', 'foreign', 'Europe', 'Northern Europe', 490),
+    ('IE', 'Ireland', 'foreign', 'Europe', 'Northern Europe', 500),
+    ('NO', 'Norway', 'foreign', 'Europe', 'Northern Europe', 510),
+    ('SE', 'Sweden', 'foreign', 'Europe', 'Northern Europe', 520),
+    ('GB', 'United Kingdom', 'foreign', 'Europe', 'Northern Europe', 530),
+    ('GR', 'Greece', 'foreign', 'Europe', 'Southern Europe', 540),
+    ('IT', 'Italy', 'foreign', 'Europe', 'Southern Europe', 550),
+    ('PT', 'Portugal', 'foreign', 'Europe', 'Southern Europe', 560),
+    ('ES', 'Spain', 'foreign', 'Europe', 'Southern Europe', 570),
+    ('cis', 'Commonwealth of Independent States', 'foreign', 'Europe', 'Eastern Europe', 580),
+    ('PL', 'Poland', 'foreign', 'Europe', 'Eastern Europe', 590),
+    ('RU', 'Russia', 'foreign', 'Europe', 'Eastern Europe', 600),
+    ('IL', 'Israel', 'foreign', 'Europe', 'East Mediterranean Europe', 610),
+    ('TR', 'Turkey', 'foreign', 'Europe', 'East Mediterranean Europe', 620),
+    ('AU', 'Australia', 'foreign', 'Australasia / Pacific', 'Australasia / Pacific', 630),
+    ('GU', 'Guam', 'foreign', 'Australasia / Pacific', 'Australasia / Pacific', 640),
+    ('NR', 'Nauru', 'foreign', 'Australasia / Pacific', 'Australasia / Pacific', 650),
+    ('NZ', 'New Zealand', 'foreign', 'Australasia / Pacific', 'Australasia / Pacific', 660),
+    ('PG', 'Papua New Guinea', 'foreign', 'Australasia / Pacific', 'Australasia / Pacific', 670),
+    ('NG', 'Nigeria', 'foreign', 'Africa', 'Africa', 680),
+    ('ZA', 'South Africa', 'foreign', 'Africa', 'Africa', 690),
+    ('other-foreign', 'Others / unspecified', 'foreign', 'Others', 'Others and unspecified', 700),
+    ('overseas-filipino', 'Overseas Filipinos', 'overseas_filipino', 'Overseas Filipinos', 'Overseas Filipinos', 710),
+    ('unspecified', 'Unspecified residence', 'unspecified', 'Unspecified residence', 'Unspecified residence', 720)
+on conflict (code) do update set
+    name = excluded.name, section = excluded.section, continent = excluded.continent,
+    region = excluded.region, sort_order = excluded.sort_order;
+
+-- One report per place per month: an accommodation's guests, rooms and nights,
+-- or an attraction's visitors. A 'municipal_total' report belongs to no place:
+-- it holds a month from before ZTIMS collected per place (the 2025 sheet),
+-- already added up for the whole municipality.
+create table if not exists public.monthly_reports (
+    id                  text primary key default public.ztims_new_id(),
+    kind                text not null
+                        constraint monthly_reports_kind
+                        check (kind in ('accommodation', 'attraction', 'municipal_total')),
+    spot_id             text references public.spots (id),
+    year                integer not null constraint monthly_reports_year check (year between 2000 and 2100),
+    month               integer not null constraint monthly_reports_month check (month between 1 and 12),
+    -- Accommodations only (and municipal totals). An attraction has visitors,
+    -- not rooms or nights.
+    rooms               integer constraint monthly_reports_rooms check (rooms is null or rooms >= 0),
+    room_nights_occupied integer
+                        constraint monthly_reports_room_nights check (room_nights_occupied is null or room_nights_occupied >= 0),
+    guest_nights        integer constraint monthly_reports_guest_nights check (guest_nights is null or guest_nights >= 0),
+    status              text not null default 'submitted'
+                        constraint monthly_reports_status check (status in ('submitted', 'void')),
+    void_reason         text not null default '',
+    -- Who sent it, by id and by email, so the record outlives the account.
+    submitted_by_role   text not null default '',
+    submitted_by_id     text not null default '',
+    submitted_by_email  text not null default '',
+    submitted_at        timestamptz not null default now(),
+    -- Set when the officer marks the month as sent to the province. A locked
+    -- report is changed only after the officer unlocks it.
+    locked_at           timestamptz,
+    locked_by_email     text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint monthly_reports_place check ((kind = 'municipal_total') = (spot_id is null)),
+    constraint monthly_reports_attraction_counts_only
+        check (kind <> 'attraction' or (rooms is null and room_nights_occupied is null and guest_nights is null)),
+    -- Room-nights occupied can never be more than rooms × days in the month.
+    constraint monthly_reports_room_nights_fit
+        check (room_nights_occupied is null or rooms is null or room_nights_occupied <=
+               rooms * extract(day from (make_date(year, month, 1) + interval '1 month' - interval '1 day')))
+);
+
+-- A voided report stays, but only one live report per place and month.
+create unique index if not exists monthly_reports_one_per_place
+    on public.monthly_reports (spot_id, year, month) where status = 'submitted' and spot_id is not null;
+create unique index if not exists monthly_reports_one_municipal_total
+    on public.monthly_reports (year, month) where status = 'submitted' and kind = 'municipal_total';
+create index if not exists monthly_reports_period_idx on public.monthly_reports (year, month);
+create index if not exists monthly_reports_spot_idx on public.monthly_reports (spot_id);
+
+-- A report's numbers: one row per residence that had anyone. Male and female
+-- are both given, or (for the 2025 sheet, which never split by sex) neither.
+create table if not exists public.monthly_report_counts (
+    report_id           text not null references public.monthly_reports (id),
+    residence_code      text not null references public.residences (code),
+    male                integer constraint monthly_report_counts_male check (male is null or male >= 0),
+    female              integer constraint monthly_report_counts_female check (female is null or female >= 0),
+    total               integer not null constraint monthly_report_counts_total check (total >= 0),
+    primary key (report_id, residence_code),
+    constraint monthly_report_counts_sex_adds_up
+        check ((male is null and female is null) or (male is not null and female is not null and male + female = total))
+);
+
+create index if not exists monthly_report_counts_residence_idx on public.monthly_report_counts (residence_code);
+
+-- Every change to a report: what it was, what it became, who and when.
+create table if not exists public.report_changes (
+    id                  text primary key default public.ztims_new_id(),
+    report_id           text not null references public.monthly_reports (id),
+    action              text not null
+                        constraint report_changes_action
+                        check (action in ('created', 'updated', 'voided', 'locked', 'unlocked')),
+    changed_by_role     text not null default '',
+    changed_by_email    text not null default '',
+    note                text not null default '' constraint report_changes_note_length check (char_length(note) <= 500),
+    before              jsonb,
+    after               jsonb,
+    changed_at          timestamptz not null default now()
+);
+
+create index if not exists report_changes_report_idx on public.report_changes (report_id, changed_at desc);
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -428,7 +618,8 @@ declare
 begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
-        'guide_time_off', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback'
+        'guide_time_off', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback',
+        'monthly_reports'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -439,7 +630,8 @@ begin
 
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
-        'guide_time_off', 'languages', 'guide_languages', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback', 'rate_limits'
+        'guide_time_off', 'languages', 'guide_languages', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
+        'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script src="../shared/theme.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Guide Bookings</title>
+<title>Explore Zamboanguita Admin | Tourism Statistics</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -517,190 +517,131 @@ body { overflow-x: hidden; }
                 <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
                     <span class="text-on-surface-variant">Municipal tourism</span>
                 </nav>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
-                <p class="text-on-surface-variant text-sm max-w-2xl">
-                    Visitors submit these without an account and bring the reference to the office.
-                    Record the payment at the counter to confirm a booking, then assign a guide.
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h2>
+                <p class="text-on-surface-variant text-sm max-w-3xl">
+                    The monthly counts behind Form A4, the Report on the Regional Distribution of Travelers, and the
+                    visitors at the attractions the office manages. Everything here is a count; totals are added up
+                    for you, and nothing is ever deleted.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Awaiting payment</p>
-                    <h5 id="statPending" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">visitors due at the counter</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Confirmed</p>
-                    <h5 id="statConfirmed" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Needs a guide</p>
-                    <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">confirmed, nobody assigned</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Collected</p>
-                    <h5 id="statCollected" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">recorded onsite payments</p>
-                </div>
+            <!-- Tabs -->
+            <div role="tablist" aria-label="Statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="true" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
+                <button role="tab" id="tab-enter" aria-controls="panel-enter" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
+                <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">landscape</span>Attractions</button>
+                <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">summarize</span>Form A4</button>
             </div>
 
-            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2 min-w-0">
-                    <span class="material-symbols-outlined text-accent !text-lg shrink-0">confirmation_number</span>
-                    <span class="truncate">Bookings</span>
-                </h3>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="bookingSearch" type="search" placeholder="Search a reference or name"
-                               class="field !pl-10 w-full sm:w-72"/>
+            <!-- ============ Tracker ============ -->
+            <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4">
+                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <label class="block"><span class="field-label">Year</span><select id="trYear" class="field w-32"></select></label>
+                    <label class="block"><span class="field-label">Places</span>
+                        <select id="trKind" class="field w-56"><option value="accommodation">Accommodations</option><option value="attraction">Attractions</option></select></label>
+                    <p class="text-support flex-1 min-w-[14rem]">Reports are due by the 5th of the following month. Pick a cell to open that month's report.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs font-bold" aria-label="Legend">
+                    <span class="tone-pill tone-success px-2 py-0.5">Submitted</span>
+                    <span class="tone-pill tone-warning px-2 py-0.5">Late</span>
+                    <span class="tone-pill tone-danger px-2 py-0.5">Missing</span>
+                    <span class="tone-pill tone-info px-2 py-0.5">Due soon</span>
+                    <span class="tone-pill tone-neutral px-2 py-0.5">Not due / municipal total</span>
+                    <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Locked</span>
+                </div>
+                <div id="trackerHost" class="glass-panel overflow-x-auto"></div>
+            </section>
+
+            <!-- ============ Enter a report ============ -->
+            <section role="tabpanel" id="panel-enter" aria-labelledby="tab-enter" class="space-y-4" hidden>
+                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <label class="block flex-1 min-w-[16rem]"><span class="field-label">Place</span><select id="enPlace" class="field"></select></label>
+                    <label class="block"><span class="field-label">Month</span><select id="enPeriod" class="field w-56"></select></label>
+                </div>
+                <p id="enWho" class="text-support"></p>
+                <div id="enHost" class="glass-panel p-4 sm:p-6"></div>
+            </section>
+
+            <!-- ============ Attractions ============ -->
+            <section role="tabpanel" id="panel-attractions" aria-labelledby="tab-attractions" class="space-y-4" hidden>
+                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <label class="block"><span class="field-label">Year</span><select id="atYear" class="field w-32"></select></label>
+                    <p class="text-support flex-1 min-w-[14rem]">Visitors counted at each attraction, kept apart from Form A4: a guest who stays at a resort and visits the falls would otherwise be counted twice.</p>
+                </div>
+                <div id="attractionsHost" class="glass-panel overflow-x-auto"></div>
+            </section>
+
+            <!-- ============ Form A4 ============ -->
+            <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4" hidden>
+                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <label class="block"><span class="field-label">Year</span><select id="faYear" class="field w-32"></select></label>
+                    <label class="block"><span class="field-label">From</span><select id="faFrom" class="field w-40"></select></label>
+                    <label class="block"><span class="field-label">To</span><select id="faTo" class="field w-40"></select></label>
+                    <button id="faGenerate" type="button" class="btn btn-primary min-h-[44px]"><span class="material-symbols-outlined !text-base">summarize</span>Generate report</button>
+                    <button id="faDownload" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">download</span>Download Excel</button>
+                </div>
+                <div id="formA4Host" class="space-y-4"></div>
+                <div class="glass-panel p-4 space-y-3">
+                    <h3 class="font-bold">Sent to the province?</h3>
+                    <p class="text-support">Marking the months as sent locks their reports, so figures already reported cannot change quietly. The officer can unlock a single report to correct it; every change is recorded.</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have sent these months to the province</label>
+                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Lock these months</button>
                     </div>
-                    <select id="bookingStatusFilter" class="field w-full sm:w-auto">
-                        <option value="all">All statuses</option>
-                        <option value="pending_payment">Pending payment</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="no_show">No show</option>
-                    </select>
-                    <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
-                    </button>
                 </div>
-            </div>
+            </section>
 
-            <div class="rounded-none glass-panel overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="ztims-table w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Reference</th>
-                                <th class="px-6 py-4">Visitor</th>
-                                <th class="px-6 py-4">Destination</th>
-                                <th class="px-6 py-4">When</th>
-                                <th class="px-6 py-4 text-center">Visitors</th>
-                                <th class="px-6 py-4">Guide</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bookingTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
-                        Showing <span id="bookingShown" class="text-on-surface font-bold">0</span>
-                        of <span id="bookingTotal" class="text-on-surface font-bold">0</span> bookings
-                    </p>
-                </div>
-            </div>
+            <p id="statsError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
         </div>
     </main>
 
-    <!-- One booking: its details, the payment, and the guide -->
-    <div id="bookingModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
-        <div class="ztims-modal w-full max-w-lg p-5 sm:p-8 space-y-5 overflow-y-auto">
-            <div class="flex justify-between items-start gap-4">
-                <div>
-                    <h2 id="bookingRef" class="text-2xl font-black tracking-tight font-headline">—</h2>
-                    <p id="bookingWhen" class="text-support mt-1">—</p>
-                </div>
-                <button id="closeBookingModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
+    <style>
+        .stats-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                     color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px;
+                     transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+        .stats-tab:hover { color: rgb(var(--ztims-on-surface)); }
+        .stats-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+        .st-cell { display: inline-flex; min-width: 2.6rem; justify-content: center; font-size: .72rem; font-weight: 800; padding: .25rem .35rem; cursor: pointer; }
+        .st-cell:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+    </style>
 
-            <div id="bookingDetails" class="bg-surface-variant rounded-xl p-4 space-y-1.5 text-sm"></div>
-
-            <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Guide</h3>
-                <div class="flex gap-2">
-                    <select id="assignGuideSelect" class="field flex-1"></select>
-                    <button type="button" id="assignGuideBtn" class="btn btn-secondary shrink-0">Assign</button>
-                </div>
-                <p id="assignHint" class="text-support mt-1.5"></p>
-            </div>
-
-            <div id="paymentSection">
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Onsite payment</h3>
-                <div id="paymentRecorded" hidden class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-sm space-y-1"></div>
-
-                <form id="paymentForm" class="space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Amount collected (₱)</label>
-                            <input id="payAmount" type="number" min="0" step="1" required
-                                   class="field"/>
-                        </div>
-                        <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Method</label>
-                            <select id="payMethod" class="field">
-                                <option value="cash">Cash</option>
-                                <option value="gcash">GCash</option>
-                                <option value="bank">Bank transfer</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Official receipt number</label>
-                        <input id="payReceipt" type="text" placeholder="OR-…"
-                               class="field"/>
-                    </div>
-                    <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Remarks</label>
-                        <input id="payRemarks" type="text"
-                               class="field"/>
-                    </div>
-                    <button type="submit" id="recordPaymentBtn"
-                            class="btn btn-primary w-full min-h-[44px]">
-                        Record payment and confirm
-                    </button>
-                </form>
-            </div>
-
-            <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Mark as</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button data-status="completed" class="booking-status-btn btn btn-secondary">Completed</button>
-                    <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
-                    <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
-                </div>
-                <p class="text-support mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
-            </div>
-
-            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
-        </div>
-    </div>
-
+    <script type="module" src="../shared/stat-form.js"></script>
     <script>
         const API_BASE = "/api";
-
-        let allBookings = [];
-        let allGuides = [];
-        let openBooking = null;
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MON = MONTHS.map(m => m.slice(0, 3));
 
         const authHeaders = extra =>
             Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
-
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+        const fmt = n => (n === null || n === undefined) ? '–' : Number(n).toLocaleString('en-US');
 
-        const formatPeso = amount =>
-            `₱${(Number(amount) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Shared with the sidebar's Log Out, so both doors behave identically.
+        function signOutStaff() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
 
-        const STATUS_LABEL = {
-            pending_payment: 'Pending payment', confirmed: 'Confirmed',
-            completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show'
-        };
-        const STATUS_STYLE = {
-            pending_payment: 'tone-warning tone-pill',
-            confirmed: 'tone-success tone-pill',
-            completed: 'tone-info tone-pill',
-            cancelled: 'tone-danger tone-pill',
-            no_show: 'tone-neutral tone-pill'
-        };
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: 'Tourist Officer',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
 
         function guardOfficerSession() {
             if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
@@ -716,241 +657,319 @@ body { overflow-x: hidden; }
             setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        function setBookingError(message) {
-            const box = document.getElementById('bookingError');
+        function setError(message) {
+            const box = document.getElementById('statsError');
             box.textContent = message || '';
             box.hidden = !message;
         }
 
-        async function loadEverything() {
-            const body = document.getElementById('bookingTableBody');
-            body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Loading bookings…</td></tr>`;
-            try {
-                const [bookingsRes, guidesRes] = await Promise.all([
-                    fetch(`${API_BASE}/guide-bookings`, { headers: authHeaders() }),
-                    fetch(`${API_BASE}/guides`, { headers: authHeaders() })
-                ]);
-                if (bookingsRes.status === 401) { handleExpiredSession(); return; }
-                if (!bookingsRes.ok) throw new Error('The server refused the booking list.');
+        async function getJson(path) {
+            const res = await fetch(`${API_BASE}/statistics${path}`, { headers: authHeaders() });
+            if (res.status === 401) { handleExpiredSession(); throw new Error('Signed out'); }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'That could not be loaded. Try again.');
+            return data;
+        }
 
-                allBookings = await bookingsRes.json();
-                allGuides = guidesRes.ok ? await guidesRes.json() : [];
-                renderStats();
-                renderTable();
-            } catch (error) {
-                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
+        const thisYear = () => new Date(Date.now() + 8 * 3600 * 1000).getUTCFullYear();
+        function fillYears(select) {
+            select.innerHTML = '';
+            for (let y = thisYear(); y >= 2025; y--) select.add(new Option(String(y), String(y)));
+        }
+
+        // ---------------------------------------------------------- tabs
+        const TABS = ['tracker', 'enter', 'attractions', 'forma4'];
+        function showTab(name) {
+            for (const t of TABS) {
+                document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
+                document.getElementById('panel-' + t).hidden = t !== name;
+            }
+            try { sessionStorage.setItem('statsTab', name); } catch (e) {}
+            if (name === 'tracker') loadTracker();
+            if (name === 'attractions') loadAttractions();
+            if (name === 'enter') loadEntry();
+        }
+
+        // ---------------------------------------------------------- tracker
+        const STATUS = {
+            submitted: ['tone-success', 'Submitted', '✓'],
+            late: ['tone-warning', 'Submitted late', 'Late'],
+            missing: ['tone-danger', 'Missing', '!'],
+            due: ['tone-info', 'Due by the 5th', 'Due'],
+            not_due: ['tone-neutral', 'Not due yet', '–'],
+            municipal_total: ['tone-neutral', 'Recorded as the municipal total', 'Total']
+        };
+        async function loadTracker() {
+            const host = document.getElementById('trackerHost');
+            const year = document.getElementById('trYear').value, kind = document.getElementById('trKind').value;
+            host.innerHTML = '<div class="ztims-empty m-4">Loading…</div>';
+            try {
+                const data = await getJson(`/tracker?year=${year}&kind=${kind}`);
+                if (!data.places.length) {
+                    host.innerHTML = `<div class="ztims-empty m-4">No ${kind === 'accommodation' ? 'accommodations' : 'attractions'} are listed yet. Add them in Destinations.</div>`;
+                    return;
+                }
+                const counts = { missing: 0, late: 0, submitted: 0 };
+                const rows = data.places.map(p => {
+                    const cells = p.months.map(m => {
+                        if (m.status in counts) counts[m.status]++;
+                        const [tone, label, short] = STATUS[m.status];
+                        return `<td class="px-1 py-1.5 text-center"><button type="button" class="st-cell tone-pill ${tone}" data-place="${p._id}" data-month="${m.month}"
+                                    title="${escapeHtml(p.title)} · ${MONTHS[m.month - 1]} ${year}: ${label}${m.locked ? ' · locked' : ''}">${m.locked ? '🔒' : ''}${short}</button></td>`;
+                    }).join('');
+                    return `<tr><td class="px-3 py-2"><div class="font-bold">${escapeHtml(p.title)}</div>
+                                <div class="text-support">${escapeHtml(p.barangay || '')}${p.keptByOffice ? ' · Tourism Office' : ' · ' + escapeHtml(p.managerName || 'Manager')}</div></td>${cells}</tr>`;
+                }).join('');
+                host.innerHTML = `
+                    <div class="flex flex-wrap gap-4 p-4 text-sm">
+                        <span><b class="font-mono">${counts.submitted}</b> on time</span>
+                        <span><b class="font-mono">${counts.late}</b> late</span>
+                        <span class="${counts.missing ? 'text-error font-bold' : ''}"><b class="font-mono">${counts.missing}</b> missing</span>
+                    </div>
+                    <table class="ztims-table text-sm min-w-[900px]">
+                        <thead><tr><th class="text-left px-3 py-2">${kind === 'accommodation' ? 'Accommodation' : 'Attraction'}</th>${MON.map(m => `<th class="px-1 py-2 text-center">${m}</th>`).join('')}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+                host.querySelectorAll('.st-cell').forEach(btn => btn.addEventListener('click', () => {
+                    openEntry(btn.dataset.place, Number(year), Number(btn.dataset.month));
+                }));
+            } catch (e) {
+                if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger m-4">${escapeHtml(e.message)}</div>`;
             }
         }
 
-        function renderStats() {
-            const pending = allBookings.filter(b => b.status === 'pending_payment').length;
-            const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
-            const unassigned = allBookings.filter(b => b.status === 'confirmed' && !b.guideId).length;
-            const collected = allBookings.reduce((sum, b) => sum + (b.payment ? Number(b.payment.amount) || 0 : 0), 0);
-
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statConfirmed').textContent = confirmed;
-            document.getElementById('statUnassigned').textContent = unassigned;
-            document.getElementById('statCollected').textContent = formatPeso(collected);
+        // ---------------------------------------------------------- enter a report
+        let placesCache = null;
+        async function places() {
+            if (!placesCache) placesCache = await getJson('/places');
+            return placesCache;
         }
-
-        /* A booking stores the country code; the officer reads country names.
-           Bookings taken before nationality was collected have none, and an
-           em dash is the honest answer for those — not a guess, and not a blank
-           that reads as a rendering fault. */
-        function countryName(code) {
-            if (!code) return '\u2014';
-            const named = window.ZTIMS_COUNTRIES && window.ZTIMS_COUNTRIES.nameOf(code);
-            // A code with no name is still worth showing: it is what is on file.
-            return named || String(code);
+        async function loadEntry() {
+            const select = document.getElementById('enPlace'), period = document.getElementById('enPeriod');
+            if (!select.options.length) {
+                try {
+                    const list = await places();
+                    const groups = [['attraction', 'Attractions'], ['accommodation', 'Accommodations']];
+                    for (const [kind, label] of groups) {
+                        const og = document.createElement('optgroup'); og.label = label;
+                        for (const p of list.filter(x => x.kind === kind)) {
+                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''}${p.keptByOffice ? '' : ' (managed by ' + (p.managerName || 'an establishment') + ')'}`, p._id));
+                        }
+                        if (og.children.length) select.appendChild(og);
+                    }
+                    for (const p of window.ZTIMS_STATS.periodOptions()) period.add(new Option(p.label, `${p.year}-${p.month}`));
+                    // Last month is the one usually being reported.
+                    if (period.options.length > 1) period.selectedIndex = 1;
+                } catch (e) {
+                    if (e.message !== 'Signed out') setError(e.message);
+                    return;
+                }
+            }
+            renderEntry();
         }
-
-        function visibleBookings() {
-            const query = document.getElementById('bookingSearch').value.trim().toLowerCase();
-            const status = document.getElementById('bookingStatusFilter').value;
-            return allBookings.filter(booking => {
-                if (status !== 'all' && booking.status !== status) return false;
-                if (!query) return true;
-                return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title,
-                        booking.nationality, countryName(booking.nationality)]
-                    .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
+        function openEntry(placeId, year, month) {
+            showTab('enter');
+            const wait = setInterval(() => {
+                const select = document.getElementById('enPlace'), period = document.getElementById('enPeriod');
+                if (!select.options.length || !window.ZTIMS_STATS) return;
+                clearInterval(wait);
+                select.value = placeId;
+                const key = `${year}-${month}`;
+                if (![...period.options].some(o => o.value === key)) period.add(new Option(`${MONTHS[month - 1]} ${year}`, key));
+                period.value = key;
+                renderEntry();
+            }, 50);
+        }
+        async function renderEntry() {
+            if (!window.ZTIMS_STATS) return setTimeout(renderEntry, 50);
+            const list = await places();
+            const place = list.find(p => p._id === document.getElementById('enPlace').value);
+            if (!place) { document.getElementById('enHost').innerHTML = '<div class="ztims-empty">Pick a place.</div>'; return; }
+            const [year, month] = document.getElementById('enPeriod').value.split('-').map(Number);
+            document.getElementById('enWho').textContent = place.keptByOffice
+                ? 'Kept by the Tourism Office: you report for it.'
+                : `Managed by ${place.managerName || 'an establishment'}. They normally report for it; you can enter it on their behalf.`;
+            window.ZTIMS_STATS.mount(document.getElementById('enHost'), {
+                apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true,
+                toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession
             });
         }
 
-        function renderTable() {
-            const body = document.getElementById('bookingTableBody');
-            const rows = visibleBookings();
-            document.getElementById('bookingShown').textContent = rows.length;
-            document.getElementById('bookingTotal').textContent = allBookings.length;
-
-            if (rows.length === 0) {
-                body.innerHTML = `<tr><td colspan="8" class="p-4"><div class="ztims-empty">${
-                    allBookings.length === 0 ? 'No guide bookings yet.' : 'No booking matches that search.'
-                }</div></td></tr>`;
-                return;
-            }
-
-            body.innerHTML = rows.map(b => `
-                <tr class="hover:bg-surface-variant/40 transition-colors">
-                    <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}</td>
-                    <td class="px-6 py-4">
-                        <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
-                        <p class="text-support">${escapeHtml(b.contactNumber)}</p>
-                        <p class="text-support">${escapeHtml(countryName(b.nationality))}</p>
-                    </td>
-                    <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
-                    <td class="px-6 py-4 text-center">${Number(b.visitors) || 0}</td>
-                    <td class="px-6 py-4">${b.guideId
-                        ? escapeHtml(b.guideId.fullName)
-                        : '<span class="text-support italic">not assigned</span>'}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button data-open="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        /* ---- one booking -------------------------------------------------- */
-
-        function openBookingModal(id) {
-            const booking = allBookings.find(b => String(b._id) === String(id));
-            if (!booking) return;
-            openBooking = booking;
-            setBookingError('');
-
-            document.getElementById('bookingRef').textContent = booking.reference;
-            document.getElementById('bookingWhen').textContent =
-                `${booking.preferredDate} at ${booking.preferredTime} · ${STATUS_LABEL[booking.status] || booking.status}`;
-
-            document.getElementById('bookingDetails').innerHTML = `
-                <p><span class="text-on-surface-variant">Visitor:</span> <b class="text-on-surface">${escapeHtml(booking.fullName)}</b></p>
-                <p><span class="text-on-surface-variant">Contact:</span> ${escapeHtml(booking.contactNumber)}</p>
-                <p><span class="text-on-surface-variant">Nationality:</span> ${escapeHtml(countryName(booking.nationality))}</p>
-                ${booking.email ? `<p><span class="text-on-surface-variant">Email:</span> ${escapeHtml(booking.email)}</p>` : ''}
-                <p><span class="text-on-surface-variant">Destination:</span> ${escapeHtml(booking.spotId?.title || '—')}</p>
-                <p><span class="text-on-surface-variant">Visitors:</span> ${Number(booking.visitors) || 0}</p>
-                ${booking.notes ? `<p><span class="text-on-surface-variant">Notes:</span> ${escapeHtml(booking.notes)}</p>` : ''}
-            `;
-
-            // Only guides who can actually take this booking are offered.
-            const eligible = allGuides.filter(guide =>
-                guide.status === 'available' &&
-                (guide.assignedSpots || []).some(spot => String(spot._id || spot) === String(booking.spotId?._id || booking.spotId)) &&
-                Number(guide.maxGroupSize) >= Number(booking.visitors));
-
-            const select = document.getElementById('assignGuideSelect');
-            select.innerHTML = `<option value="">— no guide assigned —</option>` + eligible.map(guide =>
-                `<option value="${escapeHtml(guide._id)}" ${String(booking.guideId?._id) === String(guide._id) ? 'selected' : ''}>${escapeHtml(guide.fullName)} · ${formatPeso(guide.guideFee)} · up to ${guide.maxGroupSize}</option>`
-            ).join('');
-
-            document.getElementById('assignHint').textContent = eligible.length
-                ? `${eligible.length} guide${eligible.length === 1 ? '' : 's'} can take this party at this destination.`
-                : 'No available guide is assigned to this destination with room for this party.';
-
-            const paid = booking.payment;
-            document.getElementById('paymentForm').hidden = Boolean(paid);
-            const recorded = document.getElementById('paymentRecorded');
-            recorded.hidden = !paid;
-            if (paid) {
-                recorded.innerHTML = `
-                    <p class="font-bold tone-success">${formatPeso(paid.amount)} collected</p>
-                    <p class="text-on-surface-variant">${escapeHtml(paid.method || 'cash')}${paid.receiptNumber ? ` · OR ${escapeHtml(paid.receiptNumber)}` : ''}</p>
-                    <p class="text-on-surface-variant">${new Date(paid.paidAt).toLocaleString()}</p>
-                    <p class="text-on-surface-variant">Recorded by ${escapeHtml(paid.recordedByEmail || 'the office')}</p>
-                    ${paid.remarks ? `<p class="text-on-surface-variant">${escapeHtml(paid.remarks)}</p>` : ''}
-                `;
-            } else {
-                // Pre-fill with the fee of the guide most likely to take it.
-                document.getElementById('payAmount').value = eligible.length ? eligible[0].guideFee : '';
-                document.getElementById('payReceipt').value = '';
-                document.getElementById('payRemarks').value = '';
-            }
-
-            document.getElementById('bookingModal').hidden = false;
-        }
-
-        function closeBookingModal() {
-            document.getElementById('bookingModal').hidden = true;
-            openBooking = null;
-        }
-
-        async function send(url, options, onDone) {
+        // ---------------------------------------------------------- attractions
+        async function loadAttractions() {
+            const host = document.getElementById('attractionsHost');
+            const year = document.getElementById('atYear').value;
+            host.innerHTML = '<div class="ztims-empty m-4">Loading…</div>';
             try {
-                const response = await fetch(url, options);
-                if (response.status === 401) { handleExpiredSession(); return; }
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.message || `The server refused (status ${response.status}).`);
-                setBookingError('');
-                showToast(result.message || 'Saved.', 'success');
-                await loadEverything();
-                if (onDone) onDone(result);
-            } catch (error) {
-                setBookingError(error.message);
+                const data = await getJson(`/attractions?year=${year}`);
+                if (!data.attractions.length) { host.innerHTML = '<div class="ztims-empty m-4">No attractions are listed yet. Add them in Destinations.</div>'; return; }
+                const col = Array(12).fill(0), male = Array(12).fill(0), female = Array(12).fill(0);
+                const rows = data.attractions.map(a => {
+                    let total = 0;
+                    const cells = a.months.map((m, i) => {
+                        col[i] += m.total; male[i] += m.male; female[i] += m.female; total += m.total;
+                        return `<td class="px-2 py-2 text-right font-mono ${m.reported ? '' : 'text-on-surface-variant'}">${m.reported ? fmt(m.total) : '–'}</td>`;
+                    }).join('');
+                    return `<tr><td class="px-3 py-2"><div class="font-bold">${escapeHtml(a.title)}</div><div class="text-support">${escapeHtml(a.barangay || '')}${a.keptByOffice ? '' : ' · privately managed'}</div></td>${cells}<td class="px-3 py-2 text-right font-mono font-bold">${fmt(total)}</td></tr>`;
+                }).join('');
+                const sum = arr => arr.reduce((x, y) => x + y, 0);
+                const line = (label, arr, cls) => `<tr class="${cls}"><td class="px-3 py-2 font-bold">${label}</td>${arr.map(v => `<td class="px-2 py-2 text-right font-mono">${fmt(v)}</td>`).join('')}<td class="px-3 py-2 text-right font-mono font-bold">${fmt(sum(arr))}</td></tr>`;
+                host.innerHTML = `
+                    <table class="ztims-table text-sm min-w-[960px]">
+                        <thead><tr><th class="text-left px-3 py-2">Attraction</th>${MON.map(m => `<th class="px-2 py-2 text-right">${m}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
+                        <tbody>${rows}
+                            ${line('All attractions', col, 'bg-primary/5')}
+                            ${line('Male', male, '')}
+                            ${line('Female', female, '')}
+                        </tbody>
+                    </table>
+                    <p class="text-support p-4">A dash means no report for that month. Open the Enter a report tab to add one.</p>`;
+            } catch (e) {
+                if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger m-4">${escapeHtml(e.message)}</div>`;
+            }
+        }
+
+        // ---------------------------------------------------------- Form A4
+        function formRange() {
+            return { year: document.getElementById('faYear').value, from: document.getElementById('faFrom').value, to: document.getElementById('faTo').value };
+        }
+        async function generateForm() {
+            const host = document.getElementById('formA4Host');
+            const { year, from, to } = formRange();
+            if (Number(from) > Number(to)) { host.innerHTML = '<div class="ztims-empty tone-warning">"From" has to be before "To".</div>'; return; }
+            host.innerHTML = '<div class="ztims-empty">Adding up the reports…</div>';
+            try {
+                const d = await getJson(`/form-a4?year=${year}&from=${from}&to=${to}`);
+                const months = []; for (let m = Number(from); m <= Number(to); m++) months.push(m);
+                const vals = arr => months.map(m => arr[m - 1]);
+                const sum = arr => arr.reduce((x, y) => x + (y || 0), 0);
+                const add = (a, b) => a.map((v, i) => v + b[i]);
+                const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
+                const head = (label, cls) => `<tr class="${cls}"><th colspan="${months.length + 2}" class="text-left px-3 py-2 text-xs font-extrabold uppercase tracking-widest">${label}</th></tr>`;
+
+                let body = head('Philippine residents', 'bg-primary/10 text-primary');
+                let ph = Array(12).fill(0);
+                for (const r of d.residences.filter(x => x.section === 'philippine')) { body += row(escapeHtml(r.name), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
+                body += row('<b>Total Philippine residents</b>', ph, 'font-bold');
+                body += head('Non-Philippine residents', 'bg-primary/10 text-primary');
+                let foreign = Array(12).fill(0);
+                const regions = [];
+                for (const r of d.residences.filter(x => x.section === 'foreign')) {
+                    let g = regions.find(x => x.region === r.region); if (!g) regions.push(g = { region: r.region, list: [] }); g.list.push(r);
+                }
+                for (const g of regions) {
+                    let sub = Array(12).fill(0);
+                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return row(escapeHtml(r.name), d.counts[r.code].total, 'fa-country', true); }).join('');
+                    body += head(escapeHtml(g.region), 'text-on-surface-variant') + rowsHtml + row(`Sub-total, ${escapeHtml(g.region)}`, sub, 'font-bold bg-on-surface/[0.03]', true);
+                    foreign = add(foreign, sub);
+                }
+                body += row('<b>Total non-Philippine residents</b>', foreign, 'font-bold');
+                const of = d.counts['overseas-filipino'].total, un = d.counts['unspecified'].total;
+                body += row('Overseas Filipinos', of) + row('Guests with unspecified residence', un);
+                const grand = ph.map((v, i) => v + foreign[i] + of[i] + un[i]);
+                body += row('<b>GRAND TOTAL GUEST ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
+
+                const dae = d.dae;
+                let part2 = head('Part II · A. DAE-2 (counts)', 'bg-primary/10 text-primary')
+                    + row('Room-nights available (rooms × days)', dae.roomNightsAvailable, '', true)
+                    + row('Room-nights occupied', dae.roomNightsOccupied, '', true)
+                    + row('Room-nights not occupied', dae.roomNightsNotOccupied, '', true)
+                    + row('Total guest nights', dae.guestNights, 'font-bold', true);
+                part2 += head('Part II · B. Volume per sex', 'bg-primary/10 text-primary');
+                for (const sex of ['male', 'female']) {
+                    let t = Array(12).fill(0);
+                    for (const r of d.residences) t = add(t, d.counts[r.code][sex]);
+                    const shown = t.map((v, i) => (d.sexKnown[i] ? v : null));
+                    part2 += row(sex === 'male' ? 'Male' : 'Female', shown, '', true);
+                }
+                const reported = vals(d.reportsPerMonth);
+                const noSex = months.filter(m => d.sexKnown[m - 1] === false && d.reportsPerMonth[m - 1] > 0);
+                host.innerHTML = `
+                    <div class="glass-panel p-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+                        <span>Grand total: <b class="font-mono">${fmt(sum(vals(grand)))}</b></span>
+                        <span>Guest nights: <b class="font-mono">${fmt(sum(vals(dae.guestNights)))}</b></span>
+                        <span>Reports included: <b class="font-mono">${fmt(sum(reported))}</b></span>
+                        ${d.municipalTotalMonths.length ? `<span class="text-support">${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}: municipal totals from the printed sheet</span>` : ''}
+                        ${d.lockedMonths.length ? `<span class="text-support">🔒 Locked: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
+                    </div>
+                    ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
+                    <div class="glass-panel overflow-x-auto">
+                        <table class="ztims-table text-sm min-w-[980px]">
+                            <thead><tr><th class="text-left px-3 py-2">Country of residence</th>${months.map(m => `<th class="px-2 py-2 text-right">${MON[m - 1]}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
+                            <tbody>${body}${part2}</tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div>`;
+            }
+        }
+        async function downloadExcel() {
+            const btn = document.getElementById('faDownload');
+            const { year, from, to } = formRange();
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent animate-spin"></span> Preparing…';
+            try {
+                const res = await fetch(`${API_BASE}/statistics/form-a4.xlsx?year=${year}&from=${from}&to=${to}`, { headers: authHeaders() });
+                if (res.status === 401) return handleExpiredSession();
+                if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.message || 'The Excel file could not be made.'); }
+                const blob = await res.blob();
+                const name = (res.headers.get('content-disposition') || '').match(/filename="([^"]+)"/);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name ? name[1] : `Form_A4_Zamboanguita_${year}.xlsx`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+                showToast('Form A4 downloaded.', 'success');
+            } catch (e) {
+                showToast(e.message, 'error');
+            } finally {
+                btn.disabled = false; btn.innerHTML = original;
+            }
+        }
+        async function lockMonths() {
+            const btn = document.getElementById('faLock');
+            const { year, from, to } = formRange();
+            btn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/statistics/periods/lock`, {
+                    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ year: Number(year), fromMonth: Number(from), toMonth: Number(to) })
+                });
+                if (res.status === 401) return handleExpiredSession();
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || 'The months could not be locked.');
+                showToast(data.message, 'success');
+                document.getElementById('faConfirmLock').checked = false;
+                generateForm();
+            } catch (e) {
+                showToast(e.message, 'error');
+                btn.disabled = false;
             }
         }
 
         function wire() {
-            document.getElementById('closeBookingModalBtn').addEventListener('click', closeBookingModal);
-            document.getElementById('bookingModal').addEventListener('click', event => {
-                if (event.target === document.getElementById('bookingModal')) closeBookingModal();
-            });
-            document.addEventListener('keydown', event => {
-                if (event.key === 'Escape' && !document.getElementById('bookingModal').hidden) closeBookingModal();
-            });
-
-            document.getElementById('bookingTableBody').addEventListener('click', event => {
-                const open = event.target.closest('[data-open]');
-                if (open) openBookingModal(open.dataset.open);
-            });
-            document.getElementById('bookingSearch').addEventListener('input', renderTable);
-            document.getElementById('bookingStatusFilter').addEventListener('change', renderTable);
-            document.getElementById('refreshBookingsBtn').addEventListener('click', loadEverything);
-
-            document.getElementById('assignGuideBtn').addEventListener('click', () => {
-                if (!openBooking) return;
-                const guideId = document.getElementById('assignGuideSelect').value;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/assign`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ guideId: guideId || null })
-                }, () => closeBookingModal());
-            });
-
-            document.getElementById('paymentForm').addEventListener('submit', event => {
-                event.preventDefault();
-                if (!openBooking) return;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/payment`, {
-                    method: 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({
-                        amount: Number(document.getElementById('payAmount').value) || 0,
-                        method: document.getElementById('payMethod').value,
-                        receiptNumber: document.getElementById('payReceipt').value.trim(),
-                        remarks: document.getElementById('payRemarks').value.trim()
-                    })
-                }, () => closeBookingModal());
-            });
-
-            document.querySelectorAll('.booking-status-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    if (!openBooking) return;
-                    send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/status`, {
-                        method: 'PATCH',
-                        headers: authHeaders({ 'Content-Type': 'application/json' }),
-                        body: JSON.stringify({ status: button.dataset.status })
-                    }, () => closeBookingModal());
-                });
-            });
+            for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+            for (const id of ['trYear', 'atYear', 'faYear']) fillYears(document.getElementById(id));
+            for (const id of ['faFrom', 'faTo']) MONTHS.forEach((m, i) => document.getElementById(id).add(new Option(m, String(i + 1))));
+            document.getElementById('faTo').value = '12';
+            document.getElementById('trYear').addEventListener('change', loadTracker);
+            document.getElementById('trKind').addEventListener('change', loadTracker);
+            document.getElementById('atYear').addEventListener('change', loadAttractions);
+            document.getElementById('enPlace').addEventListener('change', renderEntry);
+            document.getElementById('enPeriod').addEventListener('change', renderEntry);
+            document.getElementById('faGenerate').addEventListener('click', generateForm);
+            document.getElementById('faDownload').addEventListener('click', downloadExcel);
+            document.getElementById('faLock').addEventListener('click', lockMonths);
+            document.getElementById('faConfirmLock').addEventListener('change', e => { document.getElementById('faLock').disabled = !e.target.checked; });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             if (!guardOfficerSession()) return;
+            mountPortalAccountMenu();
             wire();
-            loadEverything();
+            let first = 'tracker';
+            try { first = sessionStorage.getItem('statsTab') || 'tracker'; } catch (e) {}
+            showTab(TABS.includes(first) ? first : 'tracker');
         });
     </script>
 
@@ -1037,6 +1056,5 @@ body { overflow-x: hidden; }
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
-<script type="module" src="../shared/countries.js"></script>
 </body>
 </html>

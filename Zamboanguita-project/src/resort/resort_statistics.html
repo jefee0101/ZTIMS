@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Tourist Establishment Manager | My Spots</title>
+    <title>Establishment Manager | Monthly Report</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -449,11 +449,11 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="My Spots" class="flex items-center gap-3 bg-primary/10 text-accent px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="My Spots" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">location_on</span>
                 <span class="sidebar-label">My Spots</span>
             </a>
-            <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_statistics.html">
+            <a title="Monthly Report" class="flex items-center gap-3 bg-primary/10 text-accent px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Monthly Report</span>
             </a>
@@ -484,108 +484,50 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1400px] mx-auto space-y-8">
-            <div class="flex justify-between items-end">
-                <div class="space-y-1">
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Spots</h2>
-                    <p class="text-on-surface-variant">Only listings owned by your account are shown here.</p>
-                </div>
-                <button onclick="toggleAddSpotModal(true)" class="btn btn-primary">
-                    <span class="material-symbols-outlined">add_circle</span> Add New Spot
-                </button>
+        <div class="p-2 max-w-[1200px] mx-auto space-y-6">
+            <div class="space-y-1">
+                <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
+                    <span class="text-on-surface-variant">Establishment portal</span>
+                </nav>
+                <h2 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h2>
+                <p class="text-on-surface-variant text-sm max-w-3xl">
+                    Your guests for the month, counted by where they live, for the Municipal Tourism Office's Form A4.
+                    Send it by the 5th of the following month. Counts only: no revenue, and no guest's name or details.
+                </p>
             </div>
 
-            <div id="spotsGrid" class="ztims-stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
-            <p id="spotsEmptyState" class="ztims-empty hidden">You haven't published any spots yet. Click "Add New Spot" to get started.</p>
-        </div>
-
-        <!-- Add/Edit Spot Modal -->
-        <div id="addSpotModal" class="fixed inset-0 ztims-scrim hidden items-center justify-center z-[200] p-3 sm:p-4 transition-all">
-            <div class="ztims-modal w-full max-w-lg xl:max-w-5xl p-5 sm:p-8 space-y-6 relative overflow-y-auto">
-                <div class="flex justify-between items-center">
-                    <h2 id="spotModalTitle" class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
-                    <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
-                        <span class="material-symbols-outlined text-2xl">close</span>
-                    </button>
-                </div>
-
-                <div id="spotFormMount"></div>
+            <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                <label class="block flex-1 min-w-[14rem]"><span class="field-label">Place</span><select id="rpPlace" class="field"></select></label>
+                <label class="block"><span class="field-label">Month</span><select id="rpPeriod" class="field w-56"></select></label>
             </div>
+
+            <details class="glass-panel p-4">
+                <summary class="cursor-pointer font-bold text-sm">What to count</summary>
+                <ul class="mt-3 space-y-1.5 text-sm text-on-surface-variant list-disc pl-5">
+                    <li><b class="text-on-surface">Guests:</b> each guest who checked in this month, once per stay, under the country where they live. Split them into male and female.</li>
+                    <li><b class="text-on-surface">Number of rooms:</b> the rooms you have for guests.</li>
+                    <li><b class="text-on-surface">Room-nights occupied:</b> each night a room was taken counts once. 1 room for 3 nights = 3.</li>
+                    <li><b class="text-on-surface">Guest nights:</b> every guest × every night. A family of 4 for 3 nights = 12.</li>
+                    <li>A guest whose residence you don't know goes under "Unspecified residence".</li>
+                </ul>
+            </details>
+
+            <div id="rpHost" class="glass-panel p-4 sm:p-6"></div>
         </div>
     </main>
 
-<!-- The listing form, the schedule picker and the location picker all live in
-     src/shared/spot-form.js now. They used to be copied into this page and both
-     admin editors, byte for byte, and kept in step by hand. -->
-<!-- The shared map layer, for the location picker's expand control and its
-     Leaflet loader. Loaded before the form, which uses it when present. -->
-<script type="module" src="../shared/tourism-map.js"></script>
-<script type="module" src="../shared/spot-form.js"></script>
-<!-- The site's own confirm/prompt, in place of the browser's. Used by the
-     form above and by this page's delete and duplicate-listing questions. -->
-<script type="module" src="../shared/ztims-dialog.js"></script>
-
-
+    <script type="module" src="../shared/stat-form.js"></script>
     <script>
         const API_BASE = "/api";
-
-        /* Photos go straight from the browser to Cloudinary; MongoDB only ever
-           stores the resulting links. Photos are far too large to keep in the
-           database itself — one phone photo is 2-5 MB, the API accepts 1 MB
-           request bodies, and a MongoDB document caps out at 16 MB.
-
-           These two values identify the account's upload folder, nothing more.
-           An unsigned preset is designed to sit in the browser, so neither is a
-           secret — but the preset decides what may be uploaded, which is why it
-           should stay limited to images in the Cloudinary settings.
-           Cloud name:    Cloudinary dashboard, top-left under the account name.
-           Upload preset: Settings -> Upload -> Upload presets (unsigned). */
-        const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
-        const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
-
-        let spotForm = null;
-        let mySpots = [];
-        let loadFailed = false;
-        let loadError = '';
-
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, ch => (
-                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-            ));
-        }
 
         function authHeaders(extra) {
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
         }
 
-        // The API sleeps on Render's free tier, so a cold start can take most of a
-        // minute — after 5s the spinner says so rather than looking frozen.
-        function showLoading(target, message, colspan) {
-            const spinner =
-                '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
-                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
-                    '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
-                '</div>';
-            target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
-            const timer = setTimeout(() => {
-                const note = target.querySelector('[data-slow]');
-                if (note) note.classList.remove('hidden');
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-
-        function setButtonLoading(btn, label) {
-            if (!btn) return () => {};
-            const originalHTML = btn.innerHTML;
-            const wasDisabled = btn.disabled;
-            btn.disabled = true;
-            btn.innerHTML =
-                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-2px] mr-2"></span>' + label;
-            return () => {
-                btn.innerHTML = originalHTML;
-                btn.disabled = wasDisabled;
-            };
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
         }
 
         // Shared with the sidebar's Log Out, so both doors behave identically.
@@ -598,7 +540,6 @@ body { overflow-x: hidden; }
             setTimeout(function () { window.location.replace('../../index.html'); }, 600);
         }
 
-        // Who is signed in, in the corner, with the way out of the portal.
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
@@ -611,11 +552,8 @@ body { overflow-x: hidden; }
             });
         }
 
-
         function guardEstablishmentManagerSession() {
             const role = localStorage.getItem('userRole');
-            // 'resort_owner' is not another kind of user — it is the spelling this
-            // same account type carried in tokens issued before the rename.
             if (!['establishment_manager', 'resort_owner'].includes(role) || !localStorage.getItem('authToken')) {
                 window.location.href = '../staff_login.html';
                 return false;
@@ -623,253 +561,63 @@ body { overflow-x: hidden; }
             return true;
         }
 
-        // A sign-in lasts two hours. When it runs out the server answers 401, and
-        // the old code treated that like any other failure — it emptied the list
-        // and showed "You haven't published any spots yet", so an expired session
-        // looked exactly like every listing having been deleted.
         function handleExpiredSession() {
-            localStorage.removeItem('authToken');
-            showToast('Your sign-in has expired. Signing you back in — none of your listings have been lost.', 'info');
-            window.location.href = '../staff_login.html?expired=1';
-            return true;
+            showToast('Your sign-in has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        function toggleAddSpotModal(show, spot) {
-            const modal = document.getElementById('addSpotModal');
-            if (show) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.getElementById('spotModalTitle').textContent = spot ? 'Edit listing' : 'Add a listing';
-                if (spotForm) spotForm.open(spot);
-            } else {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-                if (spotForm) spotForm.close();
-            }
-        }
+        let myPlaces = [];
 
-        // A manager's own listings only (mySpots is already scoped to ?mine=true) —
-        // this is a duplicate-content nudge, not an authorization control, so it
-        // lives here rather than in the backend's write path.
-        function normalizeForCompare(value) {
-            return String(value || '')
-                .toLowerCase()
-                .replace(/[^a-z0-9\s]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-        }
-
-        function titleOverlap(a, b) {
-            if (!a || !b) return 0;
-            if (a === b) return 1;
-            const wordsA = a.split(' ').filter(Boolean);
-            const wordsB = b.split(' ').filter(Boolean);
-            if (!wordsA.length || !wordsB.length) return 0;
-            const setB = new Set(wordsB);
-            const shared = wordsA.filter(word => setB.has(word)).length;
-            return shared / Math.max(wordsA.length, wordsB.length);
-        }
-
-        // Flags a listing already on this account that looks like the same place:
-        // an identical title always counts; a near-identical title only counts
-        // alongside a matching category, since two different spots can share a
-        // generic name.
-        function findLikelyDuplicate(payload, editingId) {
-            const newTitle = normalizeForCompare(payload.title);
-            const newCategory = String(payload.category || '').trim();
-            const newBarangay = normalizeForCompare(payload.barangay);
-            let best = null;
-            let bestScore = 0;
-            mySpots.forEach(spot => {
-                if (editingId && String(spot._id) === String(editingId)) return;
-                const overlap = titleOverlap(newTitle, normalizeForCompare(spot.title));
-                const sameCategory = String(spot.category || '').trim() === newCategory;
-                const sameBarangay = Boolean(newBarangay) && normalizeForCompare(spot.barangay) === newBarangay;
-                const isCandidate = overlap === 1 || (overlap >= 0.6 && sameCategory) || (overlap >= 0.45 && sameCategory && sameBarangay);
-                if (isCandidate && overlap > bestScore) {
-                    bestScore = overlap;
-                    best = spot;
-                }
+        function render() {
+            if (!window.ZTIMS_STATS) return setTimeout(render, 50);
+            const host = document.getElementById('rpHost');
+            const place = myPlaces.find(p => p._id === document.getElementById('rpPlace').value);
+            if (!place) return;
+            const [year, month] = document.getElementById('rpPeriod').value.split('-').map(Number);
+            window.ZTIMS_STATS.mount(host, {
+                apiBase: API_BASE, headers: authHeaders, place, year, month,
+                toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession
             });
-            return best;
         }
 
-        // The form collects and validates; this page only knows where to send it.
-        async function saveSpot(payload, context) {
-            const editingId = context.editingId;
-
-            const duplicate = findLikelyDuplicate(payload, editingId);
-            if (duplicate) {
-                const where = duplicate.barangay ? `${duplicate.category}, ${duplicate.barangay}` : duplicate.category;
-                const proceed = await ztimsDialog.confirm({
-                    title: 'Is this a listing you already have?',
-                    message: `It looks like "${duplicate.title}" (${where}).\n\n` +
-                        `Publish "${payload.title}" anyway, as a separate listing?`,
-                    confirmLabel: 'Publish anyway',
-                    cancelLabel: 'Go back'
-                });
-                if (!proceed) {
-                    const cancelled = new Error('Publishing was cancelled.');
-                    cancelled.silent = true;
-                    throw cancelled;
-                }
-            }
-
-            const response = await fetch(
-                editingId ? `${API_BASE}/spots/${encodeURIComponent(editingId)}` : `${API_BASE}/spots`,
-                {
-                    method: editingId ? 'PUT' : 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify(payload)
-                }
-            );
-            if (response.status === 401) { handleExpiredSession(); return; }
-            if (!response.ok) {
-                const result = await response.json().catch(() => ({}));
-                throw new Error(result.message || result.error || `The server refused this (status ${response.status}).`);
-            }
-
-            toggleAddSpotModal(false);
-            await loadMySpots();
-            showToast(`${payload.title} ${editingId ? 'updated' : 'published'}.`, 'success');
-        }
-
-        async function deleteSpot(id, button) {
-            const spot = mySpots.find(item => String(item._id) === String(id));
-            const sure = await ztimsDialog.confirm({
-                title: spot ? `Delete "${spot.title}"?` : 'Delete this listing?',
-                message: 'It disappears from the public site immediately. This cannot be undone.',
-                confirmLabel: 'Delete listing',
-                cancelLabel: 'Keep it',
-                tone: 'danger'
-            });
-            if (!sure) return;
-            const restoreButton = setButtonLoading(button, 'Deleting...');
+        async function start() {
+            if (!window.ZTIMS_STATS) return setTimeout(start, 50);
+            const host = document.getElementById('rpHost');
+            host.innerHTML = '<div class="ztims-empty">Loading your places…</div>';
             try {
-                const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
-                if (response.status === 401) { handleExpiredSession(); return; }
-                if (!response.ok) throw new Error((await response.json().catch(() => ({}))).message || 'Failed to delete spot.');
-                await loadMySpots();
-            } catch (error) {
-                showToast(error.message, 'error');
-                restoreButton();
-            }
-        }
-
-        function renderSpotsGrid() {
-            const grid = document.getElementById('spotsGrid');
-            const emptyState = document.getElementById('spotsEmptyState');
-            grid.innerHTML = '';
-
-            if (loadFailed) {
-                emptyState.classList.add('hidden');
-                grid.innerHTML = `
-                    <div class="glass-panel rounded-2xl p-5 sm:p-8 text-center md:col-span-2 xl:col-span-3">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-error/70">cloud_off</span>
-                        <p class="text-on-surface font-bold mb-1">Could not load your listings</p>
-                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(loadError)}
-                        Your listings are safe — this is only a problem reaching the server. The API sleeps when idle, so give it a moment and refresh.</p>
-                        <button onclick="loadMySpots()" class="btn btn-secondary mt-4 min-h-[44px]">Try again</button>
-                    </div>`;
+                const res = await fetch(`${API_BASE}/statistics/places`, { headers: authHeaders() });
+                if (res.status === 401) return handleExpiredSession();
+                const data = await res.json().catch(() => []);
+                if (!res.ok) throw new Error(data.message || 'Your places could not be loaded.');
+                myPlaces = data;
+            } catch (e) {
+                host.innerHTML = `<div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div>`;
                 return;
             }
-
-            if (mySpots.length === 0) {
-                emptyState.classList.remove('hidden');
+            if (!myPlaces.length) {
+                host.innerHTML = '<div class="ztims-empty">You have no listings yet. Add your establishment in My Spots first; its monthly report appears here.</div>';
+                document.getElementById('rpPlace').disabled = true;
+                document.getElementById('rpPeriod').disabled = true;
                 return;
             }
-            emptyState.classList.add('hidden');
-
-            mySpots.forEach(spot => {
-                const card = document.createElement('div');
-                card.className = 'glass-panel rounded-2xl overflow-hidden flex flex-col';
-                const photoCount = Array.isArray(spot.images) && spot.images.length
-                    ? spot.images.length
-                    : (spot.imageUrl ? 1 : 0);
-                card.innerHTML = `
-                    <div class="h-40 bg-surface-variant relative">
-                        <img src="${escapeHtml(spot.imageUrl || 'https://placehold.co/400x200?text=No+Image')}" class="w-full h-full object-cover" alt="${escapeHtml(spot.title)}"/>
-                        ${photoCount > 1 ? `<span class="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-[10px] font-bold">
-                            <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
-                        </span>` : ''}
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col gap-2">
-                        <span class="text-label font-bold uppercase tracking-widest text-primary">${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot'}</span>
-                        <h3 class="text-lg font-black text-on-surface leading-tight">${escapeHtml(spot.title)}</h3>
-                        <p class="text-support">${escapeHtml(spot.location)}</p>
-                        <p class="text-support line-clamp-2 flex-1">${escapeHtml(spot.description)}</p>
-                        <div class="flex gap-2 pt-3">
-                            <button class="btn btn-secondary flex-1">Edit</button>
-                            <button class="btn btn-secondary flex-1">Delete</button>
-                        </div>
-                    </div>
-                `;
-                const deleteButton = card.querySelectorAll('button')[1];
-                card.querySelectorAll('button')[0].addEventListener('click', () => toggleAddSpotModal(true, spot));
-                deleteButton.addEventListener('click', () => deleteSpot(spot._id, deleteButton));
-                grid.appendChild(card);
-            });
-        }
-
-        async function loadMySpots() {
-            const doneLoading = showLoading(document.getElementById('spotsGrid'), 'Loading your listings...');
-            try {
-                const response = await fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() });
-                if (response.status === 401) { handleExpiredSession(); return; }
-                if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
-                mySpots = await response.json();
-                loadFailed = false;
-            } catch (error) {
-                console.error('❌ Failed to load spots:', error);
-                mySpots = [];
-                // Told apart from an account with nothing in it, so a failure can
-                // never be mistaken for an empty portfolio.
-                loadFailed = true;
-                loadError = error.message;
-            } finally {
-                doneLoading();
-                renderSpotsGrid();
-            }
-        }
-
-        // Kept separate so a missing module costs the editor and nothing else:
-        // an early return here cannot skip the page's own loading.
-        function mountListingForm() {
-            if (typeof mountSpotForm !== 'function') {
-                console.error('The listing form (src/shared/spot-form.js) did not load.');
-                const mount = document.getElementById('spotFormMount');
-                if (mount) {
-                    mount.innerHTML = '<p class="text-sm text-error bg-error/10 border border-error/20 ' +
-                        'rounded-xl px-4 py-3">The listing form could not be loaded. Reload the page; if it ' +
-                        'keeps happening, the site needs redeploying.</p>';
-                }
-                return;
-            }
-
-            spotForm = mountSpotForm({
-                mount: document.getElementById('spotFormMount'),
-                prefix: 'spot',
-                apiBase: API_BASE,
-                role: 'manager',
-                cloudName: CLOUDINARY_CLOUD_NAME,
-                uploadPreset: CLOUDINARY_UPLOAD_PRESET,
-                labels: { create: 'Publish listing', edit: 'Save changes' },
-                onSubmit: saveSpot,
-                onCancel: () => toggleAddSpotModal(false)
-            });
+            const placeSelect = document.getElementById('rpPlace');
+            for (const p of myPlaces) placeSelect.add(new Option(`${p.title}${p.kind === 'attraction' ? ' (attraction: visitors only)' : ''}`, p._id));
+            const periodSelect = document.getElementById('rpPeriod');
+            for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
+            // Last month is the one usually being reported.
+            if (periodSelect.options.length > 1) periodSelect.selectedIndex = 1;
+            placeSelect.addEventListener('change', render);
+            periodSelect.addEventListener('change', render);
+            render();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             mountPortalAccountMenu();
-
             if (!guardEstablishmentManagerSession()) return;
-
-            mountListingForm();
-
-            loadMySpots();
+            start();
         });
     </script>
-
 <script>
 /* Collapsed sidebar state, shared across every portal page via one key. */
 (function () {

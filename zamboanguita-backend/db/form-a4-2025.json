@@ -1,0 +1,55 @@
+{
+ "source": "Form A4, Report on the Regional Distribution of Travelers, Zamboanguita, January–December 2025 — the printed sheet, transcribed from photos. Totals only: the sheet does not split guests by sex. Blank cells are left out (read as 0).", "year": 2025,
+ "printedGrandTotal": [ 1861, 1358, 1568, 2341, 1984, 1305, 1194, 1307, 940, 1607, 1440, 2403
+ ],
+ "months": [
+  { "month": 1, "rooms": 183, "roomNightsOccupied": 2107, "guestNights": 4822,
+   "counts": { "ph-filipino": 1283, "ID": 2, "LA": 2, "SG": 1, "CN": 10, "HK": 22, "JP": 2, "KR": 23, "TW": 4, "AE": 4, "CA": 17, "US": 134, "AT": 19, "FR": 95, "DE": 30, "NL": 17, "CH": 16, "DK": 15, "FI": 4, "NO": 10, "SE": 8, "GB": 9, "IT": 2, "ES": 2, "PL": 13, "RU": 71, "IL": 6, "AU": 17, "NZ": 20, "overseas-filipino": 3
+   }
+  },
+  { "month": 2, "rooms": 158, "roomNightsOccupied": 2027, "guestNights": 4517,
+   "counts": { "ph-filipino": 830, "SG": 2, "CN": 4, "HK": 1, "JP": 14, "TW": 2, "BD": 5, "CA": 16, "MX": 2, "US": 68, "BR": 2, "AT": 4, "BE": 4, "FR": 188, "DE": 22, "LU": 2, "NL": 21, "CH": 19, "DK": 15, "FI": 10, "NO": 10, "GB": 23, "IT": 6, "ES": 7, "PL": 6, "RU": 55, "IL": 12, "AU": 7, "NG": 1
+   }
+  },
+  { "month": 3, "rooms": 201, "roomNightsOccupied": 2171, "guestNights": 5041,
+   "counts": { "ph-filipino": 1007, "MY": 4, "MM": 14, "CN": 10, "HK": 12, "JP": 15, "KR": 12, "TW": 8, "CA": 8, "MX": 6, "US": 85, "AT": 45, "BE": 12, "FR": 116, "DE": 31, "LU": 8, "NL": 2, "CH": 9, "DK": 2, "FI": 6, "NO": 7, "SE": 10, "GB": 22, "IT": 6, "ES": 6, "PL": 4, "RU": 51, "IL": 6, "AU": 16, "NZ": 8, "other-foreign": 10
+   }
+  },
+  { "month": 4, "rooms": 201, "roomNightsOccupied": 2068, "guestNights": 5453,
+   "counts": { "ph-filipino": 1828, "ph-foreign": 2, "MY": 3, "SG": 6, "TH": 6, "CN": 11, "HK": 14, "JP": 18, "KR": 6, "MO": 2, "PK": 2, "CA": 11, "US": 74, "AR": 6, "BR": 2, "CO": 2, "AT": 7, "BE": 6, "FR": 145, "DE": 28, "LU": 4, "NL": 12, "CH": 15, "DK": 5, "IE": 2, "NO": 3, "SE": 4, "GB": 12, "IT": 3, "ES": 5, "PL": 13, "RU": 38, "IL": 2, "AU": 17, "NZ": 4, "overseas-filipino": 23
+   }
+  },
+  { "month": 5, "rooms": 201, "roomNightsOccupied": 1876, "guestNights": 4823,
+   "counts": { "ph-filipino": 1651, "MY": 2, "CN": 4, "HK": 8, "JP": 6, "KR": 2, "CA": 9, "US": 75, "AT": 4, "BE": 5, "FR": 96, "DE": 27, "NL": 6, "CH": 21, "DK": 2, "FI": 2, "NO": 1, "GB": 18, "ES": 1, "PL": 2, "RU": 19, "IL": 7, "AU": 8, "overseas-filipino": 8
+   }
+  },
+  { "month": 6, "rooms": 194, "roomNightsOccupied": 1236, "guestNights": 3319,
+   "counts": { "ph-filipino": 1070, "ph-foreign": 28, "TH": 5, "CN": 9, "HK": 6, "KR": 12, "CA": 2, "US": 59, "AT": 2, "BE": 6, "FR": 21, "DE": 23, "NL": 5, "CH": 8, "DK": 4, "FI": 4, "NO": 2, "SE": 8, "GB": 2, "ES": 2, "RU": 15, "AU": 10, "overseas-filipino": 2
+   }
+  },
+  { "month": 7, "rooms": 194, "roomNightsOccupied": 1496, "guestNights": 3734,
+   "counts": { "ph-filipino": 751, "ph-foreign": 165, "TH": 2, "CN": 7, "HK": 2, "JP": 12, "KR": 16, "IN": 3, "CA": 6, "US": 35, "AT": 4, "BE": 11, "FR": 47, "DE": 19, "NL": 13, "CH": 11, "FI": 6, "NO": 1, "SE": 6, "GB": 13, "IT": 2, "ES": 13, "PL": 2, "RU": 32, "IL": 1, "AU": 9, "NZ": 4, "NG": 1
+   }
+  },
+  { "month": 8, "rooms": 194, "roomNightsOccupied": 1717, "guestNights": 4118,
+   "counts": { "ph-filipino": 888, "TH": 2, "CN": 8, "JP": 69, "KR": 2, "CA": 3, "MX": 2, "US": 41, "AT": 4, "BE": 17, "FR": 99, "DE": 25, "NL": 14, "CH": 11, "IE": 12, "NO": 11, "GB": 15, "IT": 25, "ES": 5, "RU": 38, "IL": 4, "AU": 12
+   }
+  },
+  { "month": 9, "rooms": 196, "roomNightsOccupied": 1167, "guestNights": 2895,
+   "counts": { "ph-filipino": 758, "SG": 4, "TH": 2, "CN": 8, "HK": 8, "JP": 3, "KR": 1, "AE": 4, "CA": 1, "US": 32, "BR": 2, "BE": 4, "FR": 41, "DE": 9, "NL": 7, "CH": 8, "GB": 5, "IT": 4, "ES": 8, "RU": 14, "IL": 2, "AU": 15
+   }
+  },
+  { "month": 10, "rooms": 194, "roomNightsOccupied": 1718, "guestNights": 3780,
+   "counts": { "ph-filipino": 1054, "ph-foreign": 14, "LA": 1, "TH": 2, "CN": 2, "HK": 12, "JP": 2, "KR": 5, "AE": 1, "CA": 12, "US": 46, "AT": 5, "BE": 4, "FR": 266, "DE": 11, "NL": 6, "CH": 6, "DK": 4, "FI": 2, "NO": 2, "SE": 42, "GB": 9, "IT": 6, "ES": 7, "RU": 80, "IL": 4, "AU": 2
+   }
+  },
+  { "month": 11, "rooms": 203, "roomNightsOccupied": 1670, "guestNights": 4264,
+   "counts": { "ph-filipino": 1112, "ph-foreign": 12, "CN": 4, "JP": 4, "CA": 5, "US": 30, "AT": 5, "BE": 2, "FR": 108, "DE": 27, "NL": 14, "CH": 22, "DK": 7, "SE": 6, "GB": 10, "IT": 6, "ES": 12, "PL": 4, "RU": 42, "IL": 3, "AU": 5
+   }
+  },
+  { "month": 12, "rooms": 208, "roomNightsOccupied": 2227, "guestNights": 6216,
+   "counts": { "ph-filipino": 1980, "ph-foreign": 16, "MY": 2, "SG": 4, "CN": 1, "HK": 10, "JP": 4, "IN": 2, "SA": 1, "CA": 11, "US": 65, "AT": 6, "BE": 3, "FR": 60, "DE": 42, "NL": 11, "CH": 19, "DK": 5, "NO": 13, "SE": 9, "GB": 23, "IT": 4, "ES": 17, "PL": 10, "RU": 40, "IL": 2, "AU": 40, "ZA": 3
+   }
+  }
+ ]
+}
