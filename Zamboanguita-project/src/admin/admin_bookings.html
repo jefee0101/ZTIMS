@@ -511,7 +511,7 @@ body { overflow-x: hidden; }
 
     <!-- Main Workspace Container -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="p-2 max-w-[1400px] mx-auto space-y-8">
+        <div class="p-2 max-w-[1400px] mx-auto space-y-6">
 
             <div class="space-y-1">
                 <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
@@ -519,85 +519,134 @@ body { overflow-x: hidden; }
                 </nav>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
                 <p class="text-on-surface-variant text-sm max-w-2xl">
-                    Visitors submit these without an account and bring the reference to the office.
-                    Record the payment at the counter to confirm a booking, then assign a guide.
+                    Visitors book a guide on the website, without an account, and pay here at the office.
+                    Each tab below is one step. Work from left to right.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Awaiting payment</p>
-                    <h5 id="statPending" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">visitors due at the counter</p>
+            <!-- How it works: the four steps, once, in plain words -->
+            <details id="howItWorks" class="glass-panel group" open>
+                <summary class="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none">
+                    <span class="flex items-center gap-2 font-bold text-on-surface">
+                        <span class="material-symbols-outlined text-accent !text-xl">help</span>How guide bookings work
+                    </span>
+                    <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+                </summary>
+                <ol class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 1 · The visitor</p>
+                        <p class="font-bold text-on-surface">Books on the website</p>
+                        <p class="text-support">They choose a destination, date and time, and get a reference such as <b class="font-mono">TG-2026-00001</b>. Nothing for you to do yet.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 2 · You</p>
+                        <p class="font-bold text-on-surface">Collect the payment</p>
+                        <p class="text-support">When they come to the office, find their reference under <b>Collect payment</b>, take the fee and record it. That confirms the booking.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 3 · You</p>
+                        <p class="font-bold text-on-surface">Assign a guide</p>
+                        <p class="text-support">Under <b>Assign a guide</b>, pick a guide who serves that destination. ZTIMS refuses a guide who is off or already booked at that time.</p>
+                    </li>
+                    <li class="ztims-card p-4 space-y-1">
+                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 4 · After the tour</p>
+                        <p class="font-bold text-on-surface">Close the booking</p>
+                        <p class="text-support">Under <b>Upcoming tours</b>, mark it <b>Completed</b>, or <b>No show</b> if the visitor did not come. Nothing is ever deleted.</p>
+                    </li>
+                </ol>
+            </details>
+
+            <!-- Find a booking: the first thing to do when a visitor is at the counter -->
+            <div class="glass-panel p-4 flex flex-wrap items-center gap-3">
+                <div class="relative flex-1 min-w-[220px]">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
+                    <input id="bookingSearch" type="search" placeholder="Visitor at the counter? Type their reference or name"
+                           class="field !pl-10 w-full" autocomplete="off"/>
                 </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Confirmed</p>
-                    <h5 id="statConfirmed" class="text-3xl font-black text-on-surface">—</h5>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Needs a guide</p>
-                    <h5 id="statUnassigned" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">confirmed, nobody assigned</p>
-                </div>
-                <div class="glass-panel rounded-2xl p-5">
-                    <p class="text-label font-bold uppercase tracking-widest mb-1">Collected</p>
-                    <h5 id="statCollected" class="text-3xl font-black text-on-surface">—</h5>
-                    <p class="text-support mt-1">recorded onsite payments</p>
-                </div>
+                <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base">refresh</span> Refresh
+                </button>
             </div>
 
-            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2 min-w-0">
-                    <span class="material-symbols-outlined text-accent !text-lg shrink-0">confirmation_number</span>
-                    <span class="truncate">Bookings</span>
-                </h3>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="bookingSearch" type="search" placeholder="Search a reference or name"
-                               class="field !pl-10 w-full sm:w-72"/>
-                    </div>
+            <!-- Tabs: the steps, each with how many bookings are waiting on it -->
+            <div role="tablist" aria-label="Guide bookings" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="true" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">payments</span>Collect payment <span id="count-pay" class="bk-count">0</span></button>
+                <button role="tab" id="tab-assign" aria-controls="panel-assign" aria-selected="false" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">person_add</span>Assign a guide <span id="count-assign" class="bk-count">0</span></button>
+                <button role="tab" id="tab-upcoming" aria-controls="panel-upcoming" aria-selected="false" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">event</span>Upcoming tours <span id="count-upcoming" class="bk-count">0</span></button>
+                <button role="tab" id="tab-all" aria-controls="panel-all" aria-selected="false" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">list_alt</span>All bookings <span id="count-all" class="bk-count">0</span></button>
+            </div>
+
+            <section role="tabpanel" id="panel-pay" aria-labelledby="tab-pay" class="space-y-3">
+                <p class="text-support">Bookings waiting for the visitor to pay at the counter. Recording the payment confirms the booking.</p>
+                <div id="list-pay" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+            </section>
+
+            <section role="tabpanel" id="panel-assign" aria-labelledby="tab-assign" class="space-y-3" hidden>
+                <p class="text-support">Paid bookings with no guide yet. Only guides who serve the destination and can take the whole group are listed.</p>
+                <div id="list-assign" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+            </section>
+
+            <section role="tabpanel" id="panel-upcoming" aria-labelledby="tab-upcoming" class="space-y-3" hidden>
+                <p class="text-support">Paid bookings with a guide, soonest first. When a tour's day has passed, mark how it went.</p>
+                <div id="list-upcoming" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+            </section>
+
+            <section role="tabpanel" id="panel-all" aria-labelledby="tab-all" class="space-y-3" hidden>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-support">Every booking, including completed, cancelled and no-show ones. Open one to see or change it.</p>
                     <select id="bookingStatusFilter" class="field w-full sm:w-auto">
                         <option value="all">All statuses</option>
-                        <option value="pending_payment">Pending payment</option>
+                        <option value="pending_payment">Waiting for payment</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
                         <option value="no_show">No show</option>
                     </select>
-                    <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
-                    </button>
                 </div>
-            </div>
-
-            <div class="rounded-none glass-panel overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="ztims-table w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Reference</th>
-                                <th class="px-6 py-4">Visitor</th>
-                                <th class="px-6 py-4">Destination</th>
-                                <th class="px-6 py-4">When</th>
-                                <th class="px-6 py-4 text-center">Visitors</th>
-                                <th class="px-6 py-4">Guide</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bookingTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                    </table>
+                <div class="glass-panel overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="ztims-table w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
+                                    <th class="px-6 py-4">Reference</th>
+                                    <th class="px-6 py-4">Visitor</th>
+                                    <th class="px-6 py-4">Destination</th>
+                                    <th class="px-6 py-4">When</th>
+                                    <th class="px-6 py-4 text-center">Visitors</th>
+                                    <th class="px-6 py-4">Guide</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-wrap justify-between items-center gap-2 px-6 py-4 border-t border-outline-variant/30 text-sm text-on-surface-variant">
+                        <p>Showing <span id="bookingShown" class="text-on-surface font-bold">0</span>
+                           of <span id="bookingTotal" class="text-on-surface font-bold">0</span> bookings</p>
+                        <p>Collected at the counter: <span id="statCollected" class="text-on-surface font-bold">—</span></p>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
-                        Showing <span id="bookingShown" class="text-on-surface font-bold">0</span>
-                        of <span id="bookingTotal" class="text-on-surface font-bold">0</span> bookings
-                    </p>
-                </div>
-            </div>
+            </section>
         </div>
     </main>
+
+    <style>
+        .bk-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                  color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px;
+                  transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+        .bk-tab:hover { color: rgb(var(--ztims-on-surface)); }
+        .bk-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+        .bk-count { display: inline-flex; min-width: 1.5rem; justify-content: center; padding: 0 .4rem; font-size: .72rem; font-weight: 800;
+                    background: rgb(var(--ztims-on-surface) / .08); color: rgb(var(--ztims-on-surface)); }
+        /* Gold fill with navy on it: the design system's "waiting" signal. */
+        .bk-count.has-work { background: rgb(var(--brand-saffron)); color: rgb(var(--brand-navy)); }
+        #howItWorks summary::-webkit-details-marker { display: none; }
+    </style>
 
     <!-- One booking: its details, the payment, and the guide -->
     <div id="bookingModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
@@ -691,7 +740,7 @@ body { overflow-x: hidden; }
             `₱${(Number(amount) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         const STATUS_LABEL = {
-            pending_payment: 'Pending payment', confirmed: 'Confirmed',
+            pending_payment: 'Waiting for payment', confirmed: 'Confirmed',
             completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show'
         };
         const STATUS_STYLE = {
@@ -722,9 +771,79 @@ body { overflow-x: hidden; }
             box.hidden = !message;
         }
 
+        /* A booking stores the country code; the officer reads country names.
+           Bookings taken before nationality was collected have none, and an
+           em dash is the honest answer for those — not a guess, and not a blank
+           that reads as a rendering fault. */
+        function countryName(code) {
+            if (!code) return '—';
+            const named = window.ZTIMS_COUNTRIES && window.ZTIMS_COUNTRIES.nameOf(code);
+            // A code with no name is still worth showing: it is what is on file.
+            return named || String(code);
+        }
+
+        /* ---- dates, as the office reads them ------------------------------- */
+
+        const dayOf = value => String(value || '').slice(0, 10);   // 'YYYY-MM-DD'
+        function todayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        function daysFromToday(value) {
+            const [y, m, d] = dayOf(value).split('-').map(Number);
+            if (!y) return null;
+            const [ty, tm, td] = todayKey().split('-').map(Number);
+            return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86400000);
+        }
+        function friendlyDate(value) {
+            const [y, m, d] = dayOf(value).split('-').map(Number);
+            if (!y) return escapeHtml(value || '—');
+            return new Date(y, m - 1, d).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function relativeDay(value) {
+            const n = daysFromToday(value);
+            if (n === null) return '';
+            if (n === 0) return 'Today';
+            if (n === 1) return 'Tomorrow';
+            if (n === -1) return 'Yesterday';
+            return n > 0 ? `In ${n} days` : `${-n} days ago`;
+        }
+
+        /* ---- which bookings belong to which step --------------------------- */
+
+        function matchesSearch(booking) {
+            const query = document.getElementById('bookingSearch').value.trim().toLowerCase();
+            if (!query) return true;
+            return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title,
+                    booking.nationality, countryName(booking.nationality), booking.guideId?.fullName]
+                .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
+        }
+
+        const bySoonest = (a, b) => dayOf(a.preferredDate).localeCompare(dayOf(b.preferredDate))
+            || String(a.preferredTime).localeCompare(String(b.preferredTime));
+
+        const STEPS = {
+            pay: b => b.status === 'pending_payment',
+            assign: b => b.status === 'confirmed' && !b.guideId,
+            upcoming: b => b.status === 'confirmed' && !!b.guideId
+        };
+
+        // Only guides who can actually take this booking are offered. The server
+        // checks the rest (days off, working days, a clash at that hour) and says why.
+        function eligibleGuides(booking) {
+            const spotId = String(booking.spotId?._id || booking.spotId);
+            return allGuides.filter(guide =>
+                guide.status === 'available' &&
+                (guide.assignedSpots || []).some(spot => String(spot._id || spot) === spotId) &&
+                Number(guide.maxGroupSize) >= Number(booking.visitors));
+        }
+
+        /* ---- loading ------------------------------------------------------- */
+
         async function loadEverything() {
-            const body = document.getElementById('bookingTableBody');
-            body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-on-surface-variant">Loading bookings…</td></tr>`;
+            for (const step of Object.keys(STEPS)) {
+                document.getElementById('list-' + step).innerHTML = '<div class="ztims-empty xl:col-span-2">Loading bookings…</div>';
+            }
             try {
                 const [bookingsRes, guidesRes] = await Promise.all([
                     fetch(`${API_BASE}/guide-bookings`, { headers: authHeaders() }),
@@ -735,51 +854,170 @@ body { overflow-x: hidden; }
 
                 allBookings = await bookingsRes.json();
                 allGuides = guidesRes.ok ? await guidesRes.json() : [];
-                renderStats();
-                renderTable();
+                renderAll();
             } catch (error) {
-                body.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-error">${escapeHtml(error.message)}</td></tr>`;
+                for (const step of Object.keys(STEPS)) {
+                    document.getElementById('list-' + step).innerHTML =
+                        `<div class="ztims-empty tone-danger xl:col-span-2">${escapeHtml(error.message)}</div>`;
+                }
             }
         }
 
-        function renderStats() {
-            const pending = allBookings.filter(b => b.status === 'pending_payment').length;
-            const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
-            const unassigned = allBookings.filter(b => b.status === 'confirmed' && !b.guideId).length;
+        function renderAll() {
+            for (const [step, belongs] of Object.entries(STEPS)) {
+                const waiting = allBookings.filter(belongs);
+                const count = document.getElementById('count-' + step);
+                count.textContent = waiting.length;
+                count.classList.toggle('has-work', waiting.length > 0);
+                renderCards(step, waiting.filter(matchesSearch).sort(bySoonest), waiting.length);
+            }
+            document.getElementById('count-all').textContent = allBookings.length;
             const collected = allBookings.reduce((sum, b) => sum + (b.payment ? Number(b.payment.amount) || 0 : 0), 0);
-
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statConfirmed').textContent = confirmed;
-            document.getElementById('statUnassigned').textContent = unassigned;
             document.getElementById('statCollected').textContent = formatPeso(collected);
+            renderTable();
         }
 
-        /* A booking stores the country code; the officer reads country names.
-           Bookings taken before nationality was collected have none, and an
-           em dash is the honest answer for those — not a guess, and not a blank
-           that reads as a rendering fault. */
-        function countryName(code) {
-            if (!code) return '\u2014';
-            const named = window.ZTIMS_COUNTRIES && window.ZTIMS_COUNTRIES.nameOf(code);
-            // A code with no name is still worth showing: it is what is on file.
-            return named || String(code);
+        /* ---- the cards: one booking, and the one thing to do next ---------- */
+
+        const EMPTY = {
+            pay: 'Nobody is waiting to pay. New bookings appear here as visitors make them.',
+            assign: 'Every paid booking has a guide.',
+            upcoming: 'No confirmed tours with a guide yet.'
+        };
+
+        function renderCards(step, rows, waitingCount) {
+            const list = document.getElementById('list-' + step);
+            if (!rows.length) {
+                list.innerHTML = `<div class="ztims-empty xl:col-span-2">${
+                    waitingCount ? 'No booking in this step matches that search. Try the All bookings tab.' : EMPTY[step]}</div>`;
+                return;
+            }
+            list.innerHTML = rows.map(b => cardHtml(step, b)).join('');
         }
 
-        function visibleBookings() {
-            const query = document.getElementById('bookingSearch').value.trim().toLowerCase();
-            const status = document.getElementById('bookingStatusFilter').value;
-            return allBookings.filter(booking => {
-                if (status !== 'all' && booking.status !== status) return false;
-                if (!query) return true;
-                return [booking.reference, booking.fullName, booking.contactNumber, booking.spotId?.title,
-                        booking.nationality, countryName(booking.nationality)]
-                    .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
-            });
+        function cardHtml(step, b) {
+            const rel = relativeDay(b.preferredDate);
+            const passed = (daysFromToday(b.preferredDate) ?? 0) < 0;
+            return `
+            <article class="ztims-card p-5 space-y-4" data-id="${escapeHtml(b._id)}">
+                <div class="flex flex-wrap justify-between items-start gap-3">
+                    <div>
+                        <p class="font-mono font-black text-lg text-on-surface">${escapeHtml(b.reference)}</p>
+                        <p class="text-support">${escapeHtml(b.spotId?.title || '—')}</p>
+                    </div>
+                    <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
+                </div>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div>
+                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Visitor</dt>
+                        <dd class="text-on-surface font-bold">${escapeHtml(b.fullName)}</dd>
+                        <dd class="text-support">${escapeHtml(b.contactNumber)} · ${escapeHtml(countryName(b.nationality))}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Tour</dt>
+                        <dd class="text-on-surface font-bold">${friendlyDate(b.preferredDate)}</dd>
+                        <dd class="text-support">${escapeHtml(b.preferredTime)}${rel ? ` · <span class="${passed ? 'tone-danger' : ''}">${rel}</span>` : ''}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Group</dt>
+                        <dd class="text-on-surface font-bold">${Number(b.visitors) || 0} visitor${Number(b.visitors) === 1 ? '' : 's'}</dd>
+                        ${b.guideId ? `<dd class="text-support">Guide: ${escapeHtml(b.guideId.fullName)}${b.guideId.contactNumber ? ` · ${escapeHtml(b.guideId.contactNumber)}` : ''}</dd>` : ''}
+                    </div>
+                </dl>
+                ${b.notes ? `<p class="text-support"><b>Visitor's note:</b> ${escapeHtml(b.notes)}</p>` : ''}
+
+                ${step === 'pay' ? payAction(b) : step === 'assign' ? assignAction(b) : upcomingAction(b, passed)}
+
+                <p data-error hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+            </article>`;
         }
+
+        function payAction(b) {
+            const guides = eligibleGuides(b);
+            const fee = guides.length ? guides[0].guideFee : '';
+            return `
+            <form data-action="pay" class="space-y-3 border-t border-outline-variant/30 pt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Amount (₱)</span>
+                        <input name="amount" type="number" min="0" step="1" required value="${escapeHtml(fee)}" class="field"/>
+                    </label>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Paid by</span>
+                        <select name="method" class="field">
+                            <option value="cash">Cash</option>
+                            <option value="gcash">GCash</option>
+                            <option value="bank">Bank transfer</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Receipt no.</span>
+                        <input name="receiptNumber" type="text" placeholder="OR-…" class="field"/>
+                    </label>
+                </div>
+                ${fee !== '' ? `<p class="text-support">Filled in with the guide fee for this destination (${formatPeso(fee)}). Change it if you collected a different amount.</p>` : ''}
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">check_circle</span> Record payment and confirm
+                    </button>
+                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
+                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">Cancel booking</button>
+                </div>
+            </form>`;
+        }
+
+        function assignAction(b) {
+            const guides = eligibleGuides(b);
+            if (!guides.length) {
+                return `
+                <div class="border-t border-outline-variant/30 pt-4 space-y-3">
+                    <p class="tone-warning text-sm font-bold">No available guide serves this destination with room for ${Number(b.visitors) || 0}.</p>
+                    <p class="text-support">Give a guide this destination, or raise a guide's group size, on the
+                        <a href="admin_guides.html" class="underline font-bold text-primary">Tourist Guides</a> page, then come back.</p>
+                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
+                </div>`;
+            }
+            return `
+            <form data-action="assign" class="border-t border-outline-variant/30 pt-4 space-y-3">
+                <label class="block">
+                    <span class="block text-label font-bold uppercase tracking-wider mb-1">Choose a guide</span>
+                    <select name="guideId" required class="field">
+                        ${guides.map(g => `<option value="${escapeHtml(g._id)}">${escapeHtml(g.fullName)} · up to ${Number(g.maxGroupSize) || 0} visitors${g.scope === 'barangay' && g.barangay ? ` · ${escapeHtml(g.barangay)}` : ''}</option>`).join('')}
+                    </select>
+                </label>
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">person_add</span> Assign this guide
+                    </button>
+                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
+                </div>
+            </form>`;
+        }
+
+        function upcomingAction(b, passed) {
+            return `
+            <div class="border-t border-outline-variant/30 pt-4 space-y-3">
+                ${passed
+                    ? '<p class="tone-warning text-sm font-bold">The tour date has passed. How did it go?</p>'
+                    : '<p class="text-support">After the tour, mark how it went.</p>'}
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" data-status="completed" class="btn ${passed ? 'btn-primary' : 'btn-secondary'} min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">task_alt</span> Completed
+                    </button>
+                    <button type="button" data-status="no_show" class="btn btn-secondary min-h-[44px]">No show</button>
+                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Change guide / details</button>
+                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">Cancel</button>
+                </div>
+            </div>`;
+        }
+
+        /* ---- All bookings: the full record --------------------------------- */
 
         function renderTable() {
             const body = document.getElementById('bookingTableBody');
-            const rows = visibleBookings();
+            const status = document.getElementById('bookingStatusFilter').value;
+            const rows = allBookings.filter(b => (status === 'all' || b.status === status) && matchesSearch(b));
             document.getElementById('bookingShown').textContent = rows.length;
             document.getElementById('bookingTotal').textContent = allBookings.length;
 
@@ -799,22 +1037,33 @@ body { overflow-x: hidden; }
                         <p class="text-support">${escapeHtml(countryName(b.nationality))}</p>
                     </td>
                     <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap">${friendlyDate(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
                     <td class="px-6 py-4 text-center">${Number(b.visitors) || 0}</td>
                     <td class="px-6 py-4">${b.guideId
                         ? escapeHtml(b.guideId.fullName)
                         : '<span class="text-support italic">not assigned</span>'}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
+                        <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button data-open="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
+                        <button data-open-id="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        /* ---- one booking -------------------------------------------------- */
+        /* ---- tabs ---------------------------------------------------------- */
+
+        const TABS = ['pay', 'assign', 'upcoming', 'all'];
+        function showTab(name) {
+            for (const t of TABS) {
+                document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
+                document.getElementById('panel-' + t).hidden = t !== name;
+            }
+            try { sessionStorage.setItem('bookingsTab', name); } catch (e) { /* private browsing */ }
+        }
+
+        /* ---- one booking, in full (the details window) --------------------- */
 
         function openBookingModal(id) {
             const booking = allBookings.find(b => String(b._id) === String(id));
@@ -824,7 +1073,7 @@ body { overflow-x: hidden; }
 
             document.getElementById('bookingRef').textContent = booking.reference;
             document.getElementById('bookingWhen').textContent =
-                `${booking.preferredDate} at ${booking.preferredTime} · ${STATUS_LABEL[booking.status] || booking.status}`;
+                `${friendlyDate(booking.preferredDate)} at ${booking.preferredTime} · ${STATUS_LABEL[booking.status] || booking.status}`;
 
             document.getElementById('bookingDetails').innerHTML = `
                 <p><span class="text-on-surface-variant">Visitor:</span> <b class="text-on-surface">${escapeHtml(booking.fullName)}</b></p>
@@ -836,12 +1085,7 @@ body { overflow-x: hidden; }
                 ${booking.notes ? `<p><span class="text-on-surface-variant">Notes:</span> ${escapeHtml(booking.notes)}</p>` : ''}
             `;
 
-            // Only guides who can actually take this booking are offered.
-            const eligible = allGuides.filter(guide =>
-                guide.status === 'available' &&
-                (guide.assignedSpots || []).some(spot => String(spot._id || spot) === String(booking.spotId?._id || booking.spotId)) &&
-                Number(guide.maxGroupSize) >= Number(booking.visitors));
-
+            const eligible = eligibleGuides(booking);
             const select = document.getElementById('assignGuideSelect');
             select.innerHTML = `<option value="">— no guide assigned —</option>` + eligible.map(guide =>
                 `<option value="${escapeHtml(guide._id)}" ${String(booking.guideId?._id) === String(guide._id) ? 'selected' : ''}>${escapeHtml(guide.fullName)} · ${formatPeso(guide.guideFee)} · up to ${guide.maxGroupSize}</option>`
@@ -878,19 +1122,54 @@ body { overflow-x: hidden; }
             openBooking = null;
         }
 
-        async function send(url, options, onDone) {
+        /* ---- talking to the server ----------------------------------------- */
+
+        // showError: where to put a refusal — the details window, or the card.
+        async function send(url, options, showError, onDone) {
             try {
                 const response = await fetch(url, options);
-                if (response.status === 401) { handleExpiredSession(); return; }
+                if (response.status === 401) { handleExpiredSession(); return false; }
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(result.message || `The server refused (status ${response.status}).`);
-                setBookingError('');
+                showError('');
                 showToast(result.message || 'Saved.', 'success');
-                await loadEverything();
                 if (onDone) onDone(result);
+                await loadEverything();
+                return true;
             } catch (error) {
-                setBookingError(error.message);
+                showError(error.message);
+                return false;
             }
+        }
+
+        const bookingUrl = (id, tail) => `${API_BASE}/guide-bookings/${encodeURIComponent(id)}/${tail}`;
+        const jsonBody = (method, body) => ({
+            method, headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body)
+        });
+
+        function cardErrorSetter(card) {
+            const box = card.querySelector('[data-error]');
+            return message => { box.textContent = message || ''; box.hidden = !message; };
+        }
+
+        async function setBusy(button, busy) {
+            if (!button) return;
+            if (busy) { button.dataset.label = button.innerHTML; button.disabled = true; button.innerHTML = 'Saving…'; }
+            else if (button.dataset.label) { button.disabled = false; button.innerHTML = button.dataset.label; }
+        }
+
+        async function changeStatus(booking, status, showError, button) {
+            if (status === 'cancelled') {
+                const ok = await ztimsDialog.confirm({
+                    title: `Cancel ${booking.reference}?`,
+                    message: `${booking.fullName}'s booking will be marked cancelled. It stays on record.`,
+                    confirmLabel: 'Cancel booking', cancelLabel: 'Keep it', tone: 'danger'
+                });
+                if (!ok) return;
+            }
+            setBusy(button, true);
+            const done = await send(bookingUrl(booking._id, 'status'), jsonBody('PATCH', { status }), showError);
+            if (!done) setBusy(button, false);
         }
 
         function wire() {
@@ -902,55 +1181,111 @@ body { overflow-x: hidden; }
                 if (event.key === 'Escape' && !document.getElementById('bookingModal').hidden) closeBookingModal();
             });
 
-            document.getElementById('bookingTableBody').addEventListener('click', event => {
-                const open = event.target.closest('[data-open]');
-                if (open) openBookingModal(open.dataset.open);
+            for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+
+            // Remember whether the "How it works" box was closed.
+            const help = document.getElementById('howItWorks');
+            try { if (localStorage.getItem('bookingsHelpClosed') === '1') help.open = false; } catch (e) { /* private browsing */ }
+            help.addEventListener('toggle', () => {
+                try { localStorage.setItem('bookingsHelpClosed', help.open ? '0' : '1'); } catch (e) { /* private browsing */ }
             });
-            document.getElementById('bookingSearch').addEventListener('input', renderTable);
+
+            document.getElementById('bookingSearch').addEventListener('input', renderAll);
             document.getElementById('bookingStatusFilter').addEventListener('change', renderTable);
             document.getElementById('refreshBookingsBtn').addEventListener('click', loadEverything);
+            document.getElementById('bookingTableBody').addEventListener('click', event => {
+                const open = event.target.closest('[data-open-id]');
+                if (open) openBookingModal(open.dataset.openId);
+            });
 
+            // Every card's buttons and forms, in all three step lists.
+            for (const step of Object.keys(STEPS)) {
+                const list = document.getElementById('list-' + step);
+
+                list.addEventListener('click', event => {
+                    const card = event.target.closest('article[data-id]');
+                    if (!card) return;
+                    const booking = allBookings.find(b => String(b._id) === card.dataset.id);
+                    if (!booking) return;
+                    if (event.target.closest('[data-open]')) { openBookingModal(booking._id); return; }
+                    const statusBtn = event.target.closest('[data-status]');
+                    if (statusBtn) changeStatus(booking, statusBtn.dataset.status, cardErrorSetter(card), statusBtn);
+                });
+
+                list.addEventListener('submit', async event => {
+                    event.preventDefault();
+                    const form = event.target;
+                    const card = form.closest('article[data-id]');
+                    const booking = allBookings.find(b => String(b._id) === card.dataset.id);
+                    if (!booking) return;
+                    const button = form.querySelector('[type="submit"]');
+                    const data = new FormData(form);
+                    setBusy(button, true);
+                    let done;
+                    if (form.dataset.action === 'pay') {
+                        done = await send(bookingUrl(booking._id, 'payment'), jsonBody('POST', {
+                            amount: Number(data.get('amount')) || 0,
+                            method: data.get('method'),
+                            receiptNumber: String(data.get('receiptNumber') || '').trim(),
+                            remarks: ''
+                        }), cardErrorSetter(card));
+                    } else if (form.dataset.action === 'assign') {
+                        done = await send(bookingUrl(booking._id, 'assign'),
+                            jsonBody('PATCH', { guideId: data.get('guideId') }), cardErrorSetter(card));
+                    }
+                    if (!done) setBusy(button, false);
+                });
+            }
+
+            // The details window keeps every action, for the unusual cases.
             document.getElementById('assignGuideBtn').addEventListener('click', () => {
                 if (!openBooking) return;
                 const guideId = document.getElementById('assignGuideSelect').value;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/assign`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ guideId: guideId || null })
-                }, () => closeBookingModal());
+                send(bookingUrl(openBooking._id, 'assign'), jsonBody('PATCH', { guideId: guideId || null }),
+                     setBookingError, () => closeBookingModal());
             });
 
             document.getElementById('paymentForm').addEventListener('submit', event => {
                 event.preventDefault();
                 if (!openBooking) return;
-                send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/payment`, {
-                    method: 'POST',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({
-                        amount: Number(document.getElementById('payAmount').value) || 0,
-                        method: document.getElementById('payMethod').value,
-                        receiptNumber: document.getElementById('payReceipt').value.trim(),
-                        remarks: document.getElementById('payRemarks').value.trim()
-                    })
-                }, () => closeBookingModal());
+                send(bookingUrl(openBooking._id, 'payment'), jsonBody('POST', {
+                    amount: Number(document.getElementById('payAmount').value) || 0,
+                    method: document.getElementById('payMethod').value,
+                    receiptNumber: document.getElementById('payReceipt').value.trim(),
+                    remarks: document.getElementById('payRemarks').value.trim()
+                }), setBookingError, () => closeBookingModal());
             });
 
             document.querySelectorAll('.booking-status-btn').forEach(button => {
-                button.addEventListener('click', () => {
+                button.addEventListener('click', async () => {
                     if (!openBooking) return;
-                    send(`${API_BASE}/guide-bookings/${encodeURIComponent(openBooking._id)}/status`, {
-                        method: 'PATCH',
-                        headers: authHeaders({ 'Content-Type': 'application/json' }),
-                        body: JSON.stringify({ status: button.dataset.status })
-                    }, () => closeBookingModal());
+                    const booking = openBooking;
+                    if (button.dataset.status === 'cancelled') {
+                        const ok = await ztimsDialog.confirm({
+                            title: `Cancel ${booking.reference}?`,
+                            message: `${booking.fullName}'s booking will be marked cancelled. It stays on record.`,
+                            confirmLabel: 'Cancel booking', cancelLabel: 'Keep it', tone: 'danger'
+                        });
+                        if (!ok) return;
+                    }
+                    send(bookingUrl(booking._id, 'status'), jsonBody('PATCH', { status: button.dataset.status }),
+                         setBookingError, () => closeBookingModal());
                 });
             });
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             if (!guardOfficerSession()) return;
             wire();
-            loadEverything();
+            let remembered = null;
+            try { remembered = sessionStorage.getItem('bookingsTab'); } catch (e) { /* private browsing */ }
+            showTab(TABS.includes(remembered) ? remembered : 'pay');
+            await loadEverything();
+            // First visit this session: open the first step that has work waiting.
+            if (!remembered) {
+                const first = Object.keys(STEPS).find(step => allBookings.some(STEPS[step]));
+                if (first) showTab(first);
+            }
         });
     </script>
 
@@ -1038,5 +1373,6 @@ body { overflow-x: hidden; }
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/countries.js"></script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>
