@@ -254,7 +254,7 @@ body { overflow-x: hidden; }
         </button>
 
         <h3 class="text-xl font-display font-bold text-on-surface mb-1">Book a tourist guide</h3>
-        <p class="text-support mb-5">
+        <p id="bookIntro" class="text-support mb-5">
             No account needed. You will get a reference to bring to the Municipal Tourism Office,
             where you pay and the booking is confirmed.
         </p>
@@ -353,7 +353,7 @@ body { overflow-x: hidden; }
                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
             </div>
 
-            <p class="text-support bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
+            <p id="bookPaymentNote" class="text-support bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
                 Payment must be completed onsite at the Municipal Tourism Office. ZTIMS does not take payment online.
                 Your guide is assigned by the office once payment is recorded.
             </p>
@@ -372,10 +372,19 @@ body { overflow-x: hidden; }
             <p class="text-label uppercase tracking-widest">Reference</p>
             <p id="bookingReference" class="text-2xl font-display font-black text-surface-bright tracking-wider select-all"></p>
             <p id="bookingSummary" class="text-sm text-on-surface-variant"></p>
-            <p class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
+            <p id="bookingNextStep" class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
                 Please proceed to the Municipal Tourism Office to complete payment and confirmation.
                 Write this reference down — it is how the office finds your booking.
             </p>
+            <!-- Online payment: a demonstration in the payment service's test mode. -->
+            <div id="bookingPayOnline" hidden class="space-y-2">
+                <button type="button" id="bookingPayOnlineBtn"
+                        class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined !text-lg">payments</span> Pay online now
+                </button>
+                <p class="text-support">GCash, Maya or card. <b>Test mode:</b> a demonstration, no real money moves.</p>
+                <p id="bookingPayError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+            </div>
         </div>
     </div>
 </div>
@@ -832,7 +841,9 @@ body { overflow-x: hidden; }
                 </div>
                 <p class="text-sm text-on-surface-variant flex items-start gap-2">
                     <span class="material-symbols-outlined !text-lg text-secondary shrink-0">payments</span>
-                    <span>Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.</span>
+                    <span>${info.payOnline
+                        ? 'Pay online after booking (GCash, Maya or card, <b>test mode</b>: a demonstration, no real money), or at the Municipal Tourism Office.'
+                        : 'Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.'}</span>
                 </p>
                 ${availability}
                 ${info.guidesAvailable > 0 ? `
@@ -890,6 +901,15 @@ body { overflow-x: hidden; }
         });
 
         if (!openBtn || !modal) return;
+
+        if (info.payOnline) {
+            document.getElementById('bookIntro').textContent =
+                'No account needed. You will get a reference, then pay online or at the Municipal Tourism Office '
+                + 'to confirm the booking.';
+            document.getElementById('bookPaymentNote').textContent =
+                'After submitting you can pay online (test mode: a demonstration, no real money), or pay at the '
+                + 'Municipal Tourism Office. Your guide is assigned by the office once the booking is paid.';
+        }
 
         const maxGroup = info.maxGroupSize || 1;
         document.getElementById('bookVisitors').max = String(maxGroup);
@@ -967,11 +987,141 @@ body { overflow-x: hidden; }
                     `${data.booking.spot} — ${data.booking.preferredDate} at ${data.booking.preferredTime}, `
                     + `${data.booking.visitors} visitor${data.booking.visitors === 1 ? '' : 's'}.`;
                 document.getElementById('bookingResult').hidden = false;
+                offerOnlinePayment(data, payload.email);
             } catch (error) {
                 setBookingError(error.message);
             } finally {
                 button.disabled = false;
                 button.textContent = original;
+            }
+        });
+    }
+
+    /* Pay a booking online: ZTIMS opens a checkout on the payment service and
+       sends the visitor there. The amount is decided by the server. */
+    function offerOnlinePayment(data, email) {
+        const box = document.getElementById('bookingPayOnline');
+        const next = document.getElementById('bookingNextStep');
+        box.hidden = !data.payOnline;
+        if (!data.payOnline) return;
+        next.textContent = 'Pay online now to confirm the booking, or pay at the Municipal Tourism Office. '
+            + 'Write this reference down: it is how the office finds your booking.';
+        const button = document.getElementById('bookingPayOnlineBtn');
+        const error = document.getElementById('bookingPayError');
+        button.onclick = async () => {
+            error.hidden = true;
+            button.disabled = true;
+            const original = button.innerHTML;
+            button.textContent = 'Opening the payment page\u2026';
+            try {
+                const response = await fetch(`${API_BASE}/guide-bookings/${encodeURIComponent(data.booking.reference)}/checkout`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The payment page could not be opened.');
+                window.location.assign(result.checkoutUrl);
+            } catch (e) {
+                error.textContent = e.message;
+                error.hidden = false;
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        };
+    }
+
+    /* Entrance tickets, for attractions the Tourism Office runs and charges for.
+       Bought online (test mode) and shown at the gate as a QR code. */
+    async function renderTicketOffer(spotId) {
+        const slot = document.getElementById('ticketOffer');
+        if (!slot) return;
+        let offer = null;
+        try {
+            const response = await fetch(`${API_BASE}/tickets/offer/${encodeURIComponent(spotId)}`);
+            if (response.ok) offer = await response.json();
+        } catch (e) { /* no offer: the section simply does not appear */ }
+        if (!offer || !offer.available) return;
+
+        const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
+        slot.innerHTML = `
+            <section class="bg-surface border border-primary/40 rounded-xl p-5 space-y-4" aria-labelledby="ticketHeading">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <h2 id="ticketHeading" class="text-lg font-display font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">confirmation_number</span> Entrance tickets
+                    </h2>
+                    <span class="tone-warning tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1">Test mode</span>
+                </div>
+                <p class="text-sm text-on-surface-variant">
+                    ${escapeHtml(formatPeso(offer.unitFee))} per person. Buy ahead and show the QR code at the entrance,
+                    or pay at the gate as usual. <b>Test mode:</b> a demonstration, no real money moves.
+                </p>
+                <form id="ticketForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" novalidate>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Date of visit</span>
+                        <input id="tkDate" type="date" required min="${today}" max="${last}" value="${today}"
+                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
+                    </label>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">People</span>
+                        <input id="tkPeople" type="number" required min="1" max="${offer.maxPeople}" value="2"
+                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
+                    </label>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Name</span>
+                        <input id="tkName" type="text" required autocomplete="name"
+                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
+                    </label>
+                    <label class="block">
+                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Email</span>
+                        <input id="tkEmail" type="email" required autocomplete="email"
+                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
+                    </label>
+                    <div class="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-1">
+                        <p class="text-on-surface"><span class="text-support">Total</span>
+                            <span id="tkTotal" class="text-xl font-display font-black ml-1"></span></p>
+                        <button type="submit" id="tkBuy"
+                                class="bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform flex items-center gap-2">
+                            <span class="material-symbols-outlined !text-lg">payments</span> Buy and pay online
+                        </button>
+                    </div>
+                    <p id="tkError" hidden class="sm:col-span-2 text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+                </form>
+            </section>`;
+
+        const people = document.getElementById('tkPeople');
+        const total = document.getElementById('tkTotal');
+        const error = document.getElementById('tkError');
+        const showTotal = () => { total.textContent = formatPeso((Math.max(0, Math.floor(Number(people.value)) || 0)) * offer.unitFee); };
+        people.addEventListener('input', showTotal);
+        showTotal();
+
+        document.getElementById('ticketForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            error.hidden = true;
+            const button = document.getElementById('tkBuy');
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.textContent = 'Opening the payment page\u2026';
+            try {
+                const response = await fetch(`${API_BASE}/tickets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        spotId,
+                        visitDate: document.getElementById('tkDate').value,
+                        people: Number(people.value) || 0,
+                        fullName: document.getElementById('tkName').value.trim(),
+                        email: document.getElementById('tkEmail').value.trim()
+                    })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The tickets could not be bought just now.');
+                window.location.assign(result.checkoutUrl);
+            } catch (e) {
+                error.textContent = e.message;
+                error.hidden = false;
+                button.disabled = false;
+                button.innerHTML = original;
             }
         });
     }
@@ -1394,6 +1544,8 @@ body { overflow-x: hidden; }
 
                     <div id="guideRequirement"></div>
 
+                    <div id="ticketOffer"></div>
+
                     ${directionsSection(spot)}
 
                 </div>
@@ -1499,6 +1651,7 @@ body { overflow-x: hidden; }
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
             renderGuideRequirement(spotId);
+            renderTicketOffer(spotId);
         } catch (error) {
             console.error('❌ Failed to load destination:', error);
             doneLoading();

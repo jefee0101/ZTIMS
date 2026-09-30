@@ -610,6 +610,98 @@ create index if not exists report_changes_report_idx on public.report_changes (r
 
 
 -- ---------------------------------------------------------------------------
+-- Online payments — a DEMONSTRATION, in the payment gateway's test mode.
+--
+-- A visitor may pay a guide booking, or buy an entrance ticket to an attraction
+-- the office runs, through the gateway's checkout. The API refuses to start with
+-- a live key, so no real money can move: every online payment is a test one.
+-- Records made for the demonstration carry is_demo, and the officer can remove
+-- them all at once. The gateway keeps the card and wallet details; nothing here
+-- does. Money stays out of the statistics tables above.
+-- ---------------------------------------------------------------------------
+
+-- Demonstration bookings (seeded, or paid in test mode), removable together.
+alter table public.guide_bookings add column if not exists is_demo boolean not null default false;
+
+-- An entrance ticket: one date, one attraction, a number of people.
+create table if not exists public.tickets (
+    id                  text primary key default public.ztims_new_id(),
+    -- What the visitor shows at the gate, e.g. JF-7K3M-Q. Unique for good.
+    code                text not null unique,
+    spot_id             text not null references public.spots (id),
+    visit_date          date not null,
+    people              integer not null constraint tickets_people check (people between 1 and 50),
+    -- The entrance fee when bought, and the total, fixed at purchase.
+    unit_fee            numeric not null constraint tickets_unit_fee check (unit_fee >= 0),
+    amount              numeric not null constraint tickets_amount check (amount >= 0),
+    full_name           text not null,
+    email               text not null,
+    contact_number      text not null default '',
+    status              text not null default 'pending_payment'
+                        constraint tickets_status
+                        check (status in ('pending_payment', 'valid', 'used', 'cancelled', 'expired')),
+    used_at             timestamptz,
+    used_by_email       text not null default '',
+    is_demo             boolean not null default false,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create index if not exists tickets_spot_date_idx on public.tickets (spot_id, visit_date);
+create index if not exists tickets_status_idx on public.tickets (status);
+
+-- A payment is for one booking or one ticket. Online payments say so, keep the
+-- gateway's reference, and may be refunded (the office cancelled).
+alter table public.payments alter column booking_id drop not null;
+alter table public.payments add column if not exists ticket_id text unique references public.tickets (id);
+alter table public.payments add column if not exists channel text not null default 'counter';
+alter table public.payments add column if not exists gateway_ref text not null default '';
+alter table public.payments add column if not exists refunded_at timestamptz;
+alter table public.payments add column if not exists refund_reason text not null default '';
+alter table public.payments add column if not exists refunded_by_email text not null default '';
+alter table public.payments add column if not exists is_demo boolean not null default false;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'payments_channel') then
+        alter table public.payments add constraint payments_channel check (channel in ('counter', 'online'));
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'payments_for_one') then
+        alter table public.payments add constraint payments_for_one check ((booking_id is null) <> (ticket_id is null));
+    end if;
+end
+$$;
+
+create index if not exists payments_paid_at_idx on public.payments (paid_at desc);
+
+-- One trip to the gateway's checkout page. Kept whatever became of it, so a
+-- payment that arrives late, or twice, can still be matched to what it was for.
+create table if not exists public.online_checkouts (
+    id                  text primary key default public.ztims_new_id(),
+    kind                text not null constraint online_checkouts_kind check (kind in ('guide_booking', 'ticket')),
+    booking_id          text references public.guide_bookings (id) on delete cascade,
+    ticket_id           text references public.tickets (id) on delete cascade,
+    amount              numeric not null constraint online_checkouts_amount check (amount >= 0),
+    session_id          text unique,
+    checkout_url        text not null default '',
+    status              text not null default 'pending'
+                        constraint online_checkouts_status
+                        check (status in ('pending', 'paid', 'expired', 'duplicate')),
+    method              text not null default '',
+    payment_ref         text not null default '',
+    expires_at          timestamptz not null,
+    paid_at             timestamptz,
+    is_demo             boolean not null default true,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint online_checkouts_for_one check ((booking_id is null) <> (ticket_id is null))
+);
+
+create index if not exists online_checkouts_booking_idx on public.online_checkouts (booking_id);
+create index if not exists online_checkouts_ticket_idx on public.online_checkouts (ticket_id);
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -619,7 +711,7 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
         'guide_time_off', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback',
-        'monthly_reports'
+        'monthly_reports', 'tickets', 'online_checkouts'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -631,7 +723,8 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
         'guide_time_off', 'languages', 'guide_languages', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
-        'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes'
+        'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
+        'tickets', 'online_checkouts'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

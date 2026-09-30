@@ -388,7 +388,8 @@ const bookings = new Table('guide_bookings', {
     notes: text(),
     status: text({ default: 'pending_payment', enum: BOOKING_STATUSES }),
     statusNote: text(),
-    statusUpdatedAt: when()
+    statusUpdatedAt: when(),
+    isDemo: flag(false)
 });
 
 /* The Tourism Office's booking list: destination and guide summarised in
@@ -491,14 +492,56 @@ bookings.findByReferenceWithSpot = async function (reference) {
 };
 
 const payments = new Table('payments', {
-    bookingId: { type: 'id', required: true },
+    // For one booking or one ticket, never both (payments_for_one).
+    bookingId: ref(),
+    ticketId: ref(),
     amount: { type: 'number', required: true, min: 0 },
     method: text({ default: 'cash' }),
     receiptNumber: text(),
     paidAt: { type: 'date', default: () => new Date() },
     recordedBy: ref(),
     recordedByEmail: text(),
-    remarks: text()
+    remarks: text(),
+    // 'counter' (cash taken at the office) or 'online' (the gateway, test mode).
+    channel: text({ default: 'counter', enum: ['counter', 'online'] }),
+    gatewayRef: text(),
+    refundedAt: when(),
+    refundReason: text(),
+    refundedByEmail: text(),
+    isDemo: flag(false)
+});
+
+/* An entrance ticket to an attraction the office runs. */
+const tickets = new Table('tickets', {
+    code: required(),
+    spotId: { type: 'id', required: true },
+    visitDate: required(),   // YYYY-MM-DD
+    people: { type: 'integer', required: true, min: 1 },
+    unitFee: { type: 'number', required: true, min: 0 },
+    amount: { type: 'number', required: true, min: 0 },
+    fullName: required({ trim: true }),
+    email: required({ trim: true, lowercase: true }),
+    contactNumber: text({ trim: true }),
+    status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired'] }),
+    usedAt: when(),
+    usedByEmail: text(),
+    isDemo: flag(false)
+});
+
+/* One trip to the payment gateway's checkout page. */
+const checkouts = new Table('online_checkouts', {
+    kind: required({ enum: ['guide_booking', 'ticket'] }),
+    bookingId: ref(),
+    ticketId: ref(),
+    amount: { type: 'number', required: true, min: 0 },
+    sessionId: text(),
+    checkoutUrl: text(),
+    status: text({ default: 'pending', enum: ['pending', 'paid', 'expired', 'duplicate'] }),
+    method: text(),
+    paymentRef: text(),
+    expiresAt: { type: 'date', required: true },
+    paidAt: when(),
+    isDemo: flag(true)
 });
 
 const feedback = new Table('feedback', {
@@ -525,6 +568,8 @@ module.exports = {
     findGuidesSpeaking,
     bookings,
     payments,
+    tickets,
+    checkouts,
     feedback,
     MAX_SPOT_IMAGES,
     GUIDE_STATUSES,

@@ -104,7 +104,12 @@ function sharedRateLimit(name, options) {
 }
 
 // FORCE explicit body-parser rules across ALL incoming payload formats
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({
+    limit: '1mb',
+    // The payment gateway signs the exact bytes it sends; payments.js checks the
+    // signature against them, so they are kept alongside the parsed body.
+    verify: (req, res, buffer) => { if (req.originalUrl === '/api/payments/webhook') req.rawBody = buffer; }
+}));
 app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000 }));
 
 /* ==========================================
@@ -2471,7 +2476,8 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
             feeFrom: fees.length ? fees[0] : null,
             feeTo: fees.length ? fees[fees.length - 1] : null,
             maxGroupSize: guides.length ? Math.max(...guides.map(g => g.maxGroupSize)) : null,
-            payment: 'Onsite at the Municipal Tourism Office'
+            payment: paymentWays(),
+            payOnline: paymentsGatewayOnline()
         });
     } catch (error) {
         console.error('❌ Guide requirement failure:', error);
@@ -2482,12 +2488,13 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
 /* ==========================================
    4c. GUIDE BOOKINGS AND ONSITE PAYMENT
    ------------------------------------------
-   A visitor submits a request without any account, gets a reference, and takes
-   it to the Municipal Tourism Office. The officer takes payment at the counter,
-   records it, assigns a guide, and the booking becomes confirmed.
+   A visitor submits a request without any account, gets a reference, and pays
+   either at the Municipal Tourism Office, where the officer records it here, or
+   online through payments.js — a demonstration in the payment gateway's test
+   mode, which confirms the booking the same way. Then the office assigns a guide.
 
-   ZTIMS takes no money. There is no payment gateway here and no field pretending
-   otherwise — a Payment row is the record of cash that changed hands at a desk.
+   A counter payment is the record of cash that changed hands at a desk; an
+   online one carries the gateway's reference and is marked as test-mode demo.
 ========================================== */
 
 // Public submission is the one write anyone on the internet can make, so it is
@@ -2513,6 +2520,17 @@ async function nextBookingReference() {
     return prefix + String((Number.isFinite(previous) ? previous : 0) + 1).padStart(5, '0');
 }
 
+// How a visitor may pay, as the pages say it. Online only while the gateway is
+// configured with a test key (see payments.js).
+function paymentsGatewayOnline() {
+    return require('./payments').gatewayState().online;
+}
+function paymentWays() {
+    return paymentsGatewayOnline()
+        ? 'Online (test mode), or at the Municipal Tourism Office'
+        : 'Onsite at the Municipal Tourism Office';
+}
+
 // What a visitor may see by quoting a reference. Deliberately no name, phone or
 // email: references run in sequence, so anyone could try the next one along.
 // Enough to confirm the booking is real and know what to do next, nothing more.
@@ -2524,7 +2542,7 @@ function publicBookingView(booking, spotTitle) {
         preferredTime: booking.preferredTime,
         visitors: booking.visitors,
         status: booking.status,
-        payment: 'Onsite at the Municipal Tourism Office'
+        payment: paymentWays()
     };
 }
 
@@ -2635,7 +2653,10 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
             success: true,
             message: 'Booking submitted.',
             booking: publicBookingView(booking, spot.title),
-            instruction: 'Please proceed to the Municipal Tourism Office to complete payment and confirmation.'
+            instruction: paymentsGatewayOnline()
+                ? 'Pay online now, or at the Municipal Tourism Office, to confirm the booking.'
+                : 'Please proceed to the Municipal Tourism Office to complete payment and confirmation.',
+            payOnline: paymentsGatewayOnline()
         });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide booking failure:');
@@ -2835,6 +2856,20 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
 
         const booking = await GuideBooking.findById(req.params.id);
         if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+
+        // Money taken online goes back when the office cancels, through the
+        // refund route, which cancels the booking as it refunds. Cancelling here
+        // would keep the money and drop the booking.
+        if (status === 'cancelled') {
+            const paid = await Payment.findOne({ bookingId: booking._id });
+            if (paid && paid.channel === 'online' && !paid.refundedAt) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'This booking was paid online. Use "Cancel and refund" so the visitor gets the money back.',
+                    refundPaymentId: paid._id
+                });
+            }
+        }
 
         // Confirmed means paid, and payment is a separate record that this route
         // does not create. Recording the payment is what confirms a booking.
@@ -3451,6 +3486,12 @@ app.get('/api/directions/reverse', directionsRateLimit, async (req, res) => {
    TOURISM STATISTICS — Form A4 and attraction visitors (statistics.js)
 ========================================== */
 app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff }));
+
+/* ==========================================
+   ONLINE PAYMENTS — a demonstration in the gateway's test mode (payments.js)
+========================================== */
+const paymentsModule = require('./payments');
+app.use('/api', paymentsModule({ requireAdmin, sharedRateLimit, isPubliclyVisible }));
 
 /* ==========================================
    5. ERROR HANDLER

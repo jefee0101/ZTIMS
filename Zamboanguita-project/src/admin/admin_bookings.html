@@ -477,6 +477,14 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Guide Bookings</span>
             </a>
+            <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
+                <span class="material-symbols-outlined text-accent">qr_code_scanner</span>
+                <span class="sidebar-label">Tickets</span>
+            </a>
+            <a title="Collections" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_collections.html">
+                <span class="material-symbols-outlined text-accent">payments</span>
+                <span class="sidebar-label">Collections</span>
+            </a>
             <a title="Feedback" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_feedback.html">
                 <span class="material-symbols-outlined text-accent">forum</span>
                 <span class="sidebar-label">Feedback</span>
@@ -782,6 +790,17 @@ body { overflow-x: hidden; }
             return named || String(code);
         }
 
+        const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', qrph: 'QR Ph', cash: 'Cash', bank: 'Bank transfer' };
+        const demoPill = b => b.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1 align-middle">DEMO</span>' : '';
+        const paidOnline = b => !!(b.payment && b.payment.channel === 'online' && !b.payment.refundedAt);
+        function paymentLine(b) {
+            const p = b.payment;
+            if (!p) return '';
+            const how = `${METHOD[p.method] || p.method || 'cash'} · ${p.channel === 'online' ? 'online, test mode' : 'at the counter'}`;
+            return `<p class="text-support"><span class="material-symbols-outlined !text-sm align-middle tone-success">payments</span>
+                Paid ${formatPeso(p.amount)} · ${escapeHtml(how)}${p.receiptNumber ? ` · OR ${escapeHtml(p.receiptNumber)}` : ' · <span class="tone-warning font-bold">no OR yet</span>'}</p>`;
+        }
+
         /* ---- dates, as the office reads them ------------------------------- */
 
         const dayOf = value => String(value || '').slice(0, 10);   // 'YYYY-MM-DD'
@@ -902,7 +921,7 @@ body { overflow-x: hidden; }
             <article class="ztims-card p-5 space-y-4" data-id="${escapeHtml(b._id)}">
                 <div class="flex flex-wrap justify-between items-start gap-3">
                     <div>
-                        <p class="font-mono font-black text-lg text-on-surface">${escapeHtml(b.reference)}</p>
+                        <p class="font-mono font-black text-lg text-on-surface">${escapeHtml(b.reference)}${demoPill(b)}</p>
                         <p class="text-support">${escapeHtml(b.spotId?.title || '—')}</p>
                     </div>
                     <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
@@ -926,6 +945,7 @@ body { overflow-x: hidden; }
                     </div>
                 </dl>
                 ${b.notes ? `<p class="text-support"><b>Visitor's note:</b> ${escapeHtml(b.notes)}</p>` : ''}
+                ${paymentLine(b)}
 
                 ${step === 'pay' ? payAction(b) : step === 'assign' ? assignAction(b) : upcomingAction(b, passed)}
 
@@ -1007,7 +1027,7 @@ body { overflow-x: hidden; }
                     </button>
                     <button type="button" data-status="no_show" class="btn btn-secondary min-h-[44px]">No show</button>
                     <button type="button" data-open class="btn btn-ghost min-h-[44px]">Change guide / details</button>
-                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">Cancel</button>
+                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">${paidOnline(b) ? 'Cancel and refund' : 'Cancel'}</button>
                 </div>
             </div>`;
         }
@@ -1030,7 +1050,7 @@ body { overflow-x: hidden; }
 
             body.innerHTML = rows.map(b => `
                 <tr class="hover:bg-surface-variant/40 transition-colors">
-                    <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}</td>
+                    <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}${demoPill(b)}</td>
                     <td class="px-6 py-4">
                         <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
                         <p class="text-support">${escapeHtml(b.contactNumber)}</p>
@@ -1101,8 +1121,13 @@ body { overflow-x: hidden; }
             recorded.hidden = !paid;
             if (paid) {
                 recorded.innerHTML = `
-                    <p class="font-bold tone-success">${formatPeso(paid.amount)} collected</p>
-                    <p class="text-on-surface-variant">${escapeHtml(paid.method || 'cash')}${paid.receiptNumber ? ` · OR ${escapeHtml(paid.receiptNumber)}` : ''}</p>
+                    <p class="font-bold tone-success">${formatPeso(paid.amount)} ${paid.channel === 'online' ? 'paid online (test mode)' : 'collected'}${paid.refundedAt ? ' · refunded' : ''}</p>
+                    <p class="text-on-surface-variant">${escapeHtml(METHOD[paid.method] || paid.method || 'cash')}${paid.receiptNumber ? ` · OR ${escapeHtml(paid.receiptNumber)}` : ''}${paid.gatewayRef ? ` · ref ${escapeHtml(paid.gatewayRef)}` : ''}</p>
+                    ${!paid.receiptNumber && !paid.refundedAt ? `
+                    <form id="orForm" class="flex gap-2 pt-1">
+                        <input id="orNumber" placeholder="OR number from the Treasurer" class="field flex-1" aria-label="Official receipt number"/>
+                        <button class="btn btn-secondary">Save OR</button>
+                    </form>` : ''}
                     <p class="text-on-surface-variant">${new Date(paid.paidAt).toLocaleString()}</p>
                     <p class="text-on-surface-variant">Recorded by ${escapeHtml(paid.recordedByEmail || 'the office')}</p>
                     ${paid.remarks ? `<p class="text-on-surface-variant">${escapeHtml(paid.remarks)}</p>` : ''}
@@ -1113,6 +1138,17 @@ body { overflow-x: hidden; }
                 document.getElementById('payReceipt').value = '';
                 document.getElementById('payRemarks').value = '';
             }
+
+            const orForm = document.getElementById('orForm');
+            if (orForm) orForm.addEventListener('submit', event => {
+                event.preventDefault();
+                const value = document.getElementById('orNumber').value.trim();
+                if (!value) return;
+                send(`${API_BASE}/payments/${encodeURIComponent(paid._id)}/receipt`, jsonBody('PATCH', { receiptNumber: value }),
+                     setBookingError, () => closeBookingModal());
+            });
+            const cancelBtn = document.querySelector('.booking-status-btn[data-status="cancelled"]');
+            if (cancelBtn) cancelBtn.textContent = paidOnline(booking) ? 'Cancel and refund' : 'Cancelled';
 
             document.getElementById('bookingModal').hidden = false;
         }
@@ -1158,7 +1194,25 @@ body { overflow-x: hidden; }
             else if (button.dataset.label) { button.disabled = false; button.innerHTML = button.dataset.label; }
         }
 
+        /* Money taken online goes back when the office cancels: one step,
+           "Cancel and refund", with the reason on record. */
+        async function cancelAndRefund(booking, showError) {
+            const reason = await ztimsDialog.prompt({
+                title: `Cancel and refund ${booking.reference}?`,
+                message: `${formatPeso(booking.payment.amount)} goes back to ${booking.fullName} through the payment service (test mode), and the booking is cancelled. It stays on record.`,
+                label: 'Reason', placeholder: 'e.g. Bad weather, no guide available',
+                confirmLabel: 'Cancel and refund', validate: v => (v.trim() ? '' : 'Give the reason.')
+            });
+            if (!reason) return false;
+            return send(`${API_BASE}/payments/${encodeURIComponent(booking.payment._id)}/refund`,
+                        jsonBody('POST', { reason: reason.trim() }), showError);
+        }
+
         async function changeStatus(booking, status, showError, button) {
+            if (status === 'cancelled' && paidOnline(booking)) {
+                await cancelAndRefund(booking, showError);
+                return;
+            }
             if (status === 'cancelled') {
                 const ok = await ztimsDialog.confirm({
                     title: `Cancel ${booking.reference}?`,
@@ -1260,6 +1314,11 @@ body { overflow-x: hidden; }
                 button.addEventListener('click', async () => {
                     if (!openBooking) return;
                     const booking = openBooking;
+                    if (button.dataset.status === 'cancelled' && paidOnline(booking)) {
+                        const done = await cancelAndRefund(booking, setBookingError);
+                        if (done) closeBookingModal();
+                        return;
+                    }
                     if (button.dataset.status === 'cancelled') {
                         const ok = await ztimsDialog.confirm({
                             title: `Cancel ${booking.reference}?`,
