@@ -829,10 +829,6 @@ body { overflow-x: hidden; }
                   detail: due ? `Accommodations still to send their monthly counts. Due ${due.dueLong}.` : '',
                   doneText: due ? `Every accommodation has sent its ${due.monthName} report.` : '', go: 'Open the tracker',
                   href: 'admin_statistics.html#tracker' },
-                { icon: 'edit_note', tone: 'tone-info', pill: 'To approve', count: d.profileRequests ? d.profileRequests.length : null,
-                  one: 'guide profile change', many: 'guide profile changes',
-                  detail: 'Guides asked to update their contact number or bio.',
-                  doneText: 'No profile changes waiting.', go: 'Review on Tourist Guides', href: 'admin_guides.html' },
                 { icon: 'assignment', tone: 'tone-info', pill: 'New', count: d.guideReports ? d.guideReports.length : null,
                   one: 'guide report to read', many: 'guide reports to read',
                   detail: 'Tour, headcount, incident and feedback reports filed by guides.',
@@ -1094,12 +1090,11 @@ body { overflow-x: hidden; }
                 `Here is what needs you today, ${new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}.`;
             const period = reportPeriod(today);
 
-            const [bookings, spots, managers, feedback, profileRequests, guideReports, tracker] = await Promise.all([
+            const [bookings, spots, managers, feedback, guideReports, tracker] = await Promise.all([
                 getJson('/guide-bookings'),
                 getJson('/spots'),
                 getJson('/establishment-managers'),
                 getJson('/feedback?status=new'),
-                getJson('/guides/profile-requests'),
                 getJson('/guides/reports?status=new'),
                 getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`)
             ]);
@@ -1111,7 +1106,6 @@ body { overflow-x: hidden; }
                 spots: Array.isArray(spots) ? spots : null,
                 managers: Array.isArray(managers) ? managers : null,
                 feedback: Array.isArray(feedback) ? feedback : null,
-                profileRequests: profileRequests && Array.isArray(profileRequests.requests) ? profileRequests.requests : null,
                 guideReports: guideReports && Array.isArray(guideReports.reports) ? guideReports.reports : null,
                 reports
             }, today);

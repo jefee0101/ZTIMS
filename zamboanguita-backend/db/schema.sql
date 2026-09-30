@@ -219,18 +219,17 @@ create unique index if not exists tourist_guides_email_key
     on public.tourist_guides (email) where email is not null;
 create index if not exists tourist_guides_scope_idx on public.tourist_guides (scope, barangay);
 
--- Single days a guide is off (leave, a fiesta, sick). Kept by the guide in the
--- portal; the office cannot assign them a booking on one of these dates.
-create table if not exists public.guide_time_off (
-    id                  text primary key default public.ztims_new_id(),
-    guide_id            text not null references public.tourist_guides (id) on delete cascade,
-    off_date            date not null,
-    note                text not null default ''
-                        constraint guide_time_off_note_length check (char_length(note) <= 200),
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now(),
-    constraint guide_time_off_once_a_day unique (guide_id, off_date)
-);
+-- Guides used to mark single days off here (guide_time_off). That was taken
+-- out: a guide who cannot work now sets themselves Unavailable, or drops the
+-- weekday from their working days. Dropped on the next migrate, with any days
+-- off it still held.
+drop table if exists public.guide_time_off;
+
+-- Guides also used to ask here for a change to their contact number or bio,
+-- for the office to approve (guide_profile_requests). Taken out too: the
+-- office now edits those two fields itself, as it does the rest of the
+-- record. Dropped on the next migrate, with any requests it still held.
+drop table if exists public.guide_profile_requests;
 
 -- Languages, and who speaks them. A table of their own rather than a list on
 -- the guide, so "who speaks Korean" is a join, and "Korean" and "korean" are
@@ -252,27 +251,6 @@ create table if not exists public.guide_languages (
 
 create index if not exists guide_languages_language_idx on public.guide_languages (language_id);
 
--- A guide cannot change their own record: they ask, and the office approves.
--- `changes` holds only the fields a guide may propose (contact number, bio).
--- One open request per guide at a time.
-create table if not exists public.guide_profile_requests (
-    id                  text primary key default public.ztims_new_id(),
-    guide_id            text not null references public.tourist_guides (id) on delete cascade,
-    changes             jsonb not null,
-    note                text not null default ''
-                        constraint guide_profile_requests_note_length check (char_length(note) <= 500),
-    status              text not null default 'pending'
-                        constraint guide_profile_requests_status check (status in ('pending', 'approved', 'rejected')),
-    review_note         text not null default '',
-    reviewed_by_email   text not null default '',
-    reviewed_at         timestamptz,
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now()
-);
-
-create unique index if not exists guide_profile_requests_one_pending
-    on public.guide_profile_requests (guide_id) where status = 'pending';
-create index if not exists guide_profile_requests_status_idx on public.guide_profile_requests (status);
 
 -- Which spots each guide serves. MongoDB held this as an array on the guide;
 -- here it is a table of its own so every entry is a real spot. `position`
@@ -618,7 +596,7 @@ declare
 begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
-        'guide_time_off', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback',
+        'guide_reports', 'guide_bookings', 'payments', 'feedback',
         'monthly_reports'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
@@ -630,7 +608,7 @@ begin
 
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
-        'guide_time_off', 'languages', 'guide_languages', 'guide_reports', 'guide_profile_requests', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
+        'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes'
     ] loop
         execute format('alter table public.%I enable row level security', t);

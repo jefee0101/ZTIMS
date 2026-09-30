@@ -62,7 +62,7 @@
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Schedule &amp; Availability</h2>
                 <p class="text-on-surface-variant max-w-2xl">
                     The tours assigned to you, and when you can take more. The Municipal Tourism Office only
-                    assigns you bookings on the days you mark as working, and never on a day you have taken off.
+                    assigns you bookings on the days you mark as working, and none while you are unavailable.
                 </p>
             </div>
 
@@ -100,7 +100,7 @@
                                 <label class="flex items-start gap-3 cursor-pointer p-3 border border-outline-variant/40 min-h-[44px]">
                                     <input type="radio" name="status" value="unavailable" class="mt-1 text-primary focus:ring-primary"/>
                                     <span><span class="font-bold text-on-surface block">Unavailable</span>
-                                        <span class="text-support">Pause new bookings for now. Tours already assigned stay assigned.</span></span>
+                                        <span class="text-support">Pause new bookings for now, for leave or a day you cannot guide. Tours already assigned stay assigned.</span></span>
                                 </label>
                             </fieldset>
 
@@ -113,30 +113,6 @@
                             <button type="submit" id="saveAvailabilityBtn" class="btn btn-primary w-full min-h-[44px]">Save availability</button>
                         </form>
                     </section>
-
-                    <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4">
-                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">event_busy</span> Days off
-                        </h3>
-                        <p class="text-support">A single day you cannot guide — leave, a fiesta, an appointment.</p>
-
-                        <form id="timeOffForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label for="offDateInput" class="block text-label font-bold uppercase tracking-wider mb-1">Date</label>
-                                <input id="offDateInput" type="date" required class="field w-full"/>
-                            </div>
-                            <div>
-                                <label for="offNoteInput" class="block text-label font-bold uppercase tracking-wider mb-1">Reason <span class="normal-case font-normal opacity-70">(optional)</span></label>
-                                <input id="offNoteInput" type="text" maxlength="200" placeholder="e.g., family event" class="field w-full"/>
-                            </div>
-                            <p id="timeOffMessage" hidden class="text-sm rounded-xl px-4 py-3 sm:col-span-2"></p>
-                            <button type="submit" id="addTimeOffBtn" class="btn btn-secondary sm:col-span-2 min-h-[44px]">
-                                <span class="material-symbols-outlined !text-base">add</span> Add day off
-                            </button>
-                        </form>
-
-                        <ul id="timeOffList" class="divide-y divide-outline-variant/30"></ul>
-                    </section>
                 </div>
             </div>
         </div>
@@ -144,7 +120,6 @@
 
     <script>
         let myBookings = [];
-        let myTimeOff = [];
 
         const STATUS_TONE = {
             pending_payment: ['tone-warning', 'Awaiting payment'],
@@ -214,25 +189,6 @@
                 </label>`).join('');
         }
 
-        function renderTimeOff() {
-            const P = window.GuidePortal;
-            const list = document.getElementById('timeOffList');
-            if (!myTimeOff.length) {
-                list.innerHTML = '<li class="py-3 text-support italic">No days off coming up.</li>';
-                return;
-            }
-            list.innerHTML = myTimeOff.map(day => `
-                <li class="py-3 flex items-center justify-between gap-3">
-                    <div>
-                        <p class="font-bold text-on-surface">${P.escapeHtml(P.formatDate(day.offDate))}</p>
-                        ${day.note ? `<p class="text-support">${P.escapeHtml(day.note)}</p>` : ''}
-                    </div>
-                    <button type="button" data-remove="${P.escapeHtml(day._id)}" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">
-                        <span class="material-symbols-outlined !text-base">delete</span> Remove
-                    </button>
-                </li>`).join('');
-        }
-
         async function saveAvailability(event) {
             event.preventDefault();
             const P = window.GuidePortal;
@@ -255,73 +211,26 @@
             }
         }
 
-        async function addTimeOff(event) {
-            event.preventDefault();
-            const P = window.GuidePortal;
-            P.showMessage('timeOffMessage', '');
-            const restore = P.setButtonLoading(document.getElementById('addTimeOffBtn'), 'Adding...');
-            try {
-                const { result } = await P.api('/guides/me/time-off', {
-                    method: 'POST',
-                    body: {
-                        offDate: document.getElementById('offDateInput').value,
-                        note: document.getElementById('offNoteInput').value.trim()
-                    }
-                });
-                myTimeOff = myTimeOff.concat(result.day).sort((a, b) => a.offDate.localeCompare(b.offDate));
-                renderTimeOff();
-                document.getElementById('timeOffForm').reset();
-                P.showToast(result.message, 'success');
-            } catch (error) {
-                P.showMessage('timeOffMessage', error.message, 'error');
-            } finally {
-                restore();
-            }
-        }
-
-        async function removeTimeOff(id, button) {
-            const P = window.GuidePortal;
-            button.disabled = true;
-            try {
-                const { result } = await P.api(`/guides/me/time-off/${encodeURIComponent(id)}`, { method: 'DELETE' });
-                myTimeOff = myTimeOff.filter(day => String(day._id) !== String(id));
-                renderTimeOff();
-                P.showToast(result.message, 'success');
-            } catch (error) {
-                button.disabled = false;
-                P.showToast(error.message, 'error');
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', async () => {
             const P = window.GuidePortal;
             if (!P || !P.start()) return;
 
-            document.getElementById('offDateInput').min = new Date().toISOString().slice(0, 10);
             document.getElementById('availabilityForm').addEventListener('submit', saveAvailability);
-            document.getElementById('timeOffForm').addEventListener('submit', addTimeOff);
             document.getElementById('showPast').addEventListener('change', renderTours);
-            document.getElementById('timeOffList').addEventListener('click', event => {
-                const button = event.target.closest('[data-remove]');
-                if (button) removeTimeOff(button.dataset.remove, button);
-            });
 
             const loading = document.getElementById('scheduleLoading');
             const done = P.showLoading(loading, 'Loading your schedule...');
             try {
-                const [{ result: me }, { result: data }, { result: off }] = await Promise.all([
+                const [{ result: me }, { result: data }] = await Promise.all([
                     P.api('/guides/me'),
-                    P.api('/guides/me/bookings'),
-                    P.api('/guides/me/time-off')
+                    P.api('/guides/me/bookings')
                 ]);
                 done();
                 loading.innerHTML = '';
                 P.rememberGuide(me.guide);
                 myBookings = data.bookings || [];
-                myTimeOff = off.timeOff || [];
                 fillAvailability(me.guide);
                 renderTours();
-                renderTimeOff();
                 document.getElementById('scheduleContent').hidden = false;
             } catch (error) {
                 done();

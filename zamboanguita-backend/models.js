@@ -343,37 +343,6 @@ reports.listForOffice = async function (filters = {}) {
     }));
 };
 
-/* A guide's request to change their own record, waiting on the office. */
-const profileRequests = new Table('guide_profile_requests', {
-    guideId: { type: 'id', required: true },
-    changes: { type: 'json', required: true },
-    note: text({ trim: true, maxlength: 500 }),
-    status: text({ default: 'pending', enum: ['pending', 'approved', 'rejected'] }),
-    reviewNote: text({ trim: true, maxlength: 500 }),
-    reviewedByEmail: text(),
-    reviewedAt: when()
-});
-
-profileRequests.listPendingForOffice = async function () {
-    const { rows } = await query(`
-        select p.*, g.full_name as guide_name, g.contact_number as current_contact, g.bio as current_bio
-        from guide_profile_requests p join tourist_guides g on g.id = p.guide_id
-        where p.status = 'pending'
-        order by p.created_at asc`);
-    return rows.map(row => ({
-        ...profileRequests.fromRow(row),
-        guide: { _id: row.guide_id, fullName: row.guide_name },
-        current: { contactNumber: row.current_contact, bio: row.current_bio }
-    }));
-};
-
-/* Days a guide has marked themselves off. */
-const timeOff = new Table('guide_time_off', {
-    guideId: { type: 'id', required: true },
-    offDate: required(),         // YYYY-MM-DD, read back as the same text
-    note: text({ trim: true, maxlength: 200 })
-});
-
 const bookings = new Table('guide_bookings', {
     reference: required(),
     spotId: { type: 'id', required: true },
@@ -517,9 +486,7 @@ module.exports = {
     managers,
     spots,
     guides,
-    timeOff,
     reports,
-    profileRequests,
     languagesOf,
     setGuideLanguages,
     findGuidesSpeaking,

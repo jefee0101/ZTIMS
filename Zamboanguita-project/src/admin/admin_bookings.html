@@ -829,7 +829,7 @@ body { overflow-x: hidden; }
         };
 
         // Only guides who can actually take this booking are offered. The server
-        // checks the rest (days off, working days, a clash at that hour) and says why.
+        // checks the rest (unavailable, working days, a clash at that hour) and says why.
         function eligibleGuides(booking) {
             const spotId = String(booking.spotId?._id || booking.spotId);
             return allGuides.filter(guide =>

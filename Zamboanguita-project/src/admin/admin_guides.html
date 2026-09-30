@@ -556,28 +556,26 @@ body { overflow-x: hidden; }
                     <li class="ztims-card p-4 space-y-1">
                         <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 2 · You</p>
                         <p class="font-bold text-on-surface">Give them a sign-in</p>
-                        <p class="text-support">Optional. With a sign-in, the guide keeps their own working days, days off and languages up to date in the guide portal.</p>
+                        <p class="text-support">Optional. With a sign-in, the guide keeps their own availability, working days and languages up to date in the guide portal.</p>
                     </li>
                     <li class="ztims-card p-4 space-y-1">
                         <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 3 · You</p>
                         <p class="font-bold text-on-surface">Assign their tours</p>
-                        <p class="text-support">Done on <a href="admin_bookings.html" class="underline font-bold">Guide Bookings</a>. ZTIMS refuses a guide who is off or already booked at that time.</p>
+                        <p class="text-support">Done on <a href="admin_bookings.html" class="underline font-bold">Guide Bookings</a>. ZTIMS refuses a guide who is unavailable, not working that day, or already booked at that time.</p>
                     </li>
                     <li class="ztims-card p-4 space-y-1">
                         <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 4 · The guide</p>
-                        <p class="font-bold text-on-surface">Sends you changes and reports</p>
-                        <p class="text-support">A new phone number or bio waits under <b>Change requests</b> until you approve it. Tour reports arrive under <b>Reports</b>.</p>
+                        <p class="font-bold text-on-surface">Sends you reports</p>
+                        <p class="text-support">Tour reports arrive under <b>Reports</b>. If a guide's phone number or "About" changes, they tell you and you update it with <b>Edit</b>.</p>
                     </li>
                 </ol>
             </details>
 
-            <!-- Tabs: the directory, then the two things guides send in, each
-                 with how many are waiting on you. -->
+            <!-- Tabs: the directory, then what guides report, with how many
+                 reports are waiting on you. -->
             <div role="tablist" aria-label="Tourist guides" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
                 <button role="tab" id="tab-guides" aria-controls="panel-guides" aria-selected="true" class="gd-tab">
                     <span class="material-symbols-outlined !text-base">person_search</span>Guides</button>
-                <button role="tab" id="tab-requests" aria-controls="panel-requests" aria-selected="false" class="gd-tab">
-                    <span class="material-symbols-outlined !text-base">rule</span>Change requests <span id="requestCount" class="gd-count">0</span></button>
                 <button role="tab" id="tab-reports" aria-controls="panel-reports" aria-selected="false" class="gd-tab">
                     <span class="material-symbols-outlined !text-base">summarize</span>Reports <span id="reportCount" class="gd-count">0</span></button>
             </div>
@@ -651,12 +649,6 @@ body { overflow-x: hidden; }
                         of <span id="guideTotal" class="text-on-surface font-bold">0</span> guides
                     </p>
                 </div>
-            </section>
-
-            <!-- ============ Change requests: nothing changes until approved here ============ -->
-            <section role="tabpanel" id="panel-requests" aria-labelledby="tab-requests" class="glass-panel p-5 sm:p-6 space-y-3" hidden>
-                <p class="text-support">Guides can ask to change their phone number or their "About" text. The old value is crossed out; the new one is in bold. Nothing changes until you press <b>Approve</b>.</p>
-                <ul id="requestList" class="divide-y divide-outline-variant/30"></ul>
             </section>
 
             <!-- ============ Reports: what guides file, rolled up by barangay ============ -->
@@ -1034,7 +1026,6 @@ body { overflow-x: hidden; }
             }
             // The other tabs load on their own, so one failing never empties the
             // directory.
-            loadRequests();
             loadReports();
         }
 
@@ -1466,7 +1457,7 @@ body { overflow-x: hidden; }
 
         /* ---- tabs ---------------------------------------------------------- */
 
-        const TABS = ['guides', 'requests', 'reports'];
+        const TABS = ['guides', 'reports'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
@@ -1479,63 +1470,6 @@ body { overflow-x: hidden; }
             const badge = document.getElementById(id);
             badge.textContent = n;
             badge.classList.toggle('has-work', n > 0);
-        }
-
-        /* ---- profile change requests ------------------------------------------ */
-
-        const REQUEST_LABELS = { contactNumber: 'Contact number', bio: 'About' };
-
-        async function loadRequests() {
-            const list = document.getElementById('requestList');
-            try {
-                const { requests } = await officeCall('/guides/profile-requests');
-                setCount('requestCount', requests.length);
-                list.innerHTML = !requests.length
-                    ? '<li class="py-3 text-support italic">Nothing waiting.</li>'
-                    : requests.map(r => `
-                        <li class="py-4 space-y-2">
-                            <p class="font-bold text-on-surface">${escapeHtml(r.guide.fullName)}
-                                <span class="text-support font-normal">· asked ${escapeHtml(new Date(r.createdAt).toLocaleDateString())}</span></p>
-                            ${Object.entries(r.changes || {}).map(([field, value]) => `
-                                <div class="grid grid-cols-1 sm:grid-cols-[8rem_1fr_1fr] gap-1 sm:gap-3 text-sm">
-                                    <span class="text-label uppercase tracking-wider">${escapeHtml(REQUEST_LABELS[field] || field)}</span>
-                                    <span class="text-on-surface-variant line-through whitespace-pre-line">${escapeHtml(r.current[field] || '(blank)')}</span>
-                                    <span class="text-on-surface font-bold whitespace-pre-line">${escapeHtml(value || '(blank)')}</span>
-                                </div>`).join('')}
-                            ${r.note ? `<p class="text-support">“${escapeHtml(r.note)}”</p>` : ''}
-                            <div class="flex gap-2">
-                                <button type="button" data-approve="${escapeHtml(r._id)}" class="btn btn-primary !min-h-[40px] !px-3 !py-2 !text-xs">Approve</button>
-                                <button type="button" data-reject="${escapeHtml(r._id)}" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">Reject</button>
-                            </div>
-                        </li>`).join('');
-            } catch (error) {
-                list.innerHTML = `<li class="py-3 text-sm text-error">${escapeHtml(error.message)}</li>`;
-            }
-        }
-
-        async function decideRequest(id, decision, button) {
-            let reviewNote = '';
-            if (decision === 'reject') {
-                const typed = await ztimsDialog.prompt({
-                    title: 'Reject this change?',
-                    message: 'The guide\'s record stays as it is.',
-                    label: 'Reason', optional: true, placeholder: 'Optional',
-                    confirmLabel: 'Reject'
-                });
-                if (typed === null) return;
-                reviewNote = typed.trim();
-            }
-            button.disabled = true;
-            try {
-                const result = await officeCall(`/guides/profile-requests/${encodeURIComponent(id)}`, {
-                    method: 'PATCH', body: { decision, reviewNote }
-                });
-                showToast(result.message, 'success');
-                await loadEverything();
-            } catch (error) {
-                button.disabled = false;
-                showToast(error.message, 'error');
-            }
         }
 
         /* ---- reports, rolled up by barangay ------------------------------------ */
@@ -1673,12 +1607,6 @@ body { overflow-x: hidden; }
                 if (select) setGuideStatus(select.dataset.statusFor, select.value, select);
             });
 
-            document.getElementById('requestList').addEventListener('click', event => {
-                const approve = event.target.closest('[data-approve]');
-                if (approve) decideRequest(approve.dataset.approve, 'approve', approve);
-                const reject = event.target.closest('[data-reject]');
-                if (reject) decideRequest(reject.dataset.reject, 'reject', reject);
-            });
             document.getElementById('reportList').addEventListener('click', event => {
                 const review = event.target.closest('[data-review]');
                 if (review) markReviewed(review.dataset.review, review);

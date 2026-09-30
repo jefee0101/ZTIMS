@@ -19,9 +19,7 @@ const {
     managers: EstablishmentManager,
     spots: Spot,
     guides: TouristGuide,
-    timeOff: GuideTimeOff,
     reports: GuideReport,
-    profileRequests: GuideProfileRequest,
     languagesOf, setGuideLanguages, findGuidesSpeaking,
     bookings: GuideBooking,
     payments: Payment,
@@ -1547,8 +1545,6 @@ const REPORT_TYPE_NAMES = {
     incident: 'Incident',
     tourist_feedback: 'Tourist feedback'
 };
-// The only parts of their own record a guide may ask to change.
-const GUIDE_REQUESTABLE_FIELDS = ['contactNumber', 'bio'];
 
 const guideInvalid = message => Object.assign(new Error(message), { name: 'ValidationError' });
 const today = () => new Date().toISOString().slice(0, 10);
@@ -1689,10 +1685,6 @@ async function isGuideFreeOn(guide, date, { time, exceptBookingId } = {}) {
     if (!(guide.availableDays || WEEKDAYS).includes(weekday)) {
         return { free: false, reason: `${guide.fullName} does not work on ${WEEKDAY_NAMES[weekday]}s.` };
     }
-    const dayOff = await GuideTimeOff.findOne({ guideId: guide._id, offDate: date });
-    if (dayOff) {
-        return { free: false, reason: `${guide.fullName} is off on ${date}${dayOff.note ? ` (${dayOff.note})` : ''}.` };
-    }
     const clash = await GuideBooking.findOne({
         _id: exceptBookingId ? { ne: String(exceptBookingId) } : undefined,
         guideId: guide._id,
@@ -1712,7 +1704,7 @@ async function isGuideFreeOn(guide, date, { time, exceptBookingId } = {}) {
 }
 
 /* What a guide sees of their own record in the portal. Never the hash. */
-function guideProfile(guide, spotSummaries, languages, pendingRequest) {
+function guideProfile(guide, spotSummaries, languages) {
     return {
         _id: guide._id,
         fullName: guide.fullName,
@@ -1729,7 +1721,6 @@ function guideProfile(guide, spotSummaries, languages, pendingRequest) {
         availableDays: guide.availableDays || WEEKDAYS.slice(),
         email: guide.email || '',
         assignedSpots: spotSummaries || [],
-        pendingProfileRequest: pendingRequest || null,
         createdAt: guide.createdAt
     };
 }
@@ -1766,12 +1757,11 @@ async function spotSummariesFor(guide) {
 }
 
 async function fullGuideProfile(guide) {
-    const [spotSummaries, languages, pending] = await Promise.all([
+    const [spotSummaries, languages] = await Promise.all([
         spotSummariesFor(guide),
-        languagesOf(guide._id),
-        GuideProfileRequest.findOne({ guideId: guide._id, status: 'pending' })
+        languagesOf(guide._id)
     ]);
-    return guideProfile(guide, spotSummaries, languages, pending);
+    return guideProfile(guide, spotSummaries, languages);
 }
 
 app.get('/api/guides/me', requireGuide, async (req, res) => {
@@ -1849,66 +1839,6 @@ app.post('/api/guides/me/password', requireGuide, resetRateLimit, async (req, re
         return res.status(200).json({ success: true, message: 'Your password has been changed.' });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide password change failure:');
-    }
-});
-
-/* Days off: listed from today on, added one date at a time, removed by id. */
-app.get('/api/guides/me/time-off', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-        const from = today();
-        const days = (await GuideTimeOff.find({ guideId: guide._id }, { sort: { offDate: 1 } }))
-            .filter(day => day.offDate >= from);
-        return res.status(200).json({ success: true, timeOff: days });
-    } catch (error) {
-        console.error('❌ Guide time-off read failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-});
-
-app.post('/api/guides/me/time-off', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        const offDate = String(req.body.offDate || '').trim();
-        if (!isCalendarDate(offDate)) return res.status(400).json({ success: false, message: 'Choose a date.' });
-        if (offDate < today()) return res.status(400).json({ success: false, message: 'That date has already passed.' });
-
-        // A booking already assigned that day is the office's to move; saying so
-        // here is better than a guide quietly not turning up.
-        const booked = await GuideBooking.findOne({ guideId: guide._id, preferredDate: offDate, status: { in: ['pending_payment', 'confirmed'] } });
-        if (booked) {
-            return res.status(409).json({
-                success: false,
-                message: `You are assigned to booking ${booked.reference} on that day. Ask the Municipal Tourism Office to reassign it first.`
-            });
-        }
-
-        const day = await GuideTimeOff.create({ guideId: guide._id, offDate, note: String(req.body.note || '').trim().slice(0, 200) });
-        return res.status(201).json({ success: true, message: 'Day off added.', day });
-    } catch (error) {
-        if (error && error.code === 11000) {
-            return res.status(409).json({ success: false, message: 'That day is already marked off.' });
-        }
-        return reportWriteFailure(res, error, '❌ Guide time-off add failure:');
-    }
-});
-
-app.delete('/api/guides/me/time-off/:id', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-        const day = await GuideTimeOff.findById(req.params.id);
-        // Someone else's day off is answered exactly like one that does not exist.
-        if (!day || String(day.guideId) !== String(guide._id)) {
-            return res.status(404).json({ success: false, message: 'That day off no longer exists.' });
-        }
-        await GuideTimeOff.deleteById(day._id);
-        return res.status(200).json({ success: true, message: 'Day off removed.' });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide time-off remove failure:');
     }
 });
 
@@ -2081,58 +2011,8 @@ app.post('/api/guides/me/reports', requireGuide, async (req, res) => {
     }
 });
 
-/* ---- Profile changes: the guide asks, the office decides ------------------- */
-
-app.post('/api/guides/me/profile-request', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        // Only what differs from the record now, and only the fields a guide
-        // may ask about; anything else in the body is ignored, not stored.
-        const changes = {};
-        for (const field of GUIDE_REQUESTABLE_FIELDS) {
-            if (typeof req.body[field] !== 'string') continue;
-            const value = req.body[field].trim();
-            if (value.length > (field === 'bio' ? 2000 : 40)) {
-                return res.status(400).json({ success: false, message: field === 'bio' ? 'Keep "About you" under 2000 characters.' : 'That contact number is too long.' });
-            }
-            if (value !== (guide[field] || '')) changes[field] = value;
-        }
-        if (!Object.keys(changes).length) {
-            return res.status(400).json({ success: false, message: 'Nothing differs from your record, so there is nothing to ask for.' });
-        }
-
-        const request = await GuideProfileRequest.create({
-            guideId: guide._id,
-            changes,
-            note: String(req.body.note || '').trim().slice(0, 500)
-        });
-        console.log(`✏️ ${guide.fullName} asked to change ${Object.keys(changes).join(', ')}`);
-        return res.status(201).json({ success: true, message: 'Sent to the Municipal Tourism Office for approval. Your record changes once they approve it.', request });
-    } catch (error) {
-        if (error && error.code === 11000) {
-            return res.status(409).json({ success: false, message: 'You already have a change waiting for approval. Withdraw it first to send a different one.' });
-        }
-        return reportWriteFailure(res, error, '❌ Guide profile request failure:');
-    }
-});
-
-app.delete('/api/guides/me/profile-request', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-        const pending = await GuideProfileRequest.findOne({ guideId: guide._id, status: 'pending' });
-        if (!pending) return res.status(404).json({ success: false, message: 'There is no request waiting.' });
-        await GuideProfileRequest.deleteById(pending._id);
-        return res.status(200).json({ success: true, message: 'Request withdrawn.' });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide profile request withdraw failure:');
-    }
-});
-
 /* ---- The office's side ----------------------------------------------------
-   The fixed paths (search, reports, profile-requests) come before /:id. */
+   The fixed paths (search, reports) come before /:id. */
 
 app.get('/api/guides', requireAdmin, async (req, res) => {
     try {
@@ -2245,66 +2125,6 @@ app.patch('/api/guides/reports/:id', requireAdmin, async (req, res) => {
         return res.status(200).json({ success: true, message: req.body.status === 'reviewed' ? 'Marked reviewed.' : 'Marked new.', report });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide report review failure:');
-    }
-});
-
-app.get('/api/guides/profile-requests', requireAdmin, async (req, res) => {
-    try {
-        return res.status(200).json({ success: true, requests: await GuideProfileRequest.listPendingForOffice() });
-    } catch (error) {
-        console.error('❌ Profile request list failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not read the profile requests.' });
-    }
-});
-
-/**
- * PATCH: approve or reject a guide's requested change. Approving writes the
- * requested fields — only the ones a guide may ask about, re-checked here
- * whatever the stored request says — and closes the request, together.
- */
-app.patch('/api/guides/profile-requests/:id', requireAdmin, async (req, res) => {
-    try {
-        const decision = String(req.body.decision || '');
-        if (!['approve', 'reject'].includes(decision)) {
-            return res.status(400).json({ success: false, message: 'Approve or reject the request.' });
-        }
-        const request = await GuideProfileRequest.findById(req.params.id);
-        if (!request || request.status !== 'pending') {
-            return res.status(404).json({ success: false, message: 'That request has already been decided or withdrawn.' });
-        }
-        const guide = await TouristGuide.findById(request.guideId);
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-
-        const officer = await TourismOfficer.findById(req.auth.sub);
-        const reviewNote = String(req.body.reviewNote || '').trim().slice(0, 500);
-        const approved = decision === 'approve';
-
-        const allowed = {};
-        for (const field of GUIDE_REQUESTABLE_FIELDS) {
-            if (typeof (request.changes || {})[field] === 'string') allowed[field] = request.changes[field];
-        }
-        applyGuideDetails(guide, allowed);     // validates as an office edit would
-
-        await db.transaction(async client => {
-            if (approved) {
-                await db.query(
-                    `update tourist_guides set contact_number = $1, bio = $2 where id = $3`,
-                    [guide.contactNumber || '', guide.bio || '', guide._id], client);
-            }
-            await db.query(
-                `update guide_profile_requests
-                 set status = $1, review_note = $2, reviewed_by_email = $3, reviewed_at = now()
-                 where id = $4 and status = 'pending'`,
-                [approved ? 'approved' : 'rejected', reviewNote, officer ? officer.email : '', request._id], client);
-        });
-
-        console.log(`✏️ Officer ${approved ? 'approved' : 'rejected'} ${guide.fullName}'s profile change`);
-        return res.status(200).json({
-            success: true,
-            message: approved ? `${guide.fullName}'s record has been updated.` : `${guide.fullName}'s request was rejected.`
-        });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Profile request decision failure:');
     }
 });
 
@@ -2727,7 +2547,7 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
                 message: `This booking is for ${booking.visitors} visitors and ${guide.fullName} takes at most ${guide.maxGroupSize}.`
             });
         }
-        // Status, working days, days off and clashes: the same rule the office's
+        // Status, working days and clashes: the same rule the office's
         // guide search uses, so a guide it shows as free is one this accepts.
         const verdict = await isGuideFreeOn(guide, booking.preferredDate, { time: booking.preferredTime, exceptBookingId: booking._id });
         if (!verdict.free) return res.status(409).json({ success: false, message: verdict.reason });

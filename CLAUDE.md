@@ -316,14 +316,16 @@ barangay. The screens are the same for both — the scope only filters:
   shown only for bookings assigned to that guide.
 
 The guide proposes, the office disposes. A guide keeps their own availability
-(status available/unavailable, working days, `guide_time_off`) and languages,
-files reports (`guide_reports`: tour completed, headcount, incident, tourist
+(status available/unavailable and working days) and languages, and files
+reports (`guide_reports`: tour completed, headcount, incident, tourist
 feedback — `barangay` is derived server-side, and filing never changes a
-booking), and asks for changes to their contact number and bio
-(`guide_profile_requests`, one pending at a time, applied only when the
-officer approves). The office assigns every booking, approves every change,
-reviews every report (rolled up per barangay on `admin_guides.html`), and alone
-sets name, scope, fee, group size, destinations, photo and `inactive`. Guide
+booking). The office assigns every booking, reviews every report (rolled up
+per barangay on `admin_guides.html`), and alone sets name, contact number,
+bio, scope, fee, group size, destinations, photo and `inactive`. Single days
+off (`guide_time_off`) and guide-requested profile changes
+(`guide_profile_requests`) were taken out: a guide who cannot work sets
+themselves Unavailable, and a changed phone number or bio is edited by the
+office. `schema.sql` drops both tables on the next migrate. Guide
 sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
 a guide record without one has `email`/`password_hash` null.
 
@@ -340,7 +342,7 @@ sent to the province each month) and the visitor counts at the attractions,
 collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 `statistics.js`, the Excel file in `statistics-excel.js`, four tables in
 `schema.sql` (`residences`, `monthly_reports`, `monthly_report_counts`,
-`report_changes`), 18 tables in all.
+`report_changes`), 16 tables in all.
 
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,

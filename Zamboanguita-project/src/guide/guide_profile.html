@@ -61,9 +61,8 @@
             <div class="space-y-1">
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Profile</h2>
                 <p class="text-on-surface-variant max-w-2xl">
-                    Your guide record, as the Municipal Tourism Office keeps it. You can ask for your contact
-                    number and "about you" to be changed; the office approves the change before it shows.
-                    For anything else, speak to the office.
+                    Your guide record, as the Municipal Tourism Office keeps it. To change anything on it,
+                    such as a new contact number, speak to the office and they will update it.
                 </p>
             </div>
 
@@ -107,36 +106,6 @@
                 <div class="space-y-8">
                     <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
                         <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">edit</span> Ask for a change
-                        </h3>
-
-                        <div id="pendingRequest" hidden class="tone-warning border border-current/30 p-4 space-y-2 text-sm">
-                            <p class="font-bold flex items-center gap-2"><span class="material-symbols-outlined !text-lg">hourglass_top</span> Waiting for the office</p>
-                            <dl id="pendingChanges" class="space-y-1 text-on-surface"></dl>
-                            <button type="button" id="withdrawRequestBtn" class="btn btn-secondary !min-h-[40px] !px-3 !py-2 !text-xs">Withdraw request</button>
-                        </div>
-
-                        <form id="requestForm" class="space-y-4">
-                            <div>
-                                <label for="requestContact" class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
-                                <input id="requestContact" type="tel" maxlength="40" placeholder="09XX XXX XXXX" class="field w-full"/>
-                            </div>
-                            <div>
-                                <label for="requestBio" class="block text-label font-bold uppercase tracking-wider mb-1">About you</label>
-                                <textarea id="requestBio" rows="4" maxlength="2000" class="field w-full resize-none"
-                                          placeholder="Your specialities, years guiding, what visitors enjoy on your tours"></textarea>
-                            </div>
-                            <div>
-                                <label for="requestNote" class="block text-label font-bold uppercase tracking-wider mb-1">Note to the office <span class="normal-case font-normal opacity-70">(optional)</span></label>
-                                <input id="requestNote" type="text" maxlength="500" placeholder="e.g., new SIM since June" class="field w-full"/>
-                            </div>
-                            <p id="requestMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
-                            <button type="submit" id="sendRequestBtn" class="btn btn-primary w-full min-h-[44px]">Send for approval</button>
-                        </form>
-                    </section>
-
-                    <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-5">
-                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
                             <span class="material-symbols-outlined text-accent">lock</span> Password
                         </h3>
                         <form id="passwordForm" class="space-y-4">
@@ -172,8 +141,9 @@
                             </div>
                         </dl>
                         <p class="text-support pt-2">
-                            Your name, scope, fee, group size, destinations, photo and sign-in email are kept by the
-                            Municipal Tourism Office. Your availability and languages are yours to keep current; contact number and "about you" change once the office approves.
+                            Your name, contact number, "about you", scope, fee, group size, destinations, photo and
+                            sign-in email are kept by the Municipal Tourism Office. Your availability and languages are
+                            yours to keep current.
                         </p>
                     </section>
                 </div>
@@ -229,71 +199,6 @@
                 P.formatDate(guide.createdAt, { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
-        /* ---- asking for a change --------------------------------------------
-           The form starts from the record as it is now; only what differs is
-           sent, and nothing changes until the office approves. */
-        const REQUEST_LABELS = { contactNumber: 'Contact number', bio: 'About you' };
-
-        function fillRequest(guide) {
-            const P = window.GuidePortal;
-            const pending = guide.pendingProfileRequest;
-            document.getElementById('pendingRequest').hidden = !pending;
-            document.getElementById('requestForm').hidden = Boolean(pending);
-            if (pending) {
-                document.getElementById('pendingChanges').innerHTML = Object.entries(pending.changes || {}).map(([field, value]) => `
-                    <div><dt class="text-label uppercase tracking-wider">${P.escapeHtml(REQUEST_LABELS[field] || field)}</dt>
-                    <dd class="whitespace-pre-line">${P.escapeHtml(value || '(blank)')}</dd></div>`).join('') +
-                    `<p class="text-support">Sent ${P.escapeHtml(P.formatDate(pending.createdAt, { month: 'short', day: 'numeric', year: 'numeric' }))}</p>`;
-            }
-            document.getElementById('requestContact').value = guide.contactNumber || '';
-            document.getElementById('requestBio').value = guide.bio || '';
-            document.getElementById('requestNote').value = '';
-        }
-
-        async function reloadProfile() {
-            const { result } = await window.GuidePortal.api('/guides/me');
-            window.GuidePortal.rememberGuide(result.guide);
-            fillProfile(result.guide);
-            fillRequest(result.guide);
-        }
-
-        async function sendRequest(event) {
-            event.preventDefault();
-            const P = window.GuidePortal;
-            P.showMessage('requestMessage', '');
-            const restore = P.setButtonLoading(document.getElementById('sendRequestBtn'), 'Sending...');
-            try {
-                const { result } = await P.api('/guides/me/profile-request', {
-                    method: 'POST',
-                    body: {
-                        contactNumber: document.getElementById('requestContact').value.trim(),
-                        bio: document.getElementById('requestBio').value.trim(),
-                        note: document.getElementById('requestNote').value.trim()
-                    }
-                });
-                P.showToast(result.message, 'success');
-                await reloadProfile();
-            } catch (error) {
-                P.showMessage('requestMessage', error.message, 'error');
-            } finally {
-                restore();
-            }
-        }
-
-        async function withdrawRequest() {
-            const P = window.GuidePortal;
-            const button = document.getElementById('withdrawRequestBtn');
-            button.disabled = true;
-            try {
-                const { result } = await P.api('/guides/me/profile-request', { method: 'DELETE' });
-                P.showToast(result.message, 'success');
-                await reloadProfile();
-            } catch (error) {
-                P.showToast(error.message, 'error');
-            } finally {
-                button.disabled = false;
-            }
-        }
 
         async function changePassword(event) {
             event.preventDefault();
@@ -326,8 +231,6 @@
             const P = window.GuidePortal;
             if (!P || !P.start()) return;
             document.getElementById('passwordForm').addEventListener('submit', changePassword);
-            document.getElementById('requestForm').addEventListener('submit', sendRequest);
-            document.getElementById('withdrawRequestBtn').addEventListener('click', withdrawRequest);
 
             const loading = document.getElementById('profileLoading');
             const done = P.showLoading(loading, 'Loading your profile...');
@@ -337,7 +240,6 @@
                 loading.innerHTML = '';
                 P.rememberGuide(result.guide);
                 fillProfile(result.guide);
-                fillRequest(result.guide);
                 document.getElementById('profileContent').hidden = false;
             } catch (error) {
                 done();
