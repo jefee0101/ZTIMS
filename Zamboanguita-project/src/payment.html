@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="./shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Explore Zamboanguita | Payment</title>
+    <link rel="icon" href="../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+                    transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+                    transitionDuration: { DEFAULT: '220ms' },
+                    colors: {
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "primary-dim": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "secondary": "rgb(var(--ztims-secondary) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--ztims-surface-low) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "error": "rgb(var(--ztims-error) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
+                    },
+                    fontFamily: {
+                        headline: ["Poppins", "sans-serif"],
+                        display: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Plus Jakarta Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Both themes are defined as tokens so every component follows automatically,
+           rather than each one carrying its own light-mode override. */
+        :root {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+        html.dark {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+
+        body { background: var(--bg); color: var(--on-surface); }
+
+        /* The hidden attribute only gets display:none from the browser default,
+           which any Tailwind display class (.flex here) outranks. Without this,
+           elements toggled via el.hidden stay on screen. */
+        [hidden] { display: none !important; }
+
+        /* The identity gradient. It was gold into orange, which on the sand
+           ground was both unreadable and the loudest thing on the page — the
+           one element most responsible for the site reading as an orange
+           template. Ocean into teal carries the same emphasis and is legible
+           in both themes. */
+        .text-gradient {
+            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Likewise: a primary button is ocean into coastal blue. Gold is for the
+           occasional highlight, not for every call to action. */
+        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* A white tint reads as "selected" on a dark ground and as nothing at all on
+           sand. The identity's teal, held back to a wash, works on both. */
+        .nav-item.active {
+            color: rgb(var(--ztims-on-surface));
+            background: rgb(var(--ztims-accent) / .12);
+            box-shadow: inset 0 0 0 1px rgb(var(--ztims-accent) / .30);
+        }
+        .star-input { cursor: pointer; transition: transform var(--dur-instant) var(--ease-spring); }
+        .star-input.filled { font-variation-settings: 'FILL' 1; }
+
+        /* .rise, its easing and the reduced-motion rule all live in
+           src/shared/motion.css now, so every page animates the same way and
+           there is one place that turns motion off. */
+    
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an establishment name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="./shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="./shared/motion.css"/>
+    <style>
+        /* The honeypot: off-screen rather than display:none, because some
+           bots skip fields that are not rendered at all. */
+        .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+    </style>
+</head>
+<body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+
+<div class="content-shell min-h-screen flex flex-col">
+
+    <!-- The site's navigation. It was a rail down the side when this page had
+         several views to switch between; with browsing and history as ordinary
+         pages, a header says the same thing and gives the destinations the
+         whole width. -->
+    <header class="sticky top-0 z-40 glass-nav border-b border-outline-variant/15">
+        <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-3 px-5 sm:px-6 md:px-10 py-3">
+
+            <!-- min-w-0 and no shrink-0: on a narrow phone the wordmark has to be
+                 able to give way and wrap, or it pushes the nav off the screen. -->
+            <!-- The system's name is the identity. The logo is inlined rather than
+                 linked: at 56px it costs less than one round trip, and a name that is
+                 part of the page cannot break because a path resolved differently
+                 once deployed. -->
+            <a href="../index.html" class="flex items-center gap-2.5 min-w-0 leading-tight">
+                <img src="data:image/png;base64,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" alt="" width="28" height="28" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full"/>
+                <span class="min-w-0">
+                    <span class="rise block text-[11px] min-[420px]:text-sm sm:text-base font-extrabold tracking-tight font-headline text-primary">
+                        ZAMBOANGUITA <span class="text-accent">TOURISM</span>
+                    </span>
+                    <span class="rise block text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
+                </span>
+            </a>
+
+            <nav class="flex items-center gap-1 sm:gap-2 ml-auto">
+                <a href="../index.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                    <span class="material-symbols-outlined !text-lg">location_on</span>
+                    <span class="hidden min-[420px]:inline">Destinations</span>
+                </a>
+                <a href="history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                    <span class="material-symbols-outlined !text-lg">history_edu</span>
+                    <span class="hidden min-[420px]:inline">History</span>
+                </a>
+            </nav>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all" title="Toggle theme">
+                    <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+                </button>
+                <!-- Visitors need no account. This is the way in for the Tourism
+                     Office and for establishments that manage their own listing. -->
+                <a href="staff_login.html" title="Staff sign in"
+                   class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary transition-all">
+                    <span class="material-symbols-outlined !text-lg">badge</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
+            <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
+
+                <p class="tone-warning tone-pill inline-flex items-center gap-2 text-xs font-bold px-3 py-2">
+                    <span class="material-symbols-outlined !text-base">science</span>
+                    Test mode: a demonstration. No real money moves.
+                </p>
+
+                <div id="payState" class="glass-panel p-6 sm:p-8 space-y-5" aria-live="polite">
+                    <div class="flex items-center gap-3 text-on-surface-variant">
+                        <span class="inline-block w-5 h-5 border-2 border-current border-t-transparent animate-spin"></span>
+                        Confirming your payment…
+                    </div>
+                </div>
+
+                <a href="../index.html" class="inline-flex items-center gap-1.5 text-label font-bold uppercase tracking-widest hover:text-primary transition-colors min-h-[44px]">
+                    <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Drawn by shared/site-footer.js, the same on every visitor page.
+         data-root is the way back to the project root from here. -->
+    <footer data-site-footer data-root="../"></footer>
+</div>
+<script type="module" src="./shared/site-footer.js"></script>
+<script>
+/* Where the payment service sends a visitor back. The page never decides that
+   a payment happened: it asks ZTIMS, which asks the payment service itself. */
+(function () {
+    const API_BASE = "/api";
+    const box = document.getElementById('payState');
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('c') || '';
+    const cancelled = params.get('cancelled') === '1';
+    let tries = 0;
+
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', qrph: 'QR Ph' };
+    function niceDate(value) {
+        const [y, m, d] = String(value || '').slice(0, 10).split('-').map(Number);
+        if (!y) return esc(value);
+        return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    }
+    const row = (label, value) => `
+        <div class="flex justify-between gap-4 py-2 border-b border-outline-variant/20 text-sm">
+            <span class="text-on-surface-variant">${label}</span><span class="font-bold text-on-surface text-right">${value}</span>
+        </div>`;
+
+    function show(html) { box.innerHTML = html; }
+
+    function heading(icon, tone, title, sub) {
+        return `
+            <div class="flex items-start gap-3">
+                <span class="icon-chip ${tone}"><span class="material-symbols-outlined">${icon}</span></span>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface">${title}</h1>
+                    ${sub ? `<p class="text-on-surface-variant text-sm mt-1">${sub}</p>` : ''}
+                </div>
+            </div>`;
+    }
+
+    function paidLine(c) {
+        return row('Paid', `${peso(c.amount)} · ${esc(METHOD[c.method] || c.method || 'online')} · test mode`);
+    }
+
+    function render(c) {
+        if (c.status === 'paid' && c.kind === 'guide_booking' && c.booking) {
+            const b = c.booking;
+            show(heading('task_alt', 'tone-success', 'Payment received',
+                    `Booking <b class="font-mono">${esc(b.reference)}</b> is confirmed.`) + `
+                <div>
+                    ${row('Destination', esc(b.spot))}
+                    ${row('Date', `${niceDate(b.preferredDate)} · ${esc(b.preferredTime)}`)}
+                    ${row('Visitors', esc(b.visitors))}
+                    ${paidLine(c)}
+                </div>
+                <p class="text-sm text-on-surface-variant">
+                    The Municipal Tourism Office will assign your guide. Keep your reference,
+                    <b class="font-mono">${esc(b.reference)}</b>: it is how the office finds your booking.
+                </p>`);
+            return;
+        }
+        if (c.status === 'paid' && c.kind === 'ticket' && c.ticket && c.ticket.code) {
+            const t = c.ticket;
+            show(heading('confirmation_number', 'tone-success', 'Your entrance ticket',
+                    'Show this at the entrance. Take a screenshot so you have it even without signal.') + `
+                <div class="ztims-card p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
+                    <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${esc(t.spot)}</p>
+                    <p class="text-lg font-bold text-on-surface">${niceDate(t.visitDate)}</p>
+                    <div class="bg-white p-3 w-52 h-52 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(t.code)}">${t.qr}</div>
+                    <p class="font-mono text-2xl font-black tracking-widest text-on-surface select-all">${esc(t.code)}</p>
+                    <p class="text-on-surface">${esc(t.people)} ${Number(t.people) === 1 ? 'person' : 'people'} · ${esc(t.name)}</p>
+                    ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the gate</p>' : ''}
+                </div>
+                <div>${paidLine(c)}</div>
+                <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>`);
+            return;
+        }
+        if (c.status === 'duplicate') {
+            show(heading('info', 'tone-warning', 'Payment received twice',
+                'This payment arrived after the booking or ticket was already paid or cancelled. The Municipal Tourism Office will refund it.'));
+            return;
+        }
+        if (c.status === 'expired') {
+            show(heading('schedule', 'tone-neutral', 'This payment link has expired',
+                'Nothing was charged. You can start again from the destination’s page, or pay at the Municipal Tourism Office.'));
+            return;
+        }
+        // Still pending.
+        if (cancelled) {
+            const ref = c.booking ? `Your booking <b class="font-mono">${esc(c.booking.reference)}</b> is still saved.` : 'Your tickets were not bought.';
+            show(heading('undo', 'tone-neutral', 'Payment cancelled', `Nothing was charged. ${ref}`) + `
+                <div class="flex flex-wrap gap-2">
+                    ${c.payUrl ? `<a href="${esc(c.payUrl)}" class="btn btn-primary min-h-[44px]">Try paying again</a>` : ''}
+                    <a href="../index.html" class="btn btn-ghost min-h-[44px]">Back to destinations</a>
+                </div>
+                ${c.booking ? '<p class="text-support">You can also pay at the Municipal Tourism Office.</p>' : ''}`);
+            return;
+        }
+        if (tries < 20) {
+            tries += 1;
+            setTimeout(load, 2000);
+            return;
+        }
+        show(heading('hourglass_top', 'tone-warning', 'Still waiting for the payment service',
+            'You can close this page. When the payment arrives, ZTIMS confirms it by itself.') +
+            (c.booking ? `<p class="text-sm">Your reference: <b class="font-mono">${esc(c.booking.reference)}</b></p>` : ''));
+    }
+
+    async function load() {
+        if (!/^[0-9a-f]{24}$/.test(id)) {
+            show(heading('error', 'tone-danger', 'Payment not found', 'This link is incomplete. Open the payment again from the destination’s page.'));
+            return;
+        }
+        try {
+            const response = await fetch(`${API_BASE}/payments/checkout/${id}`);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || 'This payment could not be found.');
+            render(data.checkout);
+        } catch (error) {
+            show(heading('error', 'tone-danger', 'Payment not found', esc(error.message)));
+        }
+    }
+
+    load();
+})();
+</script>
+</body>
+</html>

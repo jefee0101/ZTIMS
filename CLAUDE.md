@@ -343,7 +343,7 @@ sent to the province each month) and the visitor counts at the attractions,
 collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 `statistics.js`, the Excel file in `statistics-excel.js`, four tables in
 `schema.sql` (`residences`, `monthly_reports`, `monthly_report_counts`,
-`report_changes`), 16 tables in all.
+`report_changes`).
 
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,
@@ -374,6 +374,42 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   its guests are never counted twice; voiding it opens the month again. Those
   months have no sex split, and Form A4's "volume per sex" is left blank for
   them rather than shown as 0.
+
+### Online payments (demonstration, test mode)
+
+`payments.js`, mounted at `/api`: a visitor pays a guide booking
+(`POST /api/guide-bookings/:reference/checkout`, reference + the booking's email)
+or buys entrance tickets (`POST /api/tickets`) on PayMongo's hosted checkout, and
+comes back to `src/payment.html?c=<checkout id>`. Tickets are sold only for
+attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
+
+- **Test mode only.** `PAYMONGO_SECRET_KEY` must start `sk_test_`; anything else
+  switches online payment off (`gatewayState`). Every online payment, the booking
+  or ticket it paid for, and the generated sample data carry `is_demo`.
+- **The server decides.** Amounts come from the fees on record (a booking: its
+  guide's fee, else the lowest available guide fee at the destination). A
+  payment is confirmed only by the server asking PayMongo (`settle`, when the
+  visitor returns) or by PayMongo's signed webhook (`POST /api/payments/webhook`,
+  HMAC over the raw body, which `server.js` keeps for that one route) —
+  `recordPaid` locks the checkout row so both arriving at once record it once.
+  A payment for something already paid or cancelled is marked `duplicate` for a
+  refund.
+- **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
+  belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
+  (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
+  have `is_demo`. 18 tables in all (`guide_time_off` and `guide_profile_requests` were dropped).
+- **The office:** `admin_collections.html` (money per month and day, OR numbers,
+  refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
+  type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
+  loaded on demand; `admit` is one conditional update, so a ticket is used once),
+  "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
+  the Dashboard. One refund rule: the office cancels, the visitor is refunded;
+  a plain cancel of an online-paid booking is refused.
+- **Demo data:** `POST /api/payments/demo` replaces the generated sample
+  (`TG-DEMO-` bookings, tickets with no checkout) and keeps test-mode payments;
+  `DELETE /api/payments/demo` removes everything `is_demo`. Real records are
+  never touched.
+- Money never reaches Statistics or Form A4, which stay counts only.
 
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
@@ -418,8 +454,13 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   when they explicitly press Confirm in the location picker.
 - Authorization is enforced backend-side only. Hiding a button client-side is
   never treated as a control.
-- No `tourist` role, no tourist accounts, no online payment anywhere — guide
-  payment is recorded at the counter by staff.
+- No `tourist` role, no tourist accounts. Online payment exists only as a
+  **demonstration in PayMongo's test mode** (see "Online payments" above): a
+  live key is refused, every online record is `is_demo`, and paying at the
+  counter or the gate always stays available. Collecting real fees would need a
+  municipal ordinance, the Municipal Treasurer, a merchant account in the
+  municipality's name and COA-compliant official receipts — don't switch it to
+  live keys.
 - Tourism records (spots/listings) are never hard-deleted, only marked
   inactive. Statistics reports likewise: voided, never deleted.
 - Tourism statistics hold counts and totals only — no revenue and no
