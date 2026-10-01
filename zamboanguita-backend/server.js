@@ -102,12 +102,7 @@ function sharedRateLimit(name, options) {
 }
 
 // FORCE explicit body-parser rules across ALL incoming payload formats
-app.use(express.json({
-    limit: '1mb',
-    // The payment gateway signs the exact bytes it sends; payments.js checks the
-    // signature against them, so they are kept alongside the parsed body.
-    verify: (req, res, buffer) => { if (req.originalUrl === '/api/payments/webhook') req.rawBody = buffer; }
-}));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ limit: '1mb', extended: false, parameterLimit: 1000 }));
 
 /* ==========================================

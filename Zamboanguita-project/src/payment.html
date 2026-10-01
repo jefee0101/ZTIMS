@@ -359,7 +359,7 @@ body { overflow-x: hidden; }
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', qrph: 'QR Ph' };
+    const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking' };
     function niceDate(value) {
         const [y, m, d] = String(value || '').slice(0, 10).split('-').map(Number);
         if (!y) return esc(value);

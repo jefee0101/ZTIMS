@@ -595,7 +595,7 @@ body { overflow-x: hidden; }
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', qrph: 'QR Ph', cash: 'Cash' };
+        const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking', cash: 'Cash' };
 
         function signOutStaff() {
             try { localStorage.clear(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
@@ -656,8 +656,8 @@ body { overflow-x: hidden; }
             const pill = document.getElementById('gatewayPill');
             pill.className = `${g.online ? 'tone-success' : 'tone-neutral'} tone-pill text-xs font-bold px-3 py-2`;
             pill.textContent = g.online ? 'Online payments: on, test mode'
-                : g.reason === 'live_key_refused' ? 'Online payments: off (a live key was refused)'
-                : 'Online payments: off (test keys not set)';
+                : g.reason === 'live_key_refused' ? 'Online payments: off (only a Xendit test key is accepted)'
+                : 'Online payments: off (Xendit test key not set)';
 
             const tile = (label, value, sub, tone) => `
                 <div class="glass-panel p-5 space-y-1">

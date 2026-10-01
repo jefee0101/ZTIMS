@@ -379,19 +379,24 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 
 `payments.js`, mounted at `/api`: a visitor pays a guide booking
 (`POST /api/guide-bookings/:reference/checkout`, reference + the booking's email)
-or buys entrance tickets (`POST /api/tickets`) on PayMongo's hosted checkout, and
+or buys entrance tickets (`POST /api/tickets`) on a Xendit hosted invoice, and
 comes back to `src/payment.html?c=<checkout id>`. Tickets are sold only for
 attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 
-- **Test mode only.** `PAYMONGO_SECRET_KEY` must start `sk_test_`; anything else
-  switches online payment off (`gatewayState`). Every online payment, the booking
+- **Test mode only.** `XENDIT_SECRET_KEY` must start `xnd_development_`; anything
+  else (a `xnd_production_` key above all) switches online payment off
+  (`gatewayState`). Every online payment, the booking
   or ticket it paid for, and the generated sample data carry `is_demo`.
 - **The server decides.** Amounts come from the fees on record (a booking: its
   guide's fee, else the lowest available guide fee at the destination). A
-  payment is confirmed only by the server asking PayMongo (`settle`, when the
-  visitor returns) or by PayMongo's signed webhook (`POST /api/payments/webhook`,
-  HMAC over the raw body, which `server.js` keeps for that one route) —
-  `recordPaid` locks the checkout row so both arriving at once record it once.
+  payment is confirmed only by the server asking Xendit itself (`settle`:
+  `GET /v2/invoices/:id` with its own key), when the visitor returns or when
+  Xendit's callback (`POST /api/payments/webhook`) arrives carrying the
+  `X-CALLBACK-TOKEN` (`XENDIT_CALLBACK_TOKEN`, constant-time compare). The
+  callback's body is never believed, only used to find the checkout to settle.
+  The invoice must match the checkout (`external_id` `ztims-<checkout id>`),
+  be in PHP and for the amount asked. `recordPaid` locks the checkout row so
+  both arriving at once record it once.
   A payment for something already paid or cancelled is marked `duplicate` for a
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
@@ -404,7 +409,10 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   loaded on demand; `admit` is one conditional update, so a ticket is used once),
   "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
   the Dashboard. One refund rule: the office cancels, the visitor is refunded;
-  a plain cancel of an online-paid booking is refused.
+  a plain cancel of an online-paid booking is refused. A refund goes back
+  through Xendit (`POST /refunds`, `invoice_id`, an `Idempotency-key` per
+  payment so a second click asks for the same refund) only for a payment one
+  of our invoices made; seeded and counter payments are recorded only.
 - **Demo data:** `POST /api/payments/demo` replaces the generated sample
   (`TG-DEMO-` bookings, tickets with no checkout) and keeps test-mode payments;
   `DELETE /api/payments/demo` removes everything `is_demo`. Real records are
@@ -455,7 +463,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - Authorization is enforced backend-side only. Hiding a button client-side is
   never treated as a control.
 - No `tourist` role, no tourist accounts. Online payment exists only as a
-  **demonstration in PayMongo's test mode** (see "Online payments" above): a
+  **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying at the
   counter or the gate always stays available. Collecting real fees would need a
   municipal ordinance, the Municipal Treasurer, a merchant account in the

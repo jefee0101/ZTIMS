@@ -790,7 +790,7 @@ body { overflow-x: hidden; }
             return named || String(code);
         }
 
-        const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', qrph: 'QR Ph', cash: 'Cash', bank: 'Bank transfer' };
+        const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', cash: 'Cash', bank: 'Bank transfer' };
         const demoPill = b => b.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1 align-middle">DEMO</span>' : '';
         const paidOnline = b => !!(b.payment && b.payment.channel === 'online' && !b.payment.refundedAt);
         function paymentLine(b) {

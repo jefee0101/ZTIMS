@@ -1,22 +1,25 @@
 /* Online payments — a DEMONSTRATION, in the payment gateway's test mode.
  *
  * A visitor may pay a guide booking online, or buy an entrance ticket to an
- * attraction the Tourism Office runs. The money side is PayMongo's hosted
- * checkout: the visitor pays on PayMongo's own page (GCash, Maya, card), and
- * ZTIMS never sees a card number or a wallet PIN.
+ * attraction the Tourism Office runs. The money side is a Xendit invoice: the
+ * visitor pays on Xendit's own hosted page (GCash, Maya, cards, online banking
+ * — whatever the account has switched on), and ZTIMS never sees a card number
+ * or a wallet PIN.
  *
- * TEST MODE ONLY. The secret key must be a test key (sk_test_…); a live key is
- * refused and online payment switches itself off, so no real money can move.
- * Collecting real fees would need a municipal ordinance, the Municipal
- * Treasurer, a merchant account in the municipality's name and official
- * receipts under COA rules — see the recommendations in the concept. Every
- * record an online payment makes is marked is_demo, and so is the sample data
- * the officer can load for a demonstration; both come out with one button.
+ * TEST MODE ONLY. The secret key must be a development key (xnd_development_…);
+ * a production key, or anything else, is refused and online payment switches
+ * itself off, so no real money can move. Collecting real fees would need a
+ * municipal ordinance, the Municipal Treasurer, a merchant account in the
+ * municipality's name and official receipts under COA rules. Every record an
+ * online payment makes is marked is_demo, and so is the sample data the
+ * officer can load for a demonstration; both come out with one button.
  *
- * How a payment is confirmed: never by the visitor's browser coming back. The
- * server asks PayMongo itself (settle), when the visitor returns and when
- * PayMongo's signed webhook arrives — whichever is first; the other finds the
- * work done. Amounts are decided here, from the fees on record.
+ * How a payment is confirmed: never by the visitor's browser coming back, and
+ * never by the body of a webhook. The server asks Xendit itself, with its own
+ * key (settle) — when the visitor returns, and when Xendit's callback arrives
+ * carrying the account's verification token; whichever is first, the other
+ * finds the work done. The invoice must be ours (its external_id), in pesos and
+ * for the amount we asked. Amounts are decided here, from the fees on record.
  *
  * Money stays out of the statistics: Form A4 and the Arrivals Report are
  * counts only, and nothing here writes to them.
@@ -34,35 +37,51 @@ const {
     guides: TouristGuide, officers: TourismOfficer
 } = require('./models');
 
-// PAYMONGO_API_BASE exists for local tests against a stand-in; leave it unset.
-const gatewayApi = () => (process.env.PAYMONGO_API_BASE || 'https://api.paymongo.com/v1').replace(/\/+$/, '');
+// XENDIT_API_BASE exists for local tests against a stand-in; leave it unset.
+const gatewayApi = () => (process.env.XENDIT_API_BASE || 'https://api.xendit.co').replace(/\/+$/, '');
 const CHECKOUT_MINUTES = 30;
-const MIN_ONLINE_AMOUNT = 20;          // PayMongo does not take a checkout below ₱20
+const MIN_ONLINE_AMOUNT = 20;          // a safe floor: card payments below ₱20 are refused
 const MAX_TICKET_PEOPLE = 20;
 const TICKET_DAYS_AHEAD = 60;
 const MANILA_OFFSET_HOURS = 8;
-const ONLINE_LABEL = 'Online (PayMongo test mode)';
+const ONLINE_LABEL = 'Online (Xendit test mode)';
 const DEMO_BOOKING_PREFIX = 'TG-DEMO-';
+const TEST_KEY_PREFIX = 'xnd_development_';
 
 /* ---------------------------------------------------------------- gateway */
 
 function gatewayKey() {
-    return String(process.env.PAYMONGO_SECRET_KEY || '').trim();
+    return String(process.env.XENDIT_SECRET_KEY || '').trim();
 }
 
-/* Online payment is on only with a TEST key. A live key is refused outright:
-   this build is a demonstration and must never take real money. */
+/* Online payment is on only with a TEST (development) key. Anything else — a
+   production key above all — is refused outright: this build is a
+   demonstration and must never take real money. */
 function gatewayState() {
     const key = gatewayKey();
     if (!key) return { online: false, reason: 'not_configured' };
-    if (!key.startsWith('sk_test_')) return { online: false, reason: 'live_key_refused' };
+    if (!key.startsWith(TEST_KEY_PREFIX) || key.length <= TEST_KEY_PREFIX.length) return { online: false, reason: 'live_key_refused' };
     return { online: true, mode: 'test' };
 }
 
-const METHODS = String(process.env.PAYMONGO_METHODS || 'gcash,paymaya,card')
-    .split(',').map(m => m.trim()).filter(Boolean);
+/* Optional: which of the account's methods the invoice offers (Xendit's own
+   codes, e.g. GCASH,PAYMAYA,CREDIT_CARD). Unset, Xendit shows every method the
+   account has switched on, which is the safer default — naming one the account
+   lacks makes Xendit refuse the invoice. */
+const METHODS = String(process.env.XENDIT_METHODS || '')
+    .split(',').map(m => m.trim().toUpperCase()).filter(m => /^[A-Z0-9_]{2,40}$/.test(m));
 
-async function gateway(method, path, body) {
+/* The callback token compared in constant time. Both sides are hashed first so
+   the comparison does not leak the token's length either. */
+function callbackTokenMatches(given) {
+    const expected = String(process.env.XENDIT_CALLBACK_TOKEN || '').trim();
+    if (!expected || !given) return false;
+    const a = crypto.createHash('sha256').update(String(given)).digest();
+    const b = crypto.createHash('sha256').update(expected).digest();
+    return crypto.timingSafeEqual(a, b);
+}
+
+async function gateway(method, path, body, extraHeaders = {}) {
     let res;
     try {
         res = await fetch(gatewayApi() + path, {
@@ -70,9 +89,11 @@ async function gateway(method, path, body) {
             headers: {
                 Authorization: 'Basic ' + Buffer.from(gatewayKey() + ':').toString('base64'),
                 'Content-Type': 'application/json',
-                Accept: 'application/json'
+                Accept: 'application/json',
+                ...extraHeaders
             },
             body: body ? JSON.stringify(body) : undefined,
+            redirect: 'error',
             signal: AbortSignal.timeout(15000)
         });
     } catch (error) {
@@ -82,8 +103,9 @@ async function gateway(method, path, body) {
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-        const first = Array.isArray(data.errors) && data.errors[0];
-        console.error('❌ PayMongo refused:', res.status, first ? `${first.code}: ${first.detail}` : '');
+        // Xendit's error code and message only — never the request, which
+        // carries the key in its header.
+        console.error('❌ Xendit refused:', res.status, String(data.error_code || ''), String(data.message || '').slice(0, 200));
         const e = new Error('The payment service refused this request. Try again, or pay at the Municipal Tourism Office.');
         e.status = 502;
         throw e;
@@ -91,20 +113,51 @@ async function gateway(method, path, body) {
     return data;
 }
 
-const METHOD_NAMES = { gcash: 'gcash', paymaya: 'maya', maya: 'maya', card: 'card', grab_pay: 'grabpay', qrph: 'qrph' };
+// Xendit's channel and method codes → the short names the office's pages show.
+const METHOD_NAMES = {
+    GCASH: 'gcash', PAYMAYA: 'maya', GRABPAY: 'grabpay', SHOPEEPAY: 'shopeepay',
+    CREDIT_CARD: 'card', CARD: 'card', QRPH: 'qrph', QR_CODE: 'qrph',
+    DD_BPI: 'bank', DD_UBP: 'bank', DD_RCBC: 'bank', DD_CHINABANK: 'bank', BPI: 'bank', UBP: 'bank',
+    RCBC: 'bank', CHINABANK: 'bank', DIRECT_DEBIT: 'bank', BANK_TRANSFER: 'bank'
+};
+function methodOf(invoice) {
+    const raw = String(invoice.payment_channel || invoice.payment_method || '').toUpperCase();
+    return METHOD_NAMES[raw] || (raw ? raw.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30) : 'online');
+}
 
-/* The paid payment inside a checkout session, or null. */
-function paidPaymentOf(session) {
-    const a = (session && session.attributes) || {};
-    const paid = (a.payments || []).find(p => p && p.attributes && p.attributes.status === 'paid');
-    if (!paid) return null;
-    const source = paid.attributes.source || {};
-    const raw = a.payment_method_used || source.type || '';
+/* Visitors are only ever sent to Xendit's own https pages (a stand-in's, in
+   local tests). */
+function isGatewayPage(url) {
+    let u;
+    try { u = new URL(url); } catch (error) { return false; }
+    if (process.env.XENDIT_API_BASE) return u.protocol === 'http:' || u.protocol === 'https:';
+    return u.protocol === 'https:' && (u.hostname === 'xendit.co' || u.hostname.endsWith('.xendit.co'));
+}
+
+/* Each checkout's invoice carries this, so an invoice is only ever matched to
+   the checkout that opened it. */
+const externalIdOf = checkoutId => `ztims-${checkoutId}`;
+
+/* The payment inside an invoice, or null when it is not paid — or not
+   provably ours, in pesos, for the amount we asked. */
+function paidPaymentOf(invoice, checkout) {
+    if (!invoice || !['PAID', 'SETTLED'].includes(String(invoice.status))) return null;
+    if (invoice.id !== checkout.sessionId || invoice.external_id !== externalIdOf(checkout._id)) {
+        console.error(`❌ Invoice ${invoice.id} does not belong to checkout ${checkout._id}; ignored.`);
+        return null;
+    }
+    const asked = money(checkout.amount);
+    const paidAmount = money(invoice.paid_amount != null ? invoice.paid_amount : invoice.amount);
+    if (String(invoice.currency || 'PHP') !== 'PHP' || money(invoice.amount) !== asked || paidAmount < asked) {
+        console.error(`❌ Invoice ${invoice.id} is for ${invoice.currency} ${invoice.amount} (paid ${paidAmount}), not PHP ${asked}; not recorded.`);
+        return null;
+    }
+    const paidAt = invoice.paid_at ? new Date(invoice.paid_at) : new Date();
     return {
-        ref: paid.id,
-        amount: Number(paid.attributes.amount) / 100,
-        method: METHOD_NAMES[raw] || raw || 'online',
-        paidAt: paid.attributes.paid_at ? new Date(paid.attributes.paid_at * 1000) : new Date()
+        ref: invoice.id,
+        amount: asked,
+        method: methodOf(invoice),
+        paidAt: Number.isNaN(paidAt.getTime()) ? new Date() : paidAt
     };
 }
 
@@ -176,7 +229,7 @@ async function ticketOffer(spotId) {
 
 /* ---------------------------------------------------------------- checkout */
 
-async function openCheckout(req, { kind, bookingId = null, ticketId = null, amount, name, description, reference }) {
+async function openCheckout(req, { kind, bookingId = null, ticketId = null, amount, name, description }) {
     const row = await Checkout.create({
         kind, bookingId, ticketId, amount,
         expiresAt: new Date(Date.now() + CHECKOUT_MINUTES * 60 * 1000),
@@ -184,24 +237,25 @@ async function openCheckout(req, { kind, bookingId = null, ticketId = null, amou
     });
     const back = `${siteOrigin(req)}/src/payment.html?c=${row._id}`;
     try {
-        const data = await gateway('POST', '/checkout_sessions', {
-            data: {
-                attributes: {
-                    line_items: [{ name, description, amount: Math.round(amount * 100), currency: 'PHP', quantity: 1 }],
-                    payment_method_types: METHODS,
-                    success_url: back,
-                    cancel_url: `${back}&cancelled=1`,
-                    description,
-                    reference_number: reference,
-                    send_email_receipt: false,
-                    show_description: true,
-                    show_line_items: true,
-                    metadata: { ztims_checkout: row._id, kind }
-                }
-            }
+        const invoice = await gateway('POST', '/v2/invoices', {
+            external_id: externalIdOf(row._id),
+            amount,
+            currency: 'PHP',
+            description: `${name} — ${description}`.slice(0, 250),
+            invoice_duration: CHECKOUT_MINUTES * 60,
+            success_redirect_url: back,
+            failure_redirect_url: `${back}&cancelled=1`,
+            items: [{ name: name.slice(0, 120), quantity: 1, price: amount }],
+            ...(METHODS.length ? { payment_methods: METHODS } : {})
         });
-        row.sessionId = data.data.id;
-        row.checkoutUrl = data.data.attributes.checkout_url;
+        const url = String(invoice.invoice_url || '');
+        if (!invoice.id || !isGatewayPage(url) || invoice.external_id !== externalIdOf(row._id)) {
+            const e = new Error('The payment service gave an unexpected answer. Please pay at the Municipal Tourism Office.');
+            e.status = 502;
+            throw e;
+        }
+        row.sessionId = String(invoice.id);
+        row.checkoutUrl = url;
         await Checkout.save(row);
         return row;
     } catch (error) {
@@ -261,14 +315,22 @@ async function recordPaid(checkoutId, paid) {
     });
 }
 
-/* Asks the gateway how a pending checkout stands, and records it if paid. */
-async function settle(checkout) {
-    if (!checkout || checkout.status !== 'pending' || !checkout.sessionId) return checkout;
+/* Asks the gateway how a pending checkout stands, and records it if paid.
+   This is the only way a payment is ever believed. Xendit's callback may also
+   re-check an expired one (lateToo): a payment made in the last seconds of the
+   invoice can arrive after our own window closed, and must not be lost. */
+async function settle(checkout, { lateToo = false } = {}) {
+    const open = checkout && (checkout.status === 'pending' || (lateToo && checkout.status === 'expired'));
+    if (!open || !checkout.sessionId) return checkout;
     if (!gatewayState().online) return checkout;
-    const data = await gateway('GET', `/checkout_sessions/${encodeURIComponent(checkout.sessionId)}`);
-    const paid = paidPaymentOf(data.data);
+    const invoice = await gateway('GET', `/v2/invoices/${encodeURIComponent(checkout.sessionId)}`);
+    const paid = paidPaymentOf(invoice, checkout);
     if (paid) return recordPaid(checkout._id, paid);
-    if (new Date(checkout.expiresAt) < new Date()) {
+    // Past our own window the invoice has expired at Xendit too
+    // (invoice_duration), so no payment can arrive on it any more. A paid
+    // invoice that failed the checks above stays pending, for a person to see.
+    const paidThere = invoice.status === 'PAID' || invoice.status === 'SETTLED';
+    if (!paidThere && checkout.status === 'pending' && (invoice.status === 'EXPIRED' || new Date(checkout.expiresAt) < new Date())) {
         checkout.status = 'expired';
         await Checkout.save(checkout);
     }
@@ -585,14 +647,20 @@ async function refund(paymentId, reason, officerEmail) {
     if (!payment) { const e = new Error('That payment could not be found.'); e.status = 404; throw e; }
     if (payment.refundedAt) { const e = new Error('That payment was already refunded.'); e.status = 409; throw e; }
 
-    // A real test-mode payment goes back through the gateway. Seeded demo
-    // payments and cash handed back at the counter are recorded only.
-    if (payment.channel === 'online' && /^pay_/.test(payment.gatewayRef || '')) {
+    // A real test-mode payment — one an invoice of ours paid — goes back
+    // through the gateway. Seeded demo payments and cash handed back at the
+    // counter are recorded only.
+    const { rows: paidBy } = await query(
+        `select id from online_checkouts where payment_ref = $1 and status = 'paid' limit 1`, [payment.gatewayRef || '']);
+    if (payment.channel === 'online' && payment.gatewayRef && paidBy.length) {
         if (!gatewayState().online) { const e = new Error('Online payment is switched off, so this refund cannot be sent.'); e.status = 409; throw e; }
+        // The idempotency key makes a second click (or a second officer) ask
+        // for the same refund, never a second one.
         await gateway('POST', '/refunds', {
-            data: { attributes: { amount: Math.round(Number(payment.amount) * 100), payment_id: payment.gatewayRef,
-                                  reason: 'others', notes: reason.slice(0, 200) } }
-        });
+            invoice_id: payment.gatewayRef,
+            amount: money(payment.amount),
+            reason: 'CANCELLATION'
+        }, { 'Idempotency-key': `ztims-refund-${payment._id}` });
     }
 
     return transaction(async client => {
@@ -665,8 +733,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const checkout = await openCheckout(req, {
                 kind: 'guide_booking', bookingId: booking._id, amount,
                 name: `Tourist guide · ${title}`.slice(0, 120),
-                description: `${booking.reference} · ${dayOf(booking.preferredDate)} ${booking.preferredTime} · ${booking.visitors} visitor${booking.visitors === 1 ? '' : 's'}`,
-                reference: booking.reference
+                description: `${booking.reference} · ${dayOf(booking.preferredDate)} ${booking.preferredTime} · ${booking.visitors} visitor${booking.visitors === 1 ? '' : 's'}`
             });
             return res.status(201).json({ success: true, checkoutUrl: checkout.checkoutUrl, checkoutId: checkout._id });
         } catch (error) {
@@ -707,7 +774,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const today = manilaToday();
 
             if (!fullName) return fail(res, 400, 'Please give the name the tickets are under.');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'Please give an email address, so the tickets can be sent to you.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'Please give a valid email address.');
             if (!/^\d{4}-\d{2}-\d{2}$/.test(visitDate)) return fail(res, 400, 'Please choose the date of your visit.');
             if (visitDate < today) return fail(res, 400, 'That date has already passed.');
             if (visitDate > addDays(today, TICKET_DAYS_AHEAD)) return fail(res, 400, `Tickets can be bought up to ${TICKET_DAYS_AHEAD} days ahead.`);
@@ -732,8 +799,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const checkout = await openCheckout(req, {
                 kind: 'ticket', ticketId: ticket._id, amount,
                 name: `Entrance · ${offer.spot.title}`.slice(0, 120),
-                description: `${visitDate} · ${people} ${people === 1 ? 'person' : 'people'} × ₱${offer.unitFee}`,
-                reference: ticket.code
+                description: `${visitDate} · ${people} ${people === 1 ? 'person' : 'people'} × ₱${offer.unitFee}`
             });
             return res.status(201).json({ success: true, checkoutUrl: checkout.checkoutUrl, checkoutId: checkout._id });
         } catch (error) {
@@ -755,32 +821,29 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
         }
     });
 
-    /* PUBLIC: PayMongo's signed notice that a checkout was paid. The signature
-       is checked against the webhook secret before anything is believed. */
+    /* PUBLIC: Xendit's callback that an invoice changed. It must carry the
+       account's verification token (X-CALLBACK-TOKEN), and even then its body
+       is only a hint: the checkout it names is settled by asking Xendit
+       directly, so a forged or replayed callback can record nothing. Unknown
+       invoices — Xendit's own "test" callback among them — get a plain 200. */
     router.post('/payments/webhook', async (req, res) => {
         try {
-            const secret = String(process.env.PAYMONGO_WEBHOOK_SECRET || '').trim();
-            if (!secret || !gatewayState().online) return res.status(404).end();
-            const header = String(req.get('paymongo-signature') || '');
-            const parts = Object.fromEntries(header.split(',').map(kv => kv.split('=').map(s => s.trim())));
-            const raw = req.rawBody ? req.rawBody.toString('utf8') : '';
-            if (!parts.t || !parts.te || !raw) return res.status(400).end();
-            const expected = crypto.createHmac('sha256', secret).update(`${parts.t}.${raw}`).digest('hex');
-            const given = Buffer.from(parts.te, 'utf8');
-            const wanted = Buffer.from(expected, 'utf8');
-            if (given.length !== wanted.length || !crypto.timingSafeEqual(given, wanted)) return res.status(401).end();
+            if (!String(process.env.XENDIT_CALLBACK_TOKEN || '').trim() || !gatewayState().online) return res.status(404).end();
+            if (!callbackTokenMatches(req.get('x-callback-token'))) return res.status(401).end();
 
-            const event = req.body && req.body.data && req.body.data.attributes;
-            if (!event || event.livemode) return res.status(200).json({ ignored: true });
-            if (event.type === 'checkout_session.payment.paid') {
-                const session = event.data;
-                const checkout = session && await Checkout.findOne({ sessionId: session.id });
-                const paid = paidPaymentOf(session);
-                if (checkout && paid) await recordPaid(checkout._id, paid);
-            }
+            const body = req.body || {};
+            const invoiceId = typeof body.id === 'string' ? body.id : '';
+            const externalId = typeof body.external_id === 'string' ? body.external_id : '';
+            const match = /^ztims-([0-9a-f]{24})$/.exec(externalId);
+            if (!invoiceId || !match) return res.status(200).json({ ignored: true });
+            const checkout = await Checkout.findById(match[1]);
+            if (!checkout || checkout.sessionId !== invoiceId) return res.status(200).json({ ignored: true });
+            await settle(checkout, { lateToo: true });
             return res.status(200).json({ received: true });
         } catch (error) {
-            console.error('❌ Payment webhook failure:', error);
+            // A non-2xx makes Xendit try again later, which is what we want
+            // when the gateway or the database was briefly unreachable.
+            console.error('❌ Payment webhook failure:', error && error.message);
             return res.status(500).end();
         }
     });
