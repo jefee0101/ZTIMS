@@ -414,6 +414,8 @@ body { overflow-x: hidden; }
                     <div class="bg-white p-3 w-52 h-52 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(t.code)}">${t.qr}</div>
                     <p class="font-mono text-2xl font-black tracking-widest text-on-surface select-all">${esc(t.code)}</p>
                     <p class="text-on-surface">${esc(t.people)} ${Number(t.people) === 1 ? 'person' : 'people'} · ${esc(t.name)}</p>
+                    ${t.kindsText ? `<p class="text-support">${esc(t.kindsText)}</p>` : ''}
+                    ${(t.kinds || []).some(k => k.needsId) ? '<p class="text-support"><b>Bring the senior citizen, PWD or student ID</b> for anyone at a discounted price.</p>' : ''}
                     ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the gate</p>' : ''}
                 </div>
                 <div>${paidLine(c)}</div>

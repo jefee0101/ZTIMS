@@ -365,7 +365,8 @@ async function checkoutView(checkout) {
         const t = await Ticket.findById(checkout.ticketId);
         if (t) {
             view.ticket = { spot: await spotTitle(t.spotId), spotId: t.spotId, visitDate: dayOf(t.visitDate), people: t.people,
-                            unitFee: money(t.unitFee), status: t.status, name: t.fullName };
+                            unitFee: money(t.unitFee), status: t.status, name: t.fullName,
+                            kinds: attractions.kindsOf(t), kindsText: attractions.describeKinds(t) };
             // The code and its QR only once paid: an unpaid ticket gets nobody in.
             if (['valid', 'used'].includes(t.status)) {
                 view.ticket.code = t.code;
@@ -513,7 +514,7 @@ async function seedDemo(officerEmail) {
           from spots s join tourist_guide_spots ts on ts.spot_id = s.id join tourist_guides g on g.id = ts.guide_id
          where s.requires_guide and s.status = 'published' and g.status = 'available'`)).rows;
     const ticketSpots = (await query(`
-        select id, title, entrance_fee from spots
+        select id, title, entrance_fee, student_fee, child_fee, child_age_max from spots
          where type = 'spot' and status = 'published' and managed_by is null and entrance_fee > 0`)).rows;
 
     const onlineMethod = () => pick(['gcash', 'gcash', 'gcash', 'maya', 'maya', 'card', 'card']);
@@ -603,7 +604,22 @@ async function seedDemo(officerEmail) {
                     const p = person();
                     const people = 1 + Math.floor(rand() * 6);
                     const unit = money(spot.entrance_fee);
-                    const amount = money(unit * people);
+                    // Mostly regular; now and then a senior, a PWD, a student or a child.
+                    const fees = attractions.feeTable(spot);
+                    const counts = { regular: 0, senior: 0, pwd: 0, student: 0, child: 0 };
+                    for (let k = 0; k < people; k++) {
+                        const r = rand();
+                        const kind = r < 0.10 ? 'senior' : r < 0.14 ? 'pwd' : r < 0.24 ? 'student' : r < 0.36 ? 'child' : 'regular';
+                        counts[fees[kind] === null ? 'regular' : kind] += 1;
+                    }
+                    const unitFees = {};
+                    let total = 0;
+                    for (const kind of Object.keys(counts)) {
+                        if (!counts[kind]) continue;
+                        unitFees[kind] = fees[kind];
+                        total += counts[kind] * fees[kind];
+                    }
+                    const amount = money(total);
                     let status = 'valid', usedAt = null;
                     const cancelled = chance(0.03);
                     if (cancelled) status = 'cancelled';
@@ -616,11 +632,13 @@ async function seedDemo(officerEmail) {
                     const paidAt = paidTime(day, 5);
                     const ticket = (await query(`
                         insert into tickets (code, spot_id, visit_date, people, unit_fee, amount, full_name, email, contact_number,
-                                             status, used_at, used_by_email, is_demo, created_at, updated_at)
-                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, $13, $13)
+                                             status, used_at, used_by_email, is_demo, created_at, updated_at,
+                                             count_regular, count_senior, count_pwd, count_student, count_child, fee_breakdown)
+                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, $13, $13, $14, $15, $16, $17, $18, $19)
                         on conflict (code) do nothing returning id`,
                         [newTicketCode(spot.title), spot.id, day, people, unit, amount, p.name, p.email, p.phone,
-                         status, usedAt, usedAt ? officerEmail : '', paidAt], client)).rows[0];
+                         status, usedAt, usedAt ? officerEmail : '', paidAt,
+                         counts.regular, counts.senior, counts.pwd, counts.student, counts.child, unitFees], client)).rows[0];
                     if (!ticket) continue;
                     tickets++;
                     const ageDays = (nowMs - paidAt.getTime()) / 86400000;
@@ -782,6 +800,8 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
                 daysAhead: TICKET_DAYS_AHEAD,
                 minAmount: MIN_ONLINE_AMOUNT,
                 testMode: true,
+                // What each kind of visitor pays (null: not offered here).
+                fees: available ? attractions.feeTable(offer.spot) : null,
                 // Which days can be chosen: open weekdays, less closed dates.
                 ...(available ? await attractions.visitCalendar(offer.spot, TICKET_DAYS_AHEAD + 1) : {})
             });
@@ -802,7 +822,6 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const email = String(body.email || '').trim().toLowerCase();
             const contactNumber = String(body.contactNumber || '').trim();
             const visitDate = String(body.visitDate || '').trim();
-            const people = Math.floor(Number(body.people));
             const today = manilaToday();
 
             if (!fullName) return fail(res, 400, 'Please give the name the tickets are under.');
@@ -810,10 +829,14 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             if (!/^\d{4}-\d{2}-\d{2}$/.test(visitDate)) return fail(res, 400, 'Please choose the date of your visit.');
             if (visitDate < today) return fail(res, 400, 'That date has already passed.');
             if (visitDate > addDays(today, TICKET_DAYS_AHEAD)) return fail(res, 400, `Tickets can be bought up to ${TICKET_DAYS_AHEAD} days ahead.`);
-            if (!Number.isFinite(people) || people < 1 || people > MAX_TICKET_PEOPLE) return fail(res, 400, `Choose between 1 and ${MAX_TICKET_PEOPLE} people.`);
+            // How many of each kind, priced here from the fees on record. A
+            // request that only says how many people is all at the regular price.
+            const counts = body.counts && typeof body.counts === 'object' ? body.counts : { regular: body.people };
+            const priced = attractions.priceTickets(offer.spot, counts, { maxPeople: MAX_TICKET_PEOPLE });
+            const people = priced.people;
             const day = await attractions.dayVerdict(offer.spot, visitDate);
             if (!day.open) return fail(res, 409, day.reason);
-            const amount = money(offer.unitFee * people);
+            const amount = priced.amount;
             if (amount < MIN_ONLINE_AMOUNT) return fail(res, 400, `Online payments start at ₱${MIN_ONLINE_AMOUNT}. Add a person, or pay at the gate.`);
 
             let ticket = null;
@@ -821,7 +844,9 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
                 try {
                     ticket = await Ticket.create({
                         code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate, people,
-                        unitFee: offer.unitFee, amount, fullName, email, contactNumber, isDemo: true
+                        unitFee: offer.unitFee, amount, fullName, email, contactNumber, isDemo: true,
+                        countRegular: priced.counts.regular, countSenior: priced.counts.senior, countPwd: priced.counts.pwd,
+                        countStudent: priced.counts.student, countChild: priced.counts.child, feeBreakdown: priced.unitFees
                     });
                 } catch (error) {
                     if (error && error.code === 11000) continue;
@@ -833,7 +858,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const checkout = await openCheckout(req, {
                 kind: 'ticket', ticketId: ticket._id, amount,
                 name: `Entrance · ${offer.spot.title}`.slice(0, 120),
-                description: `${visitDate} · ${people} ${people === 1 ? 'person' : 'people'} × ₱${offer.unitFee}`
+                description: `${visitDate} · ${attractions.describeKinds(ticket)}`
             });
             return res.status(201).json({ success: true, checkoutUrl: checkout.checkoutUrl, checkoutId: checkout._id });
         } catch (error) {
@@ -1006,6 +1031,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
                 date, today: manilaToday(),
                 tickets: rows.map(r => ({
                     _id: r.id, code: r.code, spot: r.spot_title, people: r.people, amount: money(r.amount),
+                    kinds: attractions.kindsOf(r), kindsText: attractions.describeKinds(r),
                     name: r.full_name, status: r.status, usedAt: r.used_at, paymentId: r.payment_id,
                     method: r.method, isDemo: r.is_demo
                 }))
@@ -1031,7 +1057,11 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
         if (t.status === 'cancelled') return ['cancelled', 'This ticket was cancelled and refunded.'];
         if (t.status === 'used') return ['used', 'Already used.'];
         if (date !== today) return ['wrong_date', date < today ? `This ticket was for ${date}.` : `This ticket is for ${date}, not today.`];
-        return ['valid', `Valid for ${t.people} ${t.people === 1 ? 'person' : 'people'}.`];
+        // Discounted kinds show an ID at the entrance: say whose to check.
+        const withId = attractions.kindsOf(t).filter(k => k.needsId);
+        const idCount = withId.reduce((n, k) => n + k.count, 0);
+        const idNote = idCount ? ` Check ${idCount === 1 ? 'the ID' : `${idCount} IDs`} (${withId.map(k => k.label.toLowerCase()).join(', ')}).` : '';
+        return ['valid', `Valid for ${t.people} ${t.people === 1 ? 'person' : 'people'}: ${attractions.describeKinds(t)}.${idNote}`];
     }
 
     router.post('/tickets/check', requireAdmin, async (req, res) => {
@@ -1042,6 +1072,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             res.json({
                 found: true, verdict, message,
                 ticket: { _id: t.id, code: t.code, spot: t.spot_title, visitDate: dayOf(t.visit_date), people: t.people,
+                          kinds: attractions.kindsOf(t), kindsText: attractions.describeKinds(t),
                           name: t.full_name, status: t.status, usedAt: t.used_at, usedByEmail: t.used_by_email, isDemo: t.is_demo }
             });
         } catch (error) {

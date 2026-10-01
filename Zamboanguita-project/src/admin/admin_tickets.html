@@ -649,7 +649,7 @@ body { overflow-x: hidden; }
                         <div class="flex-1 min-w-[200px] text-on-surface">
                             <p class="text-2xl font-black ${v.tone}">${v.title}</p>
                             <p class="text-on-surface">${detail}</p>
-                            ${t ? `<p class="text-support mt-1"><span class="font-mono font-bold">${escapeHtml(t.code)}</span> · ${escapeHtml(t.spot)} · ${dayLabel(t.visitDate)} · ${t.people} ${t.people === 1 ? 'person' : 'people'} · ${escapeHtml(t.name)}
+                            ${t ? `<p class="text-support mt-1"><span class="font-mono font-bold">${escapeHtml(t.code)}</span> · ${escapeHtml(t.spot)} · ${dayLabel(t.visitDate)} · ${escapeHtml(t.kindsText || `${t.people} ${t.people === 1 ? 'person' : 'people'}`)} · ${escapeHtml(t.name)}
                                ${t.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1">DEMO</span>' : ''}</p>` : ''}
                         </div>
                         ${r.verdict === 'valid' ? `<button type="button" id="admitBtn" data-id="${escapeHtml(t._id)}" class="btn btn-primary min-h-[48px] !text-base">
@@ -781,7 +781,7 @@ body { overflow-x: hidden; }
                         </div>
                         <div class="overflow-x-auto"><table class="ztims-table w-full text-left border-collapse text-sm">
                             <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
-                                <th class="px-2 py-2">Code</th><th class="px-2 py-2">Name</th><th class="px-2 py-2 text-center">People</th><th class="px-2 py-2">Status</th>
+                                <th class="px-2 py-2">Code</th><th class="px-2 py-2">Name</th><th class="px-2 py-2">People</th><th class="px-2 py-2">Status</th>
                             </tr></thead>
                             <tbody class="divide-y divide-outline-variant/20">${list.map(t => {
                                 const [tone, label] = t.status === 'valid' && past ? STATUS.expired : (STATUS[t.status] || ['tone-neutral', t.status]);
@@ -789,7 +789,7 @@ body { overflow-x: hidden; }
                                     <td class="px-2 py-2 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(t.code)}
                                         ${t.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1">DEMO</span>' : ''}</td>
                                     <td class="px-2 py-2">${escapeHtml(t.name)}</td>
-                                    <td class="px-2 py-2 text-center">${t.people}</td>
+                                    <td class="px-2 py-2"><b class="text-on-surface">${t.people}</b>${t.kindsText ? `<span class="block text-support">${escapeHtml(t.kindsText)}</span>` : ''}</td>
                                     <td class="px-2 py-2"><span class="${tone} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${label}${t.status === 'used' && t.usedAt ? ` · ${timeOf(t.usedAt)}` : ''}</span></td>
                                 </tr>`;
                             }).join('')}</tbody>

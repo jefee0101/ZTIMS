@@ -499,7 +499,15 @@ const tickets = new Table('tickets', {
     status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired'] }),
     usedAt: when(),
     usedByEmail: text(),
-    isDemo: flag(false)
+    isDemo: flag(false),
+    // How many of each kind of visitor; they add up to `people`.
+    countRegular: { type: 'integer', default: 0, min: 0 },
+    countSenior: { type: 'integer', default: 0, min: 0 },
+    countPwd: { type: 'integer', default: 0, min: 0 },
+    countStudent: { type: 'integer', default: 0, min: 0 },
+    countChild: { type: 'integer', default: 0, min: 0 },
+    // The price each kind paid per person when the ticket was bought.
+    feeBreakdown: { type: 'json', default: () => ({}) }
 });
 
 /* A date a destination is shut. */

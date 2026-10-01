@@ -1053,6 +1053,19 @@ body { overflow-x: hidden; }
         return '';
     }
 
+    /* The kinds of visitor a ticket here can count, with their price. Student
+       and child only where the office has set a price for them. */
+    function ticketKinds(offer) {
+        const f = offer.fees || { regular: offer.unitFee, senior: null, pwd: null, student: null, child: null };
+        return [
+            { key: 'regular', label: 'Regular', price: f.regular },
+            { key: 'senior', label: 'Senior citizen', price: f.senior, note: '20% off. Bring your senior citizen ID.' },
+            { key: 'pwd', label: 'Person with disability', price: f.pwd, note: '20% off. Bring your PWD ID.' },
+            { key: 'student', label: 'Student', price: f.student, note: 'Bring your school ID.' },
+            { key: 'child', label: 'Child', price: f.child, note: f.childAgeMax ? `Up to ${f.childAgeMax} years old.` : '' }
+        ].filter(k => k.price !== null && k.price !== undefined);
+    }
+
     /* Entrance tickets, for attractions the Tourism Office runs and charges for.
        Bought online (test mode) and shown at the gate as a QR code. */
     async function renderTicketOffer(spotId) {
@@ -1076,7 +1089,9 @@ body { overflow-x: hidden; }
                     <span class="tone-warning tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1">Test mode</span>
                 </div>
                 <p class="text-sm text-on-surface-variant">
-                    ${escapeHtml(formatPeso(offer.unitFee))} per person. Buy ahead and show the QR code at the entrance,
+                    ${escapeHtml(formatPeso(ticketKinds(offer)[0].price))} per person${ticketKinds(offer).length > 1
+                        ? `, less for ${escapeHtml(ticketKinds(offer).slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).join(', ').replace(/, ([^,]*)$/, ' and $1'))}` : ''}.
+                    Buy ahead and show the QR code at the entrance,
                     or pay at the gate as usual. <b>Test mode:</b> a demonstration, no real money moves.
                 </p>
                 <!-- There is often no mobile signal at the attraction itself, so a
@@ -1092,11 +1107,22 @@ body { overflow-x: hidden; }
                         <input id="tkDate" type="date" required min="${today}" max="${last}" value="${today}"
                                class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
                     </label>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">People</span>
-                        <input id="tkPeople" type="number" required min="1" max="${offer.maxPeople}" value="2"
-                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
-                    </label>
+                    <fieldset class="sm:col-span-2">
+                        <legend class="block text-label font-bold uppercase tracking-wider mb-1">Who is coming</legend>
+                        <div class="divide-y divide-outline-variant/30 border border-outline-variant/30">
+                            ${ticketKinds(offer).map(k => `
+                            <label class="flex items-center justify-between gap-3 px-3 py-2">
+                                <span class="min-w-0">
+                                    <span class="block font-bold text-on-surface">${escapeHtml(k.label)}
+                                        <span class="font-normal text-on-surface-variant">· ${escapeHtml(formatPeso(k.price))}</span></span>
+                                    ${k.note ? `<span class="block text-support">${escapeHtml(k.note)}</span>` : ''}
+                                </span>
+                                <input type="number" data-kind="${k.key}" min="0" max="${offer.maxPeople}" step="1"
+                                       value="${k.key === 'regular' ? 1 : 0}" aria-label="${escapeHtml(k.label)}: number of people"
+                                       class="w-20 shrink-0 bg-surface-container-high border border-outline-variant/40 p-2 text-on-surface text-center"/>
+                            </label>`).join('')}
+                        </div>
+                    </fieldset>
                     <label class="block">
                         <span class="block text-label font-bold uppercase tracking-wider mb-1">Name</span>
                         <input id="tkName" type="text" required autocomplete="name"
@@ -1130,7 +1156,8 @@ body { overflow-x: hidden; }
             slot.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        const people = document.getElementById('tkPeople');
+        const kindInputs = [...document.querySelectorAll('#ticketForm [data-kind]')];
+        const counts = () => Object.fromEntries(kindInputs.map(i => [i.dataset.kind, Math.max(0, Math.floor(Number(i.value)) || 0)]));
         const total = document.getElementById('tkTotal');
         const error = document.getElementById('tkError');
         const buyButton = document.getElementById('tkBuy');
@@ -1149,8 +1176,11 @@ body { overflow-x: hidden; }
             }
         }
         checkDate();
-        const showTotal = () => { total.textContent = formatPeso((Math.max(0, Math.floor(Number(people.value)) || 0)) * offer.unitFee); };
-        people.addEventListener('input', showTotal);
+        const showTotal = () => {
+            const c = counts();
+            total.textContent = formatPeso(ticketKinds(offer).reduce((sum, k) => sum + (c[k.key] || 0) * k.price, 0));
+        };
+        kindInputs.forEach(i => i.addEventListener('input', showTotal));
         showTotal();
 
         document.getElementById('ticketForm').addEventListener('submit', async event => {
@@ -1167,7 +1197,7 @@ body { overflow-x: hidden; }
                     body: JSON.stringify({
                         spotId,
                         visitDate: document.getElementById('tkDate').value,
-                        people: Number(people.value) || 0,
+                        counts: counts(),
                         fullName: document.getElementById('tkName').value.trim(),
                         email: document.getElementById('tkEmail').value.trim()
                     })

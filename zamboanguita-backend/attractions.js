@@ -51,6 +51,65 @@ function feeTable(spot) {
     };
 }
 
+/* The kinds of visitor a ticket counts, in the order they are shown. Those
+   with an ID to show at the entrance say so. */
+const KINDS = [
+    { key: 'regular', column: 'count_regular', field: 'countRegular', label: 'Regular', plural: 'regular', needsId: false },
+    { key: 'senior', column: 'count_senior', field: 'countSenior', label: 'Senior citizen', plural: 'senior citizens', needsId: true },
+    { key: 'pwd', column: 'count_pwd', field: 'countPwd', label: 'Person with disability', plural: 'PWDs', needsId: true },
+    { key: 'student', column: 'count_student', field: 'countStudent', label: 'Student', plural: 'students', needsId: true },
+    { key: 'child', column: 'count_child', field: 'countChild', label: 'Child', plural: 'children', needsId: false }
+];
+
+/* A ticket's people, kind by kind — from the model (countRegular…) or a raw
+   row (count_regular…). Only the kinds it has. */
+function kindsOf(ticket) {
+    return KINDS.map(k => ({ key: k.key, label: k.label, needsId: k.needsId,
+                             count: Number(ticket[k.field] ?? ticket[k.column] ?? 0) }))
+        .filter(k => k.count > 0);
+}
+
+/* "2 regular, 1 senior citizen and 1 child" */
+function describeKinds(ticket) {
+    const parts = kindsOf(ticket).map(k => {
+        const kind = KINDS.find(x => x.key === k.key);
+        return `${k.count} ${k.count === 1 ? kind.label.toLowerCase() : kind.plural}`;
+    });
+    if (parts.length <= 1) return parts.join('');
+    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+}
+
+/* Prices a ticket from the counts a visitor chose, at this destination's fees.
+   Throws a 400 with a plain message when a count is not allowed. */
+function priceTickets(spot, rawCounts, { maxPeople = 20 } = {}) {
+    const fees = feeTable(spot);
+    const counts = {};
+    let people = 0;
+    for (const k of KINDS) {
+        const raw = rawCounts && rawCounts[k.key];
+        const n = raw === undefined || raw === null || raw === '' ? 0 : Number(raw);
+        if (!Number.isInteger(n) || n < 0) {
+            const e = new Error('Each number of people must be a whole number.'); e.status = 400; throw e;
+        }
+        if (n > 0 && fees[k.key] === null) {
+            const e = new Error(`This attraction has no ${k.label.toLowerCase()} price.`); e.status = 400; throw e;
+        }
+        counts[k.key] = n;
+        people += n;
+    }
+    if (people < 1 || people > maxPeople) {
+        const e = new Error(`Choose between 1 and ${maxPeople} people.`); e.status = 400; throw e;
+    }
+    const unitFees = {};
+    let amount = 0;
+    for (const k of KINDS) {
+        if (!counts[k.key]) continue;
+        unitFees[k.key] = fees[k.key];
+        amount += counts[k.key] * fees[k.key];
+    }
+    return { counts, people, unitFees, amount: money(amount), fees };
+}
+
 /* The closed dates from `from` (today by default) for `days` days ahead. */
 async function closedDatesFor(spotId, { from = manilaToday(), days = 400 } = {}) {
     const { rows } = await query(
@@ -237,6 +296,10 @@ module.exports = function attractionsRouter({ requireAdmin }) {
 };
 
 module.exports.feeTable = feeTable;
+module.exports.KINDS = KINDS;
+module.exports.kindsOf = kindsOf;
+module.exports.describeKinds = describeKinds;
+module.exports.priceTickets = priceTickets;
 module.exports.dayVerdict = dayVerdict;
 module.exports.visitCalendar = visitCalendar;
 module.exports.closedDatesFor = closedDatesFor;

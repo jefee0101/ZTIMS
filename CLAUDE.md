@@ -444,6 +444,10 @@ guided destinations:
 - **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
   senior citizen and PWD always 20% off it (a rule, not a setting);
   `student_fee` and `child_fee` + `child_age_max` are offered only when set.
+  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`,
+  adding up to `people`, a database check) and keeps the price each kind paid
+  (`fee_breakdown`); `priceTickets` prices a purchase from the counts, and the
+  gate's check says whose ID to look at. No ID is ever stored.
 - **`cancel_keep_percent`**: the share kept when a visitor cancels, for tickets
   and guide bookings at that destination.
 - `dayVerdict(spot, date)` is the one answer to "can visitors come that day?",

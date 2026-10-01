@@ -628,6 +628,34 @@ create table if not exists public.tickets (
 create index if not exists tickets_spot_date_idx on public.tickets (spot_id, visit_date);
 create index if not exists tickets_status_idx on public.tickets (status);
 
+-- Who a ticket is for: how many of each kind of visitor, and the price each
+-- kind paid when it was bought (fee_breakdown, pesos per person by kind). The
+-- staff at the entrance see the kinds, to check a senior, PWD or student ID.
+alter table public.tickets add column if not exists count_regular integer not null default 0;
+alter table public.tickets add column if not exists count_senior integer not null default 0;
+alter table public.tickets add column if not exists count_pwd integer not null default 0;
+alter table public.tickets add column if not exists count_student integer not null default 0;
+alter table public.tickets add column if not exists count_child integer not null default 0;
+alter table public.tickets add column if not exists fee_breakdown jsonb not null default '{}'::jsonb;
+
+-- Tickets bought before there were kinds were all at the regular price.
+update public.tickets
+   set count_regular = people, fee_breakdown = jsonb_build_object('regular', unit_fee)
+ where count_regular + count_senior + count_pwd + count_student + count_child = 0;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'tickets_counts_not_negative') then
+        alter table public.tickets add constraint tickets_counts_not_negative
+            check (count_regular >= 0 and count_senior >= 0 and count_pwd >= 0 and count_student >= 0 and count_child >= 0);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'tickets_people_by_kind') then
+        alter table public.tickets add constraint tickets_people_by_kind
+            check (count_regular + count_senior + count_pwd + count_student + count_child = people);
+    end if;
+end
+$$;
+
 -- A payment is for one booking or one ticket. Online payments say so, keep the
 -- gateway's reference, and may be refunded (the office cancelled).
 alter table public.payments alter column booking_id drop not null;
