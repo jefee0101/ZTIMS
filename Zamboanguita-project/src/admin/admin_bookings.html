@@ -847,14 +847,34 @@ body { overflow-x: hidden; }
             upcoming: b => b.status === 'confirmed' && !!b.guideId
         };
 
-        // Only guides who can actually take this booking are offered. The server
-        // checks the rest (unavailable, working days, a clash at that hour) and says why.
+        // Only guides who can actually take this booking are offered, and for a
+        // paid booking only those at or below what was paid. The guide the
+        // visitor asked for comes first. The server checks the rest
+        // (unavailable, working days, a clash at that hour) and says why.
+        function paidCap(booking) {
+            const p = booking.payment;
+            return p && !p.refundedAt ? Number(p.amount) : null;
+        }
         function eligibleGuides(booking) {
             const spotId = String(booking.spotId?._id || booking.spotId);
+            const cap = paidCap(booking);
             return allGuides.filter(guide =>
                 guide.status === 'available' &&
                 (guide.assignedSpots || []).some(spot => String(spot._id || spot) === spotId) &&
-                Number(guide.maxGroupSize) >= Number(booking.visitors));
+                Number(guide.maxGroupSize) >= Number(booking.visitors) &&
+                (cap === null || Number(guide.guideFee) <= cap))
+                .sort((a, b) => (String(b._id) === String(booking.requestedGuideId)) - (String(a._id) === String(booking.requestedGuideId)));
+        }
+        function requestedGuide(booking) {
+            return booking.requestedGuideId ? allGuides.find(g => String(g._id) === String(booking.requestedGuideId)) || null : null;
+        }
+        // Why the guide the visitor asked for is not on offer, or ''.
+        function requestNote(booking) {
+            const wanted = requestedGuide(booking);
+            if (!wanted || eligibleGuides(booking).some(g => g._id === wanted._id)) return '';
+            const cap = paidCap(booking);
+            if (cap !== null && Number(wanted.guideFee) > cap) return `${wanted.fullName}, whom the visitor asked for, charges ${formatPeso(wanted.guideFee)}, more than the ${formatPeso(cap)} paid.`;
+            return `${wanted.fullName}, whom the visitor asked for, cannot take this booking now (unavailable, or the group is too large).`;
         }
 
         /* ---- loading ------------------------------------------------------- */
@@ -942,6 +962,7 @@ body { overflow-x: hidden; }
                         <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Group</dt>
                         <dd class="text-on-surface font-bold">${Number(b.visitors) || 0} visitor${Number(b.visitors) === 1 ? '' : 's'}</dd>
                         ${b.guideId ? `<dd class="text-support">Guide: ${escapeHtml(b.guideId.fullName)}${b.guideId.contactNumber ? ` · ${escapeHtml(b.guideId.contactNumber)}` : ''}</dd>` : ''}
+                        <dd class="text-support">Asked for: ${requestedGuide(b) ? escapeHtml(requestedGuide(b).fullName) : 'any guide'}</dd>
                     </div>
                 </dl>
                 ${b.notes ? `<p class="text-support"><b>Visitor's note:</b> ${escapeHtml(b.notes)}</p>` : ''}
@@ -992,7 +1013,7 @@ body { overflow-x: hidden; }
             if (!guides.length) {
                 return `
                 <div class="border-t border-outline-variant/30 pt-4 space-y-3">
-                    <p class="tone-warning text-sm font-bold">No available guide serves this destination with room for ${Number(b.visitors) || 0}.</p>
+                    <p class="tone-warning text-sm font-bold">No available guide serves this destination with room for ${Number(b.visitors) || 0}${paidCap(b) !== null ? ` at or below the ${formatPeso(paidCap(b))} paid` : ''}.</p>
                     <p class="text-support">Give a guide this destination, or raise a guide's group size, on the
                         <a href="admin_guides.html" class="underline font-bold text-primary">Tourist Guides</a> page, then come back.</p>
                     <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
@@ -1003,9 +1024,11 @@ body { overflow-x: hidden; }
                 <label class="block">
                     <span class="block text-label font-bold uppercase tracking-wider mb-1">Choose a guide</span>
                     <select name="guideId" required class="field">
-                        ${guides.map(g => `<option value="${escapeHtml(g._id)}">${escapeHtml(g.fullName)} · up to ${Number(g.maxGroupSize) || 0} visitors${g.scope === 'barangay' && g.barangay ? ` · ${escapeHtml(g.barangay)}` : ''}</option>`).join('')}
+                        ${guides.map(g => `<option value="${escapeHtml(g._id)}">${String(g._id) === String(b.requestedGuideId) ? 'Asked for · ' : ''}${escapeHtml(g.fullName)} · ${formatPeso(g.guideFee)} · up to ${Number(g.maxGroupSize) || 0} visitors${g.scope === 'barangay' && g.barangay ? ` · ${escapeHtml(g.barangay)}` : ''}</option>`).join('')}
                     </select>
                 </label>
+                ${paidCap(b) !== null ? `<p class="text-support">Paid ${formatPeso(paidCap(b))}: only guides at or below that fee are listed.</p>` : ''}
+                ${requestNote(b) ? `<p class="tone-warning text-sm">${escapeHtml(requestNote(b))}</p>` : ''}
                 <div class="flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-primary min-h-[44px]">
                         <span class="material-symbols-outlined !text-base">person_add</span> Assign this guide
@@ -1111,9 +1134,10 @@ body { overflow-x: hidden; }
                 `<option value="${escapeHtml(guide._id)}" ${String(booking.guideId?._id) === String(guide._id) ? 'selected' : ''}>${escapeHtml(guide.fullName)} · ${formatPeso(guide.guideFee)} · up to ${guide.maxGroupSize}</option>`
             ).join('');
 
-            document.getElementById('assignHint').textContent = eligible.length
-                ? `${eligible.length} guide${eligible.length === 1 ? '' : 's'} can take this party at this destination.`
-                : 'No available guide is assigned to this destination with room for this party.';
+            document.getElementById('assignHint').textContent = (eligible.length
+                ? `${eligible.length} guide${eligible.length === 1 ? '' : 's'} can take this party at this destination${paidCap(booking) !== null ? ` at or below the ${formatPeso(paidCap(booking))} paid` : ''}.`
+                : 'No available guide is assigned to this destination with room for this party.')
+                + (requestNote(booking) ? ' ' + requestNote(booking) : '');
 
             const paid = booking.payment;
             document.getElementById('paymentForm').hidden = Boolean(paid);

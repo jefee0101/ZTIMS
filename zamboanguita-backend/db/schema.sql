@@ -601,6 +601,12 @@ create index if not exists report_changes_report_idx on public.report_changes (r
 -- Demonstration bookings (seeded, or paid in test mode), removable together.
 alter table public.guide_bookings add column if not exists is_demo boolean not null default false;
 
+-- The guide the visitor asked for (null: any guide). A request, not an
+-- assignment: guide_id stays the office's to set, and for a paid booking only
+-- a guide at or below the fee paid can be assigned.
+alter table public.guide_bookings add column if not exists requested_guide_id text
+    references public.tourist_guides (id) on delete set null;
+
 -- An entrance ticket: one date, one attraction, a number of people.
 create table if not exists public.tickets (
     id                  text primary key default public.ztims_new_id(),

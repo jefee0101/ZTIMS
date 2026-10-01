@@ -363,7 +363,9 @@ const bookings = new Table('guide_bookings', {
     status: text({ default: 'pending_payment', enum: BOOKING_STATUSES }),
     statusNote: text(),
     statusUpdatedAt: when(),
-    isDemo: flag(false)
+    isDemo: flag(false),
+    // The guide the visitor asked for; null means any guide.
+    requestedGuideId: ref()
 });
 
 /* The Tourism Office's booking list: destination and guide summarised in

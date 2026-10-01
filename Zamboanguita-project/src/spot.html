@@ -347,6 +347,12 @@ body { overflow-x: hidden; }
             </div>
             <p id="bookGroupHint" class="text-support"></p>
 
+            <fieldset>
+                <legend class="block text-label font-bold uppercase tracking-wider mb-1">Your guide</legend>
+                <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
+                <p class="text-support mt-1">The office confirms your guide. If you pay online, you pay the fee of the guide you chose (or the lowest fee here, for any guide).</p>
+            </fieldset>
+
             <div>
                 <label class="block text-label font-bold uppercase tracking-wider mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
                 <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
@@ -851,6 +857,7 @@ body { overflow-x: hidden; }
                         : 'Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.'}</span>
                 </p>
                 ${availability}
+                ${info.guidesAvailable > 0 ? '<div id="guideBrowser" class="space-y-2"></div>' : ''}
                 ${info.guidesAvailable > 0 ? `
                 <button type="button" id="openBookGuideBtn"
                         class="w-full sm:w-auto bg-secondary text-white px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
@@ -875,6 +882,47 @@ body { overflow-x: hidden; }
         `;
 
         wireGuideBooking(spotId, info);
+    }
+
+    /* The guides a visitor can ask for here, from the public list: photo,
+       name, area, languages, fee, bio, and — for a chosen date — free or not.
+       Never a phone number or email. */
+    async function fetchGuides(spotId, date, time) {
+        const q = new URLSearchParams();
+        if (date) q.set('date', date);
+        if (date && time) q.set('time', time);
+        try {
+            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/guides?${q}`);
+            const data = await response.json().catch(() => ({}));
+            return response.ok ? data.guides || [] : [];
+        } catch (e) { return []; }
+    }
+
+    function guideFace(g, size) {
+        return g.photoUrl
+            ? `<img src="${escapeHtml(g.photoUrl)}" alt="" class="${size} object-cover shrink-0 bg-surface-container-high"/>`
+            : `<span class="${size} shrink-0 bg-surface-container-high flex items-center justify-center font-display font-black text-on-surface-variant" aria-hidden="true">${escapeHtml((g.fullName || '?').trim().charAt(0))}</span>`;
+    }
+
+    async function renderGuideBrowser(spotId) {
+        const box = document.getElementById('guideBrowser');
+        if (!box) return;
+        const guides = await fetchGuides(spotId);
+        if (!guides.length) return;
+        box.innerHTML = `
+            <h3 class="text-label font-bold uppercase tracking-widest">Meet the guides</h3>
+            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">${guides.map(g => `
+                <li class="bg-surface-container-high border border-outline-variant/20 p-3 flex gap-3">
+                    ${guideFace(g, 'w-14 h-14')}
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                        <p class="font-bold text-on-surface">${escapeHtml(g.fullName)}</p>
+                        <p class="text-support">${escapeHtml(formatPeso(g.guideFee))} · up to ${Number(g.maxGroupSize) || 1} · ${escapeHtml(g.area)}</p>
+                        ${g.languages.length ? `<p class="text-support">Speaks ${escapeHtml(g.languages.join(', '))}</p>` : ''}
+                        ${g.bio ? `<p class="text-sm text-on-surface-variant line-clamp-3">${escapeHtml(g.bio)}</p>` : ''}
+                        <button type="button" data-choose-guide="${escapeHtml(g._id)}" class="text-sm font-bold underline text-primary min-h-[36px]">Book with ${escapeHtml(g.fullName.split(' ')[0])}</button>
+                    </div>
+                </li>`).join('')}
+            </ul>`;
     }
 
     /* The booking form itself. No account, no sign-in, no payment — the visitor
@@ -926,13 +974,51 @@ body { overflow-x: hidden; }
         bookDate.min = new Date().toISOString().slice(0, 10);
         bookDate.addEventListener('change', () => setBookingError(closedDayReason(bookDate.value, info)));
 
+        // Who guides: "any guide", or one the visitor picks; redrawn when the
+        // date, time or group changes, since that decides who is free.
+        let chosenGuide = '';
+        async function drawGuidePicker() {
+            const list = document.getElementById('bookGuideList');
+            const date = document.getElementById('bookDate').value;
+            const time = document.getElementById('bookTime').value;
+            const group = Number(document.getElementById('bookVisitors').value) || 1;
+            const guides = await fetchGuides(spotId, date, time);
+            const usable = g => (date ? g.free !== false : true) && group <= (Number(g.maxGroupSize) || 1);
+            if (chosenGuide && !guides.some(g => g._id === chosenGuide && usable(g))) chosenGuide = '';
+            const lowest = guides.length ? Math.min(...guides.map(g => g.guideFee)) : null;
+            const option = (value, body, disabled, note) => `
+                <label class="flex items-start gap-3 border border-outline-variant/40 p-3 ${disabled ? 'opacity-60' : 'cursor-pointer'}">
+                    <input type="radio" name="bookGuide" value="${escapeHtml(value)}" ${chosenGuide === value ? 'checked' : ''} ${disabled ? 'disabled' : ''} class="mt-1 w-5 h-5 text-primary focus:ring-primary"/>
+                    <span class="min-w-0 flex-1">${body}${note ? `<span class="block text-support tone-warning">${escapeHtml(note)}</span>` : ''}</span>
+                </label>`;
+            list.innerHTML =
+                option('', `<span class="block font-bold text-on-surface">Any available guide</span>
+                    <span class="block text-support">The office picks${lowest !== null ? ` · from ${escapeHtml(formatPeso(lowest))}` : ''}.</span>`, false, '') +
+                guides.map(g => option(g._id, `
+                    <span class="flex items-center gap-3">${guideFace(g, 'w-10 h-10')}
+                        <span class="min-w-0"><span class="block font-bold text-on-surface">${escapeHtml(g.fullName)} · ${escapeHtml(formatPeso(g.guideFee))}</span>
+                        <span class="block text-support">${escapeHtml(g.languages.join(', ') || g.area)}</span></span></span>`,
+                    !usable(g), group > (Number(g.maxGroupSize) || 1) ? `Takes groups of up to ${g.maxGroupSize}` : (date && g.free === false ? g.note : ''))).join('');
+            list.querySelectorAll('input[name=bookGuide]').forEach(r => r.addEventListener('change', () => { chosenGuide = r.value; }));
+        }
+        ['bookDate', 'bookTime', 'bookVisitors'].forEach(id => document.getElementById(id).addEventListener('change', drawGuidePicker));
+
         function close() { modal.hidden = true; }
-        openBtn.addEventListener('click', () => {
+        function openBooking(guideId) {
             document.getElementById('bookingResult').hidden = true;
             document.getElementById('guideBookingForm').hidden = false;
             setBookingError('');
+            chosenGuide = guideId || '';
+            drawGuidePicker();
             modal.hidden = false;
+        }
+        openBtn.addEventListener('click', () => openBooking(''));
+        const browser = document.getElementById('guideBrowser');
+        if (browser) browser.addEventListener('click', event => {
+            const pick = event.target.closest('[data-choose-guide]');
+            if (pick) openBooking(pick.dataset.chooseGuide);
         });
+        renderGuideBrowser(spotId);
         /* The country list lives in one module so the officer's page and this one
            agree on spelling. Without it the field is an empty dropdown, which
            would be a booking nobody could submit — so say so rather than fail
@@ -972,7 +1058,8 @@ body { overflow-x: hidden; }
                 visitors: Number(document.getElementById('bookVisitors').value) || 0,
                 preferredDate: document.getElementById('bookDate').value,
                 preferredTime: document.getElementById('bookTime').value,
-                notes: document.getElementById('bookNotes').value.trim()
+                notes: document.getElementById('bookNotes').value.trim(),
+                requestedGuideId: chosenGuide || null
             };
 
             const button = document.getElementById('submitBookingBtn');
@@ -993,7 +1080,10 @@ body { overflow-x: hidden; }
                 document.getElementById('bookingReference').textContent = data.booking.reference;
                 document.getElementById('bookingSummary').textContent =
                     `${data.booking.spot} — ${data.booking.preferredDate} at ${data.booking.preferredTime}, `
-                    + `${data.booking.visitors} visitor${data.booking.visitors === 1 ? '' : 's'}.`;
+                    + `${data.booking.visitors} visitor${data.booking.visitors === 1 ? '' : 's'}. `
+                    + (data.requestedGuide
+                        ? `You asked for ${data.requestedGuide.fullName} (${formatPeso(data.requestedGuide.guideFee)}); the office confirms your guide.`
+                        : 'The office will choose your guide.');
                 document.getElementById('bookingResult').hidden = false;
                 offerOnlinePayment(data, payload.email);
             } catch (error) {

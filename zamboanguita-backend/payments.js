@@ -205,10 +205,13 @@ const newTicketCode = title => `${codePrefix(title)}-${randomCode(4)}-${randomCo
 const normaliseCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 /* Where the fee for a booking comes from: the assigned guide's fee, else the
-   lowest fee among the guides free for that destination. Fixed on the checkout. */
+   fee of the guide the visitor asked for, else the lowest fee among the guides
+   free for that destination. Fixed on the checkout; the office then assigns a
+   guide at or below it. */
 async function bookingFee(booking) {
-    if (booking.guideId) {
-        const guide = await TouristGuide.findById(booking.guideId);
+    for (const id of [booking.guideId, booking.requestedGuideId]) {
+        if (!id) continue;
+        const guide = await TouristGuide.findById(id);
         if (guide) return money(guide.guideFee);
     }
     const guides = await TouristGuide.find({ assignedSpots: booking.spotId, status: 'available' });

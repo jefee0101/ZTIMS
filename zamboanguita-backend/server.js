@@ -2330,6 +2330,58 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
     }
 });
 
+// A barangay guide only serves destinations in their barangay; checked again
+// wherever a guide meets a destination, since a listing's barangay can change.
+function guideServesSpot(guide, spot) {
+    if (!(guide.assignedSpots || []).some(id => String(id._id || id) === String(spot._id))) return false;
+    return guide.scope !== 'barangay' || barangayKey(spot.barangay) === barangayKey(guide.barangay);
+}
+
+const pesos = n => `₱${(Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/**
+ * PUBLIC: the guides a visitor can ask for at this destination — photo, name,
+ * languages, fee, bio, largest group, the area they cover — and, for a chosen
+ * date (and time), whether each is free, by isGuideFreeOn, the rule the
+ * office's assignment uses. Never a phone number or an email, and never which
+ * booking makes a guide busy.
+ */
+app.get('/api/spots/:id/guides', async (req, res) => {
+    try {
+        const spot = await Spot.findByIdWithManager(req.params.id);
+        if (!spot || !spot.requiresGuide || !isPubliclyVisible(spot)) {
+            return res.status(404).json({ success: false, message: 'No guides are listed for this destination.' });
+        }
+        const date = isCalendarDate(String(req.query.date || '')) ? String(req.query.date) : null;
+        const time = /^\d{2}:\d{2}$/.test(String(req.query.time || '')) ? String(req.query.time) : undefined;
+
+        const here = (await TouristGuide.listWithSpots())
+            .filter(g => g.status === 'available' && guideServesSpot(g, spot));
+        const guides = [];
+        for (const g of here) {
+            let free = null, note = '';
+            if (date) {
+                const verdict = await isGuideFreeOn(g, date, { time });
+                free = verdict.free;
+                if (!free) note = /does not work on/.test(verdict.reason || '')
+                    ? `Does not guide on ${WEEKDAY_NAMES[weekdayOf(date)]}s`
+                    : 'Not free that day';
+            }
+            guides.push({
+                _id: g._id, fullName: g.fullName, photoUrl: g.photoUrl || '', languages: g.languages || [],
+                guideFee: Number(g.guideFee) || 0, maxGroupSize: g.maxGroupSize, bio: g.bio || '',
+                area: g.scope === 'barangay' ? `Barangay ${g.barangay}` : 'Whole municipality',
+                free, note
+            });
+        }
+        guides.sort((a, b) => a.guideFee - b.guideFee || a.fullName.localeCompare(b.fullName));
+        return res.status(200).json({ success: true, date, guides });
+    } catch (error) {
+        console.error('❌ Public guide list failure:', error);
+        return res.status(500).json({ success: false, message: 'Could not list the guides just now.' });
+    }
+});
+
 /* ==========================================
    4c. GUIDE BOOKINGS AND ONSITE PAYMENT
    ------------------------------------------
@@ -2475,6 +2527,25 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
             });
         }
 
+        // The guide the visitor asked for, if any: one who guides here, takes a
+        // group this size, and is free then. Still only a request — the office
+        // confirms the guide.
+        let requested = null;
+        const wantedGuide = String(body.requestedGuideId || '').trim();
+        if (wantedGuide) {
+            requested = guides.find(g => String(g._id) === wantedGuide && guideServesSpot(g, spot)) || null;
+            if (!requested) {
+                return res.status(409).json({ success: false, message: 'That guide is not available for this destination. Choose another guide, or "Any guide".' });
+            }
+            if (visitors > requested.maxGroupSize) {
+                return res.status(400).json({ success: false, message: `${requested.fullName} takes groups of up to ${requested.maxGroupSize}. Choose another guide, or "Any guide".` });
+            }
+            const verdict = await isGuideFreeOn(requested, preferredDate, { time: preferredTime });
+            if (!verdict.free) {
+                return res.status(409).json({ success: false, message: `${requested.fullName} is not free then. Choose another date or guide, or "Any guide".` });
+            }
+        }
+
         // Two submissions can land on the same number; the unique index catches it
         // and the next attempt reads a higher one.
         let booking = null;
@@ -2484,7 +2555,8 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
                     reference: await nextBookingReference(),
                     spotId: spot._id,
                     fullName, contactNumber, email, nationality, visitors, preferredDate, preferredTime,
-                    notes: String(body.notes || '').trim().slice(0, 1000)
+                    notes: String(body.notes || '').trim().slice(0, 1000),
+                    requestedGuideId: requested ? requested._id : null
                 });
             } catch (error) {
                 if (error && error.code === 11000) continue;
@@ -2500,6 +2572,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
             success: true,
             message: 'Booking submitted.',
             booking: publicBookingView(booking, spot.title),
+            requestedGuide: requested ? { fullName: requested.fullName, guideFee: Number(requested.guideFee) || 0 } : null,
             instruction: paymentsGatewayOnline()
                 ? 'Pay online now, or at the Municipal Tourism Office, to confirm the booking.'
                 : 'Please proceed to the Municipal Tourism Office to complete payment and confirmation.',
@@ -2600,6 +2673,14 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
         // guide search uses, so a guide it shows as free is one this accepts.
         const verdict = await isGuideFreeOn(guide, booking.preferredDate, { time: booking.preferredTime, exceptBookingId: booking._id });
         if (!verdict.free) return res.status(409).json({ success: false, message: verdict.reason });
+        // A paid booking keeps its price: only a guide at or below what was paid.
+        const paid = await Payment.findOne({ bookingId: booking._id });
+        if (paid && !paid.refundedAt && Number(guide.guideFee) > Number(paid.amount)) {
+            return res.status(409).json({
+                success: false,
+                message: `This booking was paid ${pesos(paid.amount)}, and ${guide.fullName} charges ${pesos(guide.guideFee)}. Choose a guide at or below what was paid.`
+            });
+        }
 
         booking.guideId = guide._id;
         await GuideBooking.save(booking);

@@ -337,6 +337,15 @@ themselves Unavailable. `schema.sql` drops both tables on the next migrate. Guid
 sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
 a guide record without one has `email`/`password_hash` null.
 
+Visitors choose: `GET /api/spots/:id/guides?date=&time=` (public) lists the
+guides at a destination — photo, name, languages, fee, bio, group size, area,
+and whether each is free then by `isGuideFreeOn` — never a phone, an email or
+the booking that makes a guide busy. A booking may carry `requested_guide_id`
+(null: any guide), checked at booking time (serves here, takes the group, free
+then). It stays a request: `guide_id` is still the office's to set, an online
+payment charges the requested guide's fee (else the lowest here), and a paid
+booking can only be assigned a guide at or below what was paid.
+
 Languages are rows, not a list: `languages` (unique on `lower(name)`) and
 `guide_languages`, written by `setGuideLanguages`. That is what makes
 `GET /api/guides/search?language=&date=` ("who speaks Korean and is free
