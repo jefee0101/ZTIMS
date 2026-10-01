@@ -2339,6 +2339,10 @@ function guideServesSpot(guide, spot) {
 
 const pesos = n => `₱${(Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+// Emails to visitors (notices.js): links in them point at the public site.
+const notices = require('./notices');
+const originOf = req => `${req.protocol}://${req.get('host')}`;
+
 /**
  * PUBLIC: the guides a visitor can ask for at this destination — photo, name,
  * languages, fee, bio, largest group, the area they cover — and, for a chosen
@@ -2568,6 +2572,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
         }
 
         console.log(`🎟️ Guide booking ${booking.reference} for ${spot.title}`);
+        await notices.bookingReceived(booking._id, originOf(req), { payOnline: paymentsGatewayOnline() });
         return res.status(201).json({
             success: true,
             message: 'Booking submitted.',
@@ -2693,6 +2698,7 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
         });
 
         console.log(`🧭 ${guide.fullName} assigned to ${booking.reference}`);
+        await notices.guideAssigned(booking._id, originOf(req));
         return res.status(200).json({
             success: true,
             message: `${guide.fullName} assigned to ${booking.reference}.`,
@@ -2760,6 +2766,7 @@ app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
         });
 
         console.log(`💵 Payment recorded for ${booking.reference} by ${payment.recordedByEmail || req.auth.sub}`);
+        await notices.bookingPaid(booking._id, originOf(req));
         return res.status(201).json({
             success: true,
             message: `Payment recorded. ${booking.reference} is confirmed.`,
@@ -3427,6 +3434,12 @@ app.use('/api', paymentsModule({ requireAdmin, sharedRateLimit, isPubliclyVisibl
 ========================================== */
 const attractions = require('./attractions');
 app.use('/api', attractions({ requireAdmin }));
+
+/* ==========================================
+   MANAGE MY TICKET / BOOKING — a visitor moves or cancels with the code and
+   the email it was bought with (manage.js)
+========================================== */
+app.use('/api', require('./manage')({ sharedRateLimit, refund: paymentsModule.refund, siteOrigin: paymentsModule.siteOrigin }));
 
 /* ==========================================
    5. ERROR HANDLER

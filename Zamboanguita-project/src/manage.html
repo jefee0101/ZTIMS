@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="./shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Payment</title>
+    <title>Explore Zamboanguita | Manage my ticket or booking</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -321,21 +321,38 @@ body { overflow-x: hidden; }
         <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
-                <p class="tone-warning tone-pill inline-flex items-center gap-2 text-xs font-bold px-3 py-2">
-                    <span class="material-symbols-outlined !text-base">science</span>
-                    Test mode: a demonstration. No real money moves.
-                </p>
-
-                <div id="payState" class="glass-panel p-6 sm:p-8 space-y-5" aria-live="polite">
-                    <div class="flex items-center gap-3 text-on-surface-variant">
-                        <span class="inline-block w-5 h-5 border-2 border-current border-t-transparent animate-spin"></span>
-                        Confirming your payment…
-                    </div>
+                <div class="space-y-2">
+                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">Manage my ticket or booking</h1>
+                    <p class="text-on-surface-variant">
+                        Move the date or cancel, until 11:59 PM the day before your visit. You need the code from
+                        your email (a ticket code, or a booking reference such as TG-2026-00012) and the email
+                        address you used.
+                    </p>
                 </div>
 
-                <a href="../index.html" class="inline-flex items-center gap-1.5 text-label font-bold uppercase tracking-widest hover:text-primary transition-colors min-h-[44px]">
-                    <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to destinations
-                </a>
+                <form id="findForm" class="glass-panel p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end" novalidate>
+                    <label class="block">
+                        <span class="field-label">Ticket code or booking reference</span>
+                        <input id="findCode" type="text" required autocomplete="off" autocapitalize="characters" spellcheck="false"
+                               placeholder="e.g. JF-7K3M-Q" class="field uppercase font-mono"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Email address</span>
+                        <input id="findEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="field"/>
+                    </label>
+                    <button type="submit" id="findBtn" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">search</span> Find it
+                    </button>
+                    <p id="findError" hidden class="sm:col-span-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+                </form>
+
+                <div id="itemBox" hidden class="glass-panel p-5 sm:p-8 space-y-5" aria-live="polite"></div>
+
+                <p class="text-support">
+                    Your details are used only for your ticket or booking. See the
+                    <a href="privacy.html#collect" class="underline font-bold">Privacy Notice</a>. Lost your email? Ask
+                    the Municipal Tourism Office.
+                </p>
             </div>
         </section>
     </main>
@@ -346,20 +363,23 @@ body { overflow-x: hidden; }
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
 <script>
-/* Where the payment service sends a visitor back. The page never decides that
-   a payment happened: it asks ZTIMS, which asks the payment service itself. */
+/* Manage my ticket or booking. Everything is decided by the server, which needs
+   both the code and the email each time; this page only shows what it says and
+   asks before anything that cannot be undone. */
 (function () {
     const API_BASE = "/api";
-    const box = document.getElementById('payState');
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('c') || '';
-    const cancelled = params.get('cancelled') === '1';
-    let tries = 0;
+    const box = document.getElementById('itemBox');
+    let current = null;          // { code, email } of what is on screen
 
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking' };
+    const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking' };
+    const STATUS = {
+        valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the gate'], cancelled: ['tone-neutral', 'Cancelled'],
+        pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],
+        confirmed: ['tone-success', 'Confirmed'], completed: ['tone-info', 'Completed'], no_show: ['tone-neutral', 'No show']
+    };
     function niceDate(value) {
         const [y, m, d] = String(value || '').slice(0, 10).split('-').map(Number);
         if (!y) return esc(value);
@@ -370,113 +390,168 @@ body { overflow-x: hidden; }
             <span class="text-on-surface-variant">${label}</span><span class="font-bold text-on-surface text-right">${value}</span>
         </div>`;
 
-    function show(html) { box.innerHTML = html; }
-
-    function heading(icon, tone, title, sub) {
-        return `
-            <div class="flex items-start gap-3">
-                <span class="icon-chip ${tone}"><span class="material-symbols-outlined">${icon}</span></span>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface">${title}</h1>
-                    ${sub ? `<p class="text-on-surface-variant text-sm mt-1">${sub}</p>` : ''}
-                </div>
-            </div>`;
+    // Why a date cannot be chosen, from what the server sent (the same rule it enforces).
+    const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    function closedDayReason(dateKey, cal) {
+        if (!cal || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return '';
+        const day = new Date(dateKey + 'T00:00:00Z').getUTCDay();
+        if (Array.isArray(cal.openDays) && !cal.openDays.includes(WEEKDAY_KEYS[day])) return `Closed on ${WEEKDAY_NAMES[day]}s. Open: ${cal.openDaysText}.`;
+        const closed = (cal.closedDates || []).find(c => c.date === dateKey);
+        return closed ? `Closed on that date${closed.reason ? ` (${closed.reason})` : ''}.` : '';
     }
 
-    function paidLine(c) {
-        return row('Paid', `${peso(c.amount)} · ${esc(METHOD[c.method] || c.method || 'online')} · test mode`);
+    async function call(path, extra) {
+        const response = await fetch(`${API_BASE}${path}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...current, ...(extra || {}) })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success === false) throw new Error(data.message || 'That did not work. Please try again.');
+        return data;
     }
 
-    function render(c) {
-        if (c.status === 'paid' && c.kind === 'guide_booking' && c.booking) {
-            const b = c.booking;
-            show(heading('task_alt', 'tone-success', 'Payment received',
-                    `Booking <b class="font-mono">${esc(b.reference)}</b> is confirmed.`) + `
-                <div>
-                    ${row('Destination', esc(b.spot))}
-                    ${row('Date', `${niceDate(b.preferredDate)} · ${esc(b.preferredTime)}`)}
-                    ${row('Visitors', esc(b.visitors))}
-                    ${paidLine(c)}
+    function render(item, notice) {
+        const isTicket = item.kind === 'ticket';
+        const [tone, label] = STATUS[item.status] || ['tone-neutral', item.status];
+        const date = isTicket ? item.visitDate : item.preferredDate;
+        const details = isTicket ? [
+            row('Ticket code', `<span class="font-mono">${esc(item.code)}</span>`),
+            row('Attraction', esc(item.spot && item.spot.title)),
+            row('Date', niceDate(date)),
+            row('People', `${esc(item.people)} · ${esc(item.kindsText)}`)
+        ] : [
+            row('Reference', `<span class="font-mono">${esc(item.reference)}</span>`),
+            row('Destination', esc(item.spot && item.spot.title)),
+            row('Date and time', `${niceDate(date)} · ${esc(item.preferredTime)}`),
+            row('Visitors', esc(item.visitors)),
+            row('Guide', item.guide ? esc(item.guide) : `Not yet confirmed${item.requestedGuide ? ` (you asked for ${esc(item.requestedGuide)})` : ''}`)
+        ];
+        if (item.paid) {
+            details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online (test mode)' : ' · at the office'}`));
+            if (item.paid.refundedAt) details.push(row('Refunded', peso(item.paid.refundAmount)));
+        }
+
+        const minDate = item.today;
+        const moveForm = item.canMove ? `
+            <form id="moveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
+                <h2 class="font-bold text-on-surface">Move to another ${isTicket ? 'date' : 'date or time'}</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr_${isTicket ? '' : '10rem_'}auto] gap-3 items-end">
+                    <label class="block"><span class="field-label">New date</span>
+                        <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="field"/></label>
+                    ${isTicket ? '' : `<label class="block"><span class="field-label">Time</span>
+                        <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="field"/></label>`}
+                    <button type="submit" id="moveBtn" class="btn btn-secondary min-h-[44px]">Move</button>
                 </div>
-                <p class="text-sm text-on-surface-variant">
-                    The Municipal Tourism Office will assign your guide. Keep your reference,
-                    <b class="font-mono">${esc(b.reference)}</b>: it is how the office finds your booking.
-                </p>`);
-            return;
-        }
-        if (c.status === 'paid' && c.kind === 'ticket' && c.ticket && c.ticket.code) {
-            const t = c.ticket;
-            show(heading('confirmation_number', 'tone-success', 'Your entrance ticket',
-                    'Show this at the entrance. Take a screenshot so you have it even without signal.') + `
-                <div class="ztims-card p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
-                    <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${esc(t.spot)}</p>
-                    <p class="text-lg font-bold text-on-surface">${niceDate(t.visitDate)}</p>
-                    <div class="bg-white p-3 w-52 h-52 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(t.code)}">${t.qr}</div>
-                    <p class="font-mono text-2xl font-black tracking-widest text-on-surface select-all">${esc(t.code)}</p>
-                    <p class="text-on-surface">${esc(t.people)} ${Number(t.people) === 1 ? 'person' : 'people'} · ${esc(t.name)}</p>
-                    ${t.kindsText ? `<p class="text-support">${esc(t.kindsText)}</p>` : ''}
-                    ${(t.kinds || []).some(k => k.needsId) ? '<p class="text-support"><b>Bring the senior citizen, PWD or student ID</b> for anyone at a discounted price.</p>' : ''}
-                    ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the gate</p>' : ''}
-                </div>
-                <div>${paidLine(c)}</div>
-                <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>
-                ${t.spotId && t.status === 'valid' ? `
-                <a href="spot.html?spotId=${encodeURIComponent(t.spotId)}&ticketDate=${encodeURIComponent(t.visitDate)}"
-                   class="btn btn-secondary min-h-[44px] w-full sm:w-auto">
-                    <span class="material-symbols-outlined !text-base">group_add</span> Buy for more people, same date
-                </a>
-                <p class="text-support">There may be no signal at the attraction, so buy for anyone else in your group now.</p>` : ''}
-                <p class="text-support">We have emailed you this ticket. To move or cancel it (until 11:59 PM the day before), use
-                    <a href="manage.html?code=${encodeURIComponent(t.code)}" class="underline font-bold">Manage my ticket</a>.</p>`);
-            return;
-        }
-        if (c.status === 'duplicate') {
-            show(heading('info', 'tone-warning', 'Payment received twice',
-                'This payment arrived after the booking or ticket was already paid or cancelled. The Municipal Tourism Office will refund it.'));
-            return;
-        }
-        if (c.status === 'expired') {
-            show(heading('schedule', 'tone-neutral', 'This payment link has expired',
-                'Nothing was charged. You can start again from the destination’s page, or pay at the Municipal Tourism Office.'));
-            return;
-        }
-        // Still pending.
-        if (cancelled) {
-            const ref = c.booking ? `Your booking <b class="font-mono">${esc(c.booking.reference)}</b> is still saved.` : 'Your tickets were not bought.';
-            show(heading('undo', 'tone-neutral', 'Payment cancelled', `Nothing was charged. ${ref}`) + `
-                <div class="flex flex-wrap gap-2">
-                    ${c.payUrl ? `<a href="${esc(c.payUrl)}" class="btn btn-primary min-h-[44px]">Try paying again</a>` : ''}
-                    <a href="../index.html" class="btn btn-ghost min-h-[44px]">Back to destinations</a>
-                </div>
-                ${c.booking ? '<p class="text-support">You can also pay at the Municipal Tourism Office.</p>' : ''}`);
-            return;
-        }
-        if (tries < 20) {
-            tries += 1;
-            setTimeout(load, 2000);
-            return;
-        }
-        show(heading('hourglass_top', 'tone-warning', 'Still waiting for the payment service',
-            'You can close this page. When the payment arrives, ZTIMS confirms it by itself.') +
-            (c.booking ? `<p class="text-sm">Your reference: <b class="font-mono">${esc(c.booking.reference)}</b></p>` : ''));
+                <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
+            </form>` : '';
+        const cancelForm = item.canCancel ? `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
+                <h2 class="font-bold text-on-surface">Cancel</h2>
+                <p class="text-sm text-on-surface-variant">${item.paid && !item.paid.refundedAt
+                    ? `You get <b>${peso(item.refund)}</b> back${item.kept > 0 ? `; the office keeps ${esc(item.keepPercent)}% (${peso(item.kept)})` : ''}. This cannot be undone.`
+                    : 'Nothing has been paid, so nothing is refunded. This cannot be undone.'}</p>
+                <button type="button" id="cancelBtn" class="btn btn-danger min-h-[44px]">Cancel this ${isTicket ? 'ticket' : 'booking'}</button>
+            </div>` : '';
+
+        box.innerHTML = `
+            ${notice ? `<p class="tone-success text-sm font-bold border border-outline-variant/30 p-3">${esc(notice)}</p>` : ''}
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">${isTicket ? 'Your entrance ticket' : 'Your guide booking'}</h2>
+                <span class="${tone} tone-pill text-[11px] font-bold uppercase tracking-wider px-2 py-1">${esc(label)}</span>
+            </div>
+            ${item.qr ? `<div class="flex justify-center"><div class="bg-white p-3 w-48 h-48 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(item.code)}">${item.qr}</div></div>` : ''}
+            <div>${details.join('')}</div>
+            ${item.canMove || item.canCancel
+                ? `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`
+                : `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`}
+            ${moveForm}
+            ${cancelForm}
+            <p id="actionError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>`;
+        box.hidden = false;
+        wireActions(item);
     }
 
-    async function load() {
-        if (!/^[0-9a-f]{24}$/.test(id)) {
-            show(heading('error', 'tone-danger', 'Payment not found', 'This link is incomplete. Open the payment again from the destination’s page.'));
-            return;
+    function showError(id, message) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message || '';
+        el.hidden = !message;
+    }
+
+    function wireActions(item) {
+        const move = document.getElementById('moveForm');
+        if (move) {
+            const dateInput = document.getElementById('moveDate');
+            const button = document.getElementById('moveBtn');
+            dateInput.addEventListener('change', () => {
+                const reason = closedDayReason(dateInput.value, item.calendar);
+                showError('actionError', reason);
+                button.disabled = Boolean(reason);
+            });
+            move.addEventListener('submit', async event => {
+                event.preventDefault();
+                showError('actionError', '');
+                if (!dateInput.value) return showError('actionError', 'Choose the new date.');
+                button.disabled = true;
+                try {
+                    const time = document.getElementById('moveTime');
+                    const result = await call('/manage/move', { date: dateInput.value, ...(time ? { time: time.value } : {}) });
+                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
+                } catch (error) {
+                    showError('actionError', error.message);
+                    button.disabled = false;
+                }
+            });
         }
+        const cancel = document.getElementById('cancelBtn');
+        if (cancel) {
+            // Asked twice: the second press is the decision.
+            cancel.addEventListener('click', async () => {
+                if (!cancel.dataset.sure) {
+                    cancel.dataset.sure = '1';
+                    cancel.textContent = 'Yes, cancel it';
+                    return;
+                }
+                cancel.disabled = true;
+                showError('actionError', '');
+                try {
+                    const result = await call('/manage/cancel');
+                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
+                } catch (error) {
+                    showError('actionError', error.message);
+                    cancel.disabled = false;
+                }
+            });
+        }
+    }
+
+    document.getElementById('findForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        showError('findError', '');
+        const code = document.getElementById('findCode').value.trim();
+        const email = document.getElementById('findEmail').value.trim();
+        if (!code || !email) return showError('findError', 'Fill in both the code and the email address.');
+        const button = document.getElementById('findBtn');
+        button.disabled = true;
+        current = { code, email };
         try {
-            const response = await fetch(`${API_BASE}/payments/checkout/${id}`);
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.message || 'This payment could not be found.');
-            render(data.checkout);
+            const result = await call('/manage/lookup');
+            render(result.item);
         } catch (error) {
-            show(heading('error', 'tone-danger', 'Payment not found', esc(error.message)));
+            box.hidden = true;
+            showError('findError', error.message);
+        } finally {
+            button.disabled = false;
         }
-    }
+    });
 
-    load();
+    // A link from an email carries the code, never the email address.
+    const fromLink = new URLSearchParams(window.location.search).get('code');
+    if (fromLink) {
+        document.getElementById('findCode').value = fromLink;
+        document.getElementById('findEmail').focus();
+    }
 })();
 </script>
 </body>

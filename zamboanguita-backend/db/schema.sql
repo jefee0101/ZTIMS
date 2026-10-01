@@ -672,6 +672,10 @@ alter table public.payments add column if not exists refunded_at timestamptz;
 alter table public.payments add column if not exists refund_reason text not null default '';
 alter table public.payments add column if not exists refunded_by_email text not null default '';
 alter table public.payments add column if not exists is_demo boolean not null default false;
+-- How much went back. Null on a refund from before partial refunds: all of it.
+-- A visitor's own cancellation returns the amount less the share the office
+-- keeps (spots.cancel_keep_percent); the office's cancellation returns it all.
+alter table public.payments add column if not exists refund_amount numeric;
 
 do $$
 begin

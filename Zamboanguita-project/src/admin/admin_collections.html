@@ -721,7 +721,7 @@ body { overflow-x: hidden; }
                         <th class="px-2 py-2 text-right">Amount</th><th class="px-2 py-2">OR number</th><th class="px-2 py-2"></th>
                     </tr></thead>
                     <tbody class="divide-y divide-outline-variant/20">${rows.map(p => `
-                        <tr data-id="${escapeHtml(p._id)}" class="${p.refundedAt ? 'opacity-60' : ''}">
+                        <tr data-id="${escapeHtml(p._id)}" class="${p.refundedAt && !p.kept ? 'opacity-60' : ''}">
                             <td class="px-2 py-3 whitespace-nowrap">${when(p.paidAt)}</td>
                             <td class="px-2 py-3">
                                 <span class="font-mono font-bold text-on-surface">${escapeHtml(p.reference)}</span>
@@ -732,13 +732,15 @@ body { overflow-x: hidden; }
                                 <span class="text-on-surface">${escapeHtml(p.payer || '—')}</span>
                                 <span class="block text-support">${escapeHtml(METHOD[p.method] || p.method)} · ${p.channel === 'online' ? 'online' : 'counter'}</span>
                             </td>
-                            <td class="px-2 py-3 text-right tabular-nums font-bold text-on-surface ${p.refundedAt ? 'line-through' : ''}">${peso(p.amount)}</td>
+                            <td class="px-2 py-3 text-right tabular-nums font-bold text-on-surface">
+                                <span class="${p.refundedAt && !p.kept ? 'line-through' : ''}">${peso(p.amount)}</span>
+                                ${p.refundedAt && p.kept ? `<span class="block text-support font-normal">${peso(p.refundAmount)} back · ${peso(p.kept)} kept</span>` : ''}</td>
                             <td class="px-2 py-3">${p.receiptNumber
                                 ? `<span class="font-mono">${escapeHtml(p.receiptNumber)}</span>`
                                 : p.refundedAt ? '–'
                                 : `<form data-or class="flex gap-1"><input name="or" placeholder="OR-…" class="field !py-1.5 !w-28" aria-label="OR number for ${escapeHtml(p.reference)}"/><button class="btn btn-secondary btn-sm">Save</button></form>`}</td>
                             <td class="px-2 py-3 text-right">${p.refundedAt
-                                ? `<span class="tone-neutral text-support" title="${escapeHtml(p.refundReason)}">Refunded</span>`
+                                ? `<span class="tone-neutral text-support" title="${escapeHtml(p.refundReason)}">${p.kept ? 'Part refunded' : 'Refunded'}</span>`
                                 : p.ticketStatus === 'used'
                                     ? '<span class="text-support" title="A used ticket is never refundable.">Used at the gate</span>'
                                     : `<button data-refund class="btn btn-ghost btn-sm !text-error">Refund</button>`}</td>

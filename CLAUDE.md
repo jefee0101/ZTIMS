@@ -463,6 +463,29 @@ guided destinations:
   used by ticket sales and guide bookings alike; the public ticket offer and
   guide requirement carry `openDays` and `closedDates` so the forms say so first.
 
+### Visitor emails and "Manage my ticket / booking"
+
+- **`mailer.js`** sends through the office's Gmail (`MAIL_USER`, `MAIL_PASSWORD`,
+  an App Password — the same account as the staff password reset). It never
+  throws and gives up after 8 s: an email is a courtesy, never the record, so a
+  missing setting or a refused message is logged and the change stands. Pages
+  only say "we have emailed you" when the server says it went (`emailed`).
+  `MAIL_TRANSPORT=file:/path` writes messages to a file, for local tests only.
+- **`notices.js`** writes each email from the database: ticket receipt (the QR as
+  an attached PNG — mail apps block inline images), booking received, booking
+  paid, guide confirmed, moved, cancelled, and (closures) the office's notice.
+  An online payment's receipt is sent only by the call that recorded it
+  (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
+  send two. Links carry the code, never the email address.
+- **`manage.js`** (`/api/manage/lookup|move|cancel`, rate-limited) and
+  `src/manage.html`: the code (or booking reference) AND the email, together.
+  Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
+  refunds the amount less `cancel_keep_percent` (a partial Xendit refund,
+  `payments.refund_amount`); the office's refunds return everything. A used
+  ticket is never moved or refunded; a moved guide booking loses its guide and
+  goes back to the office; a counter-paid booking can be moved here but is
+  cancelled at the counter. Collections counts what was kept.
+
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
 needs one (a route that never queries, like `/api/directions/capabilities`,

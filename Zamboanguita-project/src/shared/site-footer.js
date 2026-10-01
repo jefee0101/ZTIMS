@@ -67,6 +67,7 @@
                             link(r + 'index.html', 'Destinations') +
                             link(r + 'index.html#map', 'Map &amp; directions') +
                             link(src + 'history.html', 'Our History') +
+                            link(src + 'manage.html', 'Manage my ticket or booking') +
                         '</ul>' +
                     '</nav>' +
 

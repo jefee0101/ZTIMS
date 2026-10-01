@@ -33,6 +33,7 @@ const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
 const { query, transaction } = require('./db');
 const attractions = require('./attractions');
+const notices = require('./notices');
 const {
     bookings: GuideBooking, payments: Payment, tickets: Ticket, checkouts: Checkout,
     guides: TouristGuide, officers: TourismOfficer, spots: Spot
@@ -311,6 +312,7 @@ async function recordPaid(checkoutId, paid) {
         checkout.paymentRef = paid.ref;
         checkout.paidAt = paid.paidAt;
         await Checkout.save(checkout, { client });
+        checkout.justPaid = !duplicate;   // recorded now, by this call: its receipt is this call's to send
         if (duplicate) console.warn(`⚠️ Checkout ${checkout._id} was paid but its ${checkout.kind} was already paid or cancelled — refund it.`);
         else console.log(`💳 Online payment (test mode) recorded for checkout ${checkout._id}`);
         return checkout;
@@ -321,13 +323,22 @@ async function recordPaid(checkoutId, paid) {
    This is the only way a payment is ever believed. Xendit's callback may also
    re-check an expired one (lateToo): a payment made in the last seconds of the
    invoice can arrive after our own window closed, and must not be lost. */
-async function settle(checkout, { lateToo = false } = {}) {
+async function settle(checkout, { lateToo = false, origin = '' } = {}) {
     const open = checkout && (checkout.status === 'pending' || (lateToo && checkout.status === 'expired'));
     if (!open || !checkout.sessionId) return checkout;
     if (!gatewayState().online) return checkout;
     const invoice = await gateway('GET', `/v2/invoices/${encodeURIComponent(checkout.sessionId)}`);
     const paid = paidPaymentOf(invoice, checkout);
-    if (paid) return recordPaid(checkout._id, paid);
+    if (paid) {
+        const recorded = await recordPaid(checkout._id, paid);
+        // The receipt goes once: only the call that recorded the payment sends
+        // it, so the return page and Xendit's callback never send two.
+        if (recorded && recorded.justPaid) {
+            if (recorded.kind === 'ticket') await notices.ticketReceipt(recorded.ticketId, origin, { qrContent: await ticketQrContent(recorded.ticketId) });
+            else await notices.bookingPaid(recorded.bookingId, origin);
+        }
+        return recorded;
+    }
     // Past our own window the invoice has expired at Xendit too
     // (invoice_duration), so no payment can arrive on it any more. A paid
     // invoice that failed the checks above stays pending, for a person to see.
@@ -337,6 +348,12 @@ async function settle(checkout, { lateToo = false } = {}) {
         await Checkout.save(checkout);
     }
     return checkout;
+}
+
+/* What a ticket's QR code holds. */
+async function ticketQrContent(ticketId) {
+    const t = await Ticket.findById(ticketId);
+    return t ? t.code : '';
 }
 
 /* ---------------------------------------------------------------- public views */
@@ -413,17 +430,22 @@ async function listPayments(from, to) {
         recordedByEmail: r.recorded_by_email,
         refundedAt: r.refunded_at,
         refundReason: r.refund_reason,
+        // What went back: the refund amount, or all of it for an older refund.
+        refundAmount: r.refunded_at ? money(r.refund_amount ?? r.amount) : 0,
+        kept: money(r.amount - (r.refunded_at ? Number(r.refund_amount ?? r.amount) : 0)),
         isDemo: r.is_demo
     }));
 }
 
+/* Totals of what the office KEPT: a payment counts in full, less whatever went
+   back (all of it for an office refund, part of it for a visitor's cancellation). */
 function summarise(list) {
-    const kept = list.filter(p => !p.refundedAt);
-    const sum = items => money(items.reduce((a, p) => a + p.amount, 0));
+    const kept = list.filter(p => p.kept > 0);
+    const sum = items => money(items.reduce((a, p) => a + p.kept, 0));
     const byDay = new Map();
     for (const p of kept) {
         const d = byDay.get(p.day) || { day: p.day, guideFees: 0, entranceFees: 0, count: 0 };
-        d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] = money(d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] + p.amount);
+        d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] = money(d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] + p.kept);
         d.count += 1;
         byDay.set(p.day, d);
     }
@@ -433,7 +455,7 @@ function summarise(list) {
         entranceFees: sum(kept.filter(p => p.kind === 'entrance_fee')),
         online: sum(kept.filter(p => p.channel === 'online')),
         counter: sum(kept.filter(p => p.channel === 'counter')),
-        refunded: sum(list.filter(p => p.refundedAt)),
+        refunded: money(list.reduce((a, p) => a + p.refundAmount, 0)),
         count: kept.length,
         awaitingReceipt: kept.filter(p => !p.receiptNumber).length,
         daily: [...byDay.values()].sort((a, b) => b.day.localeCompare(a.day))
@@ -664,10 +686,14 @@ async function seedDemo(officerEmail) {
 
 /* ---------------------------------------------------------------- refunds */
 
-async function refund(paymentId, reason, officerEmail) {
+/* Refunds a payment and cancels what it paid for. `amount` defaults to all of
+   it (the office cancelled); a visitor's own cancellation passes the amount
+   less the share the office keeps, which may be nothing at all. */
+async function refund(paymentId, reason, officerEmail, { amount } = {}) {
     const payment = await Payment.findById(paymentId);
     if (!payment) { const e = new Error('That payment could not be found.'); e.status = 404; throw e; }
     if (payment.refundedAt) { const e = new Error('That payment was already refunded.'); e.status = 409; throw e; }
+    const refundAmount = amount === undefined ? money(payment.amount) : money(Math.min(Math.max(0, amount), payment.amount));
 
     // A used ticket is never refundable: the visitor got in. The ticket is
     // taken out of use FIRST, by one conditional update, so the gate cannot
@@ -687,7 +713,7 @@ async function refund(paymentId, reason, officerEmail) {
         });
     }
     try {
-        return await sendRefund(payment, reason, officerEmail);
+        return await sendRefund(payment, reason, officerEmail, refundAmount);
     } catch (error) {
         if (ticketBefore && ticketBefore !== 'cancelled') {
             await query(`update tickets set status = $2 where id = $1 and status = 'cancelled'`, [payment.ticketId, ticketBefore]).catch(() => {});
@@ -696,19 +722,19 @@ async function refund(paymentId, reason, officerEmail) {
     }
 }
 
-async function sendRefund(payment, reason, officerEmail) {
+async function sendRefund(payment, reason, officerEmail, refundAmount) {
     // A real test-mode payment — one an invoice of ours paid — goes back
     // through the gateway. Seeded demo payments and cash handed back at the
     // counter are recorded only.
     const { rows: paidBy } = await query(
         `select id from online_checkouts where payment_ref = $1 and status = 'paid' limit 1`, [payment.gatewayRef || '']);
-    if (payment.channel === 'online' && payment.gatewayRef && paidBy.length) {
+    if (refundAmount > 0 && payment.channel === 'online' && payment.gatewayRef && paidBy.length) {
         if (!gatewayState().online) { const e = new Error('Online payment is switched off, so this refund cannot be sent.'); e.status = 409; throw e; }
         // The idempotency key makes a second click (or a second officer) ask
         // for the same refund, never a second one.
         await gateway('POST', '/refunds', {
             invoice_id: payment.gatewayRef,
-            amount: money(payment.amount),
+            amount: refundAmount,
             reason: 'CANCELLATION'
         }, { 'Idempotency-key': `ztims-refund-${payment._id}` });
     }
@@ -717,6 +743,7 @@ async function sendRefund(payment, reason, officerEmail) {
         payment.refundedAt = new Date();
         payment.refundReason = reason;
         payment.refundedByEmail = officerEmail;
+        payment.refundAmount = refundAmount;
         await Payment.save(payment, { client });
         if (payment.bookingId) {
             const booking = await GuideBooking.findById(payment.bookingId, { client });
@@ -876,7 +903,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             if (!/^[0-9a-f]{24}$/.test(req.params.id)) return fail(res, 404, 'That payment could not be found.');
             let checkout = await Checkout.findById(req.params.id);
             if (!checkout) return fail(res, 404, 'That payment could not be found.');
-            try { checkout = await settle(checkout); } catch (error) { /* the page asks again */ }
+            try { checkout = await settle(checkout, { origin: siteOrigin(req) }); } catch (error) { /* the page asks again */ }
             return res.json({ success: true, checkout: await checkoutView(checkout) });
         } catch (error) {
             return failure(res, error, '❌ Checkout status failure:');
@@ -900,7 +927,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             if (!invoiceId || !match) return res.status(200).json({ ignored: true });
             const checkout = await Checkout.findById(match[1]);
             if (!checkout || checkout.sessionId !== invoiceId) return res.status(200).json({ ignored: true });
-            await settle(checkout, { lateToo: true });
+            await settle(checkout, { lateToo: true, origin: siteOrigin(req) });
             return res.status(200).json({ received: true });
         } catch (error) {
             // A non-2xx makes Xendit try again later, which is what we want
@@ -948,7 +975,10 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const reason = String((req.body && req.body.reason) || '').trim();
             if (!reason) return fail(res, 400, 'Give the reason for the refund, for example "bad weather".');
             const payment = await refund(req.params.id, reason.slice(0, 300), await officerEmail(req));
-            res.json({ success: true, message: `₱${money(payment.amount).toLocaleString('en-PH')} refunded. The booking or ticket is cancelled.`, payment });
+            const told = payment.ticketId
+                ? await notices.ticketCancelled(payment.ticketId, { refundAmount: payment.refundAmount, byVisitor: false, reason }, siteOrigin(req))
+                : await notices.bookingCancelled(payment.bookingId, { refundAmount: payment.refundAmount, byVisitor: false, reason }, siteOrigin(req));
+            res.json({ success: true, message: `₱${money(payment.amount).toLocaleString('en-PH')} refunded. The booking or ticket is cancelled.${told.sent ? ' The visitor has been emailed.' : ''}`, payment });
         } catch (error) {
             return failure(res, error, '❌ Refund failure:');
         }
@@ -979,13 +1009,11 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
                     reference: p.reference, place: p.place, payer: p.payer,
                     channel: p.channel === 'online' ? 'Online' : 'Counter', method: p.method,
                     amount: p.amount, or: p.receiptNumber,
-                    refunded: p.refundedAt ? `Yes — ${p.refundReason}` : '', demo: p.isDemo ? 'Yes' : ''
+                    refunded: p.refundedAt ? `${money(p.refundAmount).toLocaleString('en-PH')} — ${p.refundReason}` : '', demo: p.isDemo ? 'Yes' : ''
                 });
             }
-            const last = ws.rowCount;
-            const kept = list.filter(p => !p.refundedAt).reduce((a, p) => a + p.amount, 0);
-            const total = ws.addRow({ place: 'Total collected (refunds excluded)',
-                amount: { formula: `SUMIFS(I2:I${last},K2:K${last},"")`, result: money(kept) } });
+            const kept = list.reduce((a, p) => a + p.kept, 0);
+            const total = ws.addRow({ place: 'Total kept (paid, less what was refunded)', amount: money(kept) });
             total.font = { name: 'Arial', bold: true };
             ws.getColumn('amount').numFmt = '#,##0.00';
             ws.eachRow(row => row.eachCell(cell => { cell.font = { name: 'Arial', ...(cell.font || {}) }; }));
@@ -1102,4 +1130,6 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
 };
 
 module.exports.gatewayState = gatewayState;
+module.exports.refund = refund;
+module.exports.siteOrigin = siteOrigin;
 module.exports.DEMO_BOOKING_PREFIX = DEMO_BOOKING_PREFIX;

@@ -484,6 +484,7 @@ const payments = new Table('payments', {
     refundedAt: when(),
     refundReason: text(),
     refundedByEmail: text(),
+    refundAmount: { type: 'number', nullable: true, min: 0 },
     isDemo: flag(false)
 });
 
