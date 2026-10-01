@@ -360,11 +360,11 @@ body { overflow-x: hidden; }
                         Privacy <span class="text-gradient">Policy</span>
                     </h1>
                     <p class="text-on-surface-variant mt-4 leading-relaxed">
-                        ZTIMS is built to collect as little as possible. There are no visitor accounts, no
-                        advertising trackers and no online payments. This page lists exactly what the site does
-                        handle, why, and who else sees it.
+                        ZTIMS is built to collect as little as possible. There are no visitor accounts and no
+                        advertising trackers. This page lists exactly what the site does handle, why, and who else
+                        sees it.
                     </p>
-                    <p class="text-support mt-3">Last updated 21 September 2026</p>
+                    <p class="text-support mt-3">Last updated 1 October 2026</p>
                 </header>
 
                 <!-- The short version, up front. Most people want to know three things
@@ -382,8 +382,8 @@ body { overflow-x: hidden; }
                     </div>
                     <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20">
                         <span class="material-symbols-outlined text-primary !text-2xl">credit_card_off</span>
-                        <p class="font-bold text-on-surface mt-2">No online payment</p>
-                        <p class="text-support mt-1">Guide fees are paid at the office counter. We never ask for card details.</p>
+                        <p class="font-bold text-on-surface mt-2">We never see your card</p>
+                        <p class="text-support mt-1">Online payment happens on the payment service's own page. You can always pay at the office or the gate instead.</p>
                     </div>
                 </div>
 
@@ -425,6 +425,26 @@ body { overflow-x: hidden; }
                             <li><strong>Group size, preferred date and time, and any notes you add</strong> — to plan the tour and assign a guide.</li>
                         </ul>
 
+                        <h3>When you buy an entrance ticket</h3>
+                        <ul>
+                            <li><strong>The name the tickets are under and your email</strong> — the email is where we send your ticket and receipt, and together with the ticket code it lets you open "Manage my ticket" to move or cancel it. A contact number is optional.</li>
+                            <li><strong>The date of your visit and how many people of each kind</strong> (regular, senior citizen, person with disability, student, child) — to price the tickets and to tell the entrance staff how many people to let in.</li>
+                            <li><strong>We do not collect or keep a copy of any ID.</strong> A senior citizen, PWD or student ID is only looked at by staff at the entrance, to check the discount, and handed straight back.</li>
+                        </ul>
+
+                        <h3>When you pay online</h3>
+                        <ul>
+                            <li>Online payment is offered as a <strong>demonstration in the payment service's test mode</strong>: no real money moves. You can always pay at the Municipal Tourism Office or at the gate instead.</li>
+                            <li>You pay on <strong>Xendit's</strong> own page. Your card number, wallet PIN and bank details go to Xendit, never to ZTIMS. We do not send Xendit your name, email or phone number.</li>
+                            <li>ZTIMS keeps only what a receipt needs: the amount, the method (for example GCash), Xendit's payment reference, and any refund.</li>
+                        </ul>
+
+                        <h3>Emails we send you</h3>
+                        <ul>
+                            <li>To the email you gave, and only about your own ticket or booking: the <strong>receipt</strong>, and <strong>notices</strong> when it is moved, cancelled or refunded, or when the office has to close an attraction on your date.</li>
+                            <li>No newsletters and no marketing, ever.</li>
+                        </ul>
+
                         <h3>When you send feedback</h3>
                         <ul>
                             <li><strong>Your message and the topic you chose.</strong></li>
@@ -455,8 +475,9 @@ body { overflow-x: hidden; }
                         <h2 id="third-parties">4. Services that see requests</h2>
                         <p>
                             ZTIMS relies on a few outside services to work. Your browser or our server talks to them
-                            directly, so they see the requests involved. We never send them your name, email or
-                            booking details; the most any of them receives is the coordinates of a route you asked for.
+                            directly, so they see the requests involved. Apart from the hosts that store our records and
+                            the email service that delivers your own emails, none of them is sent your name, email or
+                            booking details; the most a map service receives is the coordinates of a route you asked for.
                         </p>
                         <ul>
                             <li><strong>OpenStreetMap</strong> — the map images. Your browser fetches the tiles for the area you are looking at.</li>
@@ -464,7 +485,9 @@ body { overflow-x: hidden; }
                             <li><strong>OpenRouteService and Nominatim (OpenStreetMap)</strong> — turn a typed place name into coordinates for the address search, and the other way round when a manager pins a location.</li>
                             <li><strong>Cloudinary</strong> — hosts the listing photographs. Your browser loads them from there.</li>
                             <li><strong>Google Fonts, Tailwind CSS and unpkg</strong> — deliver the site's typefaces, styles and map library. Your browser fetches these files from them.</li>
-                            <li><strong>Vercel</strong> (this site), <strong>Render</strong> (our server) and <strong>MongoDB Atlas</strong> (our database) — host the system. Bookings and feedback are stored in the database.</li>
+                            <li><strong>Xendit</strong> — the payment page, when you choose to pay online. It sees what you pay with; ZTIMS does not.</li>
+                            <li><strong>Google (Gmail)</strong> — delivers the Tourism Office's emails to you, so it handles your email address and the message.</li>
+                            <li><strong>Vercel</strong> (this site and our server) and <strong>Supabase</strong> (our database, in Singapore) — host the system. Bookings, tickets, payments and feedback are stored in the database.</li>
                         </ul>
                         <p>Each of these has its own privacy policy that covers what it logs on its own side.</p>
 
@@ -479,6 +502,7 @@ body { overflow-x: hidden; }
                         <h2 id="retention">6. How long we keep it</h2>
                         <ul>
                             <li><strong>Guide bookings</strong> are municipal tourism records and are kept as such. A cancelled booking is marked cancelled, not erased, so the record of what happened stays complete.</li>
+                            <li><strong>Tickets and payments</strong> are kept as records of money collected and refunded, which the municipality must be able to account for.</li>
                             <li><strong>Feedback</strong> is kept while it is being acted on and afterwards as a record of what was reported and fixed.</li>
                             <li><strong>Your location</strong> for a directions request is not kept at all.</li>
                         </ul>
@@ -486,7 +510,7 @@ body { overflow-x: hidden; }
                         <h2 id="security">7. How it is protected</h2>
                         <ul>
                             <li>Everything between your browser, this site and our server travels over <strong>HTTPS</strong>.</li>
-                            <li>Bookings and feedback can only be read by <strong>signed-in Tourism Office staff</strong>. Establishment managers see only their own listings, never bookings or feedback.</li>
+                            <li>Bookings, tickets, payments and feedback can only be read by <strong>signed-in Tourism Office staff</strong>. Establishment managers see only their own listings, never bookings, tickets or feedback. "Manage my ticket" opens a ticket only with both its code and the email it was bought with.</li>
                             <li>Public forms are rate-limited to blunt abuse. Secret keys for outside services are kept on the server and never sent to the browser.</li>
                         </ul>
                         <p>No system is perfectly secure. If you believe your information has been exposed, tell us through the <a href="contact.html">Contact Us</a> page and we will investigate.</p>
@@ -507,7 +531,8 @@ body { overflow-x: hidden; }
 
                         <h2 id="children">9. Children</h2>
                         <p>
-                            The site is written for the general public and asks for no age. A guide booking should be
+                            The site is written for the general public. A ticket may count children in the group for the
+                            child's price, but no child's name or age is recorded. A guide booking or a ticket should be
                             made by an adult in the group, who is the person named on it.
                         </p>
 

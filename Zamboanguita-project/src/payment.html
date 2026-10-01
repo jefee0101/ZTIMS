@@ -417,7 +417,13 @@ body { overflow-x: hidden; }
                     ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the gate</p>' : ''}
                 </div>
                 <div>${paidLine(c)}</div>
-                <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>`);
+                <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>
+                ${t.spotId && t.status === 'valid' ? `
+                <a href="spot.html?spotId=${encodeURIComponent(t.spotId)}&ticketDate=${encodeURIComponent(t.visitDate)}"
+                   class="btn btn-secondary min-h-[44px] w-full sm:w-auto">
+                    <span class="material-symbols-outlined !text-base">group_add</span> Buy for more people, same date
+                </a>
+                <p class="text-support">There may be no signal at the attraction, so buy for anyone else in your group now.</p>` : ''}`);
             return;
         }
         if (c.status === 'duplicate') {

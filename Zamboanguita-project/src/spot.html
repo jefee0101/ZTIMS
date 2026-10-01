@@ -358,6 +358,11 @@ body { overflow-x: hidden; }
                 Your guide is assigned by the office once payment is recorded.
             </p>
 
+            <p class="text-support">
+                Your details are used only for this booking. See the
+                <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
+            </p>
+
             <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
             <button type="submit" id="submitBookingBtn"
@@ -1055,6 +1060,13 @@ body { overflow-x: hidden; }
                     ${escapeHtml(formatPeso(offer.unitFee))} per person. Buy ahead and show the QR code at the entrance,
                     or pay at the gate as usual. <b>Test mode:</b> a demonstration, no real money moves.
                 </p>
+                <!-- There is often no mobile signal at the attraction itself, so a
+                     ticket cannot be bought, or a forgotten one fetched, once there. -->
+                <p class="tone-warning text-sm flex items-start gap-2 border border-outline-variant/40 p-3">
+                    <span class="material-symbols-outlined !text-lg shrink-0" aria-hidden="true">signal_cellular_off</span>
+                    <span><b>There may be no mobile signal at the attraction.</b> Buy for your whole group now, and save
+                    the QR code (a screenshot is fine) before you set off.</span>
+                </p>
                 <form id="ticketForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" novalidate>
                     <label class="block">
                         <span class="block text-label font-bold uppercase tracking-wider mb-1">Date of visit</span>
@@ -1084,9 +1096,20 @@ body { overflow-x: hidden; }
                             <span class="material-symbols-outlined !text-lg">payments</span> Buy and pay online
                         </button>
                     </div>
+                    <p class="sm:col-span-2 text-support">
+                        Your name and email are used only for these tickets. See the
+                        <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
+                    </p>
                     <p id="tkError" hidden class="sm:col-span-2 text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
                 </form>
             </section>`;
+
+        const wanted = new URLSearchParams(window.location.search).get('ticketDate') || '';
+        const dateInput = document.getElementById('tkDate');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(wanted) && wanted >= today && wanted <= last) {
+            dateInput.value = wanted;
+            slot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         const people = document.getElementById('tkPeople');
         const total = document.getElementById('tkTotal');

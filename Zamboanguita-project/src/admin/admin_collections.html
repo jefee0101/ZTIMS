@@ -739,7 +739,9 @@ body { overflow-x: hidden; }
                                 : `<form data-or class="flex gap-1"><input name="or" placeholder="OR-…" class="field !py-1.5 !w-28" aria-label="OR number for ${escapeHtml(p.reference)}"/><button class="btn btn-secondary btn-sm">Save</button></form>`}</td>
                             <td class="px-2 py-3 text-right">${p.refundedAt
                                 ? `<span class="tone-neutral text-support" title="${escapeHtml(p.refundReason)}">Refunded</span>`
-                                : `<button data-refund class="btn btn-ghost btn-sm !text-error">Refund</button>`}</td>
+                                : p.ticketStatus === 'used'
+                                    ? '<span class="text-support" title="A used ticket is never refundable.">Used at the gate</span>'
+                                    : `<button data-refund class="btn btn-ghost btn-sm !text-error">Refund</button>`}</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>`;

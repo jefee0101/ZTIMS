@@ -365,7 +365,7 @@ async function checkoutView(checkout) {
     } else {
         const t = await Ticket.findById(checkout.ticketId);
         if (t) {
-            view.ticket = { spot: await spotTitle(t.spotId), visitDate: dayOf(t.visitDate), people: t.people,
+            view.ticket = { spot: await spotTitle(t.spotId), spotId: t.spotId, visitDate: dayOf(t.visitDate), people: t.people,
                             unitFee: money(t.unitFee), status: t.status, name: t.fullName };
             // The code and its QR only once paid: an unpaid ticket gets nobody in.
             if (['valid', 'used'].includes(t.status)) {
@@ -383,6 +383,7 @@ async function listPayments(from, to) {
     const { rows } = await query(`
         select p.*, b.reference as booking_ref, b.full_name as booking_name, bs.title as booking_spot,
                t.code as ticket_code, t.full_name as ticket_name, t.people as ticket_people, t.visit_date as ticket_date,
+               t.status as ticket_status,
                ts.title as ticket_spot
           from payments p
           left join guide_bookings b on b.id = p.booking_id
@@ -400,6 +401,7 @@ async function listPayments(from, to) {
         place: r.booking_id ? r.booking_spot : r.ticket_spot,
         payer: r.booking_id ? r.booking_name : r.ticket_name,
         people: r.ticket_people || null,
+        ticketStatus: r.ticket_status || null,
         channel: r.channel,
         method: r.method,
         amount: money(r.amount),
@@ -647,6 +649,34 @@ async function refund(paymentId, reason, officerEmail) {
     if (!payment) { const e = new Error('That payment could not be found.'); e.status = 404; throw e; }
     if (payment.refundedAt) { const e = new Error('That payment was already refunded.'); e.status = 409; throw e; }
 
+    // A used ticket is never refundable: the visitor got in. The ticket is
+    // taken out of use FIRST, by one conditional update, so the gate cannot
+    // admit it while the money is on its way back; if the refund then fails,
+    // it is put back as it was.
+    let ticketBefore = null;
+    if (payment.ticketId) {
+        ticketBefore = await transaction(async client => {
+            const { rows } = await query('select status from tickets where id = $1 for update', [payment.ticketId], client);
+            if (rows[0] && rows[0].status === 'used') {
+                const e = new Error('This ticket was already used at the gate, so it cannot be refunded.');
+                e.status = 409;
+                throw e;
+            }
+            await query(`update tickets set status = 'cancelled' where id = $1`, [payment.ticketId], client);
+            return rows[0] ? rows[0].status : null;
+        });
+    }
+    try {
+        return await sendRefund(payment, reason, officerEmail);
+    } catch (error) {
+        if (ticketBefore && ticketBefore !== 'cancelled') {
+            await query(`update tickets set status = $2 where id = $1 and status = 'cancelled'`, [payment.ticketId, ticketBefore]).catch(() => {});
+        }
+        throw error;
+    }
+}
+
+async function sendRefund(payment, reason, officerEmail) {
     // A real test-mode payment — one an invoice of ours paid — goes back
     // through the gateway. Seeded demo payments and cash handed back at the
     // counter are recorded only.
