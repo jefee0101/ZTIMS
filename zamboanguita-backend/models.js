@@ -87,7 +87,12 @@ const spots = new Table('spots', {
     status: text({ default: 'published', enum: ['published', 'unpublished', 'archived'] }),
     statusNote: text(),
     statusUpdatedAt: when(),
-    requiresGuide: flag(false)
+    requiresGuide: flag(false),
+    // Attraction setup (see schema.sql): null means that price is not offered.
+    studentFee: { type: 'number', nullable: true, min: 0 },
+    childFee: { type: 'number', nullable: true, min: 0 },
+    childAgeMax: { type: 'integer', nullable: true, min: 1, max: 17 },
+    cancelKeepPercent: number({ min: 0, max: 100 })
 });
 
 /* The establishment's details a listing is allowed to carry. Never the
@@ -497,6 +502,14 @@ const tickets = new Table('tickets', {
     isDemo: flag(false)
 });
 
+/* A date a destination is shut. */
+const closedDates = new Table('spot_closed_dates', {
+    spotId: { type: 'id', required: true },
+    closedDate: required(),   // YYYY-MM-DD
+    reason: text({ trim: true, maxlength: 200 }),
+    createdByEmail: text()
+});
+
 /* One trip to the payment gateway's checkout page. */
 const checkouts = new Table('online_checkouts', {
     kind: required({ enum: ['guide_booking', 'ticket'] }),
@@ -537,6 +550,7 @@ module.exports = {
     payments,
     tickets,
     checkouts,
+    closedDates,
     feedback,
     MAX_SPOT_IMAGES,
     GUIDE_STATUSES,

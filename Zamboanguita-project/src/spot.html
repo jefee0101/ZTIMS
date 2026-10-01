@@ -920,8 +920,11 @@ body { overflow-x: hidden; }
         document.getElementById('bookVisitors').max = String(maxGroup);
         document.getElementById('bookGroupHint').textContent =
             `Up to ${maxGroup} visitor${maxGroup === 1 ? '' : 's'} per guide.`;
-        // A date in the past is not offered in the first place.
-        document.getElementById('bookDate').min = new Date().toISOString().slice(0, 10);
+        // A date in the past is not offered in the first place, and a closed day
+        // is said to be closed before anyone submits.
+        const bookDate = document.getElementById('bookDate');
+        bookDate.min = new Date().toISOString().slice(0, 10);
+        bookDate.addEventListener('change', () => setBookingError(closedDayReason(bookDate.value, info)));
 
         function close() { modal.hidden = true; }
         openBtn.addEventListener('click', () => {
@@ -1034,6 +1037,22 @@ body { overflow-x: hidden; }
         };
     }
 
+    /* Why a date cannot be chosen here, or '' when it can. The server sends the
+       open weekdays (null: every day) and the closed dates, and refuses the
+       same days itself; this only saves a visitor a refused payment. */
+    const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    function closedDayReason(dateKey, calendar) {
+        if (!calendar || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return '';
+        const day = new Date(dateKey + 'T00:00:00Z').getUTCDay();
+        if (Array.isArray(calendar.openDays) && !calendar.openDays.includes(WEEKDAY_KEYS[day])) {
+            return `Closed on ${WEEKDAY_NAMES[day]}s. Open: ${calendar.openDaysText}.`;
+        }
+        const closed = (calendar.closedDates || []).find(c => c.date === dateKey);
+        if (closed) return `Closed on that date${closed.reason ? ` (${closed.reason})` : ''}. Please choose another day.`;
+        return '';
+    }
+
     /* Entrance tickets, for attractions the Tourism Office runs and charges for.
        Bought online (test mode) and shown at the gate as a QR code. */
     async function renderTicketOffer(spotId) {
@@ -1114,6 +1133,22 @@ body { overflow-x: hidden; }
         const people = document.getElementById('tkPeople');
         const total = document.getElementById('tkTotal');
         const error = document.getElementById('tkError');
+        const buyButton = document.getElementById('tkBuy');
+        const checkDate = () => {
+            const reason = closedDayReason(dateInput.value, offer);
+            error.textContent = reason;
+            error.hidden = !reason;
+            buyButton.disabled = Boolean(reason);
+        };
+        dateInput.addEventListener('change', checkDate);
+        // Today may itself be a closed day: open on the first day that is not.
+        if (closedDayReason(dateInput.value, offer) && !wanted) {
+            for (let i = 1; i <= offer.daysAhead; i++) {
+                const next = new Date(Date.now() + (8 + 24 * i) * 3600 * 1000).toISOString().slice(0, 10);
+                if (!closedDayReason(next, offer)) { dateInput.value = next; break; }
+            }
+        }
+        checkDate();
         const showTotal = () => { total.textContent = formatPeso((Math.max(0, Math.floor(Number(people.value)) || 0)) * offer.unitFee); };
         people.addEventListener('input', showTotal);
         showTotal();

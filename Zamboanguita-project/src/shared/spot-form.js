@@ -51,13 +51,12 @@
         { value: 'ACCOMMODATION', label: 'Accommodation' }
     ];
 
-    const DAY_PRESETS = [
-        'Everyday',
-        'Monday to Friday',
-        'Monday to Saturday',
-        'Weekends only',
-        'Wednesdays only'
-    ];
+    /* Opening days are ticked, one box a weekday, and stored as the words
+       visitors read ("Monday to Saturday"). shared/open-days.js turns one into
+       the other; ticket sales and guide bookings refuse the unticked days. */
+    const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const openDaysHelper = function () { return window.ZTIMS_OPEN_DAYS; };
 
     const MAX_SPOT_IMAGES = 30;              // must match MAX_SPOT_IMAGES in server.js
     const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -439,17 +438,19 @@
 
         /* =========================== STEP 3 — VISITING ====================== */
         '<section data-step="2" class="space-y-4" hidden>' +
-            '<div>' +
-                '<label for="' + p + 'SchedDays" class="' + LABEL + '">Open on</label>' +
-                '<select id="' + p + 'SchedDays" class="' + INPUT + '">' +
-                    DAY_PRESETS.map(function (d) {
-                        return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>';
+            '<fieldset>' +
+                '<legend class="' + LABEL + '">Open on</legend>' +
+                '<div id="' + p + 'SchedDays" class="flex flex-wrap gap-2">' +
+                    DAY_KEYS.map(function (d, i) {
+                        return '<label class="inline-flex items-center gap-2 border border-outline-variant/40 px-3 min-h-[44px] cursor-pointer select-none">' +
+                            '<input type="checkbox" value="' + d + '" checked class="w-5 h-5 text-primary focus:ring-primary"/>' +
+                            '<span class="text-sm font-bold">' + DAY_SHORT[i] + '</span>' +
+                        '</label>';
                     }).join('') +
-                    '<option value="__custom__">Something else…</option>' +
-                '</select>' +
-                '<input id="' + p + 'SchedDaysCustom" type="text" hidden placeholder="e.g., Tuesdays and Fridays" ' +
-                    'class="' + INPUT + ' mt-2"/>' +
-            '</div>' +
+                '</div>' +
+                '<p id="' + p + 'SchedDaysNote" hidden class="text-support mt-1"></p>' +
+                errorSlot(p + 'SchedDaysError') +
+            '</fieldset>' +
 
             '<div>' +
                 '<label for="' + p + 'SchedHours" class="' + LABEL + '">Opening hours</label>' +
@@ -683,6 +684,10 @@
                 test: function (v) { return v ? '' : 'Choose the barangay this is in.'; }
             },
             {
+                step: 2, field: 'SchedDays', slot: 'SchedDaysError', decorate: false,
+                test: function () { return checkedDays().length ? '' : 'Tick at least one day it is open.'; }
+            },
+            {
                 step: 2, field: 'TravelFee', slot: 'TravelFeeError',
                 test: function (v) {
                     if (v === '') return '';
@@ -862,8 +867,19 @@
 
         /* -------------------------------------------------------- schedule */
 
+        function checkedDays() {
+            return Array.prototype.map.call(el('SchedDays').querySelectorAll('input:checked'), function (box) { return box.value; });
+        }
+        function setDays(days, note) {
+            const wanted = days || DAY_KEYS;
+            Array.prototype.forEach.call(el('SchedDays').querySelectorAll('input'), function (box) {
+                box.checked = wanted.indexOf(box.value) !== -1;
+            });
+            el('SchedDaysNote').textContent = note || '';
+            el('SchedDaysNote').hidden = !note;
+        }
+
         function paintSchedule() {
-            el('SchedDaysCustom').hidden = el('SchedDays').value !== '__custom__';
             el('SchedHoursRow').hidden = el('SchedHours').value !== 'range';
             el('SchedHoursCustom').hidden = el('SchedHours').value !== '__custom__';
         }
@@ -872,16 +888,10 @@
 
         function fillSchedule(spot) {
             const storedDays = String((spot && spot.workingDays) || '').trim() || 'Everyday';
-            const match = DAY_PRESETS.find(function (preset) {
-                return preset.toLowerCase() === storedDays.toLowerCase();
-            });
-            if (match) {
-                el('SchedDays').value = match;
-                el('SchedDaysCustom').value = '';
-            } else {
-                el('SchedDays').value = '__custom__';
-                el('SchedDaysCustom').value = storedDays;
-            }
+            const parsed = openDaysHelper() ? openDaysHelper().parseOpenDays(storedDays) : null;
+            // Older wording that names no day ("By appointment") is shown, and
+            // every day ticked until someone ticks the real ones.
+            setDays(parsed, parsed ? '' : 'It said "' + storedDays + '". Tick the days it is really open.');
 
             const storedHours = String((spot && spot.workingTime) || '').trim() || 'All Day';
             const range = /^(.+?)\s*-\s*(.+)$/.exec(storedHours);
@@ -907,9 +917,7 @@
         }
 
         function scheduleValue() {
-            const chosenDays = el('SchedDays').value === '__custom__'
-                ? (el('SchedDaysCustom').value.trim() || 'Everyday')
-                : el('SchedDays').value;
+            const chosenDays = (openDaysHelper() && openDaysHelper().formatOpenDays(checkedDays())) || 'Everyday';
 
             let chosenHours = 'All Day';
             if (el('SchedHours').value === 'range') {
@@ -2018,8 +2026,7 @@
                 barangay: el('LocBarangay').value,
                 latitude: el('LocLat').value,
                 longitude: el('LocLng').value,
-                schedDays: el('SchedDays').value,
-                schedDaysCustom: el('SchedDaysCustom').value,
+                schedDays: checkedDays(),
                 schedHours: el('SchedHours').value,
                 schedOpen: el('SchedOpen').value,
                 schedClose: el('SchedClose').value,
@@ -2043,8 +2050,12 @@
             if (data.barangay) setBarangay(data.barangay);
             el('LocLat').value = data.latitude || '';
             el('LocLng').value = data.longitude || '';
-            el('SchedDays').value = data.schedDays || 'Everyday';
-            el('SchedDaysCustom').value = data.schedDaysCustom || '';
+            // A draft from before the tick boxes kept the wording instead.
+            if (Array.isArray(data.schedDays)) setDays(data.schedDays);
+            else {
+                const old = data.schedDays === '__custom__' ? data.schedDaysCustom : data.schedDays;
+                setDays(old && openDaysHelper() ? openDaysHelper().parseOpenDays(old) : null);
+            }
             el('SchedHours').value = data.schedHours || 'all';
             el('SchedOpen').value = data.schedOpen || '';
             el('SchedClose').value = data.schedClose || '';

@@ -57,7 +57,7 @@ npm run build    # vite build — every src/**/*.html page must be wired into
                   # from dist/ silently (see that file's own comment)
 npm run lint     # eslint . (flat config, src/*.jsx only — the standalone
                   # HTML pages' inline <script> blocks are NOT linted by this)
-npm run check    # node scripts/check-undefined.cjs && node scripts/check-countries.cjs
+npm run check    # check-undefined.cjs && check-countries.cjs && check-open-days.cjs
 ```
 `npm run check` is the safety net for the two failure modes ESLint can't see
 because these pages carry inline `<script>`, not modules:
@@ -70,6 +70,9 @@ because these pages carry inline `<script>`, not modules:
   `zamboanguita-backend/server.js`, which validates it. Needs a sibling
   backend checkout to run; skips (exit 0) if `../zamboanguita-backend` isn't
   present.
+- `check-open-days.cjs` — runs the page's and the server's opening-days reader
+  (`open-days.js`, one on each side) on the same texts and every combination of
+  ticked days, and fails if they disagree. Also skips without the backend.
 
 Run both before committing changes to any `src/**/*.html` page or to the
 country lists.
@@ -148,6 +151,10 @@ purpose — see the header comment in `spot-form.js`:
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
   officer's `src/admin/admin_statistics.html`. See "Tourism statistics" below.
+- `open-days.js` — reads a destination's "working days" text into weekdays and
+  writes ticked days back as text (`window.ZTIMS_OPEN_DAYS`); used by the
+  listing form's day boxes and the officer's Visitor setup. See "Attraction
+  setup" below.
 - `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -402,7 +409,8 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 18 tables in all (`guide_time_off` and `guide_profile_requests` were dropped).
+  have `is_demo`. 19 tables in all, with `spot_closed_dates` (`guide_time_off` and
+  `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
   type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
@@ -418,6 +426,29 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   `DELETE /api/payments/demo` removes everything `is_demo`. Real records are
   never touched.
 - Money never reaches Statistics or Form A4, which stay counts only.
+
+### Attraction setup
+
+`attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window
+on Destinations (`admin_dashboard_manage.html`), for office-run attractions and
+guided destinations:
+
+- **Opening days** are `spots.working_days`, the text visitors read. The listing
+  form and Visitor setup tick weekdays; `open-days.js` (both sides) writes the
+  ticks as text ("Tuesday to Sunday") and reads text back, older free text
+  included ("Closed Mondays", "Mon–Fri"). Text naming no day is unknown and
+  means open every day — a sale is never refused on a guess.
+- **Closed dates** (`spot_closed_dates`). Adding one that already has valid
+  tickets or live guide bookings is refused: closing a sold date is the
+  closure action's job (cancel, refund or move, tell each visitor).
+- **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
+  senior citizen and PWD always 20% off it (a rule, not a setting);
+  `student_fee` and `child_fee` + `child_age_max` are offered only when set.
+- **`cancel_keep_percent`**: the share kept when a visitor cancels, for tickets
+  and guide bookings at that destination.
+- `dayVerdict(spot, date)` is the one answer to "can visitors come that day?",
+  used by ticket sales and guide bookings alike; the public ticket offer and
+  guide requirement carry `openDays` and `closedDates` so the forms say so first.
 
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
@@ -450,6 +481,9 @@ environment once used.
 - **Country list**: `src/shared/countries.js` (names) vs `COUNTRY_CODES` in
   `server.js` (codes only, validates what the form sends). Checked by
   `npm run check` in the frontend.
+- **Opening-days reader**: `zamboanguita-backend/open-days.js` (decides what is
+  sold) and `Zamboanguita-project/src/shared/open-days.js` (the forms). Checked
+  by `npm run check` in the frontend.
 
 ## Standing constraints
 

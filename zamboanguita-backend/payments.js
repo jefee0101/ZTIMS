@@ -32,9 +32,10 @@ const crypto = require('crypto');
 const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
 const { query, transaction } = require('./db');
+const attractions = require('./attractions');
 const {
     bookings: GuideBooking, payments: Payment, tickets: Ticket, checkouts: Checkout,
-    guides: TouristGuide, officers: TourismOfficer
+    guides: TouristGuide, officers: TourismOfficer, spots: Spot
 } = require('./models');
 
 // XENDIT_API_BASE exists for local tests against a stand-in; leave it unset.
@@ -218,12 +219,10 @@ async function bookingFee(booking) {
 /* An attraction sells tickets when the office runs it, it is published and
    charges an entrance fee. */
 async function ticketOffer(spotId) {
-    const { rows } = await query(
-        `select id, title, type, status, entrance_fee, managed_by from spots where id = $1`, [spotId]);
-    const spot = rows[0];
+    const spot = await Spot.findById(spotId);
     if (!spot) return { available: false, reason: 'not_found' };
-    const fee = money(spot.entrance_fee);
-    const eligible = spot.type === 'spot' && spot.status === 'published' && spot.managed_by === null && fee > 0;
+    const fee = money(spot.entranceFee);
+    const eligible = spot.type === 'spot' && spot.status === 'published' && !spot.managedBy && fee > 0;
     return { available: eligible, spot, unitFee: fee };
 }
 
@@ -775,13 +774,16 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
     router.get('/tickets/offer/:spotId', async (req, res) => {
         try {
             const offer = await ticketOffer(req.params.spotId);
+            const available = offer.available && gatewayState().online;
             res.json({
-                available: offer.available && gatewayState().online,
+                available,
                 unitFee: offer.unitFee || 0,
                 maxPeople: MAX_TICKET_PEOPLE,
                 daysAhead: TICKET_DAYS_AHEAD,
                 minAmount: MIN_ONLINE_AMOUNT,
-                testMode: true
+                testMode: true,
+                // Which days can be chosen: open weekdays, less closed dates.
+                ...(available ? await attractions.visitCalendar(offer.spot, TICKET_DAYS_AHEAD + 1) : {})
             });
         } catch (error) {
             return failure(res, error, '❌ Ticket offer failure:');
@@ -809,6 +811,8 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             if (visitDate < today) return fail(res, 400, 'That date has already passed.');
             if (visitDate > addDays(today, TICKET_DAYS_AHEAD)) return fail(res, 400, `Tickets can be bought up to ${TICKET_DAYS_AHEAD} days ahead.`);
             if (!Number.isFinite(people) || people < 1 || people > MAX_TICKET_PEOPLE) return fail(res, 400, `Choose between 1 and ${MAX_TICKET_PEOPLE} people.`);
+            const day = await attractions.dayVerdict(offer.spot, visitDate);
+            if (!day.open) return fail(res, 409, day.reason);
             const amount = money(offer.unitFee * people);
             if (amount < MIN_ONLINE_AMOUNT) return fail(res, 400, `Online payments start at ₱${MIN_ONLINE_AMOUNT}. Add a person, or pay at the gate.`);
 
@@ -816,7 +820,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             for (let attempt = 0; attempt < 5 && !ticket; attempt++) {
                 try {
                     ticket = await Ticket.create({
-                        code: newTicketCode(offer.spot.title), spotId: offer.spot.id, visitDate, people,
+                        code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate, people,
                         unitFee: offer.unitFee, amount, fullName, email, contactNumber, isDemo: true
                     });
                 } catch (error) {

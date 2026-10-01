@@ -627,12 +627,94 @@ body { overflow-x: hidden; }
         </div>
     </div>
 
+    <!-- Visitor setup: what the office decides before a visitor can buy a ticket
+         or book a guide here — opening days, prices per kind of visitor, what a
+         cancellation keeps, and dates it is shut. -->
+    <div id="setupModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
+        <div class="ztims-modal w-full max-w-2xl p-5 sm:p-8 space-y-6 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <h2 id="setupTitle" class="text-2xl font-black tracking-tight font-headline">Visitor setup</h2>
+                    <p id="setupSpotName" class="text-support mt-1"></p>
+                </div>
+                <button id="closeSetupBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex">
+                    <span class="material-symbols-outlined text-2xl">close</span>
+                </button>
+            </div>
+
+            <form id="setupForm" class="space-y-6" novalidate>
+                <fieldset class="space-y-2">
+                    <legend class="field-label">Open on</legend>
+                    <div id="setupDays" class="flex flex-wrap gap-2"></div>
+                    <p id="setupDaysNote" class="text-support">Visitors cannot buy a ticket or book a guide on the other days.</p>
+                </fieldset>
+
+                <fieldset id="setupPrices" class="space-y-3">
+                    <legend class="field-label">Ticket price per person</legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="ztims-card p-3">
+                            <p class="text-support">Regular</p>
+                            <p id="setupRegular" class="font-bold text-on-surface"></p>
+                            <p class="text-support">The entrance fee. Change it with <b>Edit</b>.</p>
+                        </div>
+                        <div class="ztims-card p-3">
+                            <p class="text-support">Senior citizen and PWD</p>
+                            <p id="setupSenior" class="font-bold text-on-surface"></p>
+                            <p class="text-support">Always 20% off the regular price. The ID is checked at the entrance.</p>
+                        </div>
+                        <label class="block">
+                            <span class="field-label">Student price (₱)</span>
+                            <input id="setupStudent" type="number" min="0" step="0.01" class="field" placeholder="Empty: not offered"/>
+                            <span class="text-support">The student ID is checked at the entrance.</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="block">
+                                <span class="field-label">Child price (₱)</span>
+                                <input id="setupChild" type="number" min="0" step="0.01" class="field" placeholder="Empty: not offered"/>
+                            </label>
+                            <label class="block">
+                                <span class="field-label">Up to age</span>
+                                <input id="setupChildAge" type="number" min="1" max="17" step="1" class="field" placeholder="e.g. 12"/>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="space-y-2">
+                    <legend class="field-label">When a visitor cancels</legend>
+                    <label class="flex flex-wrap items-center gap-2 text-sm">
+                        The office keeps
+                        <input id="setupKeep" type="number" min="0" max="100" step="1" class="field !w-24" aria-label="Percent kept"/>
+                        % and refunds the rest.
+                    </label>
+                    <p class="text-support">Visitors can move or cancel until 11:59 PM the day before. This applies to tickets and guide bookings here. When the office cancels or closes, the visitor always gets everything back.</p>
+                </fieldset>
+
+                <p id="setupError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+                <button type="submit" id="setupSaveBtn" class="btn btn-primary w-full">Save setup</button>
+            </form>
+
+            <section class="space-y-3 border-t border-outline-variant/30 pt-5" aria-labelledby="closedHeading">
+                <h3 id="closedHeading" class="field-label">Closed dates</h3>
+                <ul id="setupClosedList" class="divide-y divide-outline-variant/30 text-sm"></ul>
+                <form id="closedForm" class="grid grid-cols-1 sm:grid-cols-[10rem_1fr_auto] gap-2 items-end" novalidate>
+                    <label class="block"><span class="field-label">Date</span><input id="closedDate" type="date" class="field" required/></label>
+                    <label class="block"><span class="field-label">Reason <span class="normal-case font-normal">(optional)</span></span>
+                        <input id="closedReason" type="text" maxlength="200" class="field" placeholder="e.g. Fiesta, repairs"/></label>
+                    <button type="submit" id="closedAddBtn" class="btn btn-secondary">Add</button>
+                </form>
+                <p id="closedError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+            </section>
+        </div>
+    </div>
+
 <!-- The listing form, the schedule picker and the location picker all live in
      src/shared/spot-form.js now. They used to be copied into this page, the
      Dashboard quick-add and the manager portal, byte for byte. -->
 <!-- The shared map layer, for the location picker's expand control and its
      Leaflet loader. Loaded before the form, which uses it when present. -->
 <script type="module" src="../shared/tourism-map.js"></script>
+<script type="module" src="../shared/open-days.js"></script>
 <script type="module" src="../shared/spot-form.js"></script>
 <!-- The site's own confirm/prompt, in place of the browser's. Used by the
      form above and by this page's take-down question. -->
@@ -1068,6 +1150,10 @@ body { overflow-x: hidden; }
                                 class="btn btn-secondary flex-1">
                             Edit
                         </button>`}
+                        ${(!manager && spot.type !== 'accommodation') || spot.requiresGuide ? `<button data-setup="${escapeHtml(spot._id)}"
+                                class="btn btn-secondary flex-1">
+                            Visitor setup
+                        </button>` : ''}
                         <button data-takedown="${escapeHtml(spot._id)}"
                                 class="btn btn-secondary flex-1">
                             Take down
@@ -1200,6 +1286,154 @@ body { overflow-x: hidden; }
             }
         }
 
+        /* ---- Visitor setup ------------------------------------------------ */
+
+        let setupSpotId = null;
+
+        // The same as the other officer pages: a lapsed sign-in goes back to the
+        // sign-in page rather than failing quietly.
+        function handleExpiredSession() {
+            showToast('Your session has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace('../staff_login.html'), 900);
+        }
+
+        async function setupCall(path, method, body) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                method: method || 'GET',
+                headers: authHeaders(body ? { 'Content-Type': 'application/json' } : {}),
+                body: body ? JSON.stringify(body) : undefined
+            });
+            if (response.status === 401) { handleExpiredSession(); throw new Error('Your session has expired.'); }
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) throw new Error(result.message || `The server refused (status ${response.status}).`);
+            return result;
+        }
+
+        function niceDay(key) {
+            return new Date(key + 'T00:00:00Z').toLocaleDateString('en-PH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+        }
+
+        function paintSetup(setup) {
+            const days = window.ZTIMS_OPEN_DAYS;
+            const open = new Set(setup.openDays || days.WEEK);
+            document.getElementById('setupDays').innerHTML = days.WEEK.map((d, i) => `
+                <label class="inline-flex items-center gap-2 border border-outline-variant/40 px-3 min-h-[44px] cursor-pointer select-none">
+                    <input type="checkbox" value="${d}" ${open.has(d) ? 'checked' : ''} class="w-5 h-5 text-primary focus:ring-primary"/>
+                    <span class="text-sm font-bold">${days.NAMES[i].slice(0, 3)}</span>
+                </label>`).join('');
+            document.getElementById('setupDaysNote').textContent = setup.openDays
+                ? 'Visitors cannot buy a ticket or book a guide on the other days.'
+                : `The listing says "${setup.workingDays}", which names no days, so every day is treated as open. Tick the real days and save.`;
+
+            const sells = setup.officeRun && setup.type !== 'accommodation';
+            document.getElementById('setupPrices').hidden = !sells;
+            document.getElementById('setupRegular').textContent = formatPeso(setup.entranceFee);
+            document.getElementById('setupSenior').textContent = formatPeso(setup.seniorPwdFee);
+            document.getElementById('setupStudent').value = setup.studentFee ?? '';
+            document.getElementById('setupChild').value = setup.childFee ?? '';
+            document.getElementById('setupChildAge').value = setup.childAgeMax ?? '';
+            document.getElementById('setupKeep').value = setup.cancelKeepPercent;
+
+            const list = document.getElementById('setupClosedList');
+            list.innerHTML = setup.closedDates.length
+                ? setup.closedDates.map(c => `
+                    <li class="py-2.5 flex flex-wrap items-center justify-between gap-2">
+                        <span><b class="text-on-surface">${escapeHtml(niceDay(c.date))}</b>${c.reason ? ` · ${escapeHtml(c.reason)}` : ''}</span>
+                        <button type="button" data-reopen="${escapeHtml(c._id)}" class="btn btn-ghost btn-sm">Open again</button>
+                    </li>`).join('')
+                : '<li class="py-2.5 text-support italic">No closed dates coming up.</li>';
+            document.getElementById('closedDate').min = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+        }
+
+        function setupError(id, message) {
+            const box = document.getElementById(id);
+            box.textContent = message || '';
+            box.hidden = !message;
+        }
+
+        async function openSetup(id) {
+            setupSpotId = id;
+            setupError('setupError', ''); setupError('closedError', '');
+            const spot = allSpots.find(s => String(s._id) === String(id));
+            document.getElementById('setupSpotName').textContent = spot ? spot.title : '';
+            document.getElementById('setupModal').hidden = false;
+            try {
+                const { setup } = await setupCall(`/spots/${encodeURIComponent(id)}/setup`);
+                paintSetup(setup);
+            } catch (error) {
+                setupError('setupError', error.message);
+            }
+        }
+
+        function closeSetup() {
+            document.getElementById('setupModal').hidden = true;
+            setupSpotId = null;
+        }
+
+        function wireSetup() {
+            const modal = document.getElementById('setupModal');
+            document.getElementById('closeSetupBtn').addEventListener('click', closeSetup);
+            modal.addEventListener('click', event => { if (event.target === modal) closeSetup(); });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeSetup(); });
+
+            document.getElementById('setupForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                setupError('setupError', '');
+                const openDays = [...document.querySelectorAll('#setupDays input:checked')].map(i => i.value);
+                const body = { openDays, cancelKeepPercent: document.getElementById('setupKeep').value || 0 };
+                if (!document.getElementById('setupPrices').hidden) {
+                    body.studentFee = document.getElementById('setupStudent').value;
+                    body.childFee = document.getElementById('setupChild').value;
+                    body.childAgeMax = document.getElementById('setupChildAge').value;
+                }
+                const button = document.getElementById('setupSaveBtn');
+                button.disabled = true;
+                try {
+                    const result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/setup`, 'PUT', body);
+                    showToast(result.message, 'success');
+                    closeSetup();
+                    loadEverything();
+                } catch (error) {
+                    setupError('setupError', error.message);
+                } finally {
+                    button.disabled = false;
+                }
+            });
+
+            document.getElementById('closedForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                setupError('closedError', '');
+                const date = document.getElementById('closedDate').value;
+                if (!date) return setupError('closedError', 'Choose the date it is closed.');
+                try {
+                    const result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates`, 'POST',
+                        { date, reason: document.getElementById('closedReason').value.trim() });
+                    showToast(result.message, 'success');
+                    document.getElementById('closedForm').reset();
+                    const { setup } = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/setup`);
+                    paintSetup(setup);
+                } catch (error) {
+                    setupError('closedError', error.message);
+                }
+            });
+
+            document.getElementById('setupClosedList').addEventListener('click', async event => {
+                const button = event.target.closest('[data-reopen]');
+                if (!button) return;
+                button.disabled = true;
+                try {
+                    const result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates/${encodeURIComponent(button.dataset.reopen)}`, 'DELETE');
+                    showToast(result.message, 'success');
+                    const { setup } = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/setup`);
+                    paintSetup(setup);
+                } catch (error) {
+                    button.disabled = false;
+                    setupError('closedError', error.message);
+                }
+            });
+        }
+
         async function loadEverything() {
             const container = document.getElementById('listings');
             const doneLoading = showLoading(container, 'Loading published destinations...');
@@ -1276,7 +1510,10 @@ body { overflow-x: hidden; }
                 if (takedown) return takeDownListing(takedown.dataset.takedown, takedown);
                 const edit = event.target.closest('[data-edit]');
                 if (edit) openEditModal(edit.dataset.edit);
+                const setup = event.target.closest('[data-setup]');
+                if (setup) openSetup(setup.dataset.setup);
             });
+            wireSetup();
 
             loadEverything();
         });

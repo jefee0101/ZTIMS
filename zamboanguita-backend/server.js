@@ -1519,12 +1519,12 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
    office can only assign a barangay guide destinations in that barangay.
 
    Who decides what:
-     the guide   proposes — their availability (status, working days, days
-                 off) and the languages they speak; files reports; asks for
-                 changes to their contact number and bio
-     the office  disposes — assigns every booking, approves or rejects every
-                 profile change, reviews every report, and alone sets name,
-                 scope, fee, group size, destinations, photo and inactive
+     the guide   proposes — their availability (status and working days) and
+                 the languages they speak; keeps their own contact number and
+                 bio; files reports
+     the office  disposes — assigns every booking, reviews every report, and
+                 alone sets name, scope, fee, group size, destinations, photo
+                 and inactive
 
    Everything a visitor needs to see is served by one public route that reports
    the requirement without exposing a guide's contact details.
@@ -2321,7 +2321,8 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
             feeTo: fees.length ? fees[fees.length - 1] : null,
             maxGroupSize: guides.length ? Math.max(...guides.map(g => g.maxGroupSize)) : null,
             payment: paymentWays(),
-            payOnline: paymentsGatewayOnline()
+            payOnline: paymentsGatewayOnline(),
+            ...(await require('./attractions').visitCalendar(spot, 400))
         });
     } catch (error) {
         console.error('❌ Guide requirement failure:', error);
@@ -2448,6 +2449,8 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
 
         const spot = await Spot.findByIdWithManager(body.spotId);
         if (!spot) return res.status(404).json({ success: false, message: 'That destination could not be found.' });
+        const day = await require('./attractions').dayVerdict(spot, preferredDate);
+        if (!day.open) return res.status(409).json({ success: false, message: day.reason });
         if (!spot.requiresGuide) {
             return res.status(400).json({ success: false, message: 'This destination does not require a tourist guide, so there is nothing to book.' });
         }
@@ -3336,6 +3339,13 @@ app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff 
 ========================================== */
 const paymentsModule = require('./payments');
 app.use('/api', paymentsModule({ requireAdmin, sharedRateLimit, isPubliclyVisible }));
+
+/* ==========================================
+   ATTRACTION SETUP — opening days, closed dates, prices per kind of visitor,
+   and the share kept on a cancellation (attractions.js)
+========================================== */
+const attractions = require('./attractions');
+app.use('/api', attractions({ requireAdmin }));
 
 /* ==========================================
    5. ERROR HANDLER

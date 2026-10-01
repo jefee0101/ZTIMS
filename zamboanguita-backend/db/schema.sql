@@ -680,6 +680,56 @@ create index if not exists online_checkouts_ticket_idx on public.online_checkout
 
 
 -- ---------------------------------------------------------------------------
+-- Attraction setup: the office decides, per destination, what each kind of
+-- visitor pays, which days it opens, which dates it is shut, and how much of a
+-- visitor's own cancellation it keeps.
+--
+-- Opening days live in spots.working_days, the text visitors already read
+-- ("Monday to Saturday"); open-days.js reads and writes it. Senior citizens and
+-- persons with disability always pay the regular fee less 20%, so that is a
+-- rule in the code, not a price here. A student or child price left empty is
+-- not offered. The cancellation percentage applies to tickets and guide
+-- bookings at that destination alike.
+-- ---------------------------------------------------------------------------
+alter table public.spots add column if not exists student_fee numeric;
+alter table public.spots add column if not exists child_fee numeric;
+alter table public.spots add column if not exists child_age_max integer;
+alter table public.spots add column if not exists cancel_keep_percent numeric not null default 0;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'spots_student_fee') then
+        alter table public.spots add constraint spots_student_fee check (student_fee is null or student_fee >= 0);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'spots_child_fee') then
+        alter table public.spots add constraint spots_child_fee check (child_fee is null or child_fee >= 0);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'spots_child_age_max') then
+        alter table public.spots add constraint spots_child_age_max check (child_age_max is null or child_age_max between 1 and 17);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'spots_cancel_keep_percent') then
+        alter table public.spots add constraint spots_cancel_keep_percent check (cancel_keep_percent between 0 and 100);
+    end if;
+end
+$$;
+
+-- A date a destination is shut (a fiesta, repairs, a typhoon). Tickets and guide
+-- bookings are refused for it. Closing a date that already has sales is the
+-- closure action's job: it cancels them and tells each visitor.
+create table if not exists public.spot_closed_dates (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id) on delete cascade,
+    closed_date         date not null,
+    reason              text not null default ''
+                        constraint spot_closed_dates_reason_length check (char_length(reason) <= 200),
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint spot_closed_dates_once unique (spot_id, closed_date)
+);
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -689,7 +739,7 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
         'guide_reports', 'guide_bookings', 'payments', 'feedback',
-        'monthly_reports', 'tickets', 'online_checkouts'
+        'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -702,7 +752,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
         'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
-        'tickets', 'online_checkouts'
+        'tickets', 'online_checkouts', 'spot_closed_dates'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;
