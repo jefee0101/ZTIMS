@@ -89,7 +89,6 @@ npm run copy-from-mongo -- --dry-run   # the one-time MongoDB → Postgres copy;
 npm run import-form-a4 -- db/form-a4-2025.json --dry-run
                        # loads a paper Form A4 year as locked municipal totals;
                        # skips months already recorded (see the script's header)
-npm run seal-key       # prints a new TICKET_SEAL_KEY line (see "Offline gate check")
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
 with what it defaults to when unset — most integrations degrade gracefully
@@ -435,8 +434,7 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
   type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
-  loaded on demand; `admit` is one conditional update, so a ticket is used once;
-  with no signal, `admin_gate.html` — see "Offline gate check" below),
+  loaded on demand; `admit` is one conditional update, so a ticket is used once),
   "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
   the Dashboard. One refund rule: the office cancels, the visitor is refunded;
   a plain cancel of an online-paid booking is refused. A refund goes back
@@ -509,36 +507,6 @@ guided destinations:
   counter-paid booking is refunded at the counter. The office cannot set
   `closed` by hand; Visitor setup shows how many visitors still have to choose.
 
-### Offline gate check
-
-For an attraction with no signal at the entrance (decided: office staff check,
-with their officer accounts; a sealed QR checked on the phone, a printed list
-as backup):
-
-- **Sealed QR** (`ticket-seal.js`). A ticket's QR is `ZT1.<facts>.<signature>`:
-  code, attraction, date and people by kind, signed ECDSA P-256 with
-  `TICKET_SEAL_KEY` (`npm run seal-key` makes one). Asymmetric on purpose: the
-  phones get only the public key, which can check a seal but never make one.
-  The receipt email, the paid page and the Manage page draw it (`qrContent`); a
-  moved ticket gets a new one. The online check accepts sealed and plain codes
-  and calls an edited seal `forged`. Unset, QR codes stay the plain code.
-- **`src/admin/admin_gate.html`**, a phone page of its own (no sidebar), linked
-  from Tickets. With signal, "Download the gate list" fetches
-  `GET /api/tickets/gate-pack` (the day's tickets, the public key, the kinds)
-  into IndexedDB — not localStorage, which every page's sign-out clears.
-  Offline it judges a scan alone: the list's status wins (used, cancelled,
-  closed, wrong date, another attraction); a ticket bought after the download
-  is accepted by its seal. "Let them in" is recorded on the phone.
-- **Sync**: `POST /api/tickets/admit-sync` with `{ code, at }` per let-in, sent
-  at once with signal and again whenever it returns. Each is the same
-  conditional update as the online admit, dated `at`; one the server knows was
-  cancelled, closed, moved or used meanwhile is never changed and comes back as
-  a conflict for the office ("Tell the office"). Resending is harmless.
-- **`public/gate-sw.js`**, a service worker scoped to that one page, keeps a copy
-  of it and what it loads, so it reopens with no signal.
-- **Printed gate list**: the same page prints the downloaded list (code, name,
-  people by kind, whose ID to check, status, tick box and time).
-
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
 needs one (a route that never queries, like `/api/directions/capabilities`,
@@ -594,9 +562,6 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
   refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
   falls on it, and names the bookings: the office reassigns them first.
-- **No signal at the destinations.** `spot.html`'s Getting there says so and
-  offers "Save this route" once a route is shown: it prints only that box
-  (`html.print-route`), which a phone saves as a PDF.
 - **Emergency numbers** live in `EMERGENCY` in `shared/site-footer.js` and show
   in the footer and each destination's `[data-emergency]` box. Empty on purpose
   until the office supplies them; nothing shows while it is empty.
@@ -634,6 +599,9 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   when they explicitly press Confirm in the location picker.
 - Authorization is enforced backend-side only. Hiding a button client-side is
   never treated as a control.
+- Online only. The site needs a connection: nothing works offline (no service
+  worker, no offline gate check, no sealed or offline-checkable QR codes, no
+  saved routes), as the manuscript's Limitations say. Don't add offline features.
 - No `tourist` role, no tourist accounts. Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying at the

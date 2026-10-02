@@ -279,9 +279,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     return router;
 };
 
-// What a ticket's QR holds: sealed (ticket-seal.js) when a key is set. The
-// date is sealed in, so a moved ticket's new QR is drawn from the new date.
+// What a ticket's QR holds: its code.
 module.exports.ticketQr = async ticketId => {
     const t = await Ticket.findById(ticketId);
-    return t ? require('./ticket-seal').qrContent(t) : '';
+    return t ? t.code : '';
 };

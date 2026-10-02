@@ -407,7 +407,7 @@ body { overflow-x: hidden; }
         if (c.status === 'paid' && c.kind === 'ticket' && c.ticket && c.ticket.code) {
             const t = c.ticket;
             show(heading('confirmation_number', 'tone-success', 'Your entrance ticket',
-                    'Show this at the entrance. Take a screenshot so you have it even without signal.') + `
+                    'Show this QR code at the entrance.') + `
                 <div class="ztims-card p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
                     <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${esc(t.spot)}</p>
                     <p class="text-lg font-bold text-on-surface">${niceDate(t.visitDate)}</p>
@@ -424,8 +424,7 @@ body { overflow-x: hidden; }
                 <a href="spot.html?spotId=${encodeURIComponent(t.spotId)}&ticketDate=${encodeURIComponent(t.visitDate)}"
                    class="btn btn-secondary min-h-[44px] w-full sm:w-auto">
                     <span class="material-symbols-outlined !text-base">group_add</span> Buy for more people, same date
-                </a>
-                <p class="text-support">There may be no signal at the attraction, so buy for anyone else in your group now.</p>` : ''}
+                </a>` : ''}
                 <p class="text-support">We have emailed you this ticket. To move or cancel it (until 11:59 PM the day before), use
                     <a href="manage.html?code=${encodeURIComponent(t.code)}" class="underline font-bold">Manage my ticket</a>.</p>`);
             return;

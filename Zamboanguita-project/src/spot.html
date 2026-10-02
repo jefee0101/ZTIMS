@@ -99,19 +99,6 @@ body { overflow-x: hidden; }
     }
 }
 
-    /* "Save this route": only the Getting there box is printed (or saved as a
-       PDF), so the route and map can be kept for where there is no signal. */
-    @media print {
-        html.print-route body * { visibility: hidden !important; }
-        html.print-route #directionsSection,
-        html.print-route #directionsSection * { visibility: visible !important; }
-        html.print-route #directionsSection { position: absolute; inset: 0 auto auto 0; width: 100%; }
-        html.print-route .route-no-print,
-        html.print-route #openInMapsBtn,
-        html.print-route #getDirectionsBtn,
-        html.print-route #manualOrigin,
-        html.print-route #modeRow { display: none !important; }
-    }
 </style>
     <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
          styles so the tokens win over anything left hardcoded. -->
@@ -724,14 +711,6 @@ body { overflow-x: hidden; }
                     <!-- Emergency numbers (shared/site-footer.js): hidden until the office supplies them. -->
                     <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
 
-                    <!-- Many of Zamboanguita's destinations have weak signal or none:
-                         a route asked for there cannot load, so the visitor is told to
-                         get it, and keep it, before setting off. -->
-                    <p class="tone-warning tone-pill flex items-start gap-2 text-sm font-semibold px-4 py-3 leading-relaxed">
-                        <span class="material-symbols-outlined !text-lg shrink-0" aria-hidden="true">signal_disconnected</span>
-                        <span>Signal is weak or absent at many destinations. Get directions <b>before you leave town</b>,
-                        then save the route, or download the area in your maps app for offline use.</span>
-                    </p>
 
                     <button type="button" id="getDirectionsBtn"
                             class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
@@ -808,10 +787,6 @@ body { overflow-x: hidden; }
 
                         <div id="directionsMap" hidden class="relative z-0 h-64 sm:h-80 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-high"></div>
 
-                        <button type="button" id="saveRouteBtn" hidden
-                                class="route-no-print w-full bg-secondary text-on-secondary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                            <span class="material-symbols-outlined !text-lg">download</span> Save this route
-                        </button>
 
                         <a id="openInMapsBtn" href="#" target="_blank" rel="noopener noreferrer"
                            class="w-full bg-surface-container-high border border-outline-variant/40 text-on-surface px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
@@ -1217,13 +1192,6 @@ body { overflow-x: hidden; }
                     Buy ahead and show the QR code at the entrance,
                     or pay at the gate as usual. <b>Test mode:</b> a demonstration, no real money moves.
                 </p>
-                <!-- There is often no mobile signal at the attraction itself, so a
-                     ticket cannot be bought, or a forgotten one fetched, once there. -->
-                <p class="tone-warning text-sm flex items-start gap-2 border border-outline-variant/40 p-3">
-                    <span class="material-symbols-outlined !text-lg shrink-0" aria-hidden="true">signal_cellular_off</span>
-                    <span><b>There may be no mobile signal at the attraction.</b> Buy for your whole group now, and save
-                    the QR code (a screenshot is fine) before you set off.</span>
-                </p>
                 <form id="ticketForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" novalidate>
                     <label class="block">
                         <span class="block text-label font-bold uppercase tracking-wider mb-1">Date of visit</span>
@@ -1367,17 +1335,6 @@ body { overflow-x: hidden; }
         const routeStats = document.getElementById('routeStats');
         const statusLine = document.getElementById('directionsStatus');
 
-        // Prints only the route (see "Save this route" in the styles); a phone's
-        // print dialog offers "Save as PDF", which opens with no signal.
-        document.getElementById('saveRouteBtn').addEventListener('click', function () {
-            document.documentElement.classList.add('print-route');
-            const done = function () {
-                document.documentElement.classList.remove('print-route');
-                window.removeEventListener('afterprint', done);
-            };
-            window.addEventListener('afterprint', done);
-            window.print();
-        });
         const mapBox = document.getElementById('directionsMap');
         const openInMaps = document.getElementById('openInMapsBtn');
 
@@ -1544,7 +1501,6 @@ body { overflow-x: hidden; }
 
                 if (!response.ok) throw new Error(data.message || 'Directions are unavailable right now.');
 
-                document.getElementById('saveRouteBtn').hidden = false;
                 document.getElementById('routeDistance').textContent = formatDistance(data.distanceMeters);
                 document.getElementById('routeDuration').textContent = formatDuration(data.durationSeconds);
                 paintRouteChoice(data);
@@ -1567,7 +1523,6 @@ body { overflow-x: hidden; }
                 // No straight-line stand-in: an honest "unavailable" beats a number
                 // the visitor would plan their day around.
                 routeStats.hidden = true;
-                document.getElementById('saveRouteBtn').hidden = true;
                 setStatus(error.message || 'Directions are unavailable right now.', 'error');
             }
         }

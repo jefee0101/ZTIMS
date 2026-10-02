@@ -10,7 +10,6 @@
  * which the visitor types there themselves.
  */
 const QRCode = require('qrcode');
-const seal = require('./ticket-seal');
 const { query } = require('./db');
 const { sendMail, compose, niceDate, pesos, TEST_MODE_LINE } = require('./mailer');
 const { describeKinds } = require('./attractions');
@@ -78,7 +77,7 @@ async function ticketReceipt(ticketId, origin, { qrContent } = {}) {
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Your ticket ${t.code} — ${t.spot_title}, ${niceDate(t.visit_date)}`,
-        ...body, attachments: [await qrAttachment(qrContent || seal.qrContent(t))] });
+        ...body, attachments: [await qrAttachment(qrContent || t.code)] });
 }
 
 async function ticketMoved(ticketId, fromDate, origin, { qrContent } = {}) {
@@ -92,7 +91,7 @@ async function ticketMoved(ticketId, fromDate, origin, { qrContent } = {}) {
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Ticket ${t.code} moved to ${niceDate(t.visit_date)}`, ...body,
-        attachments: [await qrAttachment(qrContent || seal.qrContent(t))] });
+        attachments: [await qrAttachment(qrContent || t.code)] });
 }
 
 /* `byVisitor`: the visitor cancelled (the office's share is kept); otherwise

@@ -533,12 +533,7 @@ body { overflow-x: hidden; }
 
             <!-- Check a ticket -->
             <section class="glass-panel p-5 sm:p-6 space-y-4" aria-labelledby="checkHeading">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h3>
-                    <a href="admin_gate.html" class="btn btn-secondary btn-sm min-h-[40px]">
-                        <span class="material-symbols-outlined !text-base">signal_disconnected</span> No signal at the spot? Offline gate
-                    </a>
-                </div>
+                <h3 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h3>
                 <form id="checkForm" class="flex flex-wrap gap-2">
                     <label for="checkCode" class="sr-only">Ticket code</label>
                     <input id="checkCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false"
@@ -636,8 +631,7 @@ body { overflow-x: hidden; }
             cancelled:  { tone: 'tone-danger',  icon: 'cancel',       title: 'Cancelled' },
             closed:     { tone: 'tone-danger',  icon: 'event_busy',   title: 'Date closed' },
             not_paid:   { tone: 'tone-danger',  icon: 'money_off',    title: 'Not paid' },
-            not_found:  { tone: 'tone-danger',  icon: 'help',         title: 'Not found' },
-            forged:     { tone: 'tone-danger',  icon: 'gpp_bad',      title: 'Not a real ticket' }
+            not_found:  { tone: 'tone-danger',  icon: 'help',         title: 'Not found' }
         };
 
         async function check(code) {
