@@ -27,6 +27,7 @@ const {
     MAX_SPOT_IMAGES, GUIDE_STATUSES, GUIDE_SCOPES, GUIDE_REPORT_TYPES, WEEKDAYS, MAX_GUIDE_LANGUAGES, BOOKING_STATUSES,
     FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
 } = require('./models');
+const { forgetOldVisitors } = require('./privacy');
 
 const app = express();
 
@@ -1687,7 +1688,10 @@ async function checkGuideScope(guide) {
  * refusing bookings on a guess. Without a time (a search for a free day), any
  * confirmed booking that day counts, since the office has not said when.
  */
-async function isGuideFreeOn(guide, date, { time, exceptBookingId } = {}) {
+/* One tour per guide per day, whatever the time: tours here run for hours
+   (a falls trek, a dive), and a guide who is busy that day leaves the other
+   guides a turn. `time` is still accepted from callers but no longer decides. */
+async function isGuideFreeOn(guide, date, { exceptBookingId } = {}) {
     if (guide.status !== 'available') return { free: false, reason: `${guide.fullName} is marked ${guide.status}.` };
 
     const weekday = weekdayOf(date);
@@ -1698,15 +1702,12 @@ async function isGuideFreeOn(guide, date, { time, exceptBookingId } = {}) {
         _id: exceptBookingId ? { ne: String(exceptBookingId) } : undefined,
         guideId: guide._id,
         status: 'confirmed',
-        preferredDate: date,
-        preferredTime: time || undefined
+        preferredDate: date
     });
     if (clash) {
         return {
             free: false,
-            reason: time
-                ? `${guide.fullName} already has confirmed booking ${clash.reference} at that date and time.`
-                : `${guide.fullName} already has confirmed booking ${clash.reference} that day.`
+            reason: `${guide.fullName} already has a tour that day (${clash.reference}). A guide takes one tour a day.`
         };
     }
     return { free: true };
@@ -2636,8 +2637,28 @@ app.get('/api/guide-bookings/reference/:reference', async (req, res) => {
 
 /* ---- everything below is the Tourism Office's ---------------------------- */
 
+/* Visitors' personal details are erased a year after the visit (privacy.js).
+   Vercel's cron calls this daily with CRON_SECRET; without it the route does
+   not exist. The officer opening Guide Bookings runs it too (below). */
+app.get('/api/maintenance/privacy', async (req, res) => {
+    const secret = String(process.env.CRON_SECRET || '');
+    const given = String(req.get('authorization') || '');
+    const wanted = `Bearer ${secret}`;
+    const matches = secret && given.length === wanted.length
+        && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(wanted));
+    if (!matches) return res.status(404).end();
+    try {
+        return res.json({ success: true, erased: await forgetOldVisitors() });
+    } catch (error) {
+        console.error('❌ Privacy clean-up failure:', error);
+        return res.status(500).json({ success: false });
+    }
+});
+
 app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
     try {
+        // Old visitors' details go before the office reads the list.
+        await forgetOldVisitors().catch(error => console.error('❌ Privacy clean-up failure:', error));
         const query = {};
         if (BOOKING_STATUSES.includes(req.query.status)) query.status = req.query.status;
 

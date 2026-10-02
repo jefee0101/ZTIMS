@@ -108,7 +108,13 @@ server-independent HTML pages under `src/` (`index.html` at the root, plus
 information pages `src/terms.html`, `src/privacy.html`, `src/faq.html`,
 `src/contact.html` (visitor feedback form → `POST /api/feedback`),
 `src/admin/*.html`, `src/resort/*.html`, `src/guide/*.html`, `src/user/*.html`), each loading
-Tailwind from the CDN and its own inline `<script>` blocks. `src/App.jsx` /
+Tailwind from the CDN and its own inline `<script>` blocks. That CDN script only
+runs in development: `npm run build` compiles each page's CSS from its own
+`tailwind.config` (the `ztims-compile-tailwind` plugin in `vite.config.js`),
+writes it into the page and swaps the CDN tag for a one-line stand-in, so
+visitors on weak signal never download or run Tailwind. A class built from
+pieces at runtime (`'bg-' + colour`) is invisible to that compile — write class
+names out whole. `src/App.jsx` /
 `src/main.jsx` are the unused default Vite+React template — `index.html` has
 no `#root` element, so nothing mounts them. Don't build new features as React
 components; follow the existing page pattern.
@@ -577,6 +583,14 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   plain 409 in `POST /api/spots` first). The manager creates it and it is live
   at once; their edits go live directly. Listings the office keeps
   (`managed_by` null) are not limited.
+- **One tour per guide per day**, whatever the time (`isGuideFreeOn`): tours run
+  for hours, and a busy guide leaves the others a turn.
+- **Visitors' details are kept one year.** `privacy.js` erases names, phones and
+  emails from guide bookings and tickets a year after the visit, and from
+  feedback a year after it was resolved; dates, counts, countries, amounts and
+  OR numbers stay. Run daily by Vercel's cron (`vercel.json` →
+  `GET /api/maintenance/privacy`, which needs `CRON_SECRET`) and whenever the
+  officer opens Guide Bookings. The Privacy page says so.
 - **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
   refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
   falls on it, and names the bookings: the office reassigns them first.
