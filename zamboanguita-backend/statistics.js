@@ -291,22 +291,23 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                     reportId = before._id;
                     await query(
                         `update monthly_reports set rooms = $2, room_nights_occupied = $3, guest_nights = $4,
-                                submitted_by_role = $5, submitted_by_id = $6, submitted_by_email = $7, submitted_at = now()
+                                submitted_by_role = $5, submitted_by_email = $6, submitted_at = now()
                           where id = $1`,
-                        [reportId, rooms, roomNights, guestNights, who.role, who.id, who.email], client);
+                        [reportId, rooms, roomNights, guestNights, who.role, who.email], client);
                     await query('delete from monthly_report_counts where report_id = $1', [reportId], client);
                 } else {
                     const { rows } = await query(
                         `insert into monthly_reports (kind, spot_id, year, month, rooms, room_nights_occupied, guest_nights,
-                                                      submitted_by_role, submitted_by_id, submitted_by_email)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
-                        [kind, spot.id, period.year, period.month, rooms, roomNights, guestNights, who.role, who.id, who.email], client);
+                                                      submitted_by_role, submitted_by_email)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
+                        [kind, spot.id, period.year, period.month, rooms, roomNights, guestNights, who.role, who.email], client);
                     reportId = rows[0].id;
                 }
                 for (const c of counts) {
                     await query(
-                        `insert into monthly_report_counts (report_id, residence_code, male, female, total) values ($1, $2, $3, $4, $5)`,
-                        [reportId, c.code, c.male, c.female, c.total], client);
+                        // The total is the database's: male + female.
+                        `insert into monthly_report_counts (report_id, residence_code, male, female) values ($1, $2, $3, $4)`,
+                        [reportId, c.code, c.male, c.female], client);
                 }
                 const after = await liveReport(spot.id, period.year, period.month, client);
                 await logChange(client, reportId, before ? 'updated' : 'created', who, snapshotOf(before), snapshotOf(after));

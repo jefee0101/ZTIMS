@@ -235,7 +235,7 @@ async function ticketOffer(spotId) {
 
 async function openCheckout(req, { kind, bookingId = null, ticketId = null, amount, name, description }) {
     const row = await Checkout.create({
-        kind, bookingId, ticketId, amount,
+        bookingId, ticketId, amount,   // its kind is read off which one is set
         expiresAt: new Date(Date.now() + CHECKOUT_MINUTES * 60 * 1000),
         isDemo: true
     });
@@ -537,7 +537,11 @@ async function seedDemo(officerEmail) {
     const nowMs = Date.now();
 
     const guideSpots = (await query(`
-        select s.id, s.title, g.id as guide_id, g.guide_fee, g.max_group_size, g.available_days
+        select s.id, s.title, g.id as guide_id, g.guide_fee, g.max_group_size,
+               array_remove(array[case when g.works_mon then 'mon' end, case when g.works_tue then 'tue' end,
+                                  case when g.works_wed then 'wed' end, case when g.works_thu then 'thu' end,
+                                  case when g.works_fri then 'fri' end, case when g.works_sat then 'sat' end,
+                                  case when g.works_sun then 'sun' end], null) as available_days
           from spots s join tourist_guide_spots ts on ts.spot_id = s.id join tourist_guides g on g.id = ts.guide_id
          where s.requires_guide and s.status = 'published' and g.status = 'available'`)).rows;
     const ticketSpots = (await query(`
@@ -639,7 +643,7 @@ async function seedDemo(officerEmail) {
                         const kind = r < 0.10 ? 'senior' : r < 0.14 ? 'pwd' : r < 0.24 ? 'student' : r < 0.36 ? 'child' : 'regular';
                         counts[fees[kind] === null ? 'regular' : kind] += 1;
                     }
-                    const unitFees = {};
+                    const unitFees = { regular: unit };
                     let total = 0;
                     for (const kind of Object.keys(counts)) {
                         if (!counts[kind]) continue;
@@ -658,14 +662,17 @@ async function seedDemo(officerEmail) {
                     }
                     const paidAt = paidTime(day, 5);
                     const ticket = (await query(`
-                        insert into tickets (code, spot_id, visit_date, people, unit_fee, amount, full_name, email, contact_number,
+                        insert into tickets (code, spot_id, visit_date, full_name, email, contact_number,
                                              status, used_at, used_by_email, is_demo, created_at, updated_at,
-                                             count_regular, count_senior, count_pwd, count_student, count_child, fee_breakdown)
-                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, $13, $13, $14, $15, $16, $17, $18, $19)
-                        on conflict (code) do nothing returning id`,
-                        [newTicketCode(spot.title), spot.id, day, people, unit, amount, p.name, p.email, p.phone,
+                                             count_regular, count_senior, count_pwd, count_student, count_child,
+                                             fee_regular, fee_senior, fee_pwd, fee_student, fee_child)
+                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+                        on conflict (code) do nothing returning id, amount`,
+                        [newTicketCode(spot.title), spot.id, day, p.name, p.email, p.phone,
                          status, usedAt, usedAt ? officerEmail : '', paidAt,
-                         counts.regular, counts.senior, counts.pwd, counts.student, counts.child, unitFees], client)).rows[0];
+                         counts.regular, counts.senior, counts.pwd, counts.student, counts.child,
+                         unitFees.regular, unitFees.senior ?? null, unitFees.pwd ?? null,
+                         unitFees.student ?? null, unitFees.child ?? null], client)).rows[0];
                     if (!ticket) continue;
                     tickets++;
                     const ageDays = (nowMs - paidAt.getTime()) / 86400000;
@@ -865,7 +872,6 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             // request that only says how many people is all at the regular price.
             const counts = body.counts && typeof body.counts === 'object' ? body.counts : { regular: body.people };
             const priced = attractions.priceTickets(offer.spot, counts, { maxPeople: MAX_TICKET_PEOPLE });
-            const people = priced.people;
             const day = await attractions.dayVerdict(offer.spot, visitDate);
             if (!day.open) return fail(res, 409, day.reason);
             const amount = priced.amount;
@@ -875,10 +881,12 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             for (let attempt = 0; attempt < 5 && !ticket; attempt++) {
                 try {
                     ticket = await Ticket.create({
-                        code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate, people,
-                        unitFee: offer.unitFee, amount, fullName, email, contactNumber, isDemo: true,
+                        code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate,
+                        fullName, email, contactNumber, isDemo: true,
                         countRegular: priced.counts.regular, countSenior: priced.counts.senior, countPwd: priced.counts.pwd,
-                        countStudent: priced.counts.student, countChild: priced.counts.child, feeBreakdown: priced.unitFees
+                        countStudent: priced.counts.student, countChild: priced.counts.child,
+                        // The regular price is kept even when no regular visitor came.
+                        feeBreakdown: { regular: offer.unitFee, ...priced.unitFees }
                     });
                 } catch (error) {
                     if (error && error.code === 11000) continue;

@@ -1145,7 +1145,7 @@ function normaliseSpotImages(payload) {
 const MANAGER_WRITABLE_SPOT_FIELDS = [
     'title', 'location', 'category', 'description', 'imageUrl', 'images', 'bookingUrl',
     'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
-    'address', 'barangay', 'municipality', 'province', 'latitude', 'longitude'
+    'address', 'barangay', 'latitude', 'longitude'
 ];
 // Note what is absent: status, managedBy and requiresGuide. Publication and the
 // guide requirement are municipal decisions, not an establishment's.
@@ -1436,7 +1436,6 @@ app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
         if (!spot) return res.status(404).json({ success: false, message: 'Listing not found.' });
 
         spot.status = status;
-        spot.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
         spot.statusUpdatedAt = new Date();
         await Spot.save(spot);
 
@@ -2754,7 +2753,6 @@ app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
                 method: String(req.body.method || 'cash').trim() || 'cash',
                 receiptNumber: String(req.body.receiptNumber || '').trim(),
                 paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
-                recordedBy: req.auth.sub,
                 recordedByEmail: officer ? officer.email : '',
                 remarks: String(req.body.remarks || '').trim().slice(0, 500)
             }, { client });

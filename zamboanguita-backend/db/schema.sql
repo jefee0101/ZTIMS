@@ -114,10 +114,9 @@ create table if not exists public.spots (
     location            text not null constraint spots_location_required check (location <> ''),
     category            text not null constraint spots_category_required check (category <> ''),
     description         text not null constraint spots_description_required check (description <> ''),
-    -- Cover photo, and the full gallery. Only links; the files live on Cloudinary.
+    -- Cover photo. Only a link; the file lives on Cloudinary. The rest of the
+    -- gallery is in spot_photos.
     image_url           text not null default '',
-    images              text[] not null default '{}'
-                        constraint spots_images_max check (cardinality(images) <= 30),
     -- Where "Book Now" sends a visitor: the establishment's own site.
     booking_url         text not null default '',
     type                text not null default 'spot'
@@ -128,9 +127,9 @@ create table if not exists public.spots (
     travel_fee          numeric not null default 0,
     entrance_fee        numeric not null default 0,
     address             text not null default '',
+    -- Every listing is in Zamboanguita, Negros Oriental, so neither is stored:
+    -- the API adds them when it reads a listing.
     barangay            text not null default '',
-    municipality        text not null default 'Zamboanguita',
-    province            text not null default 'Negros Oriental',
     -- Where the place is. Both or neither: half a point would put a marker in
     -- the sea. A visitor's own position is never stored anywhere.
     latitude            double precision
@@ -142,7 +141,6 @@ create table if not exists public.spots (
     -- Listings are taken down by status, never deleted.
     status              text not null default 'published'
                         constraint spots_status check (status in ('published', 'unpublished', 'archived')),
-    status_note         text not null default '',
     status_updated_at   timestamptz,
     requires_guide      boolean not null default false,
     created_at          timestamptz not null default now(),
@@ -198,11 +196,15 @@ alter table public.tourist_guides
         constraint tourist_guides_scope check (scope in ('municipal', 'barangay'));
 alter table public.tourist_guides
     add column if not exists barangay text not null default '';
--- The weekdays the guide works. A booking on any other day is not assigned to them.
-alter table public.tourist_guides
-    add column if not exists available_days text[] not null default '{mon,tue,wed,thu,fri,sat,sun}'
-        constraint tourist_guides_available_days
-        check (available_days <@ array['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']::text[]);
+-- The weekdays the guide works, one yes/no column per day. A booking on any
+-- other day is not assigned to them.
+alter table public.tourist_guides add column if not exists works_mon boolean not null default true;
+alter table public.tourist_guides add column if not exists works_tue boolean not null default true;
+alter table public.tourist_guides add column if not exists works_wed boolean not null default true;
+alter table public.tourist_guides add column if not exists works_thu boolean not null default true;
+alter table public.tourist_guides add column if not exists works_fri boolean not null default true;
+alter table public.tourist_guides add column if not exists works_sat boolean not null default true;
+alter table public.tourist_guides add column if not exists works_sun boolean not null default true;
 -- The sign-in. Null until the office issues one.
 alter table public.tourist_guides
     add column if not exists email text
@@ -345,17 +347,13 @@ create table if not exists public.payments (
     method              text not null default 'cash',
     receipt_number      text not null default '',
     paid_at             timestamptz not null default now(),
-    -- Who took it, by id and by email, so the record outlives the account.
-    recorded_by         text references public.tourism_officers (id) on delete set null,
+    -- Who took it, by email, so the record outlives the account.
     recorded_by_email   text not null default '',
     remarks             text not null default '',
     created_at          timestamptz not null default now(),
     updated_at          timestamptz not null default now()
 );
 
--- Removing an officer clears recorded_by on their payments; this keeps that
--- from reading the whole table.
-create index if not exists payments_recorded_by_idx on public.payments (recorded_by);
 
 
 -- ---------------------------------------------------------------------------
@@ -526,9 +524,8 @@ create table if not exists public.monthly_reports (
     status              text not null default 'submitted'
                         constraint monthly_reports_status check (status in ('submitted', 'void')),
     void_reason         text not null default '',
-    -- Who sent it, by id and by email, so the record outlives the account.
+    -- Who sent it, as what, by email, so the record outlives the account.
     submitted_by_role   text not null default '',
-    submitted_by_id     text not null default '',
     submitted_by_email  text not null default '',
     submitted_at        timestamptz not null default now(),
     -- Set when the officer marks the month as sent to the province. A locked
@@ -555,16 +552,19 @@ create index if not exists monthly_reports_period_idx on public.monthly_reports 
 create index if not exists monthly_reports_spot_idx on public.monthly_reports (spot_id);
 
 -- A report's numbers: one row per residence that had anyone. Male and female
--- are both given, or (for the 2025 sheet, which never split by sex) neither.
+-- are both given, or (for the 2025 sheet, which never split by sex) neither,
+-- and then total_unsplit holds the count. `total` is never typed in: the
+-- database works it out, so it can never disagree with the parts.
 create table if not exists public.monthly_report_counts (
     report_id           text not null references public.monthly_reports (id),
     residence_code      text not null references public.residences (code),
     male                integer constraint monthly_report_counts_male check (male is null or male >= 0),
     female              integer constraint monthly_report_counts_female check (female is null or female >= 0),
-    total               integer not null constraint monthly_report_counts_total check (total >= 0),
+    total_unsplit       integer constraint monthly_report_counts_total_unsplit check (total_unsplit is null or total_unsplit >= 0),
+    total               integer generated always as (coalesce(male + female, total_unsplit)) stored,
     primary key (report_id, residence_code),
-    constraint monthly_report_counts_sex_adds_up
-        check ((male is null and female is null) or (male is not null and female is not null and male + female = total))
+    constraint monthly_report_counts_split_or_not
+        check ((male is null) = (female is null) and (male is null) = (total_unsplit is not null))
 );
 
 create index if not exists monthly_report_counts_residence_idx on public.monthly_report_counts (residence_code);
@@ -614,10 +614,27 @@ create table if not exists public.tickets (
     code                text not null unique,
     spot_id             text not null references public.spots (id),
     visit_date          date not null,
-    people              integer not null constraint tickets_people check (people between 1 and 50),
-    -- The entrance fee when bought, and the total, fixed at purchase.
-    unit_fee            numeric not null constraint tickets_unit_fee check (unit_fee >= 0),
-    amount              numeric not null constraint tickets_amount check (amount >= 0),
+    -- How many of each kind of visitor. The staff at the entrance see the kinds,
+    -- to check a senior, PWD or student ID.
+    count_regular       integer not null default 0,
+    count_senior        integer not null default 0,
+    count_pwd           integer not null default 0,
+    count_student       integer not null default 0,
+    count_child         integer not null default 0,
+    -- The price per person each kind paid, fixed when the ticket was bought (a
+    -- receipt keeps the price of the day). Null: that kind was not offered.
+    fee_regular         numeric,
+    fee_senior          numeric,
+    fee_pwd             numeric,
+    fee_student         numeric,
+    fee_child           numeric,
+    -- Worked out by the database from the columns above, never typed in.
+    people              integer generated always as
+                        (count_regular + count_senior + count_pwd + count_student + count_child) stored,
+    amount              numeric generated always as
+                        (coalesce(count_regular * fee_regular, 0) + coalesce(count_senior * fee_senior, 0)
+                         + coalesce(count_pwd * fee_pwd, 0) + coalesce(count_student * fee_student, 0)
+                         + coalesce(count_child * fee_child, 0)) stored,
     full_name           text not null,
     email               text not null,
     contact_number      text not null default '',
@@ -634,33 +651,8 @@ create table if not exists public.tickets (
 create index if not exists tickets_spot_date_idx on public.tickets (spot_id, visit_date);
 create index if not exists tickets_status_idx on public.tickets (status);
 
--- Who a ticket is for: how many of each kind of visitor, and the price each
--- kind paid when it was bought (fee_breakdown, pesos per person by kind). The
--- staff at the entrance see the kinds, to check a senior, PWD or student ID.
-alter table public.tickets add column if not exists count_regular integer not null default 0;
-alter table public.tickets add column if not exists count_senior integer not null default 0;
-alter table public.tickets add column if not exists count_pwd integer not null default 0;
-alter table public.tickets add column if not exists count_student integer not null default 0;
-alter table public.tickets add column if not exists count_child integer not null default 0;
-alter table public.tickets add column if not exists fee_breakdown jsonb not null default '{}'::jsonb;
-
--- Tickets bought before there were kinds were all at the regular price.
-update public.tickets
-   set count_regular = people, fee_breakdown = jsonb_build_object('regular', unit_fee)
- where count_regular + count_senior + count_pwd + count_student + count_child = 0;
-
-do $$
-begin
-    if not exists (select 1 from pg_constraint where conname = 'tickets_counts_not_negative') then
-        alter table public.tickets add constraint tickets_counts_not_negative
-            check (count_regular >= 0 and count_senior >= 0 and count_pwd >= 0 and count_student >= 0 and count_child >= 0);
-    end if;
-    if not exists (select 1 from pg_constraint where conname = 'tickets_people_by_kind') then
-        alter table public.tickets add constraint tickets_people_by_kind
-            check (count_regular + count_senior + count_pwd + count_student + count_child = people);
-    end if;
-end
-$$;
+-- (A database from before the counts and per-kind prices is brought to this
+-- shape in "Normalisation" at the end of this file.)
 
 -- A payment is for one booking or one ticket. Online payments say so, keep the
 -- gateway's reference, and may be refunded (the office cancelled).
@@ -694,9 +686,11 @@ create index if not exists payments_paid_at_idx on public.payments (paid_at desc
 -- payment that arrives late, or twice, can still be matched to what it was for.
 create table if not exists public.online_checkouts (
     id                  text primary key default public.ztims_new_id(),
-    kind                text not null constraint online_checkouts_kind check (kind in ('guide_booking', 'ticket')),
     booking_id          text references public.guide_bookings (id) on delete cascade,
     ticket_id           text references public.tickets (id) on delete cascade,
+    -- What was being paid, read off which of the two is filled in.
+    kind                text generated always as
+                        (case when booking_id is not null then 'guide_booking' else 'ticket' end) stored,
     amount              numeric not null constraint online_checkouts_amount check (amount >= 0),
     session_id          text unique,
     checkout_url        text not null default '',
@@ -780,6 +774,175 @@ create table if not exists public.spot_closed_dates (
 
 
 -- ---------------------------------------------------------------------------
+-- Normalisation (October 2026): one fact in one place.
+--
+-- A destination's gallery is a table of its own (one row per photo), a guide's
+-- working days and a ticket's prices are one value per column, and every total
+-- (a ticket's people and amount, a statistics row's total, what a checkout was
+-- for) is worked out by the database rather than typed in. Columns nothing used
+-- are gone: a listing's municipality and province (always Zamboanguita, Negros
+-- Oriental), its status note, and the account ids beside the emails that
+-- already say who recorded a payment or sent a report.
+--
+-- What a record keeps about the moment it happened stays: the price a ticket
+-- was bought at, who recorded or changed something, where a guide's report
+-- took place. Those are facts of that record, as a receipt keeps its price.
+--
+-- A database created before this is converted below, its data carried across
+-- first; one created after has nothing to convert.
+-- ---------------------------------------------------------------------------
+create table if not exists public.spot_photos (
+    spot_id             text not null references public.spots (id) on delete cascade,
+    -- The gallery's order; at most 30 photos (0–29).
+    position            integer not null constraint spot_photos_position check (position between 0 and 29),
+    url                 text not null constraint spot_photos_url_required check (url <> ''),
+    primary key (spot_id, position)
+);
+
+do $$
+declare
+    has_column boolean;
+begin
+    -- Spots: the photo list becomes rows; unused columns go.
+    select exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'spots' and column_name = 'images') into has_column;
+    if has_column then
+        execute $sql$
+            insert into public.spot_photos (spot_id, position, url)
+            select s.id, p.ord - 1, p.url
+              from public.spots s, unnest(s.images) with ordinality as p(url, ord)
+             where p.url <> '' and p.ord <= 30
+            on conflict do nothing $sql$;
+        alter table public.spots drop column images;
+    end if;
+    alter table public.spots drop column if exists municipality;
+    alter table public.spots drop column if exists province;
+    alter table public.spots drop column if exists status_note;
+
+    -- Guides: the list of weekdays becomes one yes/no per day.
+    select exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'tourist_guides' and column_name = 'available_days') into has_column;
+    if has_column then
+        execute $sql$
+            update public.tourist_guides
+               set works_mon = 'mon' = any(available_days), works_tue = 'tue' = any(available_days),
+                   works_wed = 'wed' = any(available_days), works_thu = 'thu' = any(available_days),
+                   works_fri = 'fri' = any(available_days), works_sat = 'sat' = any(available_days),
+                   works_sun = 'sun' = any(available_days) $sql$;
+        alter table public.tourist_guides drop column available_days;
+    end if;
+
+    -- Who did it is the email; the account id beside it was never read.
+    alter table public.payments drop column if exists recorded_by;
+    alter table public.monthly_reports drop column if exists submitted_by_id;
+
+    -- Statistics rows: total is worked out from male + female, or kept as
+    -- total_unsplit for a month with no split (the 2025 sheet).
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'monthly_report_counts'
+                  and column_name = 'total' and is_generated = 'NEVER') then
+        alter table public.monthly_report_counts add column if not exists total_unsplit integer;
+        execute 'update public.monthly_report_counts set total_unsplit = total where male is null';
+        alter table public.monthly_report_counts drop column total;
+        alter table public.monthly_report_counts
+            add column total integer generated always as (coalesce(male + female, total_unsplit)) stored;
+    end if;
+
+    -- Tickets: the per-kind prices become columns; people and amount are worked out.
+    alter table public.tickets add column if not exists count_regular integer not null default 0;
+    alter table public.tickets add column if not exists count_senior integer not null default 0;
+    alter table public.tickets add column if not exists count_pwd integer not null default 0;
+    alter table public.tickets add column if not exists count_student integer not null default 0;
+    alter table public.tickets add column if not exists count_child integer not null default 0;
+    alter table public.tickets add column if not exists fee_regular numeric;
+    alter table public.tickets add column if not exists fee_senior numeric;
+    alter table public.tickets add column if not exists fee_pwd numeric;
+    alter table public.tickets add column if not exists fee_student numeric;
+    alter table public.tickets add column if not exists fee_child numeric;
+    select exists (select 1 from information_schema.columns
+                    where table_schema = 'public' and table_name = 'tickets' and column_name = 'fee_breakdown') into has_column;
+    if has_column then
+        -- Tickets from before the kinds were all at the regular price.
+        execute $sql$
+            update public.tickets
+               set count_regular = people
+             where count_regular + count_senior + count_pwd + count_student + count_child = 0 $sql$;
+        execute $sql$
+            update public.tickets
+               set fee_regular = coalesce((fee_breakdown->>'regular')::numeric, unit_fee),
+                   fee_senior  = (fee_breakdown->>'senior')::numeric,
+                   fee_pwd     = (fee_breakdown->>'pwd')::numeric,
+                   fee_student = (fee_breakdown->>'student')::numeric,
+                   fee_child   = (fee_breakdown->>'child')::numeric $sql$;
+        -- Nothing is dropped unless the worked-out figures match what was stored.
+        if exists (select 1 from public.tickets
+                    where count_regular + count_senior + count_pwd + count_student + count_child <> people
+                       or coalesce(count_regular * fee_regular, 0) + coalesce(count_senior * fee_senior, 0)
+                          + coalesce(count_pwd * fee_pwd, 0) + coalesce(count_student * fee_student, 0)
+                          + coalesce(count_child * fee_child, 0) <> amount) then
+            raise exception 'A ticket''s people or amount does not match its counts and prices; nothing was changed.';
+        end if;
+        alter table public.tickets drop column fee_breakdown;
+        alter table public.tickets drop column unit_fee;
+    end if;
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'tickets'
+                  and column_name = 'people' and is_generated = 'NEVER') then
+        alter table public.tickets drop column people;
+        alter table public.tickets add column people integer generated always as
+            (count_regular + count_senior + count_pwd + count_student + count_child) stored;
+    end if;
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'tickets'
+                  and column_name = 'amount' and is_generated = 'NEVER') then
+        alter table public.tickets drop column amount;
+        alter table public.tickets add column amount numeric generated always as
+            (coalesce(count_regular * fee_regular, 0) + coalesce(count_senior * fee_senior, 0)
+             + coalesce(count_pwd * fee_pwd, 0) + coalesce(count_student * fee_student, 0)
+             + coalesce(count_child * fee_child, 0)) stored;
+    end if;
+
+    -- Checkouts: what was being paid is read off which reference is filled in.
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'online_checkouts'
+                  and column_name = 'kind' and is_generated = 'NEVER') then
+        alter table public.online_checkouts drop column kind;
+        alter table public.online_checkouts add column kind text generated always as
+            (case when booking_id is not null then 'guide_booking' else 'ticket' end) stored;
+    end if;
+
+    -- The rules, for a converted database and a new one alike.
+    if not exists (select 1 from pg_constraint where conname = 'monthly_report_counts_split_or_not') then
+        alter table public.monthly_report_counts add constraint monthly_report_counts_split_or_not
+            check ((male is null) = (female is null) and (male is null) = (total_unsplit is not null));
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'monthly_report_counts_total_unsplit') then
+        alter table public.monthly_report_counts add constraint monthly_report_counts_total_unsplit
+            check (total_unsplit is null or total_unsplit >= 0);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'tickets_counts_not_negative') then
+        alter table public.tickets add constraint tickets_counts_not_negative
+            check (count_regular >= 0 and count_senior >= 0 and count_pwd >= 0 and count_student >= 0 and count_child >= 0);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'tickets_people') then
+        alter table public.tickets add constraint tickets_people check (people between 1 and 50);
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'tickets_fees_not_negative') then
+        alter table public.tickets add constraint tickets_fees_not_negative
+            check (coalesce(fee_regular, 0) >= 0 and coalesce(fee_senior, 0) >= 0 and coalesce(fee_pwd, 0) >= 0
+                   and coalesce(fee_student, 0) >= 0 and coalesce(fee_child, 0) >= 0);
+    end if;
+    -- A kind with people on the ticket has its price.
+    if not exists (select 1 from pg_constraint where conname = 'tickets_priced_by_kind') then
+        alter table public.tickets add constraint tickets_priced_by_kind
+            check ((count_regular = 0 or fee_regular is not null) and (count_senior = 0 or fee_senior is not null)
+                   and (count_pwd = 0 or fee_pwd is not null) and (count_student = 0 or fee_student is not null)
+                   and (count_child = 0 or fee_child is not null));
+    end if;
+end
+$$;
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -802,7 +965,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
         'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
-        'tickets', 'online_checkouts', 'spot_closed_dates'
+        'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

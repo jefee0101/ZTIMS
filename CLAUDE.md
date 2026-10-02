@@ -254,7 +254,10 @@ data lives in Postgres on Supabase (it moved off MongoDB Atlas; see
   That's what let the move leave every page untouched. Postgres errors are
   translated into the shapes routes already handled (`code: 11000` for a
   duplicate, `ValidationError` for a bad value, `STILL_REFERENCED` for a delete
-  that a reference blocks).
+  that a reference blocks). A field can be `generated` (the database works it
+  out; never written), `hidden` (a column routes never see, read and written
+  through a `virtual`), or `external` (not a column of the table; its model
+  writes it) — see "Normalisation" below.
 - `models.js` — one `Table` per record type, field for field what the Mongoose
   schemas were, plus the few joined queries (a listing with its establishment,
   a booking with its destination and guide). `server.js` imports them under the
@@ -421,8 +424,8 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 19 tables in all, with `spot_closed_dates` (`guide_time_off` and
-  `guide_profile_requests` were dropped).
+  have `is_demo`. 20 tables in all, with `spot_closed_dates` and `spot_photos`
+  (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
   type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
@@ -457,9 +460,10 @@ guided destinations:
 - **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
   senior citizen and PWD always 20% off it (a rule, not a setting);
   `student_fee` and `child_fee` + `child_age_max` are offered only when set.
-  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`,
-  adding up to `people`, a database check) and keeps the price each kind paid
-  (`fee_breakdown`); `priceTickets` prices a purchase from the counts, and the
+  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`)
+  and keeps the price each kind paid (`fee_regular|senior|pwd|student|child`,
+  read by routes as `feeBreakdown`); `people` and `amount` are worked out by
+  the database (see "Normalisation"); `priceTickets` prices a purchase from the counts, and the
   gate's check says whose ID to look at. No ID is ever stored.
 - **`cancel_keep_percent`**: the share kept when a visitor cancels, for tickets
   and guide bookings at that destination.
@@ -541,6 +545,30 @@ translated both on the way across, and the schema is that history now.
 the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
 to force a reset on an existing one — both are meant to be deleted from the
 environment once used.
+
+### Normalisation
+
+The schema keeps one fact in one place (3NF), with `schema.sql`'s
+"Normalisation" block converting a database from before:
+
+- **Worked out, never typed in** (Postgres generated columns): `tickets.people`
+  (the counts added up), `tickets.amount` (counts × prices),
+  `monthly_report_counts.total` (male + female, or `total_unsplit` for a month
+  with no split, the 2025 sheet), `online_checkouts.kind` (from which reference
+  is set). Writing one is an error, so models mark them `generated`.
+- **One value per column or row**: a listing's gallery is `spot_photos` (one
+  row per photo, `position` 0–29; routes still see `spot.images`, written by
+  `spots.create/save` in one transaction); a guide's days are
+  `works_mon…works_sun` (routes still see `availableDays`); a ticket's prices
+  are `fee_*` columns (routes still see `feeBreakdown` and `unitFee`).
+- **Not stored**: a listing's municipality and province (always Zamboanguita,
+  Negros Oriental — `MUNICIPALITY`/`PROVINCE` in `models.js`, added on read)
+  and status note; the account ids that sat beside `payments.recorded_by_email`
+  and `monthly_reports.submitted_by_email`.
+- **Kept on purpose**: what a record says about its own moment — the price a
+  ticket was bought at, who recorded or changed something (by email, so it
+  outlives the account), where a guide's report happened. Those are facts of
+  that record, like a receipt's price, not copies to keep in step.
 
 ## Duplicated facts (keep both sides in step by hand)
 

@@ -92,7 +92,7 @@ const label = doc => {
 function transform(source) {
     const report = { notes: [], repaired: [], skipped: [], unknownFields: {} };
     const rows = {
-        tourism_officers: [], establishment_managers: [], spots: [], tourist_guides: [],
+        tourism_officers: [], establishment_managers: [], spots: [], spot_photos: [], tourist_guides: [],
         tourist_guide_spots: [], guide_bookings: [], payments: [], feedback: []
     };
     const skip = (collection, doc, reason) => report.skipped.push({ collection, id: hexId(doc._id), label: label(doc), reason, document: doc });
@@ -213,16 +213,18 @@ function transform(source) {
         rows.spots.push({
             id,
             title: str(doc.title), location: str(doc.location), category: str(doc.category), description: str(doc.description),
-            image_url: str(doc.imageUrl), images, booking_url: str(doc.bookingUrl), type, label: str(doc.label),
+            image_url: str(doc.imageUrl), booking_url: str(doc.bookingUrl), type, label: str(doc.label),
             working_days: str(doc.workingDays, 'Everyday'), working_time: str(doc.workingTime, 'All Day'),
             travel_fee: num(doc.travelFee), entrance_fee: num(doc.entranceFee),
+            // Municipality and province are not stored: every listing is in
+            // Zamboanguita, Negros Oriental. The status note was never read.
             address: str(doc.address), barangay: str(doc.barangay),
-            municipality: str(doc.municipality, 'Zamboanguita'), province: str(doc.province, 'Negros Oriental'),
             latitude, longitude, managed_by: managedBy,
-            status, status_note: str(doc.statusNote), status_updated_at: date(doc.statusUpdatedAt),
+            status, status_updated_at: date(doc.statusUpdatedAt),
             requires_guide: bool(doc.requiresGuide, false),
             ...stamps(doc)
         });
+        images.forEach((url, position) => rows.spot_photos.push({ spot_id: id, position, url }));
     }
     noteUnknown('spots', source.spots || [], spotKnown);
 
@@ -321,16 +323,12 @@ function transform(source) {
         const amount = num(doc.amount, NaN);
         if (!Number.isFinite(amount) || amount < 0) { skip('payments', doc, `amount is ${doc.amount}`); continue; }
 
-        let recordedBy = hexId(doc.recordedBy);
-        if (recordedBy && !officerIds.has(recordedBy)) {
-            repair('payments', doc, `recorded by officer ${recordedBy}, who does not exist — the recorded email is kept`);
-            recordedBy = null;
-        }
+        // Who recorded it is kept as the email; the account id is not stored.
         paidBookings.add(bookingId);
         rows.payments.push({
             id, booking_id: bookingId, amount, method: str(doc.method, 'cash') || 'cash',
             receipt_number: str(doc.receiptNumber), paid_at: date(doc.paidAt) || stamps(doc).created_at,
-            recorded_by: recordedBy, recorded_by_email: str(doc.recordedByEmail), remarks: str(doc.remarks),
+            recorded_by_email: str(doc.recordedByEmail), remarks: str(doc.remarks),
             ...stamps(doc)
         });
     }
@@ -388,7 +386,7 @@ async function readMongo(uri) {
 
 // Parents before children, so every reference already has its row.
 const TABLE_ORDER = [
-    'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
+    'tourism_officers', 'establishment_managers', 'spots', 'spot_photos', 'tourist_guides',
     'tourist_guide_spots', 'guide_bookings', 'payments', 'feedback'
 ];
 
@@ -441,7 +439,7 @@ async function writePostgres(rows, { replace }) {
 
 const SOURCE_FOR = {
     tourism_officers: 'admins', establishment_managers: 'resortOwners', spots: 'spots',
-    tourist_guides: 'touristguides', tourist_guide_spots: 'touristguides.assignedSpots',
+    spot_photos: 'spots.images', tourist_guides: 'touristguides', tourist_guide_spots: 'touristguides.assignedSpots',
     guide_bookings: 'guidebookings', payments: 'payments', feedback: 'feedbacks'
 };
 
@@ -452,7 +450,9 @@ function printReport(source, rows, report, written) {
         const from = SOURCE_FOR[table];
         const read = table === 'tourist_guide_spots'
             ? (source.touristguides || []).reduce((n, g) => n + ((g.assignedSpots || []).length), 0)
-            : (source[from] || []).length;
+            : table === 'spot_photos'
+                ? (source.spots || []).reduce((n, s) => n + ((s.images || []).filter(Boolean).length), 0)
+                : (source[from] || []).length;
         const line = `  ${from.padEnd(30)}${table.padEnd(26)}${String(read).padStart(4)}   ${String(rows[table].length).padStart(4)}`;
         console.log(line + (written ? `  ${String(written[table]).padStart(11)}${written[table] === rows[table].length ? '  ✓' : '  ✗ MISMATCH'}` : ''));
     }
