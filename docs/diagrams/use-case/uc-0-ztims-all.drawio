@@ -1,0 +1,169 @@
+<mxfile host="drawio">
+<diagram id="ztims-use-case" name="Use Case">
+<mxGraphModel dx="1410" dy="1039" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1410" pageHeight="1039" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="boundary" value="Zamboanguita Tourism Information Management System" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;spacingTop=8;fillColor=none;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+<mxGeometry x="300" y="20" width="780" height="999" as="geometry"/>
+</mxCell>
+<mxCell id="u0" value="Browse Destinations" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="75" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u1" value="Get Directions" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="147" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u2" value="Buy Entrance Tickets" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="219" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u3" value="Book a Tour Guide" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="291" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u4" value="Manage Booking or Ticket" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="363" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u5" value="Send Feedback" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="435" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u6" value="Manage Listings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="543" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u7" value="Submit Monthly Statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="615" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u8" value="View Assigned Tours" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="723" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u9" value="Set Availability and Languages" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="795" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u10" value="Update Contact Details and Bio" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="867" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u11" value="File Tour Report" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="380" y="939" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u12" value="Pay Online" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="255" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u13" value="Handle Payments and Refunds" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="363" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u14" value="Manage Destinations" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="435" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u15" value="Manage User Accounts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="507" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u16" value="Assign Guides to Bookings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="579" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u17" value="Review Guide Reports" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="651" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u18" value="Manage Tourism Statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="723" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u19" value="Check Tickets at the Gate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="795" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="u20" value="Read Visitor Feedback" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="760" y="867" width="240" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="visitor" value="Visitor" style="shape=umlActor;labelPosition=left;align=right;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="185" y="250" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l1" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u0">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l2" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u1">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l3" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l4" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l5" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u4">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l6" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="visitor" target="u5">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="manager" value="Establishment&lt;br&gt;Manager" style="shape=umlActor;labelPosition=left;align=right;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="185" y="574" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l7" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="manager" target="u6">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l8" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="manager" target="u7">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="guide" value="Tourist Guide" style="shape=umlActor;labelPosition=left;align=right;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="185" y="826" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l9" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="guide" target="u8">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l10" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="guide" target="u9">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l11" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="guide" target="u10">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l12" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="guide" target="u11">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="maps" value="Map and Directions&lt;br&gt;Providers" style="shape=umlActor;labelPosition=right;align=left;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="1185" y="142" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l13" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u1" target="maps">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="xendit" value="Xendit Payment&lt;br&gt;Gateway" style="shape=umlActor;labelPosition=right;align=left;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="1185" y="304" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l14" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u12" target="xendit">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l15" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u13" target="xendit">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="officer" value="Tourism Officer" style="shape=umlActor;labelPosition=right;align=left;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="1185" y="610" width="30" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="l16" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u13" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l17" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u14" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l18" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u15" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l19" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u16" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l20" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u17" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l21" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u18" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l22" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u19" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l23" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u20" target="officer">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l24" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l25" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>
