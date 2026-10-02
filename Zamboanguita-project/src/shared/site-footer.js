@@ -36,6 +36,38 @@
             label + '</a></li>';
     }
 
+    /* Emergency numbers, shown in the footer and on every destination page
+       (spot.html's [data-emergency] box). EMPTY ON PURPOSE until the Municipal
+       Tourism Office supplies them: a wrong number in an emergency is worse
+       than none, so nothing is shown while this list is empty. Add each as
+       { label: 'MDRRMO Zamboanguita', number: '0917 …' }. */
+    const EMERGENCY = [];
+
+    function escapeText(value) {
+        return String(value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function emergencyList() {
+        return '<ul class="space-y-1">' + EMERGENCY.map(function (e) {
+            const dial = String(e.number).replace(/[^0-9+]/g, '');
+            return '<li class="flex flex-wrap justify-between gap-x-3"><span>' + escapeText(e.label) + '</span>' +
+                '<a class="font-bold text-primary hover:underline tabular-nums" href="tel:' + dial + '">' + escapeText(e.number) + '</a></li>';
+        }).join('') + '</ul>';
+    }
+    /* The destination page's box; empty (and so hidden) while there are no numbers. */
+    function fillEmergencyBoxes() {
+        document.querySelectorAll('[data-emergency]').forEach(function (box) {
+            if (!EMERGENCY.length) { box.hidden = true; return; }
+            box.innerHTML =
+                '<p class="flex items-center gap-2 font-bold text-on-surface mb-2">' +
+                    '<span class="material-symbols-outlined !text-lg text-error" aria-hidden="true">emergency</span>In an emergency</p>' +
+                '<div class="text-support">' + emergencyList() + '</div>';
+            box.hidden = false;
+        });
+    }
+    window.ztimsEmergency = { fill: fillEmergencyBoxes, count: EMERGENCY.length };
+
     function render(root) {
         const r = root.endsWith('/') ? root : root + '/';
         const src = r + 'src/';
@@ -97,6 +129,12 @@
                             '<span class="material-symbols-outlined !text-base" aria-hidden="true">forum</span>' +
                             'Send feedback' +
                         '</a>' +
+                        (EMERGENCY.length
+                            ? '<div class="mt-6" aria-labelledby="footerEmergencyHeading">' +
+                                  '<h2 id="footerEmergencyHeading" class="' + HEADING + '">In an emergency</h2>' +
+                                  '<div class="text-support">' + emergencyList() + '</div>' +
+                              '</div>'
+                            : '') +
                     '</div>' +
                 '</div>' +
 
@@ -121,6 +159,7 @@
             footer.classList.add('bg-surface-container-low', 'border-t', 'border-outline-variant/15', 'transition-colors', 'duration-300');
             footer.innerHTML = render(footer.getAttribute('data-root') || './');
         });
+        fillEmergencyBoxes();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);

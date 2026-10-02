@@ -98,6 +98,20 @@ body { overflow-x: hidden; }
         display: none;
     }
 }
+
+    /* "Save this route": only the Getting there box is printed (or saved as a
+       PDF), so the route and map can be kept for where there is no signal. */
+    @media print {
+        html.print-route body * { visibility: hidden !important; }
+        html.print-route #directionsSection,
+        html.print-route #directionsSection * { visibility: visible !important; }
+        html.print-route #directionsSection { position: absolute; inset: 0 auto auto 0; width: 100%; }
+        html.print-route .route-no-print,
+        html.print-route #openInMapsBtn,
+        html.print-route #getDirectionsBtn,
+        html.print-route #manualOrigin,
+        html.print-route #modeRow { display: none !important; }
+    }
 </style>
     <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
          styles so the tokens win over anything left hardcoded. -->
@@ -691,6 +705,7 @@ body { overflow-x: hidden; }
                     <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
                     <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-3">
                         ${addressLine}
+                        <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
                         <p class="text-sm text-on-surface-variant flex items-start gap-2">
                             <span class="material-symbols-outlined !text-lg text-on-surface-variant/60 shrink-0">wrong_location</span>
                             <span>Directions are currently unavailable because this location has not been configured.</span>
@@ -705,6 +720,18 @@ body { overflow-x: hidden; }
                 <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
                 <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-4">
                     ${addressLine}
+
+                    <!-- Emergency numbers (shared/site-footer.js): hidden until the office supplies them. -->
+                    <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
+
+                    <!-- Many of Zamboanguita's destinations have weak signal or none:
+                         a route asked for there cannot load, so the visitor is told to
+                         get it, and keep it, before setting off. -->
+                    <p class="tone-warning tone-pill flex items-start gap-2 text-sm font-semibold px-4 py-3 leading-relaxed">
+                        <span class="material-symbols-outlined !text-lg shrink-0" aria-hidden="true">signal_cellular_connected_no_internet_0_bar</span>
+                        <span>Signal is weak or absent at many destinations. Get directions <b>before you leave town</b>,
+                        then save the route, or download the area in your maps app for offline use.</span>
+                    </p>
 
                     <button type="button" id="getDirectionsBtn"
                             class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
@@ -780,6 +807,11 @@ body { overflow-x: hidden; }
                         <p id="directionsStatus" hidden class="text-support"></p>
 
                         <div id="directionsMap" hidden class="relative z-0 h-64 sm:h-80 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-high"></div>
+
+                        <button type="button" id="saveRouteBtn" hidden
+                                class="route-no-print w-full bg-secondary text-on-secondary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                            <span class="material-symbols-outlined !text-lg">download</span> Save this route
+                        </button>
 
                         <a id="openInMapsBtn" href="#" target="_blank" rel="noopener noreferrer"
                            class="w-full bg-surface-container-high border border-outline-variant/40 text-on-surface px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
@@ -1334,6 +1366,18 @@ body { overflow-x: hidden; }
         const modeRow = document.getElementById('modeRow');
         const routeStats = document.getElementById('routeStats');
         const statusLine = document.getElementById('directionsStatus');
+
+        // Prints only the route (see "Save this route" in the styles); a phone's
+        // print dialog offers "Save as PDF", which opens with no signal.
+        document.getElementById('saveRouteBtn').addEventListener('click', function () {
+            document.documentElement.classList.add('print-route');
+            const done = function () {
+                document.documentElement.classList.remove('print-route');
+                window.removeEventListener('afterprint', done);
+            };
+            window.addEventListener('afterprint', done);
+            window.print();
+        });
         const mapBox = document.getElementById('directionsMap');
         const openInMaps = document.getElementById('openInMapsBtn');
 
@@ -1500,6 +1544,7 @@ body { overflow-x: hidden; }
 
                 if (!response.ok) throw new Error(data.message || 'Directions are unavailable right now.');
 
+                document.getElementById('saveRouteBtn').hidden = false;
                 document.getElementById('routeDistance').textContent = formatDistance(data.distanceMeters);
                 document.getElementById('routeDuration').textContent = formatDuration(data.durationSeconds);
                 paintRouteChoice(data);
@@ -1522,6 +1567,7 @@ body { overflow-x: hidden; }
                 // No straight-line stand-in: an honest "unavailable" beats a number
                 // the visitor would plan their day around.
                 routeStats.hidden = true;
+                document.getElementById('saveRouteBtn').hidden = true;
                 setStatus(error.message || 'Directions are unavailable right now.', 'error');
             }
         }
@@ -1829,6 +1875,8 @@ body { overflow-x: hidden; }
             document.title = `${spot.title} | Zamboanguita`;
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
+            // The footer script may have run before this page was drawn.
+            if (window.ztimsEmergency) window.ztimsEmergency.fill();
             renderGuideRequirement(spotId);
             renderTicketOffer(spotId);
         } catch (error) {

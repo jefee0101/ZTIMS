@@ -1384,6 +1384,16 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         const managedBy = isEstablishmentManager(req.auth.role)
             ? req.auth.sub
             : (req.body.managedBy || null);
+        // One establishment, one listing (spots_one_per_establishment holds it
+        // too); said plainly here before anything is written.
+        if (managedBy && await Spot.count({ managedBy })) {
+            return res.status(409).json({
+                success: false,
+                message: isEstablishmentManager(req.auth.role)
+                    ? 'Your establishment already has its listing. Edit that one instead of adding another.'
+                    : 'That establishment already has its listing. An establishment keeps one listing.'
+            });
+        }
         // The record's identity and history are the database's to set, never a request's.
         const { _id, createdAt, updatedAt, ...body } = req.body;
         const scoped = scopeSpotPayload(body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
@@ -1785,13 +1795,30 @@ app.patch('/api/guides/me/availability', requireGuide, async (req, res) => {
         const guide = await loadSignedInGuide(req, res);
         if (!guide) return;
 
-        if (req.body.status !== undefined) {
-            if (!['available', 'unavailable'].includes(req.body.status)) {
-                return res.status(400).json({ success: false, message: 'Choose available or unavailable.' });
-            }
-            guide.status = req.body.status;
+        if (req.body.status !== undefined && !['available', 'unavailable'].includes(req.body.status)) {
+            return res.status(400).json({ success: false, message: 'Choose available or unavailable.' });
         }
-        if (req.body.availableDays !== undefined) guide.availableDays = cleanAvailableDays(req.body.availableDays);
+        const nextStatus = req.body.status !== undefined ? req.body.status : guide.status;
+        const nextDays = req.body.availableDays !== undefined ? cleanAvailableDays(req.body.availableDays) : guide.availableDays;
+
+        // The guide proposes, the office disposes: a guide cannot step away from
+        // confirmed tours still to come. The office reassigns them first.
+        const manilaToday = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        const upcoming = (await GuideBooking.find({ guideId: guide._id, status: 'confirmed' }))
+            .filter(b => String(b.preferredDate).slice(0, 10) >= manilaToday);
+        const leftBehind = upcoming
+            .filter(b => nextStatus !== 'available' || !nextDays.includes(weekdayOf(String(b.preferredDate).slice(0, 10))))
+            .sort((x, y) => String(x.preferredDate).localeCompare(String(y.preferredDate)));
+        if (leftBehind.length) {
+            const list = leftBehind.slice(0, 5).map(b => `${b.reference} on ${String(b.preferredDate).slice(0, 10)}`).join(', ');
+            return res.status(409).json({
+                success: false,
+                message: `You still have ${leftBehind.length === 1 ? 'a confirmed tour' : `${leftBehind.length} confirmed tours`} then: ${list}${leftBehind.length > 5 ? ', …' : ''}. Ask the Tourism Office to reassign ${leftBehind.length === 1 ? 'it' : 'them'} first.`,
+                bookings: leftBehind.map(b => ({ reference: b.reference, date: String(b.preferredDate).slice(0, 10) }))
+            });
+        }
+        guide.status = nextStatus;
+        guide.availableDays = nextDays;
 
         await TouristGuide.save(guide);
         console.log(`🗓️ Guide ${guide.email} updated their availability (${guide.status})`);

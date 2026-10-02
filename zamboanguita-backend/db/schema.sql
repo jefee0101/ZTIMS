@@ -150,6 +150,10 @@ create table if not exists public.spots (
 
 create index if not exists spots_managed_by_idx on public.spots (managed_by);
 create index if not exists spots_status_idx on public.spots (status);
+-- One establishment, one listing: a manager account keeps exactly one place.
+-- Listings the Tourism Office keeps (managed_by null) are not limited.
+create unique index if not exists spots_one_per_establishment
+    on public.spots (managed_by) where managed_by is not null;
 create index if not exists spots_requires_guide_idx on public.spots (requires_guide);
 create index if not exists spots_created_at_idx on public.spots (created_at desc);
 

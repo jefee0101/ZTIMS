@@ -570,6 +570,23 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   outlives the account), where a guide's report happened. Those are facts of
   that record, like a receipt's price, not copies to keep in step.
 
+### Listings, guides and the visitor's day out
+
+- **One establishment, one listing.** A manager account keeps exactly one
+  listing (`spots_one_per_establishment`, a unique index on `managed_by`, and a
+  plain 409 in `POST /api/spots` first). The manager creates it and it is live
+  at once; their edits go live directly. Listings the office keeps
+  (`managed_by` null) are not limited.
+- **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
+  refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
+  falls on it, and names the bookings: the office reassigns them first.
+- **No signal at the destinations.** `spot.html`'s Getting there says so and
+  offers "Save this route" once a route is shown: it prints only that box
+  (`html.print-route`), which a phone saves as a PDF.
+- **Emergency numbers** live in `EMERGENCY` in `shared/site-footer.js` and show
+  in the footer and each destination's `[data-emergency]` box. Empty on purpose
+  until the office supplies them; nothing shows while it is empty.
+
 ## Duplicated facts (keep both sides in step by hand)
 
 - **Zamboanguita bounding box**: `ZAMBOANGUITA_BOUNDS` in

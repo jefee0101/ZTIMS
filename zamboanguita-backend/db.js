@@ -129,7 +129,8 @@ function validationError(message, key) {
 /* Messages for constraint names in db/schema.sql, for the cases the table
    definitions do not catch first (a script, a race, a bug). */
 const CONSTRAINT_MESSAGES = {
-    spots_images_max: 'A spot can have at most 30 photos.',
+    spot_photos_position: 'A spot can have at most 30 photos.',
+    spots_one_per_establishment: 'An establishment has one listing, and this one already has its listing. Edit that one instead.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
     spots_managed_by_fkey: 'That establishment account does not exist.',
     tourist_guide_spots_spot_id_fkey: 'One of the assigned destinations no longer exists.',
