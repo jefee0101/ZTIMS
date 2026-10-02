@@ -172,10 +172,12 @@ on badges, map pins and legends (Mountain teal, Beach/Diving navy, Cultural
 gold, Accommodation blue). The grounds are true white and true black; the
 brand colours carry identity, not the backgrounds.
 
-- **Theme.** A visitor's toggle choice wins; otherwise the device's
-  `prefers-color-scheme` is followed live. The choice is stored only when it
-  differs from the device, so choosing the device's own theme goes back to
-  "follow the device". All in `theme.js`.
+- **Theme.** One choice for the whole site: the toggle on any page stores
+  `theme` (light or dark) and every page, and every other open tab at once,
+  shows it until toggled again. Until someone has chosen, the device's
+  `prefers-color-scheme` is followed live. Signing out keeps it: pages sign out
+  through `ztimsTheme.clearStorage()`, never a bare `localStorage.clear()`.
+  All in `theme.js`.
 - **Glass.** Translucent fill, hairline border, lit top edge, soft navy-tinted
   shadow, over a fixed ambient glow of the brand colours (`body::before`).
   `backdrop-filter` blur only on surfaces content scrolls behind — `.glass-nav`

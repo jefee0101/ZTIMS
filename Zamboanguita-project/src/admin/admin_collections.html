@@ -598,7 +598,7 @@ body { overflow-x: hidden; }
         const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking', cash: 'Cash' };
 
         function signOutStaff() {
-            try { localStorage.clear(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
+            try { window.ztimsTheme.clearStorage(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
             setTimeout(function () { window.location.replace('../../index.html'); }, 600);
         }
@@ -888,7 +888,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

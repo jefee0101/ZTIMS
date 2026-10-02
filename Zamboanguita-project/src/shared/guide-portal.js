@@ -153,7 +153,7 @@
     /* ---- session ----------------------------------------------------------- */
     function signOut() {
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch { /* private browsing */ }
         showToast('Signed out.', 'success', { duration: 2000 });

@@ -585,7 +585,7 @@ body { overflow-x: hidden; }
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
         function signOutStaff() {
-            try { localStorage.clear(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
+            try { window.ztimsTheme.clearStorage(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
             setTimeout(function () { window.location.replace('../../index.html'); }, 600);
         }
@@ -864,7 +864,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 
