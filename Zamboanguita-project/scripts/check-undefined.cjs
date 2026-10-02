@@ -23,7 +23,7 @@ const BUILTINS = new Set([
     'fetch', 'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval',
     'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'encodeURIComponent', 'decodeURIComponent',
     'encodeURI', 'decodeURI', 'String', 'Number', 'Boolean', 'Array', 'Object', 'Date', 'Math',
-    'JSON', 'Promise', 'Error', 'TypeError', 'RangeError', 'Map', 'Set', 'WeakMap', 'WeakSet',
+    'JSON', 'Promise', 'Uint8Array', 'Error', 'TypeError', 'RangeError', 'Map', 'Set', 'WeakMap', 'WeakSet',
     'RegExp', 'Symbol', 'BigInt', 'Function', 'Proxy', 'Reflect', 'require', 'import',
     'queueMicrotask', 'requestAnimationFrame', 'cancelAnimationFrame', 'structuredClone',
     'btoa', 'atob', 'FormData', 'URL', 'URLSearchParams', 'Blob', 'File', 'FileReader',

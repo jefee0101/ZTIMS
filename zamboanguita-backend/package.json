@@ -10,7 +10,8 @@
     "migrate": "node migrate.js",
     "create-admin": "node create-admin.js",
     "copy-from-mongo": "node scripts/copy-from-mongo.js",
-    "import-form-a4": "node scripts/import-form-a4.js"
+    "import-form-a4": "node scripts/import-form-a4.js",
+    "seal-key": "node ticket-seal.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

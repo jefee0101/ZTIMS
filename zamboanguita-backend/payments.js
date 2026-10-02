@@ -30,6 +30,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
+const seal = require('./ticket-seal');
 const ExcelJS = require('exceljs');
 const { query, transaction } = require('./db');
 const attractions = require('./attractions');
@@ -350,10 +351,11 @@ async function settle(checkout, { lateToo = false, origin = '' } = {}) {
     return checkout;
 }
 
-/* What a ticket's QR code holds. */
+/* What a ticket's QR code holds: its sealed facts (ticket-seal.js), or the
+   plain code when sealing is not set up. */
 async function ticketQrContent(ticketId) {
     const t = await Ticket.findById(ticketId);
-    return t ? t.code : '';
+    return t ? seal.qrContent(t) : '';
 }
 
 /* ---------------------------------------------------------------- public views */
@@ -390,7 +392,7 @@ async function checkoutView(checkout) {
             // The code and its QR only once paid: an unpaid ticket gets nobody in.
             if (['valid', 'used'].includes(t.status)) {
                 view.ticket.code = t.code;
-                view.ticket.qr = await qrSvg(t.code);
+                view.ticket.qr = await qrSvg(seal.qrContent(t));
             }
         }
     }
@@ -1072,8 +1074,10 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
         }
     });
 
+    // A scanned QR may be a sealed ticket (ticket-seal.js): its code is believed
+    // only if the seal checks out. Typed codes and older QR codes are plain.
     async function ticketByCode(code) {
-        const wanted = normaliseCode(code);
+        const wanted = normaliseCode(seal.codeFrom(code));
         if (wanted.length < 5) return null;
         const { rows } = await query(`
             select t.*, s.title as spot_title from tickets t join spots s on s.id = t.spot_id
@@ -1098,7 +1102,11 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
 
     router.post('/tickets/check', requireAdmin, async (req, res) => {
         try {
-            const t = await ticketByCode(req.body && req.body.code);
+            const text = String((req.body && req.body.code) || '').trim();
+            if (text.startsWith(`${seal.PREFIX}.`) && !seal.codeFrom(text)) {
+                return res.json({ found: false, verdict: 'forged', message: 'This QR code is not a real ZTIMS ticket: its seal does not match. Do not let the group in on it.' });
+            }
+            const t = await ticketByCode(text);
             if (!t) return res.json({ found: false, verdict: 'not_found', message: 'No ticket has that code.' });
             const [verdict, message] = verdictOf(t);
             res.json({
@@ -1124,6 +1132,94 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             res.json({ success: true, message: `Admitted: ${rows[0].people} ${rows[0].people === 1 ? 'person' : 'people'}.` });
         } catch (error) {
             return failure(res, error, '❌ Ticket admit failure:');
+        }
+    });
+
+    /* The offline gate (src/admin/admin_gate.html). Before going out to a spot
+       with no signal, the officer's phone downloads the day's tickets and the
+       PUBLIC key that checks a sealed QR; it then checks and admits on its own
+       and sends what it admitted here once it has signal again. */
+    router.get('/tickets/gate-pack', requireAdmin, async (req, res) => {
+        try {
+            const date = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.date || '')) ? req.query.date : manilaToday();
+            const [{ rows: tickets }, { rows: spots }] = await Promise.all([
+                query(`select t.*, s.title as spot_title from tickets t join spots s on s.id = t.spot_id
+                        where t.visit_date = $1 and t.status <> 'pending_payment' order by s.title, t.code`, [date]),
+                query(`select id, title from spots
+                        where type = 'spot' and status = 'published' and managed_by is null and coalesce(entrance_fee, 0) > 0
+                           or id in (select spot_id from tickets where visit_date = $1)
+                        order by title`, [date])
+            ]);
+            res.json({
+                date, today: manilaToday(), preparedAt: new Date().toISOString(),
+                sealed: seal.sealConfigured(), publicKey: seal.publicKey(),
+                kinds: attractions.KINDS.map(k => ({ key: k.key, label: k.label, plural: k.plural, needsId: k.needsId })),
+                spots: spots.map(s => ({ _id: s.id, title: s.title })),
+                tickets: tickets.map(t => ({
+                    _id: t.id, code: t.code, spotId: t.spot_id, spot: t.spot_title, visitDate: dayOf(t.visit_date),
+                    people: t.people, counts: attractions.KINDS.map(k => Number(t[k.column] || 0)),
+                    kindsText: attractions.describeKinds(t), name: t.full_name, status: t.status,
+                    usedAt: t.used_at, usedByEmail: t.used_by_email, isDemo: t.is_demo
+                }))
+            });
+        } catch (error) {
+            return failure(res, error, '❌ Gate list failure:');
+        }
+    });
+
+    /* What the offline gate let in. Each admit is the same one conditional
+       update as the online one, dated when the group came in, so a ticket is
+       still used once. A ticket the server knows was cancelled, refunded,
+       closed or already used by then is reported back as a conflict for the
+       office to follow up; it is never changed by a late scan. Sending the same
+       scan twice (an answer lost to a dropped signal) is harmless. */
+    const SYNC_MAX = 500;
+    const SYNC_OLDEST_DAYS = 30;
+    router.post('/tickets/admit-sync', requireAdmin, async (req, res) => {
+        try {
+            const scans = Array.isArray(req.body && req.body.scans) ? req.body.scans : null;
+            if (!scans || !scans.length) return fail(res, 400, 'Nothing to send.');
+            if (scans.length > SYNC_MAX) return fail(res, 400, `Send at most ${SYNC_MAX} at a time.`);
+            const email = await officerEmail(req);
+            const results = [];
+            for (const scan of scans) {
+                const code = String((scan && scan.code) || '').slice(0, 40);
+                const at = new Date(scan && scan.at);
+                const answer = (result, message, extra = {}) => results.push({ code, at: scan && scan.at, result, message, ...extra });
+                if (Number.isNaN(at.getTime()) || at.getTime() > Date.now() + 5 * 60 * 1000
+                    || at.getTime() < Date.now() - SYNC_OLDEST_DAYS * 86400 * 1000) {
+                    answer('rejected', 'The time of this scan is not believable (check the phone\'s clock).');
+                    continue;
+                }
+                const atDay = new Date(at.getTime() + MANILA_OFFSET_HOURS * 3600 * 1000).toISOString().slice(0, 10);
+                const t = await ticketByCode(code);
+                if (!t) { answer('conflict', 'No ticket has this code. Tell the office.'); continue; }
+                const { rows } = await query(`
+                    update tickets set status = 'used', used_at = $2, used_by_email = $3
+                     where id = $1 and status = 'valid' and visit_date = $4 returning id`, [t.id, at, email, atDay]);
+                if (rows[0]) { answer('admitted', `Recorded: ${t.people} ${t.people === 1 ? 'person' : 'people'} let in.`, { ticketId: t.id }); continue; }
+                const now = (await query(`select status, used_at, used_by_email, visit_date, used_at = $2::timestamptz as same_scan
+                                            from tickets where id = $1`, [t.id, at])).rows[0];
+                // This very scan, sent again (same officer, same instant to the microsecond).
+                if (now.status === 'used' && now.used_by_email === email && now.same_scan) {
+                    answer('admitted', 'Already recorded.', { ticketId: t.id });
+                } else if (now.status === 'used') {
+                    answer('conflict', `This ticket was already used at ${new Date(now.used_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}${now.used_by_email ? ` (${now.used_by_email})` : ''}. The group may have come in twice. Tell the office.`, { ticketId: t.id });
+                } else if (now.status === 'cancelled') {
+                    answer('conflict', 'The group came in on this ticket, but it has been cancelled and refunded. Tell the office.', { ticketId: t.id });
+                } else if (now.status === 'closed') {
+                    answer('conflict', 'The group came in on this ticket, but the office has closed its date. Tell the office.', { ticketId: t.id });
+                } else if (dayOf(now.visit_date) !== atDay) {
+                    answer('conflict', `This ticket is for ${dayOf(now.visit_date)}, not the day of the scan (${atDay}). It may have been moved. Tell the office.`, { ticketId: t.id });
+                } else {
+                    answer('conflict', 'This ticket could not be used then. Tell the office.', { ticketId: t.id });
+                }
+            }
+            const conflicts = results.filter(r => r.result !== 'admitted').length;
+            if (conflicts) console.warn(`⚠️ Offline gate sync by ${email}: ${conflicts} of ${results.length} scans need the office's attention.`);
+            res.json({ success: true, results });
+        } catch (error) {
+            return failure(res, error, '❌ Gate sync failure:');
         }
     });
 
