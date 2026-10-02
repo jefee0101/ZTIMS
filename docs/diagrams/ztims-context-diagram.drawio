@@ -1,443 +1,203 @@
 <mxfile host="drawio">
 <diagram id="ztims-context" name="Context Diagram">
-<mxGraphModel dx="1460" dy="1282" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1460" pageHeight="1282" math="0" shadow="0">
+<mxGraphModel dx="1582" dy="662" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1582" pageHeight="662" math="0" shadow="0">
 <root>
 <mxCell id="0"/>
 <mxCell id="1" parent="0"/>
-<mxCell id="ztims" value="Zamboanguita Tourism&lt;br&gt;Information&lt;br&gt;Management System&lt;br&gt;&lt;br&gt;ZTIMS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=22;" vertex="1" parent="1">
-<mxGeometry x="500" y="10" width="460" height="1262" as="geometry"/>
+<mxCell id="ztims" value="Zamboanguita Tourism&lt;br&gt;Information Management&lt;br&gt;System&lt;br&gt;&lt;br&gt;ZTIMS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=24;" vertex="1" parent="1">
+<mxGeometry x="480" y="20" width="622" height="622" as="geometry"/>
 </mxCell>
 <mxCell id="visitor" value="VISITOR" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="10" y="76" width="190" height="390" as="geometry"/>
+<mxGeometry x="10" y="80" width="190" height="182" as="geometry"/>
 </mxCell>
-<mxCell id="f1" value="Search keywords" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.0333;entryX=0.2578;entryY=0.0626;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.2833" relative="1" as="geometry">
+<mxCell id="f1" value="Search keywords" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.0714;entryX=0.1781;entryY=0.1174;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
+<mxGeometry x="-0.2835" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f2" value="Booking date and time" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1;entryX=0.2238;entryY=0.0832;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.2555" relative="1" as="geometry">
+<mxCell id="f2" value="Booking and ticket requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.2143;entryX=0.1342;entryY=0.1592;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
+<mxGeometry x="-0.2296" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f3" value="Preferred guide" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1667;entryX=0.195;entryY=0.1038;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.2302" relative="1" as="geometry">
+<mxCell id="f3" value="Change and cancellation requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3571;entryX=0.0993;entryY=0.201;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
+<mxGeometry x="-0.1807" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f4" value="Contact details" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.2333;entryX=0.17;entryY=0.1244;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.2067" relative="1" as="geometry">
+<mxCell id="f4" value="Feedback" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.0712;entryY=0.2428;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
+<mxGeometry x="-0.1366" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f5" value="Ticket orders" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3;entryX=0.1479;entryY=0.145;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.1848" relative="1" as="geometry">
+<mxCell id="f5" value="Destination info and directions" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0488;exitY=0.2846;exitPerimeter=0;entryX=1;entryY=0.6429;" edge="1" parent="1" source="ztims" target="visitor">
+<mxGeometry x="0.0978" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f6" value="Ticket or booking code and email" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3667;entryX=0.1283;entryY=0.1656;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.1644" relative="1" as="geometry">
+<mxCell id="f6" value="Guide availability" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0311;exitY=0.3264;exitPerimeter=0;entryX=1;entryY=0.7857;" edge="1" parent="1" source="ztims" target="visitor">
+<mxGeometry x="0.0647" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f7" value="Change and cancellation requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.4333;entryX=0.1107;entryY=0.1862;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.1451" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f8" value="Feedback" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.095;entryY=0.2068;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.1271" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f9" value="Current location" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5667;entryX=0.0808;entryY=0.2274;entryPerimeter=0;" edge="1" parent="1" source="visitor" target="ztims">
-<mxGeometry x="-0.1103" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f10" value="Destination information" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0681;exitY=0.248;exitPerimeter=0;entryX=1;entryY=0.6333;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0946" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f11" value="Maps and directions" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0568;exitY=0.2686;exitPerimeter=0;entryX=1;entryY=0.7;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0801" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f12" value="Guide list and availability" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0466;exitY=0.2892;exitPerimeter=0;entryX=1;entryY=0.7667;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0667" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f13" value="Booking reference and status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0376;exitY=0.3098;exitPerimeter=0;entryX=1;entryY=0.8333;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0545" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f14" value="E-tickets with QR code" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0296;exitY=0.3304;exitPerimeter=0;entryX=1;entryY=0.9;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0435" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f15" value="Payment status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0227;exitY=0.351;exitPerimeter=0;entryX=1;entryY=0.9667;" edge="1" parent="1" source="ztims" target="visitor">
-<mxGeometry x="0.0336" relative="1" as="geometry">
+<mxCell id="f7" value="E-tickets and booking status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0177;exitY=0.3682;exitPerimeter=0;entryX=1;entryY=0.9286;" edge="1" parent="1" source="ztims" target="visitor">
+<mxGeometry x="0.0378" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="manager" value="TOURIST&lt;br&gt;ESTABLISHMENT&lt;br&gt;MANAGER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="10" y="496" width="190" height="234" as="geometry"/>
+<mxGeometry x="10" y="292" width="190" height="130" as="geometry"/>
 </mxCell>
-<mxCell id="f16" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.0556;entryX=0.0111;entryY=0.3954;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
-<mxGeometry x="-0.0167" relative="1" as="geometry">
+<mxCell id="f8" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1;entryX=0.0018;entryY=0.4582;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
+<mxGeometry x="-0.0039" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f17" value="Listing details" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1667;entryX=0.0071;entryY=0.416;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
-<mxGeometry x="-0.0108" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f18" value="Listing photos" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.2778;entryX=0.004;entryY=0.4366;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
-<mxGeometry x="-0.0061" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f19" value="Monthly arrivals by country and sex" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3889;entryX=0.0018;entryY=0.4572;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
-<mxGeometry x="-0.0028" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f20" value="Rooms and guest nights" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.0005;entryY=0.4778;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
-<mxGeometry x="-0.0008" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f21" value="Session data" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0;exitY=0.4984;exitPerimeter=0;entryX=1;entryY=0.6111;" edge="1" parent="1" source="ztims" target="manager">
+<mxCell id="f9" value="Listing details and photos" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3;entryX=0.0;entryY=0.5;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
 <mxGeometry x="0" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f22" value="Listing status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0004;exitY=0.519;exitPerimeter=0;entryX=1;entryY=0.7222;" edge="1" parent="1" source="ztims" target="manager">
-<mxGeometry x="0.0006" relative="1" as="geometry">
+<mxCell id="f10" value="Monthly statistics reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.0018;entryY=0.5418;entryPerimeter=0;" edge="1" parent="1" source="manager" target="ztims">
+<mxGeometry x="-0.0039" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f23" value="Report status and deadlines" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0016;exitY=0.5396;exitPerimeter=0;entryX=1;entryY=0.8333;" edge="1" parent="1" source="ztims" target="manager">
-<mxGeometry x="0.0024" relative="1" as="geometry">
+<mxCell id="f11" value="Listing status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.007;exitY=0.5836;exitPerimeter=0;entryX=1;entryY=0.7;" edge="1" parent="1" source="ztims" target="manager">
+<mxGeometry x="0.0154" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f24" value="Report history" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0036;exitY=0.5602;exitPerimeter=0;entryX=1;entryY=0.9444;" edge="1" parent="1" source="ztims" target="manager">
-<mxGeometry x="0.0056" relative="1" as="geometry">
+<mxCell id="f12" value="Report status and deadlines" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.016;exitY=0.6254;exitPerimeter=0;entryX=1;entryY=0.9;" edge="1" parent="1" source="ztims" target="manager">
+<mxGeometry x="0.0343" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="guide" value="TOURIST GUIDE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="10" y="760" width="190" height="338" as="geometry"/>
+<mxGeometry x="10" y="452" width="190" height="130" as="geometry"/>
 </mxCell>
-<mxCell id="f25" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.0385;entryX=0.0111;entryY=0.6046;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0167" relative="1" as="geometry">
+<mxCell id="f13" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1;entryX=0.0488;entryY=0.7154;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
+<mxGeometry x="-0.0978" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f26" value="Availability and working days" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1154;entryX=0.0159;entryY=0.6252;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0238" relative="1" as="geometry">
+<mxCell id="f14" value="Availability and languages" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3;entryX=0.0712;entryY=0.7572;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
+<mxGeometry x="-0.1366" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f27" value="Languages spoken" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1923;entryX=0.0217;entryY=0.6458;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0322" relative="1" as="geometry">
+<mxCell id="f15" value="Tour reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.0993;entryY=0.799;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
+<mxGeometry x="-0.1807" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f28" value="Contact number and bio" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.2692;entryX=0.0285;entryY=0.6664;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0419" relative="1" as="geometry">
+<mxCell id="f16" value="Assigned tours" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.1342;exitY=0.8408;exitPerimeter=0;entryX=1;entryY=0.7;" edge="1" parent="1" source="ztims" target="guide">
+<mxGeometry x="0.2296" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f29" value="Tour completion reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.3462;entryX=0.0363;entryY=0.687;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0527" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f30" value="Headcount reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.4231;entryX=0.0451;entryY=0.7076;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0647" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f31" value="Incident reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0.0551;entryY=0.7282;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0779" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f32" value="Tourist feedback reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.5769;entryX=0.0663;entryY=0.7488;entryPerimeter=0;" edge="1" parent="1" source="guide" target="ztims">
-<mxGeometry x="-0.0923" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f33" value="Session data" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0788;exitY=0.7694;exitPerimeter=0;entryX=1;entryY=0.6538;" edge="1" parent="1" source="ztims" target="guide">
-<mxGeometry x="0.1078" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f34" value="Assigned tours" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.0927;exitY=0.79;exitPerimeter=0;entryX=1;entryY=0.7308;" edge="1" parent="1" source="ztims" target="guide">
-<mxGeometry x="0.1245" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f35" value="Visitor contacts" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.1082;exitY=0.8106;exitPerimeter=0;entryX=1;entryY=0.8077;" edge="1" parent="1" source="ztims" target="guide">
-<mxGeometry x="0.1423" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f36" value="Booking counts in their area" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.1254;exitY=0.8312;exitPerimeter=0;entryX=1;entryY=0.8846;" edge="1" parent="1" source="ztims" target="guide">
-<mxGeometry x="0.1613" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f37" value="Profile details" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.1447;exitY=0.8518;exitPerimeter=0;entryX=1;entryY=0.9615;" edge="1" parent="1" source="ztims" target="guide">
-<mxGeometry x="0.1816" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="cloudinary" value="CLOUDINARY" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="10" y="1128" width="190" height="78" as="geometry"/>
-</mxCell>
-<mxCell id="f38" value="Stored photo links" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1;exitY=0.1667;entryX=0.195;entryY=0.8962;entryPerimeter=0;" edge="1" parent="1" source="cloudinary" target="ztims">
-<mxGeometry x="-0.2302" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f39" value="Upload signatures" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.2238;exitY=0.9168;exitPerimeter=0;entryX=1;entryY=0.5;" edge="1" parent="1" source="ztims" target="cloudinary">
-<mxGeometry x="0.2555" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f40" value="Photos" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.2578;exitY=0.9374;exitPerimeter=0;entryX=1;entryY=0.8333;" edge="1" parent="1" source="ztims" target="cloudinary">
-<mxGeometry x="0.2833" relative="1" as="geometry">
+<mxCell id="f17" value="Booking counts" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.1781;exitY=0.8826;exitPerimeter=0;entryX=1;entryY=0.9;" edge="1" parent="1" source="ztims" target="guide">
+<mxGeometry x="0.2835" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="officer" value="TOURISM OFFICER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="1260" y="50" width="190" height="572" as="geometry"/>
+<mxGeometry x="1382" y="50" width="190" height="182" as="geometry"/>
 </mxCell>
-<mxCell id="f41" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.0227;entryX=0.7006;entryY=0.042;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.3146" relative="1" as="geometry">
+<mxCell id="f18" value="Login credentials" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.0714;entryX=0.7537;entryY=0.0691;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
+<mxGeometry x="-0.3537" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f42" value="Destination listings" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.0682;entryX=0.7422;entryY=0.0626;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.2833" relative="1" as="geometry">
+<mxCell id="f19" value="Listings and visitor setup" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.2143;entryX=0.814;entryY=0.1109;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
+<mxGeometry x="-0.2923" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f43" value="Opening days and closed dates" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1136;entryX=0.7762;entryY=0.0832;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.2555" relative="1" as="geometry">
+<mxCell id="f20" value="Accounts and assignments" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.3571;entryX=0.8597;entryY=0.1527;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
+<mxGeometry x="-0.2376" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f44" value="Ticket prices" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1591;entryX=0.805;entryY=0.1038;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.2302" relative="1" as="geometry">
+<mxCell id="f21" value="Ticket check-ins and refunds" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.5;entryX=0.8958;entryY=0.1945;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
+<mxGeometry x="-0.1879" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f45" value="Manager and guide accounts" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.2045;entryX=0.83;entryY=0.1244;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.2067" relative="1" as="geometry">
+<mxCell id="f22" value="Dashboard summaries" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9248;exitY=0.2363;exitPerimeter=0;entryX=0;entryY=0.6429;" edge="1" parent="1" source="ztims" target="officer">
+<mxGeometry x="0.1431" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f46" value="Booking assignments" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.25;entryX=0.8521;entryY=0.145;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.1848" relative="1" as="geometry">
+<mxCell id="f23" value="Booking and gate lists" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9481;exitY=0.2781;exitPerimeter=0;entryX=0;entryY=0.7857;" edge="1" parent="1" source="ztims" target="officer">
+<mxGeometry x="0.1034" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f47" value="Guide report reviews" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.2955;entryX=0.8717;entryY=0.1656;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.1644" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f48" value="Statistics reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.3409;entryX=0.8893;entryY=0.1862;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.1451" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f49" value="Report lock, void and unlock" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.3864;entryX=0.905;entryY=0.2068;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.1271" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f50" value="Ticket check-ins" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.4318;entryX=0.9192;entryY=0.2274;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.1103" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f51" value="Refunds" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.4773;entryX=0.9319;entryY=0.248;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.0946" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f52" value="Feedback status updates" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.5227;entryX=0.9432;entryY=0.2686;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.0801" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f53" value="Guide searches by language and date" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.5682;entryX=0.9534;entryY=0.2892;entryPerimeter=0;" edge="1" parent="1" source="officer" target="ztims">
-<mxGeometry x="-0.0667" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f54" value="Dashboard summaries" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9624;exitY=0.3098;exitPerimeter=0;entryX=0;entryY=0.6136;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0545" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f55" value="Booking lists" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9704;exitY=0.3304;exitPerimeter=0;entryX=0;entryY=0.6591;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0435" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f56" value="Guide reports by barangay" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9773;exitY=0.351;exitPerimeter=0;entryX=0;entryY=0.7045;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0336" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f57" value="Form A4 reports in Excel" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9832;exitY=0.3716;exitPerimeter=0;entryX=0;entryY=0.75;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0251" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f58" value="Collections and refund records" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9882;exitY=0.3922;exitPerimeter=0;entryX=0;entryY=0.7955;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0177" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f59" value="Ticket check results" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9923;exitY=0.4128;exitPerimeter=0;entryX=0;entryY=0.8409;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0116" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f60" value="Offline gate list" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9955;exitY=0.4334;exitPerimeter=0;entryX=0;entryY=0.8864;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0068" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f61" value="Feedback inbox" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9979;exitY=0.454;exitPerimeter=0;entryX=0;entryY=0.9318;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.0032" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f62" value="Guide search results" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9994;exitY=0.4746;exitPerimeter=0;entryX=0;entryY=0.9773;" edge="1" parent="1" source="ztims" target="officer">
-<mxGeometry x="0.001" relative="1" as="geometry">
+<mxCell id="f24" value="Form A4 and statistics reports" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9665;exitY=0.3199;exitPerimeter=0;entryX=0;entryY=0.9286;" edge="1" parent="1" source="ztims" target="officer">
+<mxGeometry x="0.0694" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="maps" value="MAP AND&lt;br&gt;DIRECTIONS&lt;br&gt;PROVIDERS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="1260" y="652" width="190" height="208" as="geometry"/>
+<mxGeometry x="1382" y="262" width="190" height="78" as="geometry"/>
 </mxCell>
-<mxCell id="f63" value="Routes with distance and time" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.0625;entryX=0.9996;entryY=0.519;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
-<mxGeometry x="-0.0006" relative="1" as="geometry">
+<mxCell id="f25" value="Routes and map tiles" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1667;entryX=0.9918;entryY=0.41;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
+<mxGeometry x="-0.0178" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f64" value="Place search results" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1875;entryX=0.9984;entryY=0.5396;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
-<mxGeometry x="-0.0024" relative="1" as="geometry">
+<mxCell id="f26" value="Place search results" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.5;entryX=0.9977;entryY=0.4518;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
+<mxGeometry x="-0.0052" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f65" value="Addresses" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.3125;entryX=0.9964;entryY=0.5602;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
-<mxGeometry x="-0.0056" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f66" value="Map tiles" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.4375;entryX=0.9934;entryY=0.5808;entryPerimeter=0;" edge="1" parent="1" source="maps" target="ztims">
-<mxGeometry x="-0.01" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f67" value="Start and end points" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9896;exitY=0.6014;exitPerimeter=0;entryX=0;entryY=0.5625;" edge="1" parent="1" source="ztims" target="maps">
-<mxGeometry x="0.0157" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f68" value="Travel mode" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9849;exitY=0.622;exitPerimeter=0;entryX=0;entryY=0.6875;" edge="1" parent="1" source="ztims" target="maps">
-<mxGeometry x="0.0227" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f69" value="Search text" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9792;exitY=0.6426;exitPerimeter=0;entryX=0;entryY=0.8125;" edge="1" parent="1" source="ztims" target="maps">
-<mxGeometry x="0.0309" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f70" value="Map coordinates" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9726;exitY=0.6632;exitPerimeter=0;entryX=0;entryY=0.9375;" edge="1" parent="1" source="ztims" target="maps">
-<mxGeometry x="0.0403" relative="1" as="geometry">
+<mxCell id="f27" value="Locations and search text" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=1.0;exitY=0.4936;exitPerimeter=0;entryX=0;entryY=0.8333;" edge="1" parent="1" source="ztims" target="maps">
+<mxGeometry x="0.0001" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="xendit" value="XENDIT&lt;br&gt;PAYMENT GATEWAY" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="1260" y="890" width="190" height="182" as="geometry"/>
+<mxGeometry x="1382" y="370" width="190" height="52" as="geometry"/>
 </mxCell>
-<mxCell id="f71" value="Payment page link" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.0714;entryX=0.9549;entryY=0.7076;entryPerimeter=0;" edge="1" parent="1" source="xendit" target="ztims">
-<mxGeometry x="-0.0647" relative="1" as="geometry">
+<mxCell id="f28" value="Payment and refund status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.25;entryX=0.993;entryY=0.5836;entryPerimeter=0;" edge="1" parent="1" source="xendit" target="ztims">
+<mxGeometry x="-0.0154" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f72" value="Payment status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.2143;entryX=0.9449;entryY=0.7282;entryPerimeter=0;" edge="1" parent="1" source="xendit" target="ztims">
-<mxGeometry x="-0.0779" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f73" value="Refund status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.3571;entryX=0.9337;entryY=0.7488;entryPerimeter=0;" edge="1" parent="1" source="xendit" target="ztims">
-<mxGeometry x="-0.0923" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f74" value="Payment callbacks" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.5;entryX=0.9212;entryY=0.7694;entryPerimeter=0;" edge="1" parent="1" source="xendit" target="ztims">
-<mxGeometry x="-0.1078" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f75" value="Invoice requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9073;exitY=0.79;exitPerimeter=0;entryX=0;entryY=0.6429;" edge="1" parent="1" source="ztims" target="xendit">
-<mxGeometry x="0.1245" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f76" value="Refund requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.8918;exitY=0.8106;exitPerimeter=0;entryX=0;entryY=0.7857;" edge="1" parent="1" source="ztims" target="xendit">
-<mxGeometry x="0.1423" relative="1" as="geometry">
-<mxPoint x="0" y="-11" as="offset"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="f77" value="Payment status checks" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.8746;exitY=0.8312;exitPerimeter=0;entryX=0;entryY=0.9286;" edge="1" parent="1" source="ztims" target="xendit">
-<mxGeometry x="0.1613" relative="1" as="geometry">
+<mxCell id="f29" value="Invoice and refund requests" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.984;exitY=0.6254;exitPerimeter=0;entryX=0;entryY=0.75;" edge="1" parent="1" source="ztims" target="xendit">
+<mxGeometry x="0.0343" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
 <mxCell id="email" value="EMAIL SERVICE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
-<mxGeometry x="1260" y="1102" width="190" height="130" as="geometry"/>
+<mxGeometry x="1382" y="452" width="190" height="78" as="geometry"/>
 </mxCell>
-<mxCell id="f78" value="Delivery status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1;entryX=0.83;entryY=0.8756;entryPerimeter=0;" edge="1" parent="1" source="email" target="ztims">
-<mxGeometry x="-0.2067" relative="1" as="geometry">
+<mxCell id="f30" value="Delivery status" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.1667;entryX=0.9512;entryY=0.7154;entryPerimeter=0;" edge="1" parent="1" source="email" target="ztims">
+<mxGeometry x="-0.0978" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f79" value="Ticket receipts with QR code" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.805;exitY=0.8962;exitPerimeter=0;entryX=0;entryY=0.3;" edge="1" parent="1" source="ztims" target="email">
-<mxGeometry x="0.2302" relative="1" as="geometry">
+<mxCell id="f31" value="Receipts and notices" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9288;exitY=0.7572;exitPerimeter=0;entryX=0;entryY=0.5;" edge="1" parent="1" source="ztims" target="email">
+<mxGeometry x="0.1366" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f80" value="Booking notices" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.7762;exitY=0.9168;exitPerimeter=0;entryX=0;entryY=0.5;" edge="1" parent="1" source="ztims" target="email">
-<mxGeometry x="0.2555" relative="1" as="geometry">
+<mxCell id="f32" value="Password reset links" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.9007;exitY=0.799;exitPerimeter=0;entryX=0;entryY=0.8333;" edge="1" parent="1" source="ztims" target="email">
+<mxGeometry x="0.1807" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f81" value="Closure notices" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.7422;exitY=0.9374;exitPerimeter=0;entryX=0;entryY=0.7;" edge="1" parent="1" source="ztims" target="email">
-<mxGeometry x="0.2833" relative="1" as="geometry">
+<mxCell id="cloudinary" value="CLOUDINARY" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+<mxGeometry x="1382" y="560" width="190" height="52" as="geometry"/>
+</mxCell>
+<mxCell id="f33" value="Photo links" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0;exitY=0.25;entryX=0.814;entryY=0.8891;entryPerimeter=0;" edge="1" parent="1" source="cloudinary" target="ztims">
+<mxGeometry x="-0.2923" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
-<mxCell id="f82" value="Staff password reset links" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.7006;exitY=0.958;exitPerimeter=0;entryX=0;entryY=0.9;" edge="1" parent="1" source="ztims" target="email">
-<mxGeometry x="0.3146" relative="1" as="geometry">
+<mxCell id="f34" value="Photo uploads" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=15;labelBackgroundColor=none;exitX=0.7537;exitY=0.9309;exitPerimeter=0;entryX=0;entryY=0.75;" edge="1" parent="1" source="ztims" target="cloudinary">
+<mxGeometry x="0.3537" relative="1" as="geometry">
 <mxPoint x="0" y="-11" as="offset"/>
 </mxGeometry>
 </mxCell>
