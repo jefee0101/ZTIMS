@@ -485,6 +485,15 @@ guided destinations:
   ticket is never moved or refunded; a moved guide booking loses its guide and
   goes back to the office; a counter-paid booking can be moved here but is
   cancelled at the counter. Collections counts what was kept.
+- **Closures** (`POST /api/spots/:id/close-date`, Visitor setup's "Close this
+  date anyway?"): one transaction marks the date closed, puts every paid ticket
+  and booking for it in status `closed` (out of use; the gate says so) and
+  cancels the unpaid ones; then each visitor is emailed (`closureNotice`). A
+  `closed` one is the visitor's to settle on the Manage page whatever the
+  deadline: a full refund (`/api/manage/refund-closure`) or a new date, which
+  makes it valid (ticket) or confirmed without a guide (booking) again. A
+  counter-paid booking is refunded at the counter. The office cannot set
+  `closed` by hand; Visitor setup shows how many visitors still have to choose.
 
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query

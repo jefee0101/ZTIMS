@@ -16,7 +16,7 @@
  * Mounted at /api by server.js. Every write here is the officer's.
  */
 const express = require('express');
-const { query } = require('./db');
+const { query, transaction } = require('./db');
 const { spots: Spot, closedDates: ClosedDate, officers: TourismOfficer } = require('./models');
 const { WEEK, NAMES, parseOpenDays, formatOpenDays, weekdayOf, isOpenOn } = require('./open-days');
 
@@ -143,13 +143,17 @@ async function visitCalendar(spot, days) {
     };
 }
 
-/* Sales already made for one date: what closing it would affect. */
+/* Sales already made for one date: what closing it would affect, and, once
+   closed, how many visitors have still to choose a refund or a new date. */
 async function salesOn(spotId, dateKey) {
     const { rows } = await query(`
         select (select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'valid')::int as tickets,
                (select count(*) from guide_bookings where spot_id = $1 and preferred_date = $2
-                   and status in ('pending_payment', 'confirmed'))::int as bookings`, [spotId, dateKey]);
-    return rows[0];
+                   and status in ('pending_payment', 'confirmed'))::int as bookings,
+               ((select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'closed')
+                + (select count(*) from guide_bookings where spot_id = $1 and preferred_date = $2 and status = 'closed'))::int as awaitingChoice`,
+        [spotId, dateKey]);
+    return { tickets: rows[0].tickets, bookings: rows[0].bookings, awaitingChoice: rows[0].awaitingchoice };
 }
 
 function setupView(spot, closedDates) {
@@ -277,6 +281,74 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             if (error && error.code === 11000) return fail(res, 409, 'That date is already marked closed.');
             console.error('❌ Closed date failure:', error);
             fail(res, 500, 'Could not save that closed date.');
+        }
+    });
+
+    /* Closing a date that already has sales: one action. The date is marked
+       closed; every paid ticket and booking for it becomes 'closed' (out of
+       use, the visitor to choose a full refund or a new date on the Manage
+       page); unpaid ones are cancelled. Each visitor is emailed. All the
+       changes are one transaction; the emails follow it. */
+    router.post('/spots/:id/close-date', requireAdmin, async (req, res) => {
+        try {
+            const spot = await Spot.findById(req.params.id);
+            if (!spot) return fail(res, 404, 'That destination could not be found.');
+            const date = String((req.body && req.body.date) || '').trim();
+            const reason = String((req.body && req.body.reason) || '').trim().slice(0, 200);
+            if (!isDateKey(date)) return fail(res, 400, 'Choose the date to close.');
+            if (date < manilaToday()) return fail(res, 400, 'That date has already passed.');
+            const who = await officerEmail(req);
+            const note = `The office closed ${spot.title} on this date${reason ? ` (${reason})` : ''}.`.slice(0, 500);
+
+            const changed = await transaction(async client => {
+                await query(`
+                    insert into spot_closed_dates (spot_id, closed_date, reason, created_by_email) values ($1, $2, $3, $4)
+                    on conflict (spot_id, closed_date) do update
+                       set reason = case when excluded.reason <> '' then excluded.reason else spot_closed_dates.reason end`,
+                    [spot._id, date, reason, who], client);
+                const ids = async (sql, params) => (await query(sql, params, client)).rows.map(r => r.id);
+                return {
+                    tickets: await ids(`update tickets set status = 'closed'
+                                         where spot_id = $1 and visit_date = $2 and status = 'valid' returning id`, [spot._id, date]),
+                    // Never paid: no ticket to keep. A payment that still lands on
+                    // one is recorded as a duplicate, for a refund.
+                    unpaidTickets: await ids(`update tickets set status = 'cancelled'
+                                         where spot_id = $1 and visit_date = $2 and status = 'pending_payment' returning id`, [spot._id, date]),
+                    bookings: await ids(`update guide_bookings b set status = 'closed', status_note = $3, status_updated_at = now()
+                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status in ('pending_payment', 'confirmed')
+                                           and exists (select 1 from payments p where p.booking_id = b.id and p.refunded_at is null) returning id`,
+                                         [spot._id, date, note]),
+                    unpaidBookings: await ids(`update guide_bookings b set status = 'cancelled', status_note = $3, status_updated_at = now()
+                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status = 'pending_payment'
+                                           and not exists (select 1 from payments p where p.booking_id = b.id) returning id`,
+                                         [spot._id, date, note])
+                };
+            });
+
+            // After the record is safe, tell each visitor. (Required here, not at
+            // the top: notices.js uses this file too.)
+            const notices = require('./notices');
+            const origin = `${req.protocol}://${req.get('host')}`;
+            let emailed = 0;
+            for (const id of changed.tickets) emailed += (await notices.closureNotice('ticket', id, { reason }, origin)).sent ? 1 : 0;
+            for (const id of changed.bookings) emailed += (await notices.closureNotice('booking', id, { reason }, origin)).sent ? 1 : 0;
+            for (const id of changed.unpaidBookings) emailed += (await notices.bookingCancelled(id, { byVisitor: false, reason: note }, origin)).sent ? 1 : 0;
+
+            const affected = changed.tickets.length + changed.bookings.length;
+            const told = affected + changed.unpaidBookings.length;
+            console.log(`🚧 ${spot.title} closed on ${date} by ${who}: ${affected} to choose, ${changed.unpaidBookings.length + changed.unpaidTickets.length} unpaid cancelled`);
+            res.status(201).json({
+                success: true,
+                message: `${spot.title} is closed on ${niceDate(date)}. ${affected
+                    ? `${affected} visitor${affected === 1 ? '' : 's'} with a paid ticket or booking will choose a full refund or a new date.`
+                    : 'Nothing paid was affected.'}${told ? ` ${emailed} of ${told} emailed.` : ''}`,
+                changed: { tickets: changed.tickets.length, bookings: changed.bookings.length,
+                           unpaidTickets: changed.unpaidTickets.length, unpaidBookings: changed.unpaidBookings.length },
+                emailed
+            });
+        } catch (error) {
+            console.error('❌ Closure failure:', error);
+            fail(res, 500, 'Could not close that date.');
         }
     });
 

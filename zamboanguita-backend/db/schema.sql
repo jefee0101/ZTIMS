@@ -751,6 +751,18 @@ begin
 end
 $$;
 
+-- Closures: when the office shuts a destination on a date that already has
+-- sales, each paid ticket and booking for it becomes 'closed' — out of use,
+-- waiting for the visitor to choose a full refund or a new date (Manage page).
+-- Unpaid ones are simply cancelled. The constraints are redrawn every migrate,
+-- so they always carry the current list.
+alter table public.tickets drop constraint if exists tickets_status;
+alter table public.tickets add constraint tickets_status
+    check (status in ('pending_payment', 'valid', 'used', 'cancelled', 'expired', 'closed'));
+alter table public.guide_bookings drop constraint if exists guide_bookings_status;
+alter table public.guide_bookings add constraint guide_bookings_status
+    check (status in ('pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show', 'closed'));
+
 -- A date a destination is shut (a fiesta, repairs, a typhoon). Tickets and guide
 -- bookings are refused for it. Closing a date that already has sales is the
 -- closure action's job: it cancels them and tells each visitor.

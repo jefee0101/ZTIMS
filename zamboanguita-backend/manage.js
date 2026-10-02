@@ -102,8 +102,16 @@ async function describe(found) {
         ...refundIfCancelled(payment, keepPercent)
     };
 
+    // Closed by the office: the visitor chooses a full refund or a new date,
+    // whatever the deadline — the closure was not theirs.
+    if (record.status === 'closed') {
+        const full = payment && !payment.refundedAt ? money(payment.amount) : 0;
+        Object.assign(base, { refund: full, kept: 0, closedByOffice: true });
+    }
+
     if (kind === 'ticket') {
         const live = record.status === 'valid';
+        const closed = record.status === 'closed';
         return {
             ...base,
             code: record.code, visitDate: record.visitDate, people: record.people,
@@ -112,8 +120,9 @@ async function describe(found) {
             qr: ['valid', 'used'].includes(record.status)
                 ? await QRCode.toString(await module.exports.ticketQr(record._id), { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
                 : null,
-            canMove: live && window.open, canCancel: live && window.open,
-            why: record.status === 'used' ? 'This ticket was used at the gate, so it can no longer be moved or refunded.'
+            canMove: (live && window.open) || closed, canCancel: live && window.open, canRefundClosure: closed,
+            why: closed ? `The office closed ${spot ? spot.title : 'the attraction'} on this date. Choose a full refund, or move the ticket to another date.`
+                : record.status === 'used' ? 'This ticket was used at the gate, so it can no longer be moved or refunded.'
                 : record.status === 'cancelled' ? 'This ticket is cancelled.'
                 : record.status !== 'valid' ? 'This ticket was never paid for.'
                 : !window.open ? 'Changes close at 11:59 PM the day before the visit.' : ''
@@ -129,9 +138,14 @@ async function describe(found) {
         visitors: record.visitors, name: record.fullName,
         guide: guide ? guide.fullName : null, requestedGuide: asked ? asked.fullName : null,
         maxDate: addDays(manilaToday(), 365),
-        canMove: live && window.open,
+        canMove: (live && window.open) || record.status === 'closed',
         canCancel: live && window.open && !counterPaid,
-        why: !live ? `This booking is ${String(record.status).replace('_', ' ')}.`
+        canRefundClosure: record.status === 'closed' && !counterPaid,
+        why: record.status === 'closed'
+                ? `The office closed ${spot ? spot.title : 'the destination'} on this date. ${counterPaid
+                    ? 'Move it to another date here, or go to the Municipal Tourism Office for your refund.'
+                    : 'Choose a full refund, or move it to another date.'}`
+            : !live ? `This booking is ${String(record.status).replace('_', ' ')}.`
             : !window.open ? 'Changes close at 11:59 PM the day before the tour.'
             : counterPaid ? 'This booking was paid at the Municipal Tourism Office. It can be moved here, but to cancel it please go to the office, where the refund is given.'
             : ''
@@ -185,7 +199,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
                 // Only a valid ticket on the date we read: a gate scan or a second
                 // tab in between leaves it alone.
                 const { rowCount } = await query(
-                    `update tickets set visit_date = $2 where id = $1 and status = 'valid' and visit_date = $3`, [found.record._id, date, from]);
+                    `update tickets set visit_date = $2, status = 'valid'
+                      where id = $1 and status in ('valid', 'closed') and visit_date = $3`, [found.record._id, date, from]);
                 if (!rowCount) throw problem(409, 'This ticket changed just now. Look it up again.');
                 const told = await notices.ticketMoved(found.record._id, from, origin, { qrContent: await module.exports.ticketQr(found.record._id) });
                 return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)}. The same QR code works on the new date.`, item: await describe(await load(req.body)) });
@@ -200,6 +215,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             booking.preferredTime = time;
             // The guide was confirmed for the old date: the office confirms one again.
             booking.guideId = null;
+            // A closed booking was paid: moving it confirms it again on the new date.
+            if (booking.status === 'closed') booking.status = 'confirmed';
             booking.statusNote = `Moved by the visitor from ${from.date} ${from.time}. The office confirms the guide again.`.slice(0, 500);
             booking.statusUpdatedAt = new Date();
             await GuideBooking.save(booking);
@@ -238,6 +255,25 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             const told = await notices.bookingCancelled(booking._id, { byVisitor: true }, origin);
             return res.json({ success: true, emailed: told.sent, message: 'Cancelled. Nothing had been paid.', item: await describe(await load(req.body)) });
         } catch (error) { fail(res, error, '❌ Manage cancel failure:'); }
+    });
+
+    /* Closed by the office: the visitor takes the full refund. */
+    router.post('/manage/refund-closure', limit, async (req, res) => {
+        try {
+            const found = await load(req.body);
+            const view = await describe(found);
+            if (!view.canRefundClosure) throw problem(409, view.why || 'There is no closure refund to take here.');
+            const payment = await paymentFor(found.kind, found.record._id);
+            if (!payment || payment.refundedAt) throw problem(409, 'This was already refunded.');
+            const done = await refund(payment._id, 'The office closed this date: refunded in full', VISITOR);
+            const origin = siteOrigin(req);
+            const told = found.kind === 'ticket'
+                ? await notices.ticketCancelled(found.record._id, { refundAmount: done.refundAmount, byVisitor: false, reason: 'closed that day' }, origin)
+                : await notices.bookingCancelled(found.record._id, { refundAmount: done.refundAmount, byVisitor: false, reason: 'closed that day' }, origin);
+            res.json({ success: true, emailed: told.sent,
+                message: `Refunded in full: ₱${done.refundAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} is on its way back to the way you paid.`,
+                item: await describe(await load(req.body)) });
+        } catch (error) { fail(res, error, '❌ Closure refund failure:'); }
     });
 
     return router;

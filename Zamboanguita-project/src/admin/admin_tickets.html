@@ -629,6 +629,7 @@ body { overflow-x: hidden; }
             used:       { tone: 'tone-danger',  icon: 'block',        title: 'Already used' },
             wrong_date: { tone: 'tone-warning', icon: 'event_busy',   title: 'Wrong date' },
             cancelled:  { tone: 'tone-danger',  icon: 'cancel',       title: 'Cancelled' },
+            closed:     { tone: 'tone-danger',  icon: 'event_busy',   title: 'Date closed' },
             not_paid:   { tone: 'tone-danger',  icon: 'money_off',    title: 'Not paid' },
             not_found:  { tone: 'tone-danger',  icon: 'help',         title: 'Not found' }
         };
@@ -753,7 +754,8 @@ body { overflow-x: hidden; }
         /* ---- the day's list ----------------------------------------------- */
 
         const STATUS = {
-            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Used'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired']
+            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Used'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired'],
+            closed: ['tone-warning', 'Closed — visitor to choose']
         };
 
         async function loadList() {

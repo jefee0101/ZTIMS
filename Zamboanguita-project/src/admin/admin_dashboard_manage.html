@@ -1306,7 +1306,9 @@ body { overflow-x: hidden; }
             });
             if (response.status === 401) { handleExpiredSession(); throw new Error('Your session has expired.'); }
             const result = await response.json().catch(() => ({}));
-            if (!response.ok || result.success === false) throw new Error(result.message || `The server refused (status ${response.status}).`);
+            if (!response.ok || result.success === false) {
+                throw Object.assign(new Error(result.message || `The server refused (status ${response.status}).`), { status: response.status, data: result });
+            }
             return result;
         }
 
@@ -1339,7 +1341,8 @@ body { overflow-x: hidden; }
             list.innerHTML = setup.closedDates.length
                 ? setup.closedDates.map(c => `
                     <li class="py-2.5 flex flex-wrap items-center justify-between gap-2">
-                        <span><b class="text-on-surface">${escapeHtml(niceDay(c.date))}</b>${c.reason ? ` · ${escapeHtml(c.reason)}` : ''}</span>
+                        <span><b class="text-on-surface">${escapeHtml(niceDay(c.date))}</b>${c.reason ? ` · ${escapeHtml(c.reason)}` : ''}
+                            ${c.awaitingChoice ? `<span class="block tone-warning text-support">${c.awaitingChoice} visitor${c.awaitingChoice === 1 ? '' : 's'} still to choose a refund or a new date</span>` : ''}</span>
                         <button type="button" data-reopen="${escapeHtml(c._id)}" class="btn btn-ghost btn-sm">Open again</button>
                     </li>`).join('')
                 : '<li class="py-2.5 text-support italic">No closed dates coming up.</li>';
@@ -1405,10 +1408,27 @@ body { overflow-x: hidden; }
                 event.preventDefault();
                 setupError('closedError', '');
                 const date = document.getElementById('closedDate').value;
+                const reason = document.getElementById('closedReason').value.trim();
                 if (!date) return setupError('closedError', 'Choose the date it is closed.');
                 try {
-                    const result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates`, 'POST',
-                        { date, reason: document.getElementById('closedReason').value.trim() });
+                    let result;
+                    try {
+                        result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates`, 'POST', { date, reason });
+                    } catch (error) {
+                        // Already sold: closing it is the closure action, which tells each visitor.
+                        if (!(error.status === 409 && error.data && error.data.sales)) throw error;
+                        const sales = error.data.sales;
+                        const parts = [];
+                        if (sales.tickets) parts.push(`${sales.tickets} ticket${sales.tickets === 1 ? '' : 's'}`);
+                        if (sales.bookings) parts.push(`${sales.bookings} guide booking${sales.bookings === 1 ? '' : 's'}`);
+                        const sure = await ztimsDialog.confirm({
+                            title: `Close ${niceDay(date)} anyway?`,
+                            message: `${parts.join(' and ')} ${sales.tickets + sales.bookings === 1 ? 'exists' : 'exist'} for that day. Each paid one will be put on hold and its visitor emailed to choose a full refund or a new date. Unpaid bookings are cancelled.`,
+                            confirmLabel: 'Close this date', tone: 'danger'
+                        });
+                        if (!sure) return;
+                        result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/close-date`, 'POST', { date, reason });
+                    }
                     showToast(result.message, 'success');
                     document.getElementById('closedForm').reset();
                     const { setup } = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/setup`);

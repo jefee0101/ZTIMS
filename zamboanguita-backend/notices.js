@@ -200,8 +200,32 @@ async function bookingCancelled(bookingId, { refundAmount = 0, keptAmount = 0, b
     return sendMail({ to: b.email, subject: `Guide booking ${b.reference} cancelled`, ...body });
 }
 
+/* ---------------------------------------------------------------- closures */
+
+/* The office closed the destination on the visitor's date: the ticket or
+   booking is out of use, and the visitor chooses a full refund or a new date. */
+async function closureNotice(kind, id, { reason }, origin) {
+    const isTicket = kind === 'ticket';
+    const row = isTicket ? await ticketRow(id) : await bookingRow(id);
+    if (!row) return { sent: false, reason: 'not_found' };
+    const code = isTicket ? row.code : row.reference;
+    const date = isTicket ? row.visit_date : row.preferred_date;
+    const body = compose({
+        heading: `${row.spot_title} is closed on ${niceDate(date)}`,
+        intro: `We are sorry: the Municipal Tourism Office has had to close ${row.spot_title} on ${niceDate(date)}${reason ? ` (${reason})` : ''}. `
+            + `Your ${isTicket ? 'ticket' : 'guide booking'} ${code} cannot be used that day.`,
+        rows: [[isTicket ? 'Ticket code' : 'Reference', code], ['Paid', paidLine(row)]],
+        paragraphs: [
+            `Please choose on the Manage page: a full refund of ${pesos(row.paid_amount)}, or another date${isTicket ? ' with the same ticket' : ' (the office then confirms your guide)'}. Or ask the Municipal Tourism Office.`,
+            row.paid_channel === 'online' ? TEST_MODE_LINE : ''
+        ].filter(Boolean),
+        link: { label: 'Choose a refund or a new date', url: manageUrl(origin, code) }
+    });
+    return sendMail({ to: row.email, subject: `Closed on ${niceDate(date)}: choose a refund or a new date (${code})`, ...body });
+}
+
 module.exports = {
-    manageUrl, siteUrl,
+    manageUrl, siteUrl, closureNotice,
     ticketReceipt, ticketMoved, ticketCancelled,
     bookingReceived, bookingPaid, guideAssigned, bookingMoved, bookingCancelled
 };

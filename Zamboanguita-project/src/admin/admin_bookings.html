@@ -749,14 +749,16 @@ body { overflow-x: hidden; }
 
         const STATUS_LABEL = {
             pending_payment: 'Waiting for payment', confirmed: 'Confirmed',
-            completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show'
+            completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show',
+            closed: 'Date closed — visitor to choose'
         };
         const STATUS_STYLE = {
             pending_payment: 'tone-warning tone-pill',
             confirmed: 'tone-success tone-pill',
             completed: 'tone-info tone-pill',
             cancelled: 'tone-danger tone-pill',
-            no_show: 'tone-neutral tone-pill'
+            no_show: 'tone-neutral tone-pill',
+            closed: 'tone-warning tone-pill'
         };
 
         function guardOfficerSession() {

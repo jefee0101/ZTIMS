@@ -1086,6 +1086,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
         const date = dayOf(t.visit_date);
         if (t.status === 'pending_payment') return ['not_paid', 'This ticket was never paid for.'];
         if (t.status === 'cancelled') return ['cancelled', 'This ticket was cancelled and refunded.'];
+        if (t.status === 'closed') return ['closed', 'The office closed the attraction on this ticket\'s date. The visitor can choose a new date or a full refund on the Manage page.'];
         if (t.status === 'used') return ['used', 'Already used.'];
         if (date !== today) return ['wrong_date', date < today ? `This ticket was for ${date}.` : `This ticket is for ${date}, not today.`];
         // Discounted kinds show an ID at the entrance: say whose to check.

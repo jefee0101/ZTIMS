@@ -23,7 +23,8 @@ const GUIDE_SCOPES = ['municipal', 'barangay'];
 const GUIDE_REPORT_TYPES = ['tour_completed', 'headcount', 'incident', 'tourist_feedback'];
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const MAX_GUIDE_LANGUAGES = 20;
-const BOOKING_STATUSES = ['pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show'];
+// 'closed': the office shut the destination that day; the visitor chooses a refund or a new date.
+const BOOKING_STATUSES = ['pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show', 'closed'];
 const FEEDBACK_TOPICS = ['suggestion', 'listing', 'problem', 'booking', 'other'];
 const FEEDBACK_STATUSES = ['new', 'read', 'resolved'];
 const FEEDBACK_MESSAGE_MAX = 2000;
@@ -499,7 +500,7 @@ const tickets = new Table('tickets', {
     fullName: required({ trim: true }),
     email: required({ trim: true, lowercase: true }),
     contactNumber: text({ trim: true }),
-    status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired'] }),
+    status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired', 'closed'] }),
     usedAt: when(),
     usedByEmail: text(),
     isDemo: flag(false),

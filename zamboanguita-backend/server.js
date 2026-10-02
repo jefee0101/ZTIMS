@@ -2785,7 +2785,8 @@ app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
 app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
     try {
         const status = String(req.body.status || '').trim();
-        if (!BOOKING_STATUSES.includes(status)) {
+        // 'closed' comes only from closing a date, which also tells the visitor.
+        if (!BOOKING_STATUSES.includes(status) || status === 'closed') {
             return res.status(400).json({ success: false, message: 'That is not a booking status ZTIMS uses.' });
         }
 

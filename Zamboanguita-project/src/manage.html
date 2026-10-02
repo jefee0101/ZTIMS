@@ -378,7 +378,8 @@ body { overflow-x: hidden; }
     const STATUS = {
         valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the gate'], cancelled: ['tone-neutral', 'Cancelled'],
         pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],
-        confirmed: ['tone-success', 'Confirmed'], completed: ['tone-info', 'Completed'], no_show: ['tone-neutral', 'No show']
+        confirmed: ['tone-success', 'Confirmed'], completed: ['tone-info', 'Completed'], no_show: ['tone-neutral', 'No show'],
+        closed: ['tone-warning', 'Date closed by the office']
     };
     function niceDate(value) {
         const [y, m, d] = String(value || '').slice(0, 10).split('-').map(Number);
@@ -445,6 +446,12 @@ body { overflow-x: hidden; }
                 </div>
                 <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
             </form>` : '';
+        const closureForm = item.canRefundClosure ? `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
+                <h2 class="font-bold text-on-surface">Take a full refund</h2>
+                <p class="text-sm text-on-surface-variant">You get all of it back: <b>${peso(item.refund)}</b>, to the way you paid.</p>
+                <button type="button" id="closureRefundBtn" class="btn btn-secondary min-h-[44px]">Refund me in full</button>
+            </div>` : '';
         const cancelForm = item.canCancel ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Cancel</h2>
@@ -462,10 +469,11 @@ body { overflow-x: hidden; }
             </div>
             ${item.qr ? `<div class="flex justify-center"><div class="bg-white p-3 w-48 h-48 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(item.code)}">${item.qr}</div></div>` : ''}
             <div>${details.join('')}</div>
-            ${item.canMove || item.canCancel
-                ? `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`
-                : `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`}
+            ${item.closedByOffice || !(item.canMove || item.canCancel)
+                ? `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`
+                : `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`}
             ${moveForm}
+            ${closureForm}
             ${cancelForm}
             <p id="actionError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>`;
         box.hidden = false;
@@ -501,6 +509,21 @@ body { overflow-x: hidden; }
                 } catch (error) {
                     showError('actionError', error.message);
                     button.disabled = false;
+                }
+            });
+        }
+        const full = document.getElementById('closureRefundBtn');
+        if (full) {
+            full.addEventListener('click', async () => {
+                if (!full.dataset.sure) { full.dataset.sure = '1'; full.textContent = 'Yes, refund me'; return; }
+                full.disabled = true;
+                showError('actionError', '');
+                try {
+                    const result = await call('/manage/refund-closure');
+                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
+                } catch (error) {
+                    showError('actionError', error.message);
+                    full.disabled = false;
                 }
             });
         }
