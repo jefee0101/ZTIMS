@@ -488,7 +488,6 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-end">
                 <div class="space-y-1">
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Listing</h2>
-                    <p class="text-on-surface-variant">Your establishment has one listing. Changes you save go live straight away.</p>
                 </div>
                 <!-- One establishment, one listing: offered only until it exists (the server refuses a second). -->
                 <button id="addSpotBtn" hidden onclick="toggleAddSpotModal(true)" class="btn btn-primary">
@@ -567,7 +566,6 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
             const timer = setTimeout(() => {

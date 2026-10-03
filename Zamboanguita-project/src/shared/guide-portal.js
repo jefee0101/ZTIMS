@@ -197,7 +197,6 @@
             '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
                 '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                 '<p class="text-sm opacity-80">' + escapeHtml(message) + '</p>' +
-                '<p data-slow class="text-support opacity-60 hidden">The server is taking a moment — this can take up to a minute.</p>' +
             '</div>';
         const timer = setTimeout(() => {
             const note = target.querySelector('[data-slow]');

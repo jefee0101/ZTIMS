@@ -236,8 +236,19 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-const requireAdmin = [requireAuth, (req, res, next) => {
+// An officer's token is also checked against the account itself, so one the
+// office has deactivated stops working at once rather than when it expires.
+const requireAdmin = [requireAuth, async (req, res, next) => {
     if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Tourist Officer access required.' });
+    try {
+        const officer = await TourismOfficer.findById(req.auth.sub);
+        if (!officer || officer.active === false) {
+            return res.status(401).json({ success: false, message: 'This account has been deactivated by the Municipal Tourism Office.' });
+        }
+    } catch (error) {
+        console.error('❌ Officer check failure:', error && error.message);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
     return next();
 }];
 
@@ -336,10 +347,20 @@ const resetRateLimit = sharedRateLimit('reset', {
  */
 app.post('/api/admin/create', requireAdmin, async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email } = req.body;
+        const fullName = String(req.body.fullName || '').trim();
+        const position = String(req.body.position || '').trim();
+        // Blank asks for one to be generated, as for managers and guides.
+        const password = String(req.body.password || '').trim() || crypto.randomBytes(6).toString('base64url');
 
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory email or password parameters.' });
+        if (!email || !fullName) {
+            return res.status(400).json({ success: false, message: "The officer's full name and email address are required." });
+        }
+        if (fullName.length > 120 || position.length > 120) {
+            return res.status(400).json({ success: false, message: 'Name and position are limited to 120 characters.' });
+        }
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -357,11 +378,13 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 12);
         await TourismOfficer.create({
             email: normalizedEmail,
-            password: passwordHash
+            password: passwordHash,
+            fullName, position
         });
 
         console.log(`🛡️ New Tourism Officer account created: ${normalizedEmail}`);
-        return res.status(201).json({ success: true, message: 'New admin successfully added!' });
+        // The password is returned once so it can be passed on; only its hash is kept.
+        return res.status(201).json({ success: true, message: 'Officer account created.', email: normalizedEmail, newPassword: password });
     } catch (error) {
         console.error("❌ Add Admin Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -375,7 +398,7 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
 app.get('/api/admin/list', requireAdmin, async (req, res) => {
     try {
         const adminList = await TourismOfficer.find({}, { sort: { createdAt: 1 } });
-        return res.status(200).json(adminList);
+        return res.status(200).json(adminList.map(a => ({ ...a, isYou: String(a._id) === String(req.auth.sub) })));
     } catch (error) {
         console.error("❌ Get Admin List Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -422,6 +445,91 @@ app.post('/api/admin/me/password', requireAdmin, resetRateLimit, async (req, res
         return res.status(200).json({ success: true, message: 'Your password has been changed.' });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Officer password change failure:');
+    }
+});
+
+/* The signed-in officer's own record (Settings → My Account). */
+app.get('/api/admin/me', requireAdmin, async (req, res) => {
+    try {
+        const me = await TourismOfficer.findById(req.auth.sub);
+        if (!me) return res.status(404).json({ success: false, message: 'Account not found.' });
+        return res.json({
+            _id: me._id, email: me.email, fullName: me.fullName, position: me.position,
+            contactNumber: me.contactNumber, createdAt: me.createdAt, lastSignInAt: me.lastSignInAt
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Officer profile read failure:');
+    }
+});
+
+/* The officer keeps their own name, position and contact number. The sign-in
+   email is not changed here: it is the account's identity. */
+app.patch('/api/admin/me', requireAdmin, async (req, res) => {
+    try {
+        const fullName = String((req.body || {}).fullName ?? '').trim();
+        const position = String((req.body || {}).position ?? '').trim();
+        const contactNumber = String((req.body || {}).contactNumber ?? '').trim();
+        if (!fullName) return res.status(400).json({ success: false, message: 'Your full name is required.' });
+        if (fullName.length > 120 || position.length > 120) {
+            return res.status(400).json({ success: false, message: 'Name and position are limited to 120 characters.' });
+        }
+        if (contactNumber.length > 40) return res.status(400).json({ success: false, message: 'The contact number is too long.' });
+        const me = await TourismOfficer.findById(req.auth.sub);
+        if (!me) return res.status(404).json({ success: false, message: 'Account not found.' });
+        Object.assign(me, { fullName, position, contactNumber });
+        await TourismOfficer.save(me);
+        return res.json({ success: true, message: 'Your details have been saved.', fullName, position, contactNumber });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Officer profile update failure:');
+    }
+});
+
+/* Deactivate or reactivate another officer. Never yourself, and never the
+   last active officer: someone must always be able to run the system. The
+   account is kept, so the records it made still say who made them. */
+app.patch('/api/admin/:id/status', requireAdmin, async (req, res) => {
+    try {
+        const active = (req.body || {}).active;
+        if (typeof active !== 'boolean') return res.status(400).json({ success: false, message: 'Say whether the account is active.' });
+        if (String(req.params.id) === String(req.auth.sub)) {
+            return res.status(409).json({ success: false, message: 'You cannot deactivate your own account.' });
+        }
+        const officer = await TourismOfficer.findById(req.params.id);
+        if (!officer) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
+        if (!active) {
+            const { rows } = await db.query('select count(*)::int as n from tourism_officers where active and id <> $1', [officer._id]);
+            if (rows[0].n < 1) return res.status(409).json({ success: false, message: 'At least one officer account must stay active.' });
+        }
+        officer.active = active;
+        await TourismOfficer.save(officer);
+        console.log(`🛡️ Officer account ${active ? 'reactivated' : 'deactivated'}: ${officer.email}`);
+        return res.json({ success: true, message: active ? 'The account has been reactivated.' : 'The account has been deactivated. It can no longer sign in.' });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Officer status change failure:');
+    }
+});
+
+/* Issue a new password for another officer (one who forgot theirs). Your own
+   is changed under Security, with your current password. */
+app.post('/api/admin/:id/password', requireAdmin, async (req, res) => {
+    try {
+        if (String(req.params.id) === String(req.auth.sub)) {
+            return res.status(409).json({ success: false, message: 'Change your own password under Security.' });
+        }
+        const officer = await TourismOfficer.findById(req.params.id);
+        if (!officer) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
+        const newPassword = String((req.body || {}).newPassword || '').trim() || crypto.randomBytes(6).toString('base64url');
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
+        }
+        officer.password = await bcrypt.hash(newPassword, 12);
+        officer.resetTokenHash = null;
+        officer.resetTokenExpires = null;
+        await TourismOfficer.save(officer);
+        console.log(`🔑 Officer issued a new password for officer ${officer.email}`);
+        return res.json({ success: true, message: 'A new password has been set. Pass it on — it cannot be read again.', email: officer.email, newPassword });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Officer password issue failure:');
     }
 });
 
@@ -830,6 +938,12 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
                 message: 'This account has been suspended by the Municipal Tourism Office. Please contact them to have it restored.'
             });
         }
+        if (account && resolvedRole === 'admin' && account.active === false) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been deactivated by the Municipal Tourism Office.'
+            });
+        }
         // An inactive guide no longer works for the office; the record stays,
         // the portal does not.
         if (account && resolvedRole === 'tourist_guide' && account.status === 'inactive') {
@@ -851,6 +965,15 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
                 success: false,
                 message: `Authentication failed: Invalid ${audience} credentials.`
                 });
+        }
+
+        if (resolvedRole === 'admin') {
+            try {
+                account.lastSignInAt = new Date();
+                await TourismOfficer.save(account);
+            } catch (error) {
+                console.error('❌ Could not record the sign-in time:', error && error.message);
+            }
         }
 
         // Base payload data structures object mapping logic
@@ -922,7 +1045,7 @@ async function findResettableAccount(email, withResetFields) {
     if (manager) return manager.active === false ? null : { account: manager, table: EstablishmentManager };
 
     const officer = await TourismOfficer.findOne({ email }, options);
-    if (officer) return { account: officer, table: TourismOfficer };
+    if (officer) return officer.active === false ? null : { account: officer, table: TourismOfficer };
 
     // A guide can reset only a sign-in the office actually issued, and not while
     // the office has them marked inactive.
@@ -3481,6 +3604,12 @@ app.use('/api', paymentsModule({ requireAdmin, sharedRateLimit, isPubliclyVisibl
 ========================================== */
 const attractions = require('./attractions');
 app.use('/api', attractions({ requireAdmin }));
+
+/* ==========================================
+   OFFICE INFORMATION — the office's public contact details and emergency
+   numbers, kept on the officer's Settings page (office.js)
+========================================== */
+app.use('/api', require('./office')({ requireAdmin }));
 
 /* ==========================================
    MANAGE MY TICKET / BOOKING — a visitor moves or cancels with the code and

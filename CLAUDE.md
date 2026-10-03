@@ -145,8 +145,11 @@ purpose — see the header comment in `spot-form.js`:
 - `site-footer.js` — the visitor pages' footer (Explore / Information /
   Contact Us columns, office address, quiet staff sign-in link), drawn into a
   `<footer data-site-footer data-root="../">` placeholder so seven pages
-  share one copy. The office's phone and email are deliberately absent until
-  the office supplies them — see the comment in `src/contact.html`.
+  share one copy. The office's address, hours, phone, email and emergency
+  numbers come from `GET /api/office` (Settings → Office Information); until
+  they load, the built-in address and hours show and nothing else. It also
+  fills Contact Us's `[data-office-field]` spots and the destination pages'
+  `[data-emergency]` box.
 - `guide-portal.js` + `guide-portal.css` — the Tourist Guide portal's frame
   (sidebar, header, account menu, phone drawer) and helpers, shared by the four
   `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
@@ -287,7 +290,8 @@ the old collection names (`admins`, `resortOwners`) did not.
 2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
 3. Auth middleware chains: `requireAuth` (valid JWT) →
    `requireAdmin`/`requireEstablishmentManager`/`requireStaff`/`requireGuide`
-   (role checks) and `optionalAuth` (attaches `req.auth` if present, never
+   (role checks; `requireAdmin` also looks the officer up, so a deactivated
+   officer's open session stops at once) and `optionalAuth` (attaches `req.auth` if present, never
    blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
    Establishment Manager) and `tourist_guide` (Tourist Guide) —
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
@@ -435,7 +439,8 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 20 tables in all, with `spot_closed_dates` and `spot_photos`
+  have `is_demo`. 22 tables in all, with `spot_closed_dates`, `spot_photos`,
+  `office_info` and `emergency_numbers`
   (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
@@ -568,9 +573,30 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
   refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
   falls on it, and names the bookings: the office reassigns them first.
-- **Emergency numbers** live in `EMERGENCY` in `shared/site-footer.js` and show
-  in the footer and each destination's `[data-emergency]` box. Empty on purpose
-  until the office supplies them; nothing shows while it is empty.
+- **Emergency numbers** are kept by the officer on Settings → Office Information
+  (`emergency_numbers`, one row each) and show in the footer and each
+  destination's `[data-emergency]` box; nothing shows while there are none.
+
+### Settings (the officer's `admin_profile.html`)
+
+- **My Account**: the officer's full name, position and contact number
+  (`tourism_officers.full_name|position|contact_number`; `GET`/`PATCH
+  /api/admin/me`), shown with initials, never a photo. The sign-in email is
+  the account's identity and is not changed here. The name is stored as
+  `localStorage.userName` at sign-in and shown in every officer page's account
+  menu.
+- **Security**: change password (`/api/admin/me/password`, needs the current
+  one) and when this session signed in (`last_sign_in_at`, set at each login).
+- **Tourism Office Accounts**: every officer with position, date added, last
+  sign-in and status. Add one (name required; a blank password is generated
+  and shown once), issue a new password (`POST /api/admin/:id/password`), and
+  deactivate or reactivate (`PATCH /api/admin/:id/status`). Officers are never
+  deleted; nobody deactivates themselves; a deactivated officer cannot sign in
+  or reset a password, and an open session stops at once.
+- **Office Information** (`office.js`, `office_info` single row +
+  `emergency_numbers`): address, phone, email, office hours and the emergency
+  list. `GET /api/office` is public (cached 5 minutes), `PUT /api/office` is
+  the officer's and replaces the emergency list in one transaction.
 
 ## Duplicated facts (keep both sides in step by hand)
 

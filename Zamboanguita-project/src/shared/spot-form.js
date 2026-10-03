@@ -324,7 +324,6 @@
                     '</div>' +
                     '<div id="' + p + 'LocResults" hidden class="mt-2 bg-surface-variant border border-outline-variant/40 ' +
                         'rounded-xl p-1 max-h-56 overflow-y-auto text-on-surface"></div>' +
-                    '<p class="text-support mt-1">Places in Zamboanguita are listed first.</p>' +
                 '</div>' +
 
                 '<div>' +
@@ -371,7 +370,6 @@
                                 return '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>';
                             }).join('') +
                         '</select>' +
-                        '<p class="text-support mt-1">Filled in from the pin. Change it if it is wrong.</p>' +
                         errorSlot(p + 'BarangayError') +
                     '</div>' +
                     '<div>' +
@@ -379,7 +377,6 @@
                             '<span class="normal-case font-normal opacity-70">(optional)</span></label>' +
                         '<input id="' + p + 'LocAddress" name="address" type="text" ' +
                             'placeholder="e.g., Sitio Bonbon, near the wharf" class="' + INPUT + '"/>' +
-                        '<p class="text-support mt-1">Anything you type here is kept as you typed it.</p>' +
                     '</div>' +
                 '</div>' +
 

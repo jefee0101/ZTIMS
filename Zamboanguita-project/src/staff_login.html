@@ -443,6 +443,10 @@ body { overflow-x: hidden; }
     const establishmentName = result.user?.establishmentName || result.user?.resortName;
     if (establishmentName) localStorage.setItem('establishmentName', establishmentName);
     if (result.role === 'tourist_guide' && result.user?.name) localStorage.setItem('guideName', result.user.name);
+    if (result.role === 'admin') {
+      if (result.user && result.user.fullName) localStorage.setItem('userName', result.user.fullName);
+      else localStorage.removeItem('userName');
+    }
 
     // Button keeps spinning through the redirect — restoring it would only flash.
     window.location.href = destination;

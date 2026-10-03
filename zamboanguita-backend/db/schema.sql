@@ -947,6 +947,66 @@ end
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Settings: who each Tourism Officer is, and the office's public contact
+-- details (the officer's Settings page).
+-- ---------------------------------------------------------------------------
+
+-- An officer is a named person with a position, not just an email. `active`:
+-- an officer who leaves is deactivated, never deleted, so what they recorded
+-- (by email) still says who did it. `last_sign_in_at` is set at each sign-in.
+alter table public.tourism_officers add column if not exists full_name text not null default '';
+alter table public.tourism_officers add column if not exists position text not null default '';
+alter table public.tourism_officers add column if not exists contact_number text not null default '';
+alter table public.tourism_officers add column if not exists active boolean not null default true;
+alter table public.tourism_officers add column if not exists last_sign_in_at timestamptz;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'tourism_officers_text_lengths') then
+        alter table public.tourism_officers add constraint tourism_officers_text_lengths
+            check (char_length(full_name) <= 120 and char_length(position) <= 120 and char_length(contact_number) <= 40);
+    end if;
+end
+$$;
+
+-- The office's contact details, shown on the public site (footer, Contact Us).
+-- One row only: there is one Municipal Tourism Office.
+create table if not exists public.office_info (
+    id                  smallint primary key default 1 constraint office_info_one_row check (id = 1),
+    address             text not null default ''
+                        constraint office_info_address_length check (char_length(address) <= 300),
+    phone               text not null default ''
+                        constraint office_info_phone_length check (char_length(phone) <= 40),
+    email               text not null default ''
+                        constraint office_info_email_length check (char_length(email) <= 254),
+    office_hours        text not null default ''
+                        constraint office_info_hours_length check (char_length(office_hours) <= 120),
+    updated_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+insert into public.office_info (id, address, office_hours)
+values (1, 'Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218', 'Monday to Friday, 8:00 AM – 5:00 PM')
+on conflict (id) do nothing;
+
+-- Emergency numbers, one row each, in the order the office lists them. Shown in
+-- the footer and on every destination page; nothing shows while there are none.
+create table if not exists public.emergency_numbers (
+    id                  text primary key default public.ztims_new_id(),
+    label               text not null
+                        constraint emergency_numbers_label_length check (char_length(btrim(label)) between 1 and 80),
+    number              text not null
+                        constraint emergency_numbers_number_length check (char_length(btrim(number)) between 3 and 40),
+    position            integer not null default 0,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create index if not exists emergency_numbers_position_idx on public.emergency_numbers (position);
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -956,7 +1016,8 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
         'guide_reports', 'guide_bookings', 'payments', 'feedback',
-        'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates'
+        'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
+        'office_info', 'emergency_numbers'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -969,7 +1030,8 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
         'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
-        'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos'
+        'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos',
+        'office_info', 'emergency_numbers'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

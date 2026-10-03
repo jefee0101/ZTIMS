@@ -488,10 +488,6 @@ body { overflow-x: hidden; }
 
             <div class="space-y-1">
                 <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Establishment</h2>
-                <p class="text-on-surface-variant">
-                    These details are yours to keep current. The name and contact details appear to visitors
-                    on listings that have no booking website.
-                </p>
             </div>
 
             <div id="settingsLoading"></div>
@@ -508,7 +504,6 @@ body { overflow-x: hidden; }
                             <label for="establishmentNameInput" class="block text-label font-bold uppercase tracking-wider mb-1">Establishment name</label>
                             <input id="establishmentNameInput" type="text" required
                                    class="field w-full"/>
-                            <p class="text-support mt-1.5">Shown on your listings and in the tourism office's records.</p>
                         </div>
 
                         <div>
@@ -521,7 +516,6 @@ body { overflow-x: hidden; }
                             <label for="contactEmailInput" class="block text-label font-bold uppercase tracking-wider mb-1">Public contact email</label>
                             <input id="contactEmailInput" type="email" placeholder="Leave blank to use your sign-in email"
                                    class="field w-full"/>
-                            <p class="text-support mt-1.5">Where visitors write to. Your sign-in email is never shown to them.</p>
                         </div>
 
                         <div>
@@ -577,7 +571,8 @@ body { overflow-x: hidden; }
                         </h3>
                         <dl class="text-sm space-y-2">
                             <div class="flex justify-between gap-4">
-                                <dt class="text-on-surface-variant">Sign-in email</dt>
+                                <dt class="text-on-surface-variant">Sign-in email
+                                    <span class="tone-pill tone-neutral text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 ml-1 whitespace-nowrap">Managed by the Tourism Office</span></dt>
                                 <dd id="signInEmail" class="text-on-surface font-bold text-right break-all"></dd>
                             </div>
                             <div class="flex justify-between gap-4">
@@ -585,9 +580,6 @@ body { overflow-x: hidden; }
                                 <dd id="accountCreated" class="text-on-surface font-bold text-right"></dd>
                             </div>
                         </dl>
-                        <p class="text-support pt-2">
-                            Only the Municipal Tourism Office can change your sign-in email — ask them if it needs correcting.
-                        </p>
                     </section>
                 </div>
             </div>
@@ -614,7 +606,6 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             const timer = setTimeout(() => {
                 const note = target.querySelector('[data-slow]');

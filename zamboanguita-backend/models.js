@@ -43,6 +43,11 @@ const SECRET = ['password', 'resetTokenHash', 'resetTokenExpires'];
 const officers = new Table('tourism_officers', {
     email: email(),
     password: passwordHash(),
+    fullName: text({ trim: true }),
+    position: text({ trim: true }),
+    contactNumber: text({ trim: true }),
+    active: flag(true),
+    lastSignInAt: when(),
     ...resetFields
 }, { secret: SECRET });
 
