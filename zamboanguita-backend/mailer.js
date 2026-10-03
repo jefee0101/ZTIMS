@@ -75,7 +75,6 @@ function niceDate(dateKey) {
     });
 }
 
-const TEST_MODE_LINE = 'Online payment in ZTIMS is a demonstration in test mode: no real money moved.';
 const FOOTER = 'Municipal Tourism Office, Municipal Hall, Poblacion, Zamboanguita, Negros Oriental.\n'
     + 'You are getting this because this email address was given for this ticket or booking. We send nothing else.';
 
@@ -104,4 +103,4 @@ function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid }) {
     return { text, html };
 }
 
-module.exports = { sendMail, mailConfigured, compose, niceDate, pesos, TEST_MODE_LINE };
+module.exports = { sendMail, mailConfigured, compose, niceDate, pesos };

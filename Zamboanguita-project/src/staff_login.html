@@ -218,15 +218,15 @@ body { overflow-x: hidden; }
   <div class="w-full max-w-md">
 
     <a href="../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-8 py-2.5 min-h-[44px]">
-      <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the public site
+      <span class="material-symbols-outlined !text-lg">arrow_back</span> Return to the public site
     </a>
 
     <div class="page-head">
-      <p class="page-eyebrow">Zamboanguita Tourism</p>
-      <h1 class="page-title">Staff sign in</h1>
+      <p class="page-eyebrow">Municipal Tourism Office · Zamboanguita</p>
+      <h1 class="page-title">Staff Portal Sign In</h1>
       <p class="page-lede">
-        For <b class="text-on-surface">Tourist Officers</b>, <b class="text-on-surface">Tourist Establishment Managers</b> and <b class="text-on-surface">Tourist Guides</b>.
-        Sign in with the account issued to you — we'll take you to the right portal automatically.
+        Authorized access for <b class="text-on-surface">Tourism Officers</b>, <b class="text-on-surface">Establishment Managers</b> and <b class="text-on-surface">Tourist Guides</b>.
+        Sign in with the credentials issued to you, and you will be directed to your portal.
       </p>
     </div>
 
@@ -262,7 +262,7 @@ body { overflow-x: hidden; }
 
     <div class="mt-8 space-y-3 text-center">
             <p class="text-support">
-        Establishment manager and tourist guide accounts are issued by the Municipal Tourism Office. Contact them if you don't have one yet.
+        Establishment Manager and Tourist Guide accounts are issued by the Municipal Tourism Office. For access, please contact the office.
       </p>
     </div>
 
@@ -287,7 +287,7 @@ body { overflow-x: hidden; }
   // The portals send people here with ?expired=1 when their two-hour sign-in runs
   // out, so the trip back is explained rather than looking like a random logout.
   if (new URLSearchParams(window.location.search).get('expired') === '1') {
-    errorBox.textContent = 'Your sign-in expired, so you were signed out. Please sign in again — nothing has been lost.';
+    errorBox.textContent = 'Your session has expired. Please sign in again to continue.';
     errorBox.className = 'text-sm text-on-surface-variant bg-surface-high border border-outline/40 rounded-xl px-4 py-3';
     errorBox.hidden = false;
   }
@@ -337,7 +337,7 @@ body { overflow-x: hidden; }
     } catch (error) {
       restoreButton();
       console.error('Staff sign-in network error:', error);
-      showError('Could not reach the server. Please check your connection and try again.');
+      showError('Unable to connect to the server. Please check your internet connection and try again.');
       return;
     }
 
@@ -346,13 +346,13 @@ body { overflow-x: hidden; }
       result = await response.json();
     } catch {
       restoreButton();
-      showError(`The server returned an unexpected response (status ${response.status}). Please try again in a moment.`);
+      showError(`The server returned an unexpected response (status ${response.status}). Please try again shortly.`);
       return;
     }
 
     if (!response.ok || !result.success) {
       restoreButton();
-      showError(result.message || 'Those credentials were not recognised.');
+      showError(result.message || 'Invalid email address or password.');
       document.getElementById('passwordInput').value = '';
       return;
     }
@@ -360,7 +360,7 @@ body { overflow-x: hidden; }
     const destination = PORTAL_HOME[result.role];
     if (!destination) {
       restoreButton();
-      showError('That account is not a staff account. Please use the tourist sign in instead.');
+      showError('This account does not have access to the staff portal.');
       return;
     }
 

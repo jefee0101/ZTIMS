@@ -742,7 +742,7 @@ body { overflow-x: hidden; }
                             <td class="px-2 py-3 text-right">${p.refundedAt
                                 ? `<span class="tone-neutral text-support" title="${escapeHtml(p.refundReason)}">${p.kept ? 'Part refunded' : 'Refunded'}</span>`
                                 : p.ticketStatus === 'used'
-                                    ? '<span class="text-support" title="A used ticket is never refundable.">Used at the gate</span>'
+                                    ? '<span class="text-support" title="A used ticket is never refundable.">Used at the entrance</span>'
                                     : `<button data-refund class="btn btn-ghost btn-sm !text-error">Refund</button>`}</td>
                         </tr>`).join('')}
                     </tbody>

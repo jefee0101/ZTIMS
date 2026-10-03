@@ -2455,7 +2455,7 @@ function paymentsGatewayOnline() {
 }
 function paymentWays() {
     return paymentsGatewayOnline()
-        ? 'Online (test mode), or at the Municipal Tourism Office'
+        ? 'Online, or onsite at the Municipal Tourism Office'
         : 'Onsite at the Municipal Tourism Office';
 }
 

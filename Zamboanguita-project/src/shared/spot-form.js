@@ -235,7 +235,6 @@
                         return '<option value="' + escapeHtml(c.value) + '">' + escapeHtml(c.label) + '</option>';
                     }).join('') +
                 '</select>' +
-                '<p class="text-support mt-1">Accommodation moves the listing under places to stay.</p>' +
             '</div>' +
 
             '<div>' +
@@ -252,7 +251,6 @@
             '<div>' +
                 '<label for="' + p + 'Label" class="' + LABEL + '">Tagline <span class="normal-case font-normal opacity-70">(optional)</span></label>' +
                 '<input id="' + p + 'Label" name="label" type="text" placeholder="e.g., Crystal Waters" class="' + INPUT + '"/>' +
-                '<p class="text-support mt-1">A short phrase shown under the name.</p>' +
             '</div>' +
         '</section>' +
 
@@ -264,14 +262,6 @@
            in the same place: a pin you can look at and agree with.
            ------------------------------------------------------------------ */
         '<section data-step="1" class="space-y-4" hidden>' +
-
-            '<div>' +
-                '<h3 class="text-base sm:text-lg font-bold text-on-surface">Where should visitors arrive?</h3>' +
-                '<p class="text-support mt-1">' +
-                    'Find the place, then put the pin on the gate or entrance people should head for. ' +
-                    'ZTIMS works out the map position, the barangay and the directions from that.' +
-                '</p>' +
-            '</div>' +
 
             /* A listing saved before this step existed, or one an officer added
                in a hurry. It is a notice, not a wall: everything else about the
@@ -485,7 +475,6 @@
                     errorSlot(p + 'EntranceFeeError') +
                 '</div>' +
             '</div>' +
-            '<p class="text-support">Leave a fee at zero if there is nothing to pay.</p>' +
 
             '<div class="pt-1">' +
                 '<label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">' +
@@ -507,8 +496,6 @@
                             'bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>' +
                         '<span class="text-label font-bold uppercase tracking-wider text-on-surface">Requires a tourist guide</span>' +
                     '</label>' +
-                    '<p class="text-support mt-1">Visitors are told a guide is needed. Assign the ' +
-                        'guides themselves under Tourist Guides.</p>' +
                   '</div>'
                 : '') +
         '</section>' +

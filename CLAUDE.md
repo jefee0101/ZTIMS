@@ -377,9 +377,11 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   room-nights available/occupied/not occupied, guest nights), not as rates.
 - **Nothing from bookings.** Establishments report their own already-totalled
   month; ZTIMS never derives these figures from guide bookings.
-- **Who reports.** A manager, for the listings they manage. The officer, for
-  the places the office keeps (listings with no manager) and on anyone's
-  behalf. `kind` comes from the listing: an accommodation reports arrivals,
+- **Who reports.** A manager, for the listing they manage. The officer, for
+  the places the office keeps (listings with no manager) only: a privately
+  managed establishment's reports are its manager's to enter, and the officer
+  views them (`mayViewFor` / `mayEnterFor` in `statistics.js`; the officer's
+  "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports visitors only, and attraction
   visitors are never part of Form A4.
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
@@ -395,7 +397,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Stored permanently.** Reports are voided with a reason, never deleted;
   every create, update, void, lock and unlock is a `report_changes` row with
   the before and after. Locking marks months as sent to the province; a locked
-  report refuses changes until the officer unlocks it, with a reason.
+  report refuses changes until the officer unlocks it, with a reason. The pages
+  call these **Finalize** and **Reopen** (the API keeps `lock`/`unlock`).
 - **Municipal totals.** A month with a `municipal_total` report (a year kept on
   paper, loaded by `scripts/import-form-a4.js`) refuses per-place reports, so
   its guests are never counted twice; voiding it opens the month again. Those
@@ -414,6 +417,9 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   else (a `xnd_production_` key above all) switches online payment off
   (`gatewayState`). Every online payment, the booking
   or ticket it paid for, and the generated sample data carry `is_demo`.
+  Visitor pages and emails do not label it "test mode" (decided); Xendit's own
+  checkout page shows that, and Terms, Privacy and FAQ still say so. Paying in
+  person is called paying **onsite** (never "at the gate").
 - **The server decides.** Amounts come from the fees on record (a booking: its
   guide's fee, else the lowest available guide fee at the destination). A
   payment is confirmed only by the server asking Xendit itself (`settle`:

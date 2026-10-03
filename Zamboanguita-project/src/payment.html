@@ -321,11 +321,6 @@ body { overflow-x: hidden; }
         <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
-                <p class="tone-warning tone-pill inline-flex items-center gap-2 text-xs font-bold px-3 py-2">
-                    <span class="material-symbols-outlined !text-base">science</span>
-                    Test mode: a demonstration. No real money moves.
-                </p>
-
                 <div id="payState" class="glass-panel p-6 sm:p-8 space-y-5" aria-live="polite">
                     <div class="flex items-center gap-3 text-on-surface-variant">
                         <span class="inline-block w-5 h-5 border-2 border-current border-t-transparent animate-spin"></span>
@@ -384,7 +379,7 @@ body { overflow-x: hidden; }
     }
 
     function paidLine(c) {
-        return row('Paid', `${peso(c.amount)} · ${esc(METHOD[c.method] || c.method || 'online')} · test mode`);
+        return row('Paid', `${peso(c.amount)} · ${esc(METHOD[c.method] || c.method || 'online')}`);
     }
 
     function render(c) {
@@ -399,8 +394,8 @@ body { overflow-x: hidden; }
                     ${paidLine(c)}
                 </div>
                 <p class="text-sm text-on-surface-variant">
-                    The Municipal Tourism Office will assign your guide. Keep your reference,
-                    <b class="font-mono">${esc(b.reference)}</b>: it is how the office finds your booking.
+                    The Municipal Tourism Office will assign your guide. Please keep your reference,
+                    <b class="font-mono">${esc(b.reference)}</b>.
                 </p>`);
             return;
         }
@@ -416,7 +411,7 @@ body { overflow-x: hidden; }
                     <p class="text-on-surface">${esc(t.people)} ${Number(t.people) === 1 ? 'person' : 'people'} · ${esc(t.name)}</p>
                     ${t.kindsText ? `<p class="text-support">${esc(t.kindsText)}</p>` : ''}
                     ${(t.kinds || []).some(k => k.needsId) ? '<p class="text-support"><b>Bring the senior citizen, PWD or student ID</b> for anyone at a discounted price.</p>' : ''}
-                    ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the gate</p>' : ''}
+                    ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the entrance</p>' : ''}
                 </div>
                 <div>${paidLine(c)}</div>
                 <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>

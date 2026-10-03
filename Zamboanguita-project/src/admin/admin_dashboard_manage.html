@@ -527,10 +527,6 @@ body { overflow-x: hidden; }
                         <span class="text-on-surface-variant">Oversight</span>
                     </nav>
                     <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h2>
-                    <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Everything on the public site, whether the office keeps it or a manager does.
-                        Take a listing down here when it is no longer available.
-                    </p>
                 </div>
                 <button id="refreshBtn" class="btn btn-secondary">
                     <span class="material-symbols-outlined !text-lg">refresh</span> Refresh
@@ -568,7 +564,7 @@ body { overflow-x: hidden; }
             </p>
 
             <!-- Filter Controls Panel -->
-            <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-6">
+            <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 space-y-4">
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="text-label font-bold uppercase tracking-widest ml-2">Categories:</span>
                     <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
@@ -579,16 +575,18 @@ body { overflow-x: hidden; }
                         <button data-category="ACCOMMODATION" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Accommodation</button>
                     </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="searchInput" type="search" placeholder="Search name, location or manager"
-                               class="field !pl-10 w-full sm:w-72"/>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label for="searchInput" class="sr-only">Search destinations</label>
+                    <div class="relative flex-1 min-w-0">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                        <input id="searchInput" type="search" placeholder="Search by name, location or manager"
+                               class="field !pl-11 w-full min-h-[44px]"/>
                     </div>
-                    <select id="managerFilter" class="field min-h-[44px]">
-                        <option value="all">Everyone</option>
-                        <option value="office">Kept by the office</option>
-                        <option value="manager">Run by a manager</option>
+                    <label for="managerFilter" class="sr-only">Show</label>
+                    <select id="managerFilter" class="field min-h-[44px] sm:!w-60 shrink-0">
+                        <option value="all">All destinations</option>
+                        <option value="office">Managed by the Tourism Office</option>
+                        <option value="manager">Privately managed</option>
                         <option value="incomplete">Needs attention</option>
                     </select>
                 </div>

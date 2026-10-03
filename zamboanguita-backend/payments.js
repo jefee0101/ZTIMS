@@ -711,7 +711,7 @@ async function refund(paymentId, reason, officerEmail, { amount } = {}) {
         ticketBefore = await transaction(async client => {
             const { rows } = await query('select status from tickets where id = $1 for update', [payment.ticketId], client);
             if (rows[0] && rows[0].status === 'used') {
-                const e = new Error('This ticket was already used at the gate, so it cannot be refunded.');
+                const e = new Error('This ticket was already used at the entrance, so it cannot be refunded.');
                 e.status = 409;
                 throw e;
             }
@@ -851,7 +851,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
        says it is paid; only then does it get anybody in. */
     router.post('/tickets', checkoutLimit, async (req, res) => {
         try {
-            if (!gatewayState().online) return fail(res, 409, 'Online tickets are not available right now. Entrance fees are paid at the gate.');
+            if (!gatewayState().online) return fail(res, 409, 'Online tickets are not available right now. Entrance fees are paid onsite.');
             const body = req.body || {};
             const offer = await ticketOffer(body.spotId);
             if (!offer.available) return fail(res, 404, 'This attraction does not sell tickets online.');
@@ -873,7 +873,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
             const day = await attractions.dayVerdict(offer.spot, visitDate);
             if (!day.open) return fail(res, 409, day.reason);
             const amount = priced.amount;
-            if (amount < MIN_ONLINE_AMOUNT) return fail(res, 400, `Online payments start at ₱${MIN_ONLINE_AMOUNT}. Add a person, or pay at the gate.`);
+            if (amount < MIN_ONLINE_AMOUNT) return fail(res, 400, `Online payments start at ₱${MIN_ONLINE_AMOUNT}. Add a person, or pay onsite.`);
 
             let ticket = null;
             for (let attempt = 0; attempt < 5 && !ticket; attempt++) {
