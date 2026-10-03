@@ -521,7 +521,6 @@ body { overflow-x: hidden; }
         <div class="max-w-[1400px] mx-auto space-y-8">
             <header>
                 <h1 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface mb-1">Profile Settings</h1>
-                <p class="text-on-surface-variant">Manage your account preferences and security details</p>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -611,10 +610,6 @@ body { overflow-x: hidden; }
                             <button id="changePasswordBtn" type="submit" class="btn btn-secondary w-full">
                                 <span class="material-symbols-outlined">key</span> Change Password
                             </button>
-                            <p class="text-support">
-                                Signing out everywhere else is not part of this — a session already
-                                open elsewhere stays open until it expires.
-                            </p>
                         </form>
                     </section>
 
@@ -675,7 +670,6 @@ function showLoading(target, message, colspan) {
         '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
             '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
             '<p class="text-sm opacity-80">' + message + '</p>' +
-            '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
         '</div>';
     target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
     const timer = setTimeout(() => {

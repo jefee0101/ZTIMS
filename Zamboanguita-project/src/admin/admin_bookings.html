@@ -526,10 +526,6 @@ body { overflow-x: hidden; }
                     <span class="text-on-surface-variant">Municipal tourism</span>
                 </nav>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
-                <p class="text-on-surface-variant text-sm max-w-2xl">
-                    Visitors book a guide on the website, without an account, and pay here at the office.
-                    Each tab below is one step. Work from left to right.
-                </p>
             </div>
 
             <!-- How it works: the four steps, once, in plain words -->
@@ -589,23 +585,19 @@ body { overflow-x: hidden; }
             </div>
 
             <section role="tabpanel" id="panel-pay" aria-labelledby="tab-pay" class="space-y-3">
-                <p class="text-support">Bookings waiting for the visitor to pay at the counter. Recording the payment confirms the booking.</p>
                 <div id="list-pay" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
             </section>
 
             <section role="tabpanel" id="panel-assign" aria-labelledby="tab-assign" class="space-y-3" hidden>
-                <p class="text-support">Paid bookings with no guide yet. Only guides who serve the destination and can take the whole group are listed.</p>
                 <div id="list-assign" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
             </section>
 
             <section role="tabpanel" id="panel-upcoming" aria-labelledby="tab-upcoming" class="space-y-3" hidden>
-                <p class="text-support">Paid bookings with a guide, soonest first. When a tour's day has passed, mark how it went.</p>
                 <div id="list-upcoming" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
             </section>
 
             <section role="tabpanel" id="panel-all" aria-labelledby="tab-all" class="space-y-3" hidden>
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <p class="text-support">Every booking, including completed, cancelled and no-show ones. Open one to see or change it.</p>
                     <select id="bookingStatusFilter" class="field w-full sm:w-auto">
                         <option value="all">All statuses</option>
                         <option value="pending_payment">Waiting for payment</option>
@@ -724,7 +716,6 @@ body { overflow-x: hidden; }
                     <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
                     <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
                 </div>
-                <p class="text-support mt-2">Nothing is deleted — a booking keeps its record whatever happens to it.</p>
             </div>
 
             <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
