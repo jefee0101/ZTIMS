@@ -251,12 +251,41 @@ body { overflow-x: hidden; }
             <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
           </button>
         </div>
+        <div class="flex justify-end mt-1">
+          <button type="button" id="forgotLink" class="text-sm font-bold text-primary hover:underline py-2 min-h-[44px]">Forgot password?</button>
+        </div>
       </div>
 
       <p id="loginError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
       <button type="submit" id="staffSignInBtn" class="btn btn-primary w-full">
         <span class="material-symbols-outlined !text-base">login</span>Sign in
+      </button>
+    </form>
+
+    <!-- Forgot password: asks for the account's email and sends a one-time
+         reset link (POST /api/forgot-password), which opens user/reset_password.html. -->
+    <form id="forgotForm" hidden class="space-y-5 bg-surface border border-outline/30 rounded-2xl p-6" novalidate>
+      <div>
+        <h2 class="text-lg font-bold text-on-surface">Reset your password</h2>
+        <p class="text-support mt-1">Enter the email address of your account. A link to set a new password will be sent to it.</p>
+      </div>
+      <div>
+        <label for="forgotEmail" class="field-label">Email address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">mail</span>
+          <input id="forgotEmail" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
+            class="field !pl-12"/>
+        </div>
+      </div>
+
+      <p id="forgotMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+
+      <button type="submit" id="forgotSendBtn" class="btn btn-primary w-full">
+        <span class="material-symbols-outlined !text-base">send</span>Send reset link
+      </button>
+      <button type="button" id="forgotBack" class="btn btn-ghost w-full">
+        <span class="material-symbols-outlined !text-base">arrow_back</span>Back to sign in
       </button>
     </form>
 
@@ -312,6 +341,49 @@ body { overflow-x: hidden; }
     const showing = input.type === 'text';
     input.type = showing ? 'password' : 'text';
     icon.textContent = showing ? 'visibility' : 'visibility_off';
+  });
+
+  /* Forgot password: swap the sign-in form for the reset request, and back. */
+  const loginForm = document.getElementById('staffLoginForm');
+  const forgotForm = document.getElementById('forgotForm');
+  const forgotMessage = document.getElementById('forgotMessage');
+  function showForgot(open) {
+    loginForm.hidden = open;
+    forgotForm.hidden = !open;
+    forgotMessage.hidden = true;
+    if (open) {
+      const typed = document.getElementById('emailInput').value.trim();
+      if (typed) document.getElementById('forgotEmail').value = typed;
+      document.getElementById('forgotEmail').focus();
+    } else {
+      document.getElementById('emailInput').focus();
+    }
+  }
+  function forgotSay(text, ok) {
+    forgotMessage.textContent = text;
+    forgotMessage.className = 'text-sm font-semibold border px-4 py-3 ' + (ok ? 'tone-success' : 'tone-danger');
+    forgotMessage.hidden = false;
+  }
+  document.getElementById('forgotLink').addEventListener('click', () => showForgot(true));
+  document.getElementById('forgotBack').addEventListener('click', () => showForgot(false));
+  forgotForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const email = document.getElementById('forgotEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { forgotSay('Please enter a valid email address.', false); return; }
+    const restore = setButtonLoading(document.getElementById('forgotSendBtn'), 'SENDING...');
+    try {
+      const response = await fetch(`${API_BASE}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const result = await response.json().catch(() => ({}));
+      forgotSay(result.message || (response.ok ? 'If that email has an account, a reset link is on its way.' : 'The reset link could not be sent. Please try again shortly.'), response.ok);
+    } catch (error) {
+      forgotSay('Unable to connect to the server. Please check your internet connection and try again.', false);
+    } finally {
+      restore();
+    }
   });
 
   // Theme is the shared module's job, including the icon it shows.

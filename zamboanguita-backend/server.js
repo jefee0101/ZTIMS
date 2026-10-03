@@ -975,11 +975,11 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
                 subject: 'Reset Password Request - Zamboanguita Tourism',
                 html: `
                     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                        <h2 style="color: #2E7D32;">Zamboanguita Tourism Portal</h2>
+                        <h2 style="color: #003D5B;">Zamboanguita Tourism Staff Portal</h2>
                         <p>Hello,</p>
                         <p>We received a request to change the password for your account.</p>
                         <p>Click the button below to create a new password. This link works once and expires in ${RESET_TOKEN_TTL_MINUTES} minutes.</p>
-                        <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: white; background-color: #2E7D32; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 15px 0;">Reset Password</a>
+                        <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: white; background-color: #30638E; text-decoration: none; font-weight: bold; margin: 15px 0;">Reset Password</a>
                         <p style="font-size: 12px; color: #666;">If the button doesn't work, paste this into your browser:<br>${resetLink}</p>
                         <p>If you didn't ask to change your password, you can ignore this email — your password stays as it is.</p>
                     </div>
