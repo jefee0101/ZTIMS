@@ -1,0 +1,124 @@
+<mxfile host="drawio">
+<diagram id="ztims-architecture" name="System Architecture">
+<mxGraphModel dx="920" dy="1046" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="1046" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="L0" value="" style="rounded=1;arcSize=3;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#000000;strokeWidth=1.3;html=1;" vertex="1" parent="1">
+<mxGeometry x="20" y="20" width="880" height="162" as="geometry"/>
+</mxCell>
+<mxCell id="L0t" value="&lt;b style=&quot;font-size:15px&quot;&gt;Client Layer: Presentation&lt;/b&gt;&lt;br&gt;&lt;i&gt;Web browsers on phones and computers: Chrome, Edge, Firefox, Safari&lt;/i&gt;" style="text;html=1;align=left;verticalAlign=top;fontColor=#000000;fontSize=11;spacing=0;" vertex="1" parent="1">
+<mxGeometry x="36" y="30" width="848" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="B1" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Visitors&lt;/b&gt;&lt;br&gt;&lt;br&gt;Destinations, maps, directions&lt;br&gt;Guide booking, entrance tickets&lt;br&gt;Manage booking, feedback" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="74" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B2" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Tourism Officer&lt;/b&gt;&lt;br&gt;&lt;br&gt;Administrative dashboard&lt;br&gt;Destinations, accounts, bookings&lt;br&gt;Statistics, tickets, collections" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="74" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B3" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Establishment Manager&lt;/b&gt;&lt;br&gt;&lt;br&gt;Listing management&lt;br&gt;Monthly statistics reports&lt;br&gt;Report status" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="74" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B4" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Tourist Guide&lt;/b&gt;&lt;br&gt;&lt;br&gt;Assigned tours&lt;br&gt;Availability and languages&lt;br&gt;Tour reports" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="74" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="L1" value="" style="rounded=1;arcSize=3;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#000000;strokeWidth=1.3;html=1;" vertex="1" parent="1">
+<mxGeometry x="20" y="232" width="880" height="266" as="geometry"/>
+</mxCell>
+<mxCell id="L1t" value="&lt;b style=&quot;font-size:15px&quot;&gt;Application Layer: Server&lt;/b&gt;&lt;br&gt;&lt;i&gt;Node.js and Express on Vercel serverless functions, Singapore region&lt;/i&gt;" style="text;html=1;align=left;verticalAlign=top;fontColor=#000000;fontSize=11;spacing=0;" vertex="1" parent="1">
+<mxGeometry x="36" y="242" width="848" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="B5" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Web Pages&lt;/b&gt;&lt;br&gt;&lt;br&gt;HTML5, Tailwind CSS, JavaScript&lt;br&gt;Leaflet and OpenStreetMap&lt;br&gt;Built with Vite" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="286" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B6" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;API Server&lt;/b&gt;&lt;br&gt;&lt;br&gt;Node.js, Express&lt;br&gt;REST routes under /api&lt;br&gt;Helmet, CORS, rate limits" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="286" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B7" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Authentication Service&lt;/b&gt;&lt;br&gt;&lt;br&gt;JWT sign-in, bcrypt passwords&lt;br&gt;Role-based access&lt;br&gt;Password reset by email" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="286" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B8" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Directions Module&lt;/b&gt;&lt;br&gt;&lt;br&gt;Routes and travel time&lt;br&gt;Place search&lt;br&gt;Provider fallback" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="286" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B9" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Booking and Ticket Module&lt;/b&gt;&lt;br&gt;&lt;br&gt;Guide bookings, assignment&lt;br&gt;Tickets with sealed QR codes&lt;br&gt;Gate check, offline list" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="390" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B10" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Payment Module&lt;/b&gt;&lt;br&gt;&lt;br&gt;Xendit invoices, test mode&lt;br&gt;Payment confirmation&lt;br&gt;Refunds and collections" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="390" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B11" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Statistics and Reporting&lt;/b&gt;&lt;br&gt;&lt;br&gt;Monthly reports, Form A4&lt;br&gt;Excel export&lt;br&gt;Guide reports by barangay" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="390" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B12" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Notification Module&lt;/b&gt;&lt;br&gt;&lt;br&gt;Ticket receipts with QR&lt;br&gt;Booking and closure notices&lt;br&gt;Sent with Nodemailer" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="390" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="L2" value="" style="rounded=1;arcSize=3;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#000000;strokeWidth=1.3;html=1;" vertex="1" parent="1">
+<mxGeometry x="20" y="548" width="880" height="162" as="geometry"/>
+</mxCell>
+<mxCell id="L2t" value="&lt;b style=&quot;font-size:15px&quot;&gt;Data Layer: Database&lt;/b&gt;&lt;br&gt;&lt;i&gt;PostgreSQL database on Supabase, Singapore region, Row Level Security on&lt;/i&gt;" style="text;html=1;align=left;verticalAlign=top;fontColor=#000000;fontSize=11;spacing=0;" vertex="1" parent="1">
+<mxGeometry x="36" y="558" width="848" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="B13" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Accounts&lt;/b&gt;&lt;br&gt;&lt;br&gt;Tourism officers&lt;br&gt;Establishment managers&lt;br&gt;Tourist guides, languages" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="602" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B14" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Destinations&lt;/b&gt;&lt;br&gt;&lt;br&gt;Spots and listings&lt;br&gt;Closed dates&lt;br&gt;Guide destinations" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="602" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B15" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Bookings and Payments&lt;/b&gt;&lt;br&gt;&lt;br&gt;Guide bookings, tickets&lt;br&gt;Online checkouts&lt;br&gt;Payments, refunds" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="602" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B16" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Reports and Feedback&lt;/b&gt;&lt;br&gt;&lt;br&gt;Monthly reports, counts&lt;br&gt;Report change history&lt;br&gt;Guide reports, feedback" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="602" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="L3" value="" style="rounded=1;arcSize=3;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#000000;strokeWidth=1.3;html=1;" vertex="1" parent="1">
+<mxGeometry x="20" y="760" width="880" height="266" as="geometry"/>
+</mxCell>
+<mxCell id="L3t" value="&lt;b style=&quot;font-size:15px&quot;&gt;External Services and Infrastructure&lt;/b&gt;&lt;br&gt;&lt;i&gt;Third-party services and hosting&lt;/i&gt;" style="text;html=1;align=left;verticalAlign=top;fontColor=#000000;fontSize=11;spacing=0;" vertex="1" parent="1">
+<mxGeometry x="36" y="770" width="848" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="B17" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Vercel&lt;/b&gt;&lt;br&gt;&lt;br&gt;Web and API hosting&lt;br&gt;Serverless functions&lt;br&gt;Automatic deployment" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="814" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B18" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Supabase&lt;/b&gt;&lt;br&gt;&lt;br&gt;Managed PostgreSQL&lt;br&gt;Database hosting&lt;br&gt;Singapore region" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="814" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B19" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Cloudinary&lt;/b&gt;&lt;br&gt;&lt;br&gt;Photo storage&lt;br&gt;Image delivery&lt;br&gt;Signed uploads" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="814" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B20" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Xendit&lt;/b&gt;&lt;br&gt;&lt;br&gt;Payment gateway&lt;br&gt;Test mode only&lt;br&gt;Invoices and refunds" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="814" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B21" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Gmail SMTP&lt;/b&gt;&lt;br&gt;&lt;br&gt;Visitor emails&lt;br&gt;Password reset emails&lt;br&gt;App password sign-in" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="36.0" y="918" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B22" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;OpenStreetMap&lt;/b&gt;&lt;br&gt;&lt;br&gt;Map tiles&lt;br&gt;Nominatim place search&lt;br&gt;Map data" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="251.0" y="918" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B23" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Routing Services&lt;/b&gt;&lt;br&gt;&lt;br&gt;OpenRouteService&lt;br&gt;OSRM&lt;br&gt;Valhalla" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="466.0" y="918" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="B24" value="&lt;b style=&quot;font-size:12.5px&quot;&gt;Development and Version Control&lt;/b&gt;&lt;br&gt;&lt;br&gt;Git, GitHub&lt;br&gt;Vite, npm&lt;br&gt;System maintenance" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.2;fontColor=#000000;fontSize=11.5;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="681.0" y="918" width="203.0" height="92" as="geometry"/>
+</mxCell>
+<mxCell id="A0" value="HTTPS / TLS" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=11.5;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="L0" target="L1">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="460" y="182" as="sourcePoint"/>
+<mxPoint x="460" y="232" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+<mxCell id="A1" value="SQL queries over SSL" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=11.5;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="L1" target="L2">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="460" y="498" as="sourcePoint"/>
+<mxPoint x="460" y="548" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+<mxCell id="A2" value="External service calls / API integration" style="endArrow=block;endFill=1;endSize=7;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=11.5;fontStyle=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="L2" target="L3">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="460" y="710" as="sourcePoint"/>
+<mxPoint x="460" y="760" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>
