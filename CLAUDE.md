@@ -680,8 +680,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   saved routes), as the manuscript's Limitations say. Don't add offline features.
 - No `tourist` role, no tourist accounts. Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
-  live key is refused, every online record is `is_demo`, and paying at the
-  counter or the gate always stays available. Collecting real fees would need a
+  live key is refused, every online record is `is_demo`, and paying onsite at the
+  Municipal Tourism Office always stays available. Collecting real fees would need a
   municipal ordinance, the Municipal Treasurer, a merchant account in the
   municipality's name and COA-compliant official receipts — don't switch it to
   live keys.
