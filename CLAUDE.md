@@ -46,6 +46,50 @@ the Node runtime reads the nearest one, and the backend is CommonJS. Real auth
 is the JWT system in `zamboanguita-backend/server.js`, called from
 `staff_login.html`.
 
+## How every session works (read first)
+
+Several Claude sessions work on this repo, often on the same days. They all
+follow this one routine, so each one's work lands the same way and nothing
+collides. The user's chat is in plain, simple language.
+
+1. **Start from the latest `main`.** `git fetch origin`, then build on
+   `origin/main` (`git checkout -B <your branch> origin/main`). Look at
+   `git log origin/main` and the other `claude/*` branches first: don't redo or
+   undo another session's work, and don't rely on anything not yet on `main`.
+2. **One finished change = one commit**, on your branch, then on `main` as a
+   fast-forward: `git fetch origin main`, check
+   `git merge-base --is-ancestor origin/main HEAD`, then
+   `git push origin HEAD:main`. Never force-push `main`. If `main` moved,
+   bring your work onto it, test again, then push. The user asks for
+   "push to main" after each piece; that is the normal end of a task.
+   Another session's unmerged branch goes to `main` only when the user says so.
+3. **Check before every push** (there is no test suite): `npm run check` and
+   `npm run build` in `Zamboanguita-project/`; the backend files load
+   (`node -e "require('./server')"` with `JWT_SECRET` set); and the change is
+   exercised for real on a local Postgres + API (API calls, and a headless
+   browser for pages). Say what was checked, and what could not be.
+4. **Database: `db/schema.sql` only, always re-runnable** (`if not exists`,
+   `do $$ … if not exists (select 1 from pg_constraint …)`, `drop … if exists`
+   before re-adding). Run it twice on the local database to prove it.
+   **Never change the live Supabase database ahead of `main`**: the code that
+   uses a schema change goes to `main` first, then the user re-runs
+   `schema.sql` in the Supabase SQL Editor, then redeploys. (On 2 October a
+   schema applied before its code reached `main` broke every ticket purchase.)
+   Anything that deletes live data needs the user's yes first.
+5. **Keep this file current in the same commit** as the change: a new table,
+   route, page, rule or decision is written here, so the next session knows.
+   New decisions go under "Standing constraints".
+6. **Finish with a short report**: what changed, what was tested, and last,
+   what the user must do themselves (re-run `schema.sql`, Vercel variables,
+   redeploy, manuscript updates).
+
+**Wording on every page** (decided): professional and brief. No page intros
+or help lines under fields; keep only what appears at the moment of an action,
+a warning, an error, or a confirmation before something risky. The roles are
+Tourism Officer, Establishment Manager and Tourist Guide; visitors pay
+**onsite** (never "at the gate"); statistics months are **Finalized** and
+**Reopened**; visitor pages and emails don't say "test mode".
+
 ## Commands
 
 Frontend (`Zamboanguita-project/`):
