@@ -1,6 +1,6 @@
 <mxfile host="drawio">
 <diagram id="ztims-erd" name="ERD">
-<mxGraphModel dx="940" dy="905" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="940" pageHeight="905" math="0" shadow="0">
+<mxGraphModel dx="940" dy="830" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="940" pageHeight="830" math="0" shadow="0">
 <root>
 <mxCell id="0"/>
 <mxCell id="1" parent="0"/>
@@ -54,12 +54,6 @@
 </mxCell>
 <mxCell id="tourism_officers" value="Tourism&lt;br&gt;Officers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
 <mxGeometry x="409" y="746" width="122" height="48" as="geometry"/>
-</mxCell>
-<mxCell id="feedback" value="Feedback" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-<mxGeometry x="39" y="746" width="122" height="48" as="geometry"/>
-</mxCell>
-<mxCell id="rate_limits" value="Rate Limits" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-<mxGeometry x="779" y="746" width="122" height="48" as="geometry"/>
 </mxCell>
 <mxCell id="r0" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="establishment_managers" target="spots">
 <mxGeometry relative="1" as="geometry"/>
@@ -120,33 +114,6 @@
 </mxCell>
 <mxCell id="r19" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="monthly_reports" target="report_changes">
 <mxGeometry relative="1" as="geometry"/>
-</mxCell>
-<mxCell id="lg0" value="" style="endArrow=ERmandOne;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="230" y="862" as="sourcePoint"/>
-<mxPoint x="290" y="862" as="targetPoint"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="lt0" value="Exactly one" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
-<mxGeometry x="298" y="852" width="110" height="20" as="geometry"/>
-</mxCell>
-<mxCell id="lg1" value="" style="endArrow=ERzeroToOne;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="420" y="862" as="sourcePoint"/>
-<mxPoint x="480" y="862" as="targetPoint"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="lt1" value="Zero or one" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
-<mxGeometry x="488" y="852" width="110" height="20" as="geometry"/>
-</mxCell>
-<mxCell id="lg2" value="" style="endArrow=ERzeroToMany;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
-<mxGeometry relative="1" as="geometry">
-<mxPoint x="610" y="862" as="sourcePoint"/>
-<mxPoint x="670" y="862" as="targetPoint"/>
-</mxGeometry>
-</mxCell>
-<mxCell id="lt2" value="Zero or many" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
-<mxGeometry x="678" y="852" width="110" height="20" as="geometry"/>
 </mxCell>
 </root>
 </mxGraphModel>
