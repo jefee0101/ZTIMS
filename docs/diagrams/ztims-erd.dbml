@@ -1,0 +1,126 @@
+// ZTIMS tables and relationships only, for dbdiagram.io.
+// Each table lists just its key and the columns that link it to another table.
+
+Table tourism_officers {
+  id text [pk]
+}
+
+Table establishment_managers {
+  id text [pk]
+}
+
+Table spots {
+  id text [pk]
+  managed_by text
+}
+
+Table spot_photos {
+  spot_id text
+  photo_position integer
+}
+
+Table spot_closed_dates {
+  id text [pk]
+  spot_id text
+}
+
+Table tourist_guides {
+  id text [pk]
+}
+
+Table languages {
+  id text [pk]
+}
+
+Table guide_languages {
+  guide_id text
+  language_id text
+}
+
+Table tourist_guide_spots {
+  guide_id text
+  spot_id text
+}
+
+Table guide_bookings {
+  id text [pk]
+  spot_id text
+  guide_id text
+  requested_guide_id text
+}
+
+Table guide_reports {
+  id text [pk]
+  guide_id text
+  booking_id text
+}
+
+Table tickets {
+  id text [pk]
+  spot_id text
+}
+
+Table payments {
+  id text [pk]
+  booking_id text
+  ticket_id text
+}
+
+Table online_checkouts {
+  id text [pk]
+  booking_id text
+  ticket_id text
+}
+
+Table residences {
+  code text [pk]
+}
+
+Table monthly_reports {
+  id text [pk]
+  spot_id text
+}
+
+Table monthly_report_counts {
+  report_id text
+  residence_code text
+}
+
+Table report_changes {
+  id text [pk]
+  report_id text
+}
+
+Table feedback {
+  id text [pk]
+}
+
+Table office_info {
+  id smallint [pk]
+}
+
+Table emergency_numbers {
+  id text [pk]
+}
+
+Ref: spots.managed_by - establishment_managers.id
+Ref: spot_photos.spot_id > spots.id
+Ref: spot_closed_dates.spot_id > spots.id
+Ref: guide_languages.guide_id > tourist_guides.id
+Ref: guide_languages.language_id > languages.id
+Ref: tourist_guide_spots.guide_id > tourist_guides.id
+Ref: tourist_guide_spots.spot_id > spots.id
+Ref: guide_bookings.spot_id > spots.id
+Ref: guide_bookings.guide_id > tourist_guides.id
+Ref: guide_bookings.requested_guide_id > tourist_guides.id
+Ref: guide_reports.guide_id > tourist_guides.id
+Ref: guide_reports.booking_id > guide_bookings.id
+Ref: tickets.spot_id > spots.id
+Ref: payments.booking_id - guide_bookings.id
+Ref: payments.ticket_id - tickets.id
+Ref: online_checkouts.booking_id > guide_bookings.id
+Ref: online_checkouts.ticket_id > tickets.id
+Ref: monthly_reports.spot_id > spots.id
+Ref: monthly_report_counts.report_id > monthly_reports.id
+Ref: monthly_report_counts.residence_code > residences.code
+Ref: report_changes.report_id > monthly_reports.id
