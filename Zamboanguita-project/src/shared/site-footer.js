@@ -17,8 +17,10 @@
    file to /assets/ with a hashed name at build time and the URL then says
    nothing about where the page is.
 
-   The markup below is fixed text ZTIMS wrote; nothing typed by a visitor or a
-   manager ever reaches it, which is the only reason innerHTML is acceptable.
+   The markup below is fixed text ZTIMS wrote, plus the office's contact details
+   and emergency numbers, which the Tourism Officer keeps on Settings → Office
+   Information (GET /api/office). Those are escaped on the way in; nothing a
+   visitor or a manager types ever reaches this footer.
    ========================================================================== */
 (function () {
     'use strict';
@@ -34,6 +36,67 @@
         return '<li><a href="' + href + '" class="' + LINK + '">' +
             (icon ? '<span class="material-symbols-outlined !text-base" aria-hidden="true">' + icon + '</span>' : '') +
             label + '</a></li>';
+    }
+
+    /* The office's details as last published (Settings → Office Information).
+       Until they arrive, or if they cannot be fetched, the address and hours
+       below are shown and the phone, email and emergency numbers are left out:
+       a wrong number in an emergency is worse than none. */
+    let OFFICE = {
+        address: 'Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218',
+        officeHours: 'Monday to Friday, 8:00 AM – 5:00 PM',
+        phone: '', email: ''
+    };
+    let EMERGENCY = [];
+
+    function escapeText(value) {
+        return String(value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function emergencyList() {
+        return '<ul class="space-y-1">' + EMERGENCY.map(function (e) {
+            const dial = String(e.number).replace(/[^0-9+]/g, '');
+            return '<li class="flex flex-wrap justify-between gap-x-3"><span>' + escapeText(e.label) + '</span>' +
+                '<a class="font-bold text-primary hover:underline tabular-nums" href="tel:' + dial + '">' + escapeText(e.number) + '</a></li>';
+        }).join('') + '</ul>';
+    }
+    /* The destination page's box; empty (and so hidden) while there are no numbers. */
+    function fillEmergencyBoxes() {
+        document.querySelectorAll('[data-emergency]').forEach(function (box) {
+            if (!EMERGENCY.length) { box.hidden = true; return; }
+            box.innerHTML =
+                '<p class="flex items-center gap-2 font-bold text-on-surface mb-2">' +
+                    '<span class="material-symbols-outlined !text-lg text-error" aria-hidden="true">emergency</span>In an emergency</p>' +
+                '<div class="text-support">' + emergencyList() + '</div>';
+            box.hidden = false;
+        });
+    }
+    window.ztimsEmergency = { fill: fillEmergencyBoxes, get count() { return EMERGENCY.length; } };
+
+    /* Other pages' own spots for the same details (Contact Us):
+       [data-office-field="address|officeHours|phone|email"], each inside an
+       optional [data-office-row] that is hidden while its value is empty. */
+    function fillOfficeFields() {
+        document.querySelectorAll('[data-office-field]').forEach(function (el) {
+            const key = el.getAttribute('data-office-field');
+            const value = OFFICE[key] || '';
+            const row = el.closest('[data-office-row]');
+            if (row) row.hidden = !value;
+            if (key === 'phone' && value) {
+                el.innerHTML = '<a class="hover:text-primary hover:underline" href="tel:' + String(value).replace(/[^0-9+]/g, '') + '">' + escapeText(value) + '</a>';
+            } else if (key === 'email' && value) {
+                el.innerHTML = '<a class="hover:text-primary hover:underline break-all" href="mailto:' + escapeText(value) + '">' + escapeText(value) + '</a>';
+            } else {
+                el.textContent = value;
+            }
+        });
+    }
+    function contactLines() {
+        return '<p>' + escapeText(OFFICE.address) + '</p>' +
+            (OFFICE.officeHours ? '<p>' + escapeText(OFFICE.officeHours) + '</p>' : '') +
+            (OFFICE.phone ? '<p><a class="hover:text-primary hover:underline" href="tel:' + String(OFFICE.phone).replace(/[^0-9+]/g, '') + '">' + escapeText(OFFICE.phone) + '</a></p>' : '') +
+            (OFFICE.email ? '<p><a class="hover:text-primary hover:underline break-all" href="mailto:' + escapeText(OFFICE.email) + '">' + escapeText(OFFICE.email) + '</a></p>' : '');
     }
 
     function render(root) {
@@ -82,13 +145,9 @@
 
                     '<div class="lg:col-span-3" aria-labelledby="footerContactHeading">' +
                         '<h2 id="footerContactHeading" class="' + HEADING + '">Contact Us</h2>' +
-                        /* CONFIRM WITH THE OFFICE BEFORE LAUNCH: the address and hours are the
-                           usual ones for a municipal hall, not supplied by the office. The same
-                           text is in contact.html and privacy.html; change all three together. */
                         '<address class="not-italic text-support space-y-1">' +
                             '<p class="font-semibold text-on-surface">Municipal Tourism Office</p>' +
-                            '<p>Municipal Hall, Poblacion<br>Zamboanguita, Negros Oriental 6218</p>' +
-                            '<p>Monday to Friday, 8:00 AM – 5:00 PM</p>' +
+                            contactLines() +
                         '</address>' +
                         /* The feedback form is the one channel that is always
                            open, so it gets the button and the office details
@@ -97,6 +156,12 @@
                             '<span class="material-symbols-outlined !text-base" aria-hidden="true">forum</span>' +
                             'Send feedback' +
                         '</a>' +
+                        (EMERGENCY.length
+                            ? '<div class="mt-6" aria-labelledby="footerEmergencyHeading">' +
+                                  '<h2 id="footerEmergencyHeading" class="' + HEADING + '">In an emergency</h2>' +
+                                  '<div class="text-support">' + emergencyList() + '</div>' +
+                              '</div>'
+                            : '') +
                     '</div>' +
                 '</div>' +
 
@@ -114,13 +179,31 @@
         );
     }
 
+    function draw() {
+        document.querySelectorAll('[data-site-footer]').forEach(function (footer) {
+            footer.innerHTML = render(footer.getAttribute('data-root') || './');
+        });
+        fillEmergencyBoxes();
+        fillOfficeFields();
+    }
+
     function mount() {
         document.querySelectorAll('[data-site-footer]').forEach(function (footer) {
             if (footer.getAttribute('data-site-footer-mounted')) return;
             footer.setAttribute('data-site-footer-mounted', '1');
             footer.classList.add('bg-surface-container-low', 'border-t', 'border-outline-variant/15', 'transition-colors', 'duration-300');
-            footer.innerHTML = render(footer.getAttribute('data-root') || './');
         });
+        draw();
+        // The office's latest details; drawn again once they arrive.
+        fetch('/api/office').then(function (res) { return res.ok ? res.json() : null; }).then(function (office) {
+            if (!office) return;
+            OFFICE = {
+                address: office.address || OFFICE.address, officeHours: office.officeHours || '',
+                phone: office.phone || '', email: office.email || ''
+            };
+            EMERGENCY = Array.isArray(office.emergency) ? office.emergency : [];
+            draw();
+        }).catch(function () { /* the built-in address stays */ });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);

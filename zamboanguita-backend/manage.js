@@ -122,7 +122,7 @@ async function describe(found) {
                 : null,
             canMove: (live && window.open) || closed, canCancel: live && window.open, canRefundClosure: closed,
             why: closed ? `The office closed ${spot ? spot.title : 'the attraction'} on this date. Choose a full refund, or move the ticket to another date.`
-                : record.status === 'used' ? 'This ticket was used at the gate, so it can no longer be moved or refunded.'
+                : record.status === 'used' ? 'This ticket was used at the entrance, so it can no longer be moved or refunded.'
                 : record.status === 'cancelled' ? 'This ticket is cancelled.'
                 : record.status !== 'valid' ? 'This ticket was never paid for.'
                 : !window.open ? 'Changes close at 11:59 PM the day before the visit.' : ''
@@ -279,9 +279,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     return router;
 };
 
-// What a ticket's QR holds: sealed (ticket-seal.js) when a key is set. The
-// date is sealed in, so a moved ticket's new QR is drawn from the new date.
+// What a ticket's QR holds: its code.
 module.exports.ticketQr = async ticketId => {
     const t = await Ticket.findById(ticketId);
-    return t ? require('./ticket-seal').qrContent(t) : '';
+    return t ? t.code : '';
 };

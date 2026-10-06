@@ -5,7 +5,7 @@ HTML
 <meta charset="utf-8"/>
 <script src="../shared/theme.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Zamboanguita Tourism Officer | Profile Settings</title>
+<title>Zamboanguita Tourism Officer | Settings</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -518,171 +518,226 @@ body { overflow-x: hidden; }
 
     <!-- Main Content Workspace -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12">
-        <div class="max-w-[1400px] mx-auto space-y-8">
-            <header>
-                <h1 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface mb-1">Profile Settings</h1>
-                <p class="text-on-surface-variant">Manage your account preferences and security details</p>
+        <div class="max-w-[1200px] mx-auto space-y-8">
+            <header class="space-y-1">
+                <p class="text-label uppercase tracking-widest font-bold text-on-surface-variant">Municipal tourism</p>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Settings</h1>
             </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Left Configuration Column -->
-                <div class="lg:col-span-7 space-y-8">
-                    <section class="glass-panel rounded-2xl p-5 sm:p-8">
-                        <h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
-                            <span class="material-symbols-outlined">person</span>Officer Information
-                        </h3>
-                        <div class="flex flex-col md:flex-row gap-8 items-start mb-4">
-                            <div class="relative group">
-                                <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-surface-variant">
-                                    <img id="avatarPreview" class="w-full h-full object-cover" src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/Profile%20Icon%20Silhouette%20PNG%20Transparent,%20Avatar%20Icon%20Profile%20Icon%20Member%20Login%20Vector%20Isolated,%20Login%20Icons,%20Profile%20Icons,%20Avatar%20Icons%20PNG%20Image%20For%20Free%20Download.jpg" alt="Avatar">
-                                </div>
-                                <label for="avatarInput" class="absolute bottom-0 right-0 bg-primary p-2 rounded-full text-on-primary hover:scale-110 transition-transform shadow-lg cursor-pointer">
-                                    <span class="material-symbols-outlined text-sm flex items-center justify-center">photo_camera</span>
-                                </label>
-                                <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="autoUploadAdminPhoto(this)">
-                            </div>
-                            <div class="flex-1 space-y-4 w-full">
-                                <!-- Read-only on purpose. Both boxes used to hold hardcoded
-                                     literals — "ADMINISTRATOR" and an invented address — that
-                                     nothing read and nothing saved, so every officer saw the
-                                     same fictional account and could type over it to no
-                                     effect. They show the signed-in account now. Changing the
-                                     address is account creation, which is the panel below. -->
-                                <div>
-                                    <label class="block text-label font-bold uppercase tracking-widest mb-2">Role</label>
-                                    <input id="currentAdminName" class="field !font-semibold" type="text"
-                                           value="Tourism Officer" readonly>
-                                </div>
-                                <div>
-                                    <label for="adminEmailField" class="block text-label font-bold uppercase tracking-widest mb-2">Email Address</label>
-                                    <input id="adminEmailField" class="field !font-semibold" type="email"
-                                           value="" placeholder="Not signed in" readonly>
-                                </div>
-                            </div>
+            <!-- Jump to a section -->
+            <nav class="flex flex-wrap gap-2" aria-label="Settings sections">
+                <a href="#accountSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">badge</span>My Account</a>
+                <a href="#securitySection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">shield_lock</span>Security</a>
+                <a href="#officersSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">groups</span>Tourism Office Accounts</a>
+                <a href="#officeSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">apartment</span>Office Information</a>
+            </nav>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 1. My Account -->
+                <section id="accountSection" class="glass-panel p-5 sm:p-7 space-y-6 scroll-mt-24" aria-labelledby="accountHeading">
+                    <h2 id="accountHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined">badge</span> My Account
+                    </h2>
+                    <div class="flex items-center gap-4">
+                        <div id="myInitials" aria-hidden="true"
+                             class="w-16 h-16 shrink-0 flex items-center justify-center bg-primary text-on-primary text-2xl font-black font-headline">—</div>
+                        <div class="min-w-0">
+                            <p id="myNameLine" class="text-lg font-bold text-on-surface truncate">—</p>
+                            <p id="myPositionLine" class="text-support truncate"></p>
                         </div>
-                    </section>
+                    </div>
+                    <form id="accountForm" class="space-y-4" novalidate>
+                        <label class="block">
+                            <span class="field-label">Full name</span>
+                            <input id="myFullName" type="text" maxlength="120" required autocomplete="name" class="field" placeholder="e.g., Maria L. Santos"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Position</span>
+                            <input id="myPosition" type="text" maxlength="120" class="field" placeholder="e.g., Municipal Tourism Officer"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Contact number</span>
+                            <input id="myContact" type="tel" maxlength="40" autocomplete="tel" class="field" placeholder="e.g., 0917 123 4567"/>
+                        </label>
+                        <dl class="text-sm space-y-2 border-t border-outline-variant/30 pt-4">
+                            <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                                <dt class="text-on-surface-variant">Sign-in email</dt>
+                                <dd id="myEmail" class="font-bold text-on-surface break-all">—</dd>
+                            </div>
+                            <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                                <dt class="text-on-surface-variant">Account created</dt>
+                                <dd id="myCreated" class="font-bold text-on-surface">—</dd>
+                            </div>
+                        </dl>
+                        <button id="saveAccountBtn" type="submit" class="btn btn-primary w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">save</span> Save changes
+                        </button>
+                    </form>
+                </section>
 
-                    <section class="glass-panel rounded-2xl p-5 sm:p-8">
-                        <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                            <span class="material-symbols-outlined">person_add</span> Add Another Tourism Officer
-                        </h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">New Officer Email Address</label>
-                                <input id="newAdminEmail" class="field !font-semibold" placeholder="officer@zamboanguita.gov.ph" type="email">
-                            </div>
-                            <div>
-                                <label class="block text-label font-bold uppercase tracking-widest mb-2">Assign Account Password</label>
-                                <input id="newAdminPassword" class="field !font-semibold" placeholder="••••••••" type="password">
-                            </div>
-                            <button id="addAdminBtn" onclick="submitNewAdmin()" class="btn btn-secondary w-full mt-2">
-                                <span class="material-symbols-outlined">how_to_reg</span> ADD OFFICER
-                            </button>
+                <!-- 2. Security -->
+                <section id="securitySection" class="glass-panel p-5 sm:p-7 space-y-6 scroll-mt-24" aria-labelledby="securityHeading">
+                    <h2 id="securityHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined">shield_lock</span> Security
+                    </h2>
+                    <dl class="text-sm">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
+                            <dt class="text-on-surface-variant">Signed in since</dt>
+                            <dd id="mySignIn" class="font-bold text-on-surface">—</dd>
                         </div>
-                    </section>
-
-                </div>
-
-                <!-- Right Security Column -->
-                <div class="lg:col-span-5 space-y-8">
-                    <section class="glass-panel rounded-2xl p-5 sm:p-8">
-                        <h3 class="text-xl font-headline font-bold text-primary mb-8 flex items-center gap-2">
-                            <span class="material-symbols-outlined">security</span> Security
-                        </h3>
-                        <form id="officerPasswordForm" class="space-y-6" autocomplete="off">
-                            <div>
-                                <label for="currentPassword" class="block text-label font-bold uppercase tracking-widest mb-2">Current Password</label>
-                                <input id="currentPassword" name="currentPassword" class="field !font-semibold"
-                                       placeholder="••••••••" type="password" autocomplete="current-password" required>
-                            </div>
-                            <div>
-                                <label for="newPassword" class="block text-label font-bold uppercase tracking-widest mb-2">New Password</label>
-                                <input id="newPassword" name="newPassword" class="field !font-semibold"
-                                       placeholder="••••••••" type="password" autocomplete="new-password"
-                                       minlength="8" required>
-                                <p class="text-support mt-1">At least 8 characters.</p>
-                            </div>
-                            <div>
-                                <label for="confirmPassword" class="block text-label font-bold uppercase tracking-widest mb-2">Confirm New Password</label>
-                                <input id="confirmPassword" name="confirmPassword" class="field !font-semibold"
-                                       placeholder="••••••••" type="password" autocomplete="new-password"
-                                       minlength="8" required>
-                            </div>
-                            <button id="changePasswordBtn" type="submit" class="btn btn-secondary w-full">
-                                <span class="material-symbols-outlined">key</span> Change Password
-                            </button>
-                            <p class="text-support">
-                                Signing out everywhere else is not part of this — a session already
-                                open elsewhere stays open until it expires.
-                            </p>
-                        </form>
-                    </section>
-
-                    <section class="glass-panel rounded-2xl p-5 sm:p-8">
-                        <h3 class="text-xl font-headline font-bold text-primary mb-6 flex items-center gap-2">
-                            <span class="material-symbols-outlined">shield_person</span> Authorized Tourism Officers
-                        </h3>
-                        <div class="overflow-x-auto rounded-xl border border-outline-variant/30 bg-background/40">
-                            <div class="max-h-[260px] overflow-y-auto">
-                                <table class="ztims-table w-full min-w-[22rem] text-left border-collapse">
-                                    <thead>
-                                        <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                            <th class="px-6 py-4">Officer Email</th>
-                                            <th class="px-6 py-4 text-right">Role</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="adminListTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
+                    </dl>
+                    <form id="officerPasswordForm" class="space-y-4" autocomplete="off">
+                        <h3 class="font-bold text-on-surface">Change password</h3>
+                        <label class="block">
+                            <span class="field-label">Current password</span>
+                            <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" class="field"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">New password</span>
+                            <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="8" class="field"/>
+                            <span class="text-support mt-1 block">At least 8 characters.</span>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Confirm new password</span>
+                            <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" class="field"/>
+                        </label>
+                        <button id="changePasswordBtn" type="submit" class="btn btn-secondary w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">key</span> Change password
+                        </button>
+                    </form>
+                </section>
             </div>
+
+            <!-- 3. Tourism Office Accounts -->
+            <section id="officersSection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="officersHeading">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 id="officersHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined">groups</span> Tourism Office Accounts
+                    </h2>
+                    <button id="openAddOfficerBtn" type="button" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">person_add</span> Add officer
+                    </button>
+                </div>
+
+                <form id="addOfficerForm" hidden class="ztims-card p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" novalidate>
+                    <label class="block">
+                        <span class="field-label">Full name</span>
+                        <input id="newOfficerName" type="text" maxlength="120" required class="field" placeholder="e.g., Juan D. Cruz"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Position</span>
+                        <input id="newOfficerPosition" type="text" maxlength="120" class="field" placeholder="e.g., Tourism Operations Officer"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Sign-in email</span>
+                        <input id="newOfficerEmail" type="email" required class="field" placeholder="officer@zamboanguita.gov.ph"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Password <span class="normal-case font-normal">(optional)</span></span>
+                        <input id="newOfficerPassword" type="text" minlength="8" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
+                    </label>
+                    <div class="sm:col-span-2 flex flex-wrap gap-2">
+                        <button id="addOfficerBtn" type="submit" class="btn btn-primary min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">check</span> Create account
+                        </button>
+                        <button id="cancelAddOfficerBtn" type="button" class="btn btn-ghost min-h-[44px]">Cancel</button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="ztims-table w-full min-w-[760px] text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
+                                <th class="px-3 py-2">Officer</th>
+                                <th class="px-3 py-2">Added</th>
+                                <th class="px-3 py-2">Last sign-in</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminListTableBody" class="divide-y divide-outline-variant/20"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 4. Office Information (shown on the public site) -->
+            <section id="officeSection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="officeHeading">
+                <h2 id="officeHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined">apartment</span> Office Information
+                </h2>
+                <form id="officeForm" class="space-y-5" novalidate>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="block sm:col-span-2">
+                            <span class="field-label">Office address</span>
+                            <input id="officeAddress" type="text" maxlength="300" class="field" placeholder="Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Telephone / mobile</span>
+                            <input id="officePhone" type="tel" maxlength="40" class="field" placeholder="e.g., (035) 123 4567"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Office email</span>
+                            <input id="officeEmail" type="email" maxlength="254" class="field" placeholder="tourism@zamboanguita.gov.ph"/>
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span class="field-label">Office hours</span>
+                            <input id="officeHours" type="text" maxlength="120" class="field" placeholder="Monday to Friday, 8:00 AM – 5:00 PM"/>
+                        </label>
+                    </div>
+
+                    <fieldset class="space-y-3">
+                        <legend class="field-label">Emergency numbers</legend>
+                        <div id="emergencyRows" class="space-y-2"></div>
+                        <button id="addEmergencyBtn" type="button" class="btn btn-ghost btn-sm min-h-[40px]">
+                            <span class="material-symbols-outlined !text-base">add</span> Add a number
+                        </button>
+                    </fieldset>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/30 pt-4">
+                        <p id="officeUpdated" class="text-support"></p>
+                        <button id="saveOfficeBtn" type="submit" class="btn btn-primary min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">save</span> Save office information
+                        </button>
+                    </div>
+                </form>
+            </section>
         </div>
     </main>
 
 <script>
-// Mock array setup to handle runtime view update if local microservice is offline
-/* ==========================================================
-   ESCAPING
-   These lists render text written by establishment managers and
-   visitors. Anything that reaches innerHTML is escaped, so a title or
-   a description containing markup is shown rather than run.
-   ========================================================== */
-function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, ch => (
-{ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-    ));
+/* Settings: My Account, Security, Tourism Office Accounts and Office
+   Information. Every list here shows text people typed (names, positions,
+   office details), so anything that reaches innerHTML is escaped. */
+const API_BASE = "/api";
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const authHeaders = extra => Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+const when = value => value
+    ? new Date(value).toLocaleString('en-PH', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' })
+    : '—';
+const day = value => value
+    ? new Date(value).toLocaleDateString('en-PH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })
+    : '—';
+function initialsOf(name, email) {
+    const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (words.length) return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase();
+    return String(email || '?').charAt(0).toUpperCase();
 }
 
-function safeImageUrl(value, fallback) {
-    const candidate = String(value || '').trim();
-    if (/^https?:\/\//i.test(candidate)) return escapeHtml(candidate);
-    return escapeHtml(fallback || '');
+function handleExpiredSession() {
+    showToast('Your session has expired. Please sign in again.', 'error');
+    ['authToken', 'userRole', 'userEmail', 'userId', 'userName'].forEach(k => localStorage.removeItem(k));
+    setTimeout(() => window.location.replace('../staff_login.html?expired=1'), 900);
 }
 
-// The administrators the server last told us about — nothing is ever invented
-// here. A hardcoded row used to sit in this list, so the page showed an
-// administrator whether or not one existed.
-let knownAdmins = [];
-
-// The API sleeps on Render's free tier, so a cold start can take most of a
-// minute — after 5s the spinner says so rather than looking frozen.
-function showLoading(target, message, colspan) {
-    const spinner =
-        '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
-            '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
-            '<p class="text-sm opacity-80">' + message + '</p>' +
-            '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
-        '</div>';
-    target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
-    const timer = setTimeout(() => {
-        const note = target.querySelector('[data-slow]');
-        if (note) note.classList.remove('hidden');
-    }, 5000);
-    return () => clearTimeout(timer);
+async function api(path, method = 'GET', body) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method, headers: authHeaders({ 'Content-Type': 'application/json' }), body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.status === 401) { handleExpiredSession(); throw new Error('Signed out.'); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.success === false) throw new Error(data.message || `The server refused (status ${res.status}).`);
+    return data;
 }
 
 function setButtonLoading(btn, label) {
@@ -690,230 +745,287 @@ function setButtonLoading(btn, label) {
     const originalHTML = btn.innerHTML;
     const wasDisabled = btn.disabled;
     btn.disabled = true;
-    btn.innerHTML =
-        '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-    return () => {
-        btn.innerHTML = originalHTML;
-        btn.disabled = wasDisabled;
-    };
+    btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
+    return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
 }
 
-/* =====================================================
-   FETCH ACTIVE ADMINS DIRECTORY
-===================================================== */
-function renderTableRows(admins) {
-    const tbody = document.getElementById('adminListTableBody');
-    tbody.innerHTML = '';
+/* ---- 1. My Account -------------------------------------------------------- */
 
-    if (!admins || admins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="p-4"><div class="ztims-empty">No Tourism Officer accounts found.</div></td></tr>';
-        return;
-    }
-    
-    admins.forEach(admin => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-surface-container-highest transition-colors";
-        tr.innerHTML = `
-            <td class="px-6 py-4 font-medium text-on-surface flex items-center gap-3">
-                <span class="material-symbols-outlined text-primary text-lg">verified_user</span>
-                ${escapeHtml(admin.email)}
-            </td>
-            <td class="px-6 py-4 text-right">
-                <span class="inline-flex items-center rounded-md bg-primary/10 px-2.5 py-1 text-support font-medium text-primary ring-1 ring-inset ring-primary/20">
-                    TOURISM OFFICER
-                </span>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+function showMe(me) {
+    document.getElementById('myInitials').textContent = initialsOf(me.fullName, me.email);
+    document.getElementById('myNameLine').textContent = me.fullName || 'Add your name below';
+    document.getElementById('myPositionLine').textContent = me.position || 'Tourism Officer';
+    document.getElementById('myFullName').value = me.fullName || '';
+    document.getElementById('myPosition').value = me.position || '';
+    document.getElementById('myContact').value = me.contactNumber || '';
+    document.getElementById('myEmail').textContent = me.email || '—';
+    document.getElementById('myCreated').textContent = day(me.createdAt);
+    document.getElementById('mySignIn').textContent = when(me.lastSignInAt);
+    if (me.fullName) localStorage.setItem('userName', me.fullName);
 }
 
-function loadAdminDirectory() {
-    const doneLoading = showLoading(document.getElementById('adminListTableBody'), 'Loading Tourism Officers...', 2);
-    fetch('/api/admin/list', { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` } })
-    .then(res => res.json())
-    .then(admins => {
-        knownAdmins = Array.isArray(admins) ? admins : [];
-        renderTableRows(knownAdmins);
-    })
-    .catch(err => {
-        console.error("Could not load the administrator directory:", err);
-        knownAdmins = [];
-        document.getElementById('adminListTableBody').innerHTML =
-            '<tr><td colspan="2" class="px-6 py-8 text-center text-on-surface-variant">' +
-            'Could not reach the server, so this list is not available right now.</td></tr>';
-    })
-    .finally(doneLoading);
+async function loadMe() {
+    try { showMe(await api('/admin/me')); }
+    catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
 }
 
-/* =====================================================
-   SAVE NEW ADMIN VIA SUBMIT
-===================================================== */
-function submitNewAdmin() {
-    const email = document.getElementById('newAdminEmail').value.trim();
-    const password = document.getElementById('newAdminPassword').value.trim();
+document.getElementById('accountForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const fullName = document.getElementById('myFullName').value.trim();
+    if (!fullName) { showToast('Your full name is required.', 'error'); document.getElementById('myFullName').focus(); return; }
+    const restore = setButtonLoading(document.getElementById('saveAccountBtn'), 'Saving...');
+    try {
+        const r = await api('/admin/me', 'PATCH', {
+            fullName, position: document.getElementById('myPosition').value.trim(),
+            contactNumber: document.getElementById('myContact').value.trim()
+        });
+        showToast(r.message, 'success');
+        localStorage.setItem('userName', r.fullName);
+        await loadMe();
+        loadOfficers();
+        mountPortalAccountMenu();
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+    finally { restore(); }
+});
 
-    if(!email || !password) {
-        showToast('An email and a password are both needed to create a Tourism Officer.', 'error');
-        return;
-    }
-
-    const payload = { email, password };
-    const restoreButton = setButtonLoading(document.getElementById('addAdminBtn'), 'Creating...');
-
-    fetch('/api/admin/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success) {
-            showToast(`Tourism Officer account created for ${email}.`, 'success');
-            document.getElementById('newAdminEmail').value = '';
-            document.getElementById('newAdminPassword').value = '';
-            loadAdminDirectory();
-        } else {
-            showToast(data.message || 'The server refused that account.', 'error');
-        }
-    })
-    .catch(err => {
-        // Nothing is added to the list: the account does not exist, and showing
-        // it would tell the officer someone can sign in who cannot.
-        console.error("Could not reach the server while creating an administrator:", err);
-        showToast('Could not reach the server, so that account was not created.', 'error');
-    })
-    .finally(restoreButton);
-}
-
-/* =====================================================
-   CHANGE OWN PASSWORD
-   -----------------------------------------------------
-   The three boxes in the Security panel had no ids, no form around them and no
-   button underneath: nothing was ever sent anywhere. They are wired to
-   /api/admin/me/password now, which is the officer's counterpart to the route
-   establishment managers already had.
-
-   The checks below are for telling the officer what is wrong before a round
-   trip, not for safety — the server repeats every one of them, and it is the
-   server that compares the current password.
-===================================================== */
-/* The signed-in account, rather than the literal that used to sit in the markup.
-   staff_login.html stores this on a successful sign-in. */
-const officerEmailBox = document.getElementById('adminEmailField');
-if (officerEmailBox) officerEmailBox.value = localStorage.getItem('userEmail') || '';
+/* ---- 2. Security ---------------------------------------------------------- */
 
 const officerPasswordForm = document.getElementById('officerPasswordForm');
-if (officerPasswordForm) {
-    officerPasswordForm.addEventListener('submit', function (event) {
-        event.preventDefault();
+officerPasswordForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const current = document.getElementById('currentPassword').value;
+    const next = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    if (!current || !next || !confirm) return showToast('Fill in all three fields to change your password.', 'error');
+    if (next.length < 8) return showToast('Your new password must be at least 8 characters.', 'error');
+    if (next !== confirm) return showToast('The new password and its confirmation do not match.', 'error');
+    if (next === current) return showToast('Your new password must be different from your current one.', 'error');
+    const restore = setButtonLoading(document.getElementById('changePasswordBtn'), 'Changing...');
+    try {
+        const r = await api('/admin/me/password', 'POST', { currentPassword: current, newPassword: next });
+        showToast(r.message || 'Your password has been changed.', 'success');
+        officerPasswordForm.reset();
+    } catch (e) {
+        if (e.message !== 'Signed out.') showToast(e.message || 'Your password is unchanged.', 'error');
+    } finally { restore(); }
+});
 
-        const current = document.getElementById('currentPassword').value;
-        const next = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
+/* ---- 3. Tourism Office Accounts ------------------------------------------ */
 
-        if (!current || !next || !confirm) {
-            showToast('Fill in all three boxes to change your password.', 'error');
-            return;
-        }
-        if (next.length < 8) {
-            showToast('Your new password must be at least 8 characters.', 'error');
-            return;
-        }
-        if (next !== confirm) {
-            showToast('The new password and its confirmation do not match.', 'error');
-            return;
-        }
-        if (next === current) {
-            showToast('Your new password has to differ from your current one.', 'error');
-            return;
-        }
+let officers = [];
 
-        const restoreButton = setButtonLoading(document.getElementById('changePasswordBtn'), 'Changing...');
+function renderOfficers() {
+    const tbody = document.getElementById('adminListTableBody');
+    if (!officers.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-support">No officer accounts.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = officers.map(o => {
+        const active = o.active !== false;
+        const status = o.isYou
+            ? '<span class="tone-info tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">You</span>'
+            : `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`;
+        const actions = o.isYou ? '<span class="text-support">—</span>' : `
+            <div class="flex flex-col items-end gap-2">
+                ${active ? `<button type="button" class="btn btn-ghost btn-sm min-h-[36px] whitespace-nowrap" data-issue="${escapeHtml(o._id)}">
+                    <span class="material-symbols-outlined !text-base">key</span>New password</button>` : ''}
+                <button type="button" class="btn ${active ? 'btn-danger' : 'btn-secondary'} btn-sm min-h-[36px] whitespace-nowrap" data-status="${escapeHtml(o._id)}" data-active="${active ? '0' : '1'}">
+                    <span class="material-symbols-outlined !text-base">${active ? 'person_off' : 'person_check'}</span>${active ? 'Deactivate' : 'Reactivate'}</button>
+            </div>`;
+        return `<tr class="${active ? '' : 'opacity-70'}">
+            <td class="px-3 py-3 min-w-[16rem]"><div class="flex items-center gap-3">
+                <span class="w-9 h-9 shrink-0 flex items-center justify-center bg-primary/15 text-primary font-black text-sm" aria-hidden="true">${escapeHtml(initialsOf(o.fullName, o.email))}</span>
+                <div class="min-w-0"><p class="font-bold text-on-surface">${escapeHtml(o.fullName || 'Name not set')}</p>
+                <p class="text-support">${escapeHtml(o.position || 'Tourism Officer')}</p>
+                <p class="text-support break-words">${escapeHtml(o.email)}</p></div></div></td>
+            <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(day(o.createdAt))}</td>
+            <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(when(o.lastSignInAt))}</td>
+            <td class="px-3 py-3">${status}</td>
+            <td class="px-3 py-3 text-right">${actions}</td>
+        </tr>`;
+    }).join('');
+}
 
-        fetch('/api/admin/me/password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
-            body: JSON.stringify({ currentPassword: current, newPassword: next })
-        })
-        .then(res => res.json().catch(() => ({ success: false, message: 'The server sent something unreadable.' })))
-        .then(data => {
-            if (data.success) {
-                showToast('Your password has been changed.', 'success');
-                officerPasswordForm.reset();
-            } else {
-                // The server's own wording: it distinguishes a wrong current
-                // password from one that is merely too short, and the officer
-                // needs to know which.
-                showToast(data.message || 'The server refused that change.', 'error');
-            }
-        })
-        .catch(err => {
-            // Nothing changed, and saying otherwise would leave an officer
-            // believing a password that still does not work.
-            console.error('Could not reach the server while changing the password:', err);
-            showToast('Could not reach the server, so your password is unchanged.', 'error');
-        })
-        .finally(restoreButton);
+async function loadOfficers() {
+    const tbody = document.getElementById('adminListTableBody');
+    if (!officers.length) tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-support">Loading…</td></tr>';
+    try { officers = await api('/admin/list'); renderOfficers(); }
+    catch (e) { if (e.message !== 'Signed out.') tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-6 text-center tone-danger">${escapeHtml(e.message)}</td></tr>`; }
+}
+
+function showPassword(title, email, password) {
+    // Shown once: only its hash is kept.
+    showToast(`${title}\nSign-in email: ${email}\nPassword: ${password}\n\nPass this on now. It cannot be shown again.`, 'success', { duration: 0 });
+}
+
+const addForm = document.getElementById('addOfficerForm');
+document.getElementById('openAddOfficerBtn').addEventListener('click', () => {
+    addForm.hidden = !addForm.hidden;
+    if (!addForm.hidden) document.getElementById('newOfficerName').focus();
+});
+document.getElementById('cancelAddOfficerBtn').addEventListener('click', () => { addForm.reset(); addForm.hidden = true; });
+addForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const fullName = document.getElementById('newOfficerName').value.trim();
+    const email = document.getElementById('newOfficerEmail').value.trim();
+    const password = document.getElementById('newOfficerPassword').value.trim();
+    if (!fullName || !email) return showToast("Enter the officer's full name and sign-in email.", 'error');
+    if (password && password.length < 8) return showToast('A password must be at least 8 characters.', 'error');
+    const restore = setButtonLoading(document.getElementById('addOfficerBtn'), 'Creating...');
+    try {
+        const r = await api('/admin/create', 'POST', { fullName, email, password, position: document.getElementById('newOfficerPosition').value.trim() });
+        showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
+        addForm.reset(); addForm.hidden = true;
+        loadOfficers();
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+    finally { restore(); }
+});
+
+document.getElementById('adminListTableBody').addEventListener('click', async event => {
+    const issue = event.target.closest('[data-issue]');
+    const status = event.target.closest('[data-status]');
+    if (!issue && !status) return;
+    const officer = officers.find(o => o._id === (issue || status).dataset[issue ? 'issue' : 'status']);
+    if (!officer) return;
+    const name = officer.fullName || officer.email;
+    try {
+        if (issue) {
+            const typed = await ztimsDialog.prompt({
+                title: `Issue a new password for ${name}?`,
+                message: 'Their current password stops working immediately.',
+                label: 'New password', optional: true, placeholder: 'Leave blank to generate one',
+                help: 'At least 8 characters.', confirmLabel: 'Issue password', icon: 'key',
+                validate: value => value.trim() && value.trim().length < 8 ? 'A password must be at least 8 characters.' : ''
+            });
+            if (typed === null) return;
+            const r = await api(`/admin/${encodeURIComponent(officer._id)}/password`, 'POST', { newPassword: typed.trim() });
+            showPassword(`New password for ${name}`, r.email, r.newPassword);
+        } else {
+            const activate = status.dataset.active === '1';
+            const yes = await ztimsDialog.confirm({
+                title: activate ? `Reactivate ${name}?` : `Deactivate ${name}?`,
+                message: activate
+                    ? 'They will be able to sign in again.'
+                    : 'They will be signed out and can no longer sign in. The account and its records are kept.',
+                confirmLabel: activate ? 'Reactivate' : 'Deactivate',
+                tone: activate ? 'default' : 'danger'
+            });
+            if (!yes) return;
+            const r = await api(`/admin/${encodeURIComponent(officer._id)}/status`, 'PATCH', { active: activate });
+            showToast(r.message, 'success');
+            loadOfficers();
+        }
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+});
+
+/* ---- 4. Office Information ------------------------------------------------- */
+
+function emergencyRow(entry) {
+    const row = document.createElement('div');
+    row.className = 'flex flex-col sm:flex-row gap-2';
+    row.innerHTML = `
+        <input type="text" maxlength="80" class="field flex-1" data-em="label" placeholder="e.g., MDRRMO Zamboanguita" aria-label="Name"/>
+        <input type="tel" maxlength="40" class="field sm:!w-56" data-em="number" placeholder="e.g., 0917 123 4567" aria-label="Number"/>
+        <button type="button" class="btn btn-ghost min-h-[44px] shrink-0" data-em-remove aria-label="Remove this number">
+            <span class="material-symbols-outlined !text-base">delete</span></button>`;
+    row.querySelector('[data-em="label"]').value = (entry && entry.label) || '';
+    row.querySelector('[data-em="number"]').value = (entry && entry.number) || '';
+    row.querySelector('[data-em-remove]').addEventListener('click', () => row.remove());
+    return row;
+}
+
+function showOffice(office) {
+    document.getElementById('officeAddress').value = office.address || '';
+    document.getElementById('officePhone').value = office.phone || '';
+    document.getElementById('officeEmail').value = office.email || '';
+    document.getElementById('officeHours').value = office.officeHours || '';
+    const rows = document.getElementById('emergencyRows');
+    rows.innerHTML = '';
+    (office.emergency || []).forEach(e => rows.appendChild(emergencyRow(e)));
+    if (!(office.emergency || []).length) rows.appendChild(emergencyRow());
+    document.getElementById('officeUpdated').textContent = office.updatedByEmail
+        ? `Last updated ${when(office.updatedAt)} by ${office.updatedByEmail}`
+        : '';
+}
+
+async function loadOffice() {
+    try {
+        const res = await fetch(`${API_BASE}/office`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('The office information could not be loaded.');
+        showOffice(await res.json());
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+document.getElementById('addEmergencyBtn').addEventListener('click', () => {
+    const row = emergencyRow();
+    document.getElementById('emergencyRows').appendChild(row);
+    row.querySelector('input').focus();
+});
+
+document.getElementById('officeForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const emergency = [...document.querySelectorAll('#emergencyRows > div')].map(row => ({
+        label: row.querySelector('[data-em="label"]').value.trim(),
+        number: row.querySelector('[data-em="number"]').value.trim()
+    })).filter(e => e.label || e.number);
+    const restore = setButtonLoading(document.getElementById('saveOfficeBtn'), 'Saving...');
+    try {
+        const r = await api('/office', 'PUT', {
+            address: document.getElementById('officeAddress').value.trim(),
+            phone: document.getElementById('officePhone').value.trim(),
+            email: document.getElementById('officeEmail').value.trim(),
+            officeHours: document.getElementById('officeHours').value.trim(),
+            emergency
+        });
+        showToast(r.message, 'success');
+        showOffice(r.office);
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+    finally { restore(); }
+});
+
+/* ---- the portal frame -------------------------------------------------------- */
+
+// Only the Tourist Officer belongs here.
+function guardOfficerSession() {
+    if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+        window.location.replace('../staff_login.html');
+        return false;
+    }
+    return true;
+}
+
+// Shared with the sidebar's Log Out, so both doors behave identically.
+function signOutStaff() {
+    try {
+        window.ztimsTheme.clearStorage();
+        sessionStorage.clear();
+    } catch (e) { /* private browsing */ }
+    if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+    setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+}
+
+// Who is signed in, in the corner, with the way out of the portal.
+function mountPortalAccountMenu() {
+    const slot = document.getElementById('accountMenuSlot');
+    slot.innerHTML = '';
+    mountAccountMenu({
+        container: slot,
+        name: localStorage.getItem('userName') || 'Tourism Officer',
+        email: localStorage.getItem('userEmail') || '',
+        items: [
+            { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
+            { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+        ]
     });
 }
 
-/* Creating establishment manager accounts and their directory moved to their own
-   page, admin_managers.html, reachable from "Managers" in the sidebar. */
-
-function autoUploadAdminPhoto(inputElement) {
-    if (inputElement.files && inputElement.files[0]) {
-        const fileObj = inputElement.files[0];
-        const fileReader = new FileReader();
-        fileReader.onload = function(event) {
-            document.getElementById('avatarPreview').src = event.target.result;
-        };
-        fileReader.readAsDataURL(fileObj);
-    }
-}
-
-
-        // Only the Tourist Officer belongs here. Without this the page's whole
-        // shell loaded for anyone with the address — the API refused the data,
-        // so it looked broken rather than protected.
-        function guardOfficerSession() {
-            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
-                window.location.replace('../staff_login.html');
-                return false;
-            }
-            return true;
-        }
-
-        // Shared with the sidebar's Log Out, so both doors behave identically.
-        function signOutStaff() {
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-            } catch (e) { /* private browsing */ }
-            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
-            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
-        }
-
-        // Who is signed in, in the corner, with the way out of the portal.
-        function mountPortalAccountMenu() {
-            mountAccountMenu({
-                container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
-                email: localStorage.getItem('userEmail') || '',
-                items: [
-                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
-                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
-                ]
-            });
-        }
-
-
-window.onload = function(){
-            if (!guardOfficerSession()) return;
-
-            mountPortalAccountMenu();
-    loadAdminDirectory();
-}
+window.addEventListener('DOMContentLoaded', () => {
+    if (!guardOfficerSession()) return;
+    mountPortalAccountMenu();
+    loadMe();
+    loadOfficers();
+    loadOffice();
+});
 </script>
 
 <script>
@@ -953,7 +1065,7 @@ window.onload = function(){
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 
@@ -999,5 +1111,6 @@ window.onload = function(){
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>

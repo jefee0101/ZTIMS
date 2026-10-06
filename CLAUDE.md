@@ -46,6 +46,50 @@ the Node runtime reads the nearest one, and the backend is CommonJS. Real auth
 is the JWT system in `zamboanguita-backend/server.js`, called from
 `staff_login.html`.
 
+## How every session works (read first)
+
+Several Claude sessions work on this repo, often on the same days. They all
+follow this one routine, so each one's work lands the same way and nothing
+collides. The user's chat is in plain, simple language.
+
+1. **Start from the latest `main`.** `git fetch origin`, then build on
+   `origin/main` (`git checkout -B <your branch> origin/main`). Look at
+   `git log origin/main` and the other `claude/*` branches first: don't redo or
+   undo another session's work, and don't rely on anything not yet on `main`.
+2. **One finished change = one commit**, on your branch, then on `main` as a
+   fast-forward: `git fetch origin main`, check
+   `git merge-base --is-ancestor origin/main HEAD`, then
+   `git push origin HEAD:main`. Never force-push `main`. If `main` moved,
+   bring your work onto it, test again, then push. The user asks for
+   "push to main" after each piece; that is the normal end of a task.
+   Another session's unmerged branch goes to `main` only when the user says so.
+3. **Check before every push** (there is no test suite): `npm run check` and
+   `npm run build` in `Zamboanguita-project/`; the backend files load
+   (`node -e "require('./server')"` with `JWT_SECRET` set); and the change is
+   exercised for real on a local Postgres + API (API calls, and a headless
+   browser for pages). Say what was checked, and what could not be.
+4. **Database: `db/schema.sql` only, always re-runnable** (`if not exists`,
+   `do $$ … if not exists (select 1 from pg_constraint …)`, `drop … if exists`
+   before re-adding). Run it twice on the local database to prove it.
+   **Never change the live Supabase database ahead of `main`**: the code that
+   uses a schema change goes to `main` first, then the user re-runs
+   `schema.sql` in the Supabase SQL Editor, then redeploys. (On 2 October a
+   schema applied before its code reached `main` broke every ticket purchase.)
+   Anything that deletes live data needs the user's yes first.
+5. **Keep this file current in the same commit** as the change: a new table,
+   route, page, rule or decision is written here, so the next session knows.
+   New decisions go under "Standing constraints".
+6. **Finish with a short report**: what changed, what was tested, and last,
+   what the user must do themselves (re-run `schema.sql`, Vercel variables,
+   redeploy, manuscript updates).
+
+**Wording on every page** (decided): professional and brief. No page intros
+or help lines under fields; keep only what appears at the moment of an action,
+a warning, an error, or a confirmation before something risky. The roles are
+Tourism Officer, Establishment Manager and Tourist Guide; visitors pay
+**onsite** (never "at the gate"); statistics months are **Finalized** and
+**Reopened**; visitor pages and emails don't say "test mode".
+
 ## Commands
 
 Frontend (`Zamboanguita-project/`):
@@ -89,7 +133,6 @@ npm run copy-from-mongo -- --dry-run   # the one-time MongoDB → Postgres copy;
 npm run import-form-a4 -- db/form-a4-2025.json --dry-run
                        # loads a paper Form A4 year as locked municipal totals;
                        # skips months already recorded (see the script's header)
-npm run seal-key       # prints a new TICKET_SEAL_KEY line (see "Offline gate check")
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
 with what it defaults to when unset — most integrations degrade gracefully
@@ -108,7 +151,13 @@ server-independent HTML pages under `src/` (`index.html` at the root, plus
 information pages `src/terms.html`, `src/privacy.html`, `src/faq.html`,
 `src/contact.html` (visitor feedback form → `POST /api/feedback`),
 `src/admin/*.html`, `src/resort/*.html`, `src/guide/*.html`, `src/user/*.html`), each loading
-Tailwind from the CDN and its own inline `<script>` blocks. `src/App.jsx` /
+Tailwind from the CDN and its own inline `<script>` blocks. That CDN script only
+runs in development: `npm run build` compiles each page's CSS from its own
+`tailwind.config` (the `ztims-compile-tailwind` plugin in `vite.config.js`),
+writes it into the page and swaps the CDN tag for a one-line stand-in, so
+visitors on weak signal never download or run Tailwind. A class built from
+pieces at runtime (`'bg-' + colour`) is invisible to that compile — write class
+names out whole. `src/App.jsx` /
 `src/main.jsx` are the unused default Vite+React template — `index.html` has
 no `#root` element, so nothing mounts them. Don't build new features as React
 components; follow the existing page pattern.
@@ -140,8 +189,11 @@ purpose — see the header comment in `spot-form.js`:
 - `site-footer.js` — the visitor pages' footer (Explore / Information /
   Contact Us columns, office address, quiet staff sign-in link), drawn into a
   `<footer data-site-footer data-root="../">` placeholder so seven pages
-  share one copy. The office's phone and email are deliberately absent until
-  the office supplies them — see the comment in `src/contact.html`.
+  share one copy. The office's address, hours, phone, email and emergency
+  numbers come from `GET /api/office` (Settings → Office Information); until
+  they load, the built-in address and hours show and nothing else. It also
+  fills Contact Us's `[data-office-field]` spots and the destination pages'
+  `[data-emergency]` box.
 - `guide-portal.js` + `guide-portal.css` — the Tourist Guide portal's frame
   (sidebar, header, account menu, phone drawer) and helpers, shared by the four
   `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
@@ -172,10 +224,12 @@ on badges, map pins and legends (Mountain teal, Beach/Diving navy, Cultural
 gold, Accommodation blue). The grounds are true white and true black; the
 brand colours carry identity, not the backgrounds.
 
-- **Theme.** A visitor's toggle choice wins; otherwise the device's
-  `prefers-color-scheme` is followed live. The choice is stored only when it
-  differs from the device, so choosing the device's own theme goes back to
-  "follow the device". All in `theme.js`.
+- **Theme.** One choice for the whole site: the toggle on any page stores
+  `theme` (light or dark) and every page, and every other open tab at once,
+  shows it until toggled again. Until someone has chosen, the device's
+  `prefers-color-scheme` is followed live. Signing out keeps it: pages sign out
+  through `ztimsTheme.clearStorage()`, never a bare `localStorage.clear()`.
+  All in `theme.js`.
 - **Glass.** Translucent fill, hairline border, lit top edge, soft navy-tinted
   shadow, over a fixed ambient glow of the brand colours (`body::before`).
   `backdrop-filter` blur only on surfaces content scrolls behind — `.glass-nav`
@@ -252,7 +306,10 @@ data lives in Postgres on Supabase (it moved off MongoDB Atlas; see
   That's what let the move leave every page untouched. Postgres errors are
   translated into the shapes routes already handled (`code: 11000` for a
   duplicate, `ValidationError` for a bad value, `STILL_REFERENCED` for a delete
-  that a reference blocks).
+  that a reference blocks). A field can be `generated` (the database works it
+  out; never written), `hidden` (a column routes never see, read and written
+  through a `virtual`), or `external` (not a column of the table; its model
+  writes it) — see "Normalisation" below.
 - `models.js` — one `Table` per record type, field for field what the Mongoose
   schemas were, plus the few joined queries (a listing with its establishment,
   a booking with its destination and guide). `server.js` imports them under the
@@ -277,7 +334,8 @@ the old collection names (`admins`, `resortOwners`) did not.
 2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
 3. Auth middleware chains: `requireAuth` (valid JWT) →
    `requireAdmin`/`requireEstablishmentManager`/`requireStaff`/`requireGuide`
-   (role checks) and `optionalAuth` (attaches `req.auth` if present, never
+   (role checks; `requireAdmin` also looks the officer up, so a deactivated
+   officer's open session stops at once) and `optionalAuth` (attaches `req.auth` if present, never
    blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
    Establishment Manager) and `tourist_guide` (Tourist Guide) —
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
@@ -367,9 +425,11 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   room-nights available/occupied/not occupied, guest nights), not as rates.
 - **Nothing from bookings.** Establishments report their own already-totalled
   month; ZTIMS never derives these figures from guide bookings.
-- **Who reports.** A manager, for the listings they manage. The officer, for
-  the places the office keeps (listings with no manager) and on anyone's
-  behalf. `kind` comes from the listing: an accommodation reports arrivals,
+- **Who reports.** A manager, for the listing they manage. The officer, for
+  the places the office keeps (listings with no manager) only: a privately
+  managed establishment's reports are its manager's to enter, and the officer
+  views them (`mayViewFor` / `mayEnterFor` in `statistics.js`; the officer's
+  "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports visitors only, and attraction
   visitors are never part of Form A4.
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
@@ -385,7 +445,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Stored permanently.** Reports are voided with a reason, never deleted;
   every create, update, void, lock and unlock is a `report_changes` row with
   the before and after. Locking marks months as sent to the province; a locked
-  report refuses changes until the officer unlocks it, with a reason.
+  report refuses changes until the officer unlocks it, with a reason. The pages
+  call these **Finalize** and **Reopen** (the API keeps `lock`/`unlock`).
 - **Municipal totals.** A month with a `municipal_total` report (a year kept on
   paper, loaded by `scripts/import-form-a4.js`) refuses per-place reports, so
   its guests are never counted twice; voiding it opens the month again. Those
@@ -404,6 +465,9 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   else (a `xnd_production_` key above all) switches online payment off
   (`gatewayState`). Every online payment, the booking
   or ticket it paid for, and the generated sample data carry `is_demo`.
+  Visitor pages and emails do not label it "test mode" (decided); Xendit's own
+  checkout page shows that, and Terms, Privacy and FAQ still say so. Paying in
+  person is called paying **onsite** (never "at the gate").
 - **The server decides.** Amounts come from the fees on record (a booking: its
   guide's fee, else the lowest available guide fee at the destination). A
   payment is confirmed only by the server asking Xendit itself (`settle`:
@@ -419,13 +483,13 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 19 tables in all, with `spot_closed_dates` (`guide_time_off` and
-  `guide_profile_requests` were dropped).
+  have `is_demo`. 22 tables in all, with `spot_closed_dates`, `spot_photos`,
+  `office_info` and `emergency_numbers`
+  (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
   type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
-  loaded on demand; `admit` is one conditional update, so a ticket is used once;
-  with no signal, `admin_gate.html` — see "Offline gate check" below),
+  loaded on demand; `admit` is one conditional update, so a ticket is used once),
   "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
   the Dashboard. One refund rule: the office cancels, the visitor is refunded;
   a plain cancel of an online-paid booking is refused. A refund goes back
@@ -455,9 +519,10 @@ guided destinations:
 - **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
   senior citizen and PWD always 20% off it (a rule, not a setting);
   `student_fee` and `child_fee` + `child_age_max` are offered only when set.
-  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`,
-  adding up to `people`, a database check) and keeps the price each kind paid
-  (`fee_breakdown`); `priceTickets` prices a purchase from the counts, and the
+  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`)
+  and keeps the price each kind paid (`fee_regular|senior|pwd|student|child`,
+  read by routes as `feeBreakdown`); `people` and `amount` are worked out by
+  the database (see "Normalisation"); `priceTickets` prices a purchase from the counts, and the
   gate's check says whose ID to look at. No ID is ever stored.
 - **`cancel_keep_percent`**: the share kept when a visitor cancels, for tickets
   and guide bookings at that destination.
@@ -497,36 +562,6 @@ guided destinations:
   counter-paid booking is refunded at the counter. The office cannot set
   `closed` by hand; Visitor setup shows how many visitors still have to choose.
 
-### Offline gate check
-
-For an attraction with no signal at the entrance (decided: office staff check,
-with their officer accounts; a sealed QR checked on the phone, a printed list
-as backup):
-
-- **Sealed QR** (`ticket-seal.js`). A ticket's QR is `ZT1.<facts>.<signature>`:
-  code, attraction, date and people by kind, signed ECDSA P-256 with
-  `TICKET_SEAL_KEY` (`npm run seal-key` makes one). Asymmetric on purpose: the
-  phones get only the public key, which can check a seal but never make one.
-  The receipt email, the paid page and the Manage page draw it (`qrContent`); a
-  moved ticket gets a new one. The online check accepts sealed and plain codes
-  and calls an edited seal `forged`. Unset, QR codes stay the plain code.
-- **`src/admin/admin_gate.html`**, a phone page of its own (no sidebar), linked
-  from Tickets. With signal, "Download the gate list" fetches
-  `GET /api/tickets/gate-pack` (the day's tickets, the public key, the kinds)
-  into IndexedDB — not localStorage, which every page's sign-out clears.
-  Offline it judges a scan alone: the list's status wins (used, cancelled,
-  closed, wrong date, another attraction); a ticket bought after the download
-  is accepted by its seal. "Let them in" is recorded on the phone.
-- **Sync**: `POST /api/tickets/admit-sync` with `{ code, at }` per let-in, sent
-  at once with signal and again whenever it returns. Each is the same
-  conditional update as the online admit, dated `at`; one the server knows was
-  cancelled, closed, moved or used meanwhile is never changed and comes back as
-  a conflict for the office ("Tell the office"). Resending is harmless.
-- **`public/gate-sw.js`**, a service worker scoped to that one page, keeps a copy
-  of it and what it loads, so it reopens with no signal.
-- **Printed gate list**: the same page prints the downloaded list (code, name,
-  people by kind, whose ID to check, status, tick box and time).
-
 A serverless host has no single startup, so nothing runs at boot: the
 database pool in `db.js` opens its first connection when the first query
 needs one (a route that never queries, like `/api/directions/capabilities`,
@@ -539,6 +574,73 @@ translated both on the way across, and the schema is that history now.
 the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
 to force a reset on an existing one — both are meant to be deleted from the
 environment once used.
+
+### Normalisation
+
+The schema keeps one fact in one place (3NF), with `schema.sql`'s
+"Normalisation" block converting a database from before:
+
+- **Worked out, never typed in** (Postgres generated columns): `tickets.people`
+  (the counts added up), `tickets.amount` (counts × prices),
+  `monthly_report_counts.total` (male + female, or `total_unsplit` for a month
+  with no split, the 2025 sheet), `online_checkouts.kind` (from which reference
+  is set). Writing one is an error, so models mark them `generated`.
+- **One value per column or row**: a listing's gallery is `spot_photos` (one
+  row per photo, `position` 0–29; routes still see `spot.images`, written by
+  `spots.create/save` in one transaction); a guide's days are
+  `works_mon…works_sun` (routes still see `availableDays`); a ticket's prices
+  are `fee_*` columns (routes still see `feeBreakdown` and `unitFee`).
+- **Not stored**: a listing's municipality and province (always Zamboanguita,
+  Negros Oriental — `MUNICIPALITY`/`PROVINCE` in `models.js`, added on read)
+  and status note; the account ids that sat beside `payments.recorded_by_email`
+  and `monthly_reports.submitted_by_email`.
+- **Kept on purpose**: what a record says about its own moment — the price a
+  ticket was bought at, who recorded or changed something (by email, so it
+  outlives the account), where a guide's report happened. Those are facts of
+  that record, like a receipt's price, not copies to keep in step.
+
+### Listings, guides and the visitor's day out
+
+- **One establishment, one listing.** A manager account keeps exactly one
+  listing (`spots_one_per_establishment`, a unique index on `managed_by`, and a
+  plain 409 in `POST /api/spots` first). The manager creates it and it is live
+  at once; their edits go live directly. Listings the office keeps
+  (`managed_by` null) are not limited.
+- **One tour per guide per day**, whatever the time (`isGuideFreeOn`): tours run
+  for hours, and a busy guide leaves the others a turn.
+- **Visitors' details are kept one year.** `privacy.js` erases names, phones and
+  emails from guide bookings and tickets a year after the visit, and from
+  feedback a year after it was resolved; dates, counts, countries, amounts and
+  OR numbers stay. Run daily by Vercel's cron (`vercel.json` →
+  `GET /api/maintenance/privacy`, which needs `CRON_SECRET`) and whenever the
+  officer opens Guide Bookings. The Privacy page says so.
+- **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
+  refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
+  falls on it, and names the bookings: the office reassigns them first.
+- **Emergency numbers** are kept by the officer on Settings → Office Information
+  (`emergency_numbers`, one row each) and show in the footer and each
+  destination's `[data-emergency]` box; nothing shows while there are none.
+
+### Settings (the officer's `admin_profile.html`)
+
+- **My Account**: the officer's full name, position and contact number
+  (`tourism_officers.full_name|position|contact_number`; `GET`/`PATCH
+  /api/admin/me`), shown with initials, never a photo. The sign-in email is
+  the account's identity and is not changed here. The name is stored as
+  `localStorage.userName` at sign-in and shown in every officer page's account
+  menu.
+- **Security**: change password (`/api/admin/me/password`, needs the current
+  one) and when this session signed in (`last_sign_in_at`, set at each login).
+- **Tourism Office Accounts**: every officer with position, date added, last
+  sign-in and status. Add one (name required; a blank password is generated
+  and shown once), issue a new password (`POST /api/admin/:id/password`), and
+  deactivate or reactivate (`PATCH /api/admin/:id/status`). Officers are never
+  deleted; nobody deactivates themselves; a deactivated officer cannot sign in
+  or reset a password, and an open session stops at once.
+- **Office Information** (`office.js`, `office_info` single row +
+  `emergency_numbers`): address, phone, email, office hours and the emergency
+  list. `GET /api/office` is public (cached 5 minutes), `PUT /api/office` is
+  the officer's and replaces the emergency list in one transaction.
 
 ## Duplicated facts (keep both sides in step by hand)
 
@@ -573,10 +675,13 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   when they explicitly press Confirm in the location picker.
 - Authorization is enforced backend-side only. Hiding a button client-side is
   never treated as a control.
+- Online only. The site needs a connection: nothing works offline (no service
+  worker, no offline gate check, no sealed or offline-checkable QR codes, no
+  saved routes), as the manuscript's Limitations say. Don't add offline features.
 - No `tourist` role, no tourist accounts. Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
-  live key is refused, every online record is `is_demo`, and paying at the
-  counter or the gate always stays available. Collecting real fees would need a
+  live key is refused, every online record is `is_demo`, and paying onsite at the
+  Municipal Tourism Office always stays available. Collecting real fees would need a
   municipal ordinance, the Municipal Treasurer, a merchant account in the
   municipality's name and COA-compliant official receipts — don't switch it to
   live keys.

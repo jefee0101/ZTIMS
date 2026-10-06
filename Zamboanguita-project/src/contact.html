@@ -414,22 +414,24 @@ body { overflow-x: hidden; }
                         <div class="rounded-none bg-surface-container-low border border-outline-variant/20 p-5 sm:p-6">
                             <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-3">Municipal Tourism Office</p>
                             <address class="not-italic space-y-3 text-on-surface-variant">
-                                <p class="flex gap-3">
+                                <!-- Filled from Settings → Office Information by shared/site-footer.js;
+                                     a row with nothing in it stays hidden. -->
+                                <p class="flex gap-3" data-office-row>
                                     <span class="material-symbols-outlined text-primary !text-xl shrink-0">location_on</span>
-                                    <span>Municipal Hall, Poblacion<br>Zamboanguita, Negros Oriental 6218<br>Philippines</span>
+                                    <span data-office-field="address">Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218</span>
                                 </p>
-                                <p class="flex gap-3">
+                                <p class="flex gap-3" data-office-row>
                                     <span class="material-symbols-outlined text-primary !text-xl shrink-0">schedule</span>
-                                    <span>Monday to Friday<br>8:00 AM – 5:00 PM</span>
+                                    <span data-office-field="officeHours">Monday to Friday, 8:00 AM – 5:00 PM</span>
                                 </p>
-                                <!-- CONFIRM WITH THE OFFICE BEFORE LAUNCH: the address and hours are the
-                                     usual ones for a municipal hall, not supplied by the office. The same
-                                     text is in shared/site-footer.js and privacy.html.
-                                     Phone and email are deliberately absent until the office
-                                     supplies them: a wrong number for a government office is
-                                     worse than none. Add them here as
-                                     <p class="flex gap-3"><span class="material-symbols-outlined text-primary !text-xl shrink-0">call</span><a href="tel:+63...">...</a></p>
-                                     and mirror them in shared/site-footer.js. -->
+                                <p class="flex gap-3" data-office-row hidden>
+                                    <span class="material-symbols-outlined text-primary !text-xl shrink-0">call</span>
+                                    <span data-office-field="phone"></span>
+                                </p>
+                                <p class="flex gap-3" data-office-row hidden>
+                                    <span class="material-symbols-outlined text-primary !text-xl shrink-0">mail</span>
+                                    <span data-office-field="email"></span>
+                                </p>
                             </address>
                         </div>
 

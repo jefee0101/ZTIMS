@@ -10,9 +10,8 @@
  * which the visitor types there themselves.
  */
 const QRCode = require('qrcode');
-const seal = require('./ticket-seal');
 const { query } = require('./db');
-const { sendMail, compose, niceDate, pesos, TEST_MODE_LINE } = require('./mailer');
+const { sendMail, compose, niceDate, pesos } = require('./mailer');
 const { describeKinds } = require('./attractions');
 
 function siteUrl(origin) {
@@ -42,7 +41,7 @@ async function bookingRow(bookingId) {
 }
 
 const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', bank: 'Online banking', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph' };
-const paidLine = row => `${pesos(row.paid_amount)} · ${METHOD[row.paid_method] || row.paid_method || 'online'}${row.paid_channel === 'online' ? ' · online (test mode)' : ' · at the office'}`;
+const paidLine = row => `${pesos(row.paid_amount)} · ${METHOD[row.paid_method] || row.paid_method || 'online'}${row.paid_channel === 'online' ? ' · online' : ' · at the office'}`;
 
 /* The QR on a ticket, as a PNG attachment: mail apps block images written into
    the message itself, but show an attached one. */
@@ -72,13 +71,12 @@ async function ticketReceipt(ticketId, origin, { qrContent } = {}) {
         ],
         paragraphs: [
             'Valid on this date only. Senior citizens, persons with disability and students: bring your ID for the discounted price.',
-            'You can move the date or cancel until 11:59 PM the day before your visit. A used ticket cannot be refunded.',
-            TEST_MODE_LINE
+            'You can move the date or cancel until 11:59 PM the day before your visit. A used ticket cannot be refunded.'
         ],
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Your ticket ${t.code} — ${t.spot_title}, ${niceDate(t.visit_date)}`,
-        ...body, attachments: [await qrAttachment(qrContent || seal.qrContent(t))] });
+        ...body, attachments: [await qrAttachment(qrContent || t.code)] });
 }
 
 async function ticketMoved(ticketId, fromDate, origin, { qrContent } = {}) {
@@ -92,7 +90,7 @@ async function ticketMoved(ticketId, fromDate, origin, { qrContent } = {}) {
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Ticket ${t.code} moved to ${niceDate(t.visit_date)}`, ...body,
-        attachments: [await qrAttachment(qrContent || seal.qrContent(t))] });
+        attachments: [await qrAttachment(qrContent || t.code)] });
 }
 
 /* `byVisitor`: the visitor cancelled (the office's share is kept); otherwise
@@ -107,8 +105,7 @@ async function ticketCancelled(ticketId, { refundAmount, keptAmount = 0, byVisit
         intro: byVisitor
             ? `You cancelled ticket ${t.code}. ${refundAmount > 0 ? `${pesos(refundAmount)} is being refunded to the way you paid.` : 'Nothing is refunded.'}`
             : `The Municipal Tourism Office cancelled ticket ${t.code}${reason ? ` (${reason})` : ''}, and refunded it in full.`,
-        rows,
-        paragraphs: [TEST_MODE_LINE]
+        rows
     });
     return sendMail({ to: t.email, subject: `Ticket ${t.code} cancelled`, ...body });
 }
@@ -136,7 +133,7 @@ async function bookingReceived(bookingId, origin, { payOnline } = {}) {
         rows: bookingRows(b),
         paragraphs: [
             payOnline
-                ? 'Pay online from the Manage page (test mode: a demonstration, no real money), or at the Municipal Tourism Office. Quote your reference.'
+                ? 'Pay online from the Manage page, or onsite at the Municipal Tourism Office. Quote your reference.'
                 : 'Please pay at the Municipal Tourism Office. Quote your reference.',
             'The office confirms your guide. You can move the date or cancel until 11:59 PM the day before.'
         ],
@@ -152,7 +149,6 @@ async function bookingPaid(bookingId, origin) {
         heading: 'Payment received — your booking is confirmed',
         intro: `Booking ${b.reference} is paid and confirmed. The office ${b.guide_name ? 'has assigned your guide' : 'will confirm your guide'}.`,
         rows: [...bookingRows(b), ['Paid', paidLine(b)], ...(b.receipt_number ? [['Official receipt', b.receipt_number]] : [])],
-        paragraphs: b.paid_channel === 'online' ? [TEST_MODE_LINE] : [],
         link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
     });
     return sendMail({ to: b.email, subject: `Receipt — guide booking ${b.reference}`, ...body });
@@ -195,8 +191,7 @@ async function bookingCancelled(bookingId, { refundAmount = 0, keptAmount = 0, b
         intro: byVisitor
             ? `You cancelled booking ${b.reference}.${b.paid_amount != null ? (refundAmount > 0 ? ` ${pesos(refundAmount)} is being refunded to the way you paid.` : ' Nothing is refunded.') : ''}`
             : `The Municipal Tourism Office cancelled booking ${b.reference}${reason ? ` (${reason})` : ''}${b.paid_amount != null ? ', and refunded it in full' : ''}.`,
-        rows,
-        paragraphs: b.paid_channel === 'online' ? [TEST_MODE_LINE] : []
+        rows
     });
     return sendMail({ to: b.email, subject: `Guide booking ${b.reference} cancelled`, ...body });
 }
@@ -217,9 +212,8 @@ async function closureNotice(kind, id, { reason }, origin) {
             + `Your ${isTicket ? 'ticket' : 'guide booking'} ${code} cannot be used that day.`,
         rows: [[isTicket ? 'Ticket code' : 'Reference', code], ['Paid', paidLine(row)]],
         paragraphs: [
-            `Please choose on the Manage page: a full refund of ${pesos(row.paid_amount)}, or another date${isTicket ? ' with the same ticket' : ' (the office then confirms your guide)'}. Or ask the Municipal Tourism Office.`,
-            row.paid_channel === 'online' ? TEST_MODE_LINE : ''
-        ].filter(Boolean),
+            `Please choose on the Manage page: a full refund of ${pesos(row.paid_amount)}, or another date${isTicket ? ' with the same ticket' : ' (the office then confirms your guide)'}. Or ask the Municipal Tourism Office.`
+        ],
         link: { label: 'Choose a refund or a new date', url: manageUrl(origin, code) }
     });
     return sendMail({ to: row.email, subject: `Closed on ${niceDate(date)}: choose a refund or a new date (${code})`, ...body });

@@ -610,7 +610,6 @@ body { overflow-x: hidden; }
                     <label for="newManagerName" class="block text-label font-bold uppercase tracking-wider mb-1">Manager's name</label>
                     <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
                            class="field w-full"/>
-                    <p class="text-support mt-1.5">The person who actually runs the establishment.</p>
                 </div>
                 <div>
                     <label for="newManagerEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Sign-in email</label>
@@ -622,19 +621,16 @@ body { overflow-x: hidden; }
                     <label for="newManagerContactEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
                            class="field w-full"/>
-                    <p class="text-support mt-1.5">Shown to visitors on a listing with no booking website, alongside the phone number.</p>
                 </div>
                 <div>
                     <label for="newManagerPhone" class="block text-label font-bold uppercase tracking-wider mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
                     <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
                            class="field w-full"/>
-                    <p class="text-support mt-1.5">Shown to visitors on a listing that has no booking website.</p>
                 </div>
                 <div>
                     <label for="newManagerPassword" class="block text-label font-bold uppercase tracking-wider mb-1">Starting password</label>
                     <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
                            class="field w-full"/>
-                    <p class="text-support mt-1.5">Deliberately readable — you have to pass it on. Tell them to change it after signing in.</p>
                 </div>
 
                 <p id="createManagerError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -693,7 +689,7 @@ body { overflow-x: hidden; }
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
-                localStorage.clear();
+                window.ztimsTheme.clearStorage();
                 sessionStorage.clear();
             } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
@@ -704,7 +700,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
+                name: localStorage.getItem('userName') || 'Tourism Officer',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
@@ -940,7 +936,7 @@ body { overflow-x: hidden; }
                 label: 'New password',
                 optional: true,
                 placeholder: 'Leave blank to have one generated',
-                help: 'At least 8 characters. Deliberately readable — you have to pass it on.',
+                help: 'At least 8 characters.',
                 confirmLabel: 'Issue password',
                 icon: 'key',
                 validate: value => value.trim() && value.trim().length < 8
@@ -974,7 +970,6 @@ body { overflow-x: hidden; }
             // anywhere changes nothing.
             const values = await ztimsDialog.form({
                 title: 'Edit manager details',
-                message: 'The sign-in email and password are changed from their own actions, not here.',
                 confirmLabel: 'Save changes',
                 icon: 'manage_accounts',
                 fields: [
@@ -984,19 +979,16 @@ body { overflow-x: hidden; }
                     },
                     {
                         name: 'managerName', label: "Manager's name",
-                        value: manager.managerName || '', placeholder: 'e.g., Maria Santos',
-                        help: 'The person who actually runs the establishment.'
+                        value: manager.managerName || '', placeholder: 'e.g., Maria Santos'
                     },
                     {
                         name: 'contactEmail', label: 'Public contact email', optional: true, type: 'email',
                         value: manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''),
-                        placeholder: 'Same as sign-in email if left blank',
-                        help: 'Shown to visitors on a listing with no booking website, alongside the phone number.'
+                        placeholder: 'Same as sign-in email if left blank'
                     },
                     {
                         name: 'phone', label: 'Phone', optional: true,
-                        value: manager.phone || '', placeholder: '09XX XXX XXXX',
-                        help: 'Shown to visitors on a listing that has no booking website.'
+                        value: manager.phone || '', placeholder: '09XX XXX XXXX'
                     }
                 ]
             });
@@ -1179,7 +1171,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

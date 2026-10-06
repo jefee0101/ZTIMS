@@ -129,7 +129,8 @@ function validationError(message, key) {
 /* Messages for constraint names in db/schema.sql, for the cases the table
    definitions do not catch first (a script, a race, a bug). */
 const CONSTRAINT_MESSAGES = {
-    spots_images_max: 'A spot can have at most 30 photos.',
+    spot_photos_position: 'A spot can have at most 30 photos.',
+    spots_one_per_establishment: 'An establishment has one listing, and this one already has its listing. Edit that one instead.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
     spots_managed_by_fkey: 'That establishment account does not exist.',
     tourist_guide_spots_spot_id_fkey: 'One of the assigned destinations no longer exists.',
@@ -288,18 +289,33 @@ const snapshots = new WeakMap();
 
 class Table {
     /**
-     * @param name    the table in db/schema.sql
-     * @param fields  { key: spec } — key is the name the API uses, spec.column
-     *                the column (derived from the key when not given)
-     * @param secret  keys never read unless asked for: password hashes and
-     *                reset tokens, the equivalent of Mongoose's select: false
+     * @param name     the table in db/schema.sql
+     * @param fields   { key: spec } — key is the name the API uses, spec.column
+     *                 the column (derived from the key when not given). Three
+     *                 kinds of field are never written as given:
+     *                   generated  the database works it out; read only
+     *                   hidden     a column the routes never see; a virtual
+     *                              (below) reads and writes it
+     *                   external   not a column of this table at all (a
+     *                              listing's photos): its model reads and
+     *                              writes it, and the select below fetches it
+     * @param secret   keys never read unless asked for: password hashes and
+     *                 reset tokens, the equivalent of Mongoose's select: false
+     * @param virtuals { key: { read(fields), write?(value) } } — a value the
+     *                 routes see that lives in hidden columns: read builds it
+     *                 from them, write turns it back into { hiddenKey: value }.
+     *                 No write: read only.
+     * @param select   what find() reads, when it is more than the table's own
+     *                 columns (the table must stay the only one in FROM)
      */
-    constructor(name, fields, { secret = [] } = {}) {
+    constructor(name, fields, { secret = [], virtuals = {}, select } = {}) {
         this.name = name;
         this.fields = {};
         for (const [key, spec] of Object.entries(fields)) {
             this.fields[key] = { ...spec, column: spec.column || key.replace(/[A-Z]/g, c => '_' + c.toLowerCase()) };
         }
+        this.virtuals = virtuals;
+        this.select = select || `select * from ${name}`;
         this.secret = new Set(secret);
         this.columnToKey = new Map([
             ...Object.entries(IMPLICIT).map(([key, column]) => [column, key]),
@@ -322,20 +338,48 @@ class Table {
     fromRow(row, { secrets = false } = {}) {
         if (!row) return null;
         const doc = { _id: row.id };
+        const hidden = {};
         for (const [key, spec] of Object.entries(this.fields)) {
             if (this.secret.has(key) && !secrets) continue;
-            if (spec.column in row) doc[key] = row[spec.column];
+            if (!(spec.column in row)) continue;
+            if (spec.hidden) hidden[key] = row[spec.column];
+            else doc[key] = row[spec.column];
         }
         if ('created_at' in row) doc.createdAt = row.created_at;
         if ('updated_at' in row) doc.updatedAt = row.updated_at;
-        this.remember(doc);
+        for (const [key, virtual] of Object.entries(this.virtuals)) doc[key] = virtual.read({ ...hidden, ...doc });
+        this.remember(doc, hidden);
         return doc;
     }
 
-    remember(doc) {
+    remember(doc, hidden = {}) {
         const snapshot = {};
-        for (const key of Object.keys(this.fields)) snapshot[key] = copyValue(doc[key]);
+        for (const key of Object.keys(this.fields)) snapshot[key] = copyValue(key in hidden ? hidden[key] : doc[key]);
         snapshots.set(doc, snapshot);
+    }
+
+    /* For a model that writes an external field itself: what was last saved. */
+    savedValue(doc, key) {
+        const snapshot = snapshots.get(doc);
+        return snapshot ? snapshot[key] : undefined;
+    }
+    rememberValue(doc, key, value) {
+        const snapshot = snapshots.get(doc);
+        if (snapshot) snapshot[key] = copyValue(value);
+    }
+
+    /* The hidden columns a record's virtuals stand for, from what it now says. */
+    expand(doc) {
+        const out = {};
+        for (const [key, virtual] of Object.entries(this.virtuals)) {
+            if (virtual.write && doc[key] !== undefined) Object.assign(out, virtual.write(doc[key]));
+        }
+        return out;
+    }
+
+    /* Fields written as given: not worked out by the database, not elsewhere. */
+    writable(spec) {
+        return !spec.generated && !spec.external;
     }
 
     /* { key: value } filters, joined with AND.
@@ -381,7 +425,7 @@ class Table {
 
     async find(filters = {}, { sort, limit, secrets = false, client } = {}) {
         const { sql, params } = this.where(filters);
-        let text = `select * from ${this.name}${sql}${this.orderBy(sort)}`;
+        let text = `${this.select}${sql}${this.orderBy(sort)}`;
         if (limit) text += ` limit ${Math.floor(limit)}`;
         const { rows } = await query(text, params, client);
         return rows.map(row => this.fromRow(row, { secrets }));
@@ -405,7 +449,8 @@ class Table {
     }
 
     /* Casts every field the caller supplied, and every required one. */
-    valuesForInsert(values) {
+    valuesForInsert(given) {
+        const values = { ...given, ...this.expand(given) };
         const columns = [];
         const params = [];
         if (values._id !== undefined && values._id !== null) {
@@ -413,6 +458,7 @@ class Table {
             params.push(String(values._id));
         }
         for (const [key, spec] of Object.entries(this.fields)) {
+            if (!this.writable(spec)) continue;
             if (values[key] === undefined && !spec.required) continue;
             columns.push(spec.column);
             params.push(castField(key, spec, values[key]));
@@ -442,12 +488,21 @@ class Table {
 
         const sets = [];
         const params = [];
+        const expanded = this.expand(doc);
         for (const [key, spec] of Object.entries(this.fields)) {
-            if (!(key in doc) && !(key in snapshot)) continue;
-            const current = spec.type === 'id' && doc[key] != null ? idOf(doc[key]) : doc[key];
+            if (!this.writable(spec)) continue;
+            let given;
+            if (spec.hidden) {
+                if (!(key in expanded)) continue;
+                given = expanded[key];
+            } else {
+                if (!(key in doc) && !(key in snapshot)) continue;
+                given = doc[key];
+            }
+            const current = spec.type === 'id' && given != null ? idOf(given) : given;
             const before = spec.type === 'id' && snapshot[key] != null ? idOf(snapshot[key]) : snapshot[key];
             if (sameValue(current, before)) continue;
-            params.push(castField(key, spec, doc[key]));
+            params.push(castField(key, spec, given));
             sets.push(`${spec.column} = $${params.length}`);
         }
         if (!sets.length) return doc;
@@ -468,8 +523,14 @@ class Table {
                 const held = doc[key];
                 if (spec.type === 'id' && held && typeof held === 'object' && idOf(held) === fresh[key]) fresh[key] = held;
             }
+            // The saved state is the fresh row's, plus what the row cannot
+            // carry: external fields, which their model writes itself.
+            const saved = { ...snapshots.get(fresh) };
+            for (const [key, spec] of Object.entries(this.fields)) {
+                if (spec.external) saved[key] = snapshot[key];
+            }
             Object.assign(doc, fresh);
-            this.remember(doc);
+            snapshots.set(doc, saved);
             return doc;
         } catch (error) {
             throw normaliseDbError(error, this);
@@ -494,6 +555,7 @@ module.exports = {
     describeDatabase,
     Table,
     castField,
+    sameValue,
     normaliseDbError,
     validationError,
     isId,

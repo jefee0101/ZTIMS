@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Tourist Establishment Manager | My Spots</title>
+    <title>Tourist Establishment Manager | My Listing</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -449,9 +449,9 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="My Spots" class="flex items-center gap-3 bg-primary/10 text-accent px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="My Listing" class="flex items-center gap-3 bg-primary/10 text-accent px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">location_on</span>
-                <span class="sidebar-label">My Spots</span>
+                <span class="sidebar-label">My Listing</span>
             </a>
             <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
@@ -487,23 +487,23 @@ body { overflow-x: hidden; }
         <div class="max-w-[1400px] mx-auto space-y-8">
             <div class="flex justify-between items-end">
                 <div class="space-y-1">
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Spots</h2>
-                    <p class="text-on-surface-variant">Only listings owned by your account are shown here.</p>
+                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Listing</h2>
                 </div>
-                <button onclick="toggleAddSpotModal(true)" class="btn btn-primary">
-                    <span class="material-symbols-outlined">add_circle</span> Add New Spot
+                <!-- One establishment, one listing: offered only until it exists (the server refuses a second). -->
+                <button id="addSpotBtn" hidden onclick="toggleAddSpotModal(true)" class="btn btn-primary">
+                    <span class="material-symbols-outlined">add_circle</span> Add your listing
                 </button>
             </div>
 
             <div id="spotsGrid" class="ztims-stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
-            <p id="spotsEmptyState" class="ztims-empty hidden">You haven't published any spots yet. Click "Add New Spot" to get started.</p>
+            <p id="spotsEmptyState" class="ztims-empty hidden">Your establishment has no listing yet. Click "Add your listing" to create it.</p>
         </div>
 
         <!-- Add/Edit Spot Modal -->
         <div id="addSpotModal" class="fixed inset-0 ztims-scrim hidden items-center justify-center z-[200] p-3 sm:p-4 transition-all">
             <div class="ztims-modal w-full max-w-lg xl:max-w-5xl p-5 sm:p-8 space-y-6 relative overflow-y-auto">
                 <div class="flex justify-between items-center">
-                    <h2 id="spotModalTitle" class="text-2xl font-black tracking-tight text-on-surface font-headline">Add New Spot</h2>
+                    <h2 id="spotModalTitle" class="text-2xl font-black tracking-tight text-on-surface font-headline">Add your listing</h2>
                     <button onclick="toggleAddSpotModal(false)" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
                         <span class="material-symbols-outlined text-2xl">close</span>
                     </button>
@@ -566,7 +566,6 @@ body { overflow-x: hidden; }
                 '<div class="flex flex-col items-center justify-center gap-3 py-12 w-full text-center">' +
                     '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
                     '<p class="text-sm opacity-80">' + message + '</p>' +
-                    '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
                 '</div>';
             target.innerHTML = colspan ? '<tr><td colspan="' + colspan + '">' + spinner + '</td></tr>' : spinner;
             const timer = setTimeout(() => {
@@ -592,7 +591,7 @@ body { overflow-x: hidden; }
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
-                localStorage.clear();
+                window.ztimsTheme.clearStorage();
                 sessionStorage.clear();
             } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
@@ -762,6 +761,8 @@ body { overflow-x: hidden; }
             const emptyState = document.getElementById('spotsEmptyState');
             grid.innerHTML = '';
 
+            document.getElementById('addSpotBtn').hidden = loadFailed || mySpots.length > 0;
+
             if (loadFailed) {
                 emptyState.classList.add('hidden');
                 grid.innerHTML = `
@@ -908,7 +909,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

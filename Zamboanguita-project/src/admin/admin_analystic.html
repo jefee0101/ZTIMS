@@ -715,7 +715,7 @@ body { overflow-x: hidden; }
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
-                localStorage.clear();
+                window.ztimsTheme.clearStorage();
                 sessionStorage.clear();
             } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
@@ -726,7 +726,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
+                name: localStorage.getItem('userName') || 'Tourism Officer',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
@@ -803,7 +803,7 @@ body { overflow-x: hidden; }
                     <span class="text-4xl font-black tracking-tight text-on-surface leading-none">${failed ? '—' : fmt(c.count)}</span>
                     <span class="font-bold text-on-surface">${escapeHtml(c.count === 1 ? c.one : c.many)}</span>
                 </span>
-                <span class="text-support">${escapeHtml(detail)}</span>
+                ${detail ? `<span class="text-support">${escapeHtml(detail)}</span>` : ''}
                 <span class="mt-auto text-sm font-bold text-primary">${escapeHtml(c.go)} →</span>
             </a>`;
         }
@@ -822,7 +822,7 @@ body { overflow-x: hidden; }
             const cards = [
                 { icon: 'payments', tone: 'tone-warning', pill: 'Waiting', count: unpaid,
                   one: 'visitor waiting to pay', many: 'visitors waiting to pay',
-                  detail: 'Booked on the website, not yet paid at the counter.',
+                  detail: '',
                   doneText: 'Nobody is waiting to pay.', go: 'Collect payment',
                   href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'pay' },
                 { icon: 'person_add', tone: 'tone-warning', pill: 'To do', count: noGuide,
@@ -1269,7 +1269,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

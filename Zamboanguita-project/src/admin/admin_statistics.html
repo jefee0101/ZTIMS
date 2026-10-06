@@ -527,9 +527,9 @@ body { overflow-x: hidden; }
                 </nav>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h2>
                 <p class="text-on-surface-variant text-sm max-w-3xl">
-                    The Arrivals Report (the province's Form A4, the Report on the Regional Distribution of
-                    Travelers), the monthly counts behind it, and the visitors at the attractions the office manages. Everything here is a count; totals are added up
-                    for you, and nothing is ever deleted.
+                    Monthly tourist arrival statistics of the Municipality of Zamboanguita: the Report on the Regional
+                    Distribution of Travelers (Form A4) submitted to the Province, the establishment reports it is compiled
+                    from, and visitor counts at the attractions managed by the Municipal Tourism Office.
                 </p>
             </div>
 
@@ -557,11 +557,11 @@ body { overflow-x: hidden; }
                 </div>
                 <div id="formA4Host" class="space-y-4"></div>
                 <div class="glass-panel p-4 space-y-3">
-                    <h3 class="font-bold">Sent to the province?</h3>
-                    <p class="text-support">Marking the months as sent locks their reports, so figures already reported cannot change quietly. The officer can unlock a single report to correct it; every change is recorded.</p>
+                    <h3 class="font-bold">Submitted to the Province?</h3>
+                    <p class="text-support">Finalizing the months marks their reports as submitted, so the figures can no longer be changed. The Tourism Officer can reopen a single report to correct it; every change is recorded.</p>
                     <div class="flex flex-wrap items-center gap-3">
-                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have sent these months to the province</label>
-                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Lock these months</button>
+                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have submitted these months to the Province</label>
+                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Finalize these months</button>
                     </div>
                 </div>
             </section>
@@ -587,7 +587,7 @@ body { overflow-x: hidden; }
                             <span class="tone-pill tone-danger px-2 py-0.5">Missing</span>
                             <span class="tone-pill tone-info px-2 py-0.5">Due soon</span>
                             <span class="tone-pill tone-neutral px-2 py-0.5">Not due / municipal total</span>
-                            <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Locked</span>
+                            <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Finalized</span>
                         </span>
                         <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180 ml-auto">expand_more</span>
                     </summary>
@@ -637,8 +637,8 @@ body { overflow-x: hidden; }
                     <li class="ztims-card p-4 flex items-start gap-3">
                         <span class="st-cell tone-pill tone-success cursor-default shrink-0" aria-hidden="true">🔒✓</span>
                         <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Locked</p>
-                            <p class="text-support">That report has already been sent to the province, so its numbers can't be changed by accident. Only the Tourism Officer can unlock it to fix a mistake, and the change is recorded. Lock months on the <b>Arrivals Report</b> tab.</p>
+                            <p class="font-bold text-on-surface">Finalized</p>
+                            <p class="text-support">The report has been submitted to the Province, so its figures can no longer be changed. Only the Tourism Officer can reopen it to correct an error, and the change is recorded. Months are finalized on the <b>Arrivals Report</b> tab.</p>
                         </div>
                     </li>
                     </ul>
@@ -695,7 +695,7 @@ body { overflow-x: hidden; }
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
-                localStorage.clear();
+                window.ztimsTheme.clearStorage();
                 sessionStorage.clear();
             } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
@@ -705,7 +705,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
+                name: localStorage.getItem('userName') || 'Tourism Officer',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
@@ -787,7 +787,7 @@ body { overflow-x: hidden; }
                         if (m.status in counts) counts[m.status]++;
                         const [tone, label, short] = STATUS[m.status];
                         return `<td class="px-1 py-1.5 text-center"><button type="button" class="st-cell tone-pill ${tone}" data-place="${p._id}" data-month="${m.month}"
-                                    title="${escapeHtml(p.title)} · ${MONTHS[m.month - 1]} ${year}: ${label}${m.locked ? ' · locked' : ''}">${m.locked ? '🔒' : ''}${short}</button></td>`;
+                                    title="${escapeHtml(p.title)} · ${MONTHS[m.month - 1]} ${year}: ${label}${m.locked ? ' · finalized' : ''}">${m.locked ? '🔒' : ''}${short}</button></td>`;
                     }).join('');
                     return `<tr><td class="px-3 py-2"><div class="font-bold">${escapeHtml(p.title)}</div>
                                 <div class="text-support">${escapeHtml(p.barangay || '')}${p.keptByOffice ? ' · Tourism Office' : ' · ' + escapeHtml(p.managerName || 'Manager')}</div></td>${cells}</tr>`;
@@ -825,7 +825,7 @@ body { overflow-x: hidden; }
                     for (const [kind, label] of groups) {
                         const og = document.createElement('optgroup'); og.label = label;
                         for (const p of list.filter(x => x.kind === kind)) {
-                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''}${p.keptByOffice ? '' : ' (managed by ' + (p.managerName || 'an establishment') + ')'}`, p._id));
+                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''}${p.keptByOffice ? '' : ' (privately managed · view only)'}`, p._id));
                         }
                         if (og.children.length) select.appendChild(og);
                     }
@@ -859,10 +859,10 @@ body { overflow-x: hidden; }
             if (!place) { document.getElementById('enHost').innerHTML = '<div class="ztims-empty">Pick a place.</div>'; return; }
             const [year, month] = document.getElementById('enPeriod').value.split('-').map(Number);
             document.getElementById('enWho').textContent = place.keptByOffice
-                ? 'Kept by the Tourism Office: you report for it.'
-                : `Managed by ${place.managerName || 'an establishment'}. They normally report for it; you can enter it on their behalf.`;
+                ? 'Managed by the Municipal Tourism Office.'
+                : `Privately managed by ${place.managerName || 'an establishment'}. Reports are submitted by the establishment manager and are view only here.`;
             window.ZTIMS_STATS.mount(document.getElementById('enHost'), {
-                apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true,
+                apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true, viewOnly: !place.keptByOffice,
                 toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession
             });
         }
@@ -895,7 +895,7 @@ body { overflow-x: hidden; }
                             ${line('Female', female, '')}
                         </tbody>
                     </table>
-                    <p class="text-support p-4">A dash means no report for that month. Open the Enter a report tab to add one.</p>`;
+                    `;
             } catch (e) {
                 if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger m-4">${escapeHtml(e.message)}</div>`;
             }
@@ -962,7 +962,7 @@ body { overflow-x: hidden; }
                         <span>Guest nights: <b class="font-mono">${fmt(sum(vals(dae.guestNights)))}</b></span>
                         <span>Reports included: <b class="font-mono">${fmt(sum(reported))}</b></span>
                         ${d.municipalTotalMonths.length ? `<span class="text-support">${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}: municipal totals from the printed sheet</span>` : ''}
-                        ${d.lockedMonths.length ? `<span class="text-support">🔒 Locked: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
+                        ${d.lockedMonths.length ? `<span class="text-support">🔒 Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
                     </div>
                     ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
                     <div class="glass-panel overflow-x-auto">
@@ -1009,7 +1009,7 @@ body { overflow-x: hidden; }
                 });
                 if (res.status === 401) return handleExpiredSession();
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.message || 'The months could not be locked.');
+                if (!res.ok) throw new Error(data.message || 'The months could not be finalized.');
                 showToast(data.message, 'success');
                 document.getElementById('faConfirmLock').checked = false;
                 generateForm();
@@ -1098,7 +1098,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

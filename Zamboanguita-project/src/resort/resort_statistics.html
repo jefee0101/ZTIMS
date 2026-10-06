@@ -449,9 +449,9 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="My Spots" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="My Listing" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">location_on</span>
-                <span class="sidebar-label">My Spots</span>
+                <span class="sidebar-label">My Listing</span>
             </a>
             <a title="Monthly Report" class="flex items-center gap-3 bg-primary/10 text-accent px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
@@ -490,10 +490,6 @@ body { overflow-x: hidden; }
                     <span class="text-on-surface-variant">Establishment portal</span>
                 </nav>
                 <h2 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h2>
-                <p class="text-on-surface-variant text-sm max-w-3xl">
-                    Your guests for the month, counted by where they live, for the Municipal Tourism Office's Form A4.
-                    Send it by the 5th of the following month. Counts only: no revenue, and no guest's name or details.
-                </p>
             </div>
 
             <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
@@ -533,7 +529,7 @@ body { overflow-x: hidden; }
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
-                localStorage.clear();
+                window.ztimsTheme.clearStorage();
                 sessionStorage.clear();
             } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
@@ -596,7 +592,7 @@ body { overflow-x: hidden; }
                 return;
             }
             if (!myPlaces.length) {
-                host.innerHTML = '<div class="ztims-empty">You have no listings yet. Add your establishment in My Spots first; its monthly report appears here.</div>';
+                host.innerHTML = '<div class="ztims-empty">Your establishment has no listing yet. Add it in My Listing first; its monthly report appears here.</div>';
                 document.getElementById('rpPlace').disabled = true;
                 document.getElementById('rpPeriod').disabled = true;
                 return;
@@ -655,7 +651,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

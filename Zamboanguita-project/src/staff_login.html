@@ -218,15 +218,15 @@ body { overflow-x: hidden; }
   <div class="w-full max-w-md">
 
     <a href="../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-8 py-2.5 min-h-[44px]">
-      <span class="material-symbols-outlined !text-lg">arrow_back</span> Back to the public site
+      <span class="material-symbols-outlined !text-lg">arrow_back</span> Return to the public site
     </a>
 
     <div class="page-head">
-      <p class="page-eyebrow">Zamboanguita Tourism</p>
-      <h1 class="page-title">Staff sign in</h1>
+      <p class="page-eyebrow">Municipal Tourism Office · Zamboanguita</p>
+      <h1 class="page-title">Staff Portal Sign In</h1>
       <p class="page-lede">
-        For <b class="text-on-surface">Tourist Officers</b>, <b class="text-on-surface">Tourist Establishment Managers</b> and <b class="text-on-surface">Tourist Guides</b>.
-        Sign in with the account issued to you — we'll take you to the right portal automatically.
+        Authorized access for <b class="text-on-surface">Tourism Officers</b>, <b class="text-on-surface">Establishment Managers</b> and <b class="text-on-surface">Tourist Guides</b>.
+        Sign in with the credentials issued to you, and you will be directed to your portal.
       </p>
     </div>
 
@@ -251,6 +251,9 @@ body { overflow-x: hidden; }
             <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
           </button>
         </div>
+        <div class="flex justify-end mt-1">
+          <button type="button" id="forgotLink" class="text-sm font-bold text-primary hover:underline py-2 min-h-[44px]">Forgot password?</button>
+        </div>
       </div>
 
       <p id="loginError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -260,9 +263,35 @@ body { overflow-x: hidden; }
       </button>
     </form>
 
+    <!-- Forgot password: asks for the account's email and sends a one-time
+         reset link (POST /api/forgot-password), which opens user/reset_password.html. -->
+    <form id="forgotForm" hidden class="space-y-5 bg-surface border border-outline/30 rounded-2xl p-6" novalidate>
+      <div>
+        <h2 class="text-lg font-bold text-on-surface">Reset your password</h2>
+        <p class="text-support mt-1">Enter the email address of your account. A link to set a new password will be sent to it.</p>
+      </div>
+      <div>
+        <label for="forgotEmail" class="field-label">Email address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">mail</span>
+          <input id="forgotEmail" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
+            class="field !pl-12"/>
+        </div>
+      </div>
+
+      <p id="forgotMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
+
+      <button type="submit" id="forgotSendBtn" class="btn btn-primary w-full">
+        <span class="material-symbols-outlined !text-base">send</span>Send reset link
+      </button>
+      <button type="button" id="forgotBack" class="btn btn-ghost w-full">
+        <span class="material-symbols-outlined !text-base">arrow_back</span>Back to sign in
+      </button>
+    </form>
+
     <div class="mt-8 space-y-3 text-center">
             <p class="text-support">
-        Establishment manager and tourist guide accounts are issued by the Municipal Tourism Office. Contact them if you don't have one yet.
+        Establishment Manager and Tourist Guide accounts are issued by the Municipal Tourism Office. For access, please contact the office.
       </p>
     </div>
 
@@ -287,7 +316,7 @@ body { overflow-x: hidden; }
   // The portals send people here with ?expired=1 when their two-hour sign-in runs
   // out, so the trip back is explained rather than looking like a random logout.
   if (new URLSearchParams(window.location.search).get('expired') === '1') {
-    errorBox.textContent = 'Your sign-in expired, so you were signed out. Please sign in again — nothing has been lost.';
+    errorBox.textContent = 'Your session has expired. Please sign in again to continue.';
     errorBox.className = 'text-sm text-on-surface-variant bg-surface-high border border-outline/40 rounded-xl px-4 py-3';
     errorBox.hidden = false;
   }
@@ -314,6 +343,49 @@ body { overflow-x: hidden; }
     icon.textContent = showing ? 'visibility' : 'visibility_off';
   });
 
+  /* Forgot password: swap the sign-in form for the reset request, and back. */
+  const loginForm = document.getElementById('staffLoginForm');
+  const forgotForm = document.getElementById('forgotForm');
+  const forgotMessage = document.getElementById('forgotMessage');
+  function showForgot(open) {
+    loginForm.hidden = open;
+    forgotForm.hidden = !open;
+    forgotMessage.hidden = true;
+    if (open) {
+      const typed = document.getElementById('emailInput').value.trim();
+      if (typed) document.getElementById('forgotEmail').value = typed;
+      document.getElementById('forgotEmail').focus();
+    } else {
+      document.getElementById('emailInput').focus();
+    }
+  }
+  function forgotSay(text, ok) {
+    forgotMessage.textContent = text;
+    forgotMessage.className = 'text-sm font-semibold border px-4 py-3 ' + (ok ? 'tone-success' : 'tone-danger');
+    forgotMessage.hidden = false;
+  }
+  document.getElementById('forgotLink').addEventListener('click', () => showForgot(true));
+  document.getElementById('forgotBack').addEventListener('click', () => showForgot(false));
+  forgotForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const email = document.getElementById('forgotEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { forgotSay('Please enter a valid email address.', false); return; }
+    const restore = setButtonLoading(document.getElementById('forgotSendBtn'), 'SENDING...');
+    try {
+      const response = await fetch(`${API_BASE}/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const result = await response.json().catch(() => ({}));
+      forgotSay(result.message || (response.ok ? 'If that email has an account, a reset link is on its way.' : 'The reset link could not be sent. Please try again shortly.'), response.ok);
+    } catch (error) {
+      forgotSay('Unable to connect to the server. Please check your internet connection and try again.', false);
+    } finally {
+      restore();
+    }
+  });
+
   // Theme is the shared module's job, including the icon it shows.
   // The shared theme script binds this button; see bindToggle().
 
@@ -337,7 +409,7 @@ body { overflow-x: hidden; }
     } catch (error) {
       restoreButton();
       console.error('Staff sign-in network error:', error);
-      showError('Could not reach the server. Please check your connection and try again.');
+      showError('Unable to connect to the server. Please check your internet connection and try again.');
       return;
     }
 
@@ -346,13 +418,13 @@ body { overflow-x: hidden; }
       result = await response.json();
     } catch {
       restoreButton();
-      showError(`The server returned an unexpected response (status ${response.status}). Please try again in a moment.`);
+      showError(`The server returned an unexpected response (status ${response.status}). Please try again shortly.`);
       return;
     }
 
     if (!response.ok || !result.success) {
       restoreButton();
-      showError(result.message || 'Those credentials were not recognised.');
+      showError(result.message || 'Invalid email address or password.');
       document.getElementById('passwordInput').value = '';
       return;
     }
@@ -360,7 +432,7 @@ body { overflow-x: hidden; }
     const destination = PORTAL_HOME[result.role];
     if (!destination) {
       restoreButton();
-      showError('That account is not a staff account. Please use the tourist sign in instead.');
+      showError('This account does not have access to the staff portal.');
       return;
     }
 
@@ -371,6 +443,10 @@ body { overflow-x: hidden; }
     const establishmentName = result.user?.establishmentName || result.user?.resortName;
     if (establishmentName) localStorage.setItem('establishmentName', establishmentName);
     if (result.role === 'tourist_guide' && result.user?.name) localStorage.setItem('guideName', result.user.name);
+    if (result.role === 'admin') {
+      if (result.user && result.user.fullName) localStorage.setItem('userName', result.user.fullName);
+      else localStorage.removeItem('userName');
+    }
 
     // Button keeps spinning through the redirect — restoring it would only flash.
     window.location.href = destination;

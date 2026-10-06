@@ -376,7 +376,7 @@ body { overflow-x: hidden; }
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking' };
     const STATUS = {
-        valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the gate'], cancelled: ['tone-neutral', 'Cancelled'],
+        valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the entrance'], cancelled: ['tone-neutral', 'Cancelled'],
         pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],
         confirmed: ['tone-success', 'Confirmed'], completed: ['tone-info', 'Completed'], no_show: ['tone-neutral', 'No show'],
         closed: ['tone-warning', 'Date closed by the office']
@@ -429,7 +429,7 @@ body { overflow-x: hidden; }
             row('Guide', item.guide ? esc(item.guide) : `Not yet confirmed${item.requestedGuide ? ` (you asked for ${esc(item.requestedGuide)})` : ''}`)
         ];
         if (item.paid) {
-            details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online (test mode)' : ' · at the office'}`));
+            details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online' : ' · at the office'}`));
             if (item.paid.refundedAt) details.push(row('Refunded', peso(item.paid.refundAmount)));
         }
 

@@ -52,7 +52,9 @@
      *   options.headers      () => fetch headers with the sign-in token
      *   options.place        { _id, title, kind: 'accommodation' | 'attraction', barangay }
      *   options.year, month  the period
-     *   options.officer      true on the officer's page: shows history, void and unlock
+     *   options.officer      true on the officer's page: shows history, void and reopen
+     *   options.viewOnly     true when this account may only look (the officer, at a
+     *                        privately managed establishment's report)
      *   options.onSaved      called after a successful save, void or unlock
      *   options.onExpired    called on a 401
      *   options.toast        (message, tone) => void
@@ -83,7 +85,8 @@
         const report = state.report;
         const locked = !!(report && report.lockedAt);
         const blocked = state.recordedAsMunicipalTotal;
-        const readOnly = locked || blocked;
+        const viewOnly = !!options.viewOnly;
+        const readOnly = locked || blocked || viewOnly;
         const given = Object.fromEntries(((report && report.counts) || []).map(c => [c.code, c]));
         const days = state.daysInMonth;
 
@@ -141,10 +144,11 @@
         host.innerHTML = `
         <div class="space-y-5">
             <div class="flex flex-wrap items-center gap-2">${status}
-                ${locked ? `<span class="tone-pill tone-info text-xs font-bold px-2 py-0.5">Locked: sent to the province</span>` : ''}
+                ${locked ? `<span class="tone-pill tone-info text-xs font-bold px-2 py-0.5">Finalized: submitted to the Province</span>` : ''}
+                ${viewOnly ? `<span class="tone-pill tone-neutral text-xs font-bold px-2 py-0.5">View only</span>` : ''}
             </div>
             ${blocked ? `<div class="ztims-empty tone-warning">${esc(MONTHS[month - 1])} ${year} is recorded as the municipality's total from the printed Form A4, so reports for single places are not taken for it.</div>` : ''}
-            ${locked ? `<p class="text-support">This month was already sent to the province. ${options.officer ? 'Unlock it below to correct it; the change is recorded.' : 'Ask the Tourism Office if something needs correcting.'}</p>` : ''}
+            ${locked ? `<p class="text-support">This month has been finalized and submitted to the Province. ${options.officer ? 'Reopen it below to correct it; the change is recorded.' : 'Please contact the Tourism Office if a correction is needed.'}</p>` : ''}
 
             ${accommodation ? `
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -195,12 +199,12 @@
             <div id="${uid}-checks" class="flex flex-wrap gap-2" aria-live="polite"></div>
             <p id="${uid}-error" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
 
+            ${viewOnly ? '' : `
             <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-outline">
                 <button id="${uid}-save" type="button" class="btn btn-primary min-h-[48px]" ${readOnly ? 'disabled' : ''}>
                     <span class="material-symbols-outlined !text-base">save</span>${report ? 'Save changes' : 'Submit report'}
                 </button>
-                <p class="text-support">Counts only: no revenue, and no guest's name or details.</p>
-            </div>
+            </div>`}
 
             ${options.officer && report ? `
             <details class="border border-outline p-4">
@@ -210,11 +214,11 @@
                         <label class="block flex-1 min-w-[14rem]"><span class="field-label">Reason (required)</span>
                             <input id="${uid}-reason" type="text" maxlength="500" class="field" placeholder="${locked ? 'What needs correcting' : 'Why this report is void'}"></label>
                         ${locked
-                            ? `<button id="${uid}-unlock" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">lock_open</span>Unlock to correct</button>`
+                            ? `<button id="${uid}-unlock" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">lock_open</span>Reopen to correct</button>`
                             : `<button id="${uid}-void" type="button" class="btn btn-danger min-h-[44px]"><span class="material-symbols-outlined !text-base">block</span>Void this report</button>`}
                     </div>
-                    <p class="text-support">${locked ? 'Unlocking lets the figures be corrected. The unlock and the correction are both recorded.' : 'A void report stays on record but no longer counts in any total. Voiding is recorded.'}</p>
-                    <ul class="space-y-1 text-sm">${(state.history || []).map(h => `<li><b>${esc(h.action)}</b> · ${esc(h.changed_by_email || h.changed_by_role)} · ${esc(formatWhen(h.changed_at))}${h.note ? ` · ${esc(h.note)}` : ''}</li>`).join('')}</ul>
+                    <p class="text-support">${locked ? 'Reopening allows the figures to be corrected. Both the reopening and the correction are recorded.' : 'A void report stays on record but no longer counts in any total. Voiding is recorded.'}</p>
+                    <ul class="space-y-1 text-sm">${(state.history || []).map(h => `<li><b>${esc(({ locked: 'finalized', unlocked: 'reopened' })[h.action] || h.action)}</b> · ${esc(h.changed_by_email || h.changed_by_role)} · ${esc(formatWhen(h.changed_at))}${h.note ? ` · ${esc(h.note)}` : ''}</li>`).join('')}</ul>
                 </div>
             </details>` : ''}
         </div>`;

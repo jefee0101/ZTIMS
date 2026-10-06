@@ -524,21 +524,11 @@ body { overflow-x: hidden; }
             <div class="space-y-1">
                 <p class="text-label uppercase tracking-widest font-bold text-on-surface-variant">Municipal tourism</p>
                 <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tickets</h2>
-                <p class="text-on-surface-variant text-sm max-w-2xl">
-                    Entrance tickets bought online for the attractions the office runs. At the gate, scan the visitor's
-                    QR code or type the code under it, then let the group in. Walk-ins still pay at the gate.
-                    Online tickets are a demonstration in <b>test mode</b>.
-                </p>
             </div>
 
             <!-- Check a ticket -->
             <section class="glass-panel p-5 sm:p-6 space-y-4" aria-labelledby="checkHeading">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h3>
-                    <a href="admin_gate.html" class="btn btn-secondary btn-sm min-h-[40px]">
-                        <span class="material-symbols-outlined !text-base">signal_disconnected</span> No signal at the spot? Offline gate
-                    </a>
-                </div>
+                <h3 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h3>
                 <form id="checkForm" class="flex flex-wrap gap-2">
                     <label for="checkCode" class="sr-only">Ticket code</label>
                     <input id="checkCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false"
@@ -585,14 +575,14 @@ body { overflow-x: hidden; }
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
         function signOutStaff() {
-            try { localStorage.clear(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
+            try { window.ztimsTheme.clearStorage(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
             if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
             setTimeout(function () { window.location.replace('../../index.html'); }, 600);
         }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: 'Tourist Officer',
+                name: localStorage.getItem('userName') || 'Tourism Officer',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
@@ -636,8 +626,7 @@ body { overflow-x: hidden; }
             cancelled:  { tone: 'tone-danger',  icon: 'cancel',       title: 'Cancelled' },
             closed:     { tone: 'tone-danger',  icon: 'event_busy',   title: 'Date closed' },
             not_paid:   { tone: 'tone-danger',  icon: 'money_off',    title: 'Not paid' },
-            not_found:  { tone: 'tone-danger',  icon: 'help',         title: 'Not found' },
-            forged:     { tone: 'tone-danger',  icon: 'gpp_bad',      title: 'Not a real ticket' }
+            not_found:  { tone: 'tone-danger',  icon: 'help',         title: 'Not found' }
         };
 
         async function check(code) {
@@ -864,7 +853,7 @@ body { overflow-x: hidden; }
     link.addEventListener('click', function (event) {
         event.preventDefault();
         try {
-            localStorage.clear();
+            window.ztimsTheme.clearStorage();
             sessionStorage.clear();
         } catch (e) { /* private browsing */ }
 

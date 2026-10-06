@@ -5,9 +5,10 @@
  * checks so this file enforces exactly the same roles.
  *
  * Who reports for a place is who runs it in ZTIMS: an establishment manager
- * for the listings they manage, the Tourism Officer for everything the office
- * keeps (spots.managed_by is null) and, on anyone's behalf, for any place.
- * Only the officer voids, locks and unlocks. Every rule is checked here, and
+ * for the listing they manage, the Tourism Officer for everything the office
+ * keeps (spots.managed_by is null). A privately managed establishment's reports
+ * are entered by its manager only; the officer views them. Only the officer
+ * voids, finalizes (locks) and reopens (unlocks). Every rule is checked here, and
  * the database's constraints (db/schema.sql) hold underneath.
  *
  * Counts only. Nothing here reads or writes money, a rate, a percentage, or
@@ -70,9 +71,18 @@ async function spotById(id, client) {
     return rows[0] || null;
 }
 
-/* Whether the signed-in account may report for this place. */
-function mayReportFor(req, spot) {
+/* Whether the signed-in account may see this place's reports: the officer
+   any place's, a manager their own. */
+function mayViewFor(req, spot) {
     if (isOfficer(req)) return true;
+    return spot.managed_by !== null && String(spot.managed_by) === String(req.auth.sub);
+}
+
+/* Whether it may enter or change them: whoever runs the place. The officer
+   for the places the office keeps; a privately managed establishment's reports
+   are its manager's alone, and the officer only views them. */
+function mayEnterFor(req, spot) {
+    if (isOfficer(req)) return spot.managed_by === null;
     return spot.managed_by !== null && String(spot.managed_by) === String(req.auth.sub);
 }
 
@@ -195,7 +205,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (period.error) return badRequest(res, period.error);
             const spot = await spotById(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
-            if (!mayReportFor(req, spot)) return res.status(403).json({ success: false, message: 'You can only see reports for the places you manage.' });
+            if (!mayViewFor(req, spot)) return res.status(403).json({ success: false, message: 'You can only see reports for the places you manage.' });
 
             const report = await liveReport(spot.id, period.year, period.month);
             let history = [];
@@ -227,7 +237,11 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (period.error) return badRequest(res, period.error);
             const spot = await spotById(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
-            if (!mayReportFor(req, spot)) return res.status(403).json({ success: false, message: 'You can only report for the places you manage.' });
+            if (!mayEnterFor(req, spot)) {
+                return res.status(403).json({ success: false, message: isOfficer(req)
+                    ? 'This establishment is privately managed. Its monthly reports are submitted by its establishment manager; the Tourism Office can only view them.'
+                    : 'You can only report for the places you manage.' });
+            }
             const kind = kindOf(spot);
             const body = req.body || {};
 
@@ -284,29 +298,30 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                 }
                 const before = await liveReport(spot.id, period.year, period.month, client);
                 if (before && before.lockedAt) {
-                    return { conflict: 'This month was already sent to the province and is locked. The Tourism Officer can unlock it to correct it.', locked: true };
+                    return { conflict: 'This month has been finalized and submitted to the Province. The Tourism Officer can reopen it to correct it.', locked: true };
                 }
                 let reportId;
                 if (before) {
                     reportId = before._id;
                     await query(
                         `update monthly_reports set rooms = $2, room_nights_occupied = $3, guest_nights = $4,
-                                submitted_by_role = $5, submitted_by_id = $6, submitted_by_email = $7, submitted_at = now()
+                                submitted_by_role = $5, submitted_by_email = $6, submitted_at = now()
                           where id = $1`,
-                        [reportId, rooms, roomNights, guestNights, who.role, who.id, who.email], client);
+                        [reportId, rooms, roomNights, guestNights, who.role, who.email], client);
                     await query('delete from monthly_report_counts where report_id = $1', [reportId], client);
                 } else {
                     const { rows } = await query(
                         `insert into monthly_reports (kind, spot_id, year, month, rooms, room_nights_occupied, guest_nights,
-                                                      submitted_by_role, submitted_by_id, submitted_by_email)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
-                        [kind, spot.id, period.year, period.month, rooms, roomNights, guestNights, who.role, who.id, who.email], client);
+                                                      submitted_by_role, submitted_by_email)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
+                        [kind, spot.id, period.year, period.month, rooms, roomNights, guestNights, who.role, who.email], client);
                     reportId = rows[0].id;
                 }
                 for (const c of counts) {
                     await query(
-                        `insert into monthly_report_counts (report_id, residence_code, male, female, total) values ($1, $2, $3, $4, $5)`,
-                        [reportId, c.code, c.male, c.female, c.total], client);
+                        // The total is the database's: male + female.
+                        `insert into monthly_report_counts (report_id, residence_code, male, female) values ($1, $2, $3, $4)`,
+                        [reportId, c.code, c.male, c.female], client);
                 }
                 const after = await liveReport(spot.id, period.year, period.month, client);
                 await logChange(client, reportId, before ? 'updated' : 'created', who, snapshotOf(before), snapshotOf(after));
@@ -341,7 +356,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                 const row = rows[0];
                 if (!row) return { status: 404, message: 'That report could not be found.' };
                 if (row.status === 'void') return { status: 409, message: 'That report is already void.' };
-                if (row.locked_at) return { status: 409, message: 'Unlock the report before voiding it: it was already sent to the province.' };
+                if (row.locked_at) return { status: 409, message: 'Reopen the report before voiding it: it has been finalized and submitted to the Province.' };
                 await query(`update monthly_reports set status = 'void', void_reason = $2 where id = $1`, [row.id, reason.slice(0, 500)], client);
                 await logChange(client, row.id, 'voided', who, { status: 'submitted' }, { status: 'void' }, reason);
                 return { status: 200, message: 'Report voided. It no longer counts in any total.' };
@@ -362,10 +377,10 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                 const { rows } = await query(`select * from monthly_reports where id = $1 for update`, [String(req.params.id)], client);
                 const row = rows[0];
                 if (!row) return { status: 404, message: 'That report could not be found.' };
-                if (!row.locked_at) return { status: 409, message: 'That report is not locked.' };
+                if (!row.locked_at) return { status: 409, message: 'That report is not finalized.' };
                 await query(`update monthly_reports set locked_at = null, locked_by_email = '' where id = $1`, [row.id], client);
                 await logChange(client, row.id, 'unlocked', who, { lockedAt: row.locked_at }, { lockedAt: null }, reason);
-                return { status: 200, message: 'Report unlocked. Its figures can be corrected now.' };
+                return { status: 200, message: 'Report reopened. Its figures can now be corrected.' };
             });
             return res.status(outcome.status).json({ success: outcome.status === 200, message: outcome.message });
         } catch (error) {
@@ -387,10 +402,10 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                     `update monthly_reports set locked_at = now(), locked_by_email = $4
                       where year = $1 and month between $2 and $3 and status = 'submitted' and locked_at is null
                       returning id, locked_at`, [year, from, to, who.email], client);
-                for (const row of rows) await logChange(client, row.id, 'locked', who, { lockedAt: null }, { lockedAt: row.locked_at }, 'Sent to the province');
+                for (const row of rows) await logChange(client, row.id, 'locked', who, { lockedAt: null }, { lockedAt: row.locked_at }, 'Submitted to the Province');
                 return rows.length;
             });
-            return res.json({ success: true, message: `Locked ${locked} report${locked === 1 ? '' : 's'}.`, locked });
+            return res.json({ success: true, message: `Finalized ${locked} report${locked === 1 ? '' : 's'}.`, locked });
         } catch (error) {
             return failure(res, error, '❌ Statistics lock failure:');
         }

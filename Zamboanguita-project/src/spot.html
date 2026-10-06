@@ -98,6 +98,7 @@ body { overflow-x: hidden; }
         display: none;
     }
 }
+
 </style>
     <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
          styles so the tokens win over anything left hardcoded. -->
@@ -253,11 +254,7 @@ body { overflow-x: hidden; }
             <span class="material-symbols-outlined">close</span>
         </button>
 
-        <h3 class="text-xl font-display font-bold text-on-surface mb-1">Book a tourist guide</h3>
-        <p id="bookIntro" class="text-support mb-5">
-            No account needed. You will get a reference to bring to the Municipal Tourism Office,
-            where you pay and the booking is confirmed.
-        </p>
+        <h3 class="text-xl font-display font-bold text-on-surface mb-5">Book a tourist guide</h3>
 
         <form id="guideBookingForm" class="space-y-3">
             <div>
@@ -303,14 +300,12 @@ body { overflow-x: hidden; }
                     <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567"
                            class="flex-1 min-w-0 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
-                <p class="text-support mt-1">Without the leading zero — the country code covers it.</p>
             </div>
 
             <div>
                 <label for="bookEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Email</label>
                 <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com"
                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-                <p class="text-support mt-1">Where the office confirms your booking.</p>
             </div>
 
             <div>
@@ -350,7 +345,6 @@ body { overflow-x: hidden; }
             <fieldset>
                 <legend class="block text-label font-bold uppercase tracking-wider mb-1">Your guide</legend>
                 <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
-                <p class="text-support mt-1">The office confirms your guide. If you pay online, you pay the fee of the guide you chose (or the lowest fee here, for any guide).</p>
             </fieldset>
 
             <div>
@@ -358,11 +352,6 @@ body { overflow-x: hidden; }
                 <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
             </div>
-
-            <p id="bookPaymentNote" class="text-support bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
-                Payment must be completed onsite at the Municipal Tourism Office. ZTIMS does not take payment online.
-                Your guide is assigned by the office once payment is recorded.
-            </p>
 
             <p class="text-support">
                 Your details are used only for this booking. See the
@@ -382,18 +371,15 @@ body { overflow-x: hidden; }
             <h4 class="text-lg font-display font-bold text-on-surface">Booking submitted</h4>
             <p class="text-label uppercase tracking-widest">Reference</p>
             <p id="bookingReference" class="text-2xl font-display font-black text-surface-bright tracking-wider select-all"></p>
-            <p id="bookingSummary" class="text-sm text-on-surface-variant"></p>
             <p id="bookingNextStep" class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
                 Please proceed to the Municipal Tourism Office to complete payment and confirmation.
-                Write this reference down — it is how the office finds your booking.
             </p>
-            <!-- Online payment: a demonstration in the payment service's test mode. -->
+            <!-- Online payment (Xendit). -->
             <div id="bookingPayOnline" hidden class="space-y-2">
                 <button type="button" id="bookingPayOnlineBtn"
                         class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined !text-lg">payments</span> Pay online now
                 </button>
-                <p class="text-support">GCash, Maya or card. <b>Test mode:</b> a demonstration, no real money moves.</p>
                 <p id="bookingPayError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
             </div>
         </div>
@@ -691,6 +677,7 @@ body { overflow-x: hidden; }
                     <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
                     <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-3">
                         ${addressLine}
+                        <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
                         <p class="text-sm text-on-surface-variant flex items-start gap-2">
                             <span class="material-symbols-outlined !text-lg text-on-surface-variant/60 shrink-0">wrong_location</span>
                             <span>Directions are currently unavailable because this location has not been configured.</span>
@@ -705,6 +692,10 @@ body { overflow-x: hidden; }
                 <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
                 <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-4">
                     ${addressLine}
+
+                    <!-- Emergency numbers (shared/site-footer.js): hidden until the office supplies them. -->
+                    <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
+
 
                     <button type="button" id="getDirectionsBtn"
                             class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
@@ -781,6 +772,7 @@ body { overflow-x: hidden; }
 
                         <div id="directionsMap" hidden class="relative z-0 h-64 sm:h-80 w-full rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-high"></div>
 
+
                         <a id="openInMapsBtn" href="#" target="_blank" rel="noopener noreferrer"
                            class="w-full bg-surface-container-high border border-outline-variant/40 text-on-surface px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
                             <span class="material-symbols-outlined !text-lg">open_in_new</span> Open in Maps
@@ -853,7 +845,7 @@ body { overflow-x: hidden; }
                 <p class="text-sm text-on-surface-variant flex items-start gap-2">
                     <span class="material-symbols-outlined !text-lg text-secondary shrink-0">payments</span>
                     <span>${info.payOnline
-                        ? 'Pay online after booking (GCash, Maya or card, <b>test mode</b>: a demonstration, no real money), or at the Municipal Tourism Office.'
+                        ? 'Pay online after booking, or onsite at the Municipal Tourism Office.'
                         : 'Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.'}</span>
                 </p>
                 ${availability}
@@ -955,15 +947,6 @@ body { overflow-x: hidden; }
         });
 
         if (!openBtn || !modal) return;
-
-        if (info.payOnline) {
-            document.getElementById('bookIntro').textContent =
-                'No account needed. You will get a reference, then pay online or at the Municipal Tourism Office '
-                + 'to confirm the booking.';
-            document.getElementById('bookPaymentNote').textContent =
-                'After submitting you can pay online (test mode: a demonstration, no real money), or pay at the '
-                + 'Municipal Tourism Office. Your guide is assigned by the office once the booking is paid.';
-        }
 
         const maxGroup = info.maxGroupSize || 1;
         document.getElementById('bookVisitors').max = String(maxGroup);
@@ -1079,12 +1062,6 @@ body { overflow-x: hidden; }
 
                 document.getElementById('guideBookingForm').hidden = true;
                 document.getElementById('bookingReference').textContent = data.booking.reference;
-                document.getElementById('bookingSummary').textContent =
-                    `${data.booking.spot} — ${data.booking.preferredDate} at ${data.booking.preferredTime}, `
-                    + `${data.booking.visitors} visitor${data.booking.visitors === 1 ? '' : 's'}. `
-                    + (data.requestedGuide
-                        ? `You asked for ${data.requestedGuide.fullName} (${formatPeso(data.requestedGuide.guideFee)}); the office confirms your guide.`
-                        : 'The office will choose your guide.');
                 document.getElementById('bookingResult').hidden = false;
                 offerOnlinePayment(data, payload.email);
             } catch (error) {
@@ -1102,9 +1079,8 @@ body { overflow-x: hidden; }
         const box = document.getElementById('bookingPayOnline');
         const next = document.getElementById('bookingNextStep');
         box.hidden = !data.payOnline;
+        next.hidden = Boolean(data.payOnline);
         if (!data.payOnline) return;
-        next.textContent = 'Pay online now to confirm the booking, or pay at the Municipal Tourism Office. '
-            + 'Write this reference down: it is how the office finds your booking.';
         const button = document.getElementById('bookingPayOnlineBtn');
         const error = document.getElementById('bookingPayError');
         button.onclick = async () => {
@@ -1158,7 +1134,7 @@ body { overflow-x: hidden; }
     }
 
     /* Entrance tickets, for attractions the Tourism Office runs and charges for.
-       Bought online (test mode) and shown at the gate as a QR code. */
+       Bought online and shown at the entrance as a QR code. */
     async function renderTicketOffer(spotId) {
         const slot = document.getElementById('ticketOffer');
         if (!slot) return;
@@ -1177,20 +1153,12 @@ body { overflow-x: hidden; }
                     <h2 id="ticketHeading" class="text-lg font-display font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">confirmation_number</span> Entrance tickets
                     </h2>
-                    <span class="tone-warning tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1">Test mode</span>
                 </div>
                 <p class="text-sm text-on-surface-variant">
                     ${escapeHtml(formatPeso(ticketKinds(offer)[0].price))} per person${ticketKinds(offer).length > 1
                         ? `, less for ${escapeHtml(ticketKinds(offer).slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).join(', ').replace(/, ([^,]*)$/, ' and $1'))}` : ''}.
                     Buy ahead and show the QR code at the entrance,
-                    or pay at the gate as usual. <b>Test mode:</b> a demonstration, no real money moves.
-                </p>
-                <!-- There is often no mobile signal at the attraction itself, so a
-                     ticket cannot be bought, or a forgotten one fetched, once there. -->
-                <p class="tone-warning text-sm flex items-start gap-2 border border-outline-variant/40 p-3">
-                    <span class="material-symbols-outlined !text-lg shrink-0" aria-hidden="true">signal_cellular_off</span>
-                    <span><b>There may be no mobile signal at the attraction.</b> Buy for your whole group now, and save
-                    the QR code (a screenshot is fine) before you set off.</span>
+                    or pay onsite.
                 </p>
                 <form id="ticketForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" novalidate>
                     <label class="block">
@@ -1334,6 +1302,7 @@ body { overflow-x: hidden; }
         const modeRow = document.getElementById('modeRow');
         const routeStats = document.getElementById('routeStats');
         const statusLine = document.getElementById('directionsStatus');
+
         const mapBox = document.getElementById('directionsMap');
         const openInMaps = document.getElementById('openInMapsBtn');
 
@@ -1829,6 +1798,8 @@ body { overflow-x: hidden; }
             document.title = `${spot.title} | Zamboanguita`;
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
+            // The footer script may have run before this page was drawn.
+            if (window.ztimsEmergency) window.ztimsEmergency.fill();
             renderGuideRequirement(spotId);
             renderTicketOffer(spotId);
         } catch (error) {

@@ -98,7 +98,7 @@ async function main() {
                 const id = rows[0].id;
                 for (const [code, total] of Object.entries(m.counts || {})) {
                     if (total > 0) {
-                        await query(`insert into monthly_report_counts (report_id, residence_code, total) values ($1, $2, $3)`, [id, code, total], client);
+                        await query(`insert into monthly_report_counts (report_id, residence_code, total_unsplit) values ($1, $2, $3)`, [id, code, total], client);
                     }
                 }
                 await query(
