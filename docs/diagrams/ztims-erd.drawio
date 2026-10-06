@@ -1,0 +1,154 @@
+<mxfile host="drawio">
+<diagram id="ztims-erd" name="ERD">
+<mxGraphModel dx="940" dy="905" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="940" pageHeight="905" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="languages" value="Languages" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="39" y="46" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="guide_languages" value="Guide&lt;br&gt;Languages" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="39" y="186" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="tourist_guide_spots" value="Tourist Guide&lt;br&gt;Spots" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="224" y="186" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="establishment_managers" value="Establishment&lt;br&gt;Managers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="409" y="186" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="spot_closed_dates" value="Spot Closed&lt;br&gt;Dates" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="594" y="186" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="report_changes" value="Report&lt;br&gt;Changes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="779" y="186" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="tourist_guides" value="Tourist&lt;br&gt;Guides" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="39" y="326" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="spots" value="Spots" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="409" y="326" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="monthly_reports" value="Monthly&lt;br&gt;Reports" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="594" y="326" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="monthly_report_counts" value="Monthly Report&lt;br&gt;Counts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="779" y="326" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="guide_reports" value="Guide&lt;br&gt;Reports" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="39" y="466" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="guide_bookings" value="Guide&lt;br&gt;Bookings" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="224" y="466" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="online_checkouts" value="Online&lt;br&gt;Checkouts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="409" y="466" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="tickets" value="Tickets" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="594" y="466" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="residences" value="Residences" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="779" y="466" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="payments" value="Payments" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="409" y="606" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="tourism_officers" value="Tourism&lt;br&gt;Officers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="409" y="746" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="feedback" value="Feedback" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="39" y="746" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="rate_limits" value="Rate Limits" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="779" y="746" width="122" height="48" as="geometry"/>
+</mxCell>
+<mxCell id="r0" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="establishment_managers" target="spots">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r1" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tourist_guides" target="guide_languages">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r2" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="languages" target="guide_languages">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r3" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tourist_guides" target="tourist_guide_spots">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r4" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="spots" target="tourist_guide_spots">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r5" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="spots" target="spot_closed_dates">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r6" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="spots" target="guide_bookings">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r7" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tourist_guides" target="guide_bookings">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r8" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tourist_guides" target="guide_reports">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r9" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="guide_bookings" target="guide_reports">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r10" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToOne;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="guide_bookings" target="payments">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r11" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToOne;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tickets" target="payments">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r12" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tourism_officers" target="payments">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r13" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="spots" target="tickets">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r14" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="guide_bookings" target="online_checkouts">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r15" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="tickets" target="online_checkouts">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r16" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERzeroToOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="spots" target="monthly_reports">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r17" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="monthly_reports" target="monthly_report_counts">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r18" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="residences" target="monthly_report_counts">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="r19" style="edgeStyle=none;html=1;strokeColor=#000000;strokeWidth=1.3;startArrow=ERmandOne;endArrow=ERzeroToMany;startFill=0;endFill=0;startSize=12;endSize=12;" edge="1" parent="1" source="monthly_reports" target="report_changes">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="lg0" value="" style="endArrow=ERmandOne;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="230" y="862" as="sourcePoint"/>
+<mxPoint x="290" y="862" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+<mxCell id="lt0" value="Exactly one" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="298" y="852" width="110" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="lg1" value="" style="endArrow=ERzeroToOne;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="420" y="862" as="sourcePoint"/>
+<mxPoint x="480" y="862" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+<mxCell id="lt1" value="Zero or one" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="488" y="852" width="110" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="lg2" value="" style="endArrow=ERzeroToMany;endFill=0;endSize=12;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=12;labelPosition=right;align=left;" edge="1" parent="1">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="610" y="862" as="sourcePoint"/>
+<mxPoint x="670" y="862" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+<mxCell id="lt2" value="Zero or many" style="text;html=1;align=left;verticalAlign=middle;fontColor=#000000;fontSize=12;" vertex="1" parent="1">
+<mxGeometry x="678" y="852" width="110" height="20" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>
+</diagram>
+</mxfile>
