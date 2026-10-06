@@ -25,7 +25,7 @@
 <mxCell id="u5" value="Send Feedback" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="229" y="478" width="190" height="64" as="geometry"/>
 </mxCell>
-<mxCell id="u6" value="Manage Listings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+<mxCell id="u6" value="Manage Listing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="229" y="601" width="190" height="64" as="geometry"/>
 </mxCell>
 <mxCell id="u7" value="Submit Monthly&lt;br&gt;Statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
@@ -64,11 +64,14 @@
 <mxCell id="u18" value="Manage Tourism&lt;br&gt;Statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="519" y="806" width="190" height="64" as="geometry"/>
 </mxCell>
-<mxCell id="u19" value="Check Tickets&lt;br&gt;at the Gate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+<mxCell id="u19" value="Check Tickets&lt;br&gt;at the Entrance" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="519" y="888" width="190" height="64" as="geometry"/>
 </mxCell>
 <mxCell id="u20" value="Read Visitor Feedback" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="519" y="970" width="190" height="64" as="geometry"/>
+</mxCell>
+<mxCell id="u21" value="Manage Office&lt;br&gt;Information" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+<mxGeometry x="519" y="1052" width="190" height="64" as="geometry"/>
 </mxCell>
 <mxCell id="visitor" value="Visitor" style="shape=umlActor;labelPosition=left;align=right;verticalLabelPosition=middle;verticalAlign=middle;spacing=6;html=1;outlineConnect=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontStyle=1;fontSize=16;" vertex="1" parent="1">
 <mxGeometry x="129" y="275" width="30" height="60" as="geometry"/>
@@ -157,10 +160,13 @@
 <mxCell id="l23" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u20" target="officer">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="l24" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u2">
+<mxCell id="l24" style="endArrow=none;html=1;strokeColor=#000000;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="u21" target="officer">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="l25" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u3">
+<mxCell id="l25" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="l26" value="&#171;extend&#187;" style="endArrow=open;endSize=10;dashed=1;html=1;strokeColor=#000000;strokeWidth=1.3;fontColor=#000000;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="u12" target="u3">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 </root>
