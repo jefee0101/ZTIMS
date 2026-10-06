@@ -1,0 +1,377 @@
+// ZTIMS database, for dbdiagram.io (paste into the editor at dbdiagram.io/d).
+// The final shape of zamboanguita-backend/db/schema.sql after every migration step:
+// 22 tables, 21 relationships. Ids are text (24 hex characters).
+// Relationship marks: ">" many-to-one, "-" one-to-one.
+
+Project ZTIMS {
+  database_type: 'PostgreSQL'
+  Note: 'Zamboanguita Tourism Information Management System, PostgreSQL on Supabase'
+}
+
+// ---------------------------------------------------------------- accounts
+
+Table tourism_officers {
+  id text [pk]
+  email text [not null, unique]
+  password_hash text [not null]
+  full_name text [not null]
+  position text [not null]
+  contact_number text [not null]
+  active boolean [not null, default: true]
+  last_sign_in_at timestamptz
+  reset_token_hash text
+  reset_token_expires timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table establishment_managers {
+  id text [pk]
+  email text [not null, unique]
+  password_hash text [not null]
+  establishment_name text [not null]
+  manager_name text [not null]
+  contact_email text [not null]
+  phone text [not null]
+  active boolean [not null, default: true]
+  operational_status text [not null, default: 'active', note: 'active, inactive, closed']
+  status_needs_review boolean [not null, default: false]
+  status_note text [not null]
+  status_updated_at timestamptz
+  reset_token_hash text
+  reset_token_expires timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table tourist_guides {
+  id text [pk]
+  full_name text [not null]
+  photo_url text [not null]
+  contact_number text [not null]
+  location text [not null]
+  bio text [not null]
+  guide_fee numeric [not null, default: 0]
+  max_group_size integer [not null, default: 1]
+  status text [not null, default: 'available', note: 'available, unavailable, inactive']
+  scope text [not null, default: 'municipal', note: 'municipal or barangay']
+  barangay text [not null]
+  works_mon boolean [not null, default: true]
+  works_tue boolean [not null, default: true]
+  works_wed boolean [not null, default: true]
+  works_thu boolean [not null, default: true]
+  works_fri boolean [not null, default: true]
+  works_sat boolean [not null, default: true]
+  works_sun boolean [not null, default: true]
+  email text [unique, note: 'null until the office issues a sign-in']
+  password_hash text
+  reset_token_hash text
+  reset_token_expires timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table languages {
+  id text [pk]
+  name text [not null, note: 'unique, ignoring case']
+  created_at timestamptz [not null]
+}
+
+Table guide_languages {
+  guide_id text [not null]
+  language_id text [not null]
+  indexes {
+    (guide_id, language_id) [pk]
+  }
+}
+
+// ---------------------------------------------------------------- destinations
+
+Table spots {
+  id text [pk]
+  title text [not null]
+  location text [not null]
+  category text [not null]
+  description text [not null]
+  image_url text [not null, note: 'cover photo link; the file is on Cloudinary']
+  booking_url text [not null]
+  type text [not null, default: 'spot', note: 'spot or accommodation']
+  label text [not null]
+  working_days text [not null, default: 'Everyday']
+  working_time text [not null, default: 'All Day']
+  travel_fee numeric [not null, default: 0]
+  entrance_fee numeric [not null, default: 0]
+  student_fee numeric
+  child_fee numeric
+  child_age_max integer
+  cancel_keep_percent numeric [not null, default: 0]
+  address text [not null]
+  barangay text [not null]
+  latitude "double precision"
+  longitude "double precision"
+  managed_by text [note: 'null: kept by the Tourism Office; one listing per establishment']
+  status text [not null, default: 'published', note: 'published, unpublished, archived']
+  status_updated_at timestamptz
+  requires_guide boolean [not null, default: false]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table spot_photos {
+  spot_id text [not null]
+  position integer [not null, note: '0 to 29']
+  url text [not null]
+  indexes {
+    (spot_id, position) [pk]
+  }
+}
+
+Table spot_closed_dates {
+  id text [pk]
+  spot_id text [not null]
+  closed_date date [not null]
+  reason text [not null]
+  created_by_email text [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+  indexes {
+    (spot_id, closed_date) [unique]
+  }
+}
+
+Table tourist_guide_spots {
+  guide_id text [not null]
+  spot_id text [not null]
+  position integer [not null, default: 0]
+  indexes {
+    (guide_id, spot_id) [pk]
+  }
+}
+
+// ---------------------------------------------------------------- bookings, tickets, payments
+
+Table guide_bookings {
+  id text [pk]
+  reference text [not null, unique, note: 'e.g. TG-2026-00001']
+  spot_id text [not null]
+  guide_id text [note: 'null until the office assigns a guide']
+  requested_guide_id text [note: 'the guide the visitor asked for; null: any']
+  full_name text [not null]
+  contact_number text [not null]
+  email text [not null]
+  nationality text [not null]
+  visitors integer [not null]
+  preferred_date date [not null]
+  preferred_time text [not null]
+  notes text [not null]
+  status text [not null, default: 'pending_payment', note: 'pending_payment, confirmed, cancelled, completed, no_show, closed']
+  status_note text [not null]
+  status_updated_at timestamptz
+  is_demo boolean [not null, default: false]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table guide_reports {
+  id text [pk]
+  guide_id text [not null]
+  booking_id text
+  report_type text [not null, note: 'tour_completed, headcount, incident, tourist_feedback']
+  report_date date [not null]
+  headcount integer
+  barangay text [not null]
+  details text [not null]
+  status text [not null, default: 'new', note: 'new or reviewed']
+  reviewed_by_email text [not null]
+  reviewed_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table tickets {
+  id text [pk]
+  code text [not null, unique]
+  spot_id text [not null]
+  visit_date date [not null]
+  count_regular integer [not null, default: 0]
+  count_senior integer [not null, default: 0]
+  count_pwd integer [not null, default: 0]
+  count_student integer [not null, default: 0]
+  count_child integer [not null, default: 0]
+  fee_regular numeric
+  fee_senior numeric
+  fee_pwd numeric
+  fee_student numeric
+  fee_child numeric
+  people integer [note: 'worked out by the database from the counts']
+  amount numeric [note: 'worked out by the database from counts and fees']
+  full_name text [not null]
+  email text [not null]
+  contact_number text [not null]
+  status text [not null, default: 'pending_payment', note: 'pending_payment, valid, used, cancelled, expired, closed']
+  used_at timestamptz
+  used_by_email text [not null]
+  is_demo boolean [not null, default: false]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table payments {
+  id text [pk]
+  booking_id text [unique, note: 'a payment is for one booking or one ticket, never both']
+  ticket_id text [unique]
+  amount numeric [not null]
+  method text [not null, default: 'cash']
+  channel text [not null, default: 'counter', note: 'counter or online']
+  receipt_number text [not null]
+  gateway_ref text [not null]
+  paid_at timestamptz [not null]
+  recorded_by_email text [not null]
+  remarks text [not null]
+  refunded_at timestamptz
+  refund_amount numeric
+  refund_reason text [not null]
+  refunded_by_email text [not null]
+  is_demo boolean [not null, default: false]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table online_checkouts {
+  id text [pk]
+  booking_id text [note: 'one of booking_id or ticket_id']
+  ticket_id text
+  kind text [note: 'worked out: guide_booking or ticket']
+  amount numeric [not null]
+  session_id text [unique]
+  checkout_url text [not null]
+  status text [not null, default: 'pending', note: 'pending, paid, expired, duplicate']
+  method text [not null]
+  payment_ref text [not null]
+  expires_at timestamptz [not null]
+  paid_at timestamptz
+  is_demo boolean [not null, default: true]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+// ---------------------------------------------------------------- tourism statistics
+
+Table residences {
+  code text [pk, note: 'Form A4 row: ISO country code or a word']
+  name text [not null]
+  section text [not null, note: 'philippine, foreign, overseas_filipino, unspecified']
+  continent text [not null]
+  region text [not null]
+  sort_order integer [not null]
+}
+
+Table monthly_reports {
+  id text [pk]
+  kind text [not null, note: 'accommodation, attraction, municipal_total']
+  spot_id text [note: 'null only for a municipal total']
+  year integer [not null]
+  month integer [not null]
+  rooms integer
+  room_nights_occupied integer
+  guest_nights integer
+  status text [not null, default: 'submitted', note: 'submitted or void']
+  void_reason text [not null]
+  submitted_by_role text [not null]
+  submitted_by_email text [not null]
+  submitted_at timestamptz [not null]
+  locked_at timestamptz
+  locked_by_email text [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table monthly_report_counts {
+  report_id text [not null]
+  residence_code text [not null]
+  male integer
+  female integer
+  total_unsplit integer
+  total integer [note: 'worked out: male + female, or total_unsplit']
+  indexes {
+    (report_id, residence_code) [pk]
+  }
+}
+
+Table report_changes {
+  id text [pk]
+  report_id text [not null]
+  action text [not null, note: 'created, updated, voided, locked, unlocked']
+  changed_by_role text [not null]
+  changed_by_email text [not null]
+  note text [not null]
+  before jsonb
+  after jsonb
+  changed_at timestamptz [not null]
+}
+
+// ---------------------------------------------------------------- site and office
+
+Table feedback {
+  id text [pk]
+  topic text [not null, default: 'other', note: 'suggestion, listing, problem, booking, other']
+  message text [not null]
+  name text [not null]
+  email text [not null]
+  page text [not null]
+  status text [not null, default: 'new', note: 'new, read, resolved']
+  status_updated_at timestamptz
+  status_updated_by_email text [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table office_info {
+  id smallint [pk, default: 1, note: 'one row only']
+  address text [not null]
+  phone text [not null]
+  email text [not null]
+  office_hours text [not null]
+  updated_by_email text [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table emergency_numbers {
+  id text [pk]
+  label text [not null]
+  number text [not null]
+  position integer [not null, default: 0]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table rate_limits {
+  key text [pk]
+  hits integer [not null]
+  expires_at timestamptz [not null]
+}
+
+// ---------------------------------------------------------------- relationships
+
+Ref: spots.managed_by - establishment_managers.id
+Ref: guide_languages.guide_id > tourist_guides.id [delete: cascade]
+Ref: guide_languages.language_id > languages.id [delete: cascade]
+Ref: tourist_guide_spots.guide_id > tourist_guides.id [delete: cascade]
+Ref: tourist_guide_spots.spot_id > spots.id [delete: cascade]
+Ref: spot_photos.spot_id > spots.id [delete: cascade]
+Ref: spot_closed_dates.spot_id > spots.id [delete: cascade]
+Ref: guide_bookings.spot_id > spots.id
+Ref: guide_bookings.guide_id > tourist_guides.id
+Ref: guide_bookings.requested_guide_id > tourist_guides.id [delete: set null]
+Ref: guide_reports.guide_id > tourist_guides.id [delete: cascade]
+Ref: guide_reports.booking_id > guide_bookings.id [delete: set null]
+Ref: tickets.spot_id > spots.id
+Ref: payments.booking_id - guide_bookings.id
+Ref: payments.ticket_id - tickets.id
+Ref: online_checkouts.booking_id > guide_bookings.id [delete: cascade]
+Ref: online_checkouts.ticket_id > tickets.id [delete: cascade]
+Ref: monthly_reports.spot_id > spots.id
+Ref: monthly_report_counts.report_id > monthly_reports.id
+Ref: monthly_report_counts.residence_code > residences.code
+Ref: report_changes.report_id > monthly_reports.id
