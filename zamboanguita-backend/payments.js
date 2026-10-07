@@ -378,7 +378,7 @@ async function checkoutView(checkout) {
     if (checkout.kind === 'guide_booking') {
         const b = await GuideBooking.findById(checkout.bookingId);
         if (b) {
-            view.booking = { reference: b.reference, spot: await spotTitle(b.spotId), preferredDate: dayOf(b.preferredDate),
+            view.booking = { reference: b.reference, spot: await spotTitle(b.spotId), spotId: b.spotId, preferredDate: dayOf(b.preferredDate),
                              preferredTime: b.preferredTime, visitors: b.visitors, status: b.status };
         }
     } else {

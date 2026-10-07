@@ -1533,3 +1533,71 @@ div.leaflet-container {
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip-container { animation: ztimsFadeIn var(--dur-base, 200ms) var(--ease-standard, ease) backwards; }
 
+
+/* ==========================================================================
+   The visitor's journey
+   --------------------------------------------------------------------------
+   Steps while booking ("1 Your details  2 Payment  3 Confirmed"), the home
+   page's "How it works" strip, and its category tiles. One look on every
+   visitor page, so the same step reads the same wherever it appears.
+   ========================================================================== */
+.journey-steps {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+    list-style: none; margin: 0; padding: 0;
+}
+.journey-step {
+    display: inline-flex; align-items: center; gap: .45rem;
+    font-size: .8rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant));
+}
+.journey-step + .journey-step::before {
+    content: ''; width: 1.25rem; height: 1px; background: currentColor; opacity: .45; margin-right: .3rem;
+}
+.journey-step__num {
+    width: 1.5rem; height: 1.5rem; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid currentColor; font-size: .72rem; font-weight: 800;
+}
+.journey-step.is-current { color: rgb(var(--ztims-primary)); }
+.journey-step.is-current .journey-step__num {
+    background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); border-color: transparent;
+}
+.journey-step.is-done { color: rgb(var(--ztims-success)); }
+
+/* "How it works": three numbered steps, one row on a wide screen. */
+.how-it-works { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+@media (min-width: 768px) { .how-it-works { grid-template-columns: repeat(3, 1fr); } }
+.how-step {
+    display: flex; align-items: flex-start; gap: .85rem; padding: 1rem 1.1rem;
+    color: rgb(var(--ztims-on-surface)); text-decoration: none;
+}
+.how-step__num {
+    width: 2.25rem; height: 2.25rem; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary));
+    font-weight: 800;
+}
+
+/* Category tiles: a photograph per kind of place, its name over it. */
+.category-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+@media (min-width: 1024px) { .category-tiles { grid-template-columns: repeat(4, 1fr); } }
+.category-tile {
+    position: relative; display: block; height: 9.5rem; overflow: hidden; text-align: left;
+    background: rgb(var(--ztims-primary)); color: #fff; border: 0; padding: 0; cursor: pointer;
+    box-shadow: var(--ztims-shadow-card);
+}
+@media (min-width: 640px) { .category-tile { height: 11rem; } }
+.category-tile img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    transition: transform var(--dur-moderate, 300ms) var(--ease-standard, ease);
+}
+.category-tile:hover img, .category-tile:focus-visible img { transform: scale(1.05); }
+/* A dark scrim, the same in both themes: the text on it is white in both. */
+.category-tile::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / .78), rgb(0 0 0 / .15) 65%, transparent);
+}
+.category-tile__text { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: .85rem 1rem; }
+.category-tile__title { display: block; font-weight: 800; font-size: 1.05rem; line-height: 1.2; }
+.category-tile__sub { display: block; font-size: .8rem; opacity: .9; }
+.category-tile[aria-pressed="true"] { outline: 3px solid rgb(var(--ztims-secondary, var(--ztims-primary))); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .category-tile img { transition: none; } }

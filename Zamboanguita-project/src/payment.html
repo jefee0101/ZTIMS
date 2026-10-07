@@ -301,6 +301,10 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
+                <a href="manage.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                    <span class="material-symbols-outlined !text-lg">confirmation_number</span>
+                    <span class="hidden min-[420px]:inline">My booking</span>
+                </a>
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -378,6 +382,66 @@ body { overflow-x: hidden; }
             </div>`;
     }
 
+    // Where the visitor is: chose, paid, done.
+    function steps(c) {
+        const labels = c.kind === 'ticket' ? ['Date & visitors', 'Payment', 'Your ticket'] : ['Your details', 'Payment', 'Confirmed'];
+        const current = c.status === 'paid' ? 3 : 1;
+        return `<ol class="journey-steps" aria-label="Steps">${labels.map((label, i) => `
+            <li class="journey-step${i === current ? ' is-current' : ''}${i < current ? ' is-done' : ''}"${i === current ? ' aria-current="step"' : ''}>
+                <span class="journey-step__num">${i < current ? '✓' : i + 1}</span><span>${esc(label)}</span>
+            </li>`).join('')}</ol>`;
+    }
+
+    // A calendar entry made here in the browser: the whole day for a ticket,
+    // three hours from the chosen time for a guided tour (Manila is UTC+8).
+    function calendarFile({ title, date, time, where, ref }) {
+        const [y, m, d] = String(date).slice(0, 10).split('-').map(Number);
+        const pad = n => String(n).padStart(2, '0');
+        const stamp = dt => dt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        let when;
+        if (/^\d{2}:\d{2}$/.test(time || '')) {
+            const [hh, mm] = time.split(':').map(Number);
+            const start = new Date(Date.UTC(y, m - 1, d, hh - 8, mm));
+            when = [`DTSTART:${stamp(start)}`, `DTEND:${stamp(new Date(start.getTime() + 3 * 3600 * 1000))}`];
+        } else {
+            const next = new Date(Date.UTC(y, m - 1, d + 1));
+            when = [`DTSTART;VALUE=DATE:${y}${pad(m)}${pad(d)}`,
+                    `DTEND;VALUE=DATE:${next.getUTCFullYear()}${pad(next.getUTCMonth() + 1)}${pad(next.getUTCDate())}`];
+        }
+        const text = value => String(value || '').replace(/([\\;,])/g, '\\$1').replace(/\n/g, '\\n');
+        return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ZTIMS//Zamboanguita Tourism//EN', 'BEGIN:VEVENT',
+                `UID:${text(ref)}@ztims`, `DTSTAMP:${stamp(new Date())}`, ...when,
+                `SUMMARY:${text(title)}`, `LOCATION:${text(where + ', Zamboanguita, Negros Oriental')}`,
+                `DESCRIPTION:${text('Reference: ' + ref)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    }
+    let calendarEntry = null;
+    box.addEventListener('click', event => {
+        if (!event.target.closest('[data-calendar]') || !calendarEntry) return;
+        const url = URL.createObjectURL(new Blob([calendarFile(calendarEntry)], { type: 'text/calendar' }));
+        const link = Object.assign(document.createElement('a'), { href: url, download: `zamboanguita-${calendarEntry.ref}.ics` });
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    // After paying: the day, how to get there, and where to change it.
+    function whatsNext({ spotId, date, time, manageCode }) {
+        return `
+            <div class="ztims-card p-5 space-y-3">
+                <h2 class="text-label font-bold uppercase tracking-widest text-on-surface-variant">What's next</h2>
+                <p class="flex items-center gap-2 font-bold text-on-surface">
+                    <span class="material-symbols-outlined !text-lg">event</span>${niceDate(date)}${time ? ` · ${esc(time)}` : ''}
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    ${spotId ? `<a href="spot.html?spotId=${encodeURIComponent(spotId)}#directionsSection" class="btn btn-secondary btn-sm min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">directions</span> Directions</a>` : ''}
+                    <button type="button" data-calendar class="btn btn-ghost btn-sm min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">calendar_add_on</span> Add to calendar</button>
+                    <a href="manage.html?code=${encodeURIComponent(manageCode)}" class="btn btn-ghost btn-sm min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">edit_calendar</span> Move or cancel</a>
+                </div>
+            </div>`;
+    }
+
     function paidLine(c) {
         return row('Paid', `${peso(c.amount)} · ${esc(METHOD[c.method] || c.method || 'online')}`);
     }
@@ -385,7 +449,8 @@ body { overflow-x: hidden; }
     function render(c) {
         if (c.status === 'paid' && c.kind === 'guide_booking' && c.booking) {
             const b = c.booking;
-            show(heading('task_alt', 'tone-success', 'Payment received',
+            calendarEntry = { title: `Guided tour: ${b.spot}`, date: b.preferredDate, time: b.preferredTime, where: b.spot, ref: b.reference };
+            show(steps(c) + heading('task_alt', 'tone-success', 'Payment received',
                     `Booking <b class="font-mono">${esc(b.reference)}</b> is confirmed.`) + `
                 <div>
                     ${row('Destination', esc(b.spot))}
@@ -396,12 +461,14 @@ body { overflow-x: hidden; }
                 <p class="text-sm text-on-surface-variant">
                     The Municipal Tourism Office will assign your guide. Please keep your reference,
                     <b class="font-mono">${esc(b.reference)}</b>.
-                </p>`);
+                </p>
+                ${whatsNext({ spotId: b.spotId, date: b.preferredDate, time: b.preferredTime, manageCode: b.reference })}`);
             return;
         }
         if (c.status === 'paid' && c.kind === 'ticket' && c.ticket && c.ticket.code) {
             const t = c.ticket;
-            show(heading('confirmation_number', 'tone-success', 'Your entrance ticket',
+            calendarEntry = { title: `Visit: ${t.spot}`, date: t.visitDate, where: t.spot, ref: t.code };
+            show(steps(c) + heading('confirmation_number', 'tone-success', 'Your entrance ticket',
                     'Show this QR code at the entrance.') + `
                 <div class="ztims-card p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
                     <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${esc(t.spot)}</p>
@@ -414,14 +481,14 @@ body { overflow-x: hidden; }
                     ${t.status === 'used' ? '<p class="tone-info tone-pill text-xs font-bold px-2 py-1">Already used at the entrance</p>' : ''}
                 </div>
                 <div>${paidLine(c)}</div>
+                ${t.status === 'valid' ? whatsNext({ spotId: t.spotId, date: t.visitDate, manageCode: t.code }) : ''}
                 <p class="text-support">Valid on this date only. If the office has to close the attraction, your payment is refunded.</p>
                 ${t.spotId && t.status === 'valid' ? `
                 <a href="spot.html?spotId=${encodeURIComponent(t.spotId)}&ticketDate=${encodeURIComponent(t.visitDate)}"
                    class="btn btn-secondary min-h-[44px] w-full sm:w-auto">
                     <span class="material-symbols-outlined !text-base">group_add</span> Buy for more people, same date
                 </a>` : ''}
-                <p class="text-support">We have emailed you this ticket. To move or cancel it (until 11:59 PM the day before), use
-                    <a href="manage.html?code=${encodeURIComponent(t.code)}" class="underline font-bold">Manage my ticket</a>.</p>`);
+                <p class="text-support">We have emailed you this ticket. It can be moved or cancelled until 11:59 PM the day before.</p>`);
             return;
         }
         if (c.status === 'duplicate') {
@@ -437,7 +504,7 @@ body { overflow-x: hidden; }
         // Still pending.
         if (cancelled) {
             const ref = c.booking ? `Your booking <b class="font-mono">${esc(c.booking.reference)}</b> is still saved.` : 'Your tickets were not bought.';
-            show(heading('undo', 'tone-neutral', 'Payment cancelled', `Nothing was charged. ${ref}`) + `
+            show(steps(c) + heading('undo', 'tone-neutral', 'Payment cancelled', `Nothing was charged. ${ref}`) + `
                 <div class="flex flex-wrap gap-2">
                     ${c.payUrl ? `<a href="${esc(c.payUrl)}" class="btn btn-primary min-h-[44px]">Try paying again</a>` : ''}
                     <a href="../index.html" class="btn btn-ghost min-h-[44px]">Back to destinations</a>
@@ -450,7 +517,7 @@ body { overflow-x: hidden; }
             setTimeout(load, 2000);
             return;
         }
-        show(heading('hourglass_top', 'tone-warning', 'Still waiting for the payment service',
+        show(steps(c) + heading('hourglass_top', 'tone-warning', 'Still waiting for the payment service',
             'You can close this page. When the payment arrives, ZTIMS confirms it by itself.') +
             (c.booking ? `<p class="text-sm">Your reference: <b class="font-mono">${esc(c.booking.reference)}</b></p>` : ''));
     }

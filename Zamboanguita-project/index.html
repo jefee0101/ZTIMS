@@ -323,6 +323,10 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
                     <span class="hidden min-[420px]:inline">History</span>
                 </a>
+                <a href="src/manage.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                    <span class="material-symbols-outlined !text-lg">confirmation_number</span>
+                    <span class="hidden min-[420px]:inline">My booking</span>
+                </a>
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -433,6 +437,25 @@ body { overflow-x: hidden; }
                      on its own — and it is the heading now rather than a caption
                      under one, which keeps the section from having no heading at all. -->
                 <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6 text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
+
+                <!-- How a visit works, in three steps, for someone here for the first time. -->
+                <ol class="how-it-works mb-6" aria-label="How it works">
+                    <li class="glass-card how-step">
+                        <span class="how-step__num" aria-hidden="true">1</span>
+                        <span><b class="block">Discover</b><span class="text-support">Find beaches, falls and heritage sites below or on the map.</span></span>
+                    </li>
+                    <li class="glass-card how-step">
+                        <span class="how-step__num" aria-hidden="true">2</span>
+                        <span><b class="block">Book &amp; pay</b><span class="text-support">Buy entrance tickets or book a tourist guide online, or pay onsite.</span></span>
+                    </li>
+                    <li class="glass-card how-step">
+                        <span class="how-step__num" aria-hidden="true">3</span>
+                        <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your QR code at the entrance.</span></span>
+                    </li>
+                </ol>
+
+                <!-- One photograph per kind of place; a tap shows only those below. -->
+                <div id="categoryTiles" class="category-tiles mb-8" aria-label="Browse by category"></div>
 
                 <!-- The gap the result count used to hold open. It sat between this
                      row and the grid with 24px under it; now that it is sr-only it
@@ -799,10 +822,67 @@ body { overflow-x: hidden; }
     });
 
     document.getElementById('spotCategoryFilter').addEventListener('change', event => {
-        activeCategory = event.target.value;
-        applyFilters();
+        setCategory(event.target.value);
         hideSuggestions();
     });
+
+    /* ---------------- browse by category, and coming back ----------------
+       The tiles and the dropdown are one control. What was searched and chosen
+       is kept for this visit, so "Destinations" on a destination page comes
+       back to the same results; a link may also name a category
+       (index.html?category=MOUNTAIN#browse). */
+    const CATEGORY_TILES = [
+        { key: 'BEACH / DIVING', title: 'Beaches & Diving', sub: 'Swim, snorkel and dive the reefs', icon: 'scuba_diving' },
+        { key: 'MOUNTAIN', title: 'Mountains & Waterfalls', sub: 'Chase the falls and the views', icon: 'landscape' },
+        { key: 'CULTURAL', title: 'Culture & Heritage', sub: "Discover the town's story", icon: 'museum' },
+        { key: 'ACCOMMODATION', title: 'Places to Stay', sub: 'Resorts and lodging for the night', icon: 'hotel' }
+    ];
+    const BROWSE_KEY = 'ztimsBrowse';
+
+    function rememberBrowse() {
+        try { sessionStorage.setItem(BROWSE_KEY, JSON.stringify({ q: searchInput.value, category: activeCategory })); } catch (e) { /* private browsing */ }
+    }
+    function setCategory(category) {
+        activeCategory = CATEGORY_TILES.some(t => t.key === category) ? category : 'all';
+        document.getElementById('spotCategoryFilter').value = activeCategory;
+        document.querySelectorAll('#categoryTiles [data-category]').forEach(tile =>
+            tile.setAttribute('aria-pressed', tile.dataset.category === activeCategory ? 'true' : 'false'));
+        applyFilters();
+        rememberBrowse();
+    }
+    function drawCategoryTiles() {
+        const box = document.getElementById('categoryTiles');
+        box.innerHTML = CATEGORY_TILES.map(tile => {
+            const places = allSpots.filter(spot => String(spot.category || '').toUpperCase() === tile.key);
+            const photo = (places.find(spot => spot.imageUrl) || {}).imageUrl;
+            return `
+                <button type="button" class="category-tile" data-category="${escapeHtml(tile.key)}" aria-pressed="${activeCategory === tile.key}">
+                    ${photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy"/>` : ''}
+                    <span class="category-tile__text">
+                        <span class="category-tile__title">${escapeHtml(tile.title)}</span>
+                        <span class="category-tile__sub">${escapeHtml(tile.sub)}${places.length ? ` · ${places.length} ${places.length === 1 ? 'place' : 'places'}` : ''}</span>
+                    </span>
+                </button>`;
+        }).join('');
+    }
+    document.getElementById('categoryTiles').addEventListener('click', event => {
+        const tile = event.target.closest('[data-category]');
+        if (!tile) return;
+        // A second tap on the chosen tile shows everything again.
+        setCategory(tile.dataset.category === activeCategory ? 'all' : tile.dataset.category);
+        document.getElementById('spotsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    searchInput.addEventListener('input', rememberBrowse);
+
+    (function restoreBrowse() {
+        let saved = {};
+        try { saved = JSON.parse(sessionStorage.getItem(BROWSE_KEY) || '{}'); } catch (e) { /* nothing kept */ }
+        const fromLink = new URLSearchParams(window.location.search).get('category');
+        if (typeof saved.q === 'string' && !fromLink) searchInput.value = saved.q;
+        const category = fromLink || saved.category || 'all';
+        activeCategory = CATEGORY_TILES.some(t => t.key === category) ? category : 'all';
+        document.getElementById('spotCategoryFilter').value = activeCategory;
+    })();
 
     async function loadSpots() {
         const doneLoading = showLoading(spotsContainer, 'Loading tourist spots and accommodations...');
@@ -812,6 +892,7 @@ body { overflow-x: hidden; }
             const spots = await response.json();
             allSpots = Array.isArray(spots) ? spots : [];
             doneLoading();
+            drawCategoryTiles();
             applyFilters();
             showOnMap(allSpots);
         } catch (error) {

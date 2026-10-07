@@ -229,7 +229,11 @@ body { overflow-x: hidden; }
             <span class="material-symbols-outlined !text-xl shrink-0">arrow_back</span>
             <span class="truncate"><span class="hidden sm:inline">EXPLORE </span>ZAMBOANGUITA</span>
         </a>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <a href="manage.html" class="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <span class="material-symbols-outlined !text-lg">confirmation_number</span>
+                <span class="hidden min-[420px]:inline">My booking</span>
+            </a>
             <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-secondary hover:bg-surface-variant transition-all" title="Toggle theme">
                 <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
             </button>
@@ -240,6 +244,11 @@ body { overflow-x: hidden; }
 <main id="spotContent" class="page-enter pt-16">
     <!-- Filled by the script below -->
 </main>
+
+<!-- On a phone the next step stays in reach: the same actions as the bar under
+     the photo, fixed to the bottom of the screen. Filled by drawActions(). -->
+<div id="mobileActions" hidden
+     class="lg:hidden fixed inset-x-0 bottom-0 z-40 glass-nav border-t border-outline-variant/30 px-3 py-2 flex gap-2"></div>
 
 
 <!-- Full-size photo viewer. One element reused for every photo, so a spot with
@@ -254,7 +263,8 @@ body { overflow-x: hidden; }
             <span class="material-symbols-outlined">close</span>
         </button>
 
-        <h3 class="text-xl font-display font-bold text-on-surface mb-5">Book a tourist guide</h3>
+        <h3 class="text-xl font-display font-bold text-on-surface mb-3">Book a tourist guide</h3>
+        <ol id="bookSteps" class="journey-steps mb-5" aria-label="Booking steps"></ol>
 
         <form id="guideBookingForm" class="space-y-3">
             <div>
@@ -947,6 +957,8 @@ body { overflow-x: hidden; }
         });
 
         if (!openBtn || !modal) return;
+        actions.guide = true;
+        drawActions();
 
         const maxGroup = info.maxGroupSize || 1;
         document.getElementById('bookVisitors').max = String(maxGroup);
@@ -991,6 +1003,7 @@ body { overflow-x: hidden; }
         function openBooking(guideId) {
             document.getElementById('bookingResult').hidden = true;
             document.getElementById('guideBookingForm').hidden = false;
+            setBookingStep(0, info.payOnline);
             setBookingError('');
             chosenGuide = guideId || '';
             drawGuidePicker();
@@ -1063,6 +1076,7 @@ body { overflow-x: hidden; }
                 document.getElementById('guideBookingForm').hidden = true;
                 document.getElementById('bookingReference').textContent = data.booking.reference;
                 document.getElementById('bookingResult').hidden = false;
+                setBookingStep(1, data.payOnline);
                 offerOnlinePayment(data, payload.email);
             } catch (error) {
                 setBookingError(error.message);
@@ -1144,6 +1158,8 @@ body { overflow-x: hidden; }
             if (response.ok) offer = await response.json();
         } catch (e) { /* no offer: the section simply does not appear */ }
         if (!offer || !offer.available) return;
+        actions.tickets = true;
+        drawActions();
 
         const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
         const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
@@ -1154,6 +1170,7 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined text-primary">confirmation_number</span> Entrance tickets
                     </h2>
                 </div>
+                <ol class="journey-steps" aria-label="Ticket steps">${journeySteps(['Date & visitors', 'Payment', 'Your ticket'], 0)}</ol>
                 <p class="text-sm text-on-surface-variant">
                     ${escapeHtml(formatPeso(ticketKinds(offer)[0].price))} per person${ticketKinds(offer).length > 1
                         ? `, less for ${escapeHtml(ticketKinds(offer).slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).join(', ').replace(/, ([^,]*)$/, ' and $1'))}` : ''}.
@@ -1642,6 +1659,114 @@ body { overflow-x: hidden; }
             || { cls: 'cat-attraction', icon: 'photo_camera' };
     }
 
+    /* ---- the visitor's journey: where they are and what comes next ---- */
+
+    const CATEGORY_TITLES = {
+        'BEACH / DIVING': 'Beaches & Diving', 'MOUNTAIN': 'Mountains & Waterfalls',
+        'CULTURAL': 'Culture & Heritage', 'ACCOMMODATION': 'Places to Stay'
+    };
+    const categoryTitle = category => CATEGORY_TITLES[String(category || '').toUpperCase()] || 'Destinations';
+
+    // "1 Details  2 Payment  3 Confirmed", the current step marked.
+    function journeySteps(labels, current) {
+        return labels.map((label, i) => `
+            <li class="journey-step${i === current ? ' is-current' : ''}${i < current ? ' is-done' : ''}"${i === current ? ' aria-current="step"' : ''}>
+                <span class="journey-step__num">${i < current ? '✓' : i + 1}</span><span>${escapeHtml(label)}</span>
+            </li>`).join('');
+    }
+    function setBookingStep(current, payOnline) {
+        const list = document.getElementById('bookSteps');
+        if (list) list.innerHTML = journeySteps(['Your details', payOnline ? 'Payment' : 'Pay onsite', 'Confirmed'], current);
+    }
+
+    // What this destination lets a visitor do, and the buttons for it: under the
+    // photo, and fixed to the bottom of a phone's screen.
+    const actions = { tickets: false, guide: false, directions: false, bookingUrl: '' };
+    function startActions(spot) {
+        actions.directions = Boolean(spotPoint(spot));
+        actions.bookingUrl = safeExternalUrl(spot.bookingUrl) || '';
+        drawActions();
+    }
+    function actionButtons(compact) {
+        const size = compact ? 'flex-1 min-w-0 !px-2 !text-xs' : '';
+        const list = [];
+        if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
+        if (actions.guide) list.push(`<button type="button" data-act="guide" class="btn ${actions.tickets ? 'btn-secondary' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">hiking</span>Book a guide</button>`);
+        if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>Book now</a>`);
+        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn btn-secondary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+        return list.join('');
+    }
+    function drawActions() {
+        const bar = document.getElementById('actionBar');
+        const phone = document.getElementById('mobileActions');
+        const html = actionButtons(false);
+        if (bar) { bar.innerHTML = html; bar.hidden = !html; }
+        if (phone) {
+            phone.innerHTML = actionButtons(true);
+            phone.hidden = !html;
+            content.classList.toggle('pb-20', Boolean(html));
+        }
+    }
+    function goTo(id) {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-act]');
+        if (!button) return;
+        const act = button.dataset.act;
+        if (act === 'tickets') goTo('ticketOffer');
+        if (act === 'directions') goTo('directionsSection');
+        if (act === 'guide') {
+            const open = document.getElementById('openBookGuideBtn');
+            if (open) open.click(); else goTo('guideRequirement');
+        }
+    });
+
+    // More places, so a visitor who has finished reading one keeps exploring:
+    // the nearest first when both have a map pin, the same kind of place first
+    // otherwise.
+    function distanceKm(a, b) {
+        const rad = d => d * Math.PI / 180;
+        const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+        return 6371 * 2 * Math.asin(Math.sqrt(h));
+    }
+    async function renderRelated(spot) {
+        const box = document.getElementById('relatedPlaces');
+        if (!box) return;
+        let all = [];
+        try {
+            const response = await fetch(`${API_BASE}/spots`);
+            if (response.ok) all = await response.json();
+        } catch (error) { return; }
+        const here = spotPoint(spot);
+        const category = String(spot.category || '').toUpperCase();
+        const others = (Array.isArray(all) ? all : []).filter(s => s._id !== spot._id).map(s => {
+            const there = spotPoint(s);
+            return { spot: s, km: here && there ? distanceKm(here, there) : null, same: String(s.category || '').toUpperCase() === category };
+        });
+        if (!others.length) return;
+        others.sort((a, b) => (a.km !== null && b.km !== null) ? a.km - b.km
+            : (a.same === b.same ? 0 : a.same ? -1 : 1));
+        const nearby = here && others[0].km !== null;
+        box.innerHTML = `
+            <h2 id="relatedHeading" class="text-2xl font-display font-bold text-on-surface mb-4">${nearby ? 'Nearby places to visit' : 'More places to explore'}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">${others.slice(0, 3).map(({ spot: s, km }) => `
+                <a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="ztims-card card-destination group flex flex-col overflow-hidden">
+                    <div class="h-36 bg-surface-variant overflow-hidden">
+                        <img class="w-full h-full object-cover" src="${escapeHtml(s.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="" loading="lazy"/>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-label font-bold uppercase tracking-widest text-primary">${escapeHtml(categoryTitle(s.category))}</p>
+                        <h3 class="font-display font-semibold text-on-surface">${escapeHtml(s.title)}</h3>
+                        <p class="text-support flex items-center gap-1 mt-1"><span class="material-symbols-outlined !text-sm text-accent">${km !== null ? 'near_me' : 'location_on'}</span>${km !== null ? `${km < 1 ? '<1' : km.toFixed(1)} km away` : escapeHtml(s.location || '')}</p>
+                    </div>
+                </a>`).join('')}
+            </div>`;
+        box.hidden = false;
+    }
+
     function renderSpot(spot) {
         const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
         const photos = spotPhotos(spot);
@@ -1663,6 +1788,16 @@ body { overflow-x: hidden; }
                 </div>
             </section>
 
+            <div class="px-5 sm:px-6 md:px-12 pt-5 max-w-7xl mx-auto space-y-4">
+                <nav aria-label="Breadcrumb" class="text-support flex flex-wrap items-center gap-1.5">
+                    <a href="../index.html#browse" class="font-bold hover:text-primary hover:underline">Destinations</a>
+                    <span aria-hidden="true">›</span>
+                    <a href="../index.html?category=${encodeURIComponent(String(spot.category || '').toUpperCase())}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot.category))}</a>
+                    <span aria-hidden="true">›</span>
+                    <span aria-current="page" class="text-on-surface">${escapeHtml(spot.title)}</span>
+                </nav>
+                <div id="actionBar" hidden class="hidden lg:flex flex-wrap gap-2"></div>
+            </div>
             <div class="px-5 sm:px-6 md:px-12 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 max-w-7xl mx-auto">
                 <div class="lg:col-span-2 space-y-8">
                     <div>
@@ -1722,6 +1857,7 @@ body { overflow-x: hidden; }
                     </div>
                 </aside>
             </div>
+            <section id="relatedPlaces" hidden class="px-5 sm:px-6 md:px-12 pb-12 max-w-7xl mx-auto" aria-labelledby="relatedHeading"></section>
         `;
     }
 
@@ -1798,6 +1934,8 @@ body { overflow-x: hidden; }
             document.title = `${spot.title} | Zamboanguita`;
             wirePhotoLightbox(spotPhotos(spot));
             wireDirections(spot);
+            startActions(spot);
+            renderRelated(spot);
             // The footer script may have run before this page was drawn.
             if (window.ztimsEmergency) window.ztimsEmergency.fill();
             renderGuideRequirement(spotId);

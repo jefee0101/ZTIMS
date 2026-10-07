@@ -530,6 +530,32 @@ guided destinations:
   used by ticket sales and guide bookings alike; the public ticket offer and
   guide requirement carry `openDays` and `closedDates` so the forms say so first.
 
+### The visitor's journey (Home → destination → pay → after)
+
+Frontend only, no tables of their own:
+- **Home** (`index.html`, `#browse`): a "How it works" strip (Discover → Book &
+  pay → Get there, `.how-it-works`) and four category photo tiles
+  (`#categoryTiles`, `.category-tile`; photo = the first listing of that
+  category with one). Tiles and the category dropdown are one control
+  (`setCategory`); a second tap shows everything. The search and category are
+  kept for the visit in `sessionStorage.ztimsBrowse`, and `?category=` opens a
+  category (the destination page's breadcrumb links there).
+- **Header**: every visitor page has "My booking" → `manage.html`.
+- **Destination** (`spot.html`): a breadcrumb (Destinations › category ›
+  place); the actions the place really offers — Buy tickets, Book a guide, Book
+  now (its own booking link), Directions — as `#actionBar` under the photo on a
+  computer and `#mobileActions` fixed to the bottom of a phone (`drawActions`;
+  never both); "Nearby places to visit" (nearest first when both have a pin,
+  else "More places to explore", same category first; `renderRelated`).
+- **Steps** (`.journey-steps`): booking a guide shows Your details → Payment
+  (or Pay onsite) → Confirmed; tickets show Date & visitors → Payment → Your
+  ticket; `payment.html` continues the same steps.
+- **After paying** (`payment.html`): "What's next" — the date, Directions
+  (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`
+  for both kinds), Add to calendar (an `.ics` made in the browser: the whole
+  day for a ticket, three hours from the chosen time for a tour, Manila time),
+  and Move or cancel (`manage.html?code=`).
+
 ### Visitor emails and "Manage my ticket / booking"
 
 - **`mailer.js`** sends through the office's Gmail (`MAIL_USER`, `MAIL_PASSWORD`,
