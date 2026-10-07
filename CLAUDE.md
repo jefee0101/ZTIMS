@@ -658,6 +658,11 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 
 ### Settings (the officer's `admin_profile.html`)
 
+Five subpages, one tab each, each with its own address so a link or a reload
+opens it and Back returns to the one before: `#account` (the default),
+`#security`, `#accounts`, `#office`, `#privacy` (`SUBPAGES` / `showSubpage` in
+the page; tabs styled like Statistics').
+
 - **My Account**: the officer's full name, position and contact number
   (`tourism_officers.full_name|position|contact_number`; `GET`/`PATCH
   /api/admin/me`), shown with initials, never a photo. The sign-in email is

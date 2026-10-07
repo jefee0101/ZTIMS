@@ -49,6 +49,13 @@ HTML
 </script>
 
 <style>
+    /* Settings' subpage tabs — the same look as Statistics' tabs. */
+    .settings-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                    color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+                    transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+    .settings-tab:hover { color: rgb(var(--ztims-on-surface)); }
+    .settings-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+    .settings-tab:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
 
 /* Input colours come from .field in shared/theme.css. This page used to carry
    its own blanket `.light-mode input` / `.dark input` overrides, both with
@@ -524,18 +531,24 @@ body { overflow-x: hidden; }
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Settings</h1>
             </header>
 
-            <!-- Jump to a section -->
-            <nav class="flex flex-wrap gap-2" aria-label="Settings sections">
-                <a href="#accountSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">badge</span>My Account</a>
-                <a href="#securitySection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">shield_lock</span>Security</a>
-                <a href="#officersSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">groups</span>Tourism Office Accounts</a>
-                <a href="#officeSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">apartment</span>Office Information</a>
-                <a href="#privacySection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">privacy_tip</span>Data Privacy</a>
-            </nav>
+            <!-- One subpage per part of Settings. Each has its own address
+                 (admin_profile.html#security, …), so a link can open one, and
+                 Back goes to the previous one. -->
+            <div role="tablist" aria-label="Settings" class="flex flex-wrap gap-x-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-account" aria-controls="accountSection" aria-selected="true" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">badge</span>My Account</button>
+                <button role="tab" id="tab-security" aria-controls="securitySection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">shield_lock</span>Security</button>
+                <button role="tab" id="tab-accounts" aria-controls="officersSection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">groups</span>Tourism Office Accounts</button>
+                <button role="tab" id="tab-office" aria-controls="officeSection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">apartment</span>Office Information</button>
+                <button role="tab" id="tab-privacy" aria-controls="privacySection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">privacy_tip</span>Data Privacy</button>
+            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- 1. My Account -->
-                <section id="accountSection" class="glass-panel p-5 sm:p-7 space-y-6 scroll-mt-24" aria-labelledby="accountHeading">
+                <section id="accountSection" role="tabpanel" aria-labelledby="tab-account" class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
                     <h2 id="accountHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">badge</span> My Account
                     </h2>
@@ -577,7 +590,7 @@ body { overflow-x: hidden; }
                 </section>
 
                 <!-- 2. Security -->
-                <section id="securitySection" class="glass-panel p-5 sm:p-7 space-y-6 scroll-mt-24" aria-labelledby="securityHeading">
+                <section id="securitySection" role="tabpanel" aria-labelledby="tab-security" hidden class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
                     <h2 id="securityHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">shield_lock</span> Security
                     </h2>
@@ -613,10 +626,9 @@ body { overflow-x: hidden; }
                         </button>
                     </div>
                 </section>
-            </div>
 
             <!-- 3. Tourism Office Accounts -->
-            <section id="officersSection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="officersHeading">
+            <section id="officersSection" role="tabpanel" aria-labelledby="tab-accounts" hidden class="glass-panel p-5 sm:p-7 space-y-5">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 id="officersHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                         <span class="material-symbols-outlined">groups</span> Tourism Office Accounts
@@ -668,7 +680,7 @@ body { overflow-x: hidden; }
             </section>
 
             <!-- 4. Office Information (shown on the public site) -->
-            <section id="officeSection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="officeHeading">
+            <section id="officeSection" role="tabpanel" aria-labelledby="tab-office" hidden class="glass-panel p-5 sm:p-7 space-y-5">
                 <h2 id="officeHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                     <span class="material-symbols-outlined">apartment</span> Office Information
                 </h2>
@@ -710,7 +722,7 @@ body { overflow-x: hidden; }
             </section>
 
             <!-- 5. Data Privacy (Data Privacy Act of 2012) -->
-            <section id="privacySection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="privacyHeading">
+            <section id="privacySection" role="tabpanel" aria-labelledby="tab-privacy" hidden class="glass-panel p-5 sm:p-7 space-y-5 max-w-3xl">
                 <h2 id="privacyHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                     <span class="material-symbols-outlined">privacy_tip</span> Data Privacy
                 </h2>
@@ -1111,8 +1123,53 @@ function mountPortalAccountMenu() {
     });
 }
 
+/* ---- the subpages ------------------------------------------------------------ */
+
+// The address names the subpage (#security …); a page opened without one, or
+// with one it doesn't know, shows My Account.
+const SUBPAGES = ['account', 'security', 'accounts', 'office', 'privacy'];
+const subpageFromAddress = () => {
+    const asked = window.location.hash.slice(1);
+    return SUBPAGES.includes(asked) ? asked : 'account';
+};
+
+function showSubpage(name, { focusTab = false } = {}) {
+    for (const page of SUBPAGES) {
+        const tab = document.getElementById('tab-' + page);
+        const on = page === name;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        document.getElementById(tab.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focusTab) document.getElementById('tab-' + name).focus();
+}
+
+document.querySelector('[role="tablist"]').addEventListener('click', event => {
+    const tab = event.target.closest('[role="tab"]');
+    if (!tab) return;
+    const name = tab.id.slice(4);
+    if (name !== subpageFromAddress()) history.pushState(null, '', '#' + name);
+    showSubpage(name);
+});
+
+// Arrow keys move between the tabs, as in any tab list.
+document.querySelector('[role="tablist"]').addEventListener('keydown', event => {
+    const step = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    const at = SUBPAGES.indexOf(subpageFromAddress());
+    const next = SUBPAGES[Math.max(0, Math.min(SUBPAGES.length - 1,
+        Number.isFinite(step) ? (at + step + SUBPAGES.length) % SUBPAGES.length : (step < 0 ? 0 : SUBPAGES.length - 1)))];
+    history.pushState(null, '', '#' + next);
+    showSubpage(next, { focusTab: true });
+});
+
+// Back and Forward move between the subpages that were opened.
+window.addEventListener('popstate', () => showSubpage(subpageFromAddress()));
+
 window.addEventListener('DOMContentLoaded', () => {
     if (!guardOfficerSession()) return;
+    showSubpage(subpageFromAddress());
     mountPortalAccountMenu();
     loadMe();
     loadOfficers();
