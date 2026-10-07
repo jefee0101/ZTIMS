@@ -75,7 +75,7 @@
     window.ztimsEmergency = { fill: fillEmergencyBoxes, get count() { return EMERGENCY.length; } };
 
     /* Other pages' own spots for the same details (Contact Us):
-       [data-office-field="address|officeHours|phone|email"], each inside an
+       [data-office-field="address|officeHours|phone|email|dpoName|dpoEmail"], each inside an
        optional [data-office-row] that is hidden while its value is empty. */
     function fillOfficeFields() {
         document.querySelectorAll('[data-office-field]').forEach(function (el) {
@@ -85,7 +85,7 @@
             if (row) row.hidden = !value;
             if (key === 'phone' && value) {
                 el.innerHTML = '<a class="hover:text-primary hover:underline" href="tel:' + String(value).replace(/[^0-9+]/g, '') + '">' + escapeText(value) + '</a>';
-            } else if (key === 'email' && value) {
+            } else if ((key === 'email' || key === 'dpoEmail') && value) {
                 el.innerHTML = '<a class="hover:text-primary hover:underline break-all" href="mailto:' + escapeText(value) + '">' + escapeText(value) + '</a>';
             } else {
                 el.textContent = value;
@@ -199,7 +199,9 @@
             if (!office) return;
             OFFICE = {
                 address: office.address || OFFICE.address, officeHours: office.officeHours || '',
-                phone: office.phone || '', email: office.email || ''
+                phone: office.phone || '', email: office.email || '',
+                // The Data Protection Officer, on the Privacy page.
+                dpoName: office.dpoName || '', dpoEmail: office.dpoEmail || ''
             };
             EMERGENCY = Array.isArray(office.emergency) ? office.emergency : [];
             draw();

@@ -530,6 +530,7 @@ body { overflow-x: hidden; }
                 <a href="#securitySection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">shield_lock</span>Security</a>
                 <a href="#officersSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">groups</span>Tourism Office Accounts</a>
                 <a href="#officeSection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">apartment</span>Office Information</a>
+                <a href="#privacySection" class="btn btn-ghost btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base">privacy_tip</span>Data Privacy</a>
             </nav>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -594,8 +595,8 @@ body { overflow-x: hidden; }
                         </label>
                         <label class="block">
                             <span class="field-label">New password</span>
-                            <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="8" class="field"/>
-                            <span class="text-support mt-1 block">At least 8 characters.</span>
+                            <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" class="field"/>
+                            <span class="text-support mt-1 block">At least 10 characters.</span>
                         </label>
                         <label class="block">
                             <span class="field-label">Confirm new password</span>
@@ -605,6 +606,12 @@ body { overflow-x: hidden; }
                             <span class="material-symbols-outlined !text-base">key</span> Change password
                         </button>
                     </form>
+                    <div class="border-t border-outline-variant/30 pt-5 space-y-3">
+                        <h3 class="font-bold text-on-surface">Signed-in devices</h3>
+                        <button id="signOutEverywhereBtn" type="button" class="btn btn-ghost w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">devices_off</span> Sign out of all devices
+                        </button>
+                    </div>
                 </section>
             </div>
 
@@ -634,7 +641,7 @@ body { overflow-x: hidden; }
                     </label>
                     <label class="block">
                         <span class="field-label">Password <span class="normal-case font-normal">(optional)</span></span>
-                        <input id="newOfficerPassword" type="text" minlength="8" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
+                        <input id="newOfficerPassword" type="text" minlength="10" maxlength="72" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
                     </label>
                     <div class="sm:col-span-2 flex flex-wrap gap-2">
                         <button id="addOfficerBtn" type="submit" class="btn btn-primary min-h-[44px]">
@@ -697,6 +704,41 @@ body { overflow-x: hidden; }
                         <p id="officeUpdated" class="text-support"></p>
                         <button id="saveOfficeBtn" type="submit" class="btn btn-primary min-h-[44px]">
                             <span class="material-symbols-outlined !text-base">save</span> Save office information
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- 5. Data Privacy (Data Privacy Act of 2012) -->
+            <section id="privacySection" class="glass-panel p-5 sm:p-7 space-y-5 scroll-mt-24" aria-labelledby="privacyHeading">
+                <h2 id="privacyHeading" class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined">privacy_tip</span> Data Privacy
+                </h2>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div class="ztims-card p-4">
+                        <dt class="text-on-surface-variant">Visitors' names, phone numbers and emails</dt>
+                        <dd class="font-bold text-on-surface mt-1">Erased one year after the visit</dd>
+                    </div>
+                    <div class="ztims-card p-4">
+                        <dt class="text-on-surface-variant">Last erasure check</dt>
+                        <dd id="privacyChecked" class="font-bold text-on-surface mt-1">—</dd>
+                    </div>
+                </dl>
+                <form id="privacyForm" class="space-y-4" novalidate>
+                    <h3 class="font-bold text-on-surface">Data Protection Officer</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="field-label">Full name</span>
+                            <input id="dpoName" type="text" maxlength="120" class="field" placeholder="e.g., Maria L. Santos"/>
+                        </label>
+                        <label class="block">
+                            <span class="field-label">Email</span>
+                            <input id="dpoEmail" type="email" maxlength="254" class="field" placeholder="dpo@zamboanguita.gov.ph"/>
+                        </label>
+                    </div>
+                    <div class="flex justify-end border-t border-outline-variant/30 pt-4">
+                        <button id="savePrivacyBtn" type="submit" class="btn btn-primary min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">save</span> Save
                         </button>
                     </div>
                 </form>
@@ -797,17 +839,33 @@ officerPasswordForm.addEventListener('submit', async event => {
     const next = document.getElementById('newPassword').value;
     const confirm = document.getElementById('confirmPassword').value;
     if (!current || !next || !confirm) return showToast('Fill in all three fields to change your password.', 'error');
-    if (next.length < 8) return showToast('Your new password must be at least 8 characters.', 'error');
+    if (next.length < 10) return showToast('Your new password must be at least 10 characters.', 'error');
     if (next !== confirm) return showToast('The new password and its confirmation do not match.', 'error');
     if (next === current) return showToast('Your new password must be different from your current one.', 'error');
     const restore = setButtonLoading(document.getElementById('changePasswordBtn'), 'Changing...');
     try {
         const r = await api('/admin/me/password', 'POST', { currentPassword: current, newPassword: next });
+        // Every other sign-in ended with the old password; this one carries on.
+        if (r.token) localStorage.setItem('authToken', r.token);
         showToast(r.message || 'Your password has been changed.', 'success');
         officerPasswordForm.reset();
     } catch (e) {
         if (e.message !== 'Signed out.') showToast(e.message || 'Your password is unchanged.', 'error');
     } finally { restore(); }
+});
+
+document.getElementById('signOutEverywhereBtn').addEventListener('click', async () => {
+    const yes = await ztimsDialog.confirm({
+        title: 'Sign out of all devices?',
+        message: 'Every computer and phone signed in to your account is signed out, this one too.',
+        confirmLabel: 'Sign out everywhere', tone: 'danger'
+    });
+    if (!yes) return;
+    try {
+        await api('/me/sign-out-everywhere', 'POST');
+        window.ztimsTheme.clearStorage();
+        window.location.replace('../staff_login.html');
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
 });
 
 /* ---- 3. Tourism Office Accounts ------------------------------------------ */
@@ -870,10 +928,15 @@ addForm.addEventListener('submit', async event => {
     const email = document.getElementById('newOfficerEmail').value.trim();
     const password = document.getElementById('newOfficerPassword').value.trim();
     if (!fullName || !email) return showToast("Enter the officer's full name and sign-in email.", 'error');
-    if (password && password.length < 8) return showToast('A password must be at least 8 characters.', 'error');
+    if (password && password.length < 10) return showToast('A password must be at least 10 characters.', 'error');
+    const confirmPassword = await ztimsDialog.prompt({
+        title: `Create an officer account for ${fullName}?`, label: 'Your password', type: 'password',
+        autocomplete: 'current-password', required: true, confirmLabel: 'Create account', icon: 'person_add'
+    });
+    if (!confirmPassword) return;
     const restore = setButtonLoading(document.getElementById('addOfficerBtn'), 'Creating...');
     try {
-        const r = await api('/admin/create', 'POST', { fullName, email, password, position: document.getElementById('newOfficerPosition').value.trim() });
+        const r = await api('/admin/create', 'POST', { fullName, email, password, position: document.getElementById('newOfficerPosition').value.trim(), confirmPassword });
         showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
         addForm.reset(); addForm.hidden = true;
         loadOfficers();
@@ -890,28 +953,34 @@ document.getElementById('adminListTableBody').addEventListener('click', async ev
     const name = officer.fullName || officer.email;
     try {
         if (issue) {
-            const typed = await ztimsDialog.prompt({
+            const values = await ztimsDialog.form({
                 title: `Issue a new password for ${name}?`,
-                message: 'Their current password stops working immediately.',
-                label: 'New password', optional: true, placeholder: 'Leave blank to generate one',
-                help: 'At least 8 characters.', confirmLabel: 'Issue password', icon: 'key',
-                validate: value => value.trim() && value.trim().length < 8 ? 'A password must be at least 8 characters.' : ''
+                message: 'Their current password stops working immediately. They choose their own at their next sign-in.',
+                confirmLabel: 'Issue password', icon: 'key',
+                fields: [
+                    { name: 'newPassword', label: 'New password', optional: true, placeholder: 'Leave blank to generate one', help: 'At least 10 characters.' },
+                    { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
+                ],
+                validate: v => v.newPassword.trim() && v.newPassword.trim().length < 10 ? 'A password must be at least 10 characters.'
+                    : (!v.confirmPassword ? 'Enter your password to confirm.' : '')
             });
-            if (typed === null) return;
-            const r = await api(`/admin/${encodeURIComponent(officer._id)}/password`, 'POST', { newPassword: typed.trim() });
+            if (values === null) return;
+            const r = await api(`/admin/${encodeURIComponent(officer._id)}/password`, 'POST', { newPassword: values.newPassword.trim(), confirmPassword: values.confirmPassword });
             showPassword(`New password for ${name}`, r.email, r.newPassword);
         } else {
             const activate = status.dataset.active === '1';
-            const yes = await ztimsDialog.confirm({
+            const values = await ztimsDialog.form({
                 title: activate ? `Reactivate ${name}?` : `Deactivate ${name}?`,
                 message: activate
                     ? 'They will be able to sign in again.'
                     : 'They will be signed out and can no longer sign in. The account and its records are kept.',
                 confirmLabel: activate ? 'Reactivate' : 'Deactivate',
-                tone: activate ? 'default' : 'danger'
+                tone: activate ? 'default' : 'danger',
+                fields: [{ name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }],
+                validate: v => (v.confirmPassword ? '' : 'Enter your password to confirm.')
             });
-            if (!yes) return;
-            const r = await api(`/admin/${encodeURIComponent(officer._id)}/status`, 'PATCH', { active: activate });
+            if (values === null) return;
+            const r = await api(`/admin/${encodeURIComponent(officer._id)}/status`, 'PATCH', { active: activate, confirmPassword: values.confirmPassword });
             showToast(r.message, 'success');
             loadOfficers();
         }
@@ -950,10 +1019,10 @@ function showOffice(office) {
 
 async function loadOffice() {
     try {
-        const res = await fetch(`${API_BASE}/office`, { cache: 'no-store' });
-        if (!res.ok) throw new Error('The office information could not be loaded.');
-        showOffice(await res.json());
-    } catch (e) { showToast(e.message, 'error'); }
+        const office = await api('/office/admin');
+        showOffice(office);
+        showPrivacy(office);
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
 }
 
 document.getElementById('addEmergencyBtn').addEventListener('click', () => {
@@ -978,6 +1047,29 @@ document.getElementById('officeForm').addEventListener('submit', async event => 
             emergency
         });
         showToast(r.message, 'success');
+        showOffice(r.office);
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+    finally { restore(); }
+});
+
+/* ---- 5. Data Privacy -------------------------------------------------------- */
+
+function showPrivacy(office) {
+    document.getElementById('dpoName').value = office.dpoName || '';
+    document.getElementById('dpoEmail').value = office.dpoEmail || '';
+    document.getElementById('privacyChecked').textContent = office.privacyCheckedAt ? when(office.privacyCheckedAt) : 'Not run yet';
+}
+
+document.getElementById('privacyForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const restore = setButtonLoading(document.getElementById('savePrivacyBtn'), 'Saving...');
+    try {
+        const r = await api('/office/privacy', 'PUT', {
+            dpoName: document.getElementById('dpoName').value.trim(),
+            dpoEmail: document.getElementById('dpoEmail').value.trim()
+        });
+        showToast(r.message, 'success');
+        showPrivacy(r.office);
         showOffice(r.office);
     } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
     finally { restore(); }
@@ -1112,5 +1204,6 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
 </body>
 </html>

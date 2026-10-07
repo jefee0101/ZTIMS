@@ -1368,17 +1368,19 @@ body { overflow-x: hidden; }
                     {
                         name: 'newPassword', label: 'Password', optional: true,
                         placeholder: guide.hasAccount ? 'Leave blank to keep their password' : 'Leave blank to have one generated',
-                        help: 'At least 8 characters. Deliberately readable — you have to pass it on.'
-                    }
+                        help: 'At least 10 characters. They choose their own at their next sign-in.'
+                    },
+                    { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
                 ],
-                validate: values => values.newPassword && values.newPassword.trim().length < 8 ? 'A password must be at least 8 characters.' : ''
+                validate: values => values.newPassword && values.newPassword.trim().length < 10 ? 'A password must be at least 10 characters.'
+                    : (!values.confirmPassword ? 'Enter your password to confirm.' : '')
             });
             if (values === null) return;
 
             try {
                 const result = await officeCall(`/guides/${encodeURIComponent(id)}/account`, {
                     method: 'POST',
-                    body: { email: values.email.trim(), newPassword: (values.newPassword || '').trim() }
+                    body: { email: values.email.trim(), newPassword: (values.newPassword || '').trim(), confirmPassword: values.confirmPassword }
                 });
                 await loadEverything();
                 // Shown once — the server keeps only a hash of it.
@@ -1702,5 +1704,6 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/photo-upload.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
 </body>
 </html>

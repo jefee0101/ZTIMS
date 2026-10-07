@@ -208,6 +208,9 @@ purpose — see the header comment in `spot-form.js`:
   writes ticked days back as text (`window.ZTIMS_OPEN_DAYS`); used by the
   listing form's day boxes and the officer's Visitor setup. See "Attraction
   setup" below.
+- `idle-signout.js` — signs an officer out after 30 minutes with no activity on
+  any officer tab (loaded as a module on every `src/admin/*.html` page). See
+  "Sign-in safety" below.
 - `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -324,19 +327,25 @@ the old collection names (`admins`, `resortOwners`) did not.
 `server.js`, top to bottom:
 
 1. Middleware: `helmet`, CORS (a page's own origin, the `CORS_ORIGIN` env
-   allow-list, and any `*.vercel.app` origin for preview deploys — see
-   `isSameOrigin` / `previewOriginPattern`), rate limits, JSON body parsing
+   allow-list, and this deployment's own Vercel addresses from `VERCEL_URL`,
+   `VERCEL_BRANCH_URL` and `VERCEL_PROJECT_PRODUCTION_URL` — never "any
+   `*.vercel.app`", which would trust anyone's site there; see
+   `isSameOrigin` / `isAllowedOrigin`), rate limits, JSON body parsing
    capped at 1MB (photos go straight browser → Cloudinary, never through this
    API). The limits that guard something (login, password reset, bookings,
    feedback, directions) go through `sharedRateLimit`, which counts in the
    `rate_limits` table (`rate-limit-store.js`) so they hold across serverless
    instances; only the blanket per-request limit stays in memory, on purpose.
 2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
-3. Auth middleware chains: `requireAuth` (valid JWT) →
+3. Auth middleware chains: `requireAuth` (a JWT checked as HS256 with its
+   issuer and audience, then the account itself: it must exist, its
+   `session_version` must match the token's `sv`, and it must not be waiting to
+   replace an issued password; the row is `req.account`) →
    `requireAdmin`/`requireEstablishmentManager`/`requireStaff`/`requireGuide`
-   (role checks; `requireAdmin` also looks the officer up, so a deactivated
-   officer's open session stops at once) and `optionalAuth` (attaches `req.auth` if present, never
-   blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
+   (role checks; `requireAdmin` also refuses a deactivated officer, so their
+   open session stops at once), `requirePasswordConfirmation` (after
+   `requireAdmin`, on risky actions — see "Sign-in safety") and `optionalAuth`
+   (attaches `req.auth` for a current, usable sign-in, never blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
    Establishment Manager) and `tourist_guide` (Tourist Guide) —
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
    tokens issued before a rename don't get rejected mid-session; nothing
@@ -656,17 +665,78 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   `localStorage.userName` at sign-in and shown in every officer page's account
   menu.
 - **Security**: change password (`/api/admin/me/password`, needs the current
-  one) and when this session signed in (`last_sign_in_at`, set at each login).
+  one; other devices are signed out and this one gets a fresh token), when this
+  session signed in (`last_sign_in_at`, set at each login), and "Sign out of
+  all devices" (`POST /api/me/sign-out-everywhere`, this one too). The
+  manager's Settings and the guide's My Profile have the same two.
 - **Tourism Office Accounts**: every officer with position, date added, last
   sign-in and status. Add one (name required; a blank password is generated
   and shown once), issue a new password (`POST /api/admin/:id/password`), and
-  deactivate or reactivate (`PATCH /api/admin/:id/status`). Officers are never
-  deleted; nobody deactivates themselves; a deactivated officer cannot sign in
-  or reset a password, and an open session stops at once.
+  deactivate or reactivate (`PATCH /api/admin/:id/status`) — all three ask for
+  the officer's own password. Officers are never deleted; nobody deactivates
+  themselves; a deactivated officer cannot sign in or reset a password, and an
+  open session stops at once. Every active officer is emailed when an officer
+  account is added.
 - **Office Information** (`office.js`, `office_info` single row +
   `emergency_numbers`): address, phone, email, office hours and the emergency
   list. `GET /api/office` is public (cached 5 minutes), `PUT /api/office` is
   the officer's and replaces the emergency list in one transaction.
+- **Data Privacy**: the Data Protection Officer's name and email
+  (`office_info.dpo_name|dpo_email`, `PUT /api/office/privacy`, both or
+  neither), published on the Privacy page through `GET /api/office`; the
+  one-year erasure rule; and when it last ran (`office_info.privacy_checked_at`,
+  written by `privacy.js`, officer-only via `GET /api/office/admin`). office_info
+  has its own `updated_at` trigger (`ztims_touch_office_info`) so that daily run
+  never changes Office Information's "last updated".
+
+### Sign-in safety (October 2026)
+
+- **Password rule** (`passwords.js`, every place a password is set — chosen,
+  issued or reset; never checked at sign-in, so older passwords still work):
+  10–72 characters, not a common password, not the site's/town's name or a
+  similar word with digits, no repeated patterns or digit runs, not containing
+  the account's email name. Generated passwords are 12 characters with no
+  look-alike characters. The pages' minimum (10) is written on each password
+  form and in `src/user/reset_password.html`.
+- **Sessions end when they should.** Every token carries `sv`, the account's
+  `session_version`. Changing a password, an officer issuing one, a reset link,
+  withdrawing a guide's sign-in, and "Sign out of all devices" add one to it
+  (`storePassword`, `endSessions`), so every token from before stops working at
+  once. A token without `sv` (issued before this) counts as 0.
+- **Issued passwords are replaced first.** `must_change_password` is set when
+  someone else chose the password (officer creating or issuing one, the first
+  officer from the environment). Sign-in returns `mustChangePassword`, the
+  staff sign-in page asks for the person's own password (`POST /api/me/password`,
+  allowed by `requireSignedInForPasswordChange`), and every other route answers
+  401 `PASSWORD_CHANGE_REQUIRED` until then.
+- **Sign-in says nothing without the password.** The password is checked first
+  (against a stand-in hash for an unknown email), so "suspended" / "deactivated"
+  / "inactive" is only told to someone who knows the password. Only failed
+  sign-ins count toward the 10-per-15-minutes limit (the Municipal Hall shares
+  one address); wrong current passwords on a password change are limited per
+  account (`ownPasswordRateLimit`).
+- **Risky actions ask for the officer's password again**
+  (`requirePasswordConfirmation`, body field `confirmPassword`, 428 when
+  missing, 403 when wrong, 10 wrong per 15 minutes per account): add an
+  officer, deactivate/reactivate an officer, issue a password (officer,
+  manager, guide sign-in), refund (`POST /api/payments/:id/refund`) and remove
+  demo data. The pages put a "Your password" field in those dialogs.
+- **Emails to the account's owner** (`alertAccountOwner`, through `mailer.js`):
+  their password was changed or reset, or a new one was issued; and every active
+  officer when an officer account is added.
+- **Photos only from our own hosting** (`PHOTO_SOURCES`, `checkPhotoSources`):
+  listing and guide photos must be on the municipality's Cloudinary account
+  (or the office's earlier onecompiler folder); a photo already on the record
+  is kept. Signed uploads also sign `allowed_formats` (jpg, jpeg, png, webp).
+- **Idle sign-out**: officer pages sign out after 30 minutes without activity
+  (`src/shared/idle-signout.js`, `ztimsLastActivity` in localStorage, shared by
+  all officer tabs and cleared at each sign-in); the sign-in page says why
+  (`?idle=1`).
+- **Page security headers** (`vercel.json` `headers`, every path but `/api/`):
+  Content-Security-Policy, no framing, nosniff, a referrer policy, a
+  permissions policy (camera and location for this site only) and HSTS. The
+  CSP lists every outside host the pages use: a new CDN, image host, font or
+  API called from a page must be added there, or the browser blocks it.
 
 ## Duplicated facts (keep both sides in step by hand)
 
@@ -689,6 +759,12 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **Opening-days reader**: `zamboanguita-backend/open-days.js` (decides what is
   sold) and `Zamboanguita-project/src/shared/open-days.js` (the forms). Checked
   by `npm run check` in the frontend.
+- **Photo hosts**: `PHOTO_SOURCES` in `server.js` and the CSP's `img-src` in
+  `vercel.json`. A host only in the first is saved but never shown.
+- **Password minimum (10)**: `MIN_PASSWORD_LENGTH` in
+  `zamboanguita-backend/passwords.js`, and the password forms' `minlength` and
+  messages (Settings, manager Settings, guide My Profile, staff sign-in,
+  `user/reset_password.html`, issue-password dialogs).
 
 ## Standing constraints
 
@@ -715,6 +791,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   inactive. Statistics reports likewise: voided, never deleted.
 - Tourism statistics hold counts and totals only — no revenue and no
   percentages.
+- Security decisions (October 2026): passwords follow `passwords.js` (length
+  and guessability, no forced symbols, no expiry); a password someone else
+  chose is always replaced at first sign-in; risky officer actions re-ask the
+  officer's password; officer pages sign out after 30 idle minutes; left out by
+  the user's decision: a per-account lockout after wrong sign-ins, cutting off
+  a suspended manager's or inactive guide's open session at once (it runs to
+  its 2-hour expiry; officers are cut off at once), and an officer activity
+  log; two-step sign-in is not built yet. Pages never load anything from a host the CSP doesn't list.
 - The hero video on `index.html` intentionally has no dark scrim over it
   (readability is carried by per-letter text-shadow/stroke instead) — see the
   large comment block in that file before changing hero text treatment.

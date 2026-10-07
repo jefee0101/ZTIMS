@@ -35,6 +35,15 @@ async function forgetOldVisitors() {
             console.log(`🔒 Privacy: personal details erased from ${done.bookings} booking(s), ${done.tickets} ticket(s), ${done.feedback} feedback message(s) older than a year.`);
         }
         return done;
+    }).then(async done => {
+        // Shown on Settings → Data Privacy. Outside the erasure on purpose: a
+        // database without this column yet must not stop the erasure itself.
+        try {
+            await query('update office_info set privacy_checked_at = now() where id = 1');
+        } catch (error) {
+            console.warn('⚠️  Could not record when the privacy check ran:', error && error.message);
+        }
+        return done;
     });
 }
 

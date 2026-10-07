@@ -131,15 +131,18 @@
                             </div>
                             <div>
                                 <label for="newPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">New password</label>
-                                <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="field w-full"/>
+                                <input id="newPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="field w-full"/>
                             </div>
                             <div>
                                 <label for="confirmPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Repeat the new password</label>
-                                <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password" class="field w-full"/>
+                                <input id="confirmPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="field w-full"/>
                             </div>
                             <p id="passwordMessage" hidden class="text-sm rounded-xl px-4 py-3"></p>
                             <button type="submit" id="savePasswordBtn" class="btn btn-secondary w-full min-h-[44px]">Change password</button>
                         </form>
+                        <button type="button" id="signOutEverywhereBtn" class="btn btn-ghost w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">devices_off</span> Sign out of all devices
+                        </button>
                     </section>
 
                     <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-3">
@@ -242,8 +245,8 @@
             P.showMessage('passwordMessage', '');
             const currentPassword = document.getElementById('currentPasswordInput').value;
             const newPassword = document.getElementById('newPasswordInput').value;
-            if (newPassword.length < 8) {
-                P.showMessage('passwordMessage', 'Your new password must be at least 8 characters.', 'error');
+            if (newPassword.length < 10) {
+                P.showMessage('passwordMessage', 'Your new password must be at least 10 characters.', 'error');
                 return;
             }
             if (newPassword !== document.getElementById('confirmPasswordInput').value) {
@@ -253,13 +256,32 @@
             const restore = P.setButtonLoading(document.getElementById('savePasswordBtn'), 'Changing...');
             try {
                 // 401 here means the current password was wrong, not a lost session.
-                await P.api('/guides/me/password', { method: 'POST', body: { currentPassword, newPassword }, keep401: true });
+                const { result } = await P.api('/guides/me/password', { method: 'POST', body: { currentPassword, newPassword }, keep401: true });
+                // Other devices were signed out with the old password; this one carries on.
+                if (result.token) localStorage.setItem('authToken', result.token);
                 document.getElementById('passwordForm').reset();
-                P.showMessage('passwordMessage', 'Your password has been changed. Use the new one next time you sign in.');
+                P.showMessage('passwordMessage', result.message || 'Your password has been changed.');
             } catch (error) {
                 P.showMessage('passwordMessage', error.message, 'error');
             } finally {
                 restore();
+            }
+        }
+
+        async function signOutEverywhere() {
+            const P = window.GuidePortal;
+            const yes = await ztimsDialog.confirm({
+                title: 'Sign out of all devices?',
+                message: 'Every computer and phone signed in to your account is signed out, this one too.',
+                confirmLabel: 'Sign out everywhere', tone: 'danger'
+            });
+            if (!yes) return;
+            try {
+                await P.api('/me/sign-out-everywhere', { method: 'POST' });
+                window.ztimsTheme.clearStorage();
+                window.location.replace('../staff_login.html');
+            } catch (error) {
+                P.showMessage('passwordMessage', error.message, 'error');
             }
         }
 
@@ -268,6 +290,7 @@
             if (!P || !P.start()) return;
             document.getElementById('detailsForm').addEventListener('submit', saveDetails);
             document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            document.getElementById('signOutEverywhereBtn').addEventListener('click', signOutEverywhere);
 
             const loading = document.getElementById('profileLoading');
             const done = P.showLoading(loading, 'Loading your profile...');
@@ -285,5 +308,6 @@
         });
     </script>
     <script type="module" src="../shared/guide-portal.js"></script>
+    <script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>

@@ -28,6 +28,8 @@ const {
     FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
 } = require('./models');
 const { forgetOldVisitors } = require('./privacy');
+const { passwordProblem, generatePassword } = require('./passwords');
+const mailer = require('./mailer');
 
 const app = express();
 
@@ -39,11 +41,15 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://127.0.0.1:5500,http:/
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-// Vercel gives every branch and every redeploy its own preview hostname, so the
-// production origin alone would break previews on each push.
-const previewOriginPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+// Vercel gives every branch and every redeploy its own hostname, and tells the
+// running deployment which ones are its own. Those are trusted by name — never
+// "any *.vercel.app", which would trust every site anyone else hosts there.
+// A page normally calls the API on its own origin anyway (isSameOrigin below).
+for (const host of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]) {
+    if (host) allowedOrigins.push(`https://${host}`);
+}
 
-const isAllowedOrigin = (origin) => allowedOrigins.includes(origin) || previewOriginPattern.test(origin);
+const isAllowedOrigin = (origin) => allowedOrigins.includes(origin);
 
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET must be configured before starting the API.');
@@ -168,10 +174,11 @@ async function bootstrapAdmin() {
         console.warn(`⚠️  INITIAL_ADMIN_EMAIL is not a valid email address — no account was created.`);
         return;
     }
-    if (password.length < 10) {
+    const weak = passwordProblem(password, { email });
+    if (weak) {
         // Refused rather than trimmed to a warning: this account can edit every
         // listing in the municipality.
-        console.warn('⚠️  INITIAL_ADMIN_PASSWORD is shorter than 10 characters — no account was created.');
+        console.warn(`⚠️  INITIAL_ADMIN_PASSWORD will not do (${weak}) — no account was created or changed.`);
         return;
     }
 
@@ -179,19 +186,18 @@ async function bootstrapAdmin() {
         const existing = await TourismOfficer.findOne({ email }, { secrets: true });
 
         if (!existing) {
-            await TourismOfficer.create({ email, password: await bcrypt.hash(password, 12) });
+            const created = await TourismOfficer.create({ email, password: await bcrypt.hash(password, 12) });
+            // The password sits in the environment, so it is replaced at first sign-in.
+            await db.query('update tourism_officers set must_change_password = true where id = $1', [created._id]);
             console.log(`🛡️  Tourism Officer account created for ${email}.`);
             console.log('    Sign in, then REMOVE INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD.');
             return;
         }
 
         if (forceReset) {
-            existing.password = await bcrypt.hash(password, 12);
-            // A forgotten password and a half-finished reset are different
-            // problems; clearing this stops an old emailed link still working.
-            existing.resetTokenHash = null;
-            existing.resetTokenExpires = null;
-            await TourismOfficer.save(existing);
+            // Also voids an emailed reset link still in flight, ends every open
+            // sign-in, and asks for the officer's own password at the next one.
+            await storePassword('admin', existing._id, password, { issued: true });
             console.warn(`🔑 PASSWORD RESET: ${email} now uses INITIAL_ADMIN_PASSWORD.`);
             console.warn('    Remove ADMIN_PASSWORD_RESET, INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD now.');
             return;
@@ -223,32 +229,113 @@ const COUNTRY_CODES = new Set((
 ).trim().split(/\s+/));
 
 
-const requireAuth = (req, res, next) => {
+// Every token is checked the same way: signature, issuer and audience, then the
+// account itself. HS256 is named so a token can never choose its own algorithm.
+const TOKEN_CHECK = { algorithms: ['HS256'], issuer: 'ztims-api', audience: 'ztims-web' };
+
+// The table behind each role a token can carry ('resort_owner': see MANAGER_ROLES).
+const ACCOUNT_TABLES = {
+    admin: 'tourism_officers',
+    establishment_manager: 'establishment_managers',
+    resort_owner: 'establishment_managers',
+    tourist_guide: 'tourist_guides'
+};
+
+const bearerToken = req => {
     const authorization = req.get('authorization') || '';
-    const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
+    return authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
+};
+
+/* The account a token names, as stored now, or null. `select *` on purpose: a
+   database that has not yet been given session_version / must_change_password
+   still signs people in (they read as 0 and false) until schema.sql is re-run. */
+async function accountBehind(claims) {
+    const table = ACCOUNT_TABLES[claims && claims.role];
+    if (!table || !claims.sub) return null;
+    const { rows } = await db.query(`select * from ${table} where id = $1`, [String(claims.sub)]);
+    return rows[0] || null;
+}
+
+const sessionVersionOf = row => Number((row && row.session_version) || 0);
+
+/* Ends every sign-in this account has open, everywhere: their tokens carry the
+   old number and are refused from the next request on. */
+async function endSessions(role, id, client) {
+    const table = ACCOUNT_TABLES[role];
+    const { rows } = await db.query(
+        `update ${table} set session_version = session_version + 1 where id = $1 returning session_version`,
+        [String(id)], client);
+    return rows[0] ? Number(rows[0].session_version) : 0;
+}
+
+/* requireAuth: a valid token, for an account that still exists, from a sign-in
+   that has not been ended since (a password change, or "Sign out of all
+   devices"). An account whose password was chosen by someone else may do one
+   thing only — set its own — so every other route refuses it until it has. */
+const checkSignIn = ({ allowPasswordChangeOnly = false } = {}) => async (req, res, next) => {
+    const token = bearerToken(req);
     if (!token) return res.status(401).json({ success: false, message: 'Authentication required.' });
 
+    let claims;
     try {
-        req.auth = jwt.verify(token, process.env.JWT_SECRET);
-        return next();
+        claims = jwt.verify(token, process.env.JWT_SECRET, TOKEN_CHECK);
     } catch {
         return res.status(401).json({ success: false, message: 'Invalid or expired session.' });
     }
-};
-
-// An officer's token is also checked against the account itself, so one the
-// office has deactivated stops working at once rather than when it expires.
-const requireAdmin = [requireAuth, async (req, res, next) => {
-    if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Tourist Officer access required.' });
     try {
-        const officer = await TourismOfficer.findById(req.auth.sub);
-        if (!officer || officer.active === false) {
-            return res.status(401).json({ success: false, message: 'This account has been deactivated by the Municipal Tourism Office.' });
+        const account = await accountBehind(claims);
+        if (!account) return res.status(401).json({ success: false, message: 'Invalid or expired session.' });
+        if (sessionVersionOf(account) !== Number(claims.sv || 0)) {
+            return res.status(401).json({ success: false, code: 'SESSION_ENDED', message: 'You have been signed out. Please sign in again.' });
         }
+        if (account.must_change_password && !allowPasswordChangeOnly) {
+            return res.status(401).json({ success: false, code: 'PASSWORD_CHANGE_REQUIRED', message: 'Set your own password first. Please sign in again.' });
+        }
+        req.auth = claims;
+        req.account = account;
+        return next();
     } catch (error) {
-        console.error('❌ Officer check failure:', error && error.message);
+        console.error('❌ Sign-in check failure:', error && error.message);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
+};
+
+const requireAuth = checkSignIn();
+// Only for setting one's own password, which an issued password must do first.
+const requireSignedInForPasswordChange = checkSignIn({ allowPasswordChangeOnly: true });
+
+// An officer is also checked for being active, so one the office has
+// deactivated stops working at once rather than when the token expires.
+const requireAdmin = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'admin') return res.status(403).json({ success: false, message: 'Tourist Officer access required.' });
+    if (req.account.active === false) {
+        return res.status(401).json({ success: false, message: 'This account has been deactivated by the Municipal Tourism Office.' });
+    }
+    return next();
+}];
+
+/* Risky actions — a refund, adding or deactivating an officer, issuing someone a
+   password, removing demo data — ask for the officer's own password again, so a
+   computer left signed in cannot be used for them in a few seconds. Goes after
+   requireAdmin. Wrong passwords are limited per account, so a borrowed session
+   cannot be used to guess it. */
+const confirmRateLimit = sharedRateLimit('confirm', {
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    skipSuccessfulRequests: true,
+    keyGenerator: req => `${req.auth.role}:${req.auth.sub}`,
+    message: { success: false, message: 'Too many wrong passwords. Please wait a few minutes and try again.' }
+});
+const requirePasswordConfirmation = [confirmRateLimit, async (req, res, next) => {
+    const typed = String((req.body || {}).confirmPassword || '');
+    if (!typed) {
+        return res.status(428).json({ success: false, code: 'CONFIRM_PASSWORD', message: 'Enter your password to confirm.' });
+    }
+    const hash = req.account && req.account.password_hash;
+    if (!hash || !(await bcrypt.compare(typed, hash))) {
+        return res.status(403).json({ success: false, code: 'CONFIRM_PASSWORD', message: 'That password is not right.' });
+    }
+    delete req.body.confirmPassword;
     return next();
 }];
 
@@ -286,17 +373,26 @@ const requireStaff = [requireAuth, (req, res, next) => {
     return next();
 }];
 
-const optionalAuth = (req, res, next) => {
-    const authorization = req.get('authorization') || '';
-    const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : null;
+// Attaches req.auth when a current, usable sign-in comes with the request;
+// anything less is simply treated as a visitor.
+const optionalAuth = async (req, res, next) => {
+    const token = bearerToken(req);
     if (token) {
-        try { req.auth = jwt.verify(token, process.env.JWT_SECRET); } catch { /* Public access remains available. */ }
+        try {
+            const claims = jwt.verify(token, process.env.JWT_SECRET, TOKEN_CHECK);
+            const account = await accountBehind(claims);
+            if (account && sessionVersionOf(account) === Number(claims.sv || 0) && !account.must_change_password
+                && !(claims.role === 'admin' && account.active === false)) {
+                req.auth = claims;
+            }
+        } catch { /* Public access remains available. */ }
     }
     return next();
 };
 
-const createToken = (account, role) => jwt.sign(
-    { sub: account._id.toString(), role },
+// `sv`: the account's session_version when this sign-in began (see endSessions).
+const createToken = (account, role, sessionVersion) => jwt.sign(
+    { sub: account._id.toString(), role, sv: Number(sessionVersion || 0) },
     process.env.JWT_SECRET,
     { expiresIn: '2h', issuer: 'ztims-api', audience: 'ztims-web' }
 );
@@ -322,7 +418,40 @@ async function emailTakenBy(email, except = {}) {
 }
 
 const RESET_TOKEN_TTL_MINUTES = 30;
-const MIN_PASSWORD_LENGTH = 8;
+
+// A real bcrypt hash of a password nobody has, compared against when an email
+// matches no account, so a wrong email takes as long to refuse as a wrong password.
+const NO_ACCOUNT_HASH = '$2b$12$YDOAyLYTMrO2s/ukI0DbX.sdGfqiRJV7V1d8hHW1n8EmTyCD533Ie';
+
+/* Sets an account's password, and with it ends every sign-in the account has
+   open (see endSessions) and voids any reset link in flight. `issued`: someone
+   else chose it — an officer passing it on — so its owner must replace it at
+   their next sign-in. Returns the new session version, for a fresh token. */
+async function storePassword(role, id, plainPassword, { issued }) {
+    const hash = await bcrypt.hash(plainPassword, 12);
+    const { rows } = await db.query(
+        `update ${ACCOUNT_TABLES[role]}
+            set password_hash = $2, reset_token_hash = null, reset_token_expires = null,
+                must_change_password = $3, session_version = session_version + 1
+          where id = $1
+      returning session_version`,
+        [String(id), hash, Boolean(issued)]);
+    return rows[0] ? Number(rows[0].session_version) : 0;
+}
+
+/* Tells an account's owner that something about their sign-in changed, so a
+   change they did not make does not go unnoticed. Never blocks the change. */
+function alertAccountOwner(to, heading, intro, paragraphs = []) {
+    const when = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'long', timeStyle: 'short' });
+    const { text, html } = mailer.compose({
+        heading,
+        intro,
+        rows: [['When', when + ' (Philippine time)']],
+        paragraphs: [...paragraphs, 'If this was not you or your office, contact the Municipal Tourism Office at once.'],
+        footer: 'Municipal Tourism Office, Zamboanguita, Negros Oriental. A security notice about your ZTIMS staff account.'
+    });
+    return mailer.sendMail({ to, subject: `ZTIMS: ${heading}`, text, html });
+}
 
 const hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -337,21 +466,85 @@ const resetRateLimit = sharedRateLimit('reset', {
     message: { success: false, message: 'Too many password reset attempts. Please wait a few minutes and try again.' }
 });
 
+// Changing one's own password: wrong current passwords are counted per account,
+// so a borrowed signed-in browser cannot be used to guess it.
+const ownPasswordRateLimit = sharedRateLimit('own-password', {
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    skipSuccessfulRequests: true,
+    keyGenerator: req => `${req.auth.role}:${req.auth.sub}`,
+    message: { success: false, message: 'Too many attempts. Please wait a few minutes and try again.' }
+});
+
 /* ==========================================
    4. API ROUTE HANDLERS
 ========================================== */
+
+/* ---- Any signed-in account: its own password and its own sign-ins ----------- */
+
+/* Changes the signed-in person's own password: the current one proves it is
+   them, not a borrowed browser. Every other device signed in to the account is
+   signed out; this one carries on with the fresh token sent back. Used by each
+   portal's change-password form and by the sign-in page when an issued
+   password has to be replaced. */
+async function changeOwnPassword(req, res) {
+    try {
+        const { currentPassword, newPassword } = req.body || {};
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
+        }
+        const account = req.account;
+        if (!account.password_hash || !(await bcrypt.compare(String(currentPassword), account.password_hash))) {
+            return res.status(400).json({ success: false, message: 'That current password is not right.' });
+        }
+        if (String(newPassword) === String(currentPassword)) {
+            return res.status(400).json({ success: false, message: 'Choose a password different from the current one.' });
+        }
+        const weak = passwordProblem(String(newPassword), { email: account.email });
+        if (weak) return res.status(400).json({ success: false, message: weak });
+
+        const role = isEstablishmentManager(req.auth.role) ? 'establishment_manager' : req.auth.role;
+        const sessionVersion = await storePassword(role, account.id, String(newPassword), { issued: false });
+
+        console.log(`🔑 ${role} changed their own password: ${account.email}`);
+        await alertAccountOwner(account.email, 'Your password was changed',
+            'The password of your ZTIMS account was changed. Every other device signed in to it has been signed out.');
+        return res.status(200).json({
+            success: true,
+            message: 'Your password has been changed. Any other device signed in to your account has been signed out.',
+            token: createToken({ _id: account.id }, role, sessionVersion)
+        });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Password change failure:');
+    }
+}
+
+// The sign-in page's "choose your own password" step, for any kind of account,
+// including one whose password was issued and must be replaced first.
+app.post('/api/me/password', requireSignedInForPasswordChange, ownPasswordRateLimit, changeOwnPassword);
+
+// "Sign out of all devices": every sign-in of this account ends, this one too.
+app.post('/api/me/sign-out-everywhere', requireAuth, async (req, res) => {
+    try {
+        await endSessions(req.auth.role, req.auth.sub);
+        console.log(`🔒 ${req.auth.role} signed out of all devices: ${req.account.email}`);
+        return res.status(200).json({ success: true, message: 'Every device signed in to your account has been signed out.' });
+    } catch (error) {
+        return reportWriteFailure(res, error, '❌ Sign out everywhere failure:');
+    }
+});
 
 /**
  * 🌟 POST: Add a new Tourism Officer account
  * Target URL: http://localhost:5000/api/admin/create
  */
-app.post('/api/admin/create', requireAdmin, async (req, res) => {
+app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (req, res) => {
     try {
         const { email } = req.body;
         const fullName = String(req.body.fullName || '').trim();
         const position = String(req.body.position || '').trim();
         // Blank asks for one to be generated, as for managers and guides.
-        const password = String(req.body.password || '').trim() || crypto.randomBytes(6).toString('base64url');
+        const password = String(req.body.password || '').trim() || generatePassword();
 
         if (!email || !fullName) {
             return res.status(400).json({ success: false, message: "The officer's full name and email address are required." });
@@ -359,11 +552,9 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
         if (fullName.length > 120 || position.length > 120) {
             return res.status(400).json({ success: false, message: 'Name and position are limited to 120 characters.' });
         }
-        if (password.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
-
         const normalizedEmail = email.toLowerCase().trim();
+        const weak = passwordProblem(password, { email: normalizedEmail });
+        if (weak) return res.status(400).json({ success: false, message: weak });
 
         // Check if an admin with this email already exists
         const existingAdmin = await TourismOfficer.findOne({ email: normalizedEmail });
@@ -376,13 +567,22 @@ app.post('/api/admin/create', requireAdmin, async (req, res) => {
         }
 
         const passwordHash = await bcrypt.hash(password, 12);
-        await TourismOfficer.create({
+        const created = await TourismOfficer.create({
             email: normalizedEmail,
             password: passwordHash,
             fullName, position
         });
+        // Chosen by someone else: its owner sets their own at first sign-in.
+        await db.query('update tourism_officers set must_change_password = true where id = $1', [created._id]);
 
         console.log(`🛡️ New Tourism Officer account created: ${normalizedEmail}`);
+        // Every active officer hears of a new officer account, so one added
+        // without the office knowing does not go unnoticed.
+        const addedBy = (req.account && req.account.email) || 'another officer';
+        const { rows: colleagues } = await db.query('select email from tourism_officers where active and id <> $1', [created._id]);
+        await Promise.all(colleagues.map(({ email: to }) => alertAccountOwner(to,
+            'A new officer account was added',
+            `A Tourism Officer account for ${fullName} (${normalizedEmail}) was added by ${addedBy}.`)));
         // The password is returned once so it can be passed on; only its hash is kept.
         return res.status(201).json({ success: true, message: 'Officer account created.', email: normalizedEmail, newPassword: password });
     } catch (error) {
@@ -419,34 +619,7 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
  * there: an unattended signed-in browser must not be enough to lock the real
  * officer out of the account that administers the whole system.
  */
-app.post('/api/admin/me/password', requireAdmin, resetRateLimit, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
-        }
-        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
-
-        const admin = await TourismOfficer.findById(req.auth.sub, { secrets: true });
-        if (!admin) return res.status(404).json({ success: false, message: 'Account not found.' });
-
-        if (!(await bcrypt.compare(currentPassword, admin.password))) {
-            return res.status(401).json({ success: false, message: 'That current password is not right.' });
-        }
-
-        admin.password = await bcrypt.hash(newPassword, 12);
-        admin.resetTokenHash = null;        // any reset link in flight is now void
-        admin.resetTokenExpires = null;
-        await TourismOfficer.save(admin);
-
-        console.log(`🔑 Tourism Officer changed their own password: ${admin.email}`);
-        return res.status(200).json({ success: true, message: 'Your password has been changed.' });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Officer password change failure:');
-    }
-});
+app.post('/api/admin/me/password', requireAdmin, ownPasswordRateLimit, changeOwnPassword);
 
 /* The signed-in officer's own record (Settings → My Account). */
 app.get('/api/admin/me', requireAdmin, async (req, res) => {
@@ -487,7 +660,7 @@ app.patch('/api/admin/me', requireAdmin, async (req, res) => {
 /* Deactivate or reactivate another officer. Never yourself, and never the
    last active officer: someone must always be able to run the system. The
    account is kept, so the records it made still say who made them. */
-app.patch('/api/admin/:id/status', requireAdmin, async (req, res) => {
+app.patch('/api/admin/:id/status', requireAdmin, requirePasswordConfirmation, async (req, res) => {
     try {
         const active = (req.body || {}).active;
         if (typeof active !== 'boolean') return res.status(400).json({ success: false, message: 'Say whether the account is active.' });
@@ -511,22 +684,20 @@ app.patch('/api/admin/:id/status', requireAdmin, async (req, res) => {
 
 /* Issue a new password for another officer (one who forgot theirs). Your own
    is changed under Security, with your current password. */
-app.post('/api/admin/:id/password', requireAdmin, async (req, res) => {
+app.post('/api/admin/:id/password', requireAdmin, requirePasswordConfirmation, async (req, res) => {
     try {
         if (String(req.params.id) === String(req.auth.sub)) {
             return res.status(409).json({ success: false, message: 'Change your own password under Security.' });
         }
         const officer = await TourismOfficer.findById(req.params.id);
         if (!officer) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
-        const newPassword = String((req.body || {}).newPassword || '').trim() || crypto.randomBytes(6).toString('base64url');
-        if (newPassword.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
-        officer.password = await bcrypt.hash(newPassword, 12);
-        officer.resetTokenHash = null;
-        officer.resetTokenExpires = null;
-        await TourismOfficer.save(officer);
+        const newPassword = String((req.body || {}).newPassword || '').trim() || generatePassword();
+        const weak = passwordProblem(newPassword, { email: officer.email });
+        if (weak) return res.status(400).json({ success: false, message: weak });
+        await storePassword('admin', officer._id, newPassword, { issued: true });
         console.log(`🔑 Officer issued a new password for officer ${officer.email}`);
+        await alertAccountOwner(officer.email, 'A new password was issued for your account',
+            `${(req.account && req.account.email) || 'A Tourism Officer'} issued a new password for your ZTIMS account. You will be asked to choose your own when you sign in.`);
         return res.json({ success: true, message: 'A new password has been set. Pass it on — it cannot be read again.', email: officer.email, newPassword });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Officer password issue failure:');
@@ -551,6 +722,8 @@ async function createEstablishmentManager(req, res) {
         }
 
         const normalizedEmail = email.toLowerCase().trim();
+        const weak = passwordProblem(String(password), { email: normalizedEmail });
+        if (weak) return res.status(400).json({ success: false, message: weak });
         const existingManager = await EstablishmentManager.findOne({ email: normalizedEmail });
         if (existingManager) {
             return res.status(409).json({ success: false, message: 'This email is already registered as an establishment manager.' });
@@ -561,7 +734,7 @@ async function createEstablishmentManager(req, res) {
         }
 
         const passwordHash = await bcrypt.hash(password, 12);
-        await EstablishmentManager.create({
+        const created = await EstablishmentManager.create({
             email: normalizedEmail,
             password: passwordHash,
             establishmentName: establishmentName.trim(),
@@ -571,6 +744,9 @@ async function createEstablishmentManager(req, res) {
             contactEmail: (req.body.contactEmail || normalizedEmail).toLowerCase().trim(),
             phone: phone || ""
         });
+
+        // The officer chose this password: the manager sets their own at first sign-in.
+        await db.query('update establishment_managers set must_change_password = true where id = $1', [created._id]);
 
         console.log(`🏨 New Tourist Establishment Manager account created by Tourist Officer: ${normalizedEmail}`);
         return res.status(201).json({ success: true, message: 'Establishment manager account created!' });
@@ -741,36 +917,7 @@ app.patch('/api/establishment-managers/me', requireEstablishmentManager, async (
     }
 });
 
-app.post('/api/establishment-managers/me/password', requireEstablishmentManager, resetRateLimit, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
-        }
-        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
-
-        const manager = await EstablishmentManager.findById(req.auth.sub, { secrets: true });
-        if (!manager) return res.status(404).json({ success: false, message: 'Account not found.' });
-
-        // Proving the current password is what stops a borrowed, still-signed-in
-        // browser from being used to lock the real manager out.
-        if (!(await bcrypt.compare(currentPassword, manager.password))) {
-            return res.status(401).json({ success: false, message: 'That current password is not right.' });
-        }
-
-        manager.password = await bcrypt.hash(newPassword, 12);
-        manager.resetTokenHash = null;      // any reset link in flight is now void
-        manager.resetTokenExpires = null;
-        await EstablishmentManager.save(manager);
-
-        console.log(`🔑 Establishment manager changed their own password: ${manager.email}`);
-        return res.status(200).json({ success: true, message: 'Your password has been changed.' });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Manager password change failure:');
-    }
-});
+app.post('/api/establishment-managers/me/password', requireEstablishmentManager, ownPasswordRateLimit, changeOwnPassword);
 
 
 /* ---- Officer-side account lifecycle ---------------------------------------- */
@@ -826,22 +973,20 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
  * The new password is returned once so the officer can pass it on — it is stored
  * only as a hash and cannot be read back afterwards.
  */
-app.post('/api/establishment-managers/:id/password', requireAdmin, async (req, res) => {
+app.post('/api/establishment-managers/:id/password', requireAdmin, requirePasswordConfirmation, async (req, res) => {
     try {
         const manager = await EstablishmentManager.findById(req.params.id);
         if (!manager) return res.status(404).json({ success: false, message: 'That account no longer exists.' });
 
-        const newPassword = String(req.body.newPassword || '').trim() || crypto.randomBytes(6).toString('base64url');
-        if (newPassword.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
+        const newPassword = String(req.body.newPassword || '').trim() || generatePassword();
+        const weak = passwordProblem(newPassword, { email: manager.email });
+        if (weak) return res.status(400).json({ success: false, message: weak });
 
-        manager.password = await bcrypt.hash(newPassword, 12);
-        manager.resetTokenHash = null;
-        manager.resetTokenExpires = null;
-        await EstablishmentManager.save(manager);
+        await storePassword('establishment_manager', manager._id, newPassword, { issued: true });
 
         console.log(`🔑 Officer issued a new password for ${manager.email}`);
+        await alertAccountOwner(manager.email, 'A new password was issued for your account',
+            'The Municipal Tourism Office issued a new password for your ZTIMS account. You will be asked to choose your own when you sign in.');
         return res.status(200).json({
             success: true,
             message: 'A new password has been set. Pass it on — it cannot be read again.',
@@ -887,7 +1032,15 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
  * Establishment Manager and Tourist Guide. Visitors browse without one.
  * Target URL: http://localhost:5000/api/login
  */
-app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limit: 10 }), async (req, res) => {
+// Only failed sign-ins count: everyone at the Municipal Hall reaches the site
+// from one internet address, and ten officers signing in on a Monday morning
+// must not lock the eleventh out. Ten wrong passwords in 15 minutes still do.
+app.post('/api/login', sharedRateLimit('login', {
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    skipSuccessfulRequests: true,
+    message: { success: false, message: 'Too many failed sign-ins. Please wait a few minutes and try again.' }
+}), async (req, res) => {
     try {
         const { email, password, role } = req.body; 
         console.log(`➡️ Login attempt received for: ${email} | Role Context: ${role || 'staff'}`);
@@ -930,31 +1083,12 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
             resolvedRole = 'establishment_manager';
         }
 
-        // A suspended account is told plainly, rather than being left to think
-        // they are mistyping a password that is in fact correct.
-        if (account && isEstablishmentManager(resolvedRole) && account.active === false) {
-            return res.status(403).json({
-                success: false,
-                message: 'This account has been suspended by the Municipal Tourism Office. Please contact them to have it restored.'
-            });
-        }
-        if (account && resolvedRole === 'admin' && account.active === false) {
-            return res.status(403).json({
-                success: false,
-                message: 'This account has been deactivated by the Municipal Tourism Office.'
-            });
-        }
-        // An inactive guide no longer works for the office; the record stays,
-        // the portal does not.
-        if (account && resolvedRole === 'tourist_guide' && account.status === 'inactive') {
-            return res.status(403).json({
-                success: false,
-                message: 'This guide account is marked inactive by the Municipal Tourism Office. Please contact them to have it restored.'
-            });
-        }
-
+        // The password is checked first, and for an unknown email too (against a
+        // stand-in hash, so the answer takes as long either way). Only someone
+        // who knows the password learns that an account exists or is suspended.
         // A guide record whose sign-in was withdrawn has no hash to compare.
-        if (!account || !account.password || !(await bcrypt.compare(password, account.password))) {
+        const passwordMatches = await bcrypt.compare(String(password), (account && account.password) || NO_ACCOUNT_HASH);
+        if (!account || !account.password || !passwordMatches) {
             // Deliberately the same wording whichever collection was searched, so the
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
@@ -966,6 +1100,32 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
                 message: `Authentication failed: Invalid ${audience} credentials.`
                 });
         }
+
+        // A suspended account is told plainly — once the password has proved it
+        // is theirs — rather than being left to think they are mistyping it.
+        if (isEstablishmentManager(resolvedRole) && account.active === false) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been suspended by the Municipal Tourism Office. Please contact them to have it restored.'
+            });
+        }
+        if (resolvedRole === 'admin' && account.active === false) {
+            return res.status(403).json({
+                success: false,
+                message: 'This account has been deactivated by the Municipal Tourism Office.'
+            });
+        }
+        // An inactive guide no longer works for the office; the record stays,
+        // the portal does not.
+        if (resolvedRole === 'tourist_guide' && account.status === 'inactive') {
+            return res.status(403).json({
+                success: false,
+                message: 'This guide account is marked inactive by the Municipal Tourism Office. Please contact them to have it restored.'
+            });
+        }
+
+        const stored = await accountBehind({ role: resolvedRole, sub: account._id });
+        const mustChangePassword = Boolean(stored && stored.must_change_password);
 
         if (resolvedRole === 'admin') {
             try {
@@ -980,8 +1140,11 @@ app.post('/api/login', sharedRateLimit('login', { windowMs: 15 * 60 * 1000, limi
         const responseData = {
             success: true,
             message: `Login Successful! Welcome back.`,
-            token: createToken(account, resolvedRole),
+            token: createToken(account, resolvedRole, sessionVersionOf(stored)),
             role: resolvedRole,
+            // The password was chosen by someone else: the sign-in page asks for
+            // the person's own before going on, and nothing else works until then.
+            mustChangePassword,
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
@@ -1035,23 +1198,23 @@ if (!mailConfigured) {
  * left with an account that dies the moment its password is forgotten. Tourists
  * who signed up through Google are skipped — they have no password here — and a
  * suspended manager cannot reset their way back in.
- * Returns { account, table } — the table being where the account is saved back —
+ * Returns { account, table, role } — the table being where the account is saved back —
  * or null.
  */
 async function findResettableAccount(email, withResetFields) {
     const options = { secrets: Boolean(withResetFields) };
 
     const manager = await EstablishmentManager.findOne({ email }, options);
-    if (manager) return manager.active === false ? null : { account: manager, table: EstablishmentManager };
+    if (manager) return manager.active === false ? null : { account: manager, table: EstablishmentManager, role: 'establishment_manager' };
 
     const officer = await TourismOfficer.findOne({ email }, options);
-    if (officer) return officer.active === false ? null : { account: officer, table: TourismOfficer };
+    if (officer) return officer.active === false ? null : { account: officer, table: TourismOfficer, role: 'admin' };
 
     // A guide can reset only a sign-in the office actually issued, and not while
     // the office has them marked inactive.
     const guide = await TouristGuide.findOne({ email }, { secrets: true });
     if (!guide || !guide.password || guide.status === 'inactive') return null;
-    return { account: guide, table: TouristGuide };
+    return { account: guide, table: TouristGuide, role: 'tourist_guide' };
 }
 
 /**
@@ -1136,9 +1299,8 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
             return res.status(400).json({ success: false, message: 'The reset link, your email and a new password are all required.' });
         }
 
-        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
+        const weak = passwordProblem(String(newPassword), { email: String(email).toLowerCase().trim() });
+        if (weak) return res.status(400).json({ success: false, message: weak });
 
         const found = await findResettableAccount(String(email).toLowerCase().trim(), true);
         const user = found && found.account;
@@ -1158,13 +1320,13 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
         // Compared in constant time so the comparison itself reveals nothing.
         if (provided.length !== stored.length || !crypto.timingSafeEqual(provided, stored)) return refuse();
 
-        user.password = await bcrypt.hash(newPassword, 12);
-        // Spent immediately, so the same link cannot be replayed.
-        user.resetTokenHash = null;
-        user.resetTokenExpires = null;
-        await found.table.save(user);
+        // Spent immediately (storePassword clears it), so the same link cannot be
+        // replayed; every open sign-in of the account ends with the old password.
+        await storePassword(found.role, user._id, String(newPassword), { issued: false });
 
         console.log(`🔑 Password reset completed for ${user.email}`);
+        await alertAccountOwner(user.email, 'Your password was changed',
+            'The password of your ZTIMS account was changed through a reset link. Every device signed in to it has been signed out.');
         return res.status(200).json({ success: true, message: 'Your password has been changed. You can sign in with it now.' });
     } catch (error) {
         console.error('Reset password error:', error);
@@ -1231,6 +1393,31 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
  * payload: blanks and duplicates are dropped, the list is capped, and the cover is
  * always the first photo unless one was named explicitly.
  */
+/* Where a photo may come from: the municipality's own Cloudinary account (every
+   upload goes there), and the folder the office used before it, which two of
+   the first listings still show. A photo anywhere else would let that site see
+   every visitor who opens the page, and the pages' Content-Security-Policy
+   (vercel.json, img-src) would not show it anyway — keep the two in step.
+   A photo already on the record being edited is always kept. */
+const PHOTO_SOURCES = [
+    `https://res.cloudinary.com/${(process.env.CLOUDINARY_CLOUD_NAME || 'xeo3pvpw').trim()}/`,
+    'https://uploads.onecompiler.io/43fxe3kf9/'
+];
+const isOwnPhoto = url => PHOTO_SOURCES.some(prefix => String(url).startsWith(prefix));
+
+/* Throws a 400-shaped error when a photo address is neither ours nor already
+   on the record. `kept`: the addresses the record has now. */
+function checkPhotoSources(urls, kept = []) {
+    const already = new Set(kept.filter(Boolean).map(String));
+    const stranger = urls.filter(Boolean).map(String).find(url => !already.has(url) && !isOwnPhoto(url));
+    if (stranger) {
+        const error = new Error('Photos have to be uploaded through ZTIMS. Use "Upload photos" rather than a link from another site.');
+        error.status = 400;
+        error.name = 'ValidationError';
+        throw error;
+    }
+}
+
 function normaliseSpotImages(payload) {
     if (!('images' in payload) && !('imageUrl' in payload)) return payload;
 
@@ -1466,6 +1653,8 @@ const CLOUDINARY_API_KEY = (process.env.CLOUDINARY_API_KEY || '').trim();
 const CLOUDINARY_API_SECRET = (process.env.CLOUDINARY_API_SECRET || '').trim();
 const CLOUDINARY_FOLDER = (process.env.CLOUDINARY_FOLDER || 'ztims').trim();
 
+const UPLOAD_FORMATS = 'jpg,jpeg,png,webp';
+
 const cloudinarySigningReady = Boolean(
     CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET
 );
@@ -1488,7 +1677,9 @@ app.get('/api/uploads/signature', requireStaff, (req, res) => {
     }
 
     const timestamp = Math.round(Date.now() / 1000);
-    const params = { folder: CLOUDINARY_FOLDER, timestamp };
+    // allowed_formats is signed with the rest, so a page cannot drop it: only
+    // photographs and plain images, never an SVG (which can carry script) or a PDF.
+    const params = { allowed_formats: UPLOAD_FORMATS, folder: CLOUDINARY_FOLDER, timestamp };
 
     return res.status(200).json({
         success: true,
@@ -1496,6 +1687,7 @@ app.get('/api/uploads/signature', requireStaff, (req, res) => {
         cloudName: CLOUDINARY_CLOUD_NAME,
         apiKey: CLOUDINARY_API_KEY,
         folder: CLOUDINARY_FOLDER,
+        allowedFormats: UPLOAD_FORMATS,
         timestamp,
         signature: signCloudinaryParams(params)
     });
@@ -1522,6 +1714,7 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         const { _id, createdAt, updatedAt, ...body } = req.body;
         const scoped = scopeSpotPayload(body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
         const prepared = deriveSpotType(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
+        checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])]);
         const savedSpot = await Spot.create({ ...prepared, managedBy });
         return res.status(201).json(savedSpot);
     } catch (error) {
@@ -1605,6 +1798,7 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         // update is saved against the id in the URL, whatever the body carries.
         const { managedBy, ownerId, _id, createdAt, updatedAt, ...updates } = req.body;
         const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
+        checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])], [spot.imageUrl, ...(spot.images || [])]);
         Object.assign(spot, deriveSpotType(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await Spot.save(spot);
         return res.status(200).json(savedSpot);
@@ -1735,6 +1929,10 @@ function applyGuideDetails(guide, body) {
         const name = body.fullName.trim();
         if (!name) throw guideInvalid('The guide needs a name.');
         guide.fullName = name;
+    }
+    if (typeof body.photoUrl === 'string' && body.photoUrl.trim() && body.photoUrl.trim() !== guide.photoUrl
+        && !isOwnPhoto(body.photoUrl.trim())) {
+        throw guideInvalid('Photos have to be uploaded through ZTIMS. Use "Choose a photo" rather than a link from another site.');
     }
     for (const field of ['photoUrl', 'contactNumber', 'location', 'bio']) {
         if (typeof body[field] === 'string') guide[field] = body[field].trim();
@@ -1994,33 +2192,7 @@ app.patch('/api/guides/me/details', requireGuide, async (req, res) => {
     }
 });
 
-app.post('/api/guides/me/password', requireGuide, resetRateLimit, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Your current and new passwords are both required.' });
-        }
-        if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `Your new password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
-
-        const guide = await loadSignedInGuide(req, res, { secrets: true });
-        if (!guide) return;
-        if (!guide.password || !(await bcrypt.compare(currentPassword, guide.password))) {
-            return res.status(401).json({ success: false, message: 'That current password is not right.' });
-        }
-
-        guide.password = await bcrypt.hash(newPassword, 12);
-        guide.resetTokenHash = null;        // any reset link in flight is now void
-        guide.resetTokenExpires = null;
-        await TouristGuide.save(guide);
-
-        console.log(`🔑 Tourist guide changed their own password: ${guide.email}`);
-        return res.status(200).json({ success: true, message: 'Your password has been changed.' });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide password change failure:');
-    }
-});
+app.post('/api/guides/me/password', requireGuide, ownPasswordRateLimit, changeOwnPassword);
 
 // "YYYY-MM" for this month and the five before it, oldest first.
 function lastSixMonths() {
@@ -2374,7 +2546,7 @@ app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
  * can pass it on; only its hash is stored. Changing only the email keeps the
  * existing password.
  */
-app.post('/api/guides/:id/account', requireAdmin, async (req, res) => {
+app.post('/api/guides/:id/account', requireAdmin, requirePasswordConfirmation, async (req, res) => {
     try {
         const guide = await TouristGuide.findById(req.params.id, { secrets: true });
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
@@ -2392,19 +2564,20 @@ app.post('/api/guides/:id/account', requireAdmin, async (req, res) => {
         // A new sign-in always needs a password; an existing one gets a new
         // password only when one is typed or asked for.
         const issuePassword = !guide.password || typed || req.body.resetPassword === true;
-        const newPassword = issuePassword ? (typed || crypto.randomBytes(6).toString('base64url')) : null;
-        if (newPassword && newPassword.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ success: false, message: `A password must be at least ${MIN_PASSWORD_LENGTH} characters.` });
-        }
+        const newPassword = issuePassword ? (typed || generatePassword()) : null;
+        const weak = newPassword && passwordProblem(newPassword, { email });
+        if (weak) return res.status(400).json({ success: false, message: weak });
 
         const firstIssue = !guide.password;
         guide.email = email;
-        if (newPassword) {
-            guide.password = await bcrypt.hash(newPassword, 12);
-            guide.resetTokenHash = null;
-            guide.resetTokenExpires = null;
-        }
         await TouristGuide.save(guide);
+        if (newPassword) {
+            await storePassword('tourist_guide', guide._id, newPassword, { issued: true });
+            if (!firstIssue) {
+                await alertAccountOwner(email, 'A new password was issued for your account',
+                    'The Municipal Tourism Office issued a new password for your ZTIMS account. You will be asked to choose your own when you sign in.');
+            }
+        }
 
         console.log(`🔑 Officer ${firstIssue ? 'issued' : 'updated'} the guide sign-in for ${guide.fullName} (${email})`);
         return res.status(200).json({
@@ -2434,6 +2607,8 @@ app.delete('/api/guides/:id/account', requireAdmin, async (req, res) => {
         guide.resetTokenHash = null;
         guide.resetTokenExpires = null;
         await TouristGuide.save(guide);
+        // Without a password there is no sign-in; one still open ends now too.
+        await endSessions('tourist_guide', guide._id);
 
         console.log(`🔒 Officer withdrew the guide sign-in for ${guide.fullName}`);
         return res.status(200).json({ success: true, message: `${guide.fullName} can no longer sign in. Their record is kept.` });
@@ -3596,7 +3771,7 @@ app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff 
    ONLINE PAYMENTS — a demonstration in the gateway's test mode (payments.js)
 ========================================== */
 const paymentsModule = require('./payments');
-app.use('/api', paymentsModule({ requireAdmin, sharedRateLimit, isPubliclyVisible }));
+app.use('/api', paymentsModule({ requireAdmin, requirePasswordConfirmation, sharedRateLimit, isPubliclyVisible }));
 
 /* ==========================================
    ATTRACTION SETUP — opening days, closed dates, prices per kind of visitor,

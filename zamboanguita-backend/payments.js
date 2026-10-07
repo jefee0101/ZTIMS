@@ -773,7 +773,7 @@ async function sendRefund(payment, reason, officerEmail, refundAmount) {
 
 /* ---------------------------------------------------------------- the router */
 
-module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubliclyVisible }) {
+module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirmation, sharedRateLimit, isPubliclyVisible }) {
     const router = express.Router();
 
     const checkoutLimit = sharedRateLimit('checkout', {
@@ -978,7 +978,8 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
     });
 
     /* The office cancels, the visitor is refunded: the one refund rule. */
-    router.post('/payments/:id/refund', requireAdmin, async (req, res) => {
+    // A refund, and removing demo data, ask for the officer's password again.
+    router.post('/payments/:id/refund', requireAdmin, requirePasswordConfirmation, async (req, res) => {
         try {
             const reason = String((req.body && req.body.reason) || '').trim();
             if (!reason) return fail(res, 400, 'Give the reason for the refund, for example "bad weather".');
@@ -1048,7 +1049,7 @@ module.exports = function paymentsRouter({ requireAdmin, sharedRateLimit, isPubl
         }
     });
 
-    router.delete('/payments/demo', requireAdmin, async (req, res) => {
+    router.delete('/payments/demo', requireAdmin, requirePasswordConfirmation, async (req, res) => {
         try {
             const removed = await transaction(client => removeDemo(client));
             res.json({ success: true, message: `Demo data removed: ${removed.bookings} guide bookings, ${removed.tickets} tickets and ${removed.payments} payments.`, ...removed });

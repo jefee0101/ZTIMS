@@ -783,15 +783,19 @@ body { overflow-x: hidden; }
                 if (!btn) return;
                 const row = btn.closest('tr[data-id]');
                 const p = data.payments.find(x => x._id === row.dataset.id);
-                const reason = await ztimsDialog.prompt({
+                const values = await ztimsDialog.form({
                     title: `Refund ${peso(p.amount)} for ${p.reference}?`,
                     message: 'Refunds are for when the office cancels. The booking or ticket is cancelled, and an online payment goes back through the payment service.',
-                    label: 'Reason', placeholder: 'e.g. Bad weather, attraction closed',
-                    confirmLabel: 'Refund', validate: v => (v.trim() ? '' : 'Give the reason.')
+                    confirmLabel: 'Refund',
+                    fields: [
+                        { name: 'reason', label: 'Reason', placeholder: 'e.g. Bad weather, attraction closed', required: true },
+                        { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
+                    ],
+                    validate: v => (!v.reason.trim() ? 'Give the reason.' : !v.confirmPassword ? 'Enter your password to confirm.' : '')
                 });
-                if (!reason) return;
+                if (!values) return;
                 try {
-                    const r = await send(`${API_BASE}/payments/${p._id}/refund`, 'POST', { reason: reason.trim() });
+                    const r = await send(`${API_BASE}/payments/${p._id}/refund`, 'POST', { reason: values.reason.trim(), confirmPassword: values.confirmPassword });
                     showToast(r.message, 'success');
                     load();
                 } catch (e) { showToast(e.message, 'error'); }
@@ -828,13 +832,15 @@ body { overflow-x: hidden; }
                 finally { btn.disabled = false; }
             });
             document.getElementById('demoRemove').addEventListener('click', async () => {
-                const ok = await ztimsDialog.confirm({
+                const values = await ztimsDialog.form({
                     title: 'Remove all demo data?',
                     message: 'Every record marked DEMO goes: sample data and test-mode payments, with their bookings and tickets. Real records stay.',
-                    confirmLabel: 'Remove demo data', tone: 'danger'
+                    confirmLabel: 'Remove demo data', tone: 'danger',
+                    fields: [{ name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }],
+                    validate: v => (v.confirmPassword ? '' : 'Enter your password to confirm.')
                 });
-                if (!ok) return;
-                try { const r = await send(`${API_BASE}/payments/demo`, 'DELETE'); showToast(r.message, 'success'); load(); }
+                if (!values) return;
+                try { const r = await send(`${API_BASE}/payments/demo`, 'DELETE', { confirmPassword: values.confirmPassword }); showToast(r.message, 'success'); load(); }
                 catch (e) { showToast(e.message, 'error'); }
             });
         }
@@ -931,5 +937,6 @@ body { overflow-x: hidden; }
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
 </body>
 </html>

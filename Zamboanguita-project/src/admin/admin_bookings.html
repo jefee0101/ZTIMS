@@ -1214,15 +1214,19 @@ body { overflow-x: hidden; }
         /* Money taken online goes back when the office cancels: one step,
            "Cancel and refund", with the reason on record. */
         async function cancelAndRefund(booking, showError) {
-            const reason = await ztimsDialog.prompt({
+            const values = await ztimsDialog.form({
                 title: `Cancel and refund ${booking.reference}?`,
                 message: `${formatPeso(booking.payment.amount)} goes back to ${booking.fullName} through the payment service (test mode), and the booking is cancelled. It stays on record.`,
-                label: 'Reason', placeholder: 'e.g. Bad weather, no guide available',
-                confirmLabel: 'Cancel and refund', validate: v => (v.trim() ? '' : 'Give the reason.')
+                confirmLabel: 'Cancel and refund',
+                fields: [
+                    { name: 'reason', label: 'Reason', placeholder: 'e.g. Bad weather, no guide available', required: true },
+                    { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
+                ],
+                validate: v => (!v.reason.trim() ? 'Give the reason.' : !v.confirmPassword ? 'Enter your password to confirm.' : '')
             });
-            if (!reason) return false;
+            if (!values) return false;
             return send(`${API_BASE}/payments/${encodeURIComponent(booking.payment._id)}/refund`,
-                        jsonBody('POST', { reason: reason.trim() }), showError);
+                        jsonBody('POST', { reason: values.reason.trim(), confirmPassword: values.confirmPassword }), showError);
         }
 
         async function changeStatus(booking, status, showError, button) {
@@ -1450,5 +1454,6 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/nav-active.js"></script>
 <script type="module" src="../shared/countries.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
 </body>
 </html>

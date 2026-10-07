@@ -289,6 +289,30 @@ body { overflow-x: hidden; }
       </button>
     </form>
 
+    <!-- Choose your own password: shown after signing in with a password someone
+         else chose (an officer issued it). Nothing else works until this is done
+         (POST /api/me/password). -->
+    <form id="newPasswordForm" hidden class="space-y-5 bg-surface border border-outline/30 rounded-2xl p-6" novalidate>
+      <div>
+        <h2 class="text-lg font-bold text-on-surface">Choose your own password</h2>
+        <p class="text-support mt-1">The password you signed in with was issued to you. Choose your own to continue.</p>
+      </div>
+      <div>
+        <label for="ownPasswordInput" class="field-label">New password</label>
+        <input id="ownPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="field"/>
+      </div>
+      <div>
+        <label for="ownPasswordAgain" class="field-label">Repeat the new password</label>
+        <input id="ownPasswordAgain" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="field"/>
+      </div>
+
+      <p id="newPasswordMessage" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+
+      <button type="submit" id="newPasswordBtn" class="btn btn-primary w-full">
+        <span class="material-symbols-outlined !text-base">key</span>Save and continue
+      </button>
+    </form>
+
     <div class="mt-8 space-y-3 text-center">
             <p class="text-support">
         Establishment Manager and Tourist Guide accounts are issued by the Municipal Tourism Office. For access, please contact the office.
@@ -315,8 +339,11 @@ body { overflow-x: hidden; }
 
   // The portals send people here with ?expired=1 when their two-hour sign-in runs
   // out, so the trip back is explained rather than looking like a random logout.
-  if (new URLSearchParams(window.location.search).get('expired') === '1') {
-    errorBox.textContent = 'Your session has expired. Please sign in again to continue.';
+  const arrivedBecause = new URLSearchParams(window.location.search);
+  if (arrivedBecause.get('expired') === '1' || arrivedBecause.get('idle') === '1') {
+    errorBox.textContent = arrivedBecause.get('idle') === '1'
+      ? 'You were signed out after 30 minutes without activity. Please sign in again.'
+      : 'Your session has expired. Please sign in again to continue.';
     errorBox.className = 'text-sm text-on-surface-variant bg-surface-high border border-outline/40 rounded-xl px-4 py-3';
     errorBox.hidden = false;
   }
@@ -437,6 +464,8 @@ body { overflow-x: hidden; }
     }
 
     localStorage.setItem('authToken', result.token);
+    // A new sign-in starts the officer pages' 30-minute idle clock afresh.
+    localStorage.removeItem('ztimsLastActivity');
     localStorage.setItem('userRole', result.role);
     localStorage.setItem('userEmail', email);
     localStorage.setItem('userId', result.userId || '');
@@ -448,9 +477,53 @@ body { overflow-x: hidden; }
       else localStorage.removeItem('userName');
     }
 
+    // A password someone else chose is replaced before anything else.
+    if (result.mustChangePassword) {
+      restoreButton();
+      askForOwnPassword(password, destination);
+      return;
+    }
+
     // Button keeps spinning through the redirect — restoring it would only flash.
     window.location.href = destination;
   });
+
+  function askForOwnPassword(issuedPassword, destination) {
+    const form = document.getElementById('newPasswordForm');
+    const message = document.getElementById('newPasswordMessage');
+    document.getElementById('staffLoginForm').hidden = true;
+    form.hidden = false;
+    document.getElementById('ownPasswordInput').focus();
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      message.hidden = true;
+      const newPassword = document.getElementById('ownPasswordInput').value;
+      const say = text => { message.textContent = text; message.hidden = false; };
+      if (newPassword.length < 10) return say('Your new password must be at least 10 characters.');
+      if (newPassword !== document.getElementById('ownPasswordAgain').value) return say('Those two passwords do not match.');
+      if (newPassword === issuedPassword) return say('Choose a password different from the one you were given.');
+
+      const restore = setButtonLoading(document.getElementById('newPasswordBtn'), 'SAVING...');
+      try {
+        const response = await fetch(`${API_BASE}/me/password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` },
+          body: JSON.stringify({ currentPassword: issuedPassword, newPassword })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.success || !result.token) {
+          restore();
+          return say(result.message || `The server refused (status ${response.status}).`);
+        }
+        localStorage.setItem('authToken', result.token);
+        window.location.href = destination;
+      } catch {
+        restore();
+        say('Unable to connect to the server. Please check your internet connection and try again.');
+      }
+    });
+  }
 </script>
 </body>
 </html>

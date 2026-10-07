@@ -90,6 +90,8 @@
             body.append('api_key', pass.apiKey);
             body.append('timestamp', pass.timestamp);
             body.append('folder', pass.folder);
+            // Part of what the server signed, so it has to be sent exactly.
+            if (pass.allowedFormats) body.append('allowed_formats', pass.allowedFormats);
             body.append('signature', pass.signature);
         } else {
             if (!configured(settings)) {

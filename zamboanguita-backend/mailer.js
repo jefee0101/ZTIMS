@@ -80,14 +80,14 @@ const FOOTER = 'Municipal Tourism Office, Municipal Hall, Poblacion, Zamboanguit
 
 /* One email from labelled lines: plain text, and a simple HTML version of the
    same, so it reads well in any mail app. */
-function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid }) {
+function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid, footer = FOOTER }) {
     const text = [
         heading, '', intro, '',
         ...rows.map(([label, value]) => `${label}: ${value}`),
         ...(rows.length ? [''] : []),
         ...paragraphs.flatMap(p => [p, '']),
         ...(link ? [`${link.label}: ${link.url}`, ''] : []),
-        '—', FOOTER
+        '—', footer
     ].join('\n');
     const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#17212B;line-height:1.5">
         <h2 style="margin:0 0 8px;color:#003D5B">${escapeHtml(heading)}</h2>
@@ -98,7 +98,7 @@ function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid }) {
                  <td style="padding:6px 8px;border-bottom:1px solid #e3e8ee;font-weight:bold">${escapeHtml(value)}</td></tr>`).join('')}</table>` : ''}
         ${paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')}
         ${link ? `<p><a href="${escapeHtml(link.url)}" style="display:inline-block;background:#30638E;color:#fff;padding:10px 16px;text-decoration:none;font-weight:bold">${escapeHtml(link.label)}</a></p>` : ''}
-        <p style="color:#667;font-size:12px;border-top:1px solid #e3e8ee;padding-top:8px">${escapeHtml(FOOTER).replace(/\n/g, '<br>')}</p>
+        <p style="color:#667;font-size:12px;border-top:1px solid #e3e8ee;padding-top:8px">${escapeHtml(footer).replace(/\n/g, '<br>')}</p>
     </div>`;
     return { text, html };
 }

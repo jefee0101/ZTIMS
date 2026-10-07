@@ -1882,6 +1882,7 @@
                 body.append('api_key', ticket.apiKey);
                 body.append('timestamp', ticket.timestamp);
                 body.append('folder', ticket.folder);
+                if (ticket.allowedFormats) body.append('allowed_formats', ticket.allowedFormats);
                 body.append('signature', ticket.signature);
             } else {
                 body.append('upload_preset', options.uploadPreset);

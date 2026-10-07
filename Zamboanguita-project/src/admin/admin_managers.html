@@ -629,7 +629,7 @@ body { overflow-x: hidden; }
                 </div>
                 <div>
                     <label for="newManagerPassword" class="block text-label font-bold uppercase tracking-wider mb-1">Starting password</label>
-                    <input id="newManagerPassword" type="text" required minlength="8" placeholder="At least 8 characters" autocomplete="off"
+                    <input id="newManagerPassword" type="text" required minlength="10" maxlength="72" placeholder="At least 10 characters" autocomplete="off"
                            class="field w-full"/>
                 </div>
 
@@ -930,26 +930,26 @@ body { overflow-x: hidden; }
 
             // Blank and cancelled are different answers: blank asks the server
             // to generate one, cancelled (null) does nothing.
-            const typed = await ztimsDialog.prompt({
+            const values = await ztimsDialog.form({
                 title: `Issue a new password for ${name}?`,
-                message: 'Their current password stops working immediately.',
-                label: 'New password',
-                optional: true,
-                placeholder: 'Leave blank to have one generated',
-                help: 'At least 8 characters.',
+                message: 'Their current password stops working immediately. They choose their own at their next sign-in.',
                 confirmLabel: 'Issue password',
                 icon: 'key',
-                validate: value => value.trim() && value.trim().length < 8
-                    ? 'A password must be at least 8 characters.'
-                    : ''
+                fields: [
+                    { name: 'newPassword', label: 'New password', optional: true, placeholder: 'Leave blank to have one generated', help: 'At least 10 characters.' },
+                    { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
+                ],
+                validate: v => v.newPassword.trim() && v.newPassword.trim().length < 10
+                    ? 'A password must be at least 10 characters.'
+                    : (!v.confirmPassword ? 'Enter your password to confirm.' : '')
             });
-            if (typed === null) return;
+            if (values === null) return;
 
             try {
                 const result = await callManagerRoute(`${API_BASE}/establishment-managers/${encodeURIComponent(id)}/password`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ newPassword: typed.trim() })
+                    body: JSON.stringify({ newPassword: values.newPassword.trim(), confirmPassword: values.confirmPassword })
                 }, button, '');
                 // Shown once — the server keeps only a hash of it.
                 // Stays until dismissed: it cannot be read again once closed.
@@ -1220,5 +1220,6 @@ body { overflow-x: hidden; }
 <!-- The site's own confirm/prompt, in place of the browser's: the suspend,
      delete, new-password and edit-details questions on each account row. -->
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
 </body>
 </html>

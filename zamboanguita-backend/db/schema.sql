@@ -1005,6 +1005,59 @@ create table if not exists public.emergency_numbers (
 
 create index if not exists emergency_numbers_position_idx on public.emergency_numbers (position);
 
+-- ---------------------------------------------------------------------------
+-- Sign-in safety (October 2026).
+--
+-- `session_version` is written into every sign-in token. Changing a password,
+-- having one issued, or pressing "Sign out of all devices" adds one to it,
+-- and every token carrying the old number stops working at once.
+-- `must_change_password` is set when someone else chose the password (an
+-- officer issuing one, or the first officer from the environment); its owner
+-- sets their own before doing anything else.
+-- ---------------------------------------------------------------------------
+alter table public.tourism_officers add column if not exists session_version integer not null default 0;
+alter table public.tourism_officers add column if not exists must_change_password boolean not null default false;
+alter table public.establishment_managers add column if not exists session_version integer not null default 0;
+alter table public.establishment_managers add column if not exists must_change_password boolean not null default false;
+alter table public.tourist_guides add column if not exists session_version integer not null default 0;
+alter table public.tourist_guides add column if not exists must_change_password boolean not null default false;
+
+-- Data privacy (Data Privacy Act of 2012): the office's Data Protection Officer,
+-- published on the Privacy page, and when the one-year erasure last ran.
+alter table public.office_info add column if not exists dpo_name text not null default '';
+alter table public.office_info add column if not exists dpo_email text not null default '';
+alter table public.office_info add column if not exists privacy_checked_at timestamptz;
+
+-- Office Information's "last updated" means the details people read changed;
+-- the daily privacy run writing privacy_checked_at is not that, so office_info
+-- has its own touch that ignores it (and is left out of the loop below).
+create or replace function public.ztims_touch_office_info()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+    if (new.address, new.phone, new.email, new.office_hours, new.dpo_name, new.dpo_email)
+       is distinct from (old.address, old.phone, old.email, old.office_hours, old.dpo_name, old.dpo_email) then
+        new.updated_at = pg_catalog.now();
+    end if;
+    return new;
+end
+$$;
+
+drop trigger if exists office_info_touch_updated_at on public.office_info;
+create trigger office_info_touch_updated_at before update on public.office_info
+    for each row execute function public.ztims_touch_office_info();
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'office_info_dpo_lengths') then
+        alter table public.office_info add constraint office_info_dpo_lengths
+            check (char_length(dpo_name) <= 120 and char_length(dpo_email) <= 254);
+    end if;
+end
+$$;
+
 
 -- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
@@ -1017,7 +1070,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
         'guide_reports', 'guide_bookings', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
-        'office_info', 'emergency_numbers'
+        'emergency_numbers'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(

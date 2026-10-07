@@ -547,12 +547,12 @@ body { overflow-x: hidden; }
                             </div>
                             <div>
                                 <label for="newPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">New password</label>
-                                <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters"
+                                <input id="newPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters"
                                        class="field w-full"/>
                             </div>
                             <div>
                                 <label for="confirmPasswordInput" class="block text-label font-bold uppercase tracking-wider mb-1">Repeat the new password</label>
-                                <input id="confirmPasswordInput" type="password" required minlength="8" autocomplete="new-password"
+                                <input id="confirmPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password"
                                        class="field w-full"/>
                             </div>
 
@@ -563,6 +563,9 @@ body { overflow-x: hidden; }
                                 Change password
                             </button>
                         </form>
+                        <button type="button" id="signOutEverywhereBtn" class="btn btn-ghost w-full min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">devices_off</span> Sign out of all devices
+                        </button>
                     </section>
 
                     <section class="glass-panel rounded-2xl p-5 sm:p-8 space-y-3">
@@ -773,8 +776,8 @@ body { overflow-x: hidden; }
             const newPassword = document.getElementById('newPasswordInput').value;
             const confirmation = document.getElementById('confirmPasswordInput').value;
 
-            if (newPassword.length < 8) {
-                showMessage('passwordMessage', 'Your new password must be at least 8 characters.', 'error');
+            if (newPassword.length < 10) {
+                showMessage('passwordMessage', 'Your new password must be at least 10 characters.', 'error');
                 return;
             }
             if (newPassword !== confirmation) {
@@ -796,8 +799,10 @@ body { overflow-x: hidden; }
                     throw new Error(result.message || `The server refused (status ${response.status}).`);
                 }
 
+                // Other devices were signed out with the old password; this one carries on.
+                if (result.token) localStorage.setItem('authToken', result.token);
                 document.getElementById('passwordForm').reset();
-                showMessage('passwordMessage', 'Your password has been changed. Use the new one next time you sign in.');
+                showMessage('passwordMessage', result.message || 'Your password has been changed.');
             } catch (error) {
                 showMessage('passwordMessage', error.message, 'error');
             } finally {
@@ -805,7 +810,26 @@ body { overflow-x: hidden; }
             }
         }
 
+        async function signOutEverywhere() {
+            const yes = await ztimsDialog.confirm({
+                title: 'Sign out of all devices?',
+                message: 'Every computer and phone signed in to your account is signed out, this one too.',
+                confirmLabel: 'Sign out everywhere', tone: 'danger'
+            });
+            if (!yes) return;
+            try {
+                const response = await fetch(`${API_BASE}/me/sign-out-everywhere`, { method: 'POST', headers: authHeaders() });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok && response.status !== 401) throw new Error(result.message || `The server refused (status ${response.status}).`);
+                window.ztimsTheme.clearStorage();
+                window.location.replace('../staff_login.html');
+            } catch (error) {
+                showMessage('passwordMessage', error.message, 'error');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('signOutEverywhereBtn').addEventListener('click', signOutEverywhere);
             mountPortalAccountMenu();
 
             if (!guardEstablishmentManagerSession()) return;
@@ -897,5 +921,6 @@ body { overflow-x: hidden; }
     });
 })();
 </script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>
