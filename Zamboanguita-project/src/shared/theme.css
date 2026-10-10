@@ -789,8 +789,9 @@ html:not(.dark) .text-orange { color: rgb(var(--ztims-gold-text)); }
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.25rem 0.625rem;
-    border-radius: 0;
+    padding: 0.25rem 0.7rem;
+    /* A pill, like the header's ovals and the buttons (the user's decision). */
+    border-radius: 9999px;
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 0.04em;

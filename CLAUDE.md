@@ -228,7 +228,8 @@ paper `#FAF7F2` (off-white) the light ground, `#121110` the dark one. Red
 (errors, destructive) and green (success) are the only colours outside the
 identity, so a status never looks like a brand colour. Categories use the four
 shades on badges, map pins and legends (Beach/Diving tangerine, Mountain ember,
-Cultural burnt, Accommodation ink), always with their name and icon. Emails
+Cultural burnt, Accommodation ink), always with their name and icon; the
+category badge (`.cat-badge`) is a pill everywhere. Emails
 (`mailer.js`, the reset email in `server.js`) use the same colours; ticket QR
 codes stay black on white so scanners read them.
 
