@@ -1576,15 +1576,13 @@ div.leaflet-container {
 @media (min-width: 768px) { .how-it-works { grid-template-columns: repeat(3, 1fr); } }
 .how-step {
     display: flex; align-items: center; gap: .85rem; padding: .85rem 1.75rem .85rem .85rem;
-    color: rgb(var(--ztims-on-primary)); text-decoration: none;
-    /* The header's and the hero buttons' shape and fill: a flat burnt-orange
-       pill, off-white on it (4.5:1), its number a tangerine circle with ink. */
-    background: rgb(var(--ztims-primary));
-    border: 0;
+    color: rgb(var(--ztims-on-surface)); text-decoration: none;
+    /* The header's pill shape, without a fill: only a hairline keeps the
+       shape, and the number carries the colour. */
+    background: transparent;
+    border: 1px solid rgb(var(--ztims-outline));
     border-radius: 9999px;
-    box-shadow: 0 6px 16px -8px rgb(var(--ztims-primary) / .6);
 }
-.how-step .text-support { color: rgb(var(--ztims-on-primary)); }
 .how-step__num {
     width: 2.5rem; height: 2.5rem; flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;

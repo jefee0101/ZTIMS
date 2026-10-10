@@ -839,8 +839,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
   `theme.css`). Their legibility rests on the film being dark behind them. Its two buttons
   are pills filled flat like the header's ovals (`.btn-pill`): Explore
-  destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps match:
-  flat burnt-orange pills, each number a tangerine circle.
+  destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps are
+  pills with no fill (a hairline outline), each number a tangerine circle.
 
 ## What to do 
 Make it one role with a scope, not two roles
