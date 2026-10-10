@@ -558,10 +558,13 @@ Frontend only, no tables of their own:
   below it on solid ground. A card's badge is its category's own name (Beach /
   Diving, Mountain, Cultural, Accommodation) and its fee line reads "Free
   entrance" at ₱0 (none for a place to stay); grey skeleton cards show while
-  loading; an empty result offers "Show all destinations". Below 420px the
-  header shows the logo alone (the name stays for screen readers), its links
-  show small labels under their icons, and the staff sign-in is in the footer
-  only.
+  loading; an empty result offers "Show all destinations". The header's
+  links are words only (Destinations, History, My booking), each showing a
+  tangerine oval behind itself on hover (`.nav-item` in the page's style; the
+  current page keeps a burnt-orange oval — the one rounded shape in the header,
+  asked for by the user), with the sun/moon theme toggle last
+  — the header's one icon. Staff sign-in is in the footer only. Below 420px the
+  header shows the logo alone (the name stays for screen readers).
 - **Header**: every visitor page has "My booking" → `manage.html`.
 - **Destination** (`spot.html`): a breadcrumb (Destinations › category ›
   place); the actions the place really offers — Buy tickets, Book a guide, Book
