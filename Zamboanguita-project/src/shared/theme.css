@@ -599,18 +599,12 @@ h1, h2, h3, h4, .font-display, .font-headline {
     pointer-events: none;
 }
 
-/* What sits inside the opening. White, because it is over a film, and carrying
-   its own halo for the same reason the hero's does — there is no scrim over the
-   picture any more. The old one started a third dark at the join and reached
-   nearly half a fifth of the way down, which drew a visible horizontal band
-   straight across the clip. */
+/* What sits inside the opening: "Browse everything the municipality has to
+   offer." Plain off-white and nothing else — no shadow, like the hero's words
+   (the user's decision, October 2026). */
 .ztims-cove-text {
-    color: #fff;
-    text-shadow:
-        0 1px 2px  rgb(0 0 0 / 0.95),
-        0 2px 6px  rgb(0 0 0 / 0.85),
-        0 4px 18px rgb(0 0 0 / 0.70),
-        0 0   42px rgb(0 0 0 / 0.55);
+    color: rgb(255 253 250);
+    text-shadow: none;
 }
 
 /* The heading's own block, as deep as the opening, with the heading centred in
