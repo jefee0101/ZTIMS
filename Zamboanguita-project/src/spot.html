@@ -223,25 +223,35 @@ body { overflow-x: hidden; }
 })();
 </script>
 
-<nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/20 transition-colors duration-300">
-    <div class="flex justify-between items-center gap-2 sm:gap-3 px-3 sm:px-6 md:px-12 py-3 sm:py-4">
-        <a class="text-sm sm:text-lg md:text-xl font-display font-black tracking-tighter text-on-surface flex items-center gap-2 min-w-0 flex-1 py-2 min-h-[44px]" href="../index.html">
-            <span class="material-symbols-outlined !text-xl shrink-0">arrow_back</span>
-            <span class="truncate"><span class="hidden sm:inline">EXPLORE </span>ZAMBOANGUITA</span>
-        </a>
-        <div class="flex items-center gap-2 sm:gap-3">
-            <a href="manage.html" class="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
-                <span class="material-symbols-outlined !text-lg">confirmation_number</span>
-                <span class="hidden min-[420px]:inline">My booking</span>
+    <!-- The visitor pages' header, the same on every one (styles: .site-link in
+         src/shared/theme.css). Words only; the theme toggle is the one icon
+         and comes last. Below 420px the logo stands alone; the name stays
+         for screen readers. -->
+    <header class="sticky top-0 z-40 glass-nav border-b border-outline-variant/15">
+        <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-2 sm:gap-3 px-4 sm:px-6 md:px-10 py-3">
+            <a href="../index.html" class="flex items-center gap-2.5 min-w-0 leading-tight shrink-0">
+                <img src="data:image/png;base64,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" alt="Zamboanguita Tourism" width="28" height="28" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full"/>
+                <span class="min-w-0 sr-only min-[640px]:not-sr-only">
+                    <span class="rise block text-sm sm:text-base font-extrabold tracking-tight font-headline text-primary">
+                        ZAMBOANGUITA <span class="text-accent">TOURISM</span>
+                    </span>
+                    <span class="rise block text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
+                </span>
             </a>
-            <button id="themeToggleBtn" class="p-2.5 rounded-full bg-surface-container/60 border border-outline-variant/20 text-secondary hover:bg-surface-variant transition-all" title="Toggle theme">
-                <span id="themeToggleIcon" class="material-symbols-outlined !text-xl">dark_mode</span>
-            </button>
-        </div>
-    </div>
-</nav>
 
-<main id="spotContent" class="page-enter pt-16">
+            <nav class="flex items-center gap-0.5 sm:gap-2 ml-auto" aria-label="Main">
+                <a href="../index.html" class="site-link" aria-current="page">Destinations</a>
+                <a href="history.html" class="site-link">History</a>
+                <a href="manage.html" class="site-link">My booking</a>
+                <a href="staff_login.html" class="site-link">Staff</a>
+                <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="ml-1 sm:ml-2 p-2.5 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all">
+                    <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+<main id="spotContent" class="page-enter">
     <!-- Filled by the script below -->
 </main>
 

@@ -1622,3 +1622,62 @@ div.leaflet-container {
 .category-tile__sub { display: block; font-size: .8rem; opacity: .9; }
 .category-tile[aria-pressed="true"] { outline: 3px solid rgb(var(--ztims-secondary, var(--ztims-primary))); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .category-tile img { transition: none; } }
+
+/* ==========================================================================
+   The visitor pages' header
+   --------------------------------------------------------------------------
+   Every visitor page carries the same header: the wordmark, then words-only
+   links — Destinations, History, My booking, Staff — and the theme toggle
+   last. On hover or keyboard focus a solid tangerine oval swells in behind a
+   link, with ink on it (6.7:1); the current page keeps a solid burnt-orange
+   oval with off-white on it (4.5:1). The ovals and the round theme toggle are
+   the header's deliberate curves (corners are square elsewhere), asked for by
+   the user. Transform and opacity only, per motion.css.
+   ========================================================================== */
+.site-link {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    min-height: 44px;
+    padding: 0 .55rem;
+    font-size: .75rem;
+    font-weight: 700;
+    color: rgb(var(--ztims-on-surface-variant));
+    transition: color var(--dur-fast) var(--ease-standard);
+}
+@media (min-width: 420px) { .site-link { font-size: .875rem; padding: 0 .75rem; } }
+@media (min-width: 640px) { .site-link { padding: 0 1rem; } }
+.site-link::after {
+    content: '';
+    position: absolute;
+    inset: 6px 0;
+    z-index: -1;
+    border-radius: 9999px;
+    background: rgb(var(--ztims-secondary));
+    opacity: 0;
+    transform: scale(.8);
+    transition: opacity var(--dur-moderate) var(--ease-decelerate),
+                transform var(--dur-moderate) var(--ease-spring);
+}
+.site-link:hover, .site-link:focus-visible { color: rgb(var(--ztims-on-secondary)); }
+.site-link:hover::after, .site-link:focus-visible::after { opacity: 1; transform: scale(1); }
+.site-link:focus-visible { outline: none; }
+.site-link:focus-visible::after { box-shadow: 0 0 0 2px rgb(var(--ztims-on-surface)); }
+.site-link[aria-current="page"], .site-link[aria-current="page"]:hover { color: rgb(var(--ztims-on-primary)); }
+.site-link[aria-current="page"]::after { opacity: 1; transform: scale(1); background: rgb(var(--ztims-primary)); }
+
+/* The theme toggle is a circle on every page — visitor pages, the sign-in
+   pages and every portal — whichever way the page wires it up. */
+#themeToggleBtn,
+#themeToggleButton,
+button[onclick="toggleDarkMode()"],
+button[onclick="toggleTheme()"] {
+    border-radius: 50%;
+    aspect-ratio: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-link, .site-link::after { transition: none; }
+}

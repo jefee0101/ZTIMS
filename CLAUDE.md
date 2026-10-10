@@ -558,14 +558,18 @@ Frontend only, no tables of their own:
   below it on solid ground. A card's badge is its category's own name (Beach /
   Diving, Mountain, Cultural, Accommodation) and its fee line reads "Free
   entrance" at ₱0 (none for a place to stay); grey skeleton cards show while
-  loading; an empty result offers "Show all destinations". The header's
-  links are words only (Destinations, History, My booking), each showing a
-  solid tangerine oval behind itself on hover (`.nav-item` in the page's style; the
-  current page keeps a solid burnt-orange oval — the one rounded shape in the header,
-  asked for by the user), with the sun/moon theme toggle last
-  — the header's one icon. Staff sign-in is in the footer only. Below 420px the
-  header shows the logo alone (the name stays for screen readers).
-- **Header**: every visitor page has "My booking" → `manage.html`.
+  loading; an empty result offers "Show all destinations". The header is
+  the visitor pages' shared one (below).
+- **Header**: the same on all nine visitor pages (Home, destination, History,
+  My booking, payment, Terms, Privacy, FAQ, Contact; styles `.site-link` in
+  `theme.css`): the wordmark (logo alone below 640px, the name kept for screen
+  readers), then words-only links Destinations, History, My booking, Staff
+  (→ `staff_login.html`), and the theme toggle last. A solid tangerine oval on
+  hover/focus, a solid burnt-orange one on the current page
+  (`aria-current="page"`; the destination page counts as Destinations). The
+  theme toggle is a circle on every page, portals included (`#themeToggleBtn`
+  and the `toggleDarkMode()` buttons, in `theme.css`). These curves are the
+  user's decision; corners stay square elsewhere.
 - **Destination** (`spot.html`): a breadcrumb (Destinations › category ›
   place); the actions the place really offers — Buy tickets, Book a guide, Book
   now (its own booking link), Directions — as `#actionBar` under the photo on a
