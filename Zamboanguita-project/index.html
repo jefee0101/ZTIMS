@@ -310,33 +310,33 @@ body { overflow-x: hidden; }
                     <span class="rise block text-[11px] min-[420px]:text-sm sm:text-base font-extrabold tracking-tight font-headline text-primary">
                         ZAMBOANGUITA <span class="text-accent">TOURISM</span>
                     </span>
-                    <span class="rise block text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
+                    <span class="rise hidden min-[420px]:block text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
                 </span>
             </a>
 
             <nav class="flex items-center gap-1 sm:gap-2 ml-auto">
-                <a href="index.html" class="nav-item active flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="index.html" class="nav-item active flex flex-col min-[420px]:flex-row items-center justify-center gap-0.5 min-[420px]:gap-1.5 px-2 min-[420px]:px-3 sm:px-4 py-1 min-[420px]:py-2.5 min-h-[44px] rounded-full text-[10px] leading-none min-[420px]:text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">location_on</span>
-                    <span class="hidden min-[420px]:inline">Destinations</span>
+                    <span>Destinations</span>
                 </a>
-                <a href="src/history.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="src/history.html" class="nav-item flex flex-col min-[420px]:flex-row items-center justify-center gap-0.5 min-[420px]:gap-1.5 px-2 min-[420px]:px-3 sm:px-4 py-1 min-[420px]:py-2.5 min-h-[44px] rounded-full text-[10px] leading-none min-[420px]:text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">history_edu</span>
-                    <span class="hidden min-[420px]:inline">History</span>
+                    <span>History</span>
                 </a>
-                <a href="src/manage.html" class="nav-item flex items-center gap-1.5 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
+                <a href="src/manage.html" class="nav-item flex flex-col min-[420px]:flex-row items-center justify-center gap-0.5 min-[420px]:gap-1.5 px-2 min-[420px]:px-3 sm:px-4 py-1 min-[420px]:py-2.5 min-h-[44px] rounded-full text-[10px] leading-none min-[420px]:text-xs sm:text-sm font-bold text-on-surface-variant hover:text-accent transition-colors">
                     <span class="material-symbols-outlined !text-lg">confirmation_number</span>
-                    <span class="hidden min-[420px]:inline">My booking</span>
+                    <span>My booking</span>
                 </a>
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
-                <button id="themeToggleBtn" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all" title="Toggle theme">
+                <button id="themeToggleBtn" aria-label="Toggle theme" class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all" title="Toggle theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
                 <!-- Visitors need no account. This is the way in for the Tourism
                      Office and for establishments that manage their own listing. -->
-                <a href="src/staff_login.html" title="Staff sign in"
-                   class="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary transition-all">
+                <a href="src/staff_login.html" title="Staff sign in" aria-label="Staff sign in"
+                   class="p-2.5 min-h-[44px] min-w-[44px] hidden min-[420px]:flex items-center justify-center rounded-full bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary transition-all">
                     <span class="material-symbols-outlined !text-lg">badge</span>
                 </a>
             </div>
@@ -395,7 +395,9 @@ body { overflow-x: hidden; }
                     <p class="rise text-base md:text-lg text-white/90 max-w-xl leading-relaxed" style="--rise-delay:.26s">
                         Experience the beauty and the hidden gems of Zamboanguita.
                     </p>
-                    <div class="rise flex flex-wrap gap-3 mt-5" style="--rise-delay:.38s">
+                    <!-- On a phone the two wrap onto two lines; full width there,
+                         so they line up instead of ending at two different widths. -->
+                    <div class="rise grid grid-cols-1 min-[420px]:flex min-[420px]:flex-wrap gap-3 mt-5" style="--rise-delay:.38s">
                         <a href="#browse" class="btn btn-primary">
                             <span class="material-symbols-outlined !text-base">explore</span>Explore destinations
                         </a>
@@ -436,7 +438,9 @@ body { overflow-x: hidden; }
                      filter below already lists, so the sentence carries the section
                      on its own — and it is the heading now rather than a caption
                      under one, which keeps the section from having no heading at all. -->
-                <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight mb-6 text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
+                <div class="ztims-cove-head">
+                    <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
+                </div>
 
                 <!-- How a visit works, in three steps, for someone here for the first time. -->
                 <ol class="how-it-works mb-6" aria-label="How it works">
@@ -464,8 +468,8 @@ body { overflow-x: hidden; }
                      more of it, rather than padding an invisible element. -->
                 <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center sm:justify-center mb-10 sm:mb-12">
                     <div class="relative w-full sm:flex-1 sm:max-w-md">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl">search</span>
-                        <input id="spotSearchInput" type="search" placeholder="Search by name, place, or category..."
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                        <input id="spotSearchInput" type="search" aria-label="Search destinations" placeholder="Search by name, place, or category..."
                             autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"
                             aria-controls="spotSuggestions"
                             class="glass-field w-full rounded-full pl-12 pr-4 py-3 placeholder:text-on-surface-variant" />
@@ -478,7 +482,7 @@ body { overflow-x: hidden; }
                                    overflow-hidden max-h-80 overflow-y-auto text-left"></div>
                     </div>
                     <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">category</span>
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">category</span>
                         <select id="spotCategoryFilter" aria-label="Filter by category"
                             class="glass-field w-full sm:w-auto appearance-none rounded-full pl-11 pr-10 py-3 text-sm font-bold">
                             <option value="all">All categories</option>
@@ -487,7 +491,7 @@ body { overflow-x: hidden; }
                             <option value="CULTURAL">Cultural</option>
                             <option value="ACCOMMODATION">Accommodation</option>
                         </select>
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg pointer-events-none">expand_more</span>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">expand_more</span>
                     </div>
                 </div>
                 <!-- Off the page, not out of it. The count was visual clutter above
@@ -559,31 +563,27 @@ body { overflow-x: hidden; }
         }[ch]));
     }
 
-    // The API sleeps on Render's free tier, so a cold start can take most of a
-    // minute — after 5s the spinner says so rather than looking frozen.
-    function showLoading(target, message) {
-        target.innerHTML =
-            // col-span-full matters when the target is the spots grid: without it the
-            // spinner is one cell wide and sits in the first column, not the middle.
-            '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full col-span-full text-center">' +
-                '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-70"></div>' +
-                '<p class="text-sm opacity-80">' + message + '</p>' +
-                '<p data-slow class="text-support opacity-60 hidden">Waking the server — this can take up to a minute.</p>' +
+    // While the destinations load: grey cards the shape of the real ones, so
+    // the page keeps its layout and the cards simply fill in. A slow line
+    // appears only if the wait runs long.
+    function showCardSkeletons(target) {
+        const card =
+            '<div class="ztims-card flex flex-col" aria-hidden="true">' +
+                '<div class="ztims-skeleton h-[200px]"></div>' +
+                '<div class="p-5 flex flex-col gap-3">' +
+                    '<div class="ztims-skeleton h-5 w-3/4"></div>' +
+                    '<div class="ztims-skeleton h-3 w-1/2"></div>' +
+                    '<div class="ztims-skeleton h-3 w-full"></div>' +
+                    '<div class="ztims-skeleton h-3 w-5/6"></div>' +
+                '</div>' +
             '</div>';
+        target.innerHTML = card.repeat(4) +
+            '<p data-slow role="status" class="col-span-full text-center text-support hidden">Still loading. Please check your connection.</p>';
         const timer = setTimeout(() => {
             const note = target.querySelector('[data-slow]');
             if (note) note.classList.remove('hidden');
-        }, 5000);
+        }, 8000);
         return () => clearTimeout(timer);
-    }
-
-    function setButtonLoading(btn, label) {
-        if (!btn) return () => {};
-        const originalHTML = btn.innerHTML;
-        const wasDisabled = btn.disabled;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
-        return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
     }
 
     function formatPeso(amount) {
@@ -617,9 +617,11 @@ body { overflow-x: hidden; }
        the map markers use, so a place is the same colour on the card and on the
        map — teal for what you climb, coastal blue for what you swim, gold for
        what the municipality keeps, ocean for somewhere to stay. */
+    // The label is the category's own name, the same words the tiles and the
+    // category filter use, so a card says which kind of place it is.
     const CATEGORY_BADGE = {
-        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape', label: 'Tourist Spot' },
-        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving', label: 'Tourist Spot' },
+        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape', label: 'Mountain' },
+        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving', label: 'Beach / Diving' },
         'CULTURAL': { cls: 'cat-municipal', icon: 'museum', label: 'Cultural' },
         'ACCOMMODATION': { cls: 'cat-stay', icon: 'hotel', label: 'Accommodation' }
     };
@@ -627,6 +629,18 @@ body { overflow-x: hidden; }
     function categoryBadge(spot) {
         const key = String(spot.category || '').toUpperCase();
         return CATEGORY_BADGE[key] || { cls: 'cat-attraction', icon: 'photo_camera', label: 'Tourist Spot' };
+    }
+
+    // "Free entrance" rather than ₱0.00. A place to stay has no entrance fee,
+    // so its card shows none; whole pesos drop the ".00".
+    function feeLine(spot) {
+        const fee = Number(spot.entranceFee) || 0;
+        if (fee > 0) {
+            const amount = Number.isInteger(fee) ? `₱${fee.toLocaleString('en-PH')}` : formatPeso(fee);
+            return `<span class="text-support">Entrance <b class="text-on-surface">${amount}</b></span>`;
+        }
+        if (String(spot.category || '').toUpperCase() === 'ACCOMMODATION') return '<span></span>';
+        return '<span class="text-support font-bold text-on-surface">Free entrance</span>';
     }
 
     function renderSpotCard(spot, index) {
@@ -660,7 +674,7 @@ body { overflow-x: hidden; }
                 </p>
                 <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
                 <div class="mt-auto flex items-center justify-between pt-3 border-t border-outline-variant/60">
-                    <span class="text-support">Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
+                    ${feeLine(spot)}
                     <span class="text-accent text-support font-bold flex items-center gap-1">
                         Explore <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </span>
@@ -693,7 +707,10 @@ body { overflow-x: hidden; }
             resultCount.textContent = '';
             spotsContainer.innerHTML = allSpots.length === 0
                 ? '<p class="ztims-empty col-span-full">No tourist spots have been published yet. Please check back soon.</p>'
-                : '<p class="ztims-empty col-span-full">Nothing matches that search or category. Try a different word, or set the category back to All.</p>';
+                : '<div class="ztims-empty col-span-full flex flex-col items-center gap-3">' +
+                      '<p>Nothing matches that search or category.</p>' +
+                      '<button type="button" data-clear-browse class="btn btn-secondary btn-sm">Show all destinations</button>' +
+                  '</div>';
             return;
         }
 
@@ -873,6 +890,11 @@ body { overflow-x: hidden; }
         document.getElementById('spotsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     searchInput.addEventListener('input', rememberBrowse);
+    spotsContainer.addEventListener('click', event => {
+        if (!event.target.closest('[data-clear-browse]')) return;
+        searchInput.value = '';
+        setCategory('all');
+    });
 
     (function restoreBrowse() {
         let saved = {};
@@ -885,7 +907,7 @@ body { overflow-x: hidden; }
     })();
 
     async function loadSpots() {
-        const doneLoading = showLoading(spotsContainer, 'Loading tourist spots and accommodations...');
+        const doneLoading = showCardSkeletons(spotsContainer);
         try {
             const response = await fetch(`${API_BASE}/spots`);
             if (!response.ok) throw new Error('Failed to load spots');

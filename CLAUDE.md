@@ -548,7 +548,14 @@ Frontend only, no tables of their own:
   category with one). Tiles and the category dropdown are one control
   (`setCategory`); a second tap shows everything. The search and category are
   kept for the visit in `sessionStorage.ztimsBrowse`, and `?category=` opens a
-  category (the destination page's breadcrumb links there).
+  category (the destination page's breadcrumb links there). The browse heading
+  sits in `.ztims-cove-head`, as deep as the photo's opening, so the steps start
+  below it on solid ground. A card's badge is its category's own name (Beach /
+  Diving, Mountain, Cultural, Accommodation) and its fee line reads "Free
+  entrance" at ₱0 (none for a place to stay); grey skeleton cards show while
+  loading; an empty result offers "Show all destinations". On a phone the
+  header's links show small labels under their icons and the staff sign-in is
+  in the footer only.
 - **Header**: every visitor page has "My booking" → `manage.html`.
 - **Destination** (`spot.html`): a breadcrumb (Destinations › category ›
   place); the actions the place really offers — Buy tickets, Book a guide, Book

@@ -626,6 +626,26 @@ h1, h2, h3, h4, .font-display, .font-headline {
         0 0   42px rgb(0 0 0 / 0.55);
 }
 
+/* The heading's own block, as deep as the opening, with the heading centred in
+   it. Whatever comes next ("How it works", the tiles) therefore starts below
+   the shoreline, on the section's solid colour. Before, the steps sat inside
+   the opening and the picture showed through the top of each card. 0.82 and
+   0.72 are where each curve's flat edge ends (196/240 and 172/240 of the
+   cove), less the section's top padding (py-8, then sm:py-10). */
+.ztims-cove-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(var(--ztims-cove) * 0.82 - 2rem);
+    margin-bottom: 1.5rem;
+}
+@media (min-width: 640px) {
+    .ztims-cove-head { min-height: calc(var(--ztims-cove) * 0.82 - 2.5rem); }
+}
+@media (min-width: 1280px) {
+    .ztims-cove-head { min-height: calc(var(--ztims-cove) * 0.72 - 2.5rem); }
+}
+
 /* The curve itself: the section's colour, filled from the shoreline downwards,
    leaving the opening above it clear. Stretched rather than scaled, so it grows
    wider on a desktop instead of taller. */
