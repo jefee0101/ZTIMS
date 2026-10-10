@@ -837,7 +837,10 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   (October 2026, the user's decision) its words — "Mabuhay", "Welcome to
   ZAMBOANGUITA." and the line under it — are plain off-white `#FFFDFA` with no
   shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
-  `theme.css`). Their legibility rests on the film being dark behind them.
+  `theme.css`). Their legibility rests on the film being dark behind them. Its two buttons
+  are pills filled flat like the header's ovals (`.btn-pill`): Explore
+  destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps match:
+  flat burnt-orange pills, each number a tangerine circle.
 
 ## What to do 
 Make it one role with a scope, not two roles

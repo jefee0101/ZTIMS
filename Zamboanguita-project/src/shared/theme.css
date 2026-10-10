@@ -1575,13 +1575,21 @@ div.leaflet-container {
 .how-it-works { display: grid; grid-template-columns: 1fr; gap: .75rem; }
 @media (min-width: 768px) { .how-it-works { grid-template-columns: repeat(3, 1fr); } }
 .how-step {
-    display: flex; align-items: flex-start; gap: .85rem; padding: 1rem 1.1rem;
-    color: rgb(var(--ztims-on-surface)); text-decoration: none;
+    display: flex; align-items: center; gap: .85rem; padding: .85rem 1.75rem .85rem .85rem;
+    color: rgb(var(--ztims-on-primary)); text-decoration: none;
+    /* The header's and the hero buttons' shape and fill: a flat burnt-orange
+       pill, off-white on it (4.5:1), its number a tangerine circle with ink. */
+    background: rgb(var(--ztims-primary));
+    border: 0;
+    border-radius: 9999px;
+    box-shadow: 0 6px 16px -8px rgb(var(--ztims-primary) / .6);
 }
+.how-step .text-support { color: rgb(var(--ztims-on-primary)); }
 .how-step__num {
-    width: 2.25rem; height: 2.25rem; flex-shrink: 0;
+    width: 2.5rem; height: 2.5rem; flex-shrink: 0;
     display: inline-flex; align-items: center; justify-content: center;
-    background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary));
+    background: rgb(var(--ztims-secondary)); color: rgb(var(--ztims-on-secondary));
+    border-radius: 50%;
     font-weight: 800;
 }
 
@@ -1654,6 +1662,18 @@ div.leaflet-container {
 .site-link:focus-visible::after { box-shadow: 0 0 0 2px rgb(var(--ztims-on-surface)); }
 .site-link[aria-current="page"], .site-link[aria-current="page"]:hover { color: rgb(var(--ztims-on-primary)); }
 .site-link[aria-current="page"]::after { opacity: 1; transform: scale(1); background: rgb(var(--ztims-primary)); }
+
+/* The hero's two buttons wear the header's shape: a pill, filled flat — burnt
+   orange for the main action (off-white on it, 4.5:1), tangerine for the map
+   (ink on it, 6.7:1). No gradient, no inner light. */
+.btn-pill { border-radius: 9999px; border: 0; }
+.btn-pill.btn-primary,
+.btn-pill.btn-primary:hover:not(:disabled) {
+    background: rgb(var(--ztims-primary));
+    box-shadow: 0 6px 16px -8px rgb(var(--ztims-primary) / .6);
+}
+.btn-pill.btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary-dim)); }
+.btn-pill.btn-highlight { box-shadow: 0 6px 16px -8px rgb(var(--brand-tangerine) / .6); }
 
 /* The theme toggle is a circle on every page — visitor pages, the sign-in
    pages and every portal — whichever way the page wires it up. */

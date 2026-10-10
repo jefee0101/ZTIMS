@@ -333,12 +333,10 @@ body { overflow-x: hidden; }
                     <!-- On a phone the two wrap onto two lines; full width there,
                          so they line up instead of ending at two different widths. -->
                     <div class="rise grid grid-cols-1 min-[420px]:flex min-[420px]:flex-wrap gap-3 mt-5" style="--rise-delay:.38s">
-                        <a href="#browse" class="btn btn-primary">
+                        <a href="#browse" class="btn btn-pill btn-primary">
                             <span class="material-symbols-outlined !text-base">explore</span>Explore destinations
                         </a>
-                        <!-- Reads as a control on a photograph rather than a
-                             ghost button that disappears over a pale sky. -->
-                        <a href="#map" class="btn btn-secondary !bg-surface/90 backdrop-blur-sm">
+                        <a href="#map" class="btn btn-pill btn-highlight">
                             <span class="material-symbols-outlined !text-base">map</span>View the map
                         </a>
                     </div>
@@ -379,15 +377,15 @@ body { overflow-x: hidden; }
 
                 <!-- How a visit works, in three steps, for someone here for the first time. -->
                 <ol class="how-it-works mb-6" aria-label="How it works">
-                    <li class="glass-card how-step">
+                    <li class="how-step">
                         <span class="how-step__num" aria-hidden="true">1</span>
                         <span><b class="block">Discover</b><span class="text-support">Find beaches, falls and heritage sites below or on the map.</span></span>
                     </li>
-                    <li class="glass-card how-step">
+                    <li class="how-step">
                         <span class="how-step__num" aria-hidden="true">2</span>
                         <span><b class="block">Book &amp; pay</b><span class="text-support">Buy entrance tickets or book a tourist guide online, or pay onsite.</span></span>
                     </li>
-                    <li class="glass-card how-step">
+                    <li class="how-step">
                         <span class="how-step__num" aria-hidden="true">3</span>
                         <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your QR code at the entrance.</span></span>
                     </li>
