@@ -188,8 +188,11 @@ purpose — see the header comment in `spot-form.js`:
   `prefers-reduced-motion` switch-off.
 - `site-footer.js` — the visitor pages' footer (Explore / Information /
   Contact Us columns, office address, quiet staff sign-in link), drawn into a
-  `<footer data-site-footer data-root="../">` placeholder so seven pages
-  share one copy. The office's address, hours, phone, email and emergency
+  `<footer data-site-footer data-root="../">` placeholder so the visitor pages
+  share one copy. Across its top runs a strip of ten flat tiles of Zamboanguita
+  (sun and sea, bangka, reef fish, turtle, palms, waterfall, heritage church,
+  Malatapay market, two patterns) in the identity's oranges, cream and ink —
+  inline SVG (`tileStrip`), decoration only. The office's address, hours, phone, email and emergency
   numbers come from `GET /api/office` (Settings → Office Information); until
   they load, the built-in address and hours show and nothing else. It also
   fills Contact Us's `[data-office-field]` spots and the destination pages'

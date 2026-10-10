@@ -1830,3 +1830,8 @@ button[onclick="toggleTheme()"] {
     .home-card__photo img, .home-card__more .material-symbols-outlined { transition: none; }
     .home-card:hover .home-card__photo img { transform: none; }
 }
+
+/* The footer's top strip of flat tiles (site-footer.js tileStrip). */
+.footer-tiles { display: flex; overflow: hidden; height: 56px; line-height: 0; }
+.footer-tiles__row { height: 100%; width: auto; flex: 0 0 auto; aspect-ratio: 10 / 1; overflow: hidden; }
+@media (min-width: 768px) { .footer-tiles { height: 72px; } }
