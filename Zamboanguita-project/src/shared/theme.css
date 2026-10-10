@@ -576,27 +576,14 @@ h1, h2, h3, h4, .font-display, .font-headline {
         rgb(var(--ztims-surface-low))     var(--ztims-cove));
 }
 
-/* No shading over the film. Asked for, twice, and this is what it costs and how
-   the cost is paid.
-
-   There is nothing between the clip and the words now — no wash, no gradient, no
-   band across the frame. What keeps the text readable instead is a halo carried
-   by the glyphs themselves: several shadow layers, tight and dark, that darken
-   only the few pixels around each letter rather than the picture behind them.
-
-   Be clear about the limit. A halo is not contrast in the sense a contrast
-   checker means: WCAG measures text against the colour behind it and a shadow
-   does not change that colour. Over a bright frame these numbers are below AA,
-   and the test says so per width rather than pretending otherwise. Legible in
-   practice, not compliant on paper — which is a design decision, and is written
-   down here so nobody later mistakes it for an oversight. */
+/* The hero's words — "Mabuhay", the welcome and the line under it — are a
+   plain light colour and nothing else: no shadow, no outline, no gradient
+   (the user's decision, October 2026), and no shading over the film either.
+   Their legibility rests on the film itself being dark enough behind them. */
 .ztims-hero h2,
 .ztims-hero p {
-    text-shadow:
-        0 1px 2px  rgb(0 0 0 / 0.95),
-        0 2px 6px  rgb(0 0 0 / 0.85),
-        0 4px 18px rgb(0 0 0 / 0.70),
-        0 0   42px rgb(0 0 0 / 0.55);
+    color: rgb(255 253 250);
+    text-shadow: none;
 }
 
 .ztims-cove {

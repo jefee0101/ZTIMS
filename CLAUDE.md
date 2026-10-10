@@ -833,9 +833,11 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   a suspended manager's or inactive guide's open session at once (it runs to
   its 2-hour expiry; officers are cut off at once), and an officer activity
   log; two-step sign-in is not built yet. Pages never load anything from a host the CSP doesn't list.
-- The hero video on `index.html` intentionally has no dark scrim over it
-  (readability is carried by per-letter text-shadow/stroke instead) — see the
-  large comment block in that file before changing hero text treatment.
+- The hero video on `index.html` intentionally has no dark scrim over it, and
+  (October 2026, the user's decision) its words — "Mabuhay", "Welcome to
+  ZAMBOANGUITA." and the line under it — are plain off-white `#FFFDFA` with no
+  shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
+  `theme.css`). Their legibility rests on the film being dark behind them.
 
 ## What to do 
 Make it one role with a scope, not two roles

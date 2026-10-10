@@ -79,44 +79,6 @@
            elements toggled via el.hidden stay on screen. */
         [hidden] { display: none !important; }
 
-        /* The identity gradient. It was gold into orange, which on the sand
-           ground was both unreadable and the loudest thing on the page — the
-           one element most responsible for the site reading as an orange
-           template. Ocean into teal carries the same emphasis and is legible
-           in both themes. */
-        /* This sits on the film, not on the page, and the only place it is used
-           is the hero. Both palette blues it used to be made of are dark — which
-           was survivable while a heavy fade sat over the whole frame, and
-           vanished the moment that came down. Light now, so it reads on a bright
-           frame and a dark one alike.
-
-           No shadow on this one, of either kind. text-shadow draws in the text's
-           own colour, which is transparent here, so it draws nothing; and a
-           filter — the usual way round that — makes Chromium stop painting the
-           clipped background altogether, which renders the word as hollow
-           outlines. The shading behind it is what carries this, and it is
-           measured: the pale end of the gradient holds 3.8:1 or better at every
-           width against the brightest frame the clip can show. */
-        .text-gradient {
-            background: linear-gradient(to right, #FFFDFA 0%, #FFC48C 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            /* The hero gives its headings a text-shadow, and this must not
-               inherit it. The fill here is transparent, so the shadow shows
-               THROUGH the letters instead of behind them — which painted the
-               word in near-black and left only a hairline of gradient along the
-               top edge. Hollow, embossed, and unreadable. */
-            text-shadow: none;
-            /* Which leaves this word with no halo, and with the shading gone
-               there is nothing else holding it off the film. A stroke is the one
-               separation that works on clipped text: it is drawn from its own
-               colour rather than the fill, so unlike a shadow it actually
-               appears, and unlike a filter it does not stop the gradient being
-               painted at all. */
-            -webkit-text-stroke: 1.3px rgb(0 0 0 / 0.55);
-            paint-order: stroke fill;
-        }
         /* Likewise: a primary button is ocean into coastal blue. Gold is for the
            occasional highlight, not for every call to action. */
         .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
@@ -363,7 +325,7 @@ body { overflow-x: hidden; }
                         <span class="inline-block w-8 h-[2px] rounded-full bg-gold"></span>
                     </p>
                     <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
-                        Welcome to <span class="text-gradient">ZAMBOANGUITA.</span>
+                        Welcome to ZAMBOANGUITA.
                     </h2>
                     <p class="rise text-base md:text-lg text-white/90 max-w-xl leading-relaxed" style="--rise-delay:.26s">
                         Experience the beauty and the hidden gems of Zamboanguita.
