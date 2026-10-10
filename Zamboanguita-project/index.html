@@ -1092,11 +1092,14 @@ body { overflow-x: hidden; }
         const svg = document.querySelector('.ztims-cove__curve');
         if (!svg || !svg.getBBox) return;
         const WORDS = 'EXPLORE ZAMBOANGUITA';
-        function edge(W, H, wide) {
+        // The ribbon starts a half-width down from the top, running in from
+        // off the side, so its ends leave the screen sideways instead of being
+        // cut by the top edge.
+        function edge(W, H, wide, top) {
             const x = v => (v / 1440 * W).toFixed(1), y = v => (v / 240 * H).toFixed(1);
             return wide
-                ? `M${x(-40)},${y(-20)} C ${x(96)},${y(6)} ${x(150)},${y(164)} ${x(232)},${y(172)} L${x(1208)},${y(172)} C ${x(1290)},${y(164)} ${x(1344)},${y(6)} ${x(1480)},${y(-20)}`
-                : `M${x(-10)},${y(-20)} C ${x(28)},${y(4)} ${x(52)},${y(186)} ${x(88)},${y(196)} L${x(1352)},${y(196)} C ${x(1388)},${y(186)} ${x(1412)},${y(4)} ${x(1450)},${y(-20)}`;
+                ? `M${x(-40)},${top} C ${x(96)},${top} ${x(150)},${y(164)} ${x(232)},${y(172)} L${x(1208)},${y(172)} C ${x(1290)},${y(164)} ${x(1344)},${top} ${x(1480)},${top}`
+                : `M${x(-30)},${top} C ${x(28)},${top} ${x(52)},${y(186)} ${x(88)},${y(196)} L${x(1352)},${y(196)} C ${x(1388)},${y(186)} ${x(1412)},${top} ${x(1470)},${top}`;
         }
         let drawnFor = '';
         function draw() {
@@ -1104,18 +1107,26 @@ body { overflow-x: hidden; }
             if (!W || !H || drawnFor === W + 'x' + H) return;
             drawnFor = W + 'x' + H;
             const wide = window.matchMedia('(min-width: 1280px)').matches;
-            const d = edge(W, H, wide);
+            const ribbon = W >= 640 ? 34 : 28;   // theme.css .cove-ribbon stroke-width
+            const d = edge(W, H, wide, ribbon / 2);
             svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
             svg.innerHTML =
                 `<path class="cove-fill" d="${d} L${W},${H} L0,${H} Z"/>` +
                 `<path id="coveEdge" class="cove-ribbon" d="${d}"/>` +
-                `<text class="cove-ribbon__text" dy="0.36em"><textPath href="#coveEdge"></textPath></text>`;
-            const path = svg.querySelector('#coveEdge');
+                // The narrow shape's corners are too tight for letters to
+                // bend round, so there the words run along the flat bottom only.
+                (wide ? '' : `<path id="coveFlat" fill="none" stroke="none" d="M${(88 / 1440 * W + ribbon).toFixed(1)},${(196 / 240 * H).toFixed(1)} L${(1352 / 1440 * W - ribbon).toFixed(1)},${(196 / 240 * H).toFixed(1)}"/>`) +
+                `<text class="cove-ribbon__text" dy="0.36em"><textPath href="#${wide ? 'coveEdge' : 'coveFlat'}" startOffset="50%" text-anchor="middle"></textPath></text>`;
+            const path = svg.querySelector(wide ? '#coveEdge' : '#coveFlat');
             const textPath = svg.querySelector('textPath');
-            const unit = WORDS + '  \u00B7  ';
+            // Whole words only, centred: as many as fit on the part of the
+            // ribbon that is on screen, so none is cut at either end.
+            const unit = '  \u00B7  ' + WORDS;
             textPath.textContent = unit;
             const unitLength = svg.querySelector('text').getComputedTextLength() || 200;
-            textPath.textContent = unit.repeat(Math.ceil(path.getTotalLength() / unitLength) + 1);
+            const offScreen = wide ? 40 / 1440 * W * 2 + ribbon * 2 : 0;
+            const count = Math.max(1, Math.floor((path.getTotalLength() - offScreen) / unitLength));
+            textPath.textContent = (unit.repeat(count) + '  \u00B7').trim();
         }
         draw();
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawnFor = ''; draw(); });
