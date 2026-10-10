@@ -127,8 +127,9 @@
         /* A white tint reads as "selected" on a dark ground and as nothing at all on
            sand. The identity's teal, held back to a wash, works on both. */
         /* The header's links: on hover or keyboard focus an oval of tangerine
-           tint swells in behind the word; the current page keeps its oval, in
-           burnt orange. The one deliberate curve in the header (corners are
+           swells in behind the word, solid, with ink on it (6.7:1); the
+           current page keeps its oval, solid burnt orange with off-white on it
+           (4.5:1). The one deliberate curve in the header (corners are
            square elsewhere). Transform and opacity only, per motion.css. */
         .nav-item {
             position: relative;
@@ -141,22 +142,20 @@
             inset: 6px 0;
             z-index: -1;
             border-radius: 9999px;
-            background: rgb(var(--ztims-secondary) / .16);
-            box-shadow: inset 0 0 0 1px rgb(var(--ztims-secondary) / .40);
+            background: rgb(var(--ztims-secondary));
             opacity: 0;
             transform: scale(.8);
             transition: opacity var(--dur-moderate) var(--ease-decelerate),
                         transform var(--dur-moderate) var(--ease-spring);
         }
-        .nav-item:hover, .nav-item:focus-visible { color: rgb(var(--ztims-on-surface)); }
+        .nav-item:hover, .nav-item:focus-visible { color: rgb(var(--ztims-on-secondary)); }
         .nav-item:hover::after, .nav-item:focus-visible::after { opacity: 1; transform: scale(1); }
         .nav-item:focus-visible { outline: none; }
-        .nav-item:focus-visible::after { box-shadow: inset 0 0 0 2px rgb(var(--ztims-secondary)); }
-        .nav-item.active { color: rgb(var(--ztims-primary-text)); }
+        .nav-item:focus-visible::after { box-shadow: 0 0 0 2px rgb(var(--ztims-on-surface)); }
+        .nav-item.active, .nav-item.active:hover { color: rgb(var(--ztims-on-primary)); }
         .nav-item.active::after {
             opacity: 1; transform: scale(1);
-            background: rgb(var(--ztims-primary) / .14);
-            box-shadow: inset 0 0 0 1px rgb(var(--ztims-primary) / .45);
+            background: rgb(var(--ztims-primary));
         }
         @media (prefers-reduced-motion: reduce) {
             .nav-item, .nav-item::after { transition: none; }

@@ -560,8 +560,8 @@ Frontend only, no tables of their own:
   entrance" at ₱0 (none for a place to stay); grey skeleton cards show while
   loading; an empty result offers "Show all destinations". The header's
   links are words only (Destinations, History, My booking), each showing a
-  tangerine oval behind itself on hover (`.nav-item` in the page's style; the
-  current page keeps a burnt-orange oval — the one rounded shape in the header,
+  solid tangerine oval behind itself on hover (`.nav-item` in the page's style; the
+  current page keeps a solid burnt-orange oval — the one rounded shape in the header,
   asked for by the user), with the sun/moon theme toggle last
   — the header's one icon. Staff sign-in is in the footer only. Below 420px the
   header shows the logo alone (the name stays for screen readers).
