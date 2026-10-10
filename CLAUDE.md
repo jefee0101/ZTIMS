@@ -743,6 +743,15 @@ the page; tabs styled like Statistics').
   CSP lists every outside host the pages use: a new CDN, image host, font or
   API called from a page must be added there, or the browser blocks it.
 
+## Open notes
+
+`docs/QUALITY-AND-TOOLS.md` (October 2026): how ZTIMS meets each ISO/IEC
+25010:2023 characteristic, the gaps and the tools that would close them, and
+which outside tools to switch (now: serve Leaflet, jsQR and the fonts from the
+site; before real use: email service, map tiles, routing servers, paid plans).
+Nothing in it is built yet; read it before working on quality, tooling or a
+framework change.
+
 ## Duplicated facts (keep both sides in step by hand)
 
 - **Zamboanguita bounding box**: `ZAMBOANGUITA_BOUNDS` in
