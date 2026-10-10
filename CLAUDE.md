@@ -554,7 +554,11 @@ Frontend only, no tables of their own:
   Zamboanguita", one line naming the experiences and what the site does, the
   **search** (`#heroSearch`: field with name suggestions, category from 640px,
   Search scrolls to the results) and two links (View the map, Plan your visit);
-  **Explore Zamboanguita** (`#browse`, in the cove) — four category photo tiles
+  **Explore Zamboanguita** (`#browse`; the heading is for screen readers, and on
+  screen the cove's edge is a still burnt-orange ribbon with "EXPLORE
+  ZAMBOANGUITA" repeated along it in off-white — `coveRibbon` in the page draws
+  the curve at the cove's real size so the letters are not stretched, and
+  redraws on resize) — four category photo tiles
   (`#categoryTiles`; tiles and the category menu are one control,
   `setCategory`; a second tap shows everything), a status line only while a
   search or category narrows the list (`#browseStatus`, with "Show all"), and
@@ -850,8 +854,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   log; two-step sign-in is not built yet. Pages never load anything from a host the CSP doesn't list.
 - The hero video on `index.html` intentionally has no dark scrim over it, and
   (October 2026, the user's decision) its words — "Mabuhay", "Welcome to
-  ZAMBOANGUITA." and the line under it, and the cove's "Browse everything the
-  municipality has to offer." (`.ztims-cove-text`) — are plain off-white `#FFFDFA` with no
+  ZAMBOANGUITA." and the line under it — are plain off-white `#FFFDFA` with no
   shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
   `theme.css`). Their legibility rests on the film being dark behind them. Its two buttons
   are pills filled flat like the header's ovals (`.btn-pill`): Explore

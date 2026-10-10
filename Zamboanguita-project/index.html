@@ -380,7 +380,9 @@ body { overflow-x: hidden; }
               </div>
               <div class="relative z-10 max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                 <div class="ztims-cove-head">
-                    <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight text-center" style="--rise-delay:.34s">Explore Zamboanguita</h2>
+                    <!-- Read by screen readers; on screen the ribbon along the
+                         curve says it (drawn by coveRibbon below). -->
+                    <h2 class="sr-only">Explore Zamboanguita</h2>
                 </div>
 
                 <!-- One photograph per kind of place; a tap shows only those below. -->
@@ -1077,6 +1079,48 @@ body { overflow-x: hidden; }
                 });
             }, { threshold: 0 }).observe(stage);
         }
+    })();
+
+    /* ---------------- the ribbon along the cove ----------------
+       The curve where the film meets the page is drawn as a burnt-orange
+       ribbon with "EXPLORE ZAMBOANGUITA" repeated along it in off-white — on a
+       solid fill, so it reads whatever the film shows. It is drawn at the
+       real size of the cove (the static paths in the markup are stretched to
+       fit, which would squash letters) and again whenever the cove's size
+       changes. The same two shapes as before: the wide one from 1280px. */
+    (function coveRibbon() {
+        const svg = document.querySelector('.ztims-cove__curve');
+        if (!svg || !svg.getBBox) return;
+        const WORDS = 'EXPLORE ZAMBOANGUITA';
+        function edge(W, H, wide) {
+            const x = v => (v / 1440 * W).toFixed(1), y = v => (v / 240 * H).toFixed(1);
+            return wide
+                ? `M${x(-40)},${y(-20)} C ${x(96)},${y(6)} ${x(150)},${y(164)} ${x(232)},${y(172)} L${x(1208)},${y(172)} C ${x(1290)},${y(164)} ${x(1344)},${y(6)} ${x(1480)},${y(-20)}`
+                : `M${x(-10)},${y(-20)} C ${x(28)},${y(4)} ${x(52)},${y(186)} ${x(88)},${y(196)} L${x(1352)},${y(196)} C ${x(1388)},${y(186)} ${x(1412)},${y(4)} ${x(1450)},${y(-20)}`;
+        }
+        let drawnFor = '';
+        function draw() {
+            const W = Math.round(svg.clientWidth), H = Math.round(svg.clientHeight);
+            if (!W || !H || drawnFor === W + 'x' + H) return;
+            drawnFor = W + 'x' + H;
+            const wide = window.matchMedia('(min-width: 1280px)').matches;
+            const d = edge(W, H, wide);
+            svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+            svg.innerHTML =
+                `<path class="cove-fill" d="${d} L${W},${H} L0,${H} Z"/>` +
+                `<path id="coveEdge" class="cove-ribbon" d="${d}"/>` +
+                `<text class="cove-ribbon__text" dy="0.36em"><textPath href="#coveEdge"></textPath></text>`;
+            const path = svg.querySelector('#coveEdge');
+            const textPath = svg.querySelector('textPath');
+            const unit = WORDS + '  \u00B7  ';
+            textPath.textContent = unit;
+            const unitLength = svg.querySelector('text').getComputedTextLength() || 200;
+            textPath.textContent = unit.repeat(Math.ceil(path.getTotalLength() / unitLength) + 1);
+        }
+        draw();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawnFor = ''; draw(); });
+        if ('ResizeObserver' in window) new ResizeObserver(draw).observe(svg);
+        else window.addEventListener('resize', draw);
     })();
 
     /* ---------------- start ---------------- */

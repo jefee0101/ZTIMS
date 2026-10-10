@@ -622,7 +622,8 @@ h1, h2, h3, h4, .font-display, .font-headline {
     align-items: center;
     justify-content: center;
     min-height: calc(var(--ztims-cove) * 0.82 - 2rem);
-    margin-bottom: 1.5rem;
+    /* Room for the lower half of the ribbon along the edge, and a gap. */
+    margin-bottom: 2.5rem;
 }
 @media (min-width: 640px) {
     .ztims-cove-head { min-height: calc(var(--ztims-cove) * 0.82 - 2.5rem); }
@@ -643,6 +644,27 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 .ztims-cove__curve path { fill: rgb(var(--ztims-surface-low)); }
+
+/* The ribbon on the cove's edge (drawn by index.html's coveRibbon): burnt
+   orange, "EXPLORE ZAMBOANGUITA" repeated along it in off-white (4.5:1).
+   Still, flat, no shadow. */
+.ztims-cove__curve .cove-ribbon {
+    fill: none;
+    stroke: rgb(var(--ztims-primary));
+    stroke-width: 28px;
+    stroke-linejoin: round;
+}
+.ztims-cove__curve .cove-ribbon__text {
+    fill: rgb(var(--ztims-on-primary));
+    font-family: var(--ztims-font-body);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .18em;
+}
+@media (min-width: 640px) {
+    .ztims-cove__curve .cove-ribbon { stroke-width: 34px; }
+    .ztims-cove__curve .cove-ribbon__text { font-size: 13px; }
+}
 
 /* Two shapes for one idea. preserveAspectRatio stretches the path to the
    viewport, so a curve that falls away gracefully across 1440px collapses into
