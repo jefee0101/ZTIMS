@@ -7,41 +7,40 @@
    switch in theme.js.
 
    -- The palette --------------------------------------------------------
-   Five brand colours, each with one job:
+   Two oranges on warm off-white and off-black. Nothing is pure white or pure
+   black, by decision (October 2026):
 
-     #30638E  blue      primary     the action: primary buttons, links, the
-                                    active navigation item, info status
-     #003D5B  navy      deep        navigation's ground in the hero, primary's
-                                    hover/pressed state, secondary text on gold
-     #00798C  teal      secondary   secondary actions (map, directions), focus
-                                    rings, eyebrows, success status
-     #D1495B  coral     accent      the visitor's own position and route on a
-                                    map, errors, destructive actions
-     #EDAE49  gold      highlight   the one thing a screen wants noticed, stars,
-                                    "waiting" status, decorative rules — as a
-                                    fill with navy on it, never as text on white
+     #F28500  tangerine  highlight   the one thing a screen wants noticed, focus
+                                     rings, map/directions actions, stars,
+                                     "waiting" status — as a fill with ink on it,
+                                     never as text on the light ground
+     #BF5700  burnt      primary     the action: primary buttons, links, the
+                                     active navigation item, info status
+     #7A2E00  ember      deep        burnt orange's pressed state, the hero's
+                                     ground, the darkest category
+     #1C1917  ink        text        off-black: text, and the ground of the dark
+                                     theme's family (#121110 behind it)
+     #FAF7F2  paper      ground      off-white: the light theme's ground
 
-   Categories reuse the same five (Mountain teal, Beach/Diving navy, Cultural
-   gold, Accommodation blue), on badges, map pins and legends alike. The
-   ambient glow behind the glass is the only purely decorative use.
+   Two colours outside the identity, because a status must not look like a
+   brand colour: red for errors and destructive actions, green for success.
 
-   The surfaces are real white in the light theme and real black in the dark,
-   as asked. The colour comes from the brand, not from a tinted background.
+   Categories use the four shades (Beach/Diving tangerine, Mountain ember,
+   Cultural burnt, Accommodation ink), on badges, map pins and legends alike.
+   Their names and icons always go with the colour. The ambient glow behind
+   the glass is the only purely decorative use.
 
    -- The rule every value here was checked against -------------------------
-   Text reads at 4.5:1 or better on every surface it can land on, including the
-   worst case of a glass panel over the brightest patch of the ambient glow.
-   Where a brand colour fails that as TEXT, it keeps its exact hex as a fill,
-   ring or icon and gets a text-safe shade of the same hue for words:
+   Text reads at 4.5:1 or better on every surface it can land on. Where a
+   brand colour fails that as TEXT, it keeps its exact hex as a fill, ring or
+   icon and gets a text-safe shade of the same hue for words:
 
-     saffron as text on white is 1.95:1   →  --ztims-gold-text  #8A6320 (5.4)
-     rose as text on white is 4.36:1      →  --ztims-error      #BE3C4E (5.3)
-     teal as text on the pale blue tint   →  --ztims-accent     #006E80 (5.1)
-     blue as text on black is 3.3:1       →  --ztims-primary-text #7EA7CE (7.0)
-     teal as text on black is 4.1:1       →  --ztims-accent     #4DB8C8 (7.6)
+     tangerine as text on paper is 2.4:1  →  --ztims-gold-text  #964200 (6.3)
+     burnt as text on paper is 4.3:1      →  --ztims-primary-text #A34A00 (5.5)
+     burnt as text on the dark panels     →  --ztims-primary-text #F28500 (6.7)
 
-   Fills keep the brand: white on #30638E is 6.4:1, white on #00798C 5.1:1,
-   navy on #EDAE49 5.9:1.
+   Fills keep the brand: off-white (#FFFDFA) on #BF5700 is 4.5:1, ink on
+   #F28500 6.7:1 — white on tangerine is 2.5:1, so it is never used.
 
    -- Why channels and not hex --------------------------------------------
    The tokens are `R G B` triples so that the page configs can say
@@ -59,86 +58,86 @@
 /* ------------------------------------------------------------ brand ---- */
 /* The five, named once. Everything below is built from these. */
 :root {
-    --brand-saffron: 237 174 73;         /* #EDAE49 */
-    --brand-rose: 209 73 91;             /* #D1495B */
-    --brand-teal: 0 121 140;             /* #00798C */
-    --brand-blue: 48 99 142;             /* #30638E */
-    --brand-navy: 0 61 91;               /* #003D5B */
+    --brand-tangerine: 242 133 0;        /* #F28500 */
+    --brand-burnt: 191 87 0;             /* #BF5700 */
+    --brand-ember: 122 46 0;             /* #7A2E00 */
+    --brand-ink: 28 25 23;               /* #1C1917 */
+    --brand-paper: 250 247 242;          /* #FAF7F2 */
 }
 
 /* -------------------------------------------------------------- light ---- */
 :root {
     /* Identity */
-    --ztims-primary: var(--brand-blue);          /* fills: white on it 6.4:1  */
-    --ztims-primary-text: var(--brand-blue);     /* as text on white 6.4:1    */
-    --ztims-primary-dim: var(--brand-navy);      /* hover / pressed primary   */
-    --ztims-secondary: var(--brand-teal);        /* rings, gradients, fills   */
-    --ztims-accent: 0 110 128;                   /* #006E80  teal, as text    */
-    --ztims-gold: var(--brand-saffron);          /* fills, stars, rules       */
-    --ztims-gold-text: 138 99 32;                /* #8A6320  saffron, as text */
-    /* `orange` is kept as a name because the page configs use it; the palette
-       has no orange, so it is the warm accent — rose. */
-    --ztims-orange: var(--brand-rose);
+    --ztims-primary: var(--brand-burnt);         /* fills: off-white on it 4.5:1 */
+    --ztims-primary-text: 163 74 0;              /* #A34A00  burnt, as text: 5.5 */
+    --ztims-primary-dim: var(--brand-ember);     /* hover / pressed primary      */
+    --ztims-secondary: var(--brand-tangerine);   /* rings, gradients, fills      */
+    --ztims-on-secondary: var(--brand-ink);      /* ink on tangerine: 6.7        */
+    --ztims-accent: 143 58 0;                    /* #8F3A00  orange, as text: 7.1 */
+    --ztims-gold: var(--brand-tangerine);        /* fills, stars, rules          */
+    --ztims-gold-text: 150 66 0;                 /* #964200  tangerine, as text  */
+    --ztims-orange: var(--brand-tangerine);
 
-    /* Surfaces — real white */
-    --ztims-background: 255 255 255;             /* #FFFFFF */
-    --ztims-surface: 255 255 255;                /* #FFFFFF */
-    --ztims-surface-low: 247 247 248;            /* #F7F7F8 */
-    --ztims-surface-high: 255 255 255;           /* #FFFFFF */
-    --ztims-surface-variant: 241 242 244;        /* #F1F2F4 */
+    /* Surfaces — warm off-white, never pure white */
+    --ztims-background: var(--brand-paper);      /* #FAF7F2 */
+    --ztims-surface: 253 251 247;                /* #FDFBF7 */
+    --ztims-surface-low: 245 241 234;            /* #F5F1EA */
+    --ztims-surface-high: 255 253 250;           /* #FFFDFA */
+    --ztims-surface-variant: 239 234 226;        /* #EFEAE2 */
 
-    /* Text — near-black, and a quiet grey that still reads 6.7:1 at worst */
-    --ztims-on-surface: 11 11 12;                /* #0B0B0C */
-    --ztims-on-surface-variant: 82 82 91;        /* #52525B */
-    --ztims-on-primary: 255 255 255;
+    /* Text — off-black, and a warm grey that still reads 6.7:1 at worst */
+    --ztims-on-surface: var(--brand-ink);        /* #1C1917 */
+    --ztims-on-surface-variant: 87 81 74;        /* #57514A */
+    --ztims-on-primary: 255 253 250;             /* #FFFDFA */
 
     /* Lines */
-    --ztims-outline: 228 228 231;                /* #E4E4E7 */
+    --ztims-outline: 227 220 209;                /* #E3DCD1 */
 
     /* Tinted containers: a quiet emphasis that is not a filled button */
-    --ztims-primary-container: 234 240 245;      /* #EAF0F5  blue, 10%  */
-    --ztims-secondary-container: 227 241 243;    /* #E3F1F3  teal, 10%  */
-    --ztims-on-secondary-container: var(--brand-navy);
+    --ztims-primary-container: 252 237 222;      /* #FCEDDE  burnt, 10%     */
+    --ztims-secondary-container: 254 240 222;    /* #FEF0DE  tangerine, 12% */
+    --ztims-on-secondary-container: var(--brand-ember);
 
-    --ztims-error: 190 60 78;                    /* #BE3C4E  rose, as text: 5.3 */
-    --ztims-success: 0 110 128;                  /* teal: the palette has no green */
+    --ztims-error: 179 38 30;                    /* #B3261E  red, as text: 6.1 */
+    --ztims-success: 46 125 50;                  /* #2E7D32  green, as text: 4.8 */
 
     /* Categories: the colour of a badge, marker or dot, and the ink its label
        is written in — the same hue, but only the ink has to be readable. */
-    --ztims-cat-attraction: var(--brand-teal);   --ztims-cat-attraction-ink: 0 110 128;
-    --ztims-cat-stay: var(--brand-blue);         --ztims-cat-stay-ink: var(--brand-blue);
-    --ztims-cat-food: var(--brand-rose);         --ztims-cat-food-ink: 190 60 78;
-    --ztims-cat-municipal: var(--brand-saffron); --ztims-cat-municipal-ink: 138 99 32;
-    --ztims-cat-notice: var(--brand-navy);       --ztims-cat-notice-ink: var(--brand-navy);
+    --ztims-cat-attraction: var(--brand-ember);  --ztims-cat-attraction-ink: var(--brand-ember);
+    --ztims-cat-stay: var(--brand-ink);          --ztims-cat-stay-ink: var(--brand-ink);
+    --ztims-cat-food: var(--brand-burnt);        --ztims-cat-food-ink: 163 74 0;
+    --ztims-cat-municipal: var(--brand-burnt);   --ztims-cat-municipal-ink: 163 74 0;
+    --ztims-cat-notice: var(--brand-tangerine);  --ztims-cat-notice-ink: 150 66 0;
 
     /* -- Glass --------------------------------------------------------------
-       Frosted white over a white page would be invisible, so the page carries
-       a faint wash of the brand colours (the ambient layer, below) and glass
-       lets it through. `--glass-alpha` is how much of the surface is opaque:
-       enough that text on it never depends on what is behind. */
-    --glass-fill: 255 255 255;
+       Frosted off-white over an off-white page would be invisible, so the page
+       carries a faint wash of the brand colours (the ambient layer, below) and
+       glass lets it through. `--glass-alpha` is how much of the surface is
+       opaque: enough that text on it never depends on what is behind. */
+    --glass-fill: 255 253 250;
     --glass-alpha: 0.62;                         /* panels and cards          */
     --glass-alpha-strong: 0.78;                  /* navigation, search fields */
     /* Anything that opens OVER content — dialogs, dropdowns, menus, toasts,
        map popups — is nearly opaque, or the text behind it ghosts through
        the text on it. */
     --glass-alpha-overlay: 0.92;
-    --glass-edge: rgb(255 255 255 / 0.75);       /* the lit top edge          */
-    --glass-hairline: rgb(11 11 12 / 0.07);      /* the outline               */
+    --glass-edge: rgb(255 253 250 / 0.75);       /* the lit top edge          */
+    --glass-hairline: rgb(28 25 23 / 0.08);      /* the outline               */
     --glass-blur: 18px;
     --glass-saturate: 160%;
 
-    /* Elevation, tinted navy rather than grey so shadows belong to the palette.
-       Three steps; nothing in the system needs a fourth. */
-    --ztims-shadow-card: 0 1px 2px rgb(0 61 91 / 0.05), 0 8px 24px -8px rgb(0 61 91 / 0.12);
-    --ztims-shadow-raised: 0 2px 6px rgb(0 61 91 / 0.06), 0 18px 40px -12px rgb(0 61 91 / 0.22);
-    --ztims-shadow-overlay: 0 4px 12px rgb(0 61 91 / 0.08), 0 32px 64px -16px rgb(0 61 91 / 0.30);
+    /* Elevation, tinted with the warm ink rather than grey so shadows belong to
+       the palette. Three steps; nothing in the system needs a fourth. */
+    --ztims-shadow-card: 0 1px 2px rgb(28 25 23 / 0.05), 0 8px 24px -8px rgb(28 25 23 / 0.12);
+    --ztims-shadow-raised: 0 2px 6px rgb(28 25 23 / 0.06), 0 18px 40px -12px rgb(28 25 23 / 0.20);
+    --ztims-shadow-overlay: 0 4px 12px rgb(28 25 23 / 0.08), 0 32px 64px -16px rgb(28 25 23 / 0.28);
 
-    /* The ambient layer: the brand, blurred into the page. */
-    --ambient-blue: 0.16;
-    --ambient-teal: 0.12;
-    --ambient-saffron: 0.14;
-    --ambient-rose: 0.08;
+    /* The ambient layer: the brand, blurred into the page. Orange carries
+       further than blue did, so the washes are lighter. */
+    --ambient-burnt: 0.10;
+    --ambient-tangerine: 0.12;
+    --ambient-ember: 0.06;
+    --ambient-tangerine-2: 0.08;
 }
 
 /* --------------------------------------------------------------- dark ---- */
@@ -147,61 +146,62 @@
 :root.dark,
 html.dark,
 body.dark-mode {
-    --ztims-primary: var(--brand-blue);          /* fills keep the brand: 6.4 */
-    --ztims-primary-text: 126 167 206;           /* #7EA7CE  blue, as text: 7.0 on the panels */
-    --ztims-primary-dim: 63 111 154;             /* #3F6F9A  hover fill, white on it 4.6 */
-    --ztims-secondary: var(--brand-teal);
-    --ztims-accent: 77 184 200;                  /* #4DB8C8  teal, as text: 7.6 */
-    --ztims-gold: var(--brand-saffron);
-    --ztims-gold-text: var(--brand-saffron);     /* saffron reads 9:1 on black as it is */
-    --ztims-orange: var(--brand-rose);
+    --ztims-primary: var(--brand-burnt);         /* fills keep the brand: 4.5 */
+    --ztims-primary-text: var(--brand-tangerine);/* burnt family, as text: 6.7 on the panels */
+    --ztims-primary-dim: 166 75 0;               /* #A64B00  hover fill, off-white on it 5.7 */
+    --ztims-secondary: var(--brand-tangerine);
+    --ztims-on-secondary: var(--brand-ink);
+    --ztims-accent: 255 166 77;                  /* #FFA64D  orange, as text: 8.9 */
+    --ztims-gold: var(--brand-tangerine);
+    --ztims-gold-text: 255 166 77;               /* #FFA64D */
+    --ztims-orange: var(--brand-tangerine);
 
-    /* Surfaces — real black, and three steps of near-black above it */
-    --ztims-background: 0 0 0;                   /* #000000 */
-    --ztims-surface: 14 14 16;                   /* #0E0E10 */
-    --ztims-surface-low: 8 8 10;                 /* #08080A */
-    --ztims-surface-high: 24 24 27;              /* #18181B */
-    --ztims-surface-variant: 28 28 31;           /* #1C1C1F */
+    /* Surfaces — warm off-black, never pure black, and three steps above it */
+    --ztims-background: 18 17 16;                /* #121110 */
+    --ztims-surface: 28 26 24;                   /* #1C1A18 */
+    --ztims-surface-low: 22 20 19;               /* #161413 */
+    --ztims-surface-high: 36 33 31;              /* #24211F */
+    --ztims-surface-variant: 42 39 36;           /* #2A2724 */
 
-    --ztims-on-surface: 245 245 247;             /* #F5F5F7 */
-    --ztims-on-surface-variant: 161 161 170;     /* #A1A1AA  6.2:1 at worst */
-    --ztims-on-primary: 255 255 255;
+    --ztims-on-surface: 245 241 234;             /* #F5F1EA */
+    --ztims-on-surface-variant: 181 173 163;     /* #B5ADA3  7.1:1 at worst */
+    --ztims-on-primary: 255 253 250;
 
-    --ztims-outline: 42 42 46;                   /* #2A2A2E */
+    --ztims-outline: 58 53 50;                   /* #3A3532 */
 
-    /* Containers lean on navy and teal, deep enough to sit under light text */
-    --ztims-primary-container: 10 37 54;         /* #0A2536 */
-    --ztims-secondary-container: 6 46 53;        /* #062E35 */
-    --ztims-on-secondary-container: 166 221 229; /* #A6DDE5 */
+    /* Containers lean on ember, deep enough to sit under light text */
+    --ztims-primary-container: 51 26 8;          /* #331A08 */
+    --ztims-secondary-container: 56 32 6;        /* #382006 */
+    --ztims-on-secondary-container: 255 196 140; /* #FFC48C */
 
-    --ztims-error: 236 118 132;                  /* #EC7684  rose, as text: 6.1 at worst */
-    --ztims-success: 77 184 200;
+    --ztims-error: 242 139 130;                  /* #F28B82  red, as text: 7 */
+    --ztims-success: 123 198 126;                /* #7BC67E  green, as text */
 
-    --ztims-cat-attraction: 77 184 200;          --ztims-cat-attraction-ink: 77 184 200;
-    --ztims-cat-stay: 126 167 206;               --ztims-cat-stay-ink: 126 167 206;
-    --ztims-cat-food: 236 118 132;               --ztims-cat-food-ink: 236 118 132;
-    --ztims-cat-municipal: var(--brand-saffron); --ztims-cat-municipal-ink: var(--brand-saffron);
-    --ztims-cat-notice: 94 150 190;              --ztims-cat-notice-ink: 94 150 190;
+    --ztims-cat-attraction: 214 110 40;          --ztims-cat-attraction-ink: 240 150 90;
+    --ztims-cat-stay: 200 192 182;               --ztims-cat-stay-ink: 200 192 182;
+    --ztims-cat-food: var(--brand-burnt);        --ztims-cat-food-ink: var(--brand-tangerine);
+    --ztims-cat-municipal: var(--brand-burnt);   --ztims-cat-municipal-ink: var(--brand-tangerine);
+    --ztims-cat-notice: var(--brand-tangerine);  --ztims-cat-notice-ink: 255 166 77;
 
-    /* Dark glass is smoked, not frosted: a near-black fill that lets the glow
-       through, edged in a faint light line — on black, a shadow alone would
-       be invisible, so the edge does the separating. */
-    --glass-fill: 20 20 23;
+    /* Dark glass is smoked, not frosted: a warm near-black fill that lets the
+       glow through, edged in a faint light line — on a dark ground, a shadow
+       alone would be invisible, so the edge does the separating. */
+    --glass-fill: 28 26 24;
     --glass-alpha: 0.60;
     --glass-alpha-strong: 0.76;
     --glass-alpha-overlay: 0.90;
-    --glass-edge: rgb(255 255 255 / 0.09);
-    --glass-hairline: rgb(255 255 255 / 0.08);
+    --glass-edge: rgb(255 253 250 / 0.09);
+    --glass-hairline: rgb(255 253 250 / 0.08);
 
-    --ztims-shadow-card: 0 1px 2px rgb(0 0 0 / 0.5), 0 8px 24px -8px rgb(0 0 0 / 0.6);
-    --ztims-shadow-raised: 0 2px 6px rgb(0 0 0 / 0.5), 0 18px 40px -12px rgb(0 0 0 / 0.7);
-    --ztims-shadow-overlay: 0 4px 12px rgb(0 0 0 / 0.5), 0 32px 64px -16px rgb(0 0 0 / 0.8);
+    --ztims-shadow-card: 0 1px 2px rgb(8 7 6 / 0.5), 0 8px 24px -8px rgb(8 7 6 / 0.6);
+    --ztims-shadow-raised: 0 2px 6px rgb(8 7 6 / 0.5), 0 18px 40px -12px rgb(8 7 6 / 0.7);
+    --ztims-shadow-overlay: 0 4px 12px rgb(8 7 6 / 0.5), 0 32px 64px -16px rgb(8 7 6 / 0.8);
 
-    /* On black the same wash reads as light, so it is allowed to be stronger. */
-    --ambient-blue: 0.26;
-    --ambient-teal: 0.18;
-    --ambient-saffron: 0.09;
-    --ambient-rose: 0.10;
+    /* On a dark ground the same wash reads as light, so it is allowed to be stronger. */
+    --ambient-burnt: 0.20;
+    --ambient-tangerine: 0.12;
+    --ambient-ember: 0.18;
+    --ambient-tangerine-2: 0.08;
 }
 
 /* ==========================================================================
@@ -242,10 +242,10 @@ body::before {
     z-index: -1;
     pointer-events: none;
     background:
-        radial-gradient(42rem 34rem at 6% -8%,   rgb(var(--brand-blue) / var(--ambient-blue)),       transparent 70%),
-        radial-gradient(38rem 30rem at 104% 10%, rgb(var(--brand-teal) / var(--ambient-teal)),       transparent 70%),
-        radial-gradient(36rem 30rem at -4% 104%, rgb(var(--brand-saffron) / var(--ambient-saffron)), transparent 70%),
-        radial-gradient(32rem 28rem at 98% 100%, rgb(var(--brand-rose) / var(--ambient-rose)),       transparent 70%);
+        radial-gradient(42rem 34rem at 6% -8%,   rgb(var(--brand-burnt) / var(--ambient-burnt)),           transparent 70%),
+        radial-gradient(38rem 30rem at 104% 10%, rgb(var(--brand-tangerine) / var(--ambient-tangerine)),   transparent 70%),
+        radial-gradient(36rem 30rem at -4% 104%, rgb(var(--brand-ember) / var(--ambient-ember)),           transparent 70%),
+        radial-gradient(32rem 28rem at 98% 100%, rgb(var(--brand-tangerine) / var(--ambient-tangerine-2)), transparent 70%);
 }
 
 /* ==========================================================================
@@ -543,8 +543,8 @@ h1, h2, h3, h4, .font-display, .font-headline {
        the white heading sits, is the very bottom of this layer. Had the still
        and the film both failed, the heading would have been white on sand. */
     background: linear-gradient(160deg,
-        rgb(var(--brand-navy)) 0%,
-        rgb(var(--brand-blue)) 100%);
+        rgb(var(--brand-ember)) 0%,
+        rgb(var(--brand-burnt)) 100%);
 }
 
 .ztims-stage__poster,
@@ -685,24 +685,25 @@ h1, h2, h3, h4, .font-display, .font-headline {
    --------------------------------------------------------------------------
    Tailwind maps one colour name to both `bg-primary` and `text-primary`, so a
    token cannot tell the two apart — and on a dark theme they need different
-   values, because a blue that carries white text is too dark to BE text.
+   values, because a burnt orange that carries off-white text is too dark to BE
+   text on the night theme, and a shade too light on the day one (4.3:1).
 
    Overriding the utility is the narrow way to say that: (0,2,0) beats the
    CDN's own (0,1,0) whatever order they load in, `bg-primary` is untouched, and
    a page that really means the fill colour can still say `!text-primary`.
    ========================================================================== */
+:root .text-primary,
 :root.dark .text-primary,
 html.dark .text-primary,
 body.dark-mode .text-primary {
     color: rgb(var(--ztims-primary-text));
 }
 
-/* The same problem the other way round, on the day theme: saffron and rose
-   are fills on white, not text — 1.95:1 and 4.36:1. Written as text, they
-   take the readable shade of the same hue. `bg-gold` and `bg-orange` keep the
-   brand hex. */
+/* The same problem on the day theme: tangerine is a fill on off-white, not
+   text — 2.4:1. Written as text, it takes the readable shade of the same hue.
+   `bg-gold` and `bg-orange` keep the brand hex. */
 html:not(.dark) .text-gold { color: rgb(var(--ztims-gold-text)); }
-html:not(.dark) .text-orange { color: rgb(var(--ztims-error)); }
+html:not(.dark) .text-orange { color: rgb(var(--ztims-gold-text)); }
 
 /* A hand, for the one or two places that greet rather than label. Kept as a
    token so the face is named once; the page that uses it is what loads it. The
@@ -837,15 +838,15 @@ html:not(.dark) .text-orange { color: rgb(var(--ztims-error)); }
    of it that reads on this theme. Tailwind's own amber-400 and green-400 were
    picked for the dark theme and are 1.5:1 on white.
 
-     .tone-warning   waiting on someone      saffron
-     .tone-success   done, paid, resolved    teal
-     .tone-info      seen, in progress       blue
-     .tone-danger    cancelled, failed       rose
+     .tone-warning   waiting on someone      tangerine
+     .tone-success   done, paid, resolved    green
+     .tone-info      seen, in progress       burnt orange
+     .tone-danger    cancelled, failed       red
      .tone-neutral   no longer in play       grey
 
    .tone-* sets the colour; add .tone-pill for the tinted pill around it.
    ========================================================================== */
-.tone-warning { --tone: var(--brand-saffron);       --tone-ink: var(--ztims-gold-text); }
+.tone-warning { --tone: var(--brand-tangerine);       --tone-ink: var(--ztims-gold-text); }
 .tone-success { --tone: var(--ztims-success);       --tone-ink: var(--ztims-success); }
 .tone-info    { --tone: var(--ztims-primary);       --tone-ink: var(--ztims-primary-text); }
 .tone-danger  { --tone: var(--ztims-error);         --tone-ink: var(--ztims-error); }
@@ -980,17 +981,17 @@ html:not(.dark) .text-orange { color: rgb(var(--ztims-error)); }
 /* Directions and other map actions, so they read as belonging to the map. */
 .btn-accent {
     background: rgb(var(--ztims-secondary));
-    color: rgb(var(--ztims-on-primary));
+    color: rgb(var(--ztims-on-secondary));
     box-shadow: 0 6px 16px -6px rgb(var(--ztims-secondary) / 0.55);
 }
 .btn-accent:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
 
-/* The one place saffron is a fill: an action the office wants noticed. Navy
-   ink on saffron (5.9:1), because white on it is 1.95:1. */
+/* Tangerine as a fill: an action the office wants noticed. Ink on tangerine
+   (6.7:1), because white on it is 2.5:1. */
 .btn-highlight {
-    background: rgb(var(--brand-saffron));
-    color: rgb(var(--brand-navy));
-    box-shadow: 0 6px 16px -6px rgb(var(--brand-saffron) / 0.6);
+    background: rgb(var(--brand-tangerine));
+    color: rgb(var(--brand-ink));
+    box-shadow: 0 6px 16px -6px rgb(var(--brand-tangerine) / 0.6);
 }
 .btn-highlight:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
 
@@ -1134,7 +1135,7 @@ textarea.field[aria-invalid="true"],
    toward black on the night one, and softened so the dialog is the only sharp
    thing on screen. */
 .ztims-scrim {
-    background: rgb(var(--brand-navy) / 0.28);
+    background: rgb(var(--brand-ink) / 0.32);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
 }

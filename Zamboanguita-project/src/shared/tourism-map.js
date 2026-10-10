@@ -52,10 +52,10 @@
                   own surfaces — the popup is glass in the page's theme, so its
                   category line uses --ztims-cat-*-ink, light on the night theme */
     const CATEGORIES = {
-        'BEACH / DIVING': { cat: 'notice',     label: 'Beach / Diving', icon: 'scuba_diving', colour: 'rgb(var(--brand-navy))',    glyph: '#fff',                   ink: 'rgb(var(--brand-navy))' },
-        'MOUNTAIN':       { cat: 'attraction', label: 'Mountain',       icon: 'landscape',    colour: 'rgb(var(--brand-teal))',    glyph: '#fff',                   ink: 'rgb(0 90 105)' },
-        'CULTURAL':       { cat: 'municipal',  label: 'Cultural',       icon: 'museum',       colour: 'rgb(var(--brand-saffron))', glyph: 'rgb(var(--brand-navy))', ink: 'rgb(110 78 22)' },
-        'ACCOMMODATION':  { cat: 'stay',       label: 'Accommodation',  icon: 'hotel',        colour: 'rgb(var(--brand-blue))',    glyph: '#fff',                   ink: 'rgb(40 85 121)' }
+        'BEACH / DIVING': { cat: 'notice',     label: 'Beach / Diving', icon: 'scuba_diving', colour: 'rgb(var(--brand-tangerine))', glyph: 'rgb(var(--brand-ink))',   ink: 'rgb(150 66 0)' },
+        'MOUNTAIN':       { cat: 'attraction', label: 'Mountain',       icon: 'landscape',    colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
+        'CULTURAL':       { cat: 'municipal',  label: 'Cultural',       icon: 'museum',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' },
+        'ACCOMMODATION':  { cat: 'stay',       label: 'Accommodation',  icon: 'hotel',        colour: 'rgb(var(--brand-ink))',       glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ink))' }
     };
 
     const FALLBACK_CATEGORY = { cat: null, label: 'Tourist spot', icon: 'photo_camera', colour: 'rgb(82 82 91)', glyph: '#fff', ink: 'rgb(82 82 91)' };
@@ -302,7 +302,7 @@
         injectStyles();
         return window.L.divIcon({
             className: '',
-            html: '<div class="ztims-pin ztims-pin--origin" style="--pin:rgb(var(--brand-rose))">' +
+            html: '<div class="ztims-pin ztims-pin--origin" style="--pin:rgb(var(--brand-ink))">' +
                       '<span class="material-symbols-outlined">person_pin_circle</span>' +
                   '</div>',
             iconSize: [30, 30],

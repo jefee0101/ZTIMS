@@ -216,16 +216,21 @@ purpose — see the header comment in `spot-form.js`:
 
 ### Design system
 
-Glassmorphism over one five-colour identity (`--brand-*` in `theme.css`),
-each colour with one job — the full table is at the top of `theme.css`:
-blue `#30638E` primary actions, links, active navigation; navy `#003D5B`
-primary's pressed state and the hero; teal `#00798C` secondary actions (map,
-directions), focus, success; coral `#D1495B` the visitor's position and route
-on a map, errors, destructive actions; gold `#EDAE49` highlights and
-"waiting" status, as a fill with navy on it. Categories reuse the same five
-on badges, map pins and legends (Mountain teal, Beach/Diving navy, Cultural
-gold, Accommodation blue). The grounds are true white and true black; the
-brand colours carry identity, not the backgrounds.
+Glassmorphism over one orange identity (`--brand-*` in `theme.css`), decided
+October 2026: tangerine and burnt orange on warm off-white and off-black —
+never pure white or pure black. The full table is at the top of `theme.css`:
+burnt orange `#BF5700` primary actions, links, active navigation; ember
+`#7A2E00` (deep burnt orange) primary's pressed state, the hero, a map route;
+tangerine `#F28500` highlights, focus rings, map/directions actions,
+"waiting" status — always as a fill with ink on it, never text on the light
+ground; ink `#1C1917` (off-black) text and the visitor's position on a map;
+paper `#FAF7F2` (off-white) the light ground, `#121110` the dark one. Red
+(errors, destructive) and green (success) are the only colours outside the
+identity, so a status never looks like a brand colour. Categories use the four
+shades on badges, map pins and legends (Beach/Diving tangerine, Mountain ember,
+Cultural burnt, Accommodation ink), always with their name and icon. Emails
+(`mailer.js`, the reset email in `server.js`) use the same colours; ticket QR
+codes stay black on white so scanners read them.
 
 - **Theme.** One choice for the whole site: the toggle on any page stores
   `theme` (light or dark) and every page, and every other open tab at once,
@@ -240,9 +245,9 @@ brand colours carry identity, not the backgrounds.
   `.glass-panel`, `.ztims-card`) are translucent without blur, for scrolling
   performance on phones.
 - **Contrast.** Every text/background token pair is ≥ 4.5:1 in both themes,
-  including over the brightest part of the glow. Saffron is never text on
-  white (1.95:1) — it has an ink shade (`--ztims-gold-text`), as does each
-  category (`--ztims-cat-*-ink`). Don't use Tailwind's own palette
+  including over the brightest part of the glow. Tangerine is never text on
+  the light ground (2.4:1) — it has an ink shade (`--ztims-gold-text`), burnt
+  orange has `--ztims-primary-text`, and each category has `--ztims-cat-*-ink`. Don't use Tailwind's own palette
   (`text-amber-400`, `bg-white/10`, …) for status or tints: those were tuned for
   one theme. Use `.tone-warning|success|info|danger|neutral` (+ `.tone-pill`),
   `.cat-badge .cat-*`, and `on-surface/…` tints.

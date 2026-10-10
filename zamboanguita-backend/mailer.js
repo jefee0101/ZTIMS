@@ -89,16 +89,16 @@ function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid, foot
         ...(link ? [`${link.label}: ${link.url}`, ''] : []),
         '—', footer
     ].join('\n');
-    const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#17212B;line-height:1.5">
-        <h2 style="margin:0 0 8px;color:#003D5B">${escapeHtml(heading)}</h2>
+    const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#1C1917;line-height:1.5">
+        <h2 style="margin:0 0 8px;color:#7A2E00">${escapeHtml(heading)}</h2>
         <p>${escapeHtml(intro)}</p>
         ${qrCid ? `<p style="text-align:center"><img src="cid:${qrCid}" alt="Ticket QR code" width="200" height="200"/></p>` : ''}
         ${rows.length ? `<table style="border-collapse:collapse;width:100%">${rows.map(([label, value]) =>
-            `<tr><td style="padding:6px 8px;border-bottom:1px solid #e3e8ee;color:#566;width:40%">${escapeHtml(label)}</td>
-                 <td style="padding:6px 8px;border-bottom:1px solid #e3e8ee;font-weight:bold">${escapeHtml(value)}</td></tr>`).join('')}</table>` : ''}
+            `<tr><td style="padding:6px 8px;border-bottom:1px solid #E3DCD1;color:#566;width:40%">${escapeHtml(label)}</td>
+                 <td style="padding:6px 8px;border-bottom:1px solid #E3DCD1;font-weight:bold">${escapeHtml(value)}</td></tr>`).join('')}</table>` : ''}
         ${paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')}
-        ${link ? `<p><a href="${escapeHtml(link.url)}" style="display:inline-block;background:#30638E;color:#fff;padding:10px 16px;text-decoration:none;font-weight:bold">${escapeHtml(link.label)}</a></p>` : ''}
-        <p style="color:#667;font-size:12px;border-top:1px solid #e3e8ee;padding-top:8px">${escapeHtml(footer).replace(/\n/g, '<br>')}</p>
+        ${link ? `<p><a href="${escapeHtml(link.url)}" style="display:inline-block;background:#BF5700;color:#FFFDFA;padding:10px 16px;text-decoration:none;font-weight:bold">${escapeHtml(link.label)}</a></p>` : ''}
+        <p style="color:#667;font-size:12px;border-top:1px solid #E3DCD1;padding-top:8px">${escapeHtml(footer).replace(/\n/g, '<br>')}</p>
     </div>`;
     return { text, html };
 }
