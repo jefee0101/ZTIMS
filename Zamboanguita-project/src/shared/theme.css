@@ -499,8 +499,10 @@ h1, h2, h3, h4, .font-display, .font-headline {
    ========================================================================== */
 :root {
     /* One source of truth. The hero is sized from this and the continuation
-       below is measured against it, so the crop cannot drift out of step. */
-    --ztims-hero-h: max(38vh, 360px);
+       below is measured against it, so the crop cannot drift out of step.
+       Tall enough to hold the greeting, the headline, the line under it, the
+       search and the two links on a phone. */
+    --ztims-hero-h: max(46vh, 410px);
     /* Deep enough to hold the heading and, on a wide screen, the search row —
        and no deeper. Past this the destination cards begin, and the picture
        would show through the gaps between them. */
@@ -508,14 +510,14 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 @media (min-width: 640px) {
-    :root { --ztims-hero-h: max(42vh, 340px); --ztims-cove: 215px; }
+    :root { --ztims-hero-h: max(48vh, 420px); --ztims-cove: 215px; }
 }
 
 @media (min-width: 1024px) {
     :root { --ztims-cove: 235px; }
 }
 
-.ztims-hero { height: var(--ztims-hero-h); }
+.ztims-hero { min-height: var(--ztims-hero-h); }
 
 /* One piece of media behind both sections, rather than a copy in each.
 
@@ -564,6 +566,7 @@ h1, h2, h3, h4, .font-display, .font-headline {
 /* Both sections sit on the stage, so both need to be above it. */
 .ztims-hero,
 .ztims-browse { position: relative; z-index: 1; }
+.ztims-hero { z-index: 2; }
 
 /* The section's colour, but starting at its own cove depth instead of its top
    edge, so the stage behind shows through the opening. A gradient with two
@@ -580,6 +583,7 @@ h1, h2, h3, h4, .font-display, .font-headline {
    plain light colour and nothing else: no shadow, no outline, no gradient
    (the user's decision, October 2026), and no shading over the film either.
    Their legibility rests on the film itself being dark enough behind them. */
+.ztims-hero h1,
 .ztims-hero h2,
 .ztims-hero p {
     color: rgb(255 253 250);
@@ -1621,6 +1625,32 @@ div.leaflet-container {
    the header's deliberate curves (corners are square elsewhere), asked for by
    the user. Transform and opacity only, per motion.css.
    ========================================================================== */
+/* Two rows on a phone (name and toggle, then the links across), one row
+   from 768px. */
+.site-header__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "brand theme" "nav nav";
+    align-items: center;
+    column-gap: .75rem;
+    padding-top: .5rem;
+    padding-bottom: .25rem;
+}
+.site-header__brand { grid-area: brand; }
+.site-header__theme { grid-area: theme; }
+.site-header__nav {
+    grid-area: nav;
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 -.35rem;
+}
+@media (min-width: 768px) {
+    .site-header__row {
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: "brand nav theme";
+        padding-top: .75rem; padding-bottom: .75rem;
+    }
+    .site-header__nav { justify-content: flex-end; gap: .35rem; margin: 0 .5rem 0 0; }
+}
 .site-link {
     position: relative;
     isolation: isolate;
@@ -1634,8 +1664,8 @@ div.leaflet-container {
     color: rgb(var(--ztims-on-surface-variant));
     transition: color var(--dur-fast) var(--ease-standard);
 }
-@media (min-width: 420px) { .site-link { font-size: .875rem; padding: 0 .75rem; } }
-@media (min-width: 640px) { .site-link { padding: 0 1rem; } }
+@media (min-width: 420px) { .site-link { font-size: .8125rem; padding: 0 .7rem; } }
+@media (min-width: 1024px) { .site-link { font-size: .875rem; padding: 0 1rem; } }
 .site-link::after {
     content: '';
     position: absolute;
@@ -1679,4 +1709,101 @@ button[onclick="toggleTheme()"] {
 
 @media (prefers-reduced-motion: reduce) {
     .site-link, .site-link::after { transition: none; }
+}
+
+/* ==========================================================================
+   Home page (index.html), flat: solid fills, hairline outlines, pill buttons,
+   no gradients and no shadows — the same look as the header's ovals.
+   ========================================================================== */
+
+/* The hero's search: one pill row — the field, the category (from 640px; on
+   a phone the category photos below do that job) and Search. */
+.hero-search { display: flex; gap: .5rem; align-items: stretch; max-width: 44rem; }
+.hero-search__field {
+    height: 48px;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface-high));
+    color: rgb(var(--ztims-on-surface));
+    font-size: 1rem;
+}
+.hero-search__field::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
+.hero-search__field:focus { outline: none; border-color: rgb(var(--ztims-secondary)); box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / .35); }
+.hero-search .btn { height: 48px; padding: 0 1.4rem; font-size: .9rem; }
+
+/* The two quiet links under the search: off-white words on the film. */
+.hero-link {
+    display: inline-flex; align-items: center; gap: .35rem; min-height: 32px;
+    color: rgb(255 253 250);
+    text-decoration: underline; text-decoration-color: rgb(255 253 250 / .5); text-underline-offset: 4px;
+}
+.hero-link:hover { text-decoration-color: rgb(var(--brand-tangerine)); }
+
+/* What the list is narrowed to, and the way back. */
+.browse-status {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .75rem;
+    font-weight: 700; color: rgb(var(--ztims-on-surface));
+}
+.browse-status[hidden] { display: none; }
+
+/* Destination cards. A column on a computer; on a phone the photo sits beside
+   the words, so a screen holds several places instead of one. */
+.home-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    overflow: hidden;
+    box-shadow: none;
+    border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface));
+}
+@media (min-width: 640px) { .home-card { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } }
+.home-card__photo { position: relative; min-height: 8.5rem; background: rgb(var(--ztims-surface-variant)); overflow: hidden; }
+@media (min-width: 640px) { .home-card__photo { height: 190px; min-height: 0; } }
+.home-card__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease-standard); }
+.home-card:hover .home-card__photo img { transform: scale(1.04); }
+/* The category: over the photo on a computer; on a phone the photo is too
+   narrow for it, so the copy in the words shows instead. */
+.home-card__badge { position: absolute; left: .75rem; top: .75rem; background: rgb(var(--ztims-surface)) !important; display: none; }
+.home-card__badge--inline { align-self: flex-start; font-size: .625rem; padding: .15rem .45rem; margin-bottom: .1rem; }
+@media (min-width: 640px) {
+    .home-card__badge { display: inline-flex; }
+    .home-card__badge--inline { display: none; }
+}
+.home-card__body { display: flex; flex-direction: column; gap: .3rem; padding: .8rem .9rem; min-width: 0; }
+@media (min-width: 640px) { .home-card__body { padding: 1.1rem 1.25rem 1.2rem; } }
+.home-card__title { font-family: var(--ztims-font-display); font-weight: 700; font-size: 1rem; line-height: 1.25; color: rgb(var(--ztims-on-surface)); }
+@media (min-width: 640px) { .home-card__title { font-size: 1.125rem; } }
+/* The name is the card's link, stretched over the whole card; the action
+   button sits above that stretch so it stays its own link. */
+.home-card__link { color: inherit; text-decoration: none; }
+.home-card__link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+.home-card__link:focus-visible { outline: none; }
+.home-card:has(.home-card__link:focus-visible) { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.home-card__meta { display: flex; align-items: flex-start; gap: .3rem; font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); min-width: 0; }
+.home-card__meta .material-symbols-outlined { font-size: 1rem; color: rgb(var(--ztims-accent)); margin-top: .05rem; }
+.home-card__desc { display: none; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); margin-top: .2rem;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (min-width: 640px) { .home-card__desc { display: -webkit-box; } }
+.home-card__foot { margin-top: auto; padding-top: .6rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+.home-card__action { position: relative; z-index: 2; }
+.home-card__more { display: inline-flex; align-items: center; gap: .2rem; font-size: .8125rem; font-weight: 700; color: rgb(var(--ztims-primary-text)); }
+.home-card:hover .home-card__more .material-symbols-outlined { transform: translateX(3px); }
+.home-card__more .material-symbols-outlined { transition: transform var(--dur-fast) var(--ease-standard); }
+
+/* Plan your visit: the Tourism Office, flat. */
+.office-card { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); padding: 1.25rem 1.25rem 1.4rem; }
+@media (min-width: 640px) { .office-card { padding: 1.75rem; } }
+.office-card__list { display: grid; gap: .85rem; }
+.office-card__list > div[hidden] { display: none; }
+.office-card__list dt { display: flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
+.office-card__list dt .material-symbols-outlined { font-size: 1rem; color: rgb(var(--ztims-accent)); }
+.office-card__list dd { margin: .15rem 0 0 1.4rem; color: rgb(var(--ztims-on-surface)); }
+.office-card__emergency { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid rgb(var(--ztims-outline)); }
+.how-it-works { align-content: start; }
+#plan .how-it-works { grid-template-columns: 1fr; }
+
+@media (prefers-reduced-motion: reduce) {
+    .home-card__photo img, .home-card__more .material-symbols-outlined { transition: none; }
+    .home-card:hover .home-card__photo img { transform: none; }
 }

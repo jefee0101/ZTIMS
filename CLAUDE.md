@@ -547,24 +547,38 @@ guided destinations:
 ### The visitor's journey (Home → destination → pay → after)
 
 Frontend only, no tables of their own:
-- **Home** (`index.html`, `#browse`): a "How it works" strip (Discover → Book &
-  pay → Get there, `.how-it-works`) and four category photo tiles
-  (`#categoryTiles`, `.category-tile`; photo = the first listing of that
-  category with one). Tiles and the category dropdown are one control
-  (`setCategory`); a second tap shows everything. The search and category are
-  kept for the visit in `sessionStorage.ztimsBrowse`, and `?category=` opens a
-  category (the destination page's breadcrumb links there). The browse heading
-  sits in `.ztims-cove-head`, as deep as the photo's opening, so the steps start
-  below it on solid ground. A card's badge is its category's own name (Beach /
-  Diving, Mountain, Cultural, Accommodation) and its fee line reads "Free
-  entrance" at ₱0 (none for a place to stay); grey skeleton cards show while
-  loading; an empty result offers "Show all destinations". The header is
-  the visitor pages' shared one (below).
+- **Home** (`index.html`), top to bottom, flat (solid fills, hairline
+  outlines, pill buttons, no gradients or shadows; styles in `theme.css`
+  "Home page"): the **hero** — "Mabuhay", the headline "Welcome to
+  Zamboanguita", one line naming the experiences and what the site does, the
+  **search** (`#heroSearch`: field with name suggestions, category from 640px,
+  Search scrolls to the results) and two links (View the map, Plan your visit);
+  **Explore Zamboanguita** (`#browse`, in the cove) — four category photo tiles
+  (`#categoryTiles`; tiles and the category menu are one control,
+  `setCategory`; a second tap shows everything), a status line only while a
+  search or category narrows the list (`#browseStatus`, with "Show all"), and
+  the cards; **Find it on the map** (`#map`); **Plan your visit** (`#plan`) —
+  the three "How it works" steps and the Tourism Office card (hours, address,
+  phone, email and emergency numbers from `GET /api/office` through
+  `site-footer.js`'s `data-office-field` / `data-emergency`), with Contact the
+  Tourism Office and Manage my booking. The search and category are kept for
+  the visit in `sessionStorage.ztimsBrowse`; `?category=` opens a category.
+  A **card** (`.home-card`): photo, category, name (the card's stretched link),
+  barangay, "Open …" from `workingDays`/`workingTime`, the fee ("Free
+  entrance" at ₱0, none for a place to stay) and its main action
+  (`mainAction`, the destination page's rules): Buy tickets (office-run
+  attraction with a fee, and `/api/payments/config` says online), Book a guide
+  (`requiresGuide`), Book a room / Book now (its booking link, new tab), else
+  "Details". On a phone the photo sits beside the words. Tickets and guide
+  open `spot.html` at `#tickets` / `#guide`, which `honourArrival` turns into
+  that action (or, if it never appears, a scroll to its section). Grey
+  skeleton cards while loading; card photos after the fourth load lazily.
 - **Header**: the same on all nine visitor pages (Home, destination, History,
-  My booking, payment, Terms, Privacy, FAQ, Contact; styles `.site-link` in
-  `theme.css`): the wordmark (logo alone below 640px, the name kept for screen
-  readers), then words-only links Destinations, History, My booking, Staff
-  (→ `staff_login.html`), and the theme toggle last. A solid tangerine oval on
+  My booking, payment, Terms, Privacy, FAQ, Contact; styles `.site-header` and
+  `.site-link` in `theme.css`): the wordmark, then words-only links
+  Destinations, Map (`index.html#map`), History, My booking, Staff
+  (→ `staff_login.html`), and the theme toggle last. On a phone it is two
+  rows: the name and the toggle, then the links across the full width. A solid tangerine oval on
   hover/focus, a solid burnt-orange one on the current page
   (`aria-current="page"`; the destination page counts as Destinations). The
   theme toggle is a circle on every page, portals included (`#themeToggleBtn`

@@ -250,31 +250,33 @@ body { overflow-x: hidden; }
          several views to switch between; with browsing and history as ordinary
          pages, a header says the same thing and gives the destinations the
          whole width. -->
-    <!-- The visitor pages' header, the same on every one (styles: .site-link in
-         src/shared/theme.css). Words only; the theme toggle is the one icon
-         and comes last. Below 420px the logo stands alone; the name stays
-         for screen readers. -->
-    <header class="sticky top-0 z-40 glass-nav border-b border-outline-variant/15">
-        <div class="max-w-[1600px] mx-auto flex items-center justify-between gap-2 sm:gap-3 px-4 sm:px-6 md:px-10 py-3">
-            <a href="index.html" class="flex items-center gap-2.5 min-w-0 leading-tight shrink-0">
-                <img src="data:image/png;base64,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" alt="Zamboanguita Tourism" width="28" height="28" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full"/>
-                <span class="min-w-0 sr-only min-[640px]:not-sr-only">
+    <!-- The visitor pages' header, the same on every one (styles: .site-header
+         and .site-link in src/shared/theme.css). Words only; the round theme
+         toggle is the one icon and comes last. On a phone it is two rows: the
+         name and the toggle, then the links across the full width. -->
+    <header class="site-header sticky top-0 z-40 glass-nav border-b border-outline-variant/15">
+        <div class="site-header__row max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10">
+            <a href="index.html" class="site-header__brand flex items-center gap-2.5 min-w-0 leading-tight">
+                <img src="data:image/png;base64,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" alt="" width="28" height="28" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full"/>
+                <span class="min-w-0">
                     <span class="rise block text-sm sm:text-base font-extrabold tracking-tight font-headline text-primary">
                         ZAMBOANGUITA <span class="text-accent">TOURISM</span>
                     </span>
-                    <span class="rise block text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
+                    <span class="rise block text-[9px] sm:text-[10px] uppercase tracking-widest text-on-surface-variant" style="--rise-delay:.08s">Information Management System</span>
                 </span>
             </a>
 
-            <nav class="flex items-center gap-0.5 sm:gap-2 ml-auto" aria-label="Main">
+            <nav class="site-header__nav" aria-label="Main">
                 <a href="index.html" class="site-link" aria-current="page">Destinations</a>
+                <a href="index.html#map" class="site-link">Map</a>
                 <a href="src/history.html" class="site-link">History</a>
                 <a href="src/manage.html" class="site-link">My booking</a>
                 <a href="src/staff_login.html" class="site-link">Staff</a>
-                <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="ml-1 sm:ml-2 p-2.5 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all">
-                    <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
-                </button>
             </nav>
+
+            <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme p-2.5 min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center bg-surface border border-outline-variant/30 text-secondary hover:scale-110 transition-all">
+                <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+            </button>
         </div>
     </header>
 
@@ -303,42 +305,59 @@ body { overflow-x: hidden; }
                          page, and only where it is wanted. -->
                 </div>
 
-            <section class="ztims-hero relative w-full flex items-center overflow-hidden">
+            <section class="ztims-hero relative w-full flex items-center">
 
                 <!-- Bottom padding is the wave's height: the hero centres its
-                     content, and without this the buttons drift down onto the
-                     shoreline, where white text meets a pale fill. -->
-                <div class="relative z-10 w-full pb-10 sm:pb-12 lg:pb-14">
+                     content, and without this the search drifts down onto the
+                     shoreline. -->
+                <div class="relative z-10 w-full pt-6 pb-10 sm:pb-12 lg:pb-14">
                   <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                     <div class="max-w-3xl">
-                    <!-- An eyebrow, the name, one line, and the two things a
-                         visitor actually came to do. The hero used to end at the
-                         sentence, so the only way on was to scroll and hope. -->
-                    <!-- A greeting rather than an instruction, in a hand rather than
-                         in capitals. Everything the old eyebrow did to it — bold,
-                         uppercase, 0.22em of tracking — is exactly what a script
-                         face cannot survive: the letters are drawn to join, and
-                         tracking pulls them apart. It is also set much larger,
-                         because a cursive at 12px is a smudge. -->
-                    <p class="rise ztims-script flex items-center gap-3 text-[1.75rem] sm:text-[2rem] text-white leading-none mb-1" style="--rise-delay:.06s">
+                    <!-- Where they are, what is here, and the way in: a greeting,
+                         the place's name, one line naming the experiences and what
+                         the site does, then the search. -->
+                    <p class="rise ztims-script flex items-center gap-3 text-[1.75rem] sm:text-[2rem] leading-none mb-1" style="--rise-delay:.06s">
                         Mabuhay
-                        <span class="inline-block w-8 h-[2px] rounded-full bg-gold"></span>
+                        <span class="inline-block w-8 h-[2px] bg-gold"></span>
                     </p>
-                    <h2 class="rise text-[2rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter leading-[1.05] sm:leading-[0.95] text-white mb-3 break-words" style="--rise-delay:.12s">
-                        Welcome to ZAMBOANGUITA.
-                    </h2>
-                    <p class="rise text-base md:text-lg text-white/90 max-w-xl leading-relaxed" style="--rise-delay:.26s">
-                        Experience the beauty and the hidden gems of Zamboanguita.
+                    <h1 class="rise text-[2.25rem] sm:text-5xl md:text-6xl font-display font-black tracking-tight leading-[1.02] mb-3 break-words" style="--rise-delay:.12s">
+                        Welcome to Zamboanguita
+                    </h1>
+                    <p class="rise text-base md:text-lg max-w-xl leading-relaxed" style="--rise-delay:.22s">
+                        Beaches, waterfalls and heritage sites in Negros Oriental. Find a place, book a tourist guide or buy tickets, and get directions.
                     </p>
-                    <!-- On a phone the two wrap onto two lines; full width there,
-                         so they line up instead of ending at two different widths. -->
-                    <div class="rise grid grid-cols-1 min-[420px]:flex min-[420px]:flex-wrap gap-3 mt-5" style="--rise-delay:.38s">
-                        <a href="#browse" class="btn btn-pill btn-primary">
-                            <span class="material-symbols-outlined !text-base">explore</span>Explore destinations
-                        </a>
-                        <a href="#map" class="btn btn-pill btn-highlight">
-                            <span class="material-symbols-outlined !text-base">map</span>View the map
-                        </a>
+
+                    <!-- The search, first thing on the page. Typing narrows the
+                         destinations below and offers names to jump to; Search
+                         takes the visitor to the results. -->
+                    <form id="heroSearch" role="search" class="rise hero-search mt-5" style="--rise-delay:.3s">
+                        <div class="relative flex-1 min-w-0">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                            <input id="spotSearchInput" type="search" aria-label="Search destinations" placeholder="Search places"
+                                autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"
+                                aria-controls="spotSuggestions"
+                                class="hero-search__field w-full pl-12 pr-4" />
+                            <div id="spotSuggestions" role="listbox" hidden
+                                class="ztims-dropdown absolute left-0 right-0 top-full mt-2 z-50
+                                       overflow-hidden max-h-80 overflow-y-auto text-left"></div>
+                        </div>
+                        <div class="relative hidden sm:block shrink-0">
+                            <select id="spotCategoryFilter" aria-label="Filter by category"
+                                class="hero-search__field appearance-none pl-5 pr-10 text-sm font-bold">
+                                <option value="all">All categories</option>
+                                <option value="BEACH / DIVING">Beach / Diving</option>
+                                <option value="MOUNTAIN">Mountain</option>
+                                <option value="CULTURAL">Cultural</option>
+                                <option value="ACCOMMODATION">Accommodation</option>
+                            </select>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">expand_more</span>
+                        </div>
+                        <button type="submit" class="btn btn-pill btn-primary shrink-0">Search</button>
+                    </form>
+
+                    <div class="rise flex flex-wrap gap-x-5 gap-y-2 mt-4 text-sm font-bold" style="--rise-delay:.38s">
+                        <a href="#map" class="hero-link"><span class="material-symbols-outlined !text-base" aria-hidden="true">map</span>View the map</a>
+                        <a href="#plan" class="hero-link"><span class="material-symbols-outlined !text-base" aria-hidden="true">support_agent</span>Plan your visit</a>
                     </div>
                     </div>
                   </div>
@@ -352,103 +371,38 @@ body { overflow-x: hidden; }
               <!-- The cove: the hero's photograph continuing into this section,
                    with this section's own colour painted back over it in a curve.
                    Decoration only — aria-hidden, and pointer-events:none in
-                   theme.css so it cannot take a tap meant for the search below.
-                   Everything in this section is the same markup it always was. -->
+                   theme.css. -->
               <div class="ztims-cove" aria-hidden="true">
                   <svg class="ztims-cove__curve" viewBox="0 0 1440 240" preserveAspectRatio="none" focusable="false">
-                      <!-- Narrow screens: shoulders of a few per cent, so the opening
-                           stays at least as wide as the heading. -->
                       <path class="is-narrow" d="M0,0 C 28,4 52,186 88,196 L1352,196 C 1388,186 1412,4 1440,0 L1440,240 L0,240 Z"/>
-                      <!-- Wide screens: room for the curve to fall away properly. -->
                       <path class="is-wide" d="M0,0 C 96,6 150,164 232,172 L1208,172 C 1290,164 1344,6 1440,0 L1440,240 L0,240 Z"/>
                   </svg>
               </div>
-              <!-- Same container AND the same gutter as the header, so the heading,
-                   the filters and the cards line up with the wordmark at any width.
-                   relative z-10 keeps every control above the cove behind it. -->
               <div class="relative z-10 max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
-                <!-- One line, not two. The old heading named the categories the
-                     filter below already lists, so the sentence carries the section
-                     on its own — and it is the heading now rather than a caption
-                     under one, which keeps the section from having no heading at all. -->
                 <div class="ztims-cove-head">
-                    <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight text-center" style="--rise-delay:.34s">Browse everything the municipality has to offer.</h2>
+                    <h2 class="rise ztims-cove-text text-3xl md:text-4xl lg:text-5xl font-display font-bold tracking-tight text-center" style="--rise-delay:.34s">Explore Zamboanguita</h2>
                 </div>
-
-                <!-- How a visit works, in three steps, for someone here for the first time. -->
-                <ol class="how-it-works mb-6" aria-label="How it works">
-                    <li class="how-step">
-                        <span class="how-step__num" aria-hidden="true">1</span>
-                        <span><b class="block">Discover</b><span class="text-support">Find beaches, falls and heritage sites below or on the map.</span></span>
-                    </li>
-                    <li class="how-step">
-                        <span class="how-step__num" aria-hidden="true">2</span>
-                        <span><b class="block">Book &amp; pay</b><span class="text-support">Buy entrance tickets or book a tourist guide online, or pay onsite.</span></span>
-                    </li>
-                    <li class="how-step">
-                        <span class="how-step__num" aria-hidden="true">3</span>
-                        <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your QR code at the entrance.</span></span>
-                    </li>
-                </ol>
 
                 <!-- One photograph per kind of place; a tap shows only those below. -->
-                <div id="categoryTiles" class="category-tiles mb-8" aria-label="Browse by category"></div>
+                <div id="categoryTiles" class="category-tiles mb-6" aria-label="Browse by category"></div>
 
-                <!-- The gap the result count used to hold open. It sat between this
-                     row and the grid with 24px under it; now that it is sr-only it
-                     occupies no height at all, and the cards came up to meet the
-                     search box. This carries that space directly, with a little
-                     more of it, rather than padding an invisible element. -->
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center sm:justify-center mb-10 sm:mb-12">
-                    <div class="relative w-full sm:flex-1 sm:max-w-md">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                        <input id="spotSearchInput" type="search" aria-label="Search destinations" placeholder="Search by name, place, or category..."
-                            autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"
-                            aria-controls="spotSuggestions"
-                            class="glass-field w-full rounded-full pl-12 pr-4 py-3 placeholder:text-on-surface-variant" />
-
-                        <!-- Names that match what has been typed so far, so a visitor
-                             who knows where they are going can jump straight there
-                             instead of reading the whole grid. -->
-                        <div id="spotSuggestions" role="listbox" hidden
-                            class="ztims-dropdown absolute left-0 right-0 top-full mt-2 z-30
-                                   overflow-hidden max-h-80 overflow-y-auto text-left"></div>
-                    </div>
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">category</span>
-                        <select id="spotCategoryFilter" aria-label="Filter by category"
-                            class="glass-field w-full sm:w-auto appearance-none rounded-full pl-11 pr-10 py-3 text-sm font-bold">
-                            <option value="all">All categories</option>
-                            <option value="BEACH / DIVING">Beach / Diving</option>
-                            <option value="MOUNTAIN">Mountain</option>
-                            <option value="CULTURAL">Cultural</option>
-                            <option value="ACCOMMODATION">Accommodation</option>
-                        </select>
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">expand_more</span>
-                    </div>
+                <!-- What the list below is showing, said only when a search or
+                     category narrows it, with the way back to everything. -->
+                <div id="browseStatus" class="browse-status mb-5" role="status" aria-live="polite" hidden>
+                    <span id="spotsResultCount"></span>
+                    <button type="button" data-clear-browse class="btn btn-pill btn-secondary btn-sm">Show all</button>
                 </div>
-                <!-- Off the page, not out of it. The count was visual clutter above
-                     the grid, but it is the only thing that tells someone using a
-                     screen reader that a search or a category change did anything
-                     at all — the cards below simply swap without comment. sr-only
-                     plus aria-live keeps that announcement and removes the line. -->
-                <p id="spotsResultCount" class="sr-only" role="status" aria-live="polite"></p>
 
-                <!-- With the rail gone there is room for a fourth column; three
-                     across a full-width page left the cards oddly wide. -->
-                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"></div>
+                <div id="spotsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"></div>
               </div>
             </section>
             </div><!-- /ztims-stage -->
 
             <!-- ============ THE TOURISM MAP ============
                  Everything published, on one map, from the same records the grid
-                 above is built from — no second list to keep in step. The tiles
-                 are OpenStreetMap, the drawing is Leaflet, and the markers are
-                 ZTIMS's own, coloured by its own categories. Routing is not done
-                 here: a marker's "Get directions" opens the listing's page, where
-                 the existing OpenRouteService flow lives. -->
-            <section id="map" class="py-8 sm:py-10 bg-surface">
+                 above is built from. Routing is not done here: a marker's "Get
+                 directions" opens the listing's page. -->
+            <section id="map" class="py-10 sm:py-14 bg-surface">
               <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
                 <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-2 text-center">
                     Find it on the map
@@ -459,10 +413,71 @@ body { overflow-x: hidden; }
 
                 <div id="tourismLegend" hidden class="justify-center mb-4"></div>
 
-                <div id="tourismMap" class="relative z-0 h-[22rem] sm:h-[30rem] w-full rounded-2xl overflow-hidden
-                    border border-outline-variant/30 bg-surface-container-low"></div>
+                <div id="tourismMap" class="relative z-0 h-[22rem] sm:h-[30rem] w-full overflow-hidden
+                    border border-outline-variant/60 bg-surface-container-low"></div>
 
                 <p id="tourismMapNote" class="text-support mt-3 text-center"></p>
+              </div>
+            </section>
+
+            <!-- ============ PLAN YOUR VISIT ============
+                 How a visit works, and the Tourism Office: its hours, address,
+                 phone and email as published in Settings → Office Information
+                 (filled by site-footer.js through data-office-field), the
+                 emergency numbers (data-emergency, hidden while there are none),
+                 and the way to reach the office. -->
+            <section id="plan" class="py-10 sm:py-14">
+              <div class="max-w-[1600px] mx-auto px-5 sm:px-6 md:px-10">
+                <h2 class="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-6 sm:mb-8 text-center">
+                    Plan your visit
+                </h2>
+                <div class="grid gap-6 lg:grid-cols-2 lg:gap-10 items-start">
+                    <ol class="how-it-works" aria-label="How it works">
+                        <li class="how-step">
+                            <span class="how-step__num" aria-hidden="true">1</span>
+                            <span><b class="block">Discover</b><span class="text-support">Find beaches, falls and heritage sites above or on the map.</span></span>
+                        </li>
+                        <li class="how-step">
+                            <span class="how-step__num" aria-hidden="true">2</span>
+                            <span><b class="block">Book &amp; pay</b><span class="text-support">Buy entrance tickets or book a tourist guide online, or pay onsite.</span></span>
+                        </li>
+                        <li class="how-step">
+                            <span class="how-step__num" aria-hidden="true">3</span>
+                            <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your QR code at the entrance.</span></span>
+                        </li>
+                    </ol>
+
+                    <div class="office-card">
+                        <h3 class="text-lg font-display font-bold text-on-surface mb-4">Municipal Tourism Office</h3>
+                        <dl class="office-card__list">
+                            <div data-office-row>
+                                <dt><span class="material-symbols-outlined" aria-hidden="true">schedule</span>Office hours</dt>
+                                <dd data-office-field="officeHours">Monday to Friday, 8:00 AM – 5:00 PM</dd>
+                            </div>
+                            <div data-office-row>
+                                <dt><span class="material-symbols-outlined" aria-hidden="true">location_on</span>Address</dt>
+                                <dd data-office-field="address">Municipal Hall, Poblacion, Zamboanguita, Negros Oriental 6218</dd>
+                            </div>
+                            <div data-office-row hidden>
+                                <dt><span class="material-symbols-outlined" aria-hidden="true">call</span>Phone</dt>
+                                <dd data-office-field="phone"></dd>
+                            </div>
+                            <div data-office-row hidden>
+                                <dt><span class="material-symbols-outlined" aria-hidden="true">mail</span>Email</dt>
+                                <dd data-office-field="email"></dd>
+                            </div>
+                        </dl>
+                        <div data-emergency hidden class="office-card__emergency"></div>
+                        <div class="flex flex-wrap gap-3 mt-5">
+                            <a href="src/contact.html" class="btn btn-pill btn-primary">
+                                <span class="material-symbols-outlined !text-base" aria-hidden="true">chat</span>Contact the Tourism Office
+                            </a>
+                            <a href="src/manage.html" class="btn btn-pill btn-highlight">
+                                <span class="material-symbols-outlined !text-base" aria-hidden="true">confirmation_number</span>Manage my booking
+                            </a>
+                        </div>
+                    </div>
+                </div>
               </div>
             </section>
 
@@ -501,9 +516,9 @@ body { overflow-x: hidden; }
     // appears only if the wait runs long.
     function showCardSkeletons(target) {
         const card =
-            '<div class="ztims-card flex flex-col" aria-hidden="true">' +
-                '<div class="ztims-skeleton h-[200px]"></div>' +
-                '<div class="p-5 flex flex-col gap-3">' +
+            '<div class="ztims-card home-card" aria-hidden="true">' +
+                '<div class="ztims-skeleton home-card__photo"></div>' +
+                '<div class="home-card__body gap-3">' +
                     '<div class="ztims-skeleton h-5 w-3/4"></div>' +
                     '<div class="ztims-skeleton h-3 w-1/2"></div>' +
                     '<div class="ztims-skeleton h-3 w-full"></div>' +
@@ -576,46 +591,81 @@ body { overflow-x: hidden; }
         return '<span class="text-support font-bold text-on-surface">Free entrance</span>';
     }
 
+    // Opening days and hours as the listing states them, in one line:
+    // "Open every day", "Open Tuesday to Sunday · 8:00 AM – 5:00 PM".
+    function hoursLine(spot) {
+        const rawDays = String(spot.workingDays || '').trim();
+        const rawTime = String(spot.workingTime || '').trim();
+        const days = !rawDays || /^every ?day$/i.test(rawDays) ? 'every day' : rawDays;
+        const time = !rawTime || /^all ?day$/i.test(rawTime) ? '' : rawTime;
+        return `Open ${days}${time ? ` · ${time}` : ''}`;
+    }
+
+    // Whether online tickets can be bought at all right now (the payment
+    // service is on). Asked once; until it answers, no card offers tickets.
+    let ticketsOnline = false;
+    fetch(`${API_BASE}/payments/config`).then(r => r.ok ? r.json() : null)
+        .then(config => { if (config && config.online) { ticketsOnline = true; if (allSpots.length) applyFilters(); } })
+        .catch(() => {});
+
+    // The one thing a visitor can do next at this place, the same rules the
+    // destination page uses: tickets for an office-run attraction with a fee,
+    // a guide where one is required, the place's own booking link. The
+    // destination page opens on that action (#tickets, #guide).
+    function mainAction(spot) {
+        const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
+        const isStay = String(spot.category || '').toUpperCase() === 'ACCOMMODATION' || spot.type === 'accommodation';
+        if (ticketsOnline && spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) {
+            return { href: `${page}#tickets`, label: 'Buy tickets', icon: 'confirmation_number' };
+        }
+        if (spot.requiresGuide) return { href: `${page}#guide`, label: 'Book a guide', icon: 'hiking' };
+        const link = String(spot.bookingUrl || '').trim();
+        if (link) {
+            const href = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+            return { href, label: isStay ? 'Book a room' : 'Book now', icon: 'open_in_new', external: true };
+        }
+        return null;
+    }
+
+    /* A card: the photo, what kind of place, its name and barangay, when it is
+       open, what it costs, and its main action. The name is the card's link
+       (stretched over the card), so the action can be a link of its own.
+       On a phone the photo sits beside the words, so more places fit a screen. */
     function renderSpotCard(spot, index) {
-        const card = document.createElement('a');
-        card.href = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        card.className = 'rise ztims-card card-destination group flex flex-col';
-        // Cards arrive one after another, capped so a long list doesn't leave the
-        // last few waiting noticeably.
+        const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
+        const card = document.createElement('article');
+        card.className = 'rise ztims-card home-card group';
         card.style.setProperty('--rise-delay', `${Math.min(index || 0, 8) * 0.05}s`);
-        const photoCount = Array.isArray(spot.images) && spot.images.length
-            ? spot.images.length
-            : (spot.imageUrl ? 1 : 0);
         const badge = categoryBadge(spot);
+        const action = mainAction(spot);
+        const where = spot.barangay || spot.location || 'Zamboanguita';
         card.innerHTML = `
-            <div class="relative h-[200px] shrink-0 overflow-hidden bg-surface-variant">
-                <img class="w-full h-full object-cover" src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <!-- The overlay exists so the badges are legible over whatever the
-                     photo happens to be, and stops short of dimming the picture. -->
-                <div class="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/30 to-transparent"></div>
-                <span class="cat-badge ${badge.cls} absolute top-3 left-3 !bg-surface/95 backdrop-blur-sm">
-                    <span class="material-symbols-outlined !text-sm">${badge.icon}</span>${badge.label}
+            <div class="home-card__photo">
+                <img src="${escapeHtml(spot.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt=""
+                     ${index > 3 ? 'loading="lazy"' : ''} decoding="async"/>
+                <span class="cat-badge ${badge.cls} home-card__badge">
+                    <span class="material-symbols-outlined !text-sm" aria-hidden="true">${badge.icon}</span>${badge.label}
                 </span>
-                ${photoCount > 1 ? `<span class="absolute top-3 right-3 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-full bg-surface/95 text-on-surface backdrop-blur-sm">
-                    <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
-                </span>` : ''}
             </div>
-            <div class="p-5 flex flex-col flex-1">
-                <h3 class="text-lg font-display font-semibold text-on-surface mb-1.5">${escapeHtml(spot.title)}</h3>
-                <p class="text-support flex items-center gap-1 mb-3">
-                    <span class="material-symbols-outlined !text-sm text-accent">location_on</span>${escapeHtml(spot.location || '')}
-                </p>
-                <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">${escapeHtml(spot.description)}</p>
-                <div class="mt-auto flex items-center justify-between pt-3 border-t border-outline-variant/60">
+            <div class="home-card__body">
+                <span class="cat-badge ${badge.cls} home-card__badge--inline">${badge.label}</span>
+                <h3 class="home-card__title"><a href="${page}" class="home-card__link">${escapeHtml(spot.title)}</a></h3>
+                <p class="home-card__meta"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(where)}</p>
+                <p class="home-card__meta"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${escapeHtml(hoursLine(spot))}</p>
+                <p class="home-card__desc">${escapeHtml(spot.description)}</p>
+                <div class="home-card__foot">
                     ${feeLine(spot)}
-                    <span class="text-accent text-support font-bold flex items-center gap-1">
-                        Explore <span class="material-symbols-outlined !text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                    </span>
+                    ${action
+                        ? `<a href="${escapeHtml(action.href)}" class="btn btn-pill btn-primary btn-sm home-card__action"${action.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>
+                               <span class="material-symbols-outlined !text-base" aria-hidden="true">${action.icon}</span>${action.label}</a>`
+                        : `<span class="home-card__more" aria-hidden="true">Details<span class="material-symbols-outlined !text-sm">arrow_forward</span></span>`}
                 </div>
             </div>
         `;
         return card;
     }
+
+    const CATEGORY_NAMES = { 'BEACH / DIVING': 'Beaches & Diving', 'MOUNTAIN': 'Mountains & Waterfalls', 'CULTURAL': 'Culture & Heritage', 'ACCOMMODATION': 'Places to Stay' };
 
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
@@ -624,7 +674,7 @@ body { overflow-x: hidden; }
             // case-insensitively so an older spot typed by hand still matches.
             if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
             if (!query) return true;
-            return [spot.title, spot.location, spot.category, spot.label, spot.description]
+            return [spot.title, spot.location, spot.barangay, spot.category, spot.label, spot.description]
                 .filter(Boolean)
                 .some(field => String(field).toLowerCase().includes(query));
         });
@@ -636,18 +686,28 @@ body { overflow-x: hidden; }
             spotsContainer.classList.add('ztims-fade-in');
         }
 
-        if (matches.length === 0) {
+        // Said only while something narrows the list.
+        const status = document.getElementById('browseStatus');
+        const narrowed = Boolean(query) || activeCategory !== 'all';
+        status.hidden = !narrowed || matches.length === 0;
+        if (narrowed) {
+            const what = [activeCategory !== 'all' ? CATEGORY_NAMES[activeCategory] : '', query ? `“${searchInput.value.trim()}”` : '']
+                .filter(Boolean).join(' · ');
+            resultCount.textContent = `${matches.length} ${matches.length === 1 ? 'place' : 'places'} · ${what}`;
+        } else {
             resultCount.textContent = '';
+        }
+
+        if (matches.length === 0) {
             spotsContainer.innerHTML = allSpots.length === 0
                 ? '<p class="ztims-empty col-span-full">No tourist spots have been published yet. Please check back soon.</p>'
                 : '<div class="ztims-empty col-span-full flex flex-col items-center gap-3">' +
                       '<p>Nothing matches that search or category.</p>' +
-                      '<button type="button" data-clear-browse class="btn btn-secondary btn-sm">Show all destinations</button>' +
+                      '<button type="button" data-clear-browse class="btn btn-pill btn-secondary btn-sm">Show all destinations</button>' +
                   '</div>';
             return;
         }
 
-        resultCount.textContent = `Showing ${matches.length} of ${allSpots.length}`;
         matches.forEach((spot, index) => spotsContainer.appendChild(renderSpotCard(spot, index)));
     }
 
@@ -823,7 +883,13 @@ body { overflow-x: hidden; }
         document.getElementById('spotsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     searchInput.addEventListener('input', rememberBrowse);
-    spotsContainer.addEventListener('click', event => {
+    document.getElementById('heroSearch').addEventListener('submit', event => {
+        event.preventDefault();
+        hideSuggestions();
+        applyFilters();
+        document.getElementById('categoryTiles').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('browse').addEventListener('click', event => {
         if (!event.target.closest('[data-clear-browse]')) return;
         searchInput.value = '';
         setCategory('all');
