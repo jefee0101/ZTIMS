@@ -1,0 +1,57 @@
+/* ==========================================================================
+   portal-flat.css: the visitor pages' flat, standard look for the staff
+   portals that use it (src/guide/*.html, src/resort/*.html). Load it after
+   theme.css and motion.css.
+   ========================================================================== */
+/* ==========================================================================
+   The standard, flat look (as on the visitor pages): flat outlined panels,
+   sentence-case labels, pill buttons and status pills, the current page in
+   the menu as a solid burnt-orange pill. Shared by the guide and the
+   establishment manager portals.
+   ========================================================================== */
+main .glass-panel {
+    background: rgb(var(--ztims-surface)) !important;
+    border: 1px solid rgb(var(--ztims-outline)) !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+main .text-label.uppercase {
+    text-transform: none !important; letter-spacing: 0 !important;
+    font-size: .875rem !important; font-weight: 700; color: rgb(var(--ztims-on-surface));
+}
+main .field { min-height: 48px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); border-radius: 0; font-size: 1rem; }
+main .field:focus { outline: none; border-color: rgb(var(--ztims-secondary)); box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / .35); }
+main .btn { border-radius: 9999px; }
+main .btn-primary, main .btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary)); box-shadow: none; transform: none; }
+main .btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary-dim)); }
+main .btn-secondary { border: 1px solid rgb(var(--ztims-primary-text) / .45); }
+.tone-pill { border-radius: 9999px; text-transform: none !important; letter-spacing: 0 !important; font-size: .75rem !important; padding: .15rem .6rem !important; }
+
+/* The menu: words in full (they wrap rather than being cut), the current
+   page a solid burnt-orange pill, a tangerine tint on hover. */
+aside nav a, aside a[href], aside button:not(#sidebarToggleBtn) { border-radius: 9999px !important; }
+body:not(.sidebar-collapsed) aside .sidebar-label { white-space: normal !important; line-height: 1.25; }
+aside a.is-current, aside a.nav-active.nav-active { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)) !important; }
+aside a.is-current .material-symbols-outlined, aside a.nav-active .material-symbols-outlined { color: inherit !important; }
+aside a:not(.is-current):not(.nav-active):hover { background: rgb(var(--ztims-secondary) / .15); color: rgb(var(--ztims-on-surface)); }
+
+/* Subpage tabs (guide My Profile, manager My Establishment): the same look
+   as the officer's Settings tabs. */
+.settings-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+                transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+.settings-tab:hover { color: rgb(var(--ztims-on-surface)); }
+.settings-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+.settings-tab:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+@media (max-width: 639px) { .settings-tab { padding: .6rem .6rem; gap: .3rem; } }
+main .field-label { text-transform: none; letter-spacing: 0; font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
+
+/* The manager pages' leftovers from the glass look: the gradient primary
+   button, card shadows, capitals under the brand, the hover nudge. */
+aside a.nav-active.nav-active { font-weight: 700; box-shadow: none !important; }
+main .btn-primary { background-image: none !important; }
+main .ztims-card, main .glass-card { box-shadow: none !important; border: 1px solid rgb(var(--ztims-outline)) !important;
+    background: rgb(var(--ztims-surface)) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+main .ztims-card:hover, main .glass-card:hover { transform: none !important; }
+aside .sidebar-label.uppercase { text-transform: none !important; letter-spacing: 0 !important; font-size: .75rem !important; }
+aside a[class*="hover:translate-x"]:hover { transform: none !important; }

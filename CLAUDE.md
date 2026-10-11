@@ -201,11 +201,9 @@ purpose — see the header comment in `spot-form.js`:
   (sidebar, header, account menu, phone drawer) and helpers, shared by the four
   `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
   Profile). Unlike the officer's and manager's pages, which each carry that
-  frame inline, the guide pages draw it from here. `guide-portal.css` also
-  gives the guide pages the visitor pages' flat, standard look: flat outlined
-  panels, sentence-case labels, pill buttons and status pills, language chips
-  as pills, the current page in the menu a solid burnt-orange pill (`.is-current`)
-  with menu labels wrapping rather than cut; the Dashboard's six-month chart
+  frame inline, the guide pages draw it from here. The guide pages get the
+  visitor pages' flat, standard look from `portal-flat.css` (below); language
+  chips are pills; the Dashboard's six-month chart
   says one line when there is nothing to chart. Schedule & Availability's **My tours** is
   built for a phone in the field: Upcoming / Past as a pill switch with counts
   (upcoming = from today, awaiting payment or confirmed), the next tour first
@@ -215,6 +213,18 @@ purpose — see the header comment in `spot-form.js`:
   later tours grouped under Today / Tomorrow / the weekday (styles `.tour-*` in
   `guide-portal.css`). Loaded as a module, so page
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
+- `portal-flat.css` — the flat, standard look for the guide and the
+  establishment manager portals (every `src/guide/*.html` and
+  `src/resort/*.html`, after theme.css and motion.css): flat outlined panels
+  and cards, sentence-case labels, pill buttons (no gradient) and status
+  pills, the current page in the menu a solid burnt-orange pill (`.is-current`
+  on the page's own link; `.nav-active` too) with labels wrapping rather than
+  cut, and the subpage tabs (`.settings-tab`). The manager's My Listing card
+  has Edit as an outlined pill and Delete as a solid red pill
+  (`.btn-danger-solid`); My Establishment (`resort_settings.html`) is two tabs
+  like the officer's Settings, `#account` (Details: name, manager, public
+  email, phone, sign-in email, account issued) and `#security` (signed in
+  since, change password, sign out of all devices).
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
