@@ -291,20 +291,42 @@ body { overflow-x: hidden; }
 
         <form id="guideBookingForm">
           <!-- Step 1: Your details. -->
-          <div id="bookPaneDetails" class="space-y-3">
-            <div>
-                <label class="block text-label font-bold uppercase tracking-wider mb-1">Full name</label>
-                <input id="bookName" type="text" required autocomplete="name"
-                       class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+          <div id="bookPaneDetails">
+            <div class="bk-group">
+                <h4 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">event</span>Your visit</h4>
+                <div class="bk-row bk-row--2">
+                    <div>
+                        <label for="bookDate" class="bk-label">Date</label>
+                        <input id="bookDate" type="date" required class="bk-field"/>
+                    </div>
+                    <div>
+                        <label for="bookTime" class="bk-label">Start time</label>
+                        <input id="bookTime" type="time" required value="08:00" class="bk-field"/>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <label for="bookVisitors" class="bk-label !mb-0">Visitors</label>
+                        <p id="bookGroupHint" class="bk-hint !mt-0"></p>
+                    </div>
+                    <div class="qty" data-qty>
+                        <button type="button" data-step="-1" aria-label="One fewer visitor">−</button>
+                        <input id="bookVisitors" type="number" min="1" value="1" required inputmode="numeric"/>
+                        <button type="button" data-step="1" aria-label="One more visitor">+</button>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="bookContact" class="block text-label font-bold uppercase tracking-wider mb-1">Contact number</label>
-                <!-- Visitors arrive from abroad, so the number needs the country it
-                     belongs to. The office dials what is stored; a bare local number
-                     from another country is not dialable. -->
-                <div class="flex gap-2">
-                    <select id="bookDialCode" aria-label="Country dialling code"
-                            class="shrink-0 w-28 sm:w-32 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
+
+            <div class="bk-group">
+                <h4 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h4>
+                <div>
+                    <label for="bookName" class="bk-label">Full name</label>
+                    <input id="bookName" type="text" required autocomplete="name" class="bk-field"/>
+                </div>
+                <div>
+                    <label for="bookContact" class="bk-label">Mobile number</label>
+                    <div class="flex gap-2">
+                        <select id="bookDialCode" aria-label="Country code" class="bk-field !w-28 sm:!w-32 shrink-0">
                         <option value="+63" data-example="917 123 4567" selected>PH +63</option>
                         <option value="+1" data-example="415 555 0123">US/CA +1</option>
                         <option value="+44" data-example="7700 900123">UK +44</option>
@@ -331,77 +353,48 @@ body { overflow-x: hidden; }
                         <option value="+46" data-example="70 123 45 67">SE +46</option>
                         <option value="+47" data-example="406 12 345">NO +47</option>
                         <option value="+45" data-example="20 12 34 56">DK +45</option>
+                        </select>
+                        <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567" class="bk-field flex-1 min-w-0"/>
+                    </div>
+                </div>
+                <div>
+                    <label for="bookEmail" class="bk-label">Email</label>
+                    <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>
+                    <p class="bk-hint">Your reference and updates are sent here.</p>
+                </div>
+                <div>
+                    <label for="bookNationality" class="bk-label">Nationality</label>
+                    <!-- A list, stored as the country code: the office counts
+                         domestic and foreign arrivals. It starts on no country, so
+                         nobody is recorded as Filipino by default. -->
+                    <select id="bookNationality" required class="bk-field">
+                        <option value="">Select nationality…</option>
                     </select>
-                    <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567"
-                           class="flex-1 min-w-0 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-                </div>
-            </div>
-
-            <div>
-                <label for="bookEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Email</label>
-                <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com"
-                       class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-            </div>
-
-            <div>
-                <label for="bookNationality" class="block text-label font-bold uppercase tracking-wider mb-1">Nationality</label>
-                <!-- The office reports domestic and foreign arrivals to the
-                     Department of Tourism. A free-text box cannot be counted, so
-                     this is a list and what is stored is the country code. It
-                     starts on no country at all: a pre-selected Philippines would
-                     record a Filipino visitor every time nobody looked at it,
-                     which is the very number being collected. -->
-                <select id="bookNationality" required
-                        class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary">
-                    <option value="">Select nationality…</option>
-                </select>
-                <p class="text-support mt-1">Collected for the municipality's visitor statistics.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Visitors</label>
-                    <input id="bookVisitors" type="number" min="1" value="1" required
-                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
                 </div>
                 <div>
-                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Date</label>
-                    <input id="bookDate" type="date" required
-                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
-                </div>
-                <div>
-                    <label class="block text-label font-bold uppercase tracking-wider mb-1">Time</label>
-                    <input id="bookTime" type="time" required value="08:00"
-                           class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+                    <label for="bookNotes" class="bk-label">Anything the office should know <small>(optional)</small></label>
+                    <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…" class="bk-field"></textarea>
                 </div>
             </div>
-            <p id="bookGroupHint" class="text-support"></p>
 
-            <div>
-                <label class="block text-label font-bold uppercase tracking-wider mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
-                <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
-                          class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"></textarea>
-            </div>
-
-            <p class="text-support">
-                Your details are used only for this booking. See the
+            <p class="text-support mt-4">
+                Used only for this booking. See the
                 <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
             </p>
-
             <button type="button" id="bookNextBtn"
-                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
+                    class="mt-4 w-full bg-primary text-on-primary py-3.5 min-h-[48px] font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
                 Next: pick a guide <span class="material-symbols-outlined !text-lg" aria-hidden="true">arrow_forward</span>
             </button>
           </div>
 
           <!-- Step 2: Pick a guide, for the date, time and group just given. -->
-          <div id="bookPaneGuide" hidden class="space-y-3">
-            <div class="flex items-start justify-between gap-3 border border-outline-variant/40 p-3">
+          <div id="bookPaneGuide" hidden class="space-y-4">
+            <div class="bk-summary flex items-start justify-between gap-3">
                 <p id="bookSummary" class="text-sm text-on-surface"></p>
                 <button type="button" id="bookBackBtn" class="shrink-0 text-sm font-bold underline text-primary min-h-[32px]">Change</button>
             </div>
             <fieldset>
-                <legend class="block text-label font-bold uppercase tracking-wider mb-2">Pick a guide</legend>
+                <legend class="bk-group-title mb-3"><span class="material-symbols-outlined" aria-hidden="true">hiking</span>Pick a guide</legend>
                 <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
             </fieldset>
             <button type="submit" id="submitBookingBtn"
@@ -418,8 +411,10 @@ body { overflow-x: hidden; }
             <h4 class="text-lg font-display font-bold text-on-surface">Booking request sent</h4>
             <p class="text-label uppercase tracking-widest">Reference</p>
             <p id="bookingReference" class="text-2xl font-display font-black text-primary tracking-wider select-all"></p>
-            <p id="bookingNextStep" class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
-                Please proceed to the Municipal Tourism Office to complete payment and confirmation.
+            <p class="text-support">Keep this reference.</p>
+            <p id="bookingNextStep" class="text-sm text-on-surface bk-summary text-left">
+                <b class="block mb-1">Next: pay onsite</b>
+                Pay at the Municipal Tourism Office to confirm your booking. The office assigns your guide.
             </p>
             <!-- Online payment (Xendit). -->
             <div id="bookingPayOnline" hidden class="space-y-2">
@@ -949,7 +944,8 @@ body { overflow-x: hidden; }
         const maxGroup = info.maxGroupSize || 1;
         document.getElementById('bookVisitors').max = String(maxGroup);
         document.getElementById('bookGroupHint').textContent =
-            `Up to ${maxGroup} visitor${maxGroup === 1 ? '' : 's'} per guide.`;
+            `Up to ${maxGroup} per guide`;
+        wireQty(modal);
         // A date in the past is not offered in the first place, and a closed day
         // is said to be closed before anyone submits.
         const bookDate = document.getElementById('bookDate');
@@ -969,17 +965,21 @@ body { overflow-x: hidden; }
             if (chosenGuide && !guides.some(g => g._id === chosenGuide && usable(g))) chosenGuide = '';
             const lowest = guides.length ? Math.min(...guides.map(g => g.guideFee)) : null;
             const option = (value, body, disabled, note) => `
-                <label class="flex items-start gap-3 border border-outline-variant/40 p-3 ${disabled ? 'opacity-60' : 'cursor-pointer'}">
-                    <input type="radio" name="bookGuide" value="${escapeHtml(value)}" ${chosenGuide === value ? 'checked' : ''} ${disabled ? 'disabled' : ''} class="mt-1 w-5 h-5 text-primary focus:ring-primary"/>
+                <label class="pick-card">
+                    <input type="radio" name="bookGuide" value="${escapeHtml(value)}" ${chosenGuide === value ? 'checked' : ''} ${disabled ? 'disabled' : ''}/>
                     <span class="min-w-0 flex-1">${body}${note ? `<span class="block text-support tone-warning">${escapeHtml(note)}</span>` : ''}</span>
                 </label>`;
             list.innerHTML =
                 option('', `<span class="block font-bold text-on-surface">Any available guide</span>
                     <span class="block text-support">The office picks${lowest !== null ? ` · from ${escapeHtml(peso(lowest))}` : ''}.</span>`, false, '') +
                 guides.map(g => option(g._id, `
-                    <span class="flex items-center gap-3">${guideFace(g, 'w-10 h-10')}
-                        <span class="min-w-0"><span class="block font-bold text-on-surface">${escapeHtml(g.fullName)} · ${escapeHtml(peso(g.guideFee))}</span>
-                        <span class="block text-support">${escapeHtml(g.languages.join(', ') || g.area)}</span></span></span>`,
+                    <span class="flex items-start gap-3">${guideFace(g, 'w-12 h-12')}
+                        <span class="min-w-0 flex-1">
+                            <span class="flex flex-wrap justify-between gap-x-3"><span class="font-bold text-on-surface">${escapeHtml(g.fullName)}</span><span class="font-bold text-on-surface">${escapeHtml(peso(g.guideFee))}</span></span>
+                            ${g.languages.length ? `<span class="block text-support">Speaks ${escapeHtml(g.languages.join(', '))}</span>` : ''}
+                            <span class="block text-support">Up to ${Number(g.maxGroupSize) || 1} visitors · ${escapeHtml(g.area)}</span>
+                            ${g.bio ? `<span class="block text-sm text-on-surface-variant line-clamp-2 mt-0.5">${escapeHtml(g.bio)}</span>` : ''}
+                        </span></span>`,
                     !usable(g), group > (Number(g.maxGroupSize) || 1) ? `Takes groups of up to ${g.maxGroupSize}` : (date && g.free === false ? g.note : ''))).join('');
             list.querySelectorAll('input[name=bookGuide]').forEach(r => r.addEventListener('change', () => { chosenGuide = r.value; }));
         }
@@ -1169,67 +1169,76 @@ body { overflow-x: hidden; }
 
         const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
         const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
+        const kinds = ticketKinds(offer);
+        const cheaper = kinds.slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).filter(Boolean);
         slot.innerHTML = `
-            <section class="bg-surface border border-primary/40 rounded-xl p-5 space-y-4" aria-labelledby="ticketHeading">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <h2 id="ticketHeading" class="text-lg font-display font-bold text-on-surface flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">confirmation_number</span> Entrance tickets
-                    </h2>
-                </div>
-                <ol class="journey-steps" aria-label="Ticket steps">${journeySteps(['Date & visitors', 'Payment', 'Your ticket'], 0)}</ol>
-                <p class="text-sm text-on-surface-variant">
-                    ${escapeHtml(formatPeso(ticketKinds(offer)[0].price))} per person${ticketKinds(offer).length > 1
-                        ? `, less for ${escapeHtml(ticketKinds(offer).slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).join(', ').replace(/, ([^,]*)$/, ' and $1'))}` : ''}.
-                    Buy ahead and show the QR code at the entrance,
-                    or pay onsite.
-                </p>
-                <form id="ticketForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3" novalidate>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Date of visit</span>
-                        <input id="tkDate" type="date" required min="${today}" max="${last}" value="${today}"
-                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
-                    </label>
-                    <fieldset class="sm:col-span-2">
-                        <legend class="block text-label font-bold uppercase tracking-wider mb-1">Who is coming</legend>
-                        <div class="divide-y divide-outline-variant/30 border border-outline-variant/30">
-                            ${ticketKinds(offer).map(k => `
-                            <label class="flex items-center justify-between gap-3 px-3 py-2">
-                                <span class="min-w-0">
-                                    <span class="block font-bold text-on-surface">${escapeHtml(k.label)}
-                                        <span class="font-normal text-on-surface-variant">· ${escapeHtml(formatPeso(k.price))}</span></span>
-                                    ${k.note ? `<span class="block text-support">${escapeHtml(k.note)}</span>` : ''}
-                                </span>
-                                <input type="number" data-kind="${k.key}" min="0" max="${offer.maxPeople}" step="1"
-                                       value="${k.key === 'regular' ? 1 : 0}" aria-label="${escapeHtml(k.label)}: number of people"
-                                       class="w-20 shrink-0 bg-surface-container-high border border-outline-variant/40 p-2 text-on-surface text-center"/>
-                            </label>`).join('')}
+            <section class="spot-panel" aria-labelledby="ticketHeading">
+                <h2 id="ticketHeading" class="spot-h2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-accent" aria-hidden="true">confirmation_number</span>Entrance tickets
+                </h2>
+                <p class="text-on-surface"><b>${escapeHtml(peso(kinds[0].price))}</b> per person${cheaper.length
+                    ? ` <span class="text-on-surface-variant">· less for ${escapeHtml(cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1'))}</span>` : ''}</p>
+                <p class="text-support mt-1">Buy ahead and show the QR code at the entrance, or pay onsite.</p>
+                <ol class="journey-steps mt-4" aria-label="Ticket steps">${journeySteps(['Date & visitors', 'Payment', 'Your ticket'], 0)}</ol>
+
+                <form id="ticketForm" class="mt-5" novalidate>
+                    <div class="bk-group">
+                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">event</span>Your visit</h3>
+                        <div>
+                            <label for="tkDate" class="bk-label">Date of visit</label>
+                            <input id="tkDate" type="date" required min="${today}" max="${last}" value="${today}" class="bk-field sm:!w-64"/>
                         </div>
-                    </fieldset>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Name</span>
-                        <input id="tkName" type="text" required autocomplete="name"
-                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
-                    </label>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Email</span>
-                        <input id="tkEmail" type="email" required autocomplete="email"
-                               class="w-full bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface"/>
-                    </label>
-                    <div class="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-1">
-                        <p class="text-on-surface"><span class="text-support">Total</span>
-                            <span id="tkTotal" class="text-xl font-display font-black ml-1"></span></p>
-                        <button type="submit" id="tkBuy"
-                                class="bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform flex items-center gap-2">
-                            <span class="material-symbols-outlined !text-lg">payments</span> Buy and pay online
-                        </button>
+                        <fieldset>
+                            <legend class="bk-label">Who is coming</legend>
+                            <div class="bk-people">
+                                ${kinds.map(k => `
+                                <div class="bk-person">
+                                    <span class="min-w-0">
+                                        <span class="bk-person__name block">${escapeHtml(k.label)}</span>
+                                        <span class="bk-person__price block">${escapeHtml(peso(k.price))} each${k.note ? ` · ${escapeHtml(k.note)}` : ''}</span>
+                                    </span>
+                                    <span class="qty" data-qty>
+                                        <button type="button" data-step="-1" aria-label="${escapeHtml(k.label)}: one fewer">−</button>
+                                        <input type="number" data-kind="${k.key}" min="0" max="${offer.maxPeople}" step="1" inputmode="numeric"
+                                               value="${k.key === 'regular' ? 1 : 0}" aria-label="${escapeHtml(k.label)}: number of people"/>
+                                        <button type="button" data-step="1" aria-label="${escapeHtml(k.label)}: one more">+</button>
+                                    </span>
+                                </div>`).join('')}
+                            </div>
+                        </fieldset>
                     </div>
-                    <p class="sm:col-span-2 text-support">
+
+                    <div class="bk-group">
+                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h3>
+                        <div class="bk-row bk-row--2">
+                            <div>
+                                <label for="tkName" class="bk-label">Full name</label>
+                                <input id="tkName" type="text" required autocomplete="name" class="bk-field"/>
+                            </div>
+                            <div>
+                                <label for="tkEmail" class="bk-label">Email</label>
+                                <input id="tkEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>
+                                <p class="bk-hint">For your ticket and receipt.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bk-summary mt-5" aria-live="polite">
+                        <div id="tkLines" class="space-y-1"></div>
+                        <p class="bk-summary__total"><span>Total</span><span id="tkTotal"></span></p>
+                    </div>
+                    <p id="tkError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+                    <button type="submit" id="tkBuy"
+                            class="mt-4 w-full bg-primary text-on-primary py-3.5 min-h-[48px] font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined !text-lg" aria-hidden="true">payments</span><span id="tkBuyLabel">Buy tickets</span>
+                    </button>
+                    <p class="text-support mt-3">
                         Your name and email are used only for these tickets. See the
                         <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
                     </p>
-                    <p id="tkError" hidden class="sm:col-span-2 text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
                 </form>
             </section>`;
+        wireQty(slot);
 
         const wanted = new URLSearchParams(window.location.search).get('ticketDate') || '';
         const dateInput = document.getElementById('tkDate');
@@ -1260,7 +1269,14 @@ body { overflow-x: hidden; }
         checkDate();
         const showTotal = () => {
             const c = counts();
-            total.textContent = formatPeso(ticketKinds(offer).reduce((sum, k) => sum + (c[k.key] || 0) * k.price, 0));
+            const sum = kinds.reduce((t, k) => t + (c[k.key] || 0) * k.price, 0);
+            const people = kinds.reduce((t, k) => t + (c[k.key] || 0), 0);
+            document.getElementById('tkLines').innerHTML = kinds.filter(k => c[k.key] > 0).map(k =>
+                `<p class="bk-summary__line"><span>${c[k.key]} × ${escapeHtml(k.label)}</span><span>${escapeHtml(peso(c[k.key] * k.price))}</span></p>`).join('')
+                || '<p class="bk-summary__line"><span>No one added yet</span><span></span></p>';
+            total.textContent = peso(sum);
+            const label = document.getElementById('tkBuyLabel');
+            if (label) label.textContent = people > 0 ? `Buy ${people} ticket${people === 1 ? '' : 's'} · ${peso(sum)}` : 'Buy tickets';
         };
         kindInputs.forEach(i => i.addEventListener('input', showTotal));
         showTotal();
@@ -1293,6 +1309,32 @@ body { overflow-x: hidden; }
                 button.disabled = false;
                 button.innerHTML = original;
             }
+        });
+    }
+
+    /* − / + steppers ([data-qty]): change the number between the input's own
+       min and max, tell the page it changed, and grey out a button at the end
+       of its range. */
+    function wireQty(root) {
+        root.querySelectorAll('[data-qty]').forEach(box => {
+            const input = box.querySelector('input');
+            const buttons = box.querySelectorAll('[data-step]');
+            const bounds = () => [Number(input.min || 0), input.max === '' ? Infinity : Number(input.max)];
+            const paint = () => {
+                const [min, max] = bounds();
+                const n = Number(input.value) || 0;
+                buttons.forEach(b => { b.disabled = Number(b.dataset.step) < 0 ? n <= min : n >= max; });
+            };
+            buttons.forEach(b => b.addEventListener('click', () => {
+                const [min, max] = bounds();
+                const next = Math.min(max, Math.max(min, (Number(input.value) || 0) + Number(b.dataset.step)));
+                input.value = String(next);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }));
+            input.addEventListener('input', paint);
+            input.addEventListener('change', paint);
+            paint();
         });
     }
 

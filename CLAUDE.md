@@ -613,7 +613,13 @@ Frontend only, no tables of their own:
   → Payment (or Pay onsite) → Confirmed — the form has two panes
   (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
   guides free for that date, time and group, and Submit), then the reference
-  with Pay online now or the onsite note; tickets show Date & visitors → Payment → Your
+  with Pay online now or the onsite note. Step 1 asks "Your visit" (date, start
+  time, visitors) before "Your details". The ticket section follows the same
+  pattern: price line, Your visit (date; who is coming, one row per kind with a
+  − / + stepper), Your details (name, email), a summary of lines and the total,
+  and one button that says what it buys ("Buy 4 tickets · ₱180"). Both use the
+  booking-form styles in `theme.css` (`.bk-*`, `.qty` wired by `wireQty`,
+  `.pick-card` for the guide choice); tickets show Date & visitors → Payment → Your
   ticket; `payment.html` continues the same steps.
 - **After paying** (`payment.html`): "What's next" — the date, Directions
   (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`

@@ -1863,3 +1863,63 @@ button[onclick="toggleTheme()"] {
 /* A plain bordered block for a section that holds an action. */
 .spot-panel { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); padding: 1.1rem 1.1rem 1.25rem; }
 @media (min-width: 640px) { .spot-panel { padding: 1.5rem; } }
+
+/* ==========================================================================
+   Booking forms (guide booking and entrance tickets on spot.html): flat,
+   sentence-case labels above roomy fields, related fields grouped under a
+   short heading, people counted with − / + steppers, and a summary with the
+   total right above the one main button.
+   ========================================================================== */
+.bk-group { display: grid; gap: .9rem; }
+.bk-group + .bk-group { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgb(var(--ztims-outline)); }
+.bk-group-title { display: flex; align-items: center; gap: .5rem; font-weight: 800; font-size: 1rem; color: rgb(var(--ztims-on-surface)); }
+.bk-group-title .material-symbols-outlined { font-size: 1.25rem; color: rgb(var(--ztims-accent)); }
+.bk-label { display: block; font-size: .875rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); margin-bottom: .35rem; }
+.bk-label small { font-weight: 400; color: rgb(var(--ztims-on-surface-variant)); font-size: .8125rem; }
+.bk-hint { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); margin-top: .3rem; }
+.bk-field {
+    width: 100%; min-height: 48px; padding: .65rem .85rem;
+    border: 1px solid rgb(var(--ztims-outline)); border-radius: 0;
+    background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+    font-size: 1rem;
+}
+textarea.bk-field { min-height: 0; resize: vertical; }
+.bk-field::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
+.bk-field:focus { outline: none; border-color: rgb(var(--ztims-secondary)); box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / .35); }
+.bk-row { display: grid; gap: .9rem; }
+@media (min-width: 480px) { .bk-row--2 { grid-template-columns: 1fr 1fr; } }
+
+/* − 2 + : a count you can change with a thumb. */
+.qty { display: inline-flex; align-items: center; gap: .25rem; flex-shrink: 0; }
+.qty button {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+    color: rgb(var(--ztims-primary-text)); font-size: 1.25rem; font-weight: 700; line-height: 1;
+}
+.qty button:hover:not(:disabled) { border-color: rgb(var(--ztims-primary)); }
+.qty button:disabled { opacity: .4; cursor: not-allowed; }
+.qty input {
+    width: 2.75rem; height: 40px; text-align: center; font-weight: 800; font-size: 1.0625rem;
+    border: 0; background: transparent; color: rgb(var(--ztims-on-surface)); -moz-appearance: textfield;
+}
+.qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* One row per kind of visitor: who, the price, the count. */
+.bk-people { border: 1px solid rgb(var(--ztims-outline)); }
+.bk-person { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem .85rem; }
+.bk-person + .bk-person { border-top: 1px solid rgb(var(--ztims-outline)); }
+.bk-person__name { font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.bk-person__price { font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* The total, and what it is made of, right above the button. */
+.bk-summary { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-low)); padding: .9rem 1rem; }
+.bk-summary__line { display: flex; justify-content: space-between; gap: .75rem; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
+.bk-summary__total { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid rgb(var(--ztims-outline)); font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.bk-summary__total span:last-child { font-size: 1.375rem; }
+
+/* A choice drawn as a card: the picked one is outlined in burnt orange. */
+.pick-card { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); cursor: pointer; }
+.pick-card:has(input:checked) { border: 2px solid rgb(var(--ztims-primary)); background: rgb(var(--ztims-primary-container)); padding: calc(.85rem - 1px); }
+.pick-card:has(input:disabled) { opacity: .6; cursor: not-allowed; }
+.pick-card input { accent-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-primary)); --tw-ring-color: rgb(var(--ztims-secondary) / .5); width: 1.15rem; height: 1.15rem; margin-top: .2rem; flex-shrink: 0; }
