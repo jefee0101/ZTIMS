@@ -244,7 +244,7 @@
             const active = item.href === here;
             return `
                 <a title="${escapeHtml(item.label)}" href="${item.href}"${active ? ' aria-current="page"' : ''}
-                   class="flex items-center gap-3 ${active ? 'bg-primary/10 text-accent font-extrabold' : 'text-on-surface-variant hover:text-accent hover:translate-x-1'} px-5 py-3.5 rounded-xl transition-all duration-300">
+                   class="flex items-center gap-3 ${active ? 'is-current font-bold' : 'text-on-surface-variant'} px-5 py-3.5 rounded-xl transition-all duration-300">
                     <span class="material-symbols-outlined text-accent">${item.icon}</span>
                     <span class="sidebar-label">${escapeHtml(item.label)}</span>
                 </a>`;

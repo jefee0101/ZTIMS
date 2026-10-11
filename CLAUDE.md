@@ -201,7 +201,12 @@ purpose — see the header comment in `spot-form.js`:
   (sidebar, header, account menu, phone drawer) and helpers, shared by the four
   `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
   Profile). Unlike the officer's and manager's pages, which each carry that
-  frame inline, the guide pages draw it from here. Loaded as a module, so page
+  frame inline, the guide pages draw it from here. `guide-portal.css` also
+  gives the guide pages the visitor pages' flat, standard look: flat outlined
+  panels, sentence-case labels, pill buttons and status pills, language chips
+  as pills, the current page in the menu a solid burnt-orange pill (`.is-current`)
+  with menu labels wrapping rather than cut; the Dashboard's six-month chart
+  says one line when there is nothing to chart. Loaded as a module, so page
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an

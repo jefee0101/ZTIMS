@@ -222,6 +222,11 @@
         function renderMonths(months) {
             const P = window.GuidePortal;
             const top = Math.max(...months.map(m => m.tours), 1);
+            // Nothing to chart yet: say so in one line instead of six empty bars.
+            if (!months.some(m => m.tours > 0)) {
+                document.getElementById('monthChart').innerHTML = '<p class="ztims-empty">No completed tours in the last six months yet.</p>';
+                return;
+            }
             document.getElementById('monthChart').innerHTML = `
                 <div class="grid grid-cols-6 gap-2 sm:gap-4 items-end h-48" role="img"
                      aria-label="${P.escapeHtml(months.map(m => `${m.month}: ${m.tours} tours`).join(', '))}">

@@ -111,10 +111,10 @@
             const list = document.getElementById('chosenList');
             list.innerHTML = chosen.length
                 ? chosen.map((name, index) => `
-                    <li class="inline-flex items-center gap-1 pl-3 pr-1 py-1 bg-primary/10 border border-primary/30 text-on-surface font-bold text-sm">
+                    <li class="pill inline-flex items-center gap-1 pl-3.5 pr-1 py-1 bg-primary/10 border border-primary/30 text-on-surface font-bold text-sm">
                         ${P.escapeHtml(name)}
                         <button type="button" data-drop="${index}" aria-label="Remove ${P.escapeHtml(name)}"
-                                class="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center text-on-surface-variant hover:text-error">
+                                class="pill p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center text-on-surface-variant hover:text-error">
                             <span class="material-symbols-outlined !text-base">close</span>
                         </button>
                     </li>`).join('')
@@ -124,7 +124,7 @@
                 .filter(name => !chosen.some(c => same(c, name)))
                 .map(name => `
                     <button type="button" data-add="${P.escapeHtml(name)}"
-                            class="px-3 py-1.5 min-h-[40px] border border-outline-variant/50 text-sm text-on-surface-variant hover:text-accent hover:border-accent transition-colors">
+                            class="pill lang-chip px-3.5 py-1.5 min-h-[40px] text-sm">
                         + ${P.escapeHtml(name)}
                     </button>`).join('') || '<span class="text-support italic">All listed.</span>';
 
