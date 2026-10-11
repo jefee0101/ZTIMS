@@ -213,6 +213,10 @@ purpose — see the header comment in `spot-form.js`:
   later tours grouped under Today / Tomorrow / the weekday (styles `.tour-*` in
   `guide-portal.css`). Loaded as a module, so page
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
+- **The staff portals' header** (officer, manager and guide — the fixed
+  `header.glass-nav` beside the sidebar) wears the footer's tile strip, one
+  tile high, from `/tiles.svg` (one rule in `theme.css`); its buttons sit on
+  solid grounds, on the right on every portal.
 - `portal-flat.css` — the flat, standard look for the guide and the
   establishment manager portals (every `src/guide/*.html` and
   `src/resort/*.html`, after theme.css and motion.css): flat outlined panels
@@ -229,7 +233,8 @@ purpose — see the header comment in `spot-form.js`:
   the bottom (the user's choice) and, where a pointer can hover, tucked up
   behind the header with only their edge showing: each slides down when
   pointed at or focused, and the open one stays down. On touch screens all
-  stay down. Each subpage shows the
+  stay down. They are solid orange (the user's choice): tangerine with ink on
+  it, the open one burnt orange with off-white on it. Each subpage shows the
   saved facts plainly (`.est-fact`; missing required facts in red, empty
   optional ones "None") with "Last updated" and one Edit button. Edit opens the
   shared listing form on that part only (`spotForm.openSection(spot, step)`:
@@ -927,6 +932,9 @@ framework change.
 - **Opening-days reader**: `zamboanguita-backend/open-days.js` (decides what is
   sold) and `Zamboanguita-project/src/shared/open-days.js` (the forms). Checked
   by `npm run check` in the frontend.
+- **The tile pattern**: `TILES` in `src/shared/site-footer.js` (the footer
+  strip and Home's cove ribbon) and `Zamboanguita-project/public/tiles.svg`
+  (the portals' header), the same ten tiles. Change one, regenerate the other.
 - **Photo hosts**: `PHOTO_SOURCES` in `server.js` and the CSP's `img-src` in
   `vercel.json`. A host only in the first is saved but never shown.
 - **Password minimum (10)**: `MIN_PASSWORD_LENGTH` in

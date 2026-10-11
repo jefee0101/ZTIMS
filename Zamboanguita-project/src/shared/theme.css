@@ -2040,3 +2040,20 @@ textarea.bk-field { min-height: 0; resize: vertical; }
            box-shadow: 0 0 0 1px rgb(var(--ztims-on-surface) / .15); }
 .sf-flag--icon { box-shadow: none; font-size: 18px; width: 20px; height: auto; text-align: center;
                  color: rgb(var(--ztims-on-surface-variant)); }
+
+/* The staff portals' header (officer, manager, guide: the fixed header beside
+   the sidebar) wears the footer's tile strip — the same ten tiles, from
+   /tiles.svg (public/tiles.svg, a copy of TILES in site-footer.js), one tile
+   high, repeated across. Its buttons sit on solid grounds so they stay legible
+   over the pattern. */
+body > header.fixed.glass-nav {
+    background: #7A2E00 url(/tiles.svg) repeat-x left center / auto 100% !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    border-bottom: 0 !important;
+}
+body > header.fixed.glass-nav #navOpenBtn {
+    background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); border-radius: 9999px;
+}
+body > header.fixed.glass-nav [aria-haspopup="menu"] { background: rgb(var(--ztims-surface)) !important; }
+/* The theme toggle and account menu on the right on every portal. */
+body > header.fixed.glass-nav > div { margin-left: auto; }

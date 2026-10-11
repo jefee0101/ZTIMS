@@ -58,8 +58,7 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
 
 /* ---- Establishment (resort_spots.html) ------------------------------------
    The subpages are folder tabs hanging from the header's lower edge, upside
-   down: the open one is the header's own glass, joined to it; the others sit
-   a little shorter, on a plain ground. */
+   down, hanging from the tile strip. */
 .est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; align-items: flex-start; gap: .3rem;
             padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin-top: -1px; }
 .est-tabs::-webkit-scrollbar { display: none; }
@@ -68,20 +67,16 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
    choice; corners elsewhere stay square). */
 .est-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
               padding: .7rem 1.1rem .75rem; min-height: 44px; font-weight: 700; font-size: .875rem;
-              color: rgb(var(--ztims-on-surface-variant));
-              background: color-mix(in srgb, rgb(var(--ztims-surface)) 86%, rgb(var(--ztims-on-surface)));
+              color: #1C1917; background: #F28500;
               border-radius: 0 0 14px 14px;
               transition: transform var(--dur-moderate, 300ms) var(--ease-decelerate, cubic-bezier(.2,0,0,1)),
                           color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard); }
 .est-tabs a .material-symbols-outlined { font-size: 18px; }
-.est-tabs a:hover { color: rgb(var(--ztims-on-surface));
-                    background: color-mix(in srgb, rgb(var(--ztims-surface)) 75%, rgb(var(--ztims-secondary))); }
-.est-tabs a.is-open { color: rgb(var(--ztims-primary-text));
-                      box-shadow: inset 0 -3px 0 rgb(var(--ztims-primary));
-                      background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
-                      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-                      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)); }
-.est-tabs a:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+/* Solid orange folders (the user's choice): tangerine with ink on it; the
+   open one burnt orange with off-white on it (both 4.5:1 or better). */
+.est-tabs a:hover { background: #FF9A1F; }
+.est-tabs a.is-open { color: #FFFDFA; background: #BF5700; }
+.est-tabs a:focus-visible { outline: 2px solid #1C1917; outline-offset: -4px; }
 @media (max-width: 639px) { .est-tabs a { padding-left: .9rem; padding-right: .9rem; } }
 
 /* Where a pointer can hover, the tabs are tucked up behind the header with
