@@ -197,3 +197,11 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .dest-row__photo { width: 4.5rem; height: 3.5rem; }
     .dest-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
+
+/* Windows (.ztims-modal) open outside <main>, so they take the same flat look
+   here: pill buttons with no gradient, sentence-case labels. */
+.ztims-modal .btn { border-radius: 9999px; }
+.ztims-modal .btn-primary, .ztims-modal .btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary)); background-image: none !important; box-shadow: none; transform: none; }
+.ztims-modal .btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary-dim)); }
+.ztims-modal .btn-secondary { border: 1px solid rgb(var(--ztims-primary-text) / .45); }
+.ztims-modal .field { border-radius: 0; }

@@ -148,7 +148,7 @@
     }
 
     function formatPeso(amount) {
-        return '₱' + (Number(amount) || 0).toFixed(2);
+        return '₱' + (Number(amount) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
     }
 
     let leafletLoading = null;
@@ -178,9 +178,9 @@
 
     const INPUT = 'w-full bg-surface-variant border border-outline-variant/40 rounded-xl p-3 text-on-surface ' +
         'focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors';
-    const LABEL = 'block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1';
-    const CHIP_BTN = 'inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-variant ' +
-        'border border-outline-variant/40 text-xs font-bold text-on-surface hover:bg-outline-variant/40 transition-all';
+    const LABEL = 'block text-sm font-bold text-on-surface mb-1';
+    // A pill (.sf-chip in theme.css), like every other secondary control.
+    const CHIP_BTN = 'sf-chip';
 
     // The three ways into a location. Big on purpose: on a phone this is the
     // first thing a manager taps, and all three are equally valid answers.
@@ -201,13 +201,13 @@
     function buildMarkup(p, role) {
         const isOfficer = role === 'officer';
 
+        // The steps as the visitor's booking form shows them: a round number,
+        // its name under it, joined by a line (.sf-steps in theme.css).
         const stepTabs = STEPS.map(function (step, index) {
-            return '<button type="button" data-step-tab="' + index + '" ' +
-                'class="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-support font-bold ' + 'uppercase tracking-wider transition-all min-h-[44px]">' +
-                '<span class="material-symbols-outlined !text-base shrink-0">' + step.icon + '</span>' +
-                '<span class="truncate hidden sm:inline">' + step.label + '</span>' +
-                '<span class="sm:hidden">' + (index + 1) + '</span>' +
-                '</button>';
+            return '<li><button type="button" data-step-tab="' + index + '" class="sf-step">' +
+                '<span class="sf-step__n">' + (index + 1) + '</span>' +
+                '<span class="sf-step__label">' + step.label + '</span>' +
+                '</button></li>';
         }).join('');
 
         return '' +
@@ -222,10 +222,8 @@
 
         // ---- step rail ----
         '<div id="' + p + 'StepRail">' +
-        '<div class="flex gap-1 bg-surface-container-low rounded-2xl p-1 mb-1">' + stepTabs + '</div>' +
-        '<div class="h-1 rounded-full bg-outline-variant/30 mb-5 overflow-hidden">' +
-            '<div id="' + p + 'Progress" class="h-full bg-primary rounded-full transition-all duration-300" style="width:25%"></div>' +
-        '</div>' +
+        '<ol class="sf-steps">' + stepTabs + '</ol>' +
+        '<div hidden><div id="' + p + 'Progress"></div></div>' +
         '</div>' +
 
         '<div id="' + p + 'Grid" class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-6">' +
@@ -455,9 +453,8 @@
                 '<legend class="' + LABEL + '">Open on</legend>' +
                 '<div id="' + p + 'SchedDays" class="flex flex-wrap gap-2">' +
                     DAY_KEYS.map(function (d, i) {
-                        return '<label class="inline-flex items-center gap-2 border border-outline-variant/40 px-3 min-h-[44px] cursor-pointer select-none">' +
-                            '<input type="checkbox" value="' + d + '" checked class="w-5 h-5 text-primary focus:ring-primary"/>' +
-                            '<span class="text-sm font-bold">' + DAY_SHORT[i] + '</span>' +
+                        return '<label class="sf-choice sf-choice--day">' +
+                            '<input type="checkbox" value="' + d + '" checked/>' + DAY_SHORT[i] +
                         '</label>';
                     }).join('') +
                 '</div>' +
@@ -500,10 +497,10 @@
             '</div>' +
 
             '<div class="pt-1">' +
-                '<label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">' +
-                    '<input id="' + p + 'TakesBookings" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 ' +
-                        'bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>' +
-                    '<span class="text-label font-bold uppercase tracking-wider text-on-surface">Visitors can book online</span>' +
+                '<label class="sf-switch">' +
+                    '<input id="' + p + 'TakesBookings" type="checkbox" role="switch"/>' +
+                    '<span class="sf-switch__track" aria-hidden="true"></span>' +
+                    '<span>Visitors can book online</span>' +
                 '</label>' +
                 '<div id="' + p + 'BookingRow" hidden class="mt-2">' +
                     '<label for="' + p + 'BookingUrl" class="' + LABEL + '">Booking link</label>' +
@@ -514,10 +511,10 @@
 
             (isOfficer
                 ? '<div class="pt-1">' +
-                    '<label class="inline-flex items-center gap-2.5 cursor-pointer select-none min-h-[44px]">' +
-                        '<input id="' + p + 'RequiresGuide" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 ' +
-                            'bg-surface-variant text-primary focus:ring-primary focus:ring-offset-0"/>' +
-                        '<span class="text-label font-bold uppercase tracking-wider text-on-surface">Requires a tourist guide</span>' +
+                    '<label class="sf-switch">' +
+                        '<input id="' + p + 'RequiresGuide" type="checkbox" role="switch"/>' +
+                        '<span class="sf-switch__track" aria-hidden="true"></span>' +
+                        '<span>Requires a tourist guide</span>' +
                     '</label>' +
                   '</div>'
                 : '') +
@@ -542,7 +539,7 @@
 
             '<div id="' + p + 'PhotoGallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>' +
             '<p id="' + p + 'PhotoEmptyHint" class="text-support">' +
-                'The first photo becomes the cover. A listing with no photo shows a grey placeholder on the public page.</p>' +
+                'The first photo is the cover.</p>' +
             '<p id="' + p + 'PhotoStatus" hidden class="text-support"></p>' +
         '</section>' +
 
@@ -560,7 +557,7 @@
         '<p id="' + p + 'FormError" hidden class="mt-5 text-sm text-error bg-error/10 border border-error/20 ' +
             'rounded-xl px-4 py-3"></p>' +
 
-        '<div class="flex flex-wrap gap-3 pt-5 mt-5 border-t border-outline-variant/20">' +
+        '<div class="sf-footer flex flex-wrap gap-3 pt-5 mt-5 border-t border-outline-variant/20">' +
             '<button type="button" id="' + p + 'CancelBtn" class="btn btn-cancel flex-1 min-w-[7rem] min-h-[48px]">Cancel</button>' +
             '<button type="button" id="' + p + 'BackBtn" hidden class="btn btn-secondary flex-1 min-w-[7rem] min-h-[48px]">Back</button>' +
             '<button type="button" id="' + p + 'NextBtn" class="btn btn-primary flex-[2] min-w-[9rem] min-h-[48px]">Next</button>' +
@@ -819,11 +816,8 @@
                 const active = index === step;
                 if (panel) panel.hidden = !active;
                 if (tab) {
-                    tab.className = 'flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl ' +
-                        'text-[11px] font-bold uppercase tracking-wider transition-all min-h-[44px] ' +
-                        (active
-                            ? 'bg-primary text-on-primary shadow'
-                            : 'text-on-surface-variant hover:bg-outline-variant/20');
+                    // Editing, every step is already filled in, so none is "done".
+                    tab.className = 'sf-step' + (active ? ' is-current' : (!editingId && index < step ? ' is-done' : ''));
                     tab.setAttribute('aria-current', active ? 'step' : 'false');
                 }
             });
@@ -839,7 +833,9 @@
             el('StepRail').hidden = sectionOnly;
             el('PreviewAside').classList.toggle('xl:block', !sectionOnly);
             el('Grid').classList.toggle('xl:grid-cols-[minmax(0,1fr)_20rem]', !sectionOnly);
-            if (sectionOnly) {
+            // Editing: Cancel and Save on every step, the steps as tabs to jump
+            // between. Adding keeps Back / Next, so nothing is skipped.
+            if (sectionOnly || editingId) {
                 el('BackBtn').hidden = true;
                 el('NextBtn').hidden = true;
                 el('SubmitBtn').hidden = false;
@@ -870,7 +866,7 @@
         form.querySelectorAll('[data-step-tab]').forEach(function (tab) {
             tab.addEventListener('click', function () {
                 const target = Number(tab.dataset.stepTab);
-                if (target <= step) { goToStep(target); return; }
+                if (target <= step || editingId) { goToStep(target); return; }
                 const problem = firstProblem(target - 1);
                 if (problem) { focusProblem(problem); return; }
                 goToStep(target);
@@ -906,7 +902,8 @@
                         '<span>' + escapeHtml(where) + '</span></p>' +
                     '<p class="text-support line-clamp-3">' +
                         escapeHtml(description || 'No description yet.') + '</p>' +
-                    '<p class="text-support font-bold text-on-surface mt-3">Entrance ' + formatPeso(entrance) + '</p>' +
+                    '<p class="text-support font-bold text-on-surface mt-3">' +
+                        (entrance > 0 ? 'Entrance ' + formatPeso(entrance) : (kindValue() === 'accommodation' ? '' : 'Free entrance')) + '</p>' +
                 '</div>';
         }
 

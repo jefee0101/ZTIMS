@@ -168,7 +168,16 @@ purpose — see the header comment in `spot-form.js`:
 - `spot-form.js` (~2200 lines) — the one listing form used by the
   establishment portal, the officer's Destinations page, and the officer's
   Dashboard quick-add. Owns barangay list, validation, the location picker
-  and its Zamboanguita bounding-box sanity check.
+  and its Zamboanguita bounding-box sanity check. Its look is the standard one wherever it
+  opens: the four steps as round numbered buttons joined by a line
+  (`.sf-steps`, like the visitor's booking steps), sentence-case labels, pills
+  for the secondary controls (`.sf-chip`), open days as pills, yes/no settings
+  as switches (`.sf-switch`), and a Cancel / Next / Save row that stays at the
+  bottom of the window (`.sf-footer`). **Adding** walks Back / Next to Publish
+  and cannot skip ahead; **editing** shows only Cancel and Save changes, and
+  any step opens straight away. The preview says "Free entrance" and prices
+  have no cents. Windows outside `<main>` take the flat buttons from
+  `portal-flat.css` (`.ztims-modal .btn…`).
 - `tourism-map.js` — Leaflet + OpenStreetMap tiles + ZTIMS's own category
   markers, and the one list of categories every page uses
   (`window.ZTIMS_CATEGORIES`: `CODES`, `info`, `label`, `of(spot)` — the main

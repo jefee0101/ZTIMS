@@ -2116,3 +2116,48 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .sf-choice__main { display: none; font-size: .6875rem; font-weight: 800; padding: .05rem .45rem; border-radius: 9999px;
                    background: rgb(var(--ztims-on-primary)); color: rgb(var(--ztims-primary-text)); }
 .sf-choice.is-main .sf-choice__main { display: inline-block; }
+
+/* The listing form (spot-form.js), the standard look wherever it opens — the
+   officer's Destinations and Dashboard, the manager's Establishment. */
+/* Steps: a round number with its name under it, joined by a line, like the
+   visitor's booking steps; done green with a tick, current burnt orange. They
+   are buttons: when editing, any step opens straight away. */
+.sf-steps { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.sf-steps li { position: relative; display: flex; justify-content: center; }
+.sf-steps li + li::before { content: ''; position: absolute; top: 18px; right: calc(50% + 22px); left: calc(-50% + 22px);
+                           height: 2px; background: rgb(var(--ztims-outline)); }
+.sf-step { display: flex; flex-direction: column; align-items: center; gap: .35rem; min-height: 44px; padding: 0 .25rem;
+           background: none; border: 0; cursor: pointer; color: rgb(var(--ztims-on-surface-variant)); font-weight: 700; font-size: .8125rem; }
+.sf-step__n { width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+              border: 2px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); font-weight: 800; }
+.sf-step:hover .sf-step__n { border-color: rgb(var(--ztims-secondary)); }
+.sf-step.is-current { color: rgb(var(--ztims-on-surface)); }
+.sf-step.is-current .sf-step__n { background: rgb(var(--ztims-primary)); border-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.sf-step.is-done .sf-step__n { background: rgb(var(--ztims-success)); border-color: rgb(var(--ztims-success)); color: #FFFDFA; font-size: 0; }
+.sf-step.is-done .sf-step__n::after { content: '\2713'; font-size: 1rem; }
+.sf-step:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+
+/* Secondary controls as pills: the ways to find a place, upload, paste a link. */
+.sf-chip { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0 1rem; border-radius: 9999px;
+           border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface));
+           font-size: .875rem; font-weight: 700; cursor: pointer; }
+.sf-chip:hover { border-color: rgb(var(--ztims-secondary)); background: rgb(var(--ztims-secondary) / .12); }
+[id$="LocSearchBtn"] { border-radius: 9999px !important; }
+
+/* Open days: the same pills as Known for. */
+.sf-choice--day { min-width: 3.5rem; justify-content: center; padding: 0 .75rem; }
+
+/* Yes/no settings as switches. */
+.sf-switch { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; cursor: pointer; font-weight: 700;
+             font-size: .9375rem; color: rgb(var(--ztims-on-surface)); }
+.sf-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.sf-switch__track { position: relative; width: 44px; height: 26px; border-radius: 9999px; flex-shrink: 0;
+                    background: rgb(var(--ztims-outline)); transition: background-color var(--dur-fast) var(--ease-standard); }
+.sf-switch__track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+                           background: #FFFDFA; box-shadow: 0 1px 2px rgb(0 0 0 / .25); transition: transform var(--dur-fast) var(--ease-standard); }
+.sf-switch input:checked + .sf-switch__track { background: rgb(var(--ztims-primary)); }
+.sf-switch input:checked + .sf-switch__track::after { transform: translateX(18px); }
+.sf-switch input:focus-visible + .sf-switch__track { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+/* The form's buttons stay in reach at the bottom of a scrolling window. */
+.ztims-modal .sf-footer { position: sticky; bottom: -2rem; z-index: 5; background: rgb(var(--ztims-surface));
+                          margin-left: -.25rem; margin-right: -.25rem; padding: 1rem .25rem 1.25rem; }
