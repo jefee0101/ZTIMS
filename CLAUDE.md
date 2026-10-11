@@ -276,6 +276,9 @@ codes stay black on white so scanners read them.
   Toasts are pills on every page: each page builds them in `#toastHost`, and
   one rule in `theme.css` (`#toastHost > *`) shapes them all — solid surface,
   hairline outline, the tone in the icon only.
+  Loading spinners (`animate-spin`, on every page) are a smooth circle — a
+  faint ring with one arc turning — by one rule in `theme.css`, whatever
+  square corners the page's config gives.
   Leaflet's zoom, attribution and popups are restyled in theme.css ("The map");
   pins and legends take their colours from `tourism-map.js`'s `CATEGORIES`.
 - **Motion.** Durations 120/160 ms (micro), 200/240 ms (standard UI), 300/350 ms

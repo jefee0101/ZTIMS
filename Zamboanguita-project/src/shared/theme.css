@@ -2020,3 +2020,16 @@ textarea.bk-field { min-height: 0; resize: vertical; }
         rgb(var(--ztims-surface-low)) 0,
         rgb(var(--ztims-surface)) 8rem);
 }
+
+/* Loading spinners, on every page: a smooth circle — a faint full ring with
+   one bright arc turning on it. The pages build them from Tailwind's
+   `animate-spin` + `border-t-transparent`, and their configs make every corner
+   square, so without this they turned as squares. */
+@keyframes ztimsSpin { to { transform: rotate(360deg); } }
+.animate-spin {
+    border-radius: 50% !important;
+    border-color: rgb(127 127 127 / .25) !important;
+    border-color: color-mix(in srgb, currentColor 22%, transparent) !important;
+    border-top-color: currentColor !important;
+    animation: ztimsSpin .8s linear infinite !important;
+}
