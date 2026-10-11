@@ -358,7 +358,9 @@
             // Not named `confirm`/`cancel`: check-undefined.cjs treats every
             // declared name as page-wide, and a local called `confirm` would
             // excuse the very browser call this file exists to replace.
-            const cancelButton = makeButton(settings.cancelLabel || 'Cancel', 'btn-secondary');
+            const cancelLabel = settings.cancelLabel || 'Cancel';
+            // A plain Cancel is red (outlined); "Keep it" or "Go back" stays neutral.
+            const cancelButton = makeButton(cancelLabel, /^cancel$/i.test(cancelLabel) ? 'btn-cancel' : 'btn-secondary');
             const confirmButton = makeButton(
                 settings.confirmLabel || (kind === 'confirm' ? 'Confirm' : 'Save'),
                 tone === 'danger' ? 'btn-danger' : 'btn-primary'

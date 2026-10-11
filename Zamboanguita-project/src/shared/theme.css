@@ -2047,9 +2047,12 @@ textarea.bk-field { min-height: 0; resize: vertical; }
    high, repeated across. Its buttons sit on solid grounds so they stay legible
    over the pattern. */
 body > header.fixed.glass-nav {
-    background: #7A2E00 url(/tiles.svg) repeat-x left center / auto 100% !important;
+    /* No colour behind the tiles: with browser zoom the tile row can round a
+       pixel short, and a dark fallback then showed as a brown line. */
+    background: url(/tiles.svg) repeat-x left top / auto 100% !important;
+    background-color: transparent !important;
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
-    border-bottom: 0 !important;
+    border: 0 !important; box-shadow: none !important; outline: 0 !important;
 }
 body > header.fixed.glass-nav #navOpenBtn {
     background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); border-radius: 9999px;
@@ -2057,3 +2060,33 @@ body > header.fixed.glass-nav #navOpenBtn {
 body > header.fixed.glass-nav [aria-haspopup="menu"] { background: rgb(var(--ztims-surface)) !important; }
 /* The theme toggle and account menu on the right on every portal. */
 body > header.fixed.glass-nav > div { margin-left: auto; }
+
+/* ==========================================================================
+   Leaving and destroying are red, on every page (the user's decision):
+   - Delete / Remove / Cancel a booking, and a dialog's confirming button when
+     it destroys something (.btn-danger): a solid red pill, the same deep red
+     in both themes, off-white on it (6.1:1).
+   - Cancel that only closes a form or dialog, and Sign out of all devices
+     (.btn-cancel): a red outlined pill, so it never looks like Delete.
+   - Log Out in the portals' menu: red words and icon, a solid red pill on
+     hover. Sign out in the account menu is already red.
+   ========================================================================== */
+.btn-danger, .btn-danger:hover:not(:disabled) {
+    background: #B3261E; color: #FFFDFA; border: 0; border-radius: 9999px; box-shadow: none;
+}
+.btn-danger:hover:not(:disabled) { background: #8C1D18; }
+.btn-cancel, #signOutEverywhereBtn {
+    background: transparent; color: rgb(var(--ztims-error)); border: 1px solid rgb(var(--ztims-error) / .6);
+    border-radius: 9999px; box-shadow: none;
+}
+.btn-cancel:hover:not(:disabled), #signOutEverywhereBtn:hover:not(:disabled) {
+    background: #B3261E; color: #FFFDFA; border-color: #B3261E;
+}
+aside a[title="Log Out"], aside a[title="Log Out"] .material-symbols-outlined { color: rgb(var(--ztims-error)) !important; }
+aside a[title="Log Out"]:hover { background: #B3261E !important; }
+aside a[title="Log Out"]:hover, aside a[title="Log Out"]:hover .material-symbols-outlined { color: #FFFDFA !important; }
+/* The small removes (a photo, a language, an emergency number) and the map's
+   Cancel while pinning: red. */
+button[data-remove], button[data-em-remove], button[data-drop], .ztims-pinbar__btn--cancel { color: rgb(var(--ztims-error)) !important; }
+button[data-remove] { background: #B3261E !important; color: #FFFDFA !important; }
+button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !important; color: #FFFDFA !important; }

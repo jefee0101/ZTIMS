@@ -996,7 +996,7 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined !text-base">check_circle</span> Record payment and confirm
                     </button>
                     <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
-                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">Cancel booking</button>
+                    <button type="button" data-status="cancelled" class="btn btn-danger min-h-[44px] ml-auto">Cancel booking</button>
                 </div>
             </form>`;
         }
@@ -1043,7 +1043,7 @@ body { overflow-x: hidden; }
                     </button>
                     <button type="button" data-status="no_show" class="btn btn-secondary min-h-[44px]">No show</button>
                     <button type="button" data-open class="btn btn-ghost min-h-[44px]">Change guide / details</button>
-                    <button type="button" data-status="cancelled" class="btn btn-ghost !text-error min-h-[44px] ml-auto">${paidOnline(b) ? 'Cancel and refund' : 'Cancel'}</button>
+                    <button type="button" data-status="cancelled" class="btn btn-danger min-h-[44px] ml-auto">${paidOnline(b) ? 'Cancel and refund' : 'Cancel'}</button>
                 </div>
             </div>`;
         }

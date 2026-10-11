@@ -60,7 +60,8 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
    The subpages are folder tabs hanging from the header's lower edge, upside
    down, hanging from the tile strip. */
 .est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; align-items: flex-start; gap: .3rem;
-            padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin-top: -1px; }
+            padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin: 0;
+            background: none !important; border: 0 !important; box-shadow: none !important; }
 .est-tabs::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) { .est-tabs { padding: 0 2rem; } }
 /* Curved at the bottom, like a folder's tab turned upside down (the user's
@@ -84,7 +85,7 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
    reached with the keyboard. The open one stays down. On touch screens they
    all stay down: there is nothing to hover with. */
 @media (hover: hover) and (pointer: fine) {
-    .est-tabs { overflow: hidden; pointer-events: none; padding-bottom: 6px; }
+    .est-tabs { overflow: hidden; pointer-events: none; padding-bottom: 0; }
     .est-tabs a { pointer-events: auto; transform: translateY(calc(-100% + 12px)); }
     .est-tabs a:hover, .est-tabs a:focus-visible, .est-tabs a.is-open { transform: none; }
     .est-tabs a:not(.is-open) > * { opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }

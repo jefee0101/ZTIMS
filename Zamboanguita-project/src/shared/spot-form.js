@@ -207,7 +207,7 @@
             '<p class="text-support text-on-surface flex-1 min-w-[12rem]">You have an unfinished listing from ' +
                 '<b id="' + p + 'DraftWhen"></b>.</p>' +
             '<button type="button" id="' + p + 'DraftRestore" class="btn btn-primary btn-sm">Restore it</button>' +
-            '<button type="button" id="' + p + 'DraftDiscard" class="btn btn-secondary btn-sm">Discard</button>' +
+            '<button type="button" id="' + p + 'DraftDiscard" class="btn btn-cancel btn-sm">Discard</button>' +
         '</div>' +
 
         // ---- step rail ----
@@ -537,7 +537,7 @@
             'rounded-xl px-4 py-3"></p>' +
 
         '<div class="flex flex-wrap gap-3 pt-5 mt-5 border-t border-outline-variant/20">' +
-            '<button type="button" id="' + p + 'CancelBtn" class="btn btn-ghost flex-1 min-w-[7rem] min-h-[48px]">Cancel</button>' +
+            '<button type="button" id="' + p + 'CancelBtn" class="btn btn-cancel flex-1 min-w-[7rem] min-h-[48px]">Cancel</button>' +
             '<button type="button" id="' + p + 'BackBtn" hidden class="btn btn-secondary flex-1 min-w-[7rem] min-h-[48px]">Back</button>' +
             '<button type="button" id="' + p + 'NextBtn" class="btn btn-primary flex-[2] min-w-[9rem] min-h-[48px]">Next</button>' +
             '<button type="submit" id="' + p + 'SubmitBtn" hidden class="btn btn-primary flex-[2] min-w-[9rem] min-h-[48px]">Publish</button>' +

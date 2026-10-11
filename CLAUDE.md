@@ -215,7 +215,9 @@ purpose — see the header comment in `spot-form.js`:
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
 - **The staff portals' header** (officer, manager and guide — the fixed
   `header.glass-nav` beside the sidebar) wears the footer's tile strip, one
-  tile high, from `/tiles.svg` (one rule in `theme.css`); its buttons sit on
+  tile high, from `/tiles.svg` (one rule in `theme.css`; no colour, border or
+  shadow behind the tiles, so browser zoom can never show a line under them);
+  its buttons sit on
   solid grounds, on the right on every portal.
 - `portal-flat.css` — the flat, standard look for the guide and the
   establishment manager portals (every `src/guide/*.html` and
@@ -322,6 +324,16 @@ codes stay black on white so scanners read them.
   Toasts are pills on every page: each page builds them in `#toastHost`, and
   one rule in `theme.css` (`#toastHost > *`) shapes them all — solid surface,
   hairline outline, the tone in the icon only.
+  **Leaving and destroying are red** (the user's decision, every page, rules
+  at the end of `theme.css`): Delete / Remove / Cancel a booking and a
+  dialog's destroying confirm (`.btn-danger`) are a solid red pill, the same
+  deep red in both themes; a Cancel that only closes a form or dialog, Discard,
+  and Sign out of all devices (`.btn-cancel`, `#signOutEverywhereBtn`) a red
+  outlined pill, so Cancel never looks like Delete (ztims-dialog's cancel is
+  `.btn-cancel` only when it reads "Cancel"; "Keep it" / "Go back" stay
+  neutral); Log Out in the portals' menu red, a solid red pill on hover; the
+  small removes (a photo, a language, an emergency number) and the map's
+  Cancel while pinning red.
   Loading spinners (`animate-spin`, on every page) are a smooth circle — a
   faint ring with one arc turning — by one rule in `theme.css`, whatever
   square corners the page's config gives.

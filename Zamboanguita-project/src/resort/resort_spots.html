@@ -540,7 +540,7 @@ body { overflow-x: hidden; }
                     <input id="cEmail" type="email" maxlength="120" autocomplete="email" placeholder="Leave blank to use your sign-in email" class="field w-full"/></label>
                 <p id="cMessage" hidden class="text-sm px-4 py-3"></p>
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeContactEditor()" class="btn btn-ghost flex-1 min-h-[48px]">Cancel</button>
+                    <button type="button" onclick="closeContactEditor()" class="btn btn-cancel flex-1 min-h-[48px]">Cancel</button>
                     <button type="submit" id="cSaveBtn" class="btn btn-primary flex-[2] min-h-[48px]">Save changes</button>
                 </div>
             </form>
@@ -795,7 +795,7 @@ body { overflow-x: hidden; }
         const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
         const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
         const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
-        const CATEGORY_NAMES = { BEACH: 'Beach', DIVING: 'Diving', MOUNTAIN: 'Mountain', CULTURAL: 'Cultural', ACCOMMODATION: 'Accommodation' };
+        const CATEGORY_NAMES = { 'BEACH / DIVING': 'Beach / Diving', BEACH: 'Beach', DIVING: 'Diving', MOUNTAIN: 'Mountain', CULTURAL: 'Cultural', ACCOMMODATION: 'Accommodation' };
 
         const subFromAddress = () => { const h = location.hash.slice(1); return SUBS.includes(h) ? h : 'basics'; };
         const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
