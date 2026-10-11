@@ -910,7 +910,10 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   (October 2026, the user's decision) its words — "Mabuhay", "Welcome to
   ZAMBOANGUITA." and the line under it — are plain off-white `#FFFDFA` with no
   shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
-  `theme.css`). Their legibility rests on the film being dark behind them. Its two buttons
+  `theme.css`). They arrive in order (the user's choice): "Mabuhay"
+  letter by letter, each dropping in (`.hero-drop__l`, 80 ms apart), then the
+  welcome fades in (`.hero-fade`, from 0.75 s), then the line under it (1.3 s);
+  the search is there from the start. `prefers-reduced-motion` shows all at once. Their legibility rests on the film being dark behind them. Its two buttons
   are pills filled flat like the header's ovals (`.btn-pill`): Explore
   destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps are
   pills with no fill (a hairline outline), each number a tangerine circle.

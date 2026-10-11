@@ -316,14 +316,17 @@ body { overflow-x: hidden; }
                     <!-- Where they are, what is here, and the way in: a greeting,
                          the place's name, one line naming the experiences and what
                          the site does, then the search. -->
-                    <p class="rise ztims-script flex items-center gap-3 text-[1.75rem] sm:text-[2rem] leading-none mb-1" style="--rise-delay:.06s">
-                        Mabuhay
-                        <span class="inline-block w-8 h-[2px] bg-gold"></span>
+                    <!-- The greeting arrives in order: Mabuhay letter by letter
+                         (each drops in), then the welcome fades in, then the line
+                         under it (.hero-drop / .hero-fade in theme.css). -->
+                    <p class="hero-drop ztims-script flex items-center gap-3 text-[1.75rem] sm:text-[2rem] leading-none mb-1">
+                        <span class="sr-only">Mabuhay</span><span aria-hidden="true"><span class="hero-drop__l" style="--i:0">M</span><span class="hero-drop__l" style="--i:1">a</span><span class="hero-drop__l" style="--i:2">b</span><span class="hero-drop__l" style="--i:3">u</span><span class="hero-drop__l" style="--i:4">h</span><span class="hero-drop__l" style="--i:5">a</span><span class="hero-drop__l" style="--i:6">y</span></span>
+                        <span class="hero-drop__rule inline-block w-8 h-[2px] bg-gold"></span>
                     </p>
-                    <h1 class="rise text-[2.25rem] sm:text-5xl md:text-6xl font-display font-black tracking-tight leading-[1.02] mb-3 break-words" style="--rise-delay:.12s">
+                    <h1 class="hero-fade text-[2.25rem] sm:text-5xl md:text-6xl font-display font-black tracking-tight leading-[1.02] mb-3 break-words" style="--fade-delay:.75s">
                         Welcome to Zamboanguita
                     </h1>
-                    <p class="rise text-base md:text-lg max-w-xl leading-relaxed" style="--rise-delay:.22s">
+                    <p class="hero-fade text-base md:text-lg max-w-xl leading-relaxed" style="--fade-delay:1.3s">
                         Beaches, waterfalls and heritage sites in Negros Oriental. Find a place, book a tourist guide or buy tickets, and get directions.
                     </p>
 

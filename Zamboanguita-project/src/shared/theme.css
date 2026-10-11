@@ -1976,3 +1976,19 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 
 /* The round icon at the top of a result (payment received, ticket, …). */
 #payState .icon-chip { border-radius: 50%; }
+
+/* The hero's greeting, in order (index.html): "Mabuhay" letter by letter, each
+   dropping in from above, then the welcome fades in, then the line under it.
+   Only transform and opacity move; motion.css's reduced-motion rule stills it. */
+@keyframes ztimsLetterDrop {
+    from { opacity: 0; transform: translateY(-0.8em); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes ztimsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.hero-drop__l {
+    display: inline-block;
+    animation: ztimsLetterDrop 450ms var(--ease-decelerate) both;
+    animation-delay: calc(80ms * var(--i, 0));
+}
+.hero-drop__rule { animation: ztimsFadeIn 300ms var(--ease-decelerate) both; animation-delay: 560ms; }
+.hero-fade { animation: ztimsFadeIn 700ms var(--ease-standard) both; animation-delay: var(--fade-delay, 0s); }
