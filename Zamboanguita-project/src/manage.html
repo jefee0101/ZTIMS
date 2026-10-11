@@ -350,6 +350,12 @@ body { overflow-x: hidden; }
     const box = document.getElementById('itemBox');
     let current = null;          // { code, email } of what is on screen
 
+    // Whether online payment is on, asked once: a booking still waiting for
+    // payment offers "Pay online now" only when it can work.
+    let payOnline = false;
+    const payReady = fetch(`${API_BASE}/payments/config`).then(r => r.ok ? r.json() : null)
+        .then(c => { payOnline = Boolean(c && c.online); }).catch(() => {});
+
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -425,6 +431,17 @@ body { overflow-x: hidden; }
                 </div>
                 <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
             </form>` : '';
+        // A guide booking nobody has paid for yet: the way to pay, first.
+        const needsPaying = !isTicket && item.status === 'pending_payment' && !item.paid;
+        const payForm = needsPaying ? `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
+                <h2 class="font-bold text-on-surface">Pay for this booking</h2>
+                <p class="text-sm text-on-surface-variant">${payOnline
+                    ? 'Pay online now, or pay onsite at the Municipal Tourism Office.'
+                    : 'Pay onsite at the Municipal Tourism Office to confirm your booking.'}</p>
+                ${payOnline ? `<button type="button" id="payNowBtn" class="btn btn-pill btn-primary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">payments</span>Pay online now</button>` : ''}
+            </div>` : '';
         const closureForm = item.canRefundClosure ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Take a full refund</h2>
@@ -451,6 +468,7 @@ body { overflow-x: hidden; }
             ${item.closedByOffice || !(item.canMove || item.canCancel)
                 ? `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`
                 : `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`}
+            ${payForm}
             ${moveForm}
             ${closureForm}
             ${cancelForm}
@@ -467,6 +485,26 @@ body { overflow-x: hidden; }
     }
 
     function wireActions(item) {
+        const pay = document.getElementById('payNowBtn');
+        if (pay) pay.addEventListener('click', async () => {
+            showError('actionError', '');
+            pay.disabled = true;
+            const original = pay.innerHTML;
+            pay.textContent = 'Opening the payment page\u2026';
+            try {
+                const response = await fetch(`${API_BASE}/guide-bookings/${encodeURIComponent(item.reference)}/checkout`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: current.email })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The payment page could not be opened.');
+                window.location.assign(result.checkoutUrl);
+            } catch (e) {
+                showError('actionError', e.message);
+                pay.disabled = false;
+                pay.innerHTML = original;
+            }
+        });
         const move = document.getElementById('moveForm');
         if (move) {
             const dateInput = document.getElementById('moveDate');
@@ -539,6 +577,7 @@ body { overflow-x: hidden; }
         current = { code, email };
         try {
             const result = await call('/manage/lookup');
+            await payReady;
             render(result.item);
         } catch (error) {
             box.hidden = true;

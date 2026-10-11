@@ -619,7 +619,8 @@ Frontend only, no tables of their own:
   − / + stepper), Your details (name, email), a summary of lines and the total,
   and one button that says what it buys ("Buy 4 tickets · ₱180"). Both use the
   booking-form styles in `theme.css` (`.bk-*`, `.qty` wired by `wireQty`,
-  `.pick-card` for the guide choice); tickets show Date & visitors → Payment → Your
+  `.pick-card` for the guide choice, each with the guide's photo large —
+  `.guide-photo`, 80px, 96px from 640px — so the face is easy to see); tickets show Date & visitors → Payment → Your
   ticket; `payment.html` continues the same steps.
 - **After paying** (`payment.html`): "What's next" — the date, Directions
   (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`
@@ -643,6 +644,11 @@ Frontend only, no tables of their own:
   send two. Links carry the code, never the email address.
 - **`manage.js`** (`/api/manage/lookup|move|cancel`, rate-limited) and
   `src/manage.html`: the code (or booking reference) AND the email, together.
+  A guide booking still waiting for payment shows "Pay for this booking" first:
+  Pay online now (when `/api/payments/config` is online; the same
+  `/api/guide-bookings/:reference/checkout` the booking form uses, which reuses
+  an open checkout) or pay onsite — so closing the booking form before paying
+  never strands a booking.
   Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
   refunds the amount less `cancel_keep_percent` (a partial Xendit refund,
   `payments.refund_amount`); the office's refunds return everything. A used
