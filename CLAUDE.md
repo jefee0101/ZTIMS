@@ -273,6 +273,9 @@ codes stay black on white so scanners read them.
   `.ztims-dropdown` for anything that opens from a control; `.ztims-table`;
   `.ztims-empty` for "nothing here yet" (add a `.tone-*` for a failed load);
   `.tone-*`/`.tone-pill` for status; `.cat-badge .cat-*` for categories.
+  Toasts are pills on every page: each page builds them in `#toastHost`, and
+  one rule in `theme.css` (`#toastHost > *`) shapes them all — solid surface,
+  hairline outline, the tone in the icon only.
   Leaflet's zoom, attribution and popups are restyled in theme.css ("The map");
   pins and legends take their colours from `tourism-map.js`'s `CATEGORIES`.
 - **Motion.** Durations 120/160 ms (micro), 200/240 ms (standard UI), 300/350 ms

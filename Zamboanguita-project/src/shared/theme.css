@@ -1992,3 +1992,23 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 }
 .hero-drop__rule { animation: ztimsFadeIn 300ms var(--ease-decelerate) both; animation-delay: 560ms; }
 .hero-fade { animation: ztimsFadeIn 700ms var(--ease-standard) both; animation-delay: var(--fade-delay, 0s); }
+
+/* Toasts, on every page: a flat pill like the site's buttons and status pills.
+   Each page builds its toasts inside #toastHost with inline styles, so this
+   one rule (with !important, to outrank them) shapes them all: solid surface,
+   a hairline outline, no side bar or shadow; the tone stays in the icon. */
+#toastHost > * {
+    border-radius: 9999px !important;
+    align-items: center !important;
+    padding: .65rem 1rem .65rem 1.1rem !important;
+    background: rgb(var(--ztims-surface)) !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    border: 1px solid rgb(var(--ztims-outline)) !important;
+    box-shadow: 0 6px 20px rgb(28 25 23 / .14) !important;
+    font-weight: 600;
+}
+#toastHost > * > button {
+    width: 28px; height: 28px; border-radius: 9999px !important;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+#toastHost > * > button:hover { background: rgb(var(--ztims-on-surface) / .08) !important; }
