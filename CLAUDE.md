@@ -767,6 +767,14 @@ the page; tabs styled like Statistics').
   session signed in (`last_sign_in_at`, set at each login), and "Sign out of
   all devices" (`POST /api/me/sign-out-everywhere`, this one too). The
   manager's Settings and the guide's My Profile have the same two.
+  The guide's My Profile (`guide/guide_profile.html`) is laid out like these
+  Settings: tabs with their own addresses — `#account` (photo, name, status;
+  contact number and bio saved straight away; sign-in email, guide since),
+  `#work` (what the office set, read only: scope, station, fee, largest group,
+  destinations; and working days and languages with Change links to their
+  pages) and `#security` (signed in since — the token's issue time, change
+  password, sign out of all devices). Tab styles `.settings-tab` in
+  `guide-portal.css`.
 - **Tourism Office Accounts**: every officer with position, date added, last
   sign-in and status. Add one (name required; a blank password is generated
   and shown once), issue a new password (`POST /api/admin/:id/password`), and

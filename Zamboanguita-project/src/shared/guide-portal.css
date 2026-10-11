@@ -124,3 +124,13 @@ aside a:not(.is-current):hover { background: rgb(var(--ztims-secondary) / .15); 
 /* A language to add: an outlined pill that fills tangerine on hover. */
 .lang-chip { border: 1px solid rgb(var(--ztims-outline)); color: rgb(var(--ztims-on-surface)); transition: background-color var(--dur-fast) var(--ease-standard); }
 .lang-chip:hover { background: rgb(var(--ztims-secondary)); border-color: rgb(var(--ztims-secondary)); color: rgb(var(--ztims-on-secondary)); }
+
+/* My Profile's subpage tabs: the same look as the officer's Settings tabs. */
+.settings-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
+                color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+                transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
+.settings-tab:hover { color: rgb(var(--ztims-on-surface)); }
+.settings-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+.settings-tab:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+@media (max-width: 639px) { .settings-tab { padding: .6rem .6rem; gap: .3rem; } }
+main .field-label { text-transform: none; letter-spacing: 0; font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
