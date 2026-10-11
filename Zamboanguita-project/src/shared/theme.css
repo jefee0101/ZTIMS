@@ -1953,3 +1953,12 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 .btn-danger-solid { background: rgb(179 38 30); color: rgb(255 253 250); border: 0; }
 .btn-danger-solid:hover:not(:disabled) { background: rgb(150 30 24); }
 .btn-pill.btn-secondary { border-radius: 9999px; border: 1px solid rgb(var(--ztims-primary-text) / .45); }
+
+/* A code typed in capitals; its hint stays as written. */
+.bk-field--code { text-transform: uppercase; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
+.bk-field--code::placeholder { text-transform: none; font-family: var(--ztims-font-body); letter-spacing: 0; }
+/* Status pills, round like the category badges. */
+.tone-pill.rounded-pill { border-radius: 9999px; }
+
+/* A chip as a pill (History's name journey and barangays). */
+.pill { border-radius: 9999px; }

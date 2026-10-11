@@ -301,36 +301,33 @@ body { overflow-x: hidden; }
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
                 <div class="space-y-2">
-                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">Manage my ticket or booking</h1>
-                    <p class="text-on-surface-variant">
-                        Move the date or cancel, until 11:59 PM the day before your visit. You need the code from
-                        your email (a ticket code, or a booking reference such as TG-2026-00012) and the email
-                        address you used.
-                    </p>
+                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">My booking</h1>
+                    <p class="text-on-surface-variant">Enter the code from your email and the email address you used.</p>
                 </div>
 
-                <form id="findForm" class="glass-panel p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end" novalidate>
-                    <label class="block">
-                        <span class="field-label">Ticket code or booking reference</span>
-                        <input id="findCode" type="text" required autocomplete="off" autocapitalize="characters" spellcheck="false"
-                               placeholder="e.g. JF-7K3M-Q" class="field uppercase font-mono"/>
-                    </label>
-                    <label class="block">
-                        <span class="field-label">Email address</span>
-                        <input id="findEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="field"/>
-                    </label>
-                    <button type="submit" id="findBtn" class="btn btn-primary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">search</span> Find it
+                <form id="findForm" class="spot-panel" novalidate>
+                    <div class="bk-row bk-row--2">
+                        <div>
+                            <label for="findCode" class="bk-label">Ticket code or booking reference</label>
+                            <input id="findCode" type="text" required autocomplete="off" autocapitalize="characters" spellcheck="false"
+                                   placeholder="e.g. TG-2026-00012" class="bk-field bk-field--code"/>
+                        </div>
+                        <div>
+                            <label for="findEmail" class="bk-label">Email</label>
+                            <input id="findEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>
+                        </div>
+                    </div>
+                    <p id="findError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+                    <button type="submit" id="findBtn" class="btn btn-pill btn-primary min-h-[48px] w-full sm:w-auto mt-4">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span>Find my booking
                     </button>
-                    <p id="findError" hidden class="sm:col-span-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
                 </form>
 
-                <div id="itemBox" hidden class="glass-panel p-5 sm:p-8 space-y-5" aria-live="polite"></div>
+                <div id="itemBox" hidden class="spot-panel space-y-5" aria-live="polite"></div>
 
                 <p class="text-support">
-                    Your details are used only for your ticket or booking. See the
-                    <a href="privacy.html#collect" class="underline font-bold">Privacy Notice</a>. Lost your email? Ask
-                    the Municipal Tourism Office.
+                    Lost the email? Ask the Municipal Tourism Office. See the
+                    <a href="privacy.html#collect" class="underline font-bold">Privacy Notice</a>.
                 </p>
             </div>
         </section>
@@ -423,10 +420,10 @@ body { overflow-x: hidden; }
             <form id="moveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
                 <h2 class="font-bold text-on-surface">Move to another ${isTicket ? 'date' : 'date or time'}</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-[1fr_${isTicket ? '' : '10rem_'}auto] gap-3 items-end">
-                    <label class="block"><span class="field-label">New date</span>
-                        <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="field"/></label>
-                    ${isTicket ? '' : `<label class="block"><span class="field-label">Time</span>
-                        <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="field"/></label>`}
+                    <label class="block"><span class="bk-label">New date</span>
+                        <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="bk-field"/></label>
+                    ${isTicket ? '' : `<label class="block"><span class="bk-label">Time</span>
+                        <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="bk-field"/></label>`}
                     <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Move</button>
                 </div>
                 <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
@@ -461,7 +458,7 @@ body { overflow-x: hidden; }
             ${notice ? `<p class="tone-success text-sm font-bold border border-outline-variant/30 p-3">${esc(notice)}</p>` : ''}
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">${isTicket ? 'Your entrance ticket' : 'Your guide booking'}</h2>
-                <span class="${tone} tone-pill text-[11px] font-bold uppercase tracking-wider px-2 py-1">${esc(label)}</span>
+                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-3 py-1">${esc(label)}</span>
             </div>
             ${item.qr ? `<div class="flex justify-center"><div class="bg-white p-3 w-48 h-48 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(item.code)}">${item.qr}</div></div>` : ''}
             <div>${details.join('')}</div>

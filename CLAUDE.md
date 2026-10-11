@@ -611,6 +611,12 @@ Frontend only, no tables of their own:
   both have a pin, else "More places to explore", same category first;
   `renderRelated`). Flat: the page's older gradient buttons are restyled as
   solid pills in its own style block; prices without cents (`peso`).
+- **My booking, History, Staff sign-in** (and the reset-password page) follow
+  the same flat style: sentence-case labels above `.bk-field`s, flat
+  `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
+  `.tone-pill.rounded-pill`), short titles ("My booking", "Staff sign in",
+  "How Zamboanguita came to be"), History's figures as `.spot-fact` tiles. The
+  footer's Send feedback is a pill too.
 - **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
   number with its label under it, joined by a line; done green with a tick,
   current solid burnt orange): booking a guide is Your details → Pick a guide

@@ -170,7 +170,7 @@
                         /* The feedback form is the one channel that is always
                            open, so it gets the button and the office details
                            stay plain text. */
-                        '<a href="' + src + 'contact.html" class="btn btn-secondary mt-4">' +
+                        '<a href="' + src + 'contact.html" class="btn btn-pill btn-secondary mt-4">' +
                             '<span class="material-symbols-outlined !text-base" aria-hidden="true">forum</span>' +
                             'Send feedback' +
                         '</a>' +
