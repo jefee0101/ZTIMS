@@ -556,12 +556,15 @@ Frontend only, no tables of their own:
   "Home page"): the **hero** — "Mabuhay", the headline "Welcome to
   Zamboanguita", one line naming the experiences and what the site does, the
   **search** (`#heroSearch`: field with name suggestions, category from 640px,
-  Search scrolls to the results) and two links (View the map, Plan your visit);
+  Search scrolls to the results);
   **Explore Zamboanguita** (`#browse`; the heading is for screen readers, and on
-  screen the cove's edge is a still burnt-orange ribbon with "EXPLORE
-  ZAMBOANGUITA" repeated along it in off-white — `coveRibbon` in the page draws
-  the curve at the cove's real size so the letters are not stretched, and
-  redraws on resize) — four category photo tiles
+  screen the cove's edge is a ribbon made of the footer's flat tiles
+  (`window.ztimsTiles` from `site-footer.js`, as an SVG pattern), the same
+  thickness as before, with one "EXPLORE ZAMBOANGUITA" on it, in the middle of
+  the flat bottom, the tiles behind the letters (off-white with an ember
+  outline, the user's choice) — `coveRibbon` in the page draws
+  the curve at the cove's real size so tiles and letters are not stretched,
+  and redraws on resize) — four category photo tiles
   (`#categoryTiles`; tiles and the category menu are one control,
   `setCategory`; a second tap shows everything), a status line only while a
   search or category narrows the list (`#browseStatus`, with "Show all"), and

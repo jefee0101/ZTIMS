@@ -355,10 +355,6 @@ body { overflow-x: hidden; }
                         <button type="submit" class="btn btn-pill btn-primary shrink-0">Search</button>
                     </form>
 
-                    <div class="rise flex flex-wrap gap-x-5 gap-y-2 mt-4 text-sm font-bold" style="--rise-delay:.38s">
-                        <a href="#map" class="hero-link"><span class="material-symbols-outlined !text-base" aria-hidden="true">map</span>View the map</a>
-                        <a href="#plan" class="hero-link"><span class="material-symbols-outlined !text-base" aria-hidden="true">support_agent</span>Plan your visit</a>
-                    </div>
                     </div>
                   </div>
                 </div>
@@ -1082,12 +1078,14 @@ body { overflow-x: hidden; }
     })();
 
     /* ---------------- the ribbon along the cove ----------------
-       The curve where the film meets the page is drawn as a burnt-orange
-       ribbon with "EXPLORE ZAMBOANGUITA" repeated along it in off-white — on a
-       solid fill, so it reads whatever the film shows. It is drawn at the
-       real size of the cove (the static paths in the markup are stretched to
-       fit, which would squash letters) and again whenever the cove's size
-       changes. The same two shapes as before: the wide one from 1280px. */
+       The curve where the film meets the page is a ribbon made of the
+       footer's flat tiles (window.ztimsTiles, from site-footer.js), the same
+       thickness as before; one "EXPLORE ZAMBOANGUITA" sits on it, in the
+       middle of the flat bottom, with the tiles behind the letters — an ember
+       outline round each letter keeps it readable over them. Drawn at the cove's real size (the
+       static paths in the markup are stretched to fit, which would squash
+       tiles and letters) and again whenever that size changes. The wide
+       shape from 1280px, as before. */
     (function coveRibbon() {
         const svg = document.querySelector('.ztims-cove__curve');
         if (!svg || !svg.getBBox) return;
@@ -1104,31 +1102,29 @@ body { overflow-x: hidden; }
         let drawnFor = '';
         function draw() {
             const W = Math.round(svg.clientWidth), H = Math.round(svg.clientHeight);
-            if (!W || !H || drawnFor === W + 'x' + H) return;
-            drawnFor = W + 'x' + H;
+            const tiles = window.ztimsTiles || '';
+            const key = `${W}x${H}${tiles ? 't' : ''}`;
+            if (!W || !H || drawnFor === key) return;
+            drawnFor = key;
             const wide = window.matchMedia('(min-width: 1280px)').matches;
             const ribbon = W >= 640 ? 34 : 28;   // theme.css .cove-ribbon stroke-width
             const d = edge(W, H, wide, ribbon / 2);
+            const flatY = (wide ? 172 : 196) / 240 * H;
+            // The tiles are 80 units square; here they are as tall as the
+            // ribbon is wide, lined up with its flat bottom.
+            const scale = ribbon / 80;
+            const pattern = tiles
+                ? `<defs><pattern id="coveTiles" patternUnits="userSpaceOnUse" x="0" y="${(flatY - ribbon / 2).toFixed(1)}" width="${(800 * scale).toFixed(2)}" height="${ribbon}">` +
+                  `<g transform="scale(${scale.toFixed(4)})">${tiles}</g></pattern></defs>`
+                : '';
             svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-            svg.innerHTML =
+            svg.innerHTML = pattern +
                 `<path class="cove-fill" d="${d} L${W},${H} L0,${H} Z"/>` +
-                `<path id="coveEdge" class="cove-ribbon" d="${d}"/>` +
-                // The narrow shape's corners are too tight for letters to
-                // bend round, so there the words run along the flat bottom only.
-                (wide ? '' : `<path id="coveFlat" fill="none" stroke="none" d="M${(88 / 1440 * W + ribbon).toFixed(1)},${(196 / 240 * H).toFixed(1)} L${(1352 / 1440 * W - ribbon).toFixed(1)},${(196 / 240 * H).toFixed(1)}"/>`) +
-                `<text class="cove-ribbon__text" dy="0.36em"><textPath href="#${wide ? 'coveEdge' : 'coveFlat'}" startOffset="50%" text-anchor="middle"></textPath></text>`;
-            const path = svg.querySelector(wide ? '#coveEdge' : '#coveFlat');
-            const textPath = svg.querySelector('textPath');
-            // Whole words only, centred: as many as fit on the part of the
-            // ribbon that is on screen, so none is cut at either end.
-            const unit = '  \u00B7  ' + WORDS;
-            textPath.textContent = unit;
-            const unitLength = svg.querySelector('text').getComputedTextLength() || 200;
-            const offScreen = wide ? 40 / 1440 * W * 2 + ribbon * 2 : 0;
-            const count = Math.max(1, Math.floor((path.getTotalLength() - offScreen) / unitLength));
-            textPath.textContent = (unit.repeat(count) + '  \u00B7').trim();
+                `<path class="cove-ribbon" d="${d}"${tiles ? ' style="stroke:url(#coveTiles)"' : ''}/>` +
+                `<text class="cove-ribbon__text cove-ribbon__text--over" x="${(W / 2).toFixed(1)}" y="${flatY.toFixed(1)}" dy="0.36em" text-anchor="middle">${WORDS}</text>`;
         }
         draw();
+        window.addEventListener('ztims-tiles', () => { drawnFor = ''; draw(); });
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawnFor = ''; draw(); });
         if ('ResizeObserver' in window) new ResizeObserver(draw).observe(svg);
         else window.addEventListener('resize', draw);

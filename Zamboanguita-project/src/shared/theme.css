@@ -654,6 +654,15 @@ h1, h2, h3, h4, .font-display, .font-headline {
     stroke-width: 28px;
     stroke-linejoin: round;
 }
+/* The words over the tiles: off-white with an ember outline drawn under the
+   fill, so they read over any tile behind them. */
+.ztims-cove__curve .cove-ribbon__text--over {
+    fill: rgb(255 253 250);
+    stroke: rgb(var(--brand-ember)); stroke-width: 4px; stroke-linejoin: round;
+    paint-order: stroke fill;
+    font-size: 12px; letter-spacing: .2em;
+}
+@media (min-width: 640px) { .ztims-cove__curve .cove-ribbon__text--over { font-size: 15px; } }
 .ztims-cove__curve .cove-ribbon__text {
     fill: rgb(var(--ztims-on-primary));
     font-family: var(--ztims-font-body);
@@ -663,7 +672,16 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 @media (min-width: 640px) {
     .ztims-cove__curve .cove-ribbon { stroke-width: 34px; }
-    .ztims-cove__curve .cove-ribbon__text { font-size: 13px; }
+    /* The words over the tiles: off-white with an ember outline drawn under the
+   fill, so they read over any tile behind them. */
+.ztims-cove__curve .cove-ribbon__text--over {
+    fill: rgb(255 253 250);
+    stroke: rgb(var(--brand-ember)); stroke-width: 4px; stroke-linejoin: round;
+    paint-order: stroke fill;
+    font-size: 12px; letter-spacing: .2em;
+}
+@media (min-width: 640px) { .ztims-cove__curve .cove-ribbon__text--over { font-size: 15px; } }
+.ztims-cove__curve .cove-ribbon__text { font-size: 13px; }
 }
 
 /* Two shapes for one idea. preserveAspectRatio stretches the path to the
@@ -1769,13 +1787,6 @@ button[onclick="toggleTheme()"] {
 .hero-search__field:focus { outline: none; border-color: rgb(var(--ztims-secondary)); box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / .35); }
 .hero-search .btn { height: 48px; padding: 0 1.4rem; font-size: .9rem; }
 
-/* The two quiet links under the search: off-white words on the film. */
-.hero-link {
-    display: inline-flex; align-items: center; gap: .35rem; min-height: 32px;
-    color: rgb(255 253 250);
-    text-decoration: underline; text-decoration-color: rgb(255 253 250 / .5); text-underline-offset: 4px;
-}
-.hero-link:hover { text-decoration-color: rgb(var(--brand-tangerine)); }
 
 /* What the list is narrowed to, and the way back. */
 .browse-status {
