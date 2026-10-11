@@ -493,34 +493,67 @@ body { overflow-x: hidden; }
 
             <div id="settingsLoading"></div>
 
-            <!-- The sign-in and its safety. The establishment's own details
-                 (name, manager, phone, public email) are on Establishment → Contact. -->
-            <div id="settingsContent" hidden class="space-y-6 max-w-3xl">
-            <section class="glass-panel p-5 sm:p-7 space-y-4">
+            <div id="settingsContent" hidden class="space-y-8">
+            <!-- One subpage per part, as on the officer's Settings. Each has its
+                 own address (resort_settings.html#security), so a link can open
+                 one, and Back goes to the previous one. -->
+            <div role="tablist" aria-label="Account" class="flex overflow-x-auto gap-x-1 sm:gap-x-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-account" aria-controls="accountSection" aria-selected="true" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">badge</span>My Account</button>
+                <button role="tab" id="tab-security" aria-controls="securitySection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">shield_lock</span>Security</button>
+            </div>
+
+            <!-- 1. My Account: the person behind the account. -->
+            <section id="accountSection" role="tabpanel" aria-labelledby="tab-account" class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
                 <h2 class="text-xl font-headline font-bold text-primary flex items-center gap-2">
-                    <span class="material-symbols-outlined">manage_accounts</span> Account
+                    <span class="material-symbols-outlined">badge</span> My Account
                 </h2>
-                <dl class="text-sm divide-y divide-outline-variant/30">
-                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
-                        <dt class="text-on-surface-variant">Sign-in email
-                            <span class="tone-pill tone-neutral ml-1 whitespace-nowrap">Set by the Tourism Office</span></dt>
-                        <dd id="signInEmail" class="font-bold text-on-surface text-right break-all">—</dd>
+                <div class="flex items-center gap-4">
+                    <div id="myInitials" aria-hidden="true"
+                         class="w-16 h-16 shrink-0 flex items-center justify-center bg-primary text-on-primary text-2xl font-black font-headline">—</div>
+                    <div class="min-w-0">
+                        <p id="myNameLine" class="text-lg font-bold text-on-surface truncate">—</p>
+                        <p id="myEstablishmentLine" class="text-support truncate"></p>
                     </div>
-                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
-                        <dt class="text-on-surface-variant">Account issued</dt>
-                        <dd id="accountCreated" class="font-bold text-on-surface text-right">—</dd>
-                    </div>
-                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
-                        <dt class="text-on-surface-variant">Signed in since</dt>
-                        <dd id="signedInSince" class="font-bold text-on-surface text-right">—</dd>
-                    </div>
-                </dl>
+                </div>
+                <form id="accountForm" class="space-y-4" novalidate>
+                    <label class="block">
+                        <span class="field-label">Full name</span>
+                        <input id="myFullName" type="text" maxlength="120" autocomplete="name" class="field w-full" placeholder="e.g., Rosa L. Villanueva"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Contact number</span>
+                        <input id="myContact" type="tel" maxlength="40" autocomplete="tel" class="field w-full" placeholder="e.g., 0917 123 4567"/>
+                    </label>
+                    <dl class="text-sm border-t border-outline-variant/30 pt-2">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Sign-in email <span class="tone-pill tone-neutral ml-1 whitespace-nowrap">Set by the Tourism Office</span></dt>
+                            <dd id="signInEmail" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Account issued</dt>
+                            <dd id="accountCreated" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                    </dl>
+                    <p id="accountMessage" hidden class="text-sm px-4 py-3"></p>
+                    <button id="saveAccountBtn" type="submit" class="btn btn-primary w-full min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">save</span> Save changes
+                    </button>
+                </form>
             </section>
 
-            <section id="securitySection" class="glass-panel p-5 sm:p-7 space-y-6">
+            <!-- 2. Security: the same as the officer's and the guide's. -->
+            <section id="securitySection" role="tabpanel" aria-labelledby="tab-security" hidden class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
                 <h2 class="text-xl font-headline font-bold text-primary flex items-center gap-2">
                     <span class="material-symbols-outlined">shield_lock</span> Security
                 </h2>
+                <dl class="text-sm">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Signed in since</dt>
+                            <dd id="signedInSince" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                </dl>
                 <form id="passwordForm" class="space-y-4">
                     <h3 class="font-bold text-on-surface">Change password</h3>
                     <label class="block">
@@ -651,11 +684,86 @@ body { overflow-x: hidden; }
                 : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
+        function initials(name) {
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            return parts.length ? (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() : '—';
+        }
+
         function fillForm(manager) {
+            document.getElementById('myFullName').value = manager.managerName || '';
+            document.getElementById('myContact').value = manager.phone || '';
+            document.getElementById('myInitials').textContent = initials(manager.managerName || manager.establishmentName);
+            document.getElementById('myNameLine').textContent = manager.managerName || 'Name not added yet';
+            document.getElementById('myEstablishmentLine').textContent = manager.establishmentName || '';
             document.getElementById('signInEmail').textContent = manager.email || '';
             document.getElementById('accountCreated').textContent = formatDate(manager.createdAt);
             if (manager.establishmentName) localStorage.setItem('establishmentName', manager.establishmentName);
             mountPortalAccountMenu();
+        }
+
+        // The manager's own name and number (the same two the Establishment's
+        // Contact shows visitors). The sign-in email is the office's to change.
+        async function saveAccount(event) {
+            event.preventDefault();
+            showMessage('accountMessage', '');
+            const restore = setButtonLoading(document.getElementById('saveAccountBtn'), 'Saving...');
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        managerName: document.getElementById('myFullName').value.trim(),
+                        phone: document.getElementById('myContact').value.trim()
+                    })
+                });
+                if (response.status === 401) return handleExpiredSession();
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) throw new Error(result.message || `The server refused (status ${response.status}).`);
+                fillForm(result.manager || {});
+                showMessage('accountMessage', result.message || 'Your details have been saved.');
+            } catch (error) {
+                showMessage('accountMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        /* ---- the subpages, as on the officer's Settings ---- */
+        const SUBPAGES = ['account', 'security'];
+        const subpageFromAddress = () => {
+            const asked = window.location.hash.slice(1);
+            return SUBPAGES.includes(asked) ? asked : 'account';
+        };
+        function showSubpage(name, { focusTab = false } = {}) {
+            for (const page of SUBPAGES) {
+                const tab = document.getElementById('tab-' + page);
+                const on = page === name;
+                tab.setAttribute('aria-selected', String(on));
+                tab.tabIndex = on ? 0 : -1;
+                document.getElementById(tab.getAttribute('aria-controls')).hidden = !on;
+            }
+            if (focusTab) document.getElementById('tab-' + name).focus();
+        }
+        function wireSubpages() {
+            const list = document.querySelector('[role="tablist"]');
+            list.addEventListener('click', event => {
+                const tab = event.target.closest('[role="tab"]');
+                if (!tab) return;
+                const name = tab.id.slice(4);
+                if (name !== subpageFromAddress()) history.pushState(null, '', '#' + name);
+                showSubpage(name);
+            });
+            list.addEventListener('keydown', event => {
+                const step = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity }[event.key];
+                if (step === undefined) return;
+                event.preventDefault();
+                const at = SUBPAGES.indexOf(subpageFromAddress());
+                const next = SUBPAGES[Number.isFinite(step) ? (at + step + SUBPAGES.length) % SUBPAGES.length : (step < 0 ? 0 : SUBPAGES.length - 1)];
+                history.pushState(null, '', '#' + next);
+                showSubpage(next, { focusTab: true });
+            });
+            window.addEventListener('popstate', () => showSubpage(subpageFromAddress()));
+            showSubpage(subpageFromAddress());
         }
 
         async function loadProfile() {
@@ -752,6 +860,8 @@ body { overflow-x: hidden; }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            wireSubpages();
+            document.getElementById('accountForm').addEventListener('submit', saveAccount);
             document.getElementById('signedInSince').textContent = signedInSince();
             document.getElementById('signOutEverywhereBtn').addEventListener('click', signOutEverywhere);
             mountPortalAccountMenu();
