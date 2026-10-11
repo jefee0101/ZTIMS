@@ -69,7 +69,18 @@
         }
         /* Likewise: a primary button is ocean into coastal blue. Gold is for the
            occasional highlight, not for every call to action. */
-        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
+        /* The page's older buttons, made flat like the rest of the site: a solid
+           burnt-orange pill, words in sentence case, no glow. */
+        .btn-primary-gradient {
+            background: rgb(var(--ztims-primary)) !important;
+            color: rgb(var(--ztims-on-primary)) !important;
+            border-radius: 9999px !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            font-size: .875rem !important;
+            box-shadow: none !important;
+        }
+        .btn-primary-gradient:hover { background: rgb(var(--ztims-primary-dim)) !important; transform: none !important; }
 
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
@@ -515,7 +526,7 @@ body { overflow-x: hidden; }
             return `
                 <a id="bookNowBtn" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
                    class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                    <span class="material-symbols-outlined">open_in_new</span> Book Now
+                    <span class="material-symbols-outlined">open_in_new</span> ${String(spot.category || '').toUpperCase() === 'ACCOMMODATION' ? 'Book a room' : 'Book now'}
                 </a>
                 <p class="text-support text-center mt-3">
                     Booking is handled on ${escapeHtml(managerName(establishment) || 'the establishment')}'s own website. This opens in a new tab.
@@ -721,7 +732,7 @@ body { overflow-x: hidden; }
 
                     <button type="button" id="getDirectionsBtn"
                             class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                        <span class="material-symbols-outlined !text-lg">near_me</span> Get Directions
+                        <span class="material-symbols-outlined !text-lg">near_me</span> Get directions
                     </button>
 
                     <div id="directionsPanel" hidden class="space-y-4">
@@ -1694,18 +1705,20 @@ body { overflow-x: hidden; }
     // What this destination lets a visitor do, and the buttons for it: under the
     // photo, and fixed to the bottom of a phone's screen.
     const actions = { tickets: false, guide: false, directions: false, bookingUrl: '' };
+    let currentCategory = '';
     function startActions(spot) {
+        currentCategory = spot.category || '';
         actions.directions = Boolean(spotPoint(spot));
         actions.bookingUrl = safeExternalUrl(spot.bookingUrl) || '';
         drawActions();
     }
     function actionButtons(compact) {
-        const size = compact ? 'flex-1 min-w-0 !px-2 !text-xs' : '';
+        const size = 'btn-pill' + (compact ? ' flex-1 min-w-0 !px-2 !text-xs' : '');
         const list = [];
         if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
-        if (actions.guide) list.push(`<button type="button" data-act="guide" class="btn ${actions.tickets ? 'btn-secondary' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">hiking</span>Book a guide</button>`);
-        if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>Book now</a>`);
-        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn btn-secondary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+        if (actions.guide) list.push(`<button type="button" data-act="guide" class="btn ${actions.tickets ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">hiking</span>Book a guide</button>`);
+        if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${String(currentCategory).toUpperCase() === 'ACCOMMODATION' ? 'Book a room' : 'Book now'}</a>`);
+        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.guide || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
         return list.join('');
     }
     function drawActions() {
@@ -1789,113 +1802,122 @@ body { overflow-x: hidden; }
             : (a.same === b.same ? 0 : a.same ? -1 : 1));
         const nearby = here && others[0].km !== null;
         box.innerHTML = `
-            <h2 id="relatedHeading" class="text-2xl font-display font-bold text-on-surface mb-4">${nearby ? 'Nearby places to visit' : 'More places to explore'}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">${others.slice(0, 3).map(({ spot: s, km }) => `
-                <a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="ztims-card card-destination group flex flex-col overflow-hidden">
-                    <div class="h-36 bg-surface-variant overflow-hidden">
-                        <img class="w-full h-full object-cover" src="${escapeHtml(s.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="" loading="lazy"/>
+            <h2 id="relatedHeading" class="spot-h2">${nearby ? 'Nearby places to visit' : 'More places to explore'}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">${others.slice(0, 3).map(({ spot: s, km }) => {
+                const b = heroBadge(s);
+                return `
+                <article class="ztims-card home-card group">
+                    <div class="home-card__photo">
+                        <img src="${escapeHtml(s.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="" loading="lazy" decoding="async"/>
                     </div>
-                    <div class="p-4">
-                        <p class="text-label font-bold uppercase tracking-widest text-primary">${escapeHtml(categoryTitle(s.category))}</p>
-                        <h3 class="font-display font-semibold text-on-surface">${escapeHtml(s.title)}</h3>
-                        <p class="text-support flex items-center gap-1 mt-1"><span class="material-symbols-outlined !text-sm text-accent">${km !== null ? 'near_me' : 'location_on'}</span>${km !== null ? `${km < 1 ? '<1' : km.toFixed(1)} km away` : escapeHtml(s.location || '')}</p>
+                    <div class="home-card__body">
+                        <span class="cat-badge ${b.cls} self-start !text-[10px] !py-0.5">${escapeHtml(categoryTitle(s.category))}</span>
+                        <h3 class="home-card__title"><a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="home-card__link">${escapeHtml(s.title)}</a></h3>
+                        <p class="home-card__meta"><span class="material-symbols-outlined" aria-hidden="true">${km !== null ? 'near_me' : 'location_on'}</span>${km !== null ? `${km < 1 ? 'Under 1' : km.toFixed(1)} km away` : escapeHtml(s.barangay || s.location || '')}</p>
                     </div>
-                </a>`).join('')}
+                </article>`; }).join('')}
             </div>`;
         box.hidden = false;
     }
 
+    // Pesos as visitors read them: ₱50, ₱1,250, ₱12.50.
+    function peso(amount) {
+        const n = Number(amount) || 0;
+        return Number.isInteger(n) ? `₱${n.toLocaleString('en-PH')}` : `₱${n.toFixed(2)}`;
+    }
+
+    /* The facts a visitor needs before going, in one row of tiles: when it is
+       open, what it costs to get in, any travel fee, whether a guide must come,
+       and where it is. Only what applies to this place is shown. */
+    function glanceFacts(spot) {
+        const isStay = String(spot.category || '').toUpperCase() === 'ACCOMMODATION' || spot.type === 'accommodation';
+        const rawDays = String(spot.workingDays || '').trim();
+        const rawTime = String(spot.workingTime || '').trim();
+        const days = !rawDays || /^every ?day$/i.test(rawDays) ? 'Every day' : rawDays;
+        const time = !rawTime || /^all ?day$/i.test(rawTime) ? 'All day' : rawTime;
+        const fee = Number(spot.entranceFee) || 0;
+        const travel = Number(spot.travelFee) || 0;
+        const facts = [
+            { icon: 'schedule', label: isStay ? 'Open' : 'Open', value: days, sub: time },
+        ];
+        if (!isStay) facts.push({ icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person' : '' });
+        if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
+        if (spot.requiresGuide) facts.push({ icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: 'book below' });
+        facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });
+        return `
+            <ul class="spot-facts" aria-label="At a glance">
+                ${facts.map(f => `
+                    <li class="spot-fact">
+                        <span class="material-symbols-outlined spot-fact__icon" aria-hidden="true">${f.icon}</span>
+                        <span class="spot-fact__label">${escapeHtml(f.label)}</span>
+                        <span class="spot-fact__value">${escapeHtml(f.value)}</span>
+                        ${f.sub ? `<span class="spot-fact__sub">${escapeHtml(f.sub)}</span>` : ''}
+                    </li>`).join('')}
+            </ul>`;
+    }
+
+    /* One column, read top to bottom in the order a visitor asks: what is
+       this place, what can I do here, the facts at a glance, about it, photos,
+       booking, getting there, and what else is near. */
     function renderSpot(spot) {
-        const typeLabel = spot.type === 'accommodation' ? 'Accommodation' : 'Tourist Spot';
         const photos = spotPhotos(spot);
+        const badge = heroBadge(spot);
+        const contact = safeExternalUrl(spot.bookingUrl) ? '' : bookingPanel(spot);
 
         content.innerHTML = `
-            <section class="relative h-[38vh] sm:h-[45vh] min-h-[260px] sm:min-h-[320px] w-full overflow-hidden">
+            <section class="spot-hero relative w-full overflow-hidden">
                 <img class="w-full h-full object-cover" src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <!-- A dark scrim, identical in both themes, because the text on it is
-                     white in both. It was keyed to the page background, which in
-                     light mode faded the photograph to sand and took the title
-                     with it. Kept to the lower half so the picture still reads. -->
+                <!-- A dark scrim under the words, the same in both themes, kept
+                     to the lower part so the picture still reads. -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 right-0 px-5 sm:px-6 md:px-12 pb-6 sm:pb-8">
-                    <span class="cat-badge ${heroBadge(spot).cls} !bg-surface/95 backdrop-blur-sm mb-3"><span class="material-symbols-outlined !text-sm">${heroBadge(spot).icon}</span>${escapeHtml(typeLabel)}</span>
-                    <h1 class="text-[1.9rem] sm:text-4xl md:text-6xl font-display font-black tracking-tight sm:tracking-tighter text-white mb-2 break-words">${escapeHtml(spot.title)}</h1>
-                    <p class="text-white/80 flex items-center gap-1.5 text-sm">
-                        <span class="material-symbols-outlined !text-lg">location_on</span>${escapeHtml(spot.location || '')}
-                    </p>
+                <div class="absolute bottom-0 left-0 right-0">
+                    <div class="spot-wrap pb-6 sm:pb-8">
+                        <span class="cat-badge ${badge.cls} !bg-surface mb-3"><span class="material-symbols-outlined !text-sm" aria-hidden="true">${badge.icon}</span>${escapeHtml(categoryTitle(spot.category))}</span>
+                        <h1 class="text-[1.9rem] sm:text-4xl md:text-5xl font-display font-black tracking-tight text-white mb-2 break-words">${escapeHtml(spot.title)}</h1>
+                        <p class="text-white/90 flex items-center gap-1.5 text-sm">
+                            <span class="material-symbols-outlined !text-lg" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay ? `${spot.barangay}, Zamboanguita` : (spot.location || 'Zamboanguita'))}
+                        </p>
+                    </div>
                 </div>
             </section>
 
-            <div class="px-5 sm:px-6 md:px-12 pt-5 max-w-7xl mx-auto space-y-4">
-                <nav aria-label="Breadcrumb" class="text-support flex flex-wrap items-center gap-1.5">
-                    <a href="../index.html#browse" class="font-bold hover:text-primary hover:underline">Destinations</a>
-                    <span aria-hidden="true">›</span>
-                    <a href="../index.html?category=${encodeURIComponent(String(spot.category || '').toUpperCase())}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot.category))}</a>
-                    <span aria-hidden="true">›</span>
-                    <span aria-current="page" class="text-on-surface">${escapeHtml(spot.title)}</span>
-                </nav>
-                <div id="actionBar" hidden class="hidden lg:flex flex-wrap gap-2"></div>
-            </div>
-            <div class="px-5 sm:px-6 md:px-12 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 max-w-7xl mx-auto">
-                <div class="lg:col-span-2 space-y-8">
-                    <div>
-                        <span class="text-primary text-label font-bold uppercase tracking-widest block mb-2">${escapeHtml(spot.label || spot.category || '')}</span>
-                        <h2 class="text-2xl font-display font-bold text-on-surface mb-3">About this destination</h2>
-                        ${describe(spot.description)}
-                    </div>
-
-                    ${photoGallerySection(photos)}
-
-                    <div>
-                        <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Know before you go</h2>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
-                                <span class="material-symbols-outlined text-accent !text-2xl mb-2">schedule</span>
-                                <p class="text-label uppercase tracking-widest font-bold mb-1">Open</p>
-                                <p class="text-on-surface font-bold">${escapeHtml(spot.workingDays || 'Everyday')}</p>
-                                <p class="text-on-surface-variant text-sm">${escapeHtml(spot.workingTime || 'All Day')}</p>
-                            </div>
-                            <div class="bg-surface border border-outline-variant/20 rounded-xl p-5">
-                                <span class="material-symbols-outlined text-accent !text-2xl mb-2">category</span>
-                                <p class="text-label uppercase tracking-widest font-bold mb-1">Category</p>
-                                <p class="text-on-surface font-bold">${escapeHtml(spot.category || '—')}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="guideRequirement" class="scroll-mt-24"></div>
-
-                    <div id="ticketOffer" class="scroll-mt-24"></div>
-
-                    ${directionsSection(spot)}
-
+            <div class="spot-wrap pt-4 pb-12 space-y-8 sm:space-y-10">
+                <div class="space-y-4">
+                    <nav aria-label="Breadcrumb" class="text-support flex flex-wrap items-center gap-1.5">
+                        <a href="../index.html#browse" class="font-bold hover:text-primary hover:underline">Destinations</a>
+                        <span aria-hidden="true">›</span>
+                        <a href="../index.html?category=${encodeURIComponent(String(spot.category || '').toUpperCase())}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot.category))}</a>
+                        <span aria-hidden="true">›</span>
+                        <span aria-current="page" class="text-on-surface">${escapeHtml(spot.title)}</span>
+                    </nav>
+                    <div id="actionBar" hidden class="hidden lg:flex flex-wrap gap-2"></div>
                 </div>
 
-                <aside class="lg:col-span-1">
-                    <div class="bg-surface border border-outline-variant/30 rounded-2xl p-6 sticky top-24">
-                        <h3 class="font-display font-bold text-lg text-on-surface mb-4 flex items-center gap-2">
-                            <span class="material-symbols-outlined !text-xl">payments</span> Estimated fees
-                        </h3>
-                        <div class="space-y-3 mb-6">
-                            <div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
-                                <span class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined !text-lg">directions_bus</span>Travel</span>
-                                <span class="font-bold text-sm text-primary">${formatPeso(spot.travelFee)}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined !text-lg">door_open</span>Entrance</span>
-                                <span class="font-bold text-sm text-primary">${formatPeso(spot.entranceFee)}</span>
-                            </div>
-                        </div>
-                        ${bookingPanel(spot)}
-                        ${spotPoint(spot) ? `
-                        <button type="button" id="asideDirectionsBtn"
-                                class="w-full mt-3 bg-surface-container-high border border-outline-variant/40 text-on-surface py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-outline-variant/30 transition-colors">
-                            <span class="material-symbols-outlined !text-lg">near_me</span> Get Directions
-                        </button>` : ''}
-                    </div>
-                </aside>
+                ${glanceFacts(spot)}
+
+                <section>
+                    <h2 class="spot-h2">About</h2>
+                    ${describe(spot.description)}
+                </section>
+
+                ${photoGallerySection(photos)}
+
+                <div id="guideRequirement" class="scroll-mt-24 empty:hidden"></div>
+                <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
+                ${safeExternalUrl(spot.bookingUrl) ? `
+                <section class="spot-panel">
+                    <h2 class="spot-h2">${String(spot.category || '').toUpperCase() === 'ACCOMMODATION' ? 'Book your stay' : 'Book your visit'}</h2>
+                    ${bookingPanel(spot)}
+                </section>` : contact ? `
+                <section class="spot-panel">
+                    <h2 class="spot-h2">Contact</h2>
+                    ${contact}
+                </section>` : ''}
+
+                ${directionsSection(spot)}
+
+                <section id="relatedPlaces" hidden aria-labelledby="relatedHeading"></section>
             </div>
-            <section id="relatedPlaces" hidden class="px-5 sm:px-6 md:px-12 pb-12 max-w-7xl mx-auto" aria-labelledby="relatedHeading"></section>
         `;
     }
 

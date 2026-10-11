@@ -592,12 +592,20 @@ Frontend only, no tables of their own:
   theme toggle is a circle on every page, portals included (`#themeToggleBtn`
   and the `toggleDarkMode()` buttons, in `theme.css`). These curves are the
   user's decision; corners stay square elsewhere.
-- **Destination** (`spot.html`): a breadcrumb (Destinations › category ›
-  place); the actions the place really offers — Buy tickets, Book a guide, Book
-  now (its own booking link), Directions — as `#actionBar` under the photo on a
-  computer and `#mobileActions` fixed to the bottom of a phone (`drawActions`;
-  never both); "Nearby places to visit" (nearest first when both have a pin,
-  else "More places to explore", same category first; `renderRelated`).
+- **Destination** (`spot.html`): one column (`.spot-wrap`, ~52rem), read top to
+  bottom in the order a visitor asks — the photo with the category pill, name
+  and barangay; a breadcrumb (Destinations › category › place); the actions the
+  place really offers as pills — Buy tickets, Book a guide, Book a room / Book
+  now (its own booking link), Directions — as `#actionBar` on a computer and
+  `#mobileActions` fixed to the bottom of a phone (`drawActions`; never both);
+  **At a glance** tiles (`glanceFacts`: open days and hours, entrance or Free,
+  a travel fee only if set, "Tourist guide: Required" only if so, barangay);
+  About; Photos; the guide and ticket sections; Book your stay / visit (its
+  booking link) or Contact; Getting there (address, emergency numbers, Get
+  directions); "Nearby places to visit" (Home's card style; nearest first when
+  both have a pin, else "More places to explore", same category first;
+  `renderRelated`). Flat: the page's older gradient buttons are restyled as
+  solid pills in its own style block; prices without cents (`peso`).
 - **Steps** (`.journey-steps`): booking a guide shows Your details → Payment
   (or Pay onsite) → Confirmed; tickets show Date & visitors → Payment → Your
   ticket; `payment.html` continues the same steps.
