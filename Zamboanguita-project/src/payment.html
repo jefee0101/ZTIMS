@@ -359,8 +359,9 @@ body { overflow-x: hidden; }
 
     // Where the visitor is: chose, paid, done.
     function steps(c) {
-        const labels = c.kind === 'ticket' ? ['Date & visitors', 'Payment', 'Your ticket'] : ['Your details', 'Payment', 'Confirmed'];
-        const current = c.status === 'paid' ? 3 : 1;
+        const labels = c.kind === 'ticket' ? ['Date & visitors', 'Payment', 'Your ticket'] : ['Your details', 'Pick a guide', 'Payment', 'Confirmed'];
+        // Paid: every step done. Otherwise the visitor is at Payment.
+        const current = c.status === 'paid' ? labels.length : labels.length - 2;
         return `<ol class="journey-steps" aria-label="Steps">${labels.map((label, i) => `
             <li class="journey-step${i === current ? ' is-current' : ''}${i < current ? ' is-done' : ''}"${i === current ? ' aria-current="step"' : ''}>
                 <span class="journey-step__num">${i < current ? '✓' : i + 1}</span><span>${esc(label)}</span>

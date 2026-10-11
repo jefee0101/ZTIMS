@@ -599,15 +599,21 @@ Frontend only, no tables of their own:
   now (its own booking link), Directions — as `#actionBar` on a computer and
   `#mobileActions` fixed to the bottom of a phone (`drawActions`; never both);
   **At a glance** tiles (`glanceFacts`: open days and hours, entrance or Free,
-  a travel fee only if set, "Tourist guide: Required" only if so, barangay);
-  About; Photos; the guide and ticket sections; Book your stay / visit (its
+  a travel fee only if set, "Tourist guide: Required" only if so — with the
+  guide fee and group size, or that no guide is free — barangay); About;
+  Photos; the ticket section (a guided place has no panel of its own: "Book a
+  guide" opens the booking form, where a guide is chosen, through the hidden
+  `#openBookGuideBtn`); Book your stay / visit (its
   booking link) or Contact; Getting there (address, emergency numbers, Get
   directions); "Nearby places to visit" (Home's card style; nearest first when
   both have a pin, else "More places to explore", same category first;
   `renderRelated`). Flat: the page's older gradient buttons are restyled as
   solid pills in its own style block; prices without cents (`peso`).
-- **Steps** (`.journey-steps`): booking a guide shows Your details → Payment
-  (or Pay onsite) → Confirmed; tickets show Date & visitors → Payment → Your
+- **Steps** (`.journey-steps`): booking a guide is Your details → Pick a guide
+  → Payment (or Pay onsite) → Confirmed — the form has two panes
+  (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
+  guides free for that date, time and group, and Submit), then the reference
+  with Pay online now or the onsite note; tickets show Date & visitors → Payment → Your
   ticket; `payment.html` continues the same steps.
 - **After paying** (`payment.html`): "What's next" — the date, Directions
   (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`

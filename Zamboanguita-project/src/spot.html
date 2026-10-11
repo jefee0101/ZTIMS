@@ -289,7 +289,9 @@ body { overflow-x: hidden; }
         <h3 class="text-xl font-display font-bold text-on-surface mb-3">Book a tourist guide</h3>
         <ol id="bookSteps" class="journey-steps mb-5" aria-label="Booking steps"></ol>
 
-        <form id="guideBookingForm" class="space-y-3">
+        <form id="guideBookingForm">
+          <!-- Step 1: Your details. -->
+          <div id="bookPaneDetails" class="space-y-3">
             <div>
                 <label class="block text-label font-bold uppercase tracking-wider mb-1">Full name</label>
                 <input id="bookName" type="text" required autocomplete="name"
@@ -375,11 +377,6 @@ body { overflow-x: hidden; }
             </div>
             <p id="bookGroupHint" class="text-support"></p>
 
-            <fieldset>
-                <legend class="block text-label font-bold uppercase tracking-wider mb-1">Your guide</legend>
-                <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
-            </fieldset>
-
             <div>
                 <label class="block text-label font-bold uppercase tracking-wider mb-1">Anything the office should know <span class="font-normal normal-case">(optional)</span></label>
                 <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…"
@@ -391,19 +388,36 @@ body { overflow-x: hidden; }
                 <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
             </p>
 
-            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+            <button type="button" id="bookNextBtn"
+                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
+                Next: pick a guide <span class="material-symbols-outlined !text-lg" aria-hidden="true">arrow_forward</span>
+            </button>
+          </div>
 
+          <!-- Step 2: Pick a guide, for the date, time and group just given. -->
+          <div id="bookPaneGuide" hidden class="space-y-3">
+            <div class="flex items-start justify-between gap-3 border border-outline-variant/40 p-3">
+                <p id="bookSummary" class="text-sm text-on-surface"></p>
+                <button type="button" id="bookBackBtn" class="shrink-0 text-sm font-bold underline text-primary min-h-[32px]">Change</button>
+            </div>
+            <fieldset>
+                <legend class="block text-label font-bold uppercase tracking-wider mb-2">Pick a guide</legend>
+                <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
+            </fieldset>
             <button type="submit" id="submitBookingBtn"
-                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform">
+                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold btn-primary-gradient">
                 Submit request
             </button>
+          </div>
+
+          <p id="bookingError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
         </form>
 
         <div id="bookingResult" hidden class="text-center space-y-3">
             <span class="material-symbols-outlined !text-5xl tone-success">task_alt</span>
-            <h4 class="text-lg font-display font-bold text-on-surface">Booking submitted</h4>
+            <h4 class="text-lg font-display font-bold text-on-surface">Booking request sent</h4>
             <p class="text-label uppercase tracking-widest">Reference</p>
-            <p id="bookingReference" class="text-2xl font-display font-black text-surface-bright tracking-wider select-all"></p>
+            <p id="bookingReference" class="text-2xl font-display font-black text-primary tracking-wider select-all"></p>
             <p id="bookingNextStep" class="text-sm text-on-surface-variant bg-surface-container-high border border-outline-variant/30 rounded-xl p-3">
                 Please proceed to the Municipal Tourism Office to complete payment and confirmation.
             </p>
@@ -857,55 +871,24 @@ body { overflow-x: hidden; }
                    No guide is free for this spot at the moment. Contact the Municipal Tourism Office to arrange a visit.
                </p>`;
 
-        slot.innerHTML = `
-            <section class="bg-surface border border-secondary/40 rounded-xl p-5 space-y-3">
-                <h2 class="text-lg font-display font-bold text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-secondary">hiking</span> Tourist guide required
-                </h2>
-                <p class="text-sm text-on-surface-variant">
-                    The municipality requires visitors to this spot to be accompanied by an accredited tourist guide.
-                </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                        <p class="text-label uppercase tracking-widest font-bold mb-1">Guide fee</p>
-                        <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(fee)}</p>
-                    </div>
-                    <div class="bg-surface-container-high border border-outline-variant/20 rounded-xl p-4">
-                        <p class="text-label uppercase tracking-widest font-bold mb-1">Maximum group</p>
-                        <p class="text-lg font-display font-bold text-on-surface">${escapeHtml(group)}</p>
-                    </div>
-                </div>
-                <p class="text-sm text-on-surface-variant flex items-start gap-2">
-                    <span class="material-symbols-outlined !text-lg text-secondary shrink-0">payments</span>
-                    <span>${info.payOnline
-                        ? 'Pay online after booking, or onsite at the Municipal Tourism Office.'
-                        : 'Payment is made onsite at the Municipal Tourism Office. ZTIMS takes no payment online.'}</span>
-                </p>
-                ${availability}
-                ${info.guidesAvailable > 0 ? '<div id="guideBrowser" class="space-y-2"></div>' : ''}
-                ${info.guidesAvailable > 0 ? `
-                <button type="button" id="openBookGuideBtn"
-                        class="w-full sm:w-auto bg-secondary text-white px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                    <span class="material-symbols-outlined !text-lg">hiking</span> Book a Tourist Guide
-                </button>` : ''}
-
-                <details class="pt-1">
-                    <summary class="text-support cursor-pointer hover:text-on-surface transition-colors min-h-[44px] flex items-center">
-                        Already booked? Check a reference
-                    </summary>
-                    <div class="flex gap-2 mt-2">
-                        <input id="lookupReference" type="text" placeholder="TG-0000-00000"
-                               class="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-xl p-3 text-on-surface uppercase focus:outline-none focus:ring-1 focus:ring-primary"/>
-                        <button type="button" id="lookupBtn"
-                                class="shrink-0 px-4 py-3 min-h-[44px] rounded-xl bg-surface-container-high border border-outline-variant/40 text-support font-bold text-on-surface hover:bg-outline-variant/40 transition-all">
-                            Check
-                        </button>
-                    </div>
-                    <p id="lookupResult" hidden class="text-support mt-2"></p>
-                    <p class="text-support mt-2">To move or cancel it, use <a href="manage.html" class="underline font-bold">Manage my booking</a>.</p>
-                </details>
-            </section>
-        `;
+        // No panel of its own: the "Book a guide" button at the top opens the
+        // booking form (where a guide is chosen), and what a visitor needs to
+        // know — the fee, the group size, or that no guide is free — goes in the
+        // "Tourist guide" tile under At a glance. The hidden button is what the
+        // top button and a #guide arrival press.
+        slot.innerHTML = info.guidesAvailable > 0
+            ? '<button type="button" id="openBookGuideBtn" hidden tabindex="-1"></button>'
+            : '';
+        const tileValue = document.querySelector('[data-fact="guide"] .spot-fact__value');
+        const tileSub = document.querySelector('[data-fact="guide"] .spot-fact__sub');
+        if (tileSub) {
+            tileSub.textContent = info.guidesAvailable > 0
+                ? [info.feeFrom === null ? '' : (info.feeFrom === info.feeTo ? peso(info.feeFrom) : `${peso(info.feeFrom)} – ${peso(info.feeTo)}`),
+                   info.maxGroupSize ? `up to ${info.maxGroupSize} per guide` : ''].filter(Boolean).join(' · ')
+                : 'No guide is free right now. Contact the Tourism Office.';
+            tileSub.hidden = !tileSub.textContent;
+        }
+        if (tileValue && !(info.guidesAvailable > 0)) tileValue.classList.add('tone-warning');
 
         wireGuideBooking(spotId, info);
     }
@@ -930,34 +913,14 @@ body { overflow-x: hidden; }
             : `<span class="${size} shrink-0 bg-surface-container-high flex items-center justify-center font-display font-black text-on-surface-variant" aria-hidden="true">${escapeHtml((g.fullName || '?').trim().charAt(0))}</span>`;
     }
 
-    async function renderGuideBrowser(spotId) {
-        const box = document.getElementById('guideBrowser');
-        if (!box) return;
-        const guides = await fetchGuides(spotId);
-        if (!guides.length) return;
-        box.innerHTML = `
-            <h3 class="text-label font-bold uppercase tracking-widest">Meet the guides</h3>
-            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">${guides.map(g => `
-                <li class="bg-surface-container-high border border-outline-variant/20 p-3 flex gap-3">
-                    ${guideFace(g, 'w-14 h-14')}
-                    <div class="min-w-0 flex-1 space-y-0.5">
-                        <p class="font-bold text-on-surface">${escapeHtml(g.fullName)}</p>
-                        <p class="text-support">${escapeHtml(formatPeso(g.guideFee))} · up to ${Number(g.maxGroupSize) || 1} · ${escapeHtml(g.area)}</p>
-                        ${g.languages.length ? `<p class="text-support">Speaks ${escapeHtml(g.languages.join(', '))}</p>` : ''}
-                        ${g.bio ? `<p class="text-sm text-on-surface-variant line-clamp-3">${escapeHtml(g.bio)}</p>` : ''}
-                        <button type="button" data-choose-guide="${escapeHtml(g._id)}" class="text-sm font-bold underline text-primary min-h-[36px]">Book with ${escapeHtml(g.fullName.split(' ')[0])}</button>
-                    </div>
-                </li>`).join('')}
-            </ul>`;
-    }
-
     /* The booking form itself. No account, no sign-in, no payment — the visitor
        leaves with a reference and pays at the Municipal Tourism Office. */
     function wireGuideBooking(spotId, info) {
         const openBtn = document.getElementById('openBookGuideBtn');
         const modal = document.getElementById('guideBookingModal');
 
-        document.getElementById('lookupBtn').addEventListener('click', async () => {
+        const lookupBtn = document.getElementById('lookupBtn');
+        if (lookupBtn) lookupBtn.addEventListener('click', async () => {
             const box = document.getElementById('lookupResult');
             const reference = document.getElementById('lookupReference').value.trim().toUpperCase();
             if (!reference) return;
@@ -1012,10 +975,10 @@ body { overflow-x: hidden; }
                 </label>`;
             list.innerHTML =
                 option('', `<span class="block font-bold text-on-surface">Any available guide</span>
-                    <span class="block text-support">The office picks${lowest !== null ? ` · from ${escapeHtml(formatPeso(lowest))}` : ''}.</span>`, false, '') +
+                    <span class="block text-support">The office picks${lowest !== null ? ` · from ${escapeHtml(peso(lowest))}` : ''}.</span>`, false, '') +
                 guides.map(g => option(g._id, `
                     <span class="flex items-center gap-3">${guideFace(g, 'w-10 h-10')}
-                        <span class="min-w-0"><span class="block font-bold text-on-surface">${escapeHtml(g.fullName)} · ${escapeHtml(formatPeso(g.guideFee))}</span>
+                        <span class="min-w-0"><span class="block font-bold text-on-surface">${escapeHtml(g.fullName)} · ${escapeHtml(peso(g.guideFee))}</span>
                         <span class="block text-support">${escapeHtml(g.languages.join(', ') || g.area)}</span></span></span>`,
                     !usable(g), group > (Number(g.maxGroupSize) || 1) ? `Takes groups of up to ${g.maxGroupSize}` : (date && g.free === false ? g.note : ''))).join('');
             list.querySelectorAll('input[name=bookGuide]').forEach(r => r.addEventListener('change', () => { chosenGuide = r.value; }));
@@ -1023,22 +986,42 @@ body { overflow-x: hidden; }
         ['bookDate', 'bookTime', 'bookVisitors'].forEach(id => document.getElementById(id).addEventListener('change', drawGuidePicker));
 
         function close() { modal.hidden = true; }
+        // Step 1 (details) and step 2 (pick a guide) are two panes of one form.
+        function showPane(which) {
+            document.getElementById('bookPaneDetails').hidden = which !== 'details';
+            document.getElementById('bookPaneGuide').hidden = which !== 'guide';
+            setBookingStep(which === 'guide' ? 1 : 0, info.payOnline);
+            setBookingError('');
+            modal.querySelector('.overflow-y-auto').scrollTop = 0;
+        }
+        document.getElementById('bookNextBtn').addEventListener('click', () => {
+            const pane = document.getElementById('bookPaneDetails');
+            const fields = [...pane.querySelectorAll('input, select, textarea')];
+            const invalid = fields.find(f => !f.checkValidity());
+            if (invalid) { invalid.reportValidity(); return; }
+            const closed = closedDayReason(document.getElementById('bookDate').value, info);
+            if (closed) { setBookingError(closed); return; }
+            const group = Number(document.getElementById('bookVisitors').value) || 1;
+            const date = document.getElementById('bookDate').value;
+            const time = document.getElementById('bookTime').value;
+            const when = date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            document.getElementById('bookSummary').innerHTML =
+                `<b>${escapeHtml(when)}</b> at <b>${escapeHtml(time)}</b> · ${group} visitor${group === 1 ? '' : 's'}`;
+            drawGuidePicker();
+            showPane('guide');
+        });
+        document.getElementById('bookBackBtn').addEventListener('click', () => showPane('details'));
+
         function openBooking(guideId) {
             document.getElementById('bookingResult').hidden = true;
             document.getElementById('guideBookingForm').hidden = false;
-            setBookingStep(0, info.payOnline);
+            showPane('details');
             setBookingError('');
             chosenGuide = guideId || '';
             drawGuidePicker();
             modal.hidden = false;
         }
         openBtn.addEventListener('click', () => openBooking(''));
-        const browser = document.getElementById('guideBrowser');
-        if (browser) browser.addEventListener('click', event => {
-            const pick = event.target.closest('[data-choose-guide]');
-            if (pick) openBooking(pick.dataset.chooseGuide);
-        });
-        renderGuideBrowser(spotId);
         /* The country list lives in one module so the officer's page and this one
            agree on spelling. Without it the field is an empty dropdown, which
            would be a booking nobody could submit — so say so rather than fail
@@ -1099,7 +1082,7 @@ body { overflow-x: hidden; }
                 document.getElementById('guideBookingForm').hidden = true;
                 document.getElementById('bookingReference').textContent = data.booking.reference;
                 document.getElementById('bookingResult').hidden = false;
-                setBookingStep(1, data.payOnline);
+                setBookingStep(2, data.payOnline);
                 offerOnlinePayment(data, payload.email);
             } catch (error) {
                 setBookingError(error.message);
@@ -1699,7 +1682,7 @@ body { overflow-x: hidden; }
     }
     function setBookingStep(current, payOnline) {
         const list = document.getElementById('bookSteps');
-        if (list) list.innerHTML = journeySteps(['Your details', payOnline ? 'Payment' : 'Pay onsite', 'Confirmed'], current);
+        if (list) list.innerHTML = journeySteps(['Your details', 'Pick a guide', payOnline ? 'Payment' : 'Pay onsite', 'Confirmed'], current);
     }
 
     // What this destination lets a visitor do, and the buttons for it: under the
@@ -1742,7 +1725,7 @@ body { overflow-x: hidden; }
     if (arrivalAct) setTimeout(() => {
         if (arrivalDone) return;
         arrivalDone = true;
-        const id = { tickets: 'ticketOffer', guide: 'guideRequirement', directions: 'directionsSection' }[arrivalAct];
+        const id = { tickets: 'ticketOffer', guide: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
         const el = document.getElementById(id);
         if (el && el.offsetHeight) goTo(id);
     }, 3000);
@@ -1842,16 +1825,16 @@ body { overflow-x: hidden; }
         ];
         if (!isStay) facts.push({ icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person' : '' });
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
-        if (spot.requiresGuide) facts.push({ icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: 'book below' });
+        if (spot.requiresGuide) facts.push({ key: 'guide', icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: '' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });
         return `
-            <ul class="spot-facts" aria-label="At a glance">
+            <ul id="spotFacts" class="spot-facts scroll-mt-24" aria-label="At a glance">
                 ${facts.map(f => `
-                    <li class="spot-fact">
+                    <li class="spot-fact"${f.key ? ` data-fact="${f.key}"` : ''}>
                         <span class="material-symbols-outlined spot-fact__icon" aria-hidden="true">${f.icon}</span>
                         <span class="spot-fact__label">${escapeHtml(f.label)}</span>
                         <span class="spot-fact__value">${escapeHtml(f.value)}</span>
-                        ${f.sub ? `<span class="spot-fact__sub">${escapeHtml(f.sub)}</span>` : ''}
+                        ${f.sub || f.key ? `<span class="spot-fact__sub"${f.sub ? '' : ' hidden'}>${escapeHtml(f.sub)}</span>` : ''}
                     </li>`).join('')}
             </ul>`;
     }
