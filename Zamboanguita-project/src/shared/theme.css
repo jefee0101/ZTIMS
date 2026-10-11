@@ -2033,3 +2033,10 @@ textarea.bk-field { min-height: 0; resize: vertical; }
     border-top-color: currentColor !important;
     animation: ztimsSpin .8s linear infinite !important;
 }
+
+/* Monthly reports: a country's flag beside its name (stat-form.js `flag`). */
+.sf-name { display: inline-flex; align-items: center; gap: .55rem; }
+.sf-flag { width: 20px; height: 15px; flex-shrink: 0; object-fit: cover;
+           box-shadow: 0 0 0 1px rgb(var(--ztims-on-surface) / .15); }
+.sf-flag--icon { box-shadow: none; font-size: 18px; width: 20px; height: auto; text-align: center;
+                 color: rgb(var(--ztims-on-surface-variant)); }

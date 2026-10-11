@@ -916,12 +916,14 @@ body { overflow-x: hidden; }
                 const vals = arr => months.map(m => arr[m - 1]);
                 const sum = arr => arr.reduce((x, y) => x + (y || 0), 0);
                 const add = (a, b) => a.map((v, i) => v + b[i]);
+                // The country's flag beside its name (stat-form.js keeps the pictures' rules).
+                const withFlag = r => `<span class="sf-name">${(window.ZTIMS_STATS && window.ZTIMS_STATS.flag) ? window.ZTIMS_STATS.flag(r.code) : ''}${escapeHtml(r.name)}</span>`;
                 const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
                 const head = (label, cls) => `<tr class="${cls}"><th colspan="${months.length + 2}" class="text-left px-3 py-2 text-xs font-extrabold uppercase tracking-widest">${label}</th></tr>`;
 
                 let body = head('Philippine residents', 'bg-primary/10 text-primary');
                 let ph = Array(12).fill(0);
-                for (const r of d.residences.filter(x => x.section === 'philippine')) { body += row(escapeHtml(r.name), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
+                for (const r of d.residences.filter(x => x.section === 'philippine')) { body += row(withFlag(r), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
                 body += row('<b>Total Philippine residents</b>', ph, 'font-bold');
                 body += head('Non-Philippine residents', 'bg-primary/10 text-primary');
                 let foreign = Array(12).fill(0);
@@ -931,13 +933,13 @@ body { overflow-x: hidden; }
                 }
                 for (const g of regions) {
                     let sub = Array(12).fill(0);
-                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return row(escapeHtml(r.name), d.counts[r.code].total, 'fa-country', true); }).join('');
+                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return row(withFlag(r), d.counts[r.code].total, 'fa-country', true); }).join('');
                     body += head(escapeHtml(g.region), 'text-on-surface-variant') + rowsHtml + row(`Sub-total, ${escapeHtml(g.region)}`, sub, 'font-bold bg-on-surface/[0.03]', true);
                     foreign = add(foreign, sub);
                 }
                 body += row('<b>Total non-Philippine residents</b>', foreign, 'font-bold');
                 const of = d.counts['overseas-filipino'].total, un = d.counts['unspecified'].total;
-                body += row('Overseas Filipinos', of) + row('Guests with unspecified residence', un);
+                body += row(withFlag({ code: 'overseas-filipino', name: 'Overseas Filipinos' }), of) + row(withFlag({ code: 'unspecified', name: 'Guests with unspecified residence' }), un);
                 const grand = ph.map((v, i) => v + foreign[i] + of[i] + un[i]);
                 body += row('<b>GRAND TOTAL GUEST ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
 

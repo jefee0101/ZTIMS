@@ -482,7 +482,15 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only
   in the database — the form fetches it — so unlike the booking form's
-  country list it is not duplicated anywhere.
+  country list it is not duplicated anywhere. Each row shows its flag beside the name, in the
+  report form and the officer's Arrivals Report (`flag` in `stat-form.js`,
+  `.sf-flag` in `theme.css`): small SVGs in `Zamboanguita-project/public/flags/`
+  (copies of flag-icons 7.5.0, MIT, `LICENSE.txt` beside them; only the
+  countries Form A4 lists), served from the site itself, never emoji (Windows
+  shows those as letters) and never an outside host. The Philippine rows and
+  overseas Filipinos take the Philippine flag; CIS, other foreign and
+  unspecified take an icon. A country added to `residences` needs its flag
+  copied there too.
 - **Rules the API enforces**, whatever the page does: one live report per
   place per month; male + female = total; room-nights occupied ≤ rooms × days
   in the month; guest nights ≥ arrivals; no month that hasn't started. Due on

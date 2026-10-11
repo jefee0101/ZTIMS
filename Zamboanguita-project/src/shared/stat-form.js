@@ -20,6 +20,20 @@
     const fmt = n => (n || 0).toLocaleString('en-US');
     const daysIn = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 
+    /* A small flag beside each country of residence. The pictures are copies
+       of flag-icons (MIT, public/flags/LICENSE.txt) kept on this site, so no
+       outside host is asked; emoji flags would show as letters on Windows.
+       The Philippine rows and overseas Filipinos take the Philippine flag;
+       rows that are not one country take an icon instead. */
+    const FLAG_FOR = { 'ph-filipino': 'ph', 'ph-foreign': 'ph', 'overseas-filipino': 'ph' };
+    const ICON_FOR = { cis: 'public', 'other-foreign': 'public', unspecified: 'help' };
+    function flag(code) {
+        const key = String(code || '');
+        if (ICON_FOR[key]) return `<span class="sf-flag sf-flag--icon material-symbols-outlined" aria-hidden="true">${ICON_FOR[key]}</span>`;
+        const iso = FLAG_FOR[key] || (/^[A-Z]{2}$/.test(key) ? key.toLowerCase() : '');
+        return iso ? `<img class="sf-flag" src="/flags/${iso}.svg" alt="" width="20" height="15" loading="lazy" decoding="async"/>` : '';
+    }
+
     let residencesPromise = null;
     function residences(apiBase, headers) {
         if (!residencesPromise) {
@@ -126,7 +140,7 @@
                 if (showRegion) tbody += `<tr class="sf-region" data-region="${esc(g.region)}"><th colspan="4" class="text-left text-[11px] font-bold uppercase tracking-wider text-primary px-3 pt-3 pb-1">${esc(g.region)}</th></tr>`;
                 for (const r of g.list) {
                     tbody += `<tr class="sf-row" data-code="${esc(r.code)}" data-name="${esc((r.name + ' ' + r.region + ' ' + r.continent).toLowerCase())}" data-region="${esc(g.region)}">
-                        <td class="px-3 py-1.5 ${single ? 'font-bold' : ''}">${esc(r.name)}</td>
+                        <td class="px-3 py-1.5 ${single ? 'font-bold' : ''}"><span class="sf-name">${flag(r.code)}${esc(r.name)}</span></td>
                         <td class="px-2 py-1 text-right">${cellInput(r.code, 'male')}</td>
                         <td class="px-2 py-1 text-right">${cellInput(r.code, 'female')}</td>
                         <td class="px-3 py-1.5 text-right font-mono font-bold" data-total="${esc(r.code)}">0</td></tr>`;
@@ -369,5 +383,5 @@
         recalc();
     }
 
-    window.ZTIMS_STATS = { mount, periodOptions, MONTHS, daysIn };
+    window.ZTIMS_STATS = { mount, periodOptions, MONTHS, daysIn, flag };
 })();
