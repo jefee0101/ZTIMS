@@ -1025,7 +1025,9 @@ framework change.
 `docs/ideas/VISITOR-ORIGINS.md` (October 2026, held by the user): counting each
 group's countries and male / female when it arrives (at Let them in, and in
 the guide's tour report) so Statistics can suggest a month's visitor report.
-Not built; it needs the user's yes to change "Nothing from bookings".
+Not built; it needs the user's yes to change "Nothing from bookings", and the
+user noted weak signal at many places makes counting at the entrance hard
+(see the note's "Weak signal").
 
 ## Duplicated facts (keep both sides in step by hand)
 

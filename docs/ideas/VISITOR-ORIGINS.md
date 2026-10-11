@@ -46,6 +46,29 @@ at a moment they already act:
    ones never do. The officer adds visitors who paid onsite, checks, submits.
    Nothing is ever submitted by itself.
 
+## Weak signal (the user's concern, October 2026)
+
+Zamboanguita is not a city: many attractions have weak or no signal, and
+ZTIMS is online only (no offline features, by decision). So Option B's
+entrance step is hard to rely on — staff may not be able to load the grid
+at the moment the group arrives. What each step needs:
+
+- **Entrance count (Option B, step 1):** signal at the entrance, at that
+  moment. Weakest part; drop it or make it optional.
+- **Guide's tour report (Option B, step 2):** no signal needed at the site.
+  The report can be sent later the same day from anywhere with signal (home,
+  the town proper, the office), so this step still works.
+- **Asking the visitor at booking (Option A):** the visitor is already
+  online when booking, wherever they are, so signal at the place does not
+  matter.
+- **Month end (step 3):** done at the Tourism Office, which has signal.
+
+A direction that fits weak signal (to decide later): ask at booking, kept
+short (one country prefilled, Male / Female, mixed groups optional); the
+guide corrects it in the tour report when back in signal; nothing new at the
+entrance. Visitors who pay onsite stay as today (paper tally, entered at the
+office).
+
 ## Visitors who pay onsite (no ticket, no QR)
 
 1. **For now:** the officer adds them by hand at month end (as in the image).
