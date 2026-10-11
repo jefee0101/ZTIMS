@@ -1171,11 +1171,26 @@ body { overflow-x: hidden; }
         const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
         const kinds = ticketKinds(offer);
         const cheaper = kinds.slice(1).map(k => ({ senior: 'seniors', pwd: 'PWDs', student: 'students', child: 'children' })[k.key]).filter(Boolean);
-        slot.innerHTML = `
-            <section class="spot-panel" aria-labelledby="ticketHeading">
-                <h2 id="ticketHeading" class="spot-h2 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-accent" aria-hidden="true">confirmation_number</span>Entrance tickets
-                </h2>
+        // No section on the page: "Buy tickets" opens this form in a window,
+        // like booking a guide. The Entrance tile under At a glance carries the
+        // price and the discounts.
+        const tileSub = document.querySelector('[data-fact="entrance"] .spot-fact__sub');
+        if (tileSub && cheaper.length) tileSub.textContent = `per person · less for ${cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1')}`;
+        const modal = document.createElement('div');
+        modal.id = 'ticketModal';
+        modal.hidden = true;
+        modal.className = 'fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'ticketHeading');
+        document.body.appendChild(modal);
+        modal.innerHTML = `
+            <div class="bg-surface border border-outline-variant/40 w-full max-w-lg p-6 sm:p-7 max-h-[95vh] overflow-y-auto relative">
+                <button type="button" id="closeTicketModal" aria-label="Close"
+                        class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <h3 id="ticketHeading" class="text-xl font-display font-bold text-on-surface mb-1 pr-10">Buy entrance tickets</h3>
                 <p class="text-on-surface"><b>${escapeHtml(peso(kinds[0].price))}</b> per person${cheaper.length
                     ? ` <span class="text-on-surface-variant">· less for ${escapeHtml(cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1'))}</span>` : ''}</p>
                 <p class="text-support mt-1">Buy ahead and show the QR code at the entrance, or pay onsite.</p>
@@ -1237,14 +1252,18 @@ body { overflow-x: hidden; }
                         <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
                     </p>
                 </form>
-            </section>`;
-        wireQty(slot);
+            </div>`;
+        wireQty(modal);
+        const closeTickets = () => { modal.hidden = true; };
+        document.getElementById('closeTicketModal').addEventListener('click', closeTickets);
+        modal.addEventListener('click', event => { if (event.target === modal) closeTickets(); });
+        document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeTickets(); });
 
         const wanted = new URLSearchParams(window.location.search).get('ticketDate') || '';
         const dateInput = document.getElementById('tkDate');
         if (/^\d{4}-\d{2}-\d{2}$/.test(wanted) && wanted >= today && wanted <= last) {
             dateInput.value = wanted;
-            slot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            modal.hidden = false;
         }
 
         const kindInputs = [...document.querySelectorAll('#ticketForm [data-kind]')];
@@ -1767,7 +1786,7 @@ body { overflow-x: hidden; }
     if (arrivalAct) setTimeout(() => {
         if (arrivalDone) return;
         arrivalDone = true;
-        const id = { tickets: 'ticketOffer', guide: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
+        const id = { tickets: 'spotFacts', guide: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
         const el = document.getElementById(id);
         if (el && el.offsetHeight) goTo(id);
     }, 3000);
@@ -1775,13 +1794,17 @@ body { overflow-x: hidden; }
         if (arrivalDone || !arrivalAct || !actions[arrivalAct]) return;
         arrivalDone = true;
         setTimeout(() => {
-            if (arrivalAct === 'tickets') goTo('ticketOffer');
+            if (arrivalAct === 'tickets') openTickets();
             if (arrivalAct === 'directions') goTo('directionsSection');
             if (arrivalAct === 'guide') {
                 const open = document.getElementById('openBookGuideBtn');
                 if (open) open.click(); else goTo('guideRequirement');
             }
         }, 150);
+    }
+    function openTickets() {
+        const modal = document.getElementById('ticketModal');
+        if (modal) modal.hidden = false;
     }
     function goTo(id) {
         const el = document.getElementById(id);
@@ -1791,7 +1814,7 @@ body { overflow-x: hidden; }
         const button = event.target.closest('[data-act]');
         if (!button) return;
         const act = button.dataset.act;
-        if (act === 'tickets') goTo('ticketOffer');
+        if (act === 'tickets') openTickets();
         if (act === 'directions') goTo('directionsSection');
         if (act === 'guide') {
             const open = document.getElementById('openBookGuideBtn');
@@ -1865,7 +1888,7 @@ body { overflow-x: hidden; }
         const facts = [
             { icon: 'schedule', label: isStay ? 'Open' : 'Open', value: days, sub: time },
         ];
-        if (!isStay) facts.push({ icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person' : '' });
+        if (!isStay) facts.push({ key: 'entrance', icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person' : '' });
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
         if (spot.requiresGuide) facts.push({ key: 'guide', icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: '' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });

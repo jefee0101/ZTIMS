@@ -601,9 +601,11 @@ Frontend only, no tables of their own:
   **At a glance** tiles (`glanceFacts`: open days and hours, entrance or Free,
   a travel fee only if set, "Tourist guide: Required" only if so — with the
   guide fee and group size, or that no guide is free — barangay); About;
-  Photos; the ticket section (a guided place has no panel of its own: "Book a
-  guide" opens the booking form, where a guide is chosen, through the hidden
-  `#openBookGuideBtn`); Book your stay / visit (its
+  Photos (neither tickets nor a guide have a section of their own: "Buy
+  tickets" opens the ticket form in a window, `#ticketModal` built by
+  `renderTicketOffer`, and the Entrance tile says "less for seniors and
+  PWDs"; "Book a guide" opens the booking form, where a guide is chosen,
+  through the hidden `#openBookGuideBtn`); Book your stay / visit (its
   booking link) or Contact; Getting there (address, emergency numbers, Get
   directions); "Nearby places to visit" (Home's card style; nearest first when
   both have a pin, else "More places to explore", same category first;
@@ -616,7 +618,7 @@ Frontend only, no tables of their own:
   (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
   guides free for that date, time and group, and Submit), then the reference
   with Pay online now or the onsite note. Step 1 asks "Your visit" (date, start
-  time, visitors) before "Your details". The ticket section follows the same
+  time, visitors) before "Your details". The ticket window follows the same
   pattern: price line, Your visit (date; who is coming, one row per kind with a
   − / + stepper), Your details (name, email), a summary of lines and the total,
   and one button that says what it buys ("Buy 4 tickets · ₱180"). Both use the
