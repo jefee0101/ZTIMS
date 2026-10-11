@@ -1021,6 +1021,11 @@ site; before real use: email service, map tiles, routing servers, paid plans).
 Nothing in it is built yet; read it before working on quality, tooling or a
 framework change.
 
+`docs/ideas/VISITOR-ORIGINS.md` (October 2026, held by the user): counting each
+group's countries and male / female when it arrives (at Let them in, and in
+the guide's tour report) so Statistics can suggest a month's visitor report.
+Not built; it needs the user's yes to change "Nothing from bookings".
+
 ## Duplicated facts (keep both sides in step by hand)
 
 - **Zamboanguita bounding box**: `ZAMBOANGUITA_BOUNDS` in
