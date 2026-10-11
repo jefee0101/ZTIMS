@@ -610,6 +610,21 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   never touched.
 - Money never reaches Statistics or Form A4, which stay counts only.
 
+### The officer's Destinations (`admin_dashboard_manage.html`)
+
+Flat and short, the important facts first: the title and **Add destination**
+(the shared listing form, empty; a new place is then found, scrolled to and
+marked, as from the Dashboard's `?new=`); the starter list as one line with
+"Publish them" while any are missing; counts that filter — All, By the office,
+By managers, Needs attention (red count) — then the category pills (one
+scrolling row on a phone) and the search. Each place is one row (`.dest-row`
+in `portal-flat.css`): photo, name, category pills, one line of facts
+(barangay · who runs it · entrance or Free · a travel fee only if set · open
+days), what is missing as red pills ("No photo · Fix" opens the editor), then
+**Edit** (office-run) or **View** (manager-run: only the manager edits it) and a
+⋯ menu (View public page, Visitor setup where it applies, Take down in red).
+Prices without cents. No Refresh button: the list reloads after every change.
+
 ### Attraction setup
 
 `attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window

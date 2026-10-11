@@ -145,3 +145,55 @@ main .overflow-x-auto { position: relative; }
 /* Destinations: the listing just published from the Dashboard, marked for a moment. */
 .just-published { box-shadow: inset 0 0 0 3px rgb(var(--ztims-secondary)); background: rgb(var(--ztims-secondary) / .1);
                   transition: box-shadow var(--dur-slow, 350ms) var(--ease-standard), background-color var(--dur-slow, 350ms) var(--ease-standard); }
+
+/* ---- The officer's Destinations (admin_dashboard_manage.html) ------------
+   Counts that filter, category pills (one scrolling row on a phone), and one
+   compact row per place: photo, name, categories, one line of facts, what is
+   missing (red, "· Fix" opens the editor), then Edit and a ⋯ menu. */
+.dest-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.dest-chips button { min-height: 40px; padding: 0 .9rem; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline));
+                     background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .8125rem;
+                     display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.dest-chips button b { font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); }
+.dest-chips button:hover { border-color: rgb(var(--ztims-secondary)); }
+.dest-chips button[aria-pressed="true"] { background: rgb(var(--ztims-primary)); border-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.dest-chips button[aria-pressed="true"] b { color: inherit; }
+.dest-chips__warn b { color: rgb(var(--ztims-error)) !important; }
+.dest-chips__warn[aria-pressed="true"] b { color: inherit !important; }
+.dest-chips button:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+@media (max-width: 639px) {
+    .dest-chips--scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem; }
+    .dest-chips--scroll::-webkit-scrollbar { display: none; }
+}
+
+.dest-row { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 1rem; align-items: start; padding: 1rem 1.25rem; }
+.dest-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
+.dest-row__photo { width: 5.5rem; height: 4.25rem; background: rgb(var(--ztims-surface-high)); overflow: hidden;
+                   display: flex; align-items: center; justify-content: center; color: rgb(var(--ztims-on-surface-variant)); }
+.dest-row__photo img { width: 100%; height: 100%; object-fit: cover; }
+.dest-row__body { min-width: 0; display: flex; flex-direction: column; gap: .3rem; }
+.dest-row__name { font-size: 1.0625rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); line-height: 1.25; overflow-wrap: anywhere; }
+.dest-row__cats { display: flex; flex-wrap: wrap; gap: .3rem; }
+.dest-row__cats .cat-badge { font-size: .6875rem; padding: .1rem .55rem; }
+.dest-row__facts { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+.dest-row__issues { display: flex; flex-wrap: wrap; gap: .3rem; }
+.dest-issue { font-size: .75rem; font-weight: 700; padding: .15rem .6rem; border-radius: 9999px;
+              background: rgb(var(--ztims-error) / .1); color: rgb(var(--ztims-error)); border: 1px solid rgb(var(--ztims-error) / .3); }
+button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3261E; }
+.dest-row__actions { display: flex; align-items: center; gap: .4rem; }
+.dest-more { width: 40px; height: 40px; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline));
+             display: inline-flex; align-items: center; justify-content: center; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-surface)); }
+.dest-more:hover { border-color: rgb(var(--ztims-secondary)); }
+.dest-menu { position: absolute; right: 0; top: calc(100% + .35rem); z-index: 30; min-width: 12rem; padding: .3rem;
+             background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline)); box-shadow: var(--ztims-shadow-raised); }
+.dest-menu a, .dest-menu button { display: flex; align-items: center; gap: .6rem; width: 100%; min-height: 40px; padding: 0 .75rem;
+                                  font-size: .875rem; font-weight: 600; color: rgb(var(--ztims-on-surface)); text-align: left; border-radius: 9999px; }
+.dest-menu a:hover, .dest-menu button:hover { background: rgb(var(--ztims-secondary) / .15); }
+.dest-menu .material-symbols-outlined { font-size: 18px; }
+.dest-menu .is-danger { color: rgb(var(--ztims-error)); }
+.dest-menu .is-danger:hover { background: #B3261E; color: #FFFDFA; }
+@media (max-width: 639px) {
+    .dest-row { grid-template-columns: 4.5rem 1fr; padding: .9rem 1rem; }
+    .dest-row__photo { width: 4.5rem; height: 3.5rem; }
+    .dest-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}

@@ -523,88 +523,59 @@ body { overflow-x: hidden; }
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
             <div class="flex flex-wrap justify-between items-end gap-4">
-                <div class="space-y-1">
-                    <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                        <span class="text-on-surface-variant">Oversight</span>
-                    </nav>
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h2>
-                </div>
-                <button id="refreshBtn" class="btn btn-secondary">
-                    <span class="material-symbols-outlined !text-lg">refresh</span> Refresh
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h1>
+                <button id="addDestinationBtn" type="button" class="btn btn-primary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span> Add destination
                 </button>
             </div>
 
             <!-- One-time import of the destinations the office already documented.
                  Hidden as soon as they are all in the database. -->
-            <div id="starterImportPanel" hidden class="glass-panel rounded-2xl p-6 border-l-4 border-accent">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">cloud_upload</span>
-                            Publish the municipality's destinations
-                        </h3>
-                        <p class="text-sm text-on-surface-variant mt-1">
-                            <span id="starterMissingCount">0</span> of the destinations the office already documented
-                            are not in the database yet, so the public site cannot show them.
-                            Publishing adds only the missing ones — nothing is duplicated or overwritten.
-                        </p>
-                        <p id="starterMissingNames" class="text-support mt-1"></p>
-                    </div>
-                    <button id="importStarterBtn" class="btn btn-primary shrink-0">
-                        <span class="material-symbols-outlined">publish</span> Publish them now
+            <div id="starterImportPanel" hidden class="glass-panel p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-on-surface min-w-0 flex-1">
+                        <b><span id="starterMissingCount">0</span> destinations</b> from the office's records are not on the site yet:
+                        <span id="starterMissingNames" class="text-on-surface-variant"></span>
+                    </p>
+                    <button id="importStarterBtn" class="btn btn-secondary btn-sm min-h-[40px] shrink-0">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">publish</span> Publish them
                     </button>
                 </div>
-                <p id="starterImportStatus" hidden class="text-support mt-3"></p>
+                <p id="starterImportStatus" hidden class="text-support mt-2"></p>
             </div>
 
-            <!-- Summary of what is live, in one line rather than three cards -->
-            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
-                <span><b id="statTotal" class="text-on-surface">—</b> published (<span id="statSpots">0</span> spots, <span id="statStays">0</span> accommodations)</span>
-                <span><b id="statOffice" class="text-on-surface">—</b> kept by the office, <b id="statManaged" class="text-on-surface">0</b> run by managers</span>
-                <span><b id="statIncomplete" class="text-on-surface">—</b> missing a photo or a description</span>
-            </p>
-
-            <!-- Filter Controls Panel -->
-            <div class="glass-panel backdrop-blur-xl border border-outline-variant/30 rounded-2xl p-4 space-y-4">
-                <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-label font-bold uppercase tracking-widest ml-2">Categories:</span>
-                    <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
-                        <button data-category="ALL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">All</button>
-                        <button data-category="BEACH" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Beach &amp; Sea</button>
-                        <button data-category="DIVING" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Diving &amp; Snorkeling</button>
-                        <button data-category="NATURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Nature</button>
-                        <button data-category="ADVENTURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Adventure</button>
-                        <button data-category="CULTURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Culture &amp; Heritage</button>
-                        <button data-category="FAITH" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Faith</button>
-                        <button data-category="STAY" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Places to stay</button>
-                    </div>
+            <!-- Who keeps each place, and what needs fixing: counts that filter. -->
+            <div class="dest-filters space-y-3">
+                <div id="showFilter" class="dest-chips" role="group" aria-label="Show">
+                    <button type="button" data-show="all" aria-pressed="true">All <b id="statTotal">0</b></button>
+                    <button type="button" data-show="office" aria-pressed="false">By the office <b id="statOffice">0</b></button>
+                    <button type="button" data-show="manager" aria-pressed="false">By managers <b id="statManaged">0</b></button>
+                    <button type="button" data-show="incomplete" aria-pressed="false" class="dest-chips__warn">Needs attention <b id="statIncomplete">0</b></button>
                 </div>
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div id="categoryFilterContainer" class="dest-chips dest-chips--scroll" role="group" aria-label="Category">
+                    <button type="button" data-category="ALL" aria-pressed="true">All categories</button>
+                    <button type="button" data-category="BEACH" aria-pressed="false">Beach &amp; Sea</button>
+                    <button type="button" data-category="DIVING" aria-pressed="false">Diving &amp; Snorkeling</button>
+                    <button type="button" data-category="NATURE" aria-pressed="false">Nature</button>
+                    <button type="button" data-category="ADVENTURE" aria-pressed="false">Adventure</button>
+                    <button type="button" data-category="CULTURE" aria-pressed="false">Culture &amp; Heritage</button>
+                    <button type="button" data-category="FAITH" aria-pressed="false">Faith</button>
+                    <button type="button" data-category="STAY" aria-pressed="false">Places to stay</button>
+                </div>
+                <div class="relative">
                     <label for="searchInput" class="sr-only">Search destinations</label>
-                    <div class="relative flex-1 min-w-0">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                        <input id="searchInput" type="search" placeholder="Search by name, location or manager"
-                               class="field !pl-11 w-full min-h-[44px]"/>
-                    </div>
-                    <label for="managerFilter" class="sr-only">Show</label>
-                    <select id="managerFilter" class="field min-h-[44px] sm:!w-60 shrink-0">
-                        <option value="all">All destinations</option>
-                        <option value="office">Managed by the Tourism Office</option>
-                        <option value="manager">Privately managed</option>
-                        <option value="incomplete">Needs attention</option>
-                    </select>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                    <input id="searchInput" type="search" placeholder="Search by name, barangay or manager"
+                           class="field !pl-11 w-full min-h-[44px]"/>
                 </div>
             </div>
 
             <!-- The listings themselves -->
             <div id="listingsPanel" class="rounded-none glass-panel overflow-hidden">
                 <div id="listings" class="ztims-stagger divide-y divide-outline-variant/20"></div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
-                        Showing <span id="shownCount" class="text-on-surface font-bold">0</span>
-                        of <span id="totalCount" class="text-on-surface font-bold">0</span> published listings
-                    </p>
-                </div>
+                <p class="px-5 py-3 border-t border-outline-variant/30 text-support">
+                    Showing <b id="shownCount" class="text-on-surface">0</b> of <b id="totalCount" class="text-on-surface">0</b>
+                </p>
             </div>
         </div>
     </main>
@@ -617,8 +588,7 @@ body { overflow-x: hidden; }
         <div class="ztims-modal w-full max-w-lg xl:max-w-5xl p-5 sm:p-8 space-y-6 overflow-y-auto">
             <div class="flex justify-between items-start gap-4">
                 <div>
-                    <h2 class="text-2xl font-black tracking-tight font-headline">Edit listing</h2>
-                    <p class="text-support mt-1">Kept by the Tourism Office, so the office maintains it.</p>
+                    <h2 id="editModalTitle" class="text-2xl font-black tracking-tight font-headline">Edit destination</h2>
                 </div>
                 <button id="closeEditModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex">
                     <span class="material-symbols-outlined text-2xl">close</span>
@@ -749,7 +719,7 @@ body { overflow-x: hidden; }
         }
 
         function formatPeso(amount) {
-            return `₱${(Number(amount) || 0).toFixed(2)}`;
+            return '₱' + (Number(amount) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
         }
 
         // The API sleeps on Render's free tier, so a cold start can take most of a
@@ -1047,7 +1017,7 @@ body { overflow-x: hidden; }
 
         function visibleSpots() {
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
-            const managerFilter = document.getElementById('managerFilter').value;
+            const managerFilter = activeShow;
 
             return allSpots.filter(spot => {
                 if (activeCategory !== 'ALL' && !window.ZTIMS_CATEGORIES.matches(spot, activeCategory)) return false;
@@ -1062,14 +1032,12 @@ body { overflow-x: hidden; }
             });
         }
 
+        let activeShow = 'all';
         function renderSummary() {
-            const stays = allSpots.filter(spot => spot.type === 'accommodation').length;
             const managed = allSpots.filter(spot => managerOf(spot)).length;
             const incomplete = allSpots.filter(spot => completenessIssues(spot).length > 0).length;
 
             document.getElementById('statTotal').textContent = allSpots.length;
-            document.getElementById('statSpots').textContent = allSpots.length - stays;
-            document.getElementById('statStays').textContent = stays;
             document.getElementById('statOffice').textContent = allSpots.length - managed;
             document.getElementById('statManaged').textContent = managed;
             document.getElementById('statIncomplete').textContent = incomplete;
@@ -1112,68 +1080,46 @@ body { overflow-x: hidden; }
                 const issues = completenessIssues(spot);
                 const photos = photoCount(spot);
                 const manager = managerOf(spot);
+                const id = escapeHtml(spot._id);
+                const entrance = Number(spot.entranceFee) > 0 ? `Entrance ${formatPeso(spot.entranceFee)}`
+                    : (window.ZTIMS_CATEGORIES.isStay(spot) ? '' : 'Free entrance');
+                const facts = [
+                    escapeHtml(spot.barangay || spot.location || '—'),
+                    manager ? `Run by ${escapeHtml(manager)}` : 'Tourism Office',
+                    entrance,
+                    Number(spot.travelFee) > 0 ? `Travel ${formatPeso(spot.travelFee)}` : '',
+                    escapeHtml(spot.workingDays || 'Every day')
+                ].filter(Boolean).join(' · ');
+                const hasSetup = (!manager && spot.type !== 'accommodation') || spot.requiresGuide;
 
                 return `
-                <div data-spot="${escapeHtml(spot._id)}" class="p-6 flex flex-col lg:flex-row gap-5 hover:bg-on-surface/[0.03] transition-colors">
-                    <div class="relative w-full lg:w-40 h-28 shrink-0 rounded-xl overflow-hidden bg-surface-variant">
+                <div data-spot="${id}" class="dest-row">
+                    <div class="dest-row__photo">
                         ${photos
-                            ? `<img src="${escapeHtml(spot.imageUrl)}" alt="${escapeHtml(spot.title)}" class="w-full h-full object-cover"/>`
-                            : `<div class="w-full h-full flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined">no_photography</span></div>`}
-                        ${photos > 1 ? `<span class="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 text-white text-[10px] font-bold">
-                            <span class="material-symbols-outlined !text-xs">photo_library</span>${photos}
-                        </span>` : ''}
+                            ? `<img src="${escapeHtml(spot.imageUrl)}" alt="" loading="lazy"/>`
+                            : `<span class="material-symbols-outlined" aria-hidden="true">no_photography</span>`}
                     </div>
-
-                    <div class="flex-1 min-w-0 space-y-2">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-xl font-black text-on-surface">${escapeHtml(spot.title)}</h3>
-                            <!-- Category only. The type badge beside it was derived from the
-                                 category on the server, so it could only ever restate it:
-                                 ACCOMMODATION sat next to "Accommodation", and every other
-                                 category next to "Tourist Spot". -->
-                            ${categoryBadges(spot)}
-                        </div>
-
-                        <p class="text-support flex items-center gap-1">
-                            <span class="material-symbols-outlined !text-sm">location_on</span>${escapeHtml(spot.location || '—')}
-                        </p>
-                        <p class="text-sm text-on-surface-variant line-clamp-2">${escapeHtml(spot.description || '')}</p>
-
-                        <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-support pt-1">
-                            <span class="flex items-center gap-1.5">
-                                <span class="material-symbols-outlined !text-sm">${manager ? 'storefront' : 'account_balance'}</span>
-                                ${manager ? escapeHtml(manager) : 'Tourism Office'}
-                            </span>
-                            <span>Travel <b class="text-on-surface">${formatPeso(spot.travelFee)}</b></span>
-                            <span>Entrance <b class="text-on-surface">${formatPeso(spot.entranceFee)}</b></span>
-                            <span class="flex items-center gap-1">
-                                <span class="material-symbols-outlined !text-sm">schedule</span>
-                                ${escapeHtml(spot.workingDays || 'Everyday')} · ${escapeHtml(spot.workingTime || 'All Day')}
-                            </span>
-                        </div>
-
-                        ${issues.length ? `<div class="flex flex-wrap gap-1.5 pt-1">
-                            ${issues.map(issue => `<span class="px-2 py-0.5 rounded-full bg-error/10 text-error text-[10px] font-bold">${escapeHtml(issue)}</span>`).join('')}
-                        </div>` : ''}
+                    <div class="dest-row__body">
+                        <h3 class="dest-row__name">${escapeHtml(spot.title)}</h3>
+                        <div class="dest-row__cats">${categoryBadges(spot)}</div>
+                        <p class="dest-row__facts">${facts}</p>
+                        ${issues.length ? `<div class="dest-row__issues">${issues.map(issue => manager
+                            ? `<span class="dest-issue">${escapeHtml(issue)}</span>`
+                            : `<button type="button" data-edit="${id}" class="dest-issue">${escapeHtml(issue)} · Fix</button>`).join('')}</div>` : ''}
                     </div>
-
-                    <div class="flex lg:flex-col gap-2 shrink-0 lg:w-40">
-                        <a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener"
-                           class="btn btn-secondary flex-1 text-center">
-                            View public page
-                        </a>
-                        ${manager ? '' : `<button data-edit="${escapeHtml(spot._id)}"
-                                class="btn btn-secondary flex-1">
-                            Edit
-                        </button>`}
-                        ${(!manager && spot.type !== 'accommodation') || spot.requiresGuide ? `<button data-setup="${escapeHtml(spot._id)}"
-                                class="btn btn-secondary flex-1">
-                            Visitor setup
-                        </button>` : ''}
-                        <button data-takedown="${escapeHtml(spot._id)}"
-                                class="btn btn-secondary flex-1">
-                            Take down
-                        </button>
+                    <div class="dest-row__actions">
+                        ${manager
+                            ? `<a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm min-h-[40px]">View</a>`
+                            : `<button type="button" data-edit="${id}" class="btn btn-primary btn-sm min-h-[40px]">Edit</button>`}
+                        <div class="relative">
+                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(spot.title)}"
+                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
+                                ${manager ? '' : `<a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View public page</a>`}
+                                ${hasSetup ? `<button type="button" data-setup="${id}"><span class="material-symbols-outlined" aria-hidden="true">tune</span>Visitor setup</button>` : ''}
+                                <button type="button" data-takedown="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>Take down</button>
+                            </div>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
@@ -1204,8 +1150,15 @@ body { overflow-x: hidden; }
                 return;
             }
 
+            document.getElementById('editModalTitle').textContent = 'Edit destination';
             document.getElementById('editSpotModal').hidden = false;
             if (spotForm) spotForm.open(spot);
+        }
+
+        function openAddModal() {
+            document.getElementById('editModalTitle').textContent = 'Add destination';
+            document.getElementById('editSpotModal').hidden = false;
+            if (spotForm) spotForm.open(null);
         }
 
         function closeEditModal() {
@@ -1215,8 +1168,9 @@ body { overflow-x: hidden; }
 
         // The form collects and validates; this page only knows where to send it.
         async function saveEditedSpot(payload, context) {
-            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(context.editingId)}`, {
-                method: 'PUT',
+            const adding = !context.editingId;
+            const response = await fetch(adding ? `${API_BASE}/spots` : `${API_BASE}/spots/${encodeURIComponent(context.editingId)}`, {
+                method: adding ? 'POST' : 'PUT',
                 headers: authHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(payload)
             });
@@ -1227,6 +1181,7 @@ body { overflow-x: hidden; }
 
             closeEditModal();
             await loadEverything();
+            if (adding && result && result._id) { showPublished(result._id); return; }
             showToast(`${payload.title} updated. The public page shows it now.`, 'success');
         }
 
@@ -1520,6 +1475,10 @@ body { overflow-x: hidden; }
             const id = params.get('new');
             if (!id) return;
             history.replaceState(null, '', window.location.pathname + window.location.hash);
+            showPublished(id);
+        }
+        function showPublished(id) {
+            id = String(id);
             const spot = allSpots.find(s => String(s._id) === id);
             if (!spot) return;
             document.getElementById('searchInput').value = spot.title || '';
@@ -1542,26 +1501,50 @@ body { overflow-x: hidden; }
                 const button = event.target.closest('[data-category]');
                 if (!button) return;
                 activeCategory = button.dataset.category;
-                document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-                    const isActive = btn.dataset.category === activeCategory;
-                    // Rebuilt from the system's classes, not from a second set of
-                    // hand-written ones — this line runs on every filter press and
-                    // would otherwise undo whatever the markup said.
-                    btn.className = 'cat-filter-btn btn ' +
-                        (isActive ? 'btn-primary' : 'btn-secondary !text-on-surface-variant');
-                });
+                document.querySelectorAll('#categoryFilterContainer [data-category]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.category === activeCategory)));
                 renderListings();
             });
 
             document.getElementById('searchInput').addEventListener('input', renderListings);
-            document.getElementById('managerFilter').addEventListener('change', renderListings);
-            document.getElementById('refreshBtn').addEventListener('click', loadEverything);
+            document.getElementById('showFilter').addEventListener('click', event => {
+                const button = event.target.closest('[data-show]');
+                if (!button) return;
+                activeShow = button.dataset.show;
+                document.querySelectorAll('#showFilter [data-show]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                renderListings();
+            });
+            document.getElementById('addDestinationBtn').addEventListener('click', openAddModal);
+
+            // The ⋯ menu on each row: one open at a time; a click elsewhere or
+            // Escape closes it.
+            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
+                if (menu === except) return;
+                menu.hidden = true;
+                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
+                if (opener) opener.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('click', event => {
+                const opener = event.target.closest('[data-more]');
+                if (opener) {
+                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
+                    closeMenus(menu);
+                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
+                    return;
+                }
+                if (!event.target.closest('.dest-menu')) closeMenus();
+            });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
             document.getElementById('importStarterBtn').addEventListener('click', importStarterDestinations);
 
             // Delegated so the buttons survive every re-render of the list.
             wireEditModal();
 
             document.getElementById('listings').addEventListener('click', event => {
+                if (event.target.closest('.dest-menu [data-setup], .dest-menu [data-takedown]')) {
+                    event.target.closest('.dest-menu').hidden = true;
+                }
                 const takedown = event.target.closest('[data-takedown]');
                 if (takedown) return takeDownListing(takedown.dataset.takedown, takedown);
                 const edit = event.target.closest('[data-edit]');
