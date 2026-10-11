@@ -795,7 +795,12 @@ body { overflow-x: hidden; }
         const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
         const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
         const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
-        const CATEGORY_NAMES = { 'BEACH / DIVING': 'Beach / Diving', BEACH: 'Beach', DIVING: 'Diving', MOUNTAIN: 'Mountain', CULTURAL: 'Cultural', ACCOMMODATION: 'Accommodation' };
+        // The categories live in tourism-map.js (window.ZTIMS_CATEGORIES).
+        function knownForPills(spot) {
+            const C = window.ZTIMS_CATEGORIES;
+            return C.of(spot).map((code, i) => `<span class="pill border border-outline-variant px-3 py-0.5 text-xs font-bold inline-flex items-center gap-1">
+                <span class="material-symbols-outlined !text-sm" aria-hidden="true">${C.info(code).icon}</span>${escapeHtml(C.label(code))}${i === 0 ? ' <span class="text-on-surface-variant font-normal">· main</span>' : ''}</span>`).join(' ');
+        }
 
         const subFromAddress = () => { const h = location.hash.slice(1); return SUBS.includes(h) ? h : 'basics'; };
         const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
@@ -846,7 +851,8 @@ body { overflow-x: hidden; }
             if (sub === 'basics') {
                 return panel('basics', `<dl class="est-facts">
                     ${fact('Name', escapeHtml(spot.title))}
-                    ${fact('Category', `<span class="pill border border-outline-variant px-3 py-0.5 text-xs font-bold">${escapeHtml(CATEGORY_NAMES[spot.category] || spot.category)}</span>`)}
+                    ${fact('Kind of place', window.ZTIMS_CATEGORIES.isStay(spot) ? 'Place to stay' : 'Place to visit')}
+                    ${fact('Known for', `<span class="flex flex-wrap gap-1.5">${knownForPills(spot)}</span>`)}
                     ${fact('Tagline', spot.label ? escapeHtml(spot.label) : '', 'None')}
                     ${fact('Description', spot.description ? `<span class="whitespace-pre-line font-normal">${escapeHtml(spot.description)}</span>` : '')}
                 </dl>`, { footer: `<div class="border-t border-outline-variant/30 pt-4 flex justify-end">

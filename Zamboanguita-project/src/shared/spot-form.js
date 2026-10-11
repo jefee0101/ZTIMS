@@ -44,12 +44,22 @@
     const MUNICIPALITY = 'Zamboanguita';
     const PROVINCE = 'Negros Oriental';
 
+    /* What a place is known for (one or more; the first ticked is the main
+       one), and separately whether it is a place to stay. See schema.sql,
+       "Categories". The names match tourism-map.js's CATEGORIES. */
     const CATEGORIES = [
-        { value: 'MOUNTAIN', label: 'Mountain' },
-        { value: 'BEACH / DIVING', label: 'Beach / Diving' },
-        { value: 'CULTURAL', label: 'Cultural' },
-        { value: 'ACCOMMODATION', label: 'Accommodation' }
+        { value: 'BEACH', label: 'Beach & Sea', icon: 'beach_access' },
+        { value: 'DIVING', label: 'Diving & Snorkeling', icon: 'scuba_diving' },
+        { value: 'NATURE', label: 'Nature', icon: 'forest' },
+        { value: 'ADVENTURE', label: 'Adventure', icon: 'hiking' },
+        { value: 'CULTURE', label: 'Culture & Heritage', icon: 'museum' },
+        { value: 'FAITH', label: 'Faith', icon: 'church' }
     ];
+    const OLD_CATEGORY = { 'BEACH / DIVING': ['BEACH', 'DIVING'], 'MOUNTAIN': ['NATURE'], 'CULTURAL': ['CULTURE'], 'ACCOMMODATION': [] };
+    const categoryLabel = function (code) {
+        const found = CATEGORIES.filter(function (c) { return c.value === code; })[0];
+        return found ? found.label : '';
+    };
 
     /* Opening days are ticked, one box a weekday, and stored as the words
        visitors read ("Monday to Saturday"). shared/open-days.js turns one into
@@ -230,14 +240,28 @@
                 errorSlot(p + 'TitleError') +
             '</div>' +
 
-            '<div>' +
-                '<label for="' + p + 'Category" class="' + LABEL + '">Category' + required() + '</label>' +
-                '<select id="' + p + 'Category" name="category" class="' + INPUT + '">' +
+            '<fieldset>' +
+                '<legend class="' + LABEL + '">Kind of place' + required() + '</legend>' +
+                '<div id="' + p + 'Kind" class="sf-choices">' +
+                    '<label class="sf-choice"><input type="radio" name="' + p + 'Kind" value="spot" checked/>' +
+                        '<span class="material-symbols-outlined" aria-hidden="true">photo_camera</span>Place to visit</label>' +
+                    '<label class="sf-choice"><input type="radio" name="' + p + 'Kind" value="accommodation"/>' +
+                        '<span class="material-symbols-outlined" aria-hidden="true">hotel</span>Place to stay</label>' +
+                '</div>' +
+            '</fieldset>' +
+
+            '<fieldset>' +
+                '<legend class="' + LABEL + '">Known for' + required() + '</legend>' +
+                '<input type="hidden" id="' + p + 'Category" name="category"/>' +
+                '<div id="' + p + 'Cats" class="sf-choices">' +
                     CATEGORIES.map(function (c) {
-                        return '<option value="' + escapeHtml(c.value) + '">' + escapeHtml(c.label) + '</option>';
+                        return '<label class="sf-choice"><input type="checkbox" value="' + escapeHtml(c.value) + '"/>' +
+                            '<span class="material-symbols-outlined" aria-hidden="true">' + c.icon + '</span>' +
+                            escapeHtml(c.label) + '<span class="sf-choice__main">Main</span></label>';
                     }).join('') +
-                '</select>' +
-            '</div>' +
+                '</div>' +
+                errorSlot(p + 'CategoryError') +
+            '</fieldset>' +
 
             '<div>' +
                 '<label for="' + p + 'Description" class="' + LABEL + '">Description' + required() + '</label>' +
@@ -633,7 +657,44 @@
 
         // Each rule returns a message, or '' when the value is fine. `step` is the
         // panel the field lives on, so a failure can take you straight there.
+        /* ---- kind and categories ----
+           catOrder keeps the ticked categories in the order they were ticked:
+           the first is the main one (spots.category), the rest moreCategories.
+           The hidden Category field holds the main one for the rules and drafts. */
+        let catOrder = [];
+        function paintCats() {
+            el('Category').value = catOrder[0] || '';
+            el('Cats').querySelectorAll('input').forEach(function (box) {
+                box.checked = catOrder.indexOf(box.value) !== -1;
+                box.closest('.sf-choice').classList.toggle('is-main', box.value === catOrder[0]);
+            });
+        }
+        function setCats(main, more) {
+            const all = [];
+            [main].concat(more || []).forEach(function (code) {
+                const key = String(code || '').trim().toUpperCase();
+                (OLD_CATEGORY[key] || [key]).forEach(function (one) {
+                    if (categoryLabel(one) && all.indexOf(one) === -1) all.push(one);
+                });
+            });
+            catOrder = all;
+            paintCats();
+        }
+        function kindValue() {
+            const chosen = el('Kind').querySelector('input:checked');
+            return chosen ? chosen.value : 'spot';
+        }
+        function setKind(type) {
+            el('Kind').querySelectorAll('input').forEach(function (radio) {
+                radio.checked = radio.value === (type === 'accommodation' ? 'accommodation' : 'spot');
+            });
+        }
+
         const RULES = [
+            {
+                step: 0, field: 'Category', slot: 'CategoryError', focusId: 'Cats', decorate: false,
+                test: function (v) { return v ? '' : 'Tick at least one thing the place is known for.'; }
+            },
             {
                 step: 0, field: 'Title', slot: 'TitleError',
                 test: function (v) {
@@ -820,7 +881,7 @@
 
         function previewHtml() {
             const title = el('Title').value.trim() || 'Untitled listing';
-            const category = el('Category').value;
+            const category = (kindValue() === 'accommodation' ? 'Place to stay · ' : '') + categoryLabel(el('Category').value);
             const description = el('Description').value.trim();
             const barangay = el('LocBarangay').value;
             const address = el('LocAddress').value.trim();
@@ -854,6 +915,18 @@
             const description = el('Description').value.trim();
             el('DescriptionCount').textContent = description.length + ' characters';
         }
+
+        el('Cats').addEventListener('change', function (event) {
+            const box = event.target;
+            if (!box || box.type !== 'checkbox') return;
+            catOrder = catOrder.filter(function (code) { return code !== box.value; });
+            if (box.checked) catOrder.push(box.value);
+            paintCats();
+            const rule = RULES[0];
+            if (el('Category').value) setFieldError(null, p + rule.slot, '');
+            paintPreview(); saveDraftSoon();
+        });
+        el('Kind').addEventListener('change', function () { paintPreview(); saveDraftSoon(); });
 
         ['Title', 'Category', 'Description', 'Label', 'LocBarangay', 'LocAddress', 'EntranceFee']
             .forEach(function (name) {
@@ -2018,7 +2091,9 @@
         function readForm() {
             return {
                 title: el('Title').value,
-                category: el('Category').value,
+                category: catOrder[0] || '',
+                moreCategories: catOrder.slice(1),
+                type: kindValue(),
                 description: el('Description').value,
                 label: el('Label').value,
                 address: el('LocAddress').value,
@@ -2041,7 +2116,8 @@
 
         function applyForm(data) {
             el('Title').value = data.title || '';
-            el('Category').value = data.category || 'MOUNTAIN';
+            setCats(data.category, data.moreCategories);
+            setKind(data.type || (String(data.category || '').toUpperCase() === 'ACCOMMODATION' ? 'accommodation' : 'spot'));
             el('Description').value = data.description || '';
             el('Label').value = data.label || '';
             el('LocAddress').value = data.address || '';
@@ -2154,7 +2230,9 @@
             const payload = Object.assign({
                 title: el('Title').value.trim(),
                 description: el('Description').value.trim(),
-                category: el('Category').value,
+                category: catOrder[0],
+                moreCategories: catOrder.slice(1),
+                type: kindValue(),
                 label: el('Label').value.trim(),
                 travelFee: parseFloat(el('TravelFee').value) || 0,
                 entranceFee: parseFloat(el('EntranceFee').value) || 0,
@@ -2195,7 +2273,8 @@
             editingId = spot && spot._id ? String(spot._id) : '';
 
             el('Title').value = (spot && spot.title) || '';
-            el('Category').value = (spot && spot.category) || 'MOUNTAIN';
+            setCats(spot && spot.category, spot && spot.moreCategories);
+            setKind(spot && (spot.type || (String(spot.category || '').toUpperCase() === 'ACCOMMODATION' ? 'accommodation' : 'spot')));
             el('Description').value = (spot && spot.description) || '';
             el('Label').value = (spot && spot.label) || '';
             el('TravelFee').value = spot && spot.travelFee != null ? spot.travelFee : '';
@@ -2246,6 +2325,8 @@
             }
             if (pinMode) leavePinMode();
             form.reset();
+            catOrder = [];
+            paintCats();
             photos = [];
             currentSpot = null;
             editingId = '';

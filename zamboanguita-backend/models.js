@@ -72,6 +72,12 @@ const managers = new Table('establishment_managers', {
 const MUNICIPALITY = 'Zamboanguita';
 const PROVINCE = 'Negros Oriental';
 
+/* What a listing is known for (see schema.sql, "Categories"): the main
+   category is spots.category; any others are spot_more_categories rows. */
+const CATEGORY_CODES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'];
+const MORE_CATEGORIES_OF = alias => `coalesce((select array_agg(c.category order by c.position) from spot_more_categories c
+    where c.spot_id = ${alias}.id), '{}') as more_categories`;
+
 /* A listing's gallery, in order, from spot_photos. */
 const PHOTOS_OF = alias => `coalesce((select array_agg(p.url order by p.position) from spot_photos p
     where p.spot_id = ${alias}.id), '{}') as images`;
@@ -79,7 +85,9 @@ const PHOTOS_OF = alias => `coalesce((select array_agg(p.url order by p.position
 const spots = new Table('spots', {
     title: required(),
     location: required({ requiredMessage: 'Fill in the Location Information so the listing has a place to show.' }),
-    category: required(),
+    category: required({ enum: CATEGORY_CODES }),
+    // The other categories, in spot_more_categories; spots.create/save write it.
+    moreCategories: { type: 'strings', default: () => [], maxItems: CATEGORY_CODES.length, external: true },
     description: required(),
     imageUrl: text(),
     // In spot_photos, one row per photo; spots.create/save write it.
@@ -108,7 +116,7 @@ const spots = new Table('spots', {
     childAgeMax: { type: 'integer', nullable: true, min: 1, max: 17 },
     cancelKeepPercent: number({ min: 0, max: 100 })
 }, {
-    select: `select spots.*, ${PHOTOS_OF('spots')} from spots`,
+    select: `select spots.*, ${PHOTOS_OF('spots')}, ${MORE_CATEGORIES_OF('spots')} from spots`,
     virtuals: {
         municipality: { read: () => MUNICIPALITY },
         province: { read: () => PROVINCE }
@@ -126,15 +134,32 @@ async function writePhotos(spotId, photos, client) {
     }
 }
 
-/* A listing and its gallery are written together, in one transaction. */
+/* Replaces a listing's other categories, in order, never repeating the main one. */
+async function writeMoreCategories(spotId, main, more, client) {
+    const list = [...new Set(more)].filter(code => code !== main);
+    await query('delete from spot_more_categories where spot_id = $1', [spotId], client);
+    if (list.length) {
+        await query(
+            `insert into spot_more_categories (spot_id, position, category)
+             select $1, ord - 1, category from unnest($2::text[]) with ordinality as c(category, ord)`,
+            [spotId, list], client);
+    }
+    return list;
+}
+
+/* A listing, its gallery and its other categories are written together, in
+   one transaction. */
 const createSpotRow = spots.create.bind(spots);
 spots.create = async function (values, options = {}) {
     const photos = castField('images', spots.fields.images, values.images);
+    const more = castField('moreCategories', spots.fields.moreCategories, values.moreCategories);
     const run = async client => {
         const spot = await createSpotRow(values, { ...options, client });
         await writePhotos(spot._id, photos, client);
         spot.images = photos;
         spots.rememberValue(spot, 'images', photos);
+        spot.moreCategories = await writeMoreCategories(spot._id, spot.category, more, client);
+        spots.rememberValue(spot, 'moreCategories', spot.moreCategories);
         return spot;
     };
     return options.client ? run(options.client) : transaction(run);
@@ -142,14 +167,24 @@ spots.create = async function (values, options = {}) {
 
 const saveSpotRow = spots.save.bind(spots);
 spots.save = async function (spot, options = {}) {
-    const changed = spot.images !== undefined && !sameValue(spot.images, spots.savedValue(spot, 'images'));
-    if (!changed) return saveSpotRow(spot, options);
-    const photos = castField('images', spots.fields.images, spot.images);
+    const photosChanged = spot.images !== undefined && !sameValue(spot.images, spots.savedValue(spot, 'images'));
+    const moreChanged = spot.moreCategories !== undefined
+        && (!sameValue(spot.moreCategories, spots.savedValue(spot, 'moreCategories'))
+            || spot.category !== spots.savedValue(spot, 'category'));
+    if (!photosChanged && !moreChanged) return saveSpotRow(spot, options);
     const run = async client => {
         await saveSpotRow(spot, { ...options, client });
-        await writePhotos(spot._id, photos, client);
-        spot.images = photos;
-        spots.rememberValue(spot, 'images', photos);
+        if (photosChanged) {
+            const photos = castField('images', spots.fields.images, spot.images);
+            await writePhotos(spot._id, photos, client);
+            spot.images = photos;
+            spots.rememberValue(spot, 'images', photos);
+        }
+        if (moreChanged) {
+            const more = castField('moreCategories', spots.fields.moreCategories, spot.moreCategories);
+            spot.moreCategories = await writeMoreCategories(spot._id, spot.category, more, client);
+            spots.rememberValue(spot, 'moreCategories', spot.moreCategories);
+        }
         return spot;
     };
     return options.client ? run(options.client) : transaction(run);
@@ -171,7 +206,7 @@ const MANAGER_SUMMARY = `case when m.id is null then null else jsonb_build_objec
    populate() gave them, newest first. */
 spots.findWithManagers = async function (filters = {}, { limit } = {}) {
     const { sql, params } = spots.where(filters, [], 's');
-    let statement = `select s.*, ${PHOTOS_OF('s')}, ${MANAGER_SUMMARY}
+    let statement = `select s.*, ${PHOTOS_OF('s')}, ${MORE_CATEGORIES_OF('s')}, ${MANAGER_SUMMARY}
         from spots s left join establishment_managers m on m.id = s.managed_by${sql}
         order by s.created_at desc`;
     if (limit) statement += ` limit ${Math.floor(limit)}`;

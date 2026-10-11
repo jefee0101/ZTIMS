@@ -348,10 +348,13 @@ body { overflow-x: hidden; }
                             <select id="spotCategoryFilter" aria-label="Filter by category"
                                 class="hero-search__field appearance-none pl-5 pr-10 text-sm font-bold">
                                 <option value="all">All categories</option>
-                                <option value="BEACH / DIVING">Beach / Diving</option>
-                                <option value="MOUNTAIN">Mountain</option>
-                                <option value="CULTURAL">Cultural</option>
-                                <option value="ACCOMMODATION">Accommodation</option>
+                                <option value="BEACH">Beach &amp; Sea</option>
+                                <option value="DIVING">Diving &amp; Snorkeling</option>
+                                <option value="NATURE">Nature</option>
+                                <option value="ADVENTURE">Adventure</option>
+                                <option value="CULTURE">Culture &amp; Heritage</option>
+                                <option value="FAITH">Faith</option>
+                                <option value="STAY">Places to stay</option>
                             </select>
                             <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">expand_more</span>
                         </div>
@@ -568,17 +571,24 @@ body { overflow-x: hidden; }
        what the municipality keeps, ocean for somewhere to stay. */
     // The label is the category's own name, the same words the tiles and the
     // category filter use, so a card says which kind of place it is.
-    const CATEGORY_BADGE = {
-        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape', label: 'Mountain' },
-        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving', label: 'Beach / Diving' },
-        'CULTURAL': { cls: 'cat-municipal', icon: 'museum', label: 'Cultural' },
-        'ACCOMMODATION': { cls: 'cat-stay', icon: 'hotel', label: 'Accommodation' }
-    };
+    // The categories live in tourism-map.js (window.ZTIMS_CATEGORIES), shared
+    // with the map, the destination page and the portals.
+    const CATS = () => window.ZTIMS_CATEGORIES;
+    const isStayPlace = spot => CATS().isStay(spot);
 
+    // The card's badge: its main category; a place to stay says so first.
     function categoryBadge(spot) {
-        const key = String(spot.category || '').toUpperCase();
-        return CATEGORY_BADGE[key] || { cls: 'cat-attraction', icon: 'photo_camera', label: 'Tourist Spot' };
+        const main = CATS().of(spot)[0];
+        const info = main ? CATS().info(main) : null;
+        if (isStayPlace(spot)) {
+            return { cls: 'cat-stay', icon: 'hotel', label: 'Place to stay' + (info ? ' · ' + info.label : '') };
+        }
+        return info ? { cls: 'cat-' + info.cat, icon: info.icon, label: info.label }
+                    : { cls: 'cat-attraction', icon: 'photo_camera', label: 'Tourist spot' };
     }
+    // Every category's name, for the search to find a place by.
+    const categoryWords = spot => CATS().of(spot).map(code => CATS().label(code)).join(' ')
+        + (isStayPlace(spot) ? ' place to stay resort accommodation' : '');
 
     // "Free entrance" rather than ₱0.00. A place to stay has no entrance fee,
     // so its card shows none; whole pesos drop the ".00".
@@ -588,7 +598,7 @@ body { overflow-x: hidden; }
             const amount = Number.isInteger(fee) ? `₱${fee.toLocaleString('en-PH')}` : formatPeso(fee);
             return `<span class="text-support">Entrance <b class="text-on-surface">${amount}</b></span>`;
         }
-        if (String(spot.category || '').toUpperCase() === 'ACCOMMODATION') return '<span></span>';
+        if (isStayPlace(spot)) return '<span></span>';
         return '<span class="text-support font-bold text-on-surface">Free entrance</span>';
     }
 
@@ -615,7 +625,7 @@ body { overflow-x: hidden; }
     // destination page opens on that action (#tickets, #guide).
     function mainAction(spot) {
         const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
-        const isStay = String(spot.category || '').toUpperCase() === 'ACCOMMODATION' || spot.type === 'accommodation';
+        const isStay = isStayPlace(spot);
         if (ticketsOnline && spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) {
             return { href: `${page}#tickets`, label: 'Buy tickets', icon: 'confirmation_number' };
         }
@@ -666,16 +676,17 @@ body { overflow-x: hidden; }
         return card;
     }
 
-    const CATEGORY_NAMES = { 'BEACH / DIVING': 'Beaches & Diving', 'MOUNTAIN': 'Mountains & Waterfalls', 'CULTURAL': 'Culture & Heritage', 'ACCOMMODATION': 'Places to Stay' };
+    const CATEGORY_NAMES = { BEACH: 'Beach & Sea', DIVING: 'Diving & Snorkeling', NATURE: 'Nature', ADVENTURE: 'Adventure',
+                             CULTURE: 'Culture & Heritage', FAITH: 'Faith', STAY: 'Places to stay' };
 
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
         const matches = allSpots.filter(spot => {
             // Categories are stored upper case by every editor, but compared
             // case-insensitively so an older spot typed by hand still matches.
-            if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
+            if (!CATS().matches(spot, activeCategory)) return false;
             if (!query) return true;
-            return [spot.title, spot.location, spot.barangay, spot.category, spot.label, spot.description]
+            return [spot.title, spot.location, spot.barangay, categoryWords(spot), spot.label, spot.description]
                 .filter(Boolean)
                 .some(field => String(field).toLowerCase().includes(query));
         });
@@ -733,8 +744,8 @@ body { overflow-x: hidden; }
 
     function findSuggestions(query) {
         const hits = allSpots.filter(spot => {
-            if (activeCategory !== 'all' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
-            return [spot.title, spot.location, spot.barangay, spot.category, spot.label]
+            if (!CATS().matches(spot, activeCategory)) return false;
+            return [spot.title, spot.location, spot.barangay, categoryWords(spot), spot.label]
                 .filter(Boolean)
                 .some(field => String(field).toLowerCase().includes(query));
         });
@@ -781,7 +792,7 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-lg text-primary shrink-0">place</span>
                     <span class="min-w-0">
                         <span class="block text-sm font-bold text-on-surface truncate">${markMatch(String(spot.title || ''), query)}</span>
-                        <span class="block text-support truncate">${escapeHtml(spot.category || '')} · ${escapeHtml(where)}</span>
+                        <span class="block text-support truncate">${escapeHtml(categoryBadge(spot).label)} · ${escapeHtml(where)}</span>
                     </span>
                 </button>`;
         }).join('');
@@ -841,20 +852,28 @@ body { overflow-x: hidden; }
        The tiles and the dropdown are one control. What was searched and chosen
        is kept for this visit, so "Destinations" on a destination page comes
        back to the same results; a link may also name a category
-       (index.html?category=MOUNTAIN#browse). */
+       (index.html?category=NATURE#browse; the old names still work). */
     const CATEGORY_TILES = [
-        { key: 'BEACH / DIVING', title: 'Beaches & Diving', sub: 'Swim, snorkel and dive the reefs', icon: 'scuba_diving' },
-        { key: 'MOUNTAIN', title: 'Mountains & Waterfalls', sub: 'Chase the falls and the views', icon: 'landscape' },
-        { key: 'CULTURAL', title: 'Culture & Heritage', sub: "Discover the town's story", icon: 'museum' },
-        { key: 'ACCOMMODATION', title: 'Places to Stay', sub: 'Resorts and lodging for the night', icon: 'hotel' }
+        { key: 'BEACH', title: 'Beach & Sea', sub: 'Swim and relax by the sea', icon: 'beach_access' },
+        { key: 'DIVING', title: 'Diving & Snorkeling', sub: 'Explore the reefs', icon: 'scuba_diving' },
+        { key: 'NATURE', title: 'Nature', sub: 'Falls, hills and farms', icon: 'forest' },
+        { key: 'ADVENTURE', title: 'Adventure', sub: 'Treks and climbs', icon: 'hiking' },
+        { key: 'CULTURE', title: 'Culture & Heritage', sub: "The town's story", icon: 'museum' },
+        { key: 'FAITH', title: 'Faith', sub: 'Churches and shrines', icon: 'church' },
+        { key: 'STAY', title: 'Places to stay', sub: 'Resorts and inns', icon: 'hotel' }
     ];
+    const OLD_CATEGORY_KEYS = { 'BEACH / DIVING': 'BEACH', MOUNTAIN: 'NATURE', CULTURAL: 'CULTURE', ACCOMMODATION: 'STAY' };
+    const knownCategory = key => {
+        const k = OLD_CATEGORY_KEYS[String(key || '').toUpperCase()] || String(key || '').toUpperCase();
+        return CATEGORY_TILES.some(t => t.key === k) ? k : 'all';
+    };
     const BROWSE_KEY = 'ztimsBrowse';
 
     function rememberBrowse() {
         try { sessionStorage.setItem(BROWSE_KEY, JSON.stringify({ q: searchInput.value, category: activeCategory })); } catch (e) { /* private browsing */ }
     }
     function setCategory(category) {
-        activeCategory = CATEGORY_TILES.some(t => t.key === category) ? category : 'all';
+        activeCategory = knownCategory(category);
         document.getElementById('spotCategoryFilter').value = activeCategory;
         document.querySelectorAll('#categoryTiles [data-category]').forEach(tile =>
             tile.setAttribute('aria-pressed', tile.dataset.category === activeCategory ? 'true' : 'false'));
@@ -864,7 +883,7 @@ body { overflow-x: hidden; }
     function drawCategoryTiles() {
         const box = document.getElementById('categoryTiles');
         box.innerHTML = CATEGORY_TILES.map(tile => {
-            const places = allSpots.filter(spot => String(spot.category || '').toUpperCase() === tile.key);
+            const places = allSpots.filter(spot => CATS().matches(spot, tile.key));
             const photo = (places.find(spot => spot.imageUrl) || {}).imageUrl;
             return `
                 <button type="button" class="category-tile" data-category="${escapeHtml(tile.key)}" aria-pressed="${activeCategory === tile.key}">
@@ -901,8 +920,7 @@ body { overflow-x: hidden; }
         try { saved = JSON.parse(sessionStorage.getItem(BROWSE_KEY) || '{}'); } catch (e) { /* nothing kept */ }
         const fromLink = new URLSearchParams(window.location.search).get('category');
         if (typeof saved.q === 'string' && !fromLink) searchInput.value = saved.q;
-        const category = fromLink || saved.category || 'all';
-        activeCategory = CATEGORY_TILES.some(t => t.key === category) ? category : 'all';
+        activeCategory = knownCategory(fromLink || saved.category || 'all');
         document.getElementById('spotCategoryFilter').value = activeCategory;
     })();
 

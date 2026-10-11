@@ -1647,7 +1647,17 @@ div.leaflet-container {
 
 /* Category tiles: a photograph per kind of place, its name over it. */
 .category-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-@media (min-width: 1024px) { .category-tiles { grid-template-columns: repeat(4, 1fr); } }
+/* Seven tiles (six categories and Places to stay): two a row on a phone, the
+   seventh across the row; four a row on a tablet; all seven in one row wide. */
+.category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: span 2; }
+@media (min-width: 1024px) {
+    .category-tiles { grid-template-columns: repeat(4, 1fr); }
+    .category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: auto; }
+}
+@media (min-width: 1280px) {
+    .category-tiles { grid-template-columns: repeat(7, 1fr); }
+    .category-tile__title { font-size: .95rem; }
+}
 .category-tile {
     position: relative; display: block; height: 9.5rem; overflow: hidden; text-align: left;
     background: rgb(var(--ztims-primary)); color: #fff; border: 0; padding: 0; cursor: pointer;
@@ -2090,3 +2100,19 @@ aside a[title="Log Out"]:hover, aside a[title="Log Out"]:hover .material-symbols
 button[data-remove], button[data-em-remove], button[data-drop], .ztims-pinbar__btn--cancel { color: rgb(var(--ztims-error)) !important; }
 button[data-remove] { background: #B3261E !important; color: #FFFDFA !important; }
 button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !important; color: #FFFDFA !important; }
+
+/* The listing form's Kind of place and Known for (spot-form.js): pills to tap;
+   a chosen one fills burnt orange, the main category says so. */
+.sf-choices { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .35rem; }
+.sf-choice { position: relative; display: inline-flex; align-items: center; gap: .4rem; min-height: 44px;
+             padding: 0 1rem; border: 1px solid rgb(var(--ztims-outline)); border-radius: 9999px; cursor: pointer;
+             font-weight: 700; font-size: .875rem; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-surface));
+             transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard); }
+.sf-choice .material-symbols-outlined { font-size: 18px; }
+.sf-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.sf-choice:hover { border-color: rgb(var(--ztims-secondary)); }
+.sf-choice:has(input:checked) { background: rgb(var(--ztims-primary)); border-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.sf-choice:has(input:focus-visible) { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.sf-choice__main { display: none; font-size: .6875rem; font-weight: 800; padding: .05rem .45rem; border-radius: 9999px;
+                   background: rgb(var(--ztims-on-primary)); color: rgb(var(--ztims-primary-text)); }
+.sf-choice.is-main .sf-choice__main { display: inline-block; }

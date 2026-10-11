@@ -535,7 +535,7 @@ body { overflow-x: hidden; }
             return `
                 <a id="bookNowBtn" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
                    class="w-full bg-primary text-on-primary py-4 rounded-full font-display font-bold uppercase tracking-widest btn-primary-gradient shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                    <span class="material-symbols-outlined">open_in_new</span> ${String(spot.category || '').toUpperCase() === 'ACCOMMODATION' ? 'Book a room' : 'Book now'}
+                    <span class="material-symbols-outlined">open_in_new</span> ${isStayPlace(spot) ? 'Book a room' : 'Book now'}
                 </a>
                 <p class="text-support text-center mt-3">
                     Booking is handled on ${escapeHtml(managerName(establishment) || 'the establishment')}'s own website. This opens in a new tab.
@@ -1715,24 +1715,29 @@ body { overflow-x: hidden; }
 
     /* The same category colours the landing cards and the map markers use, so a
        place looks like itself wherever it appears. */
-    const HERO_BADGE = {
-        'MOUNTAIN': { cls: 'cat-attraction', icon: 'landscape' },
-        'BEACH / DIVING': { cls: 'cat-notice', icon: 'scuba_diving' },
-        'CULTURAL': { cls: 'cat-municipal', icon: 'museum' },
-        'ACCOMMODATION': { cls: 'cat-stay', icon: 'hotel' }
-    };
+    // The categories live in tourism-map.js (window.ZTIMS_CATEGORIES).
+    const CATS = () => window.ZTIMS_CATEGORIES;
+    const isStayPlace = spot => CATS().isStay(spot);
     function heroBadge(spot) {
-        return HERO_BADGE[String(spot && spot.category || '').toUpperCase()]
-            || { cls: 'cat-attraction', icon: 'photo_camera' };
+        if (isStayPlace(spot)) return { cls: 'cat-stay', icon: 'hotel' };
+        const info = CATS().info(CATS().of(spot)[0]);
+        return info ? { cls: 'cat-' + info.cat, icon: info.icon } : { cls: 'cat-attraction', icon: 'photo_camera' };
     }
 
     /* ---- the visitor's journey: where they are and what comes next ---- */
 
-    const CATEGORY_TITLES = {
-        'BEACH / DIVING': 'Beaches & Diving', 'MOUNTAIN': 'Mountains & Waterfalls',
-        'CULTURAL': 'Culture & Heritage', 'ACCOMMODATION': 'Places to Stay'
-    };
-    const categoryTitle = category => CATEGORY_TITLES[String(category || '').toUpperCase()] || 'Destinations';
+    // A place's heading category: "Places to stay" for one, else its main one;
+    // and the filter Home opens for it.
+    const categoryTitle = spot => isStayPlace(spot) ? 'Places to stay' : (CATS().label(CATS().of(spot)[0]) || 'Destinations');
+    const categoryKey = spot => isStayPlace(spot) ? 'STAY' : (CATS().of(spot)[0] || '');
+    // Its other categories, as small pills under the main badge.
+    function moreBadges(spot) {
+        const codes = CATS().of(spot).slice(isStayPlace(spot) ? 0 : 1);
+        return codes.map(code => {
+            const info = CATS().info(code);
+            return `<span class="cat-badge cat-${info.cat} !bg-surface !text-[11px] !py-0.5"><span class="material-symbols-outlined !text-sm" aria-hidden="true">${info.icon}</span>${escapeHtml(info.label)}</span>`;
+        }).join('');
+    }
 
     // "1 Details  2 Payment  3 Confirmed", the current step marked.
     function journeySteps(labels, current) {
@@ -1749,9 +1754,9 @@ body { overflow-x: hidden; }
     // What this destination lets a visitor do, and the buttons for it: under the
     // photo, and fixed to the bottom of a phone's screen.
     const actions = { tickets: false, guide: false, directions: false, bookingUrl: '' };
-    let currentCategory = '';
+    let currentIsStay = false;
     function startActions(spot) {
-        currentCategory = spot.category || '';
+        currentIsStay = isStayPlace(spot);
         actions.directions = Boolean(spotPoint(spot));
         actions.bookingUrl = safeExternalUrl(spot.bookingUrl) || '';
         drawActions();
@@ -1761,7 +1766,7 @@ body { overflow-x: hidden; }
         const list = [];
         if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
         if (actions.guide) list.push(`<button type="button" data-act="guide" class="btn ${actions.tickets ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">hiking</span>Book a guide</button>`);
-        if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${String(currentCategory).toUpperCase() === 'ACCOMMODATION' ? 'Book a room' : 'Book now'}</a>`);
+        if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
         if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.guide || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
         return list.join('');
     }
@@ -1840,10 +1845,10 @@ body { overflow-x: hidden; }
             if (response.ok) all = await response.json();
         } catch (error) { return; }
         const here = spotPoint(spot);
-        const category = String(spot.category || '').toUpperCase();
+        const mine = CATS().of(spot);
         const others = (Array.isArray(all) ? all : []).filter(s => s._id !== spot._id).map(s => {
             const there = spotPoint(s);
-            return { spot: s, km: here && there ? distanceKm(here, there) : null, same: String(s.category || '').toUpperCase() === category };
+            return { spot: s, km: here && there ? distanceKm(here, there) : null, same: CATS().of(s).some(code => mine.includes(code)) };
         });
         if (!others.length) return;
         others.sort((a, b) => (a.km !== null && b.km !== null) ? a.km - b.km
@@ -1859,7 +1864,7 @@ body { overflow-x: hidden; }
                         <img src="${escapeHtml(s.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="" loading="lazy" decoding="async"/>
                     </div>
                     <div class="home-card__body">
-                        <span class="cat-badge ${b.cls} self-start !text-[10px] !py-0.5">${escapeHtml(categoryTitle(s.category))}</span>
+                        <span class="cat-badge ${b.cls} self-start !text-[10px] !py-0.5">${escapeHtml(categoryTitle(s))}</span>
                         <h3 class="home-card__title"><a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="home-card__link">${escapeHtml(s.title)}</a></h3>
                         <p class="home-card__meta"><span class="material-symbols-outlined" aria-hidden="true">${km !== null ? 'near_me' : 'location_on'}</span>${km !== null ? `${km < 1 ? 'Under 1' : km.toFixed(1)} km away` : escapeHtml(s.barangay || s.location || '')}</p>
                     </div>
@@ -1878,7 +1883,7 @@ body { overflow-x: hidden; }
        open, what it costs to get in, any travel fee, whether a guide must come,
        and where it is. Only what applies to this place is shown. */
     function glanceFacts(spot) {
-        const isStay = String(spot.category || '').toUpperCase() === 'ACCOMMODATION' || spot.type === 'accommodation';
+        const isStay = isStayPlace(spot);
         const rawDays = String(spot.workingDays || '').trim();
         const rawTime = String(spot.workingTime || '').trim();
         const days = !rawDays || /^every ?day$/i.test(rawDays) ? 'Every day' : rawDays;
@@ -1920,7 +1925,8 @@ body { overflow-x: hidden; }
                 <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
                 <div class="absolute bottom-0 left-0 right-0">
                     <div class="spot-wrap pb-6 sm:pb-8">
-                        <span class="cat-badge ${badge.cls} !bg-surface mb-3"><span class="material-symbols-outlined !text-sm" aria-hidden="true">${badge.icon}</span>${escapeHtml(categoryTitle(spot.category))}</span>
+                        <span class="cat-badge ${badge.cls} !bg-surface mb-3"><span class="material-symbols-outlined !text-sm" aria-hidden="true">${badge.icon}</span>${escapeHtml(categoryTitle(spot))}</span>
+                        ${moreBadges(spot) ? `<span class="flex flex-wrap gap-1.5 mb-3 -mt-1">${moreBadges(spot)}</span>` : ''}
                         <h1 class="text-[1.9rem] sm:text-4xl md:text-5xl font-display font-black tracking-tight text-white mb-2 break-words">${escapeHtml(spot.title)}</h1>
                         <p class="text-white/90 flex items-center gap-1.5 text-sm">
                             <span class="material-symbols-outlined !text-lg" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay ? `${spot.barangay}, Zamboanguita` : (spot.location || 'Zamboanguita'))}
@@ -1934,7 +1940,7 @@ body { overflow-x: hidden; }
                     <nav aria-label="Breadcrumb" class="text-support flex flex-wrap items-center gap-1.5">
                         <a href="../index.html#browse" class="font-bold hover:text-primary hover:underline">Destinations</a>
                         <span aria-hidden="true">›</span>
-                        <a href="../index.html?category=${encodeURIComponent(String(spot.category || '').toUpperCase())}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot.category))}</a>
+                        <a href="../index.html?category=${encodeURIComponent(categoryKey(spot))}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot))}</a>
                         <span aria-hidden="true">›</span>
                         <span aria-current="page" class="text-on-surface">${escapeHtml(spot.title)}</span>
                     </nav>
@@ -1954,7 +1960,7 @@ body { overflow-x: hidden; }
                 <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
                 ${safeExternalUrl(spot.bookingUrl) ? `
                 <section class="spot-panel">
-                    <h2 class="spot-h2">${String(spot.category || '').toUpperCase() === 'ACCOMMODATION' ? 'Book your stay' : 'Book your visit'}</h2>
+                    <h2 class="spot-h2">${isStayPlace(spot) ? 'Book your stay' : 'Book your visit'}</h2>
                     ${bookingPanel(spot)}
                 </section>` : contact ? `
                 <section class="spot-panel">

@@ -170,7 +170,10 @@ purpose — see the header comment in `spot-form.js`:
   Dashboard quick-add. Owns barangay list, validation, the location picker
   and its Zamboanguita bounding-box sanity check.
 - `tourism-map.js` — Leaflet + OpenStreetMap tiles + ZTIMS's own category
-  markers. Never calls a routing provider directly; hands off to the backend's
+  markers, and the one list of categories every page uses
+  (`window.ZTIMS_CATEGORIES`: `CODES`, `info`, `label`, `of(spot)` — the main
+  one first — `isStay`, and `matches(spot, filter)` with `'STAY'` for places to
+  stay; old codes are read as their new ones). Never calls a routing provider directly; hands off to the backend's
   `/api/directions/route`.
 - `theme.css` — the design system: the single source of the color palette
   (RGB-triple custom properties so Tailwind opacity modifiers like `/40` keep
@@ -287,8 +290,10 @@ ground; ink `#1C1917` (off-black) text and the visitor's position on a map;
 paper `#FAF7F2` (off-white) the light ground, `#121110` the dark one. Red
 (errors, destructive) and green (success) are the only colours outside the
 identity, so a status never looks like a brand colour. Categories use the four
-shades on badges, map pins and legends (Beach/Diving tangerine, Mountain ember,
-Cultural burnt, Accommodation ink), always with their name and icon; the
+shades on badges, map pins and legends (Beach & Sea and Diving tangerine, Nature
+and Adventure ember, Culture & Heritage and Faith burnt, Places to stay ink),
+always with their name and icon — two share each colour, so the icon tells them
+apart (the map legend shows each as its pin); the
 category badge (`.cat-badge`) is a pill everywhere. Emails
 (`mailer.js`, the reset email in `server.js`) use the same colours; ticket QR
 codes stay black on white so scanners read them.
@@ -539,6 +544,7 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   overseas Filipinos take the Philippine flag; CIS, other foreign and
   unspecified take an icon. A country added to `residences` needs its flag
   copied there too.
+- (Statistics read a place's kind from `spots.type`, never its categories.)
 - **Rules the API enforces**, whatever the page does: one live report per
   place per month; male + female = total; room-nights occupied ≤ rooms × days
   in the month; guest nights ≥ arrivals; no month that hasn't started. Due on
@@ -585,8 +591,8 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 22 tables in all, with `spot_closed_dates`, `spot_photos`,
-  `office_info` and `emergency_numbers`
+  have `is_demo`. 23 tables in all, with `spot_closed_dates`, `spot_photos`,
+  `spot_more_categories`, `office_info` and `emergency_numbers`
   (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
@@ -649,7 +655,8 @@ Frontend only, no tables of their own:
   outline, the user's choice) — `coveRibbon` in the page draws
   the curve at the cove's real size so tiles and letters are not stretched,
   and redraws on resize) — four category photo tiles
-  (`#categoryTiles`; tiles and the category menu are one control,
+  (`#categoryTiles`, seven: the six categories and Places to stay — two a row
+  on a phone, all seven in a row from 1280px; tiles and the category menu are one control,
   `setCategory`; a second tap shows everything), a status line only while a
   search or category narrows the list (`#browseStatus`, with "Show all"), and
   the cards; **Find it on the map** (`#map`, whose ground fades from the
@@ -796,7 +803,8 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **One value per column or row**: a listing's gallery is `spot_photos` (one
   row per photo, `position` 0–29; routes still see `spot.images`, written by
   `spots.create/save` in one transaction); a guide's days are
-  `works_mon…works_sun` (routes still see `availableDays`); a ticket's prices
+  `works_mon…works_sun` (routes still see `availableDays`); a listing's other
+  categories are `spot_more_categories` (routes see `moreCategories`); a ticket's prices
   are `fee_*` columns (routes still see `feeBreakdown` and `unitFee`).
 - **Not stored**: a listing's municipality and province (always Zamboanguita,
   Negros Oriental — `MUNICIPALITY`/`PROVINCE` in `models.js`, added on read)
@@ -808,6 +816,25 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   that record, like a receipt's price, not copies to keep in step.
 
 ### Listings, guides and the visitor's day out
+
+- **Categories, by the visitor's purpose** (October 2026, the user's choice):
+  Beach & Sea (`BEACH`), Diving & Snorkeling (`DIVING`), Nature (`NATURE`),
+  Adventure (`ADVENTURE`), Culture & Heritage (`CULTURE`), Faith (`FAITH`). A
+  place can have several: `spots.category` is the main one (checked against the
+  six), `spot_more_categories` holds the others (one row each, never the main
+  again; routes see `spot.moreCategories`, written by `spots.create/save` in the
+  same transaction as the photos). Whether it is a **place to stay** is its own
+  question, `spots.type` (`accommodation` | `spot`), and it alone decides the
+  monthly report's kind, tickets and "Book a room". The form asks "Kind of
+  place" (two pills) and "Known for" (six pills to tick; the first ticked is the
+  main one, marked Main); `normaliseSpotCategories` in `server.js` checks them
+  and reads the four old codes a cached page may send. Home's tiles and filter
+  are the six plus Places to stay (`?category=` accepts old names too); a place
+  shows under every category it has. `schema.sql` converted the old values once
+  (ACCOMMODATION → a place to stay, Beach & Sea if its words speak of the sea,
+  else Nature; BEACH / DIVING → Beach & Sea + Diving; MOUNTAIN → Nature, +
+  Adventure for a peak or ridge; CULTURAL → Culture & Heritage, Faith first for
+  a church) — the office and managers adjust from there.
 
 - **One establishment, one listing.** A manager account keeps exactly one
   listing (`spots_one_per_establishment`, a unique index on `managed_by`, and a

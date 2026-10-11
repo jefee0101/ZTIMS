@@ -570,10 +570,13 @@ body { overflow-x: hidden; }
                     <span class="text-label font-bold uppercase tracking-widest ml-2">Categories:</span>
                     <div class="flex flex-wrap gap-2" id="categoryFilterContainer">
                         <button data-category="ALL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">All</button>
-                        <button data-category="BEACH / DIVING" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Beach / Diving</button>
-                        <button data-category="MOUNTAIN" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Mountain</button>
-                        <button data-category="CULTURAL" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Cultural</button>
-                        <button data-category="ACCOMMODATION" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Accommodation</button>
+                        <button data-category="BEACH" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Beach &amp; Sea</button>
+                        <button data-category="DIVING" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Diving &amp; Snorkeling</button>
+                        <button data-category="NATURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Nature</button>
+                        <button data-category="ADVENTURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Adventure</button>
+                        <button data-category="CULTURE" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Culture &amp; Heritage</button>
+                        <button data-category="FAITH" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Faith</button>
+                        <button data-category="STAY" class="cat-filter-btn btn btn-secondary !text-on-surface-variant">Places to stay</button>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -821,7 +824,8 @@ body { overflow-x: hidden; }
                 type: "spot",
                 title: "Najandig Peak",
                 location: "Brgy. Najandig",
-                category: "MOUNTAIN",
+                category: "ADVENTURE",
+                moreCategories: ["NATURE"],
                 label: "Highland Overlooking View",
                 description: "A panoramic trek route mapping raw ridge line view overlooking Apo Island strait.",
                 workingDays: "Everyday",
@@ -835,7 +839,8 @@ body { overflow-x: hidden; }
                 type: "spot",
                 title: "Jumao-as Falls",
                 location: "Malongcay Diot",
-                category: "MOUNTAIN",
+                category: "NATURE",
+                moreCategories: ["ADVENTURE"],
                 label: "Hidden Jungle Waterfall",
                 description: "Deep valley spring running through pristine stone reservoirs, perfect for outdoor enthusiasts.",
                 workingDays: "Everyday",
@@ -849,7 +854,8 @@ body { overflow-x: hidden; }
                 type: "spot",
                 title: "Hot Spring",
                 location: "Jumao-as",
-                category: "MOUNTAIN",
+                category: "NATURE",
+                moreCategories: [],
                 label: "Relaxing Natural Pool",
                 description: "Geothermal heated structural streams filtering soothing warm minerals safely.",
                 workingDays: "Everyday",
@@ -863,7 +869,8 @@ body { overflow-x: hidden; }
                 type: "spot",
                 title: "Malatapay Market",
                 location: "Zamboanguita Proper",
-                category: "CULTURAL",
+                category: "CULTURE",
+                moreCategories: [],
                 label: "Authentic Coastal Trade Hub",
                 description: "Famous Wednesday open air traditional marketplace layout for livestock barter and local seafood dishes.",
                 workingDays: "Wednesdays Only",
@@ -885,7 +892,8 @@ body { overflow-x: hidden; }
                 location: "Brgy. Calango",
                 barangay: "Calango",
                 address: "Sitio Mayaposi, inland from the national highway",
-                category: "CULTURAL",
+                category: "NATURE",
+                moreCategories: ["CULTURE"],
                 label: "Organic Farm & Farm-to-Table",
                 description:
                     "Also known as Zamora Natural Farm, an eco-tourism and organic farm in the quiet interior of " +
@@ -913,7 +921,8 @@ body { overflow-x: hidden; }
                 location: "Poblacion",
                 barangay: "Poblacion",
                 address: "Corner Magsaysay Street and Quezon Street",
-                category: "CULTURAL",
+                category: "FAITH",
+                moreCategories: ["CULTURE"],
                 label: "19th-Century Heritage Parish",
                 description:
                     "Simbahan ng Zamboanguita, a 19th-century heritage parish church at the town centre and the " +
@@ -1041,14 +1050,14 @@ body { overflow-x: hidden; }
             const managerFilter = document.getElementById('managerFilter').value;
 
             return allSpots.filter(spot => {
-                if (activeCategory !== 'ALL' && String(spot.category || '').toUpperCase() !== activeCategory) return false;
+                if (activeCategory !== 'ALL' && !window.ZTIMS_CATEGORIES.matches(spot, activeCategory)) return false;
 
                 if (managerFilter === 'office' && managerOf(spot)) return false;
                 if (managerFilter === 'manager' && !managerOf(spot)) return false;
                 if (managerFilter === 'incomplete' && completenessIssues(spot).length === 0) return false;
 
                 if (!search) return true;
-                return [spot.title, spot.location, managerOf(spot), spot.category, spot.label]
+                return [spot.title, spot.location, managerOf(spot), categoryNames(spot), spot.label]
                     .some(field => String(field || '').toLowerCase().includes(search));
             });
         }
@@ -1065,6 +1074,19 @@ body { overflow-x: hidden; }
             document.getElementById('statManaged').textContent = managed;
             document.getElementById('statIncomplete').textContent = incomplete;
         }
+
+        // Its categories as pills, the main one first (the same colours the
+        // visitor's cards and the map use); a place to stay says so first.
+        function categoryBadges(spot) {
+            const C = window.ZTIMS_CATEGORIES;
+            const stay = C.isStay(spot) ? '<span class="cat-badge cat-stay">Place to stay</span>' : '';
+            return stay + C.of(spot).map(code => {
+                const info = C.info(code);
+                return `<span class="cat-badge cat-${info.cat}">${escapeHtml(info.label)}</span>`;
+            }).join('');
+        }
+        const categoryNames = spot => window.ZTIMS_CATEGORIES.of(spot).map(code => window.ZTIMS_CATEGORIES.label(code)).join(' ')
+            + (window.ZTIMS_CATEGORIES.isStay(spot) ? ' place to stay' : '');
 
         function renderListings() {
             const container = document.getElementById('listings');
@@ -1090,11 +1112,6 @@ body { overflow-x: hidden; }
                 const issues = completenessIssues(spot);
                 const photos = photoCount(spot);
                 const manager = managerOf(spot);
-                // The same category colours the visitor's cards and map use.
-                const categoryColour = spot.category === 'CULTURAL' ? 'cat-municipal'
-                    : spot.category === 'BEACH / DIVING' ? 'cat-notice'
-                    : spot.category === 'ACCOMMODATION' ? 'cat-stay'
-                    : 'cat-attraction';
 
                 return `
                 <div data-spot="${escapeHtml(spot._id)}" class="p-6 flex flex-col lg:flex-row gap-5 hover:bg-on-surface/[0.03] transition-colors">
@@ -1114,7 +1131,7 @@ body { overflow-x: hidden; }
                                  category on the server, so it could only ever restate it:
                                  ACCOMMODATION sat next to "Accommodation", and every other
                                  category next to "Tourist Spot". -->
-                            <span class="cat-badge ${categoryColour}">${escapeHtml(spot.category || 'General')}</span>
+                            ${categoryBadges(spot)}
                         </div>
 
                         <p class="text-support flex items-center gap-1">

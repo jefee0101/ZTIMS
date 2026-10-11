@@ -947,6 +947,76 @@ end
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Categories (October 2026): what a place is known for, by the visitor's
+-- purpose — BEACH (Beach & Sea), DIVING (Diving & Snorkeling), NATURE,
+-- ADVENTURE, CULTURE (Culture & Heritage), FAITH. One place can be several:
+-- spots.category is the main one, spot_more_categories holds any others (one
+-- row each, never the main one again). Whether it is a place to stay is a
+-- separate fact, spots.type ('accommodation' | 'spot').
+--
+-- Before this a listing had one of MOUNTAIN, BEACH / DIVING, CULTURAL and
+-- ACCOMMODATION, and ACCOMMODATION also meant "a place to stay". Those are
+-- converted below, once (only rows still holding an old value are touched):
+-- ACCOMMODATION -> a place to stay, Beach & Sea if its words speak of the sea,
+-- else Nature; BEACH / DIVING -> Beach & Sea + Diving (Diving first when the
+-- name says reef or sanctuary); MOUNTAIN -> Nature (+ Adventure when the name
+-- says peak, ridge or trail); CULTURAL -> Culture & Heritage (Faith first when
+-- the name says church or shrine). Managers and the office adjust from there.
+-- ---------------------------------------------------------------------------
+create table if not exists public.spot_more_categories (
+    spot_id             text not null references public.spots (id) on delete cascade,
+    position            integer not null constraint spot_more_categories_position check (position between 0 and 5),
+    category            text not null constraint spot_more_categories_known
+                        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH')),
+    primary key (spot_id, position),
+    constraint spot_more_categories_once unique (spot_id, category)
+);
+
+do $$
+begin
+    drop table if exists ztims_old_categories;
+    create temporary table ztims_old_categories on commit drop as
+    select id,
+           upper(btrim(category)) as old,
+           coalesce(title, '') as name,
+           coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(label, '') as words
+      from public.spots
+     where category not in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH');
+
+    -- The other categories first, from the old values.
+    insert into public.spot_more_categories (spot_id, position, category)
+    select id, 0,
+           case when name ~* '(div|reef|snorkel|sanctuary|marine)' then 'BEACH' else 'DIVING' end
+      from ztims_old_categories where old = 'BEACH / DIVING'
+    union all
+    select id, 0, 'ADVENTURE'
+      from ztims_old_categories where old = 'MOUNTAIN' and name ~* '(peak|ridge|trek|hik|trail|climb|summit)'
+    union all
+    select id, 0, 'CULTURE'
+      from ztims_old_categories where old = 'CULTURAL' and name ~* '(church|chapel|shrine|cathedral|parish|pilgrim)'
+    on conflict do nothing;
+
+    update public.spots s
+       set type = case when o.old = 'ACCOMMODATION' then 'accommodation' else s.type end,
+           category = case
+               when o.old = 'ACCOMMODATION' then
+                   case when o.words ~* '(beach|sea|cove|shore|island|div|snorkel|reef)' then 'BEACH' else 'NATURE' end
+               when o.old = 'BEACH / DIVING' then
+                   case when o.name ~* '(div|reef|snorkel|sanctuary|marine)' then 'DIVING' else 'BEACH' end
+               when o.old = 'CULTURAL' then
+                   case when o.name ~* '(church|chapel|shrine|cathedral|parish|pilgrim)' then 'FAITH' else 'CULTURE' end
+               else 'NATURE'
+           end
+      from ztims_old_categories o
+     where o.id = s.id;
+
+    alter table public.spots drop constraint if exists spots_category_known;
+    alter table public.spots add constraint spots_category_known
+        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'));
+end
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Settings: who each Tourism Officer is, and the office's public contact
 -- details (the officer's Settings page).
 -- ---------------------------------------------------------------------------
@@ -1083,7 +1153,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
         'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
-        'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos',
+        'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
         'office_info', 'emergency_numbers'
     ] loop
         execute format('alter table public.%I enable row level security', t);

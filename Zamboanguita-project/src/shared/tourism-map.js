@@ -51,19 +51,59 @@
          cat      the category's token in theme.css, for text on the page's
                   own surfaces — the popup is glass in the page's theme, so its
                   category line uses --ztims-cat-*-ink, light on the night theme */
+    /* What a place is known for (October 2026; see schema.sql "Categories"):
+       six, by the visitor's purpose. Colours repeat by twos — the identity has
+       four shades — so the icon and the name are what tell them apart, on the
+       pin, the badge and the legend alike. A place to stay is pinned as one,
+       whatever it is known for: that is what a visitor looks for it as. */
     const CATEGORIES = {
-        'BEACH / DIVING': { cat: 'notice',     label: 'Beach / Diving', icon: 'scuba_diving', colour: 'rgb(var(--brand-tangerine))', glyph: 'rgb(var(--brand-ink))',   ink: 'rgb(150 66 0)' },
-        'MOUNTAIN':       { cat: 'attraction', label: 'Mountain',       icon: 'landscape',    colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
-        'CULTURAL':       { cat: 'municipal',  label: 'Cultural',       icon: 'museum',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' },
-        'ACCOMMODATION':  { cat: 'stay',       label: 'Accommodation',  icon: 'hotel',        colour: 'rgb(var(--brand-ink))',       glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ink))' }
+        'BEACH':     { cat: 'notice',     label: 'Beach & Sea',         icon: 'beach_access', colour: 'rgb(var(--brand-tangerine))', glyph: 'rgb(var(--brand-ink))',   ink: 'rgb(150 66 0)' },
+        'DIVING':    { cat: 'notice',     label: 'Diving & Snorkeling', icon: 'scuba_diving', colour: 'rgb(var(--brand-tangerine))', glyph: 'rgb(var(--brand-ink))',   ink: 'rgb(150 66 0)' },
+        'NATURE':    { cat: 'attraction', label: 'Nature',              icon: 'forest',       colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
+        'ADVENTURE': { cat: 'attraction', label: 'Adventure',           icon: 'hiking',       colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
+        'CULTURE':   { cat: 'municipal',  label: 'Culture & Heritage',  icon: 'museum',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' },
+        'FAITH':     { cat: 'municipal',  label: 'Faith',               icon: 'church',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' }
     };
+    const STAY = { cat: 'stay', label: 'Places to stay', icon: 'hotel', colour: 'rgb(var(--brand-ink))', glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ink))' };
+    // What a page cached before October 2026 may still hold.
+    const OLD_CODES = { 'BEACH / DIVING': 'BEACH', 'MOUNTAIN': 'NATURE', 'CULTURAL': 'CULTURE' };
 
     const FALLBACK_CATEGORY = { cat: null, label: 'Tourist spot', icon: 'photo_camera', colour: 'rgb(82 82 91)', glyph: '#fff', ink: 'rgb(82 82 91)' };
 
-    function categoryOf(spot) {
+    const isStay = spot => Boolean(spot) && (spot.type === 'accommodation'
+        || String(spot.category || '').trim().toUpperCase() === 'ACCOMMODATION');
+    const mainCode = spot => {
         const key = String((spot && spot.category) || '').trim().toUpperCase();
-        return CATEGORIES[key] || FALLBACK_CATEGORY;
+        return OLD_CODES[key] || key;
+    };
+    // Every category a place has, the main one first.
+    function categoriesOf(spot) {
+        const all = [mainCode(spot)].concat((spot && spot.moreCategories) || []);
+        return all.filter(function (code, i) { return CATEGORIES[code] && all.indexOf(code) === i; });
     }
+
+    // The pin and its legend entry: a place to stay as one, else its main category.
+    function categoryOf(spot) {
+        if (isStay(spot)) return STAY;
+        return CATEGORIES[mainCode(spot)] || FALLBACK_CATEGORY;
+    }
+
+    /* For the pages (Home, destination, Destinations, Establishment, the form):
+       one list, one set of names. */
+    window.ZTIMS_CATEGORIES = {
+        CODES: Object.keys(CATEGORIES),
+        STAY: STAY,
+        info: function (code) { return CATEGORIES[OLD_CODES[code] || code] || null; },
+        label: function (code) { const c = CATEGORIES[OLD_CODES[code] || code]; return c ? c.label : (code || ''); },
+        of: categoriesOf,
+        isStay: isStay,
+        // Does the place belong under this filter? 'STAY' is the places to stay.
+        matches: function (spot, filter) {
+            if (!filter || filter === 'all') return true;
+            if (filter === 'STAY') return isStay(spot);
+            return categoriesOf(spot).indexOf(OLD_CODES[filter] || filter) !== -1;
+        }
+    };
 
     /* --------------------------------------------------------------- helpers */
 
@@ -180,9 +220,15 @@
             display: flex; flex-wrap: wrap; gap: 6px 14px;
             font-size: 11px; font-weight: 700; align-items: center;
         }
+        .ztims-legend > span { display: inline-flex; align-items: center; }
         .ztims-legend span.dot {
             width: 10px; height: 10px; border-radius: 0; display: inline-block; margin-right: 5px;
         }
+        .ztims-legend span.dot--icon {
+            width: 20px; height: 20px; border-radius: 50%; display: inline-flex;
+            align-items: center; justify-content: center; margin-right: 6px;
+        }
+        .ztims-legend span.dot--icon .material-symbols-outlined { font-size: 13px; }
 
         /* Expanded view. Fixed rather than the Fullscreen API: Safari on iPhone
            will not put a plain <div> into fullscreen, and a phone is exactly
@@ -541,6 +587,7 @@
     function renderLegend(host, labels) {
         const entries = Object.keys(CATEGORIES)
             .map(function (key) { return CATEGORIES[key]; })
+            .concat([STAY])
             .filter(function (meta) { return labels.has(meta.label); });
 
         if (entries.length === 0) { host.innerHTML = ''; host.hidden = true; return; }
@@ -549,8 +596,11 @@
         // Added, not assigned: the page sets its own layout classes on this
         // element, and overwriting className silently threw them away.
         host.classList.add('ztims-legend', 'text-on-surface-variant');
+        // Each entry is its pin in small — the colour and the icon — since
+        // two categories share each colour.
         host.innerHTML = entries.map(function (meta) {
-            return '<span><span class="dot" style="background:' + (meta.cat ? 'rgb(var(--ztims-cat-' + meta.cat + '))' : meta.colour) + '"></span>' +
+            return '<span><span class="dot dot--icon" style="background:' + meta.colour + ';color:' + meta.glyph + '">' +
+                '<span class="material-symbols-outlined" aria-hidden="true">' + meta.icon + '</span></span>' +
                 escapeHtml(meta.label) + '</span>';
         }).join('');
     }

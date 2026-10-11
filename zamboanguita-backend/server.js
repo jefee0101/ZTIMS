@@ -1454,7 +1454,7 @@ function normaliseSpotImages(payload) {
 // What an establishment manager may write on a listing assigned to them: its
 // tourism information, and nothing about who is responsible for it.
 const MANAGER_WRITABLE_SPOT_FIELDS = [
-    'title', 'location', 'category', 'description', 'imageUrl', 'images', 'bookingUrl',
+    'title', 'location', 'category', 'moreCategories', 'description', 'imageUrl', 'images', 'bookingUrl',
     'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
     'address', 'barangay', 'latitude', 'longitude'
 ];
@@ -1570,20 +1570,46 @@ function parseCoordinate(latitudeInput, longitudeInput) {
  * time somebody saves it.
  */
 /**
- * Works out whether a listing is a place to stay or a place to visit, from the
- * category the editor already asked for. Editors no longer ask separately: with
- * ACCOMMODATION sitting in the category list, the two questions were the same one
- * twice, and nothing stopped them contradicting each other.
+ * What a listing is known for (see schema.sql, "Categories"): `category` is the
+ * main one of six, `moreCategories` any others; whether it is a place to stay is
+ * `type`, its own question. A field the editor did not send is left alone.
  *
- * An explicit type is still honoured, so anything posting one directly keeps
- * working, and a payload with no category at all leaves the stored value alone.
+ * The four old values a page cached before October 2026 may still send are
+ * read the way schema.sql converted the listings; ACCOMMODATION alone is not
+ * guessed at (it said nothing about what the place is known for).
  */
-function deriveSpotType(payload) {
-    if (payload.type) return payload;
-    if (!payload.category) return payload;
+const SPOT_CATEGORIES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'];
+const OLD_SPOT_CATEGORIES = { 'BEACH / DIVING': ['BEACH', 'DIVING'], MOUNTAIN: ['NATURE'], CULTURAL: ['CULTURE'] };
 
-    const isStay = String(payload.category).trim().toUpperCase() === 'ACCOMMODATION';
-    return { ...payload, type: isStay ? 'accommodation' : 'spot' };
+function categoryProblem(message) {
+    return Object.assign(new Error(message), { name: 'ValidationError', errors: { category: { message } } });
+}
+
+function normaliseSpotCategories(payload) {
+    const out = { ...payload };
+    if ('category' in out) {
+        let main = String(out.category || '').trim().toUpperCase();
+        if (OLD_SPOT_CATEGORIES[main]) {
+            const [first, ...rest] = OLD_SPOT_CATEGORIES[main];
+            main = first;
+            if (!('moreCategories' in out)) out.moreCategories = rest;
+        }
+        if (!SPOT_CATEGORIES.includes(main)) {
+            throw categoryProblem('Choose what the place is known for: Beach & Sea, Diving & Snorkeling, Nature, Adventure, Culture & Heritage or Faith.');
+        }
+        out.category = main;
+    }
+    if ('moreCategories' in out) {
+        const list = Array.isArray(out.moreCategories) ? out.moreCategories : [];
+        const codes = list.map(code => String(code || '').trim().toUpperCase()).filter(Boolean);
+        const unknown = codes.find(code => !SPOT_CATEGORIES.includes(code));
+        if (unknown) throw categoryProblem(`"${unknown}" is not one of the categories.`);
+        out.moreCategories = [...new Set(codes)].filter(code => code !== out.category);
+    }
+    if ('type' in out && !['accommodation', 'spot'].includes(out.type)) {
+        throw categoryProblem('Say whether it is a place to stay or a place to visit.');
+    }
+    return out;
 }
 
 function deriveSpotLocation(payload, existingLocation) {
@@ -1713,7 +1739,7 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         // The record's identity and history are the database's to set, never a request's.
         const { _id, createdAt, updatedAt, ...body } = req.body;
         const scoped = scopeSpotPayload(body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
-        const prepared = deriveSpotType(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
+        const prepared = normaliseSpotCategories(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])]);
         const savedSpot = await Spot.create({ ...prepared, managedBy });
         return res.status(201).json(savedSpot);
@@ -1799,7 +1825,7 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         const { managedBy, ownerId, _id, createdAt, updatedAt, ...updates } = req.body;
         const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])], [spot.imageUrl, ...(spot.images || [])]);
-        Object.assign(spot, deriveSpotType(deriveSpotLocation(prepared, spot.location)));
+        Object.assign(spot, normaliseSpotCategories(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await Spot.save(spot);
         return res.status(200).json(savedSpot);
     } catch (error) {
