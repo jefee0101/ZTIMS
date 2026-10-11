@@ -221,6 +221,12 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .pay-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
 .pay-row__body { min-width: 0; display: flex; flex-direction: column; gap: .25rem; }
 .pay-row__title { font-weight: 800; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.pay-row__what { font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
+.pay-facts { display: grid; grid-template-columns: 9rem 11rem 9rem 10rem; gap: .35rem 1.25rem; margin-top: .2rem; }
+.pay-facts dd { overflow-wrap: anywhere; }
+.pay-facts dt { font-size: .6875rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
+.pay-facts dd { font-size: .8125rem; font-weight: 600; color: rgb(var(--ztims-on-surface)); }
+.pay-row__or > span { font-family: var(--ztims-font-body, inherit); font-weight: 600; }
 .pay-row__amount { text-align: right; font-size: 1.125rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pay-row__actions { display: flex; align-items: center; gap: .4rem; justify-content: flex-end; }
 .pay-row__or { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8125rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
@@ -229,5 +235,6 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .tk-row__who { grid-column: 1 / -1; grid-row: 2; }
     .pay-row { grid-template-columns: 1fr auto; padding: .9rem 1rem; }
     .pay-row__actions:empty { display: none; }
+    .pay-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem 1rem; }
     .pay-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
 }

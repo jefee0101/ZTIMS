@@ -716,23 +716,33 @@ body { overflow-x: hidden; }
             if (!rows.length) { box.innerHTML = `<div class="p-4"><div class="ztims-empty">${all.length ? 'No payment matches.' : 'No payments this month.'}</div></div>`; return; }
             box.innerHTML = rows.map(p => {
                 const refunded = p.refundedAt && !p.kept;
-                const what = p.kind === 'guide_fee' ? 'Guide fee' : `Entrance${p.people ? ` · ${p.people} ${p.people === 1 ? 'person' : 'people'}` : ''}`;
-                const facts = [escapeHtml(p.payer || '—'), escapeHtml(METHOD[p.method] || p.method), p.channel === 'online' ? 'Online' : 'Onsite', when(p.paidAt)].join(' · ');
+                // Read in one order on every row: the place, what was paid for,
+                // then each fact with its own label.
+                const what = p.kind === 'guide_fee' ? 'Guide fee'
+                    : `Entrance tickets${p.people ? ` · ${p.people} ${p.people === 1 ? 'person' : 'people'}` : ''}`;
+                const fact = (label, value, mono) => `<div><dt>${label}</dt><dd${mono ? ' class="font-mono"' : ''}>${value}</dd></div>`;
+                const facts = [
+                    fact(p.kind === 'guide_fee' ? 'Booking' : 'Ticket', escapeHtml(p.reference), true),
+                    fact('Paid by', escapeHtml(p.payer || '—')),
+                    fact('Paid with', `${escapeHtml(METHOD[p.method] || p.method)}, ${p.channel === 'online' ? 'online' : 'onsite'}`),
+                    fact('Paid on', when(p.paidAt))
+                ].join('');
                 const pills = [
                     p.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5">Demo</span>' : '',
                     p.refundedAt ? `<span class="tone-neutral tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5" title="${escapeHtml(p.refundReason)}">${p.kept ? `Part refunded · ${peso(p.refundAmount)} back` : 'Refunded'}</span>` : '',
                     p.ticketStatus === 'used' ? '<span class="tone-info tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">Used at the entrance</span>' : ''
                 ].filter(Boolean).join('');
                 const or = p.receiptNumber
-                    ? `<span class="pay-row__or">${/^or\b/i.test(p.receiptNumber) ? '' : 'OR '}${escapeHtml(p.receiptNumber)}</span>`
+                    ? `<span class="pay-row__or"><span>OR no.</span> ${escapeHtml(p.receiptNumber)}</span>`
                     : p.refundedAt ? ''
                     : `<form data-or class="flex gap-1.5"><input name="or" placeholder="OR number" class="field !py-1.5 !w-32 min-h-[40px]" aria-label="OR number for ${escapeHtml(p.reference)}"/><button class="btn btn-primary btn-sm min-h-[40px]">Save</button></form>`;
                 const canRefund = !p.refundedAt && p.ticketStatus !== 'used';
                 return `
                 <div data-id="${escapeHtml(p._id)}" class="pay-row">
                     <div class="pay-row__body${refunded ? ' opacity-60' : ''}">
-                        <p class="pay-row__title"><span class="font-mono">${escapeHtml(p.reference)}</span> <span class="font-normal text-on-surface-variant">${what} · ${escapeHtml(p.place || '—')}</span></p>
-                        <p class="dest-row__facts">${facts}</p>
+                        <p class="pay-row__title">${escapeHtml(p.place || '—')}</p>
+                        <p class="pay-row__what">${what}</p>
+                        <dl class="pay-facts">${facts}</dl>
                         ${pills ? `<div class="dest-row__issues">${pills}</div>` : ''}
                     </div>
                     <p class="pay-row__amount${refunded ? ' line-through opacity-60' : ''}">${peso(p.amount)}</p>

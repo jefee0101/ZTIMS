@@ -665,9 +665,10 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 - **Collections** (`admin_collections.html`): title with the online-payments
   pill, month and Excel beside it; four tiles (Collected, Guide fees, Entrance
   fees, Waiting for an OR in red when any); Payments as counts that filter (All,
-  Waiting for an OR, Refunded), search, and a row per payment (`.pay-row`:
-  reference, what and where, payer · method · online/onsite · when, the amount
-  large, the OR number or its field with Save, and ⋯ → Cancel and refund in
+  Waiting for an OR, Refunded), search, and a row per payment (`.pay-row`,
+  read top to bottom: the place, what was paid for and how many people, then
+  labelled facts in fixed columns `.pay-facts` — Ticket / Booking code, Paid
+  by, Paid with (method, online or onsite), Paid on — the amount large, the OR number or its field with Save, and ⋯ → Cancel and refund in
   red); Day by day; Demo data as one line with its two buttons. Pesos are whole
   unless a refund left centavos.
 
