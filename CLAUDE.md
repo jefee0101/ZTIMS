@@ -576,7 +576,8 @@ Frontend only, no tables of their own:
   (`#categoryTiles`; tiles and the category menu are one control,
   `setCategory`; a second tap shows everything), a status line only while a
   search or category narrows the list (`#browseStatus`, with "Show all"), and
-  the cards; **Find it on the map** (`#map`); **Plan your visit** (`#plan`) —
+  the cards; **Find it on the map** (`#map`, whose ground fades from the
+  destinations' colour into its own over its top 8rem, `.home-map`); **Plan your visit** (`#plan`) —
   the three "How it works" steps and the Tourism Office card (hours, address,
   phone, email and emergency numbers from `GET /api/office` through
   `site-footer.js`'s `data-office-field` / `data-emergency`), with Contact the

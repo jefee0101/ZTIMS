@@ -2012,3 +2012,11 @@ textarea.bk-field { min-height: 0; resize: vertical; }
     display: inline-flex; align-items: center; justify-content: center;
 }
 #toastHost > * > button:hover { background: rgb(var(--ztims-on-surface) / .08) !important; }
+
+/* Home: the destinations' ground (surface-low) melts into the map's (surface)
+   over the top of the map section, instead of meeting it in a hard line. */
+.home-map {
+    background: linear-gradient(to bottom,
+        rgb(var(--ztims-surface-low)) 0,
+        rgb(var(--ztims-surface)) 8rem);
+}
