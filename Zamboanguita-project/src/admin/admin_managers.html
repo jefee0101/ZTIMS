@@ -523,65 +523,33 @@ body { overflow-x: hidden; }
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
             <div class="flex flex-wrap justify-between items-end gap-4">
-                <div class="space-y-1">
-                    <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                        <span class="text-on-surface-variant">Accounts</span>
-                    </nav>
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h2>
-                    <p class="text-on-surface-variant text-sm max-w-2xl">
-                        Managers do not sign themselves up — as Tourist Officer you issue each account here.
-                        A manager can then publish and edit only their own tourist spots and accommodations.
-                    </p>
-                </div>
-                <button id="openCreateModalBtn" class="btn btn-primary">
-                    <span class="material-symbols-outlined">person_add</span> New manager account
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h1>
+                <button id="openCreateModalBtn" type="button" class="btn btn-primary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">person_add</span> New manager account
                 </button>
             </div>
 
-            <!-- The numbers, in one line rather than three cards. -->
-            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
-                <span><b id="statManagers" class="text-on-surface">—</b> manager accounts</span>
-                <span><b id="statListings" class="text-on-surface">—</b> listings they publish</span>
-                <span><b id="statIdle" class="text-on-surface">—</b> yet to publish anything</span>
-            </p>
-
-            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-accent !text-lg">storefront</span> Manager directory
-                </h3>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="searchInput" type="search" placeholder="Search establishment or email"
-                               class="field !pl-10 w-full sm:w-72"/>
-                    </div>
-                    <button id="refreshBtn" class="btn btn-secondary">
-                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
-                    </button>
+            <!-- Counts that filter, then the search. -->
+            <div class="space-y-3">
+                <div id="showFilter" class="dest-chips" role="group" aria-label="Show">
+                    <button type="button" data-show="all" aria-pressed="true">All <b id="statManagers">0</b></button>
+                    <button type="button" data-show="active" aria-pressed="false">Active <b id="statActive">0</b></button>
+                    <button type="button" data-show="suspended" aria-pressed="false">Suspended <b id="statSuspended">0</b></button>
+                    <button type="button" data-show="idle" aria-pressed="false" class="dest-chips__warn">No listing yet <b id="statIdle">0</b></button>
+                </div>
+                <div class="relative">
+                    <label for="searchInput" class="sr-only">Search managers</label>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                    <input id="searchInput" type="search" placeholder="Search by establishment, name, email or phone"
+                           class="field !pl-11 w-full min-h-[44px]"/>
                 </div>
             </div>
 
-            <div class="rounded-none glass-panel overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="ztims-table w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                <th class="px-5 py-4">Establishment</th>
-                                <th class="px-5 py-4">Contact</th>
-                                <th class="px-5 py-4 text-center">Listings</th>
-                                <th class="px-5 py-4 text-center">Status</th>
-                                <th class="px-5 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="managerTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-between items-center px-8 py-5 border-t border-outline-variant/30">
-                    <p class="text-on-surface-variant text-sm">
-                        Showing <span id="shownCount" class="text-on-surface font-bold">0</span>
-                        of <span id="totalCount" class="text-on-surface font-bold">0</span> manager accounts
-                    </p>
-                </div>
+            <div class="rounded-none glass-panel">
+                <div id="managerTableBody" class="ztims-stagger divide-y divide-outline-variant/20"></div>
+                <p class="px-5 py-3 border-t border-outline-variant/30 text-support">
+                    Showing <b id="shownCount" class="text-on-surface">0</b> of <b id="totalCount" class="text-on-surface">0</b>
+                </p>
             </div>
         </div>
     </main>
@@ -592,9 +560,6 @@ body { overflow-x: hidden; }
             <div class="flex justify-between items-start gap-4">
                 <div>
                     <h2 class="text-2xl font-black tracking-tight font-headline">New manager account</h2>
-                    <p class="text-support mt-1">
-                        Give the manager these details afterwards — they sign in through the staff sign-in page.
-                    </p>
                 </div>
                 <button id="closeCreateModalBtn" aria-label="Close" class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
                     <span class="material-symbols-outlined text-2xl">close</span>
@@ -603,42 +568,41 @@ body { overflow-x: hidden; }
 
             <form id="createManagerForm" class="space-y-4 font-body">
                 <div>
-                    <label for="newManagerEstablishmentName" class="block text-label font-bold uppercase tracking-wider mb-1">Establishment name</label>
+                    <label for="newManagerEstablishmentName" class="block text-sm font-semibold text-on-surface mb-1.5">Establishment name</label>
                     <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerName" class="block text-label font-bold uppercase tracking-wider mb-1">Manager's name</label>
+                    <label for="newManagerName" class="block text-sm font-semibold text-on-surface mb-1.5">Manager's name</label>
                     <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Sign-in email</label>
+                    <label for="newManagerEmail" class="block text-sm font-semibold text-on-surface mb-1.5">Sign-in email</label>
                     <input id="newManagerEmail" type="email" required placeholder="manager@gmail.com" autocomplete="off"
                            class="field w-full"/>
-                    <p class="text-support mt-1.5">What they type to sign in. Never shown to visitors.</p>
                 </div>
                 <div>
-                    <label for="newManagerContactEmail" class="block text-label font-bold uppercase tracking-wider mb-1">Public contact email <span class="normal-case font-normal">(optional)</span></label>
+                    <label for="newManagerContactEmail" class="block text-sm font-semibold text-on-surface mb-1.5">Public contact email <span class="font-normal text-on-surface-variant">(optional)</span></label>
                     <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerPhone" class="block text-label font-bold uppercase tracking-wider mb-1">Phone <span class="normal-case font-normal">(optional)</span></label>
+                    <label for="newManagerPhone" class="block text-sm font-semibold text-on-surface mb-1.5">Phone <span class="font-normal text-on-surface-variant">(optional)</span></label>
                     <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerPassword" class="block text-label font-bold uppercase tracking-wider mb-1">Starting password</label>
+                    <label for="newManagerPassword" class="block text-sm font-semibold text-on-surface mb-1.5">Starting password</label>
                     <input id="newManagerPassword" type="text" required minlength="10" maxlength="72" placeholder="At least 10 characters" autocomplete="off"
                            class="field w-full"/>
                 </div>
 
                 <p id="createManagerError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
-                <div class="flex gap-4 pt-2">
-                    <button type="button" id="cancelCreateBtn" class="btn btn-cancel w-1/2">Cancel</button>
-                    <button type="submit" id="createManagerBtn" class="btn btn-primary w-1/2">Create account</button>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="cancelCreateBtn" class="btn btn-cancel min-h-[44px]">Cancel</button>
+                    <button type="submit" id="createManagerBtn" class="btn btn-primary min-h-[44px]">Create account</button>
                 </div>
             </form>
         </div>
@@ -648,6 +612,10 @@ body { overflow-x: hidden; }
         const API_BASE = "/api";
 
         let managers = [];
+        // Which count above the list is pressed: all, active, suspended or idle.
+        let activeShow = 'all';
+        // Each manager's listing, so a row can open it.
+        let listingOf = {};
         let listingCounts = {};     // manager id -> number of published listings
 
         function authHeaders(extra) {
@@ -740,19 +708,23 @@ body { overflow-x: hidden; }
 
         function visibleManagers() {
             const search = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!search) return managers;
-            return managers.filter(manager =>
-                [nameOf(manager), manager.managerName, manager.email, contactEmailOf(manager), manager.phone]
-                    .some(field => String(field || '').toLowerCase().includes(search))
-            );
+            return managers.filter(manager => {
+                const suspended = manager.active === false;
+                if (activeShow === 'active' && suspended) return false;
+                if (activeShow === 'suspended' && !suspended) return false;
+                if (activeShow === 'idle' && listingCounts[String(manager._id)]) return false;
+                return !search || [nameOf(manager), manager.managerName, manager.email, contactEmailOf(manager), manager.phone]
+                    .some(field => String(field || '').toLowerCase().includes(search));
+            });
         }
 
         function renderSummary() {
-            const listings = Object.values(listingCounts).reduce((sum, count) => sum + count, 0);
+            const suspended = managers.filter(manager => manager.active === false).length;
             const idle = managers.filter(manager => !listingCounts[String(manager._id)]).length;
 
             document.getElementById('statManagers').textContent = managers.length;
-            document.getElementById('statListings').textContent = listings;
+            document.getElementById('statActive').textContent = managers.length - suspended;
+            document.getElementById('statSuspended').textContent = suspended;
             document.getElementById('statIdle').textContent = idle;
         }
 
@@ -765,43 +737,54 @@ body { overflow-x: hidden; }
 
             if (rows.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="5" class="p-4"><div class="ztims-empty">
+                    <div class="p-4"><div class="ztims-empty">
                         <span class="material-symbols-outlined">storefront</span>
                         ${managers.length === 0
-                            ? 'No manager accounts yet. Use “New manager account” to issue the first one.'
-                            : 'No account matches that search.'}
-                    </div></td></tr>`;
+                            ? 'No manager accounts yet.'
+                            : 'No account matches.'}
+                    </div></div>`;
                 return;
             }
 
             tbody.innerHTML = rows.map(manager => {
+                const id = escapeHtml(manager._id);
                 const listings = listingCounts[String(manager._id)] || 0;
+                const listing = listingOf[String(manager._id)];
                 const suspended = manager.active === false;
+                const name = nameOf(manager) || 'Unnamed establishment';
+                const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
+                const facts = [
+                    escapeHtml(manager.managerName || 'No manager name'),
+                    escapeHtml(manager.email || '—'),
+                    manager.phone ? escapeHtml(manager.phone) : '',
+                    `Since ${escapeHtml(formatDate(manager.createdAt))}`
+                ].filter(Boolean).join(' · ');
+                const pills = [
+                    suspended ? '<span class="dest-issue">Suspended</span>' : '',
+                    listings ? '' : '<span class="tone-pill tone-warning rounded-pill text-xs font-bold px-2.5 py-0.5">No listing yet</span>'
+                ].filter(Boolean).join('');
                 return `
-                <tr class="hover:bg-on-surface/[0.03] transition-colors align-top">
-                    <td class="px-5 py-4 ${suspended ? 'opacity-60' : ''}">
-                        <p class="font-bold text-on-surface">${escapeHtml(nameOf(manager) || 'Unnamed establishment')}</p>
-                        <p class="text-support">${escapeHtml(manager.managerName || 'No manager name')}</p>
-                        <p class="text-support">Account since ${escapeHtml(formatDate(manager.createdAt))}</p>
-                    </td>
-                    <td class="px-5 py-4 ${suspended ? 'opacity-60' : ''}">
-                        <p class="text-on-surface [overflow-wrap:anywhere]">Signs in as ${escapeHtml(manager.email || '—')}</p>
-                        ${contactEmailOf(manager) !== (manager.email || '—') ? `<p class="text-support [overflow-wrap:anywhere]">Public: ${escapeHtml(contactEmailOf(manager))}</p>` : ''}
-                        ${manager.phone ? `<p class="text-support">${escapeHtml(manager.phone)}</p>` : ''}
-                    </td>
-                    <td class="px-5 py-4 text-center font-bold ${listings ? 'text-on-surface' : 'text-on-surface-variant'}">${listings}</td>
-                    <td class="px-5 py-4 text-center">
-                        <span class="tone-pill ${suspended ? 'tone-danger' : 'tone-success'} text-[10px] font-bold uppercase tracking-wider px-2 py-0.5">${suspended ? 'Suspended' : 'Active'}</span>
-                    </td>
-                    <td class="px-5 py-4">
-                        <div class="flex flex-wrap justify-end gap-2">
-                            <button data-edit="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">Edit</button>
-                            <button data-password="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">New password</button>
-                            <button data-suspend="${escapeHtml(manager._id)}" class="btn btn-secondary btn-sm">${suspended ? 'Restore' : 'Suspend'}</button>
-                            <button data-delete="${escapeHtml(manager._id)}" class="btn btn-danger btn-sm">Delete</button>
+                <div class="dest-row${suspended ? ' is-muted' : ''}">
+                    <div class="dest-row__photo dest-row__initials" aria-hidden="true">${escapeHtml(initials || '?')}</div>
+                    <div class="dest-row__body">
+                        <h3 class="dest-row__name">${escapeHtml(name)}</h3>
+                        <p class="dest-row__facts [overflow-wrap:anywhere]">${facts}</p>
+                        ${pills ? `<div class="dest-row__issues">${pills}</div>` : ''}
+                    </div>
+                    <div class="dest-row__actions">
+                        <button type="button" data-edit="${id}" class="btn btn-primary btn-sm min-h-[40px]">Edit</button>
+                        <div class="relative">
+                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(name)}"
+                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
+                                ${listing ? `<a href="../spot.html?spotId=${encodeURIComponent(listing)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View listing</a>` : ''}
+                                <button type="button" data-password="${id}"><span class="material-symbols-outlined" aria-hidden="true">key</span>New password</button>
+                                <button type="button" data-suspend="${id}"><span class="material-symbols-outlined" aria-hidden="true">${suspended ? 'how_to_reg' : 'person_off'}</span>${suspended ? 'Restore' : 'Suspend'}</button>
+                                <button type="button" data-delete="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
+                            </div>
                         </div>
-                    </td>
-                </tr>`;
+                    </div>
+                </div>`;
             }).join('');
         }
 
@@ -821,7 +804,7 @@ body { overflow-x: hidden; }
 
         async function loadDirectory() {
             const tbody = document.getElementById('managerTableBody');
-            const doneLoading = showLoading(tbody, 'Loading manager accounts...', 9);
+            const doneLoading = showLoading(tbody, 'Loading manager accounts...');
 
             try {
                 const [managersResponse, spotsResponse] = await Promise.all([
@@ -835,11 +818,15 @@ body { overflow-x: hidden; }
 
                 // Listing counts are a nice-to-have; losing them must not empty the table.
                 listingCounts = {};
+                listingOf = {};
                 if (spotsResponse && spotsResponse.ok) {
                     const spots = await spotsResponse.json().catch(() => []);
                     (Array.isArray(spots) ? spots : []).forEach(spot => {
                         const id = managedByIdOf(spot);
-                        if (id) listingCounts[id] = (listingCounts[id] || 0) + 1;
+                        if (id) {
+                            listingCounts[id] = (listingCounts[id] || 0) + 1;
+                            listingOf[id] = spot._id;
+                        }
                     });
                 }
 
@@ -854,12 +841,10 @@ body { overflow-x: hidden; }
                 document.getElementById('shownCount').textContent = 0;
                 document.getElementById('totalCount').textContent = 0;
                 tbody.innerHTML = `
-                    <tr><td colspan="5" class="px-6 py-16 text-center">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-error/70">cloud_off</span>
-                        <p class="text-on-surface font-bold mb-1">Could not reach the database</p>
-                        <p class="text-sm max-w-md mx-auto">${escapeHtml(error.message)}
-                        Nothing has been changed. Try Refresh in a moment — the API sleeps when idle and takes a while to wake.</p>
-                    </td></tr>`;
+                    <div class="p-4"><div class="ztims-empty tone-danger">
+                        <span class="material-symbols-outlined">cloud_off</span>
+                        Could not load the accounts. ${escapeHtml(error.message)} Reload the page to try again.
+                    </div></div>`;
             }
         }
 
@@ -1002,6 +987,7 @@ body { overflow-x: hidden; }
                     body: JSON.stringify(values)
                 }, button, '');
                 await loadDirectory();
+                showToast('Changes saved.', 'success');
             } catch (error) {
                 showToast(error.message, 'error');
             }
@@ -1112,7 +1098,34 @@ body { overflow-x: hidden; }
             document.getElementById('cancelCreateBtn').addEventListener('click', () => toggleCreateModal(false));
             document.getElementById('createManagerForm').addEventListener('submit', createManager);
             document.getElementById('searchInput').addEventListener('input', renderTable);
-            document.getElementById('refreshBtn').addEventListener('click', loadDirectory);
+            document.getElementById('showFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-show]');
+                if (!chip) return;
+                activeShow = chip.dataset.show;
+                document.querySelectorAll('#showFilter [data-show]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                renderTable();
+            });
+
+            // The ⋯ menu on each row: one open at a time; a click elsewhere or
+            // Escape closes it.
+            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
+                if (menu === except) return;
+                menu.hidden = true;
+                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
+                if (opener) opener.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('click', event => {
+                const opener = event.target.closest('[data-more]');
+                if (opener) {
+                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
+                    closeMenus(menu);
+                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
+                    return;
+                }
+                closeMenus();
+            });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
 
             // Delegated so the buttons survive every re-render of the table.
             document.getElementById('managerTableBody').addEventListener('click', event => {

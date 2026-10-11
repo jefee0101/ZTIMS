@@ -634,6 +634,30 @@ days), what is missing as red pills ("No photo · Fix" opens the editor), then
 ⋯ menu (View public page, Visitor setup where it applies, Take down in red).
 Prices without cents. No Refresh button: the list reloads after every change.
 
+### The officer's Tourist Guides and Establishment Managers
+
+Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
+`portal-flat.css`), no page intro or help lines:
+- **Tourist Guides** (`admin_guides.html`): title and **New guide**; tabs Guides /
+  Reports; a red line only while a destination needing a guide has no available
+  one; counts that filter (All, Available, Unavailable, Inactive, No
+  destination); search, Speaks and Free on (a date asks `/api/guides/search`;
+  Clear appears only when something is set). Each guide is one row: photo or
+  initials, name, one line of facts (area · languages · fee · largest group ·
+  phone), their destinations, a status pill (and Free that day / Not free with
+  the reason), then **Edit** and ⋯ (Mark available / unavailable / inactive,
+  Sign-in and password, Withdraw sign-in in red). The window has three parts:
+  The guide (photo, name, contact, about), Where they guide (covers, barangay,
+  destinations, meeting point), Bookings (fee, largest group, working days as
+  pills `.gd-day`, languages, status).
+- **Establishment Managers** (`admin_managers.html`): title and **New manager
+  account**; counts that filter (All, Active, Suspended, No listing yet);
+  search; one row per account (initials, establishment, manager · sign-in
+  email · phone · since, Suspended / No listing yet pills), **Edit** and ⋯ (View
+  listing, New password, Suspend / Restore, Delete in red).
+- The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
+  cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
+
 ### Attraction setup
 
 `attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window

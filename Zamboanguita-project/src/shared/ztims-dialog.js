@@ -121,8 +121,8 @@
         .ztims-dialog__fields { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.25rem; }
         .ztims-dialog__field label {
             display: block;
-            font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-            color: rgb(var(--ztims-on-surface-variant));
+            font-size: 0.875rem; font-weight: 600;
+            color: rgb(var(--ztims-on-surface));
             margin-bottom: 0.35rem;
         }
         .ztims-dialog__field label .ztims-dialog__optional { text-transform: none; font-weight: 400; letter-spacing: 0; }

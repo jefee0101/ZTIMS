@@ -192,6 +192,10 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .dest-menu .material-symbols-outlined { font-size: 18px; }
 .dest-menu .is-danger { color: rgb(var(--ztims-error)); }
 .dest-menu .is-danger:hover { background: #B3261E; color: #FFFDFA; }
+/* The same rows for people (Managers, Tourist Guides): initials or a face in
+   the photo's place, and a suspended or inactive one shown quieter. */
+.dest-row__initials { font-size: 1.25rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-secondary) / .25); }
+.dest-row.is-muted .dest-row__photo, .dest-row.is-muted .dest-row__name, .dest-row.is-muted .dest-row__facts { opacity: .6; }
 @media (max-width: 639px) {
     .dest-row { grid-template-columns: 4.5rem 1fr; padding: .9rem 1rem; }
     .dest-row__photo { width: 4.5rem; height: 3.5rem; }
