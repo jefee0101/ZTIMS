@@ -520,48 +520,51 @@ body { overflow-x: hidden; }
 
     <!-- Main Workspace Container -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1100px] mx-auto space-y-8">
+        <div class="max-w-[1100px] mx-auto space-y-6">
 
-            <div class="space-y-1">
-                <p class="text-label uppercase tracking-widest font-bold text-on-surface-variant">Municipal tourism</p>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tickets</h2>
-            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tickets</h1>
 
-            <!-- Check a ticket -->
+            <!-- Check a ticket: type the code or scan its QR, then let them in. -->
             <section class="glass-panel p-5 sm:p-6 space-y-4" aria-labelledby="checkHeading">
-                <h3 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h3>
+                <h2 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h2>
                 <form id="checkForm" class="flex flex-wrap gap-2">
                     <label for="checkCode" class="sr-only">Ticket code</label>
                     <input id="checkCode" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                           placeholder="e.g. JF-7K3M-Q" class="field flex-1 min-w-[200px] !text-xl font-mono uppercase tracking-widest"/>
+                           placeholder="Ticket code" class="field flex-1 min-w-[200px] min-h-[48px] !text-xl font-mono uppercase tracking-widest"/>
                     <button type="submit" class="btn btn-primary min-h-[48px]">
-                        <span class="material-symbols-outlined !text-base">search</span> Check
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span> Check
                     </button>
                     <button type="button" id="scanBtn" class="btn btn-secondary min-h-[48px]">
-                        <span class="material-symbols-outlined !text-base">qr_code_scanner</span> Scan QR
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">qr_code_scanner</span> Scan QR
                     </button>
                 </form>
                 <div id="scanBox" hidden class="space-y-2">
                     <video id="scanVideo" playsinline muted class="w-full max-w-md bg-black aspect-square object-cover"></video>
-                    <div class="flex items-center gap-3">
-                        <button type="button" id="scanStop" class="btn btn-ghost min-h-[44px]">Stop scanning</button>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" id="scanStop" class="btn btn-cancel min-h-[44px]">Stop scanning</button>
                         <p id="scanNote" class="text-support">Point the camera at the ticket's QR code.</p>
                     </div>
                 </div>
                 <div id="checkResult" aria-live="polite"></div>
             </section>
 
-            <!-- The day's tickets -->
+            <!-- The day's tickets: counts that filter, then one box per place. -->
             <section class="space-y-4" aria-labelledby="listHeading">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 id="listHeading" class="text-xl font-extrabold text-on-surface">Tickets for the day</h3>
+                    <h2 id="listHeading" class="text-xl font-extrabold text-on-surface">Tickets for <span id="listDay"></span></h2>
                     <div class="flex items-center gap-2">
-                        <label for="listDate" class="text-label font-bold uppercase tracking-widest">Date</label>
-                        <input id="listDate" type="date" class="field !w-auto"/>
-                        <button id="listRefresh" type="button" class="btn btn-ghost min-h-[44px]" aria-label="Refresh the list">
-                            <span class="material-symbols-outlined !text-base">refresh</span>
+                        <label for="listDate" class="sr-only">Date</label>
+                        <input id="listDate" type="date" class="field !w-auto min-h-[44px]"/>
+                        <button id="listRefresh" type="button" class="dest-more" aria-label="Refresh the list" title="Refresh">
+                            <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
                         </button>
                     </div>
+                </div>
+                <div id="ticketFilter" class="dest-chips" role="group" aria-label="Show">
+                    <button type="button" data-show="all" aria-pressed="true">All <b id="countAll">0</b></button>
+                    <button type="button" data-show="waiting" aria-pressed="false">Not yet used <b id="countWaiting">0</b></button>
+                    <button type="button" data-show="used" aria-pressed="false">Let in <b id="countUsed">0</b></button>
+                    <button type="button" data-show="other" aria-pressed="false" class="dest-chips__warn">Cancelled or closed <b id="countOther">0</b></button>
                 </div>
                 <div id="ticketList" class="space-y-4"></div>
             </section>
@@ -647,7 +650,7 @@ body { overflow-x: hidden; }
                             <p class="text-2xl font-black ${v.tone}">${v.title}</p>
                             <p class="text-on-surface">${detail}</p>
                             ${t ? `<p class="text-support mt-1"><span class="font-mono font-bold">${escapeHtml(t.code)}</span> · ${escapeHtml(t.spot)} · ${dayLabel(t.visitDate)} · ${escapeHtml(t.kindsText || `${t.people} ${t.people === 1 ? 'person' : 'people'}`)} · ${escapeHtml(t.name)}
-                               ${t.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1">DEMO</span>' : ''}</p>` : ''}
+                               ${t.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5 ml-1">Demo</span>' : ''}</p>` : ''}
                         </div>
                         ${r.verdict === 'valid' ? `<button type="button" id="admitBtn" data-id="${escapeHtml(t._id)}" class="btn btn-primary min-h-[48px] !text-base">
                             <span class="material-symbols-outlined">login</span> Let them in</button>` : ''}
@@ -661,7 +664,7 @@ body { overflow-x: hidden; }
                             const a = await api(`/tickets/${admit.dataset.id}/admit`, 'POST');
                             showToast(a.message, 'success');
                             document.getElementById('checkCode').value = '';
-                            box.innerHTML = `<div class="ztims-card tone-success p-5 font-bold">${escapeHtml(a.message)} Ready for the next ticket.</div>`;
+                            box.innerHTML = `<div class="ztims-card tone-success p-5 font-bold">${escapeHtml(a.message)}</div>`;
                             document.getElementById('checkCode').focus();
                             loadList();
                         } catch (e) { showToast(e.message, 'error'); admit.disabled = false; }
@@ -750,53 +753,73 @@ body { overflow-x: hidden; }
         /* ---- the day's list ----------------------------------------------- */
 
         const STATUS = {
-            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Used'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired'],
-            closed: ['tone-warning', 'Closed — visitor to choose']
+            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Let in'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired'],
+            closed: ['tone-warning', 'Closed, visitor to choose']
         };
+
+        let dayTickets = null;     // { tickets, today, date } for the day shown
+        let activeShow = 'all';    // the pressed count
+
+        const groupOf = t => t.status === 'used' ? 'used' : t.status === 'valid' ? 'waiting' : 'other';
 
         async function loadList() {
             const box = document.getElementById('ticketList');
             const date = document.getElementById('listDate').value;
+            document.getElementById('listDay').textContent = date === manilaToday() ? 'today' : dayLabel(date);
             box.innerHTML = '<div class="ztims-empty">Loading tickets…</div>';
             try {
                 const r = await api(`/tickets?date=${date}`);
-                if (!r.tickets.length) { box.innerHTML = `<div class="ztims-empty">No tickets bought online for ${dayLabel(date)}.</div>`; return; }
-                const bySpot = new Map();
-                for (const t of r.tickets) {
-                    if (!bySpot.has(t.spot)) bySpot.set(t.spot, []);
-                    bySpot.get(t.spot).push(t);
-                }
-                const past = date < r.today;
-                box.innerHTML = [...bySpot.entries()].map(([spot, list]) => {
-                    const live = list.filter(t => t.status !== 'cancelled');
-                    const people = live.reduce((a, t) => a + t.people, 0);
-                    const inside = live.filter(t => t.status === 'used').reduce((a, t) => a + t.people, 0);
-                    return `
-                    <div class="glass-panel p-5 space-y-3">
-                        <div class="flex flex-wrap items-baseline justify-between gap-2">
-                            <h4 class="text-lg font-extrabold text-on-surface">${escapeHtml(spot)}</h4>
-                            <p class="text-support">${live.length} ticket${live.length === 1 ? '' : 's'} · ${people} ${people === 1 ? 'person' : 'people'} · ${inside} let in</p>
-                        </div>
-                        <div class="overflow-x-auto"><table class="ztims-table w-full text-left border-collapse text-sm">
-                            <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
-                                <th class="px-2 py-2">Code</th><th class="px-2 py-2">Name</th><th class="px-2 py-2">People</th><th class="px-2 py-2">Status</th>
-                            </tr></thead>
-                            <tbody class="divide-y divide-outline-variant/20">${list.map(t => {
-                                const [tone, label] = t.status === 'valid' && past ? STATUS.expired : (STATUS[t.status] || ['tone-neutral', t.status]);
-                                return `<tr>
-                                    <td class="px-2 py-2 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(t.code)}
-                                        ${t.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1">DEMO</span>' : ''}</td>
-                                    <td class="px-2 py-2">${escapeHtml(t.name)}</td>
-                                    <td class="px-2 py-2"><b class="text-on-surface">${t.people}</b>${t.kindsText ? `<span class="block text-support">${escapeHtml(t.kindsText)}</span>` : ''}</td>
-                                    <td class="px-2 py-2"><span class="${tone} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${label}${t.status === 'used' && t.usedAt ? ` · ${timeOf(t.usedAt)}` : ''}</span></td>
-                                </tr>`;
-                            }).join('')}</tbody>
-                        </table></div>
-                    </div>`;
-                }).join('');
+                dayTickets = { tickets: r.tickets, today: r.today, date };
+                renderList();
             } catch (error) {
+                dayTickets = null;
                 box.innerHTML = `<div class="ztims-empty tone-danger">${escapeHtml(error.message)}</div>`;
             }
+        }
+
+        function renderList() {
+            const box = document.getElementById('ticketList');
+            const { tickets, today, date } = dayTickets;
+            const count = group => tickets.filter(t => groupOf(t) === group).length;
+            document.getElementById('countAll').textContent = tickets.length;
+            document.getElementById('countWaiting').textContent = count('waiting');
+            document.getElementById('countUsed').textContent = count('used');
+            document.getElementById('countOther').textContent = count('other');
+
+            const shown = tickets.filter(t => activeShow === 'all' || groupOf(t) === activeShow);
+            if (!shown.length) {
+                box.innerHTML = `<div class="ztims-empty">${tickets.length ? 'No ticket matches.' : 'No tickets for this day.'}</div>`;
+                return;
+            }
+            const bySpot = new Map();
+            for (const t of shown) {
+                if (!bySpot.has(t.spot)) bySpot.set(t.spot, []);
+                bySpot.get(t.spot).push(t);
+            }
+            const past = date < today;
+            box.innerHTML = [...bySpot.entries()].map(([spot, list]) => {
+                const all = tickets.filter(t => t.spot === spot && t.status !== 'cancelled');
+                const people = all.reduce((a, t) => a + t.people, 0);
+                const inside = all.filter(t => t.status === 'used').reduce((a, t) => a + t.people, 0);
+                return `
+                <div class="glass-panel">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-4 pb-3">
+                        <h3 class="text-lg font-extrabold text-on-surface">${escapeHtml(spot)}</h3>
+                        <p class="text-sm text-on-surface"><b>${inside}</b> of <b>${people}</b> ${people === 1 ? 'person' : 'people'} let in</p>
+                    </div>
+                    <div class="divide-y divide-outline-variant/20 border-t border-outline-variant/30">${list.map(t => {
+                        const [tone, label] = t.status === 'valid' && past ? STATUS.expired : (STATUS[t.status] || ['tone-neutral', t.status]);
+                        return `<div class="tk-row">
+                            <span class="tk-row__code">${escapeHtml(t.code)}</span>
+                            <span class="tk-row__who"><b>${escapeHtml(t.name)}</b>
+                                <span class="text-support">${t.people} ${t.people === 1 ? 'person' : 'people'}${t.kindsText ? ` · ${escapeHtml(t.kindsText)}` : ''}</span></span>
+                            <span class="tk-row__status">
+                                ${t.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5">Demo</span>' : ''}
+                                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">${label}${t.status === 'used' && t.usedAt ? ` · ${timeOf(t.usedAt)}` : ''}</span></span>
+                        </div>`;
+                    }).join('')}</div>
+                </div>`;
+            }).join('');
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -812,6 +835,14 @@ body { overflow-x: hidden; }
             date.value = manilaToday();
             date.addEventListener('change', loadList);
             document.getElementById('listRefresh').addEventListener('click', loadList);
+            document.getElementById('ticketFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-show]');
+                if (!chip) return;
+                activeShow = chip.dataset.show;
+                document.querySelectorAll('#ticketFilter [data-show]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                if (dayTickets) renderList();
+            });
             loadList();
             document.getElementById('checkCode').focus();
         });

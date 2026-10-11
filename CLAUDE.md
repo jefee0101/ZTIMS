@@ -657,6 +657,19 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   listing, New password, Suspend / Restore, Delete in red).
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
+- **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Scan
+  QR; Stop scanning is a red outlined pill; Let them in), then "Tickets for
+  today" (or the chosen date) with counts that filter (All, Not yet used, Let
+  in, Cancelled or closed) and one box per place ("6 of 8 people let in") with
+  a row per ticket (`.tk-row`: code, name and people, status pill).
+- **Collections** (`admin_collections.html`): title with the online-payments
+  pill, month and Excel beside it; four tiles (Collected, Guide fees, Entrance
+  fees, Waiting for an OR in red when any); Payments as counts that filter (All,
+  Waiting for an OR, Refunded), search, and a row per payment (`.pay-row`:
+  reference, what and where, payer · method · online/onsite · when, the amount
+  large, the OR number or its field with Save, and ⋯ → Cancel and refund in
+  red); Day by day; Demo data as one line with its two buttons. Pesos are whole
+  unless a refund left centavos.
 
 ### Attraction setup
 

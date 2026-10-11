@@ -520,65 +520,58 @@ body { overflow-x: hidden; }
 
     <!-- Main Workspace Container -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1400px] mx-auto space-y-8">
+        <div class="max-w-[1100px] mx-auto space-y-6">
 
             <div class="flex flex-wrap items-end justify-between gap-4">
-                <div class="space-y-1">
-                    <p class="text-label uppercase tracking-widest font-bold text-on-surface-variant">Municipal tourism</p>
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Collections</h2>
+                <div class="space-y-2">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Collections</h1>
+                    <span id="gatewayPill" class="tone-pill rounded-pill text-xs font-bold px-3 py-1 inline-flex"></span>
                 </div>
-                <span id="gatewayPill" class="tone-pill text-xs font-bold px-3 py-2"></span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <label for="colMonth" class="sr-only">Month</label>
+                    <select id="colMonth" class="field !w-auto min-h-[44px]"></select>
+                    <button id="colDownload" type="button" class="btn btn-secondary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">download</span> Excel
+                    </button>
+                </div>
             </div>
 
-            <div class="glass-panel p-4 flex flex-wrap items-center gap-3">
-                <label for="colMonth" class="text-label font-bold uppercase tracking-widest">Month</label>
-                <select id="colMonth" class="field !w-auto"></select>
-                <div class="relative flex-1 min-w-[200px]">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                    <input id="colSearch" type="search" placeholder="Reference, ticket code or name" class="field !pl-10 w-full" autocomplete="off"/>
-                </div>
-                <label class="flex items-center gap-2 text-sm min-h-[44px]"><input id="colNoOr" type="checkbox"/> Waiting for an OR only</label>
-                <button id="colDownload" type="button" class="btn btn-secondary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base">download</span> Download Excel
-                </button>
-            </div>
-
-            <div id="colTiles" class="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-4"></div>
-
+            <div id="colTiles" class="grid grid-cols-2 xl:grid-cols-4 gap-3"></div>
             <div id="colDuplicates"></div>
 
-            <section class="glass-panel p-5 sm:p-6 space-y-3 min-w-0">
-                <div class="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 class="text-lg font-extrabold text-on-surface">Payments</h3>
-                    <p id="colShown" class="text-support"></p>
+            <!-- The payments: counts that filter, the search, one row each. -->
+            <section class="space-y-3 min-w-0" aria-labelledby="payHeading">
+                <h2 id="payHeading" class="text-xl font-extrabold text-on-surface">Payments</h2>
+                <div id="colFilter" class="dest-chips" role="group" aria-label="Show">
+                    <button type="button" data-show="all" aria-pressed="true">All <b id="colCountAll">0</b></button>
+                    <button type="button" data-show="noor" aria-pressed="false" class="dest-chips__warn">Waiting for an OR <b id="colCountNoOr">0</b></button>
+                    <button type="button" data-show="refunded" aria-pressed="false">Refunded <b id="colCountRefunded">0</b></button>
                 </div>
-                <div id="colList" class="overflow-auto max-h-[70vh]"></div>
+                <div class="relative">
+                    <label for="colSearch" class="sr-only">Search payments</label>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                    <input id="colSearch" type="search" placeholder="Search by reference, ticket code, name or place" class="field !pl-11 w-full min-h-[44px]" autocomplete="off"/>
+                </div>
+                <div class="glass-panel">
+                    <div id="colList" class="divide-y divide-outline-variant/20"></div>
+                    <p id="colShown" class="px-5 py-3 border-t border-outline-variant/30 text-support"></p>
+                </div>
             </section>
 
             <section class="glass-panel p-5 sm:p-6 space-y-3 min-w-0">
-                <h3 class="text-lg font-extrabold text-on-surface">Day by day</h3>
+                <h2 class="text-lg font-extrabold text-on-surface">Day by day</h2>
                 <div id="colDaily" class="overflow-auto max-h-[50vh] max-w-3xl"></div>
             </section>
 
-            <section class="glass-panel p-5 sm:p-6 space-y-3" aria-labelledby="demoHeading">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h3 id="demoHeading" class="text-lg font-extrabold text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">science</span> Demonstration data
-                        </h3>
-                        <p id="demoCounts" class="text-support"></p>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button id="demoLoad" type="button" class="btn btn-secondary min-h-[44px]">Load demo data</button>
-                        <button id="demoRemove" type="button" class="btn btn-danger min-h-[44px]">Remove demo data</button>
-                    </div>
+            <section class="glass-panel p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3" aria-labelledby="demoHeading">
+                <div>
+                    <h2 id="demoHeading" class="text-lg font-extrabold text-on-surface">Demo data</h2>
+                    <p id="demoCounts" class="text-support"></p>
                 </div>
-                <p class="text-support max-w-3xl">
-                    Loads about three months of sample guide bookings, entrance tickets and payments, each marked DEMO,
-                    so the pages have something to show. Loading again replaces the sample and keeps test-mode payments
-                    made through the checkout. Removing takes out every DEMO record, test-mode payments included; real
-                    records are never touched.
-                </p>
+                <div class="flex flex-wrap gap-2">
+                    <button id="demoLoad" type="button" class="btn btn-secondary min-h-[44px]">Load demo data</button>
+                    <button id="demoRemove" type="button" class="btn btn-danger min-h-[44px]">Remove demo data</button>
+                </div>
             </section>
         </div>
     </main>
@@ -591,7 +584,11 @@ body { overflow-x: hidden; }
             Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-        const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const peso = n => {
+            const value = Number(n) || 0;
+            const cents = Math.round(value * 100) % 100 !== 0;
+            return '₱' + value.toLocaleString('en-PH', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+        };
         const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking', cash: 'Cash' };
 
         function signOutStaff() {
@@ -651,27 +648,27 @@ body { overflow-x: hidden; }
             const s = data.summary;
             const g = data.gateway;
             const pill = document.getElementById('gatewayPill');
-            pill.className = `${g.online ? 'tone-success' : 'tone-neutral'} tone-pill text-xs font-bold px-3 py-2`;
-            pill.textContent = g.online ? 'Online payments: on, test mode'
-                : g.reason === 'live_key_refused' ? 'Online payments: off (only a Xendit test key is accepted)'
-                : 'Online payments: off (Xendit test key not set)';
+            pill.className = `${g.online ? 'tone-success' : 'tone-neutral'} tone-pill rounded-pill text-xs font-bold px-3 py-1 inline-flex`;
+            pill.textContent = g.online ? 'Online payments on (test mode)'
+                : g.reason === 'live_key_refused' ? 'Online payments off: only a Xendit test key is accepted'
+                : 'Online payments off: Xendit test key not set';
 
             const tile = (label, value, sub, tone) => `
-                <div class="glass-panel p-5 space-y-1">
-                    <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">${label}</p>
-                    <p class="text-3xl font-black tabular-nums ${tone || 'text-on-surface'}">${value}</p>
-                    <p class="text-support">${sub}</p>
+                <div class="glass-panel p-4 sm:p-5 space-y-1 min-w-0">
+                    <p class="text-sm font-semibold text-on-surface-variant">${label}</p>
+                    <p class="text-2xl sm:text-3xl font-black tabular-nums ${tone || 'text-on-surface'}">${value}</p>
+                    ${sub ? `<p class="text-support">${sub}</p>` : ''}
                 </div>`;
             document.getElementById('colTiles').innerHTML =
-                tile('Collected', peso(s.total), `${s.count} payment${s.count === 1 ? '' : 's'} · ${peso(s.online)} online · ${peso(s.counter)} at the counter`) +
-                tile('Guide fees', peso(s.guideFees), 'guide bookings') +
-                tile('Entrance fees', peso(s.entranceFees), 'attraction tickets') +
-                tile('Waiting for an OR', String(s.awaitingReceipt), s.refunded ? `${peso(s.refunded)} refunded this month` : 'official receipts still to issue',
-                     s.awaitingReceipt ? 'tone-warning' : 'text-on-surface');
+                tile('Collected', peso(s.total), `${peso(s.online)} online · ${peso(s.counter)} onsite`) +
+                tile('Guide fees', peso(s.guideFees), '') +
+                tile('Entrance fees', peso(s.entranceFees), '') +
+                tile('Waiting for an OR', String(s.awaitingReceipt), s.refunded ? `${peso(s.refunded)} refunded` : '',
+                     s.awaitingReceipt ? 'text-error' : 'text-on-surface');
 
             const dup = data.duplicates || [];
             document.getElementById('colDuplicates').innerHTML = dup.length ? `
-                <div class="ztims-card tone-warning p-4 text-sm">
+                <div class="ztims-card tone-danger p-4 text-sm">
                     <b>${dup.length} payment${dup.length === 1 ? '' : 's'} arrived for something already paid or cancelled.</b>
                     Refund ${dup.length === 1 ? 'it' : 'them'} in the payment service's dashboard:
                     ${dup.map(d => `${escapeHtml(d.reference || d.code)} (${peso(d.amount)}, ${escapeHtml(d.payment_ref)})`).join(' · ')}
@@ -698,52 +695,59 @@ body { overflow-x: hidden; }
 
             renderList();
             document.getElementById('demoCounts').textContent = data.demo.payments
-                ? `Loaded now: ${data.demo.bookings} guide bookings, ${data.demo.tickets} tickets, ${data.demo.payments} payments.`
+                ? `${data.demo.bookings} guide bookings, ${data.demo.tickets} tickets and ${data.demo.payments} payments, each marked Demo.`
                 : 'None loaded.';
         }
 
+        let activeShow = 'all';    // the pressed count: all, noor or refunded
+        const waitsForOr = p => !p.receiptNumber && !p.refundedAt;
+
         function renderList() {
             const q = document.getElementById('colSearch').value.trim().toLowerCase();
-            const noOr = document.getElementById('colNoOr').checked;
-            const rows = data.payments.filter(p =>
+            const all = data.payments;
+            document.getElementById('colCountAll').textContent = all.length;
+            document.getElementById('colCountNoOr').textContent = all.filter(waitsForOr).length;
+            document.getElementById('colCountRefunded').textContent = all.filter(p => p.refundedAt).length;
+            const rows = all.filter(p =>
                 (!q || [p.reference, p.payer, p.place].some(v => String(v || '').toLowerCase().includes(q))) &&
-                (!noOr || (!p.receiptNumber && !p.refundedAt)));
-            document.getElementById('colShown').textContent = `${rows.length} of ${data.payments.length}`;
+                (activeShow === 'all' || (activeShow === 'noor' ? waitsForOr(p) : p.refundedAt)));
+            document.getElementById('colShown').innerHTML = `Showing <b class="text-on-surface">${rows.length}</b> of <b class="text-on-surface">${all.length}</b>`;
             const box = document.getElementById('colList');
-            if (!rows.length) { box.innerHTML = `<div class="ztims-empty">${data.payments.length ? 'No payment matches.' : 'No payments this month.'}</div>`; return; }
-            box.innerHTML = `
-                <table class="ztims-table w-full text-left border-collapse text-sm">
-                    <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
-                        <th class="px-2 py-2">When</th><th class="px-2 py-2">For</th><th class="px-2 py-2">Paid by</th>
-                        <th class="px-2 py-2 text-right">Amount</th><th class="px-2 py-2">OR number</th><th class="px-2 py-2"></th>
-                    </tr></thead>
-                    <tbody class="divide-y divide-outline-variant/20">${rows.map(p => `
-                        <tr data-id="${escapeHtml(p._id)}" class="${p.refundedAt && !p.kept ? 'opacity-60' : ''}">
-                            <td class="px-2 py-3 whitespace-nowrap">${when(p.paidAt)}</td>
-                            <td class="px-2 py-3">
-                                <span class="font-mono font-bold text-on-surface">${escapeHtml(p.reference)}</span>
-                                ${p.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1">DEMO</span>' : ''}
-                                <span class="block text-support">${p.kind === 'guide_fee' ? 'Guide fee' : `Entrance${p.people ? ` · ${p.people} people` : ''}`} · ${escapeHtml(p.place || '—')}</span>
-                            </td>
-                            <td class="px-2 py-3">
-                                <span class="text-on-surface">${escapeHtml(p.payer || '—')}</span>
-                                <span class="block text-support">${escapeHtml(METHOD[p.method] || p.method)} · ${p.channel === 'online' ? 'online' : 'counter'}</span>
-                            </td>
-                            <td class="px-2 py-3 text-right tabular-nums font-bold text-on-surface">
-                                <span class="${p.refundedAt && !p.kept ? 'line-through' : ''}">${peso(p.amount)}</span>
-                                ${p.refundedAt && p.kept ? `<span class="block text-support font-normal">${peso(p.refundAmount)} back · ${peso(p.kept)} kept</span>` : ''}</td>
-                            <td class="px-2 py-3">${p.receiptNumber
-                                ? `<span class="font-mono">${escapeHtml(p.receiptNumber)}</span>`
-                                : p.refundedAt ? '–'
-                                : `<form data-or class="flex gap-1"><input name="or" placeholder="OR-…" class="field !py-1.5 !w-28" aria-label="OR number for ${escapeHtml(p.reference)}"/><button class="btn btn-secondary btn-sm">Save</button></form>`}</td>
-                            <td class="px-2 py-3 text-right">${p.refundedAt
-                                ? `<span class="tone-neutral text-support" title="${escapeHtml(p.refundReason)}">${p.kept ? 'Part refunded' : 'Refunded'}</span>`
-                                : p.ticketStatus === 'used'
-                                    ? '<span class="text-support" title="A used ticket is never refundable.">Used at the entrance</span>'
-                                    : `<button data-refund class="btn btn-ghost btn-sm !text-error">Refund</button>`}</td>
-                        </tr>`).join('')}
-                    </tbody>
-                </table>`;
+            if (!rows.length) { box.innerHTML = `<div class="p-4"><div class="ztims-empty">${all.length ? 'No payment matches.' : 'No payments this month.'}</div></div>`; return; }
+            box.innerHTML = rows.map(p => {
+                const refunded = p.refundedAt && !p.kept;
+                const what = p.kind === 'guide_fee' ? 'Guide fee' : `Entrance${p.people ? ` · ${p.people} ${p.people === 1 ? 'person' : 'people'}` : ''}`;
+                const facts = [escapeHtml(p.payer || '—'), escapeHtml(METHOD[p.method] || p.method), p.channel === 'online' ? 'Online' : 'Onsite', when(p.paidAt)].join(' · ');
+                const pills = [
+                    p.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5">Demo</span>' : '',
+                    p.refundedAt ? `<span class="tone-neutral tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5" title="${escapeHtml(p.refundReason)}">${p.kept ? `Part refunded · ${peso(p.refundAmount)} back` : 'Refunded'}</span>` : '',
+                    p.ticketStatus === 'used' ? '<span class="tone-info tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">Used at the entrance</span>' : ''
+                ].filter(Boolean).join('');
+                const or = p.receiptNumber
+                    ? `<span class="pay-row__or">${/^or\b/i.test(p.receiptNumber) ? '' : 'OR '}${escapeHtml(p.receiptNumber)}</span>`
+                    : p.refundedAt ? ''
+                    : `<form data-or class="flex gap-1.5"><input name="or" placeholder="OR number" class="field !py-1.5 !w-32 min-h-[40px]" aria-label="OR number for ${escapeHtml(p.reference)}"/><button class="btn btn-primary btn-sm min-h-[40px]">Save</button></form>`;
+                const canRefund = !p.refundedAt && p.ticketStatus !== 'used';
+                return `
+                <div data-id="${escapeHtml(p._id)}" class="pay-row">
+                    <div class="pay-row__body${refunded ? ' opacity-60' : ''}">
+                        <p class="pay-row__title"><span class="font-mono">${escapeHtml(p.reference)}</span> <span class="font-normal text-on-surface-variant">${what} · ${escapeHtml(p.place || '—')}</span></p>
+                        <p class="dest-row__facts">${facts}</p>
+                        ${pills ? `<div class="dest-row__issues">${pills}</div>` : ''}
+                    </div>
+                    <p class="pay-row__amount${refunded ? ' line-through opacity-60' : ''}">${peso(p.amount)}</p>
+                    <div class="pay-row__actions">
+                        ${or}
+                        ${canRefund ? `<div class="relative">
+                            <button type="button" data-more="${escapeHtml(p._id)}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(p.reference)}"
+                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                            <div class="ztims-dropdown dest-menu" data-menu="${escapeHtml(p._id)}" hidden>
+                                <button type="button" data-refund class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">undo</span>Cancel and refund</button>
+                            </div>
+                        </div>` : '<span class="hidden sm:block w-10 shrink-0" aria-hidden="true"></span>'}
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         async function send(url, method, body) {
@@ -766,11 +770,38 @@ body { overflow-x: hidden; }
             select.innerHTML = options.join('');
             select.addEventListener('change', load);
             document.getElementById('colSearch').addEventListener('input', () => data && renderList());
-            document.getElementById('colNoOr').addEventListener('change', () => data && renderList());
+            document.getElementById('colFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-show]');
+                if (!chip) return;
+                activeShow = chip.dataset.show;
+                document.querySelectorAll('#colFilter [data-show]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                if (data) renderList();
+            });
+
+            // The ⋯ menu on each row: one open at a time; a click elsewhere or
+            // Escape closes it.
+            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
+                if (menu === except) return;
+                menu.hidden = true;
+                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
+                if (opener) opener.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('click', event => {
+                const opener = event.target.closest('[data-more]');
+                if (opener) {
+                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
+                    closeMenus(menu);
+                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
+                    return;
+                }
+                closeMenus();
+            });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
 
             document.getElementById('colList').addEventListener('submit', async event => {
                 event.preventDefault();
-                const row = event.target.closest('tr[data-id]');
+                const row = event.target.closest('[data-id]');
                 const value = event.target.elements.or.value.trim();
                 if (!value) return;
                 try {
@@ -782,12 +813,12 @@ body { overflow-x: hidden; }
             document.getElementById('colList').addEventListener('click', async event => {
                 const btn = event.target.closest('[data-refund]');
                 if (!btn) return;
-                const row = btn.closest('tr[data-id]');
+                const row = btn.closest('[data-id]');
                 const p = data.payments.find(x => x._id === row.dataset.id);
                 const values = await ztimsDialog.form({
-                    title: `Refund ${peso(p.amount)} for ${p.reference}?`,
+                    title: `Cancel and refund ${peso(p.amount)} for ${p.reference}?`,
                     message: 'Refunds are for when the office cancels. The booking or ticket is cancelled, and an online payment goes back through the payment service.',
-                    confirmLabel: 'Refund',
+                    confirmLabel: 'Cancel and refund', tone: 'danger',
                     fields: [
                         { name: 'reason', label: 'Reason', placeholder: 'e.g. Bad weather, attraction closed', required: true },
                         { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
@@ -822,7 +853,7 @@ body { overflow-x: hidden; }
             document.getElementById('demoLoad').addEventListener('click', async () => {
                 const ok = await ztimsDialog.confirm({
                     title: 'Load demo data?',
-                    message: 'About three months of sample bookings, tickets and payments, each marked DEMO. A sample already loaded is replaced; test-mode payments and real records are kept.',
+                    message: 'About three months of sample bookings, tickets and payments, each marked Demo. A sample already loaded is replaced; test-mode payments and real records are kept.',
                     confirmLabel: 'Load demo data'
                 });
                 if (!ok) return;
@@ -835,7 +866,7 @@ body { overflow-x: hidden; }
             document.getElementById('demoRemove').addEventListener('click', async () => {
                 const values = await ztimsDialog.form({
                     title: 'Remove all demo data?',
-                    message: 'Every record marked DEMO goes: sample data and test-mode payments, with their bookings and tickets. Real records stay.',
+                    message: 'Every record marked Demo goes: sample data and test-mode payments, with their bookings and tickets. Real records stay.',
                     confirmLabel: 'Remove demo data', tone: 'danger',
                     fields: [{ name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }],
                     validate: v => (v.confirmPassword ? '' : 'Enter your password to confirm.')

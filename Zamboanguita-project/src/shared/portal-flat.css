@@ -209,3 +209,25 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .ztims-modal .btn-primary:hover:not(:disabled) { background: rgb(var(--ztims-primary-dim)); }
 .ztims-modal .btn-secondary { border: 1px solid rgb(var(--ztims-primary-text) / .45); }
 .ztims-modal .field { border-radius: 0; }
+
+/* ---- The officer's Tickets and Collections --------------------------------
+   One row per ticket (code, who, status) and per payment (what and who, the
+   amount large, then the OR number or its field, and ⋯ for Cancel and refund). */
+.tk-row { display: grid; grid-template-columns: 9rem 1fr auto; gap: .75rem 1rem; align-items: center; padding: .75rem 1.25rem; }
+.tk-row__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: rgb(var(--ztims-on-surface)); letter-spacing: .04em; }
+.tk-row__who { min-width: 0; display: flex; flex-direction: column; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.tk-row__status { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; }
+.pay-row { display: grid; grid-template-columns: 1fr 7rem 15rem; gap: .5rem 1.25rem; align-items: center; padding: .9rem 1.25rem; }
+.pay-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
+.pay-row__body { min-width: 0; display: flex; flex-direction: column; gap: .25rem; }
+.pay-row__title { font-weight: 800; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.pay-row__amount { text-align: right; font-size: 1.125rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pay-row__actions { display: flex; align-items: center; gap: .4rem; justify-content: flex-end; }
+.pay-row__or { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8125rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+@media (max-width: 639px) {
+    .tk-row { grid-template-columns: 1fr auto; padding: .75rem 1rem; }
+    .tk-row__who { grid-column: 1 / -1; grid-row: 2; }
+    .pay-row { grid-template-columns: 1fr auto; padding: .9rem 1rem; }
+    .pay-row__actions:empty { display: none; }
+    .pay-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
