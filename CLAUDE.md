@@ -219,12 +219,16 @@ purpose — see the header comment in `spot-form.js`:
   shadow behind the tiles, so browser zoom can never show a line under them);
   its buttons sit on
   solid grounds, on the right on every portal.
-- `portal-flat.css` — the flat, standard look for the guide and the
-  establishment manager portals (every `src/guide/*.html` and
-  `src/resort/*.html`, after theme.css and motion.css): flat outlined panels
+- `portal-flat.css` — the flat, standard look for all three staff portals
+  (every `src/admin/*.html`, `src/guide/*.html` and `src/resort/*.html`,
+  after theme.css and motion.css): flat outlined panels
   and cards, sentence-case labels, pill buttons (no gradient) and status
-  pills, the current page in the menu a solid burnt-orange pill (`.is-current`
-  on the page's own link; `.nav-active` too) with labels wrapping rather than
+  pills, the current page in the menu a solid burnt-orange pill with
+  off-white words (`.is-current` on the page's own link; the officer's
+  `.nav-active` from nav-active.js, outranked so its old tint never shows),
+  labels, kickers, table headers and status tags in sentence case (codes typed
+  in capitals excepted), sideways-scrolling tables holding their own hidden
+  labels with labels wrapping rather than
   cut, and the subpage tabs (`.settings-tab`).
 - **The manager's Establishment** (`resort/resort_spots.html`, the menu's
   "Establishment"; it was "My Listing"): the whole listing on one page in five

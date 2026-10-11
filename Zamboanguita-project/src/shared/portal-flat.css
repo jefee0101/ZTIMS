@@ -124,3 +124,21 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
                      border: 1px solid rgb(var(--ztims-secondary)); font-size: .8125rem; font-weight: 700;
                      color: rgb(var(--ztims-on-surface)); }
 .est-check__todo a:hover { background: rgb(var(--ztims-secondary)); color: rgb(var(--ztims-on-secondary)); }
+
+/* ---- The officer's pages ----------------------------------------------- */
+/* The current page in the menu: off-white words on the burnt-orange pill
+   (nav-active.js colours them for its old tint, with !important). */
+aside a.nav-active.nav-active, aside a.nav-active.nav-active .sidebar-label,
+aside a.nav-active.nav-active .material-symbols-outlined { color: rgb(var(--ztims-on-primary)) !important; }
+/* Labels, kickers, table headers and status tags in sentence case, as on the
+   visitor pages. Codes typed in capitals stay as they are. */
+main .uppercase:not(input):not(.font-mono):not(.bk-field--code),
+.ztims-modal .uppercase:not(input):not(.font-mono),
+main th, .ztims-modal th {
+    text-transform: none !important; letter-spacing: normal !important;
+}
+/* A header whose theme button sits directly in it (Settings): to the right. */
+body > header.fixed.glass-nav > button:not(#navOpenBtn) { margin-left: auto; }
+/* A box that scrolls sideways (the wide tables) holds its own hidden labels,
+   so a screen-reader-only label never pushes the page wider than the phone. */
+main .overflow-x-auto { position: relative; }
