@@ -206,7 +206,14 @@ purpose — see the header comment in `spot-form.js`:
   panels, sentence-case labels, pill buttons and status pills, language chips
   as pills, the current page in the menu a solid burnt-orange pill (`.is-current`)
   with menu labels wrapping rather than cut; the Dashboard's six-month chart
-  says one line when there is nothing to chart. Loaded as a module, so page
+  says one line when there is nothing to chart. Schedule & Availability's **My tours** is
+  built for a phone in the field: Upcoming / Past as a pill switch with counts
+  (upcoming = from today, awaiting payment or confirmed), the next tour first
+  and larger ("Next tour · Today"), each tour a card with the time large, the
+  place, visitors and name, the visitor's note highlighted, and Call (`tel:`),
+  Text (`sms:`) and Directions (the destination page's directions) on one row;
+  later tours grouped under Today / Tomorrow / the weekday (styles `.tour-*` in
+  `guide-portal.css`). Loaded as a module, so page
   code calls `window.GuidePortal` only inside `DOMContentLoaded`.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an

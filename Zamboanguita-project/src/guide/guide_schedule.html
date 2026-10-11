@@ -66,17 +66,17 @@
 
             <div id="scheduleContent" hidden class="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-                <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-4 lg:col-span-3">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">calendar_month</span> My tours
-                        </h3>
-                        <label class="flex items-center gap-2 text-sm text-on-surface-variant cursor-pointer min-h-[44px]">
-                            <input id="showPast" type="checkbox" class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
-                            Show past tours
-                        </label>
+                <!-- My tours, built for a phone in the field: the next tour first,
+                     large, with Call, Text and Directions; then the rest by day. -->
+                <section class="glass-panel rounded-2xl p-4 sm:p-6 space-y-4 lg:col-span-3">
+                    <h3 class="text-xl font-headline font-black text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-accent">calendar_month</span> My tours
+                    </h3>
+                    <div role="tablist" aria-label="Which tours" class="tour-seg">
+                        <button type="button" role="tab" id="tabUpcoming" aria-selected="true">Upcoming <span id="countUpcoming" class="tour-seg__n"></span></button>
+                        <button type="button" role="tab" id="tabPast" aria-selected="false">Past <span id="countPast" class="tour-seg__n"></span></button>
                     </div>
-                    <div id="tourList" class="space-y-6"></div>
+                    <div id="tourList" class="space-y-5"></div>
                 </section>
 
                 <div class="space-y-8 lg:col-span-2">
@@ -125,49 +125,93 @@
             cancelled: ['tone-neutral', 'Cancelled']
         };
 
+        let showingPast = false;
+
+        // Today and other days in the guide's own calendar (not UTC).
+        const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        function dayName(date) {
+            const P = window.GuidePortal;
+            const now = new Date();
+            const today = isoDay(now);
+            const tomorrow = isoDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+            if (date === today) return 'Today';
+            if (date === tomorrow) return 'Tomorrow';
+            return P.formatDate(date, { weekday: 'long', month: 'short', day: 'numeric' });
+        }
+        const isUpcoming = b => b.preferredDate >= isoDay(new Date()) && ['pending_payment', 'confirmed'].includes(b.status);
+
+        // The three things a guide does from a tour: ring, text, find the way.
+        function tourActions(b, big) {
+            const P = window.GuidePortal;
+            const phone = (b.contactNumber || '').replace(/[^\d+]/g, '');
+            const size = big ? 'min-h-[48px]' : 'btn-sm min-h-[40px]';
+            return `<div class="tour-actions">
+                ${phone ? `<a href="tel:${P.escapeHtml(phone)}" class="btn btn-primary ${size}"><span class="material-symbols-outlined !text-base" aria-hidden="true">call</span> Call</a>
+                <a href="sms:${P.escapeHtml(phone)}" class="btn btn-secondary ${size}"><span class="material-symbols-outlined !text-base" aria-hidden="true">sms</span> Text</a>` : ''}
+                <a href="../spot.html?spotId=${encodeURIComponent(b.spot._id)}#directionsSection" class="btn btn-secondary ${size}"><span class="material-symbols-outlined !text-base" aria-hidden="true">directions</span> Directions</a>
+            </div>`;
+        }
+
+        function tourCard(b, { next = false, past = false } = {}) {
+            const P = window.GuidePortal;
+            const [tone, label] = STATUS_TONE[b.status] || ['tone-neutral', b.status];
+            const time = P.formatTime(b.preferredTime);
+            return `
+            <li class="tour-card${next ? ' tour-card--next' : ''}">
+                ${next ? `<p class="tour-card__kicker">Next tour · ${P.escapeHtml(dayName(b.preferredDate))}</p>` : ''}
+                <div class="tour-card__main">
+                    <div class="tour-card__time">
+                        <span class="tour-card__clock">${P.escapeHtml(time.replace(/ (AM|PM)$/, ''))}</span>
+                        <span class="tour-card__ampm">${P.escapeHtml((time.match(/AM|PM/) || [''])[0])}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="tour-card__place">${P.escapeHtml(b.spot.title)}</p>
+                        <p class="tour-card__who">
+                            <span class="material-symbols-outlined !text-base" aria-hidden="true">group</span>
+                            <b>${b.visitors}</b> visitor${b.visitors === 1 ? '' : 's'} · ${P.escapeHtml(b.fullName)}
+                        </p>
+                        <span class="tone-pill ${tone} inline-block mt-1.5">${label}</span>
+                    </div>
+                </div>
+                ${b.notes ? `<p class="tour-card__note"><span class="material-symbols-outlined !text-base" aria-hidden="true">sticky_note_2</span><span>${P.escapeHtml(b.notes)}</span></p>` : ''}
+                ${past ? '' : tourActions(b, next)}
+                <p class="text-support">Reference ${P.escapeHtml(b.reference)}</p>
+            </li>`;
+        }
+
         function renderTours() {
             const P = window.GuidePortal;
-            const today = new Date().toISOString().slice(0, 10);
-            const showPast = document.getElementById('showPast').checked;
-            const list = myBookings.filter(b => showPast || b.preferredDate >= today);
-            // Past tours read newest first; upcoming ones soonest first.
-            if (showPast) list.sort((a, b) => (b.preferredDate + b.preferredTime).localeCompare(a.preferredDate + a.preferredTime));
+            const upcoming = myBookings.filter(isUpcoming);
+            const past = myBookings.filter(b => !isUpcoming(b))
+                .sort((a, b) => (b.preferredDate + b.preferredTime).localeCompare(a.preferredDate + a.preferredTime));
+            document.getElementById('countUpcoming').textContent = upcoming.length;
+            document.getElementById('countPast').textContent = past.length;
+            document.getElementById('tabUpcoming').setAttribute('aria-selected', String(!showingPast));
+            document.getElementById('tabPast').setAttribute('aria-selected', String(showingPast));
 
             const box = document.getElementById('tourList');
+            const list = showingPast ? past : upcoming;
             if (!list.length) {
-                box.innerHTML = `<div class="ztims-empty">${showPast
-                    ? 'No tours have been assigned to you yet.'
-                    : 'No upcoming tours. The office will assign them here as visitors book.'}</div>`;
+                box.innerHTML = `<div class="ztims-empty">${showingPast
+                    ? 'No past tours yet.'
+                    : 'No upcoming tours. The office assigns them here as visitors book.'}</div>`;
                 return;
             }
 
+            // Upcoming: the next tour on its own, large; the rest by day.
+            const [first, ...rest] = list;
+            const head = showingPast ? '' : `<ul>${tourCard(first, { next: true })}</ul>`;
             const byDate = new Map();
-            list.forEach(b => {
+            (showingPast ? list : rest).forEach(b => {
                 if (!byDate.has(b.preferredDate)) byDate.set(b.preferredDate, []);
                 byDate.get(b.preferredDate).push(b);
             });
-
-            box.innerHTML = [...byDate.entries()].map(([date, tours]) => `
+            box.innerHTML = head + [...byDate.entries()].map(([date, tours]) => `
                 <div>
-                    <h4 class="text-label font-bold uppercase tracking-widest mb-2 ${date === today ? 'text-primary' : ''}">
-                        ${date === today ? 'Today · ' : ''}${P.escapeHtml(P.formatDate(date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }))}
-                    </h4>
-                    <ul class="space-y-2">${tours.map(b => {
-                        const [tone, label] = STATUS_TONE[b.status] || ['tone-neutral', b.status];
-                        return `
-                        <li class="border border-outline-variant/40 p-4 space-y-1.5">
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="font-black text-on-surface">${P.escapeHtml(P.formatTime(b.preferredTime))} · ${P.escapeHtml(b.spot.title)}</p>
-                                <span class="tone-pill ${tone} text-[11px] font-bold uppercase tracking-wider px-2 py-0.5">${label}</span>
-                            </div>
-                            <p class="text-sm text-on-surface-variant">
-                                ${b.visitors} visitor${b.visitors === 1 ? '' : 's'} · ${P.escapeHtml(b.fullName)}
-                                ${b.contactNumber ? ` · <a class="underline" href="tel:${P.escapeHtml(b.contactNumber.replace(/[^\d+]/g, ''))}">${P.escapeHtml(b.contactNumber)}</a>` : ''}
-                            </p>
-                            ${b.notes ? `<p class="text-support">“${P.escapeHtml(b.notes)}”</p>` : ''}
-                            <p class="text-support">Reference ${P.escapeHtml(b.reference)}</p>
-                        </li>`;
-                    }).join('')}</ul>
+                    <h4 class="tour-day">${P.escapeHtml(showingPast
+                        ? P.formatDate(date, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                        : dayName(date))}</h4>
+                    <ul class="space-y-2">${tours.map(b => tourCard(b, { past: showingPast })).join('')}</ul>
                 </div>`).join('');
         }
 
@@ -212,7 +256,8 @@
             if (!P || !P.start()) return;
 
             document.getElementById('availabilityForm').addEventListener('submit', saveAvailability);
-            document.getElementById('showPast').addEventListener('change', renderTours);
+            document.getElementById('tabUpcoming').addEventListener('click', () => { showingPast = false; renderTours(); });
+            document.getElementById('tabPast').addEventListener('click', () => { showingPast = true; renderTours(); });
 
             const loading = document.getElementById('scheduleLoading');
             const done = P.showLoading(loading, 'Loading your schedule...');
