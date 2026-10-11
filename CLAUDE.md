@@ -609,7 +609,9 @@ Frontend only, no tables of their own:
   both have a pin, else "More places to explore", same category first;
   `renderRelated`). Flat: the page's older gradient buttons are restyled as
   solid pills in its own style block; prices without cents (`peso`).
-- **Steps** (`.journey-steps`): booking a guide is Your details → Pick a guide
+- **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
+  number with its label under it, joined by a line; done green with a tick,
+  current solid burnt orange): booking a guide is Your details → Pick a guide
   → Payment (or Pay onsite) → Confirmed — the form has two panes
   (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
   guides free for that date, time and group, and Submit), then the reference
