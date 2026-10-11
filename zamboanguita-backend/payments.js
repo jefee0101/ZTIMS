@@ -379,7 +379,7 @@ async function checkoutView(checkout) {
         const b = await GuideBooking.findById(checkout.bookingId);
         if (b) {
             view.booking = { reference: b.reference, spot: await spotTitle(b.spotId), spotId: b.spotId, preferredDate: dayOf(b.preferredDate),
-                             preferredTime: b.preferredTime, visitors: b.visitors, status: b.status };
+                             preferredTime: b.preferredTime, visitors: b.visitors, status: b.status, guideAssigned: !!b.guideId };
         }
     } else {
         const t = await Ticket.findById(checkout.ticketId);

@@ -645,6 +645,11 @@ Frontend only, no tables of their own:
   for both kinds), Add to calendar (an `.ics` made in the browser: the whole
   day for a ticket, three hours from the chosen time for a tour, Manila time),
   and Move or cancel (`manage.html?code=`).
+  Flat style like the other visitor pages. A ticket and a guide booking look
+  alike: one bordered card (place, date, the code or reference large, people,
+  a status pill — "Guide to be assigned" / "Guide assigned" from the view's
+  `guideAssigned`), then Paid, then "What's next". The page never says the
+  visitor was emailed.
 
 ### Visitor emails and "Manage my ticket / booking"
 

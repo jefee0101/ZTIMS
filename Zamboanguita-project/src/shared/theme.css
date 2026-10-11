@@ -1973,3 +1973,6 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 
 /* A chip as a pill (History's name journey and barangays). */
 .pill { border-radius: 9999px; }
+
+/* The round icon at the top of a result (payment received, ticket, …). */
+#payState .icon-chip { border-radius: 50%; }
