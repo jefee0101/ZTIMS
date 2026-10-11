@@ -650,7 +650,9 @@ Frontend only, no tables of their own:
   Pay online now (when `/api/payments/config` is online; the same
   `/api/guide-bookings/:reference/checkout` the booking form uses, which reuses
   an open checkout) or pay onsite — so closing the booking form before paying
-  never strands a booking.
+  never strands a booking. Its buttons are pills: Cancel solid red
+  (`.btn-danger-solid`, the same deep red in both themes), Move and Refund
+  outlined.
   Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
   refunds the amount less `cancel_keep_percent` (a partial Xendit refund,
   `payments.refund_amount`); the office's refunds return everything. A used

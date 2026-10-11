@@ -427,7 +427,7 @@ body { overflow-x: hidden; }
                         <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="field"/></label>
                     ${isTicket ? '' : `<label class="block"><span class="field-label">Time</span>
                         <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="field"/></label>`}
-                    <button type="submit" id="moveBtn" class="btn btn-secondary min-h-[44px]">Move</button>
+                    <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Move</button>
                 </div>
                 <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
             </form>` : '';
@@ -446,7 +446,7 @@ body { overflow-x: hidden; }
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Take a full refund</h2>
                 <p class="text-sm text-on-surface-variant">You get all of it back: <b>${peso(item.refund)}</b>, to the way you paid.</p>
-                <button type="button" id="closureRefundBtn" class="btn btn-secondary min-h-[44px]">Refund me in full</button>
+                <button type="button" id="closureRefundBtn" class="btn btn-pill btn-secondary min-h-[44px]">Refund me in full</button>
             </div>` : '';
         const cancelForm = item.canCancel ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
@@ -454,7 +454,7 @@ body { overflow-x: hidden; }
                 <p class="text-sm text-on-surface-variant">${item.paid && !item.paid.refundedAt
                     ? `You get <b>${peso(item.refund)}</b> back${item.kept > 0 ? `; the office keeps ${esc(item.keepPercent)}% (${peso(item.kept)})` : ''}. This cannot be undone.`
                     : 'Nothing has been paid, so nothing is refunded. This cannot be undone.'}</p>
-                <button type="button" id="cancelBtn" class="btn btn-danger min-h-[44px]">Cancel this ${isTicket ? 'ticket' : 'booking'}</button>
+                <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this ${isTicket ? 'ticket' : 'booking'}</button>
             </div>` : '';
 
         box.innerHTML = `

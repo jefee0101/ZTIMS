@@ -1947,3 +1947,9 @@ textarea.bk-field { min-height: 0; resize: vertical; }
     --tw-ring-color: rgb(var(--ztims-secondary) / .6);
     box-shadow: 0 0 0 2px rgb(var(--ztims-surface)), 0 0 0 4px rgb(var(--ztims-secondary) / .6) !important;
 }
+
+/* A destructive action as a solid red pill (Cancel this booking). The same
+   deep red in both themes: off-white on it is 6.4:1. */
+.btn-danger-solid { background: rgb(179 38 30); color: rgb(255 253 250); border: 0; }
+.btn-danger-solid:hover:not(:disabled) { background: rgb(150 30 24); }
+.btn-pill.btn-secondary { border-radius: 9999px; border: 1px solid rgb(var(--ztims-primary-text) / .45); }
