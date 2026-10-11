@@ -362,7 +362,10 @@ every card links to the page where it is dealt with, opening Guide Bookings on
 the right tab through its `bookingsTab` session key and Statistics through the
 tab named in the link's address (`admin_statistics.html#tracker`) — plus
 today's tours, the month just ended's Form A4 reports, and Form A4 counts by
-month and by country. Counts only, like the statistics themselves.
+month and by country. Counts only, like the statistics themselves. Its "Add new
+spot" publishes, then opens Destinations at `?new=<id>`, which finds that
+listing (search filled in, scrolled to, marked for a moment with
+`.just-published`), says it is live, and drops `?new` from the address.
 
 Each page sets its own `const API_BASE = "/api"` (`admin_analystic.html`
 calls it `BASE_API_URL`; `admin_profile.html` writes `/api/...` into its

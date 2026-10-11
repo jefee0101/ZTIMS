@@ -1097,7 +1097,7 @@ body { overflow-x: hidden; }
                     : 'cat-attraction';
 
                 return `
-                <div class="p-6 flex flex-col lg:flex-row gap-5 hover:bg-on-surface/[0.03] transition-colors">
+                <div data-spot="${escapeHtml(spot._id)}" class="p-6 flex flex-col lg:flex-row gap-5 hover:bg-on-surface/[0.03] transition-colors">
                     <div class="relative w-full lg:w-40 h-28 shrink-0 rounded-xl overflow-hidden bg-surface-variant">
                         ${photos
                             ? `<img src="${escapeHtml(spot.imageUrl)}" alt="${escapeHtml(spot.title)}" class="w-full h-full object-cover"/>`
@@ -1496,6 +1496,26 @@ body { overflow-x: hidden; }
             }
         }
 
+        // Arriving from the Dashboard's "Add new spot" (?new=<id>): show that
+        // listing — searched for, scrolled to and briefly marked — and say so.
+        function showNewlyPublished() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('new');
+            if (!id) return;
+            history.replaceState(null, '', window.location.pathname + window.location.hash);
+            const spot = allSpots.find(s => String(s._id) === id);
+            if (!spot) return;
+            document.getElementById('searchInput').value = spot.title || '';
+            renderListings();
+            const row = [...document.querySelectorAll('[data-spot]')].find(el => el.dataset.spot === id);
+            if (row) {
+                row.classList.add('just-published');
+                row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                setTimeout(() => row.classList.remove('just-published'), 4000);
+            }
+            showToast(`${spot.title} published. It is live on the site now.`, 'success');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             mountPortalAccountMenu();
 
@@ -1534,7 +1554,7 @@ body { overflow-x: hidden; }
             });
             wireSetup();
 
-            loadEverything();
+            loadEverything().then(showNewlyPublished);
         });
     </script>
 

@@ -142,3 +142,6 @@ body > header.fixed.glass-nav > button:not(#navOpenBtn) { margin-left: auto; }
 /* A box that scrolls sideways (the wide tables) holds its own hidden labels,
    so a screen-reader-only label never pushes the page wider than the phone. */
 main .overflow-x-auto { position: relative; }
+/* Destinations: the listing just published from the Dashboard, marked for a moment. */
+.just-published { box-shadow: inset 0 0 0 3px rgb(var(--ztims-secondary)); background: rgb(var(--ztims-secondary) / .1);
+                  transition: box-shadow var(--dur-slow, 350ms) var(--ease-standard), background-color var(--dur-slow, 350ms) var(--ease-standard); }

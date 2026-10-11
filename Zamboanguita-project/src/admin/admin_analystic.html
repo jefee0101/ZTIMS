@@ -1185,9 +1185,11 @@ body { overflow-x: hidden; }
                 throw new Error(result.message || result.error || `The server refused this (status ${response.status}).`);
             }
 
-            showToast(`${payload.title} published. It is live on the main page now.`, 'success');
+            // On to Destinations, which finds the new listing and shows it.
             closeAddSpotModal();
-            loadDashboard();
+            window.location.href = result && result._id
+                ? `admin_dashboard_manage.html?new=${encodeURIComponent(result._id)}`
+                : 'admin_dashboard_manage.html';
         }
 
         // Kept separate so a missing module costs the editor and nothing else:
