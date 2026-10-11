@@ -55,3 +55,60 @@ main .ztims-card, main .glass-card { box-shadow: none !important; border: 1px so
 main .ztims-card:hover, main .glass-card:hover { transform: none !important; }
 aside .sidebar-label.uppercase { text-transform: none !important; letter-spacing: 0 !important; font-size: .75rem !important; }
 aside a[class*="hover:translate-x"]:hover { transform: none !important; }
+
+/* ---- Establishment (resort_spots.html) ------------------------------------
+   The subpages are folder tabs hanging from the header's lower edge, upside
+   down: the open one is the header's own glass, joined to it; the others sit
+   a little shorter, on a plain ground. */
+.est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; gap: .3rem;
+            padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin-top: -1px; }
+.est-tabs::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .est-tabs { padding: 0 2rem; } }
+.est-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
+              padding: .55rem 1.1rem .7rem; min-height: 40px; font-weight: 700; font-size: .875rem;
+              color: rgb(var(--ztims-on-surface-variant));
+              background: color-mix(in srgb, rgb(var(--ztims-surface)) 86%, rgb(var(--ztims-on-surface)));
+              clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 9px 100%);
+              transition: color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard); }
+.est-tabs a .material-symbols-outlined { font-size: 18px; }
+.est-tabs a:hover { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-secondary) / .25); }
+.est-tabs a.is-open { color: rgb(var(--ztims-primary-text)); padding-top: .75rem; padding-bottom: .85rem;
+                      box-shadow: inset 0 -3px 0 rgb(var(--ztims-primary));
+                      background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
+                      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+                      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)); }
+.est-tabs a:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+@media (max-width: 639px) { .est-tabs a { padding-left: .9rem; padding-right: .9rem; } }
+
+.est-facts { display: grid; gap: 0; }
+.est-fact { display: grid; grid-template-columns: 9.5rem 1fr; gap: .25rem 1rem; padding: .8rem 0;
+            border-top: 1px solid rgb(var(--ztims-outline) / .7); }
+.est-fact:first-child { border-top: 0; padding-top: 0; }
+.est-fact dt { color: rgb(var(--ztims-on-surface-variant)); font-size: .875rem; }
+.est-fact dd { color: rgb(var(--ztims-on-surface)); font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 479px) { .est-fact { grid-template-columns: 1fr; } }
+.est-missing { font-weight: 600; color: rgb(var(--ztims-error)); }
+.est-none { font-weight: 400; color: rgb(var(--ztims-on-surface-variant)); }
+
+.est-map { position: relative; height: 220px; overflow: hidden; border: 1px solid rgb(var(--ztims-outline));
+           background: rgb(var(--ztims-surface-high)); }
+.est-map img { position: absolute; width: 256px; height: 256px; max-width: none; }
+.est-map__pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); font-size: 44px;
+                color: rgb(var(--ztims-primary)); font-variation-settings: 'FILL' 1; }
+.est-map__credit { position: absolute; right: 0; bottom: 0; font-size: 10px; padding: 1px 5px;
+                   background: rgb(255 253 250 / .85); color: #1C1917; }
+
+.est-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .5rem; }
+.est-photos li { position: relative; aspect-ratio: 4 / 3; background: rgb(var(--ztims-surface-high)); }
+.est-photos img { width: 100%; height: 100%; object-fit: cover; }
+.est-photos__cover { position: absolute; left: .4rem; top: .4rem; font-size: .7rem; font-weight: 800; padding: .1rem .55rem;
+                     border-radius: 9999px; background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+
+.est-check { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); padding: .9rem 1rem;
+             display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+.est-check__line { display: flex; align-items: center; gap: .4rem; color: rgb(var(--ztims-on-surface)); }
+.est-check__todo { display: flex; flex-wrap: wrap; gap: .4rem; }
+.est-check__todo a { display: inline-flex; align-items: center; gap: .3rem; min-height: 36px; padding: 0 .85rem;
+                     border: 1px solid rgb(var(--ztims-secondary)); font-size: .8125rem; font-weight: 700;
+                     color: rgb(var(--ztims-on-surface)); }
+.est-check__todo a:hover { background: rgb(var(--ztims-secondary)); color: rgb(var(--ztims-on-secondary)); }

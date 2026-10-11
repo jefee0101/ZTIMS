@@ -211,12 +211,14 @@
         '</div>' +
 
         // ---- step rail ----
+        '<div id="' + p + 'StepRail">' +
         '<div class="flex gap-1 bg-surface-container-low rounded-2xl p-1 mb-1">' + stepTabs + '</div>' +
         '<div class="h-1 rounded-full bg-outline-variant/30 mb-5 overflow-hidden">' +
             '<div id="' + p + 'Progress" class="h-full bg-primary rounded-full transition-all duration-300" style="width:25%"></div>' +
         '</div>' +
+        '</div>' +
 
-        '<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-6">' +
+        '<div id="' + p + 'Grid" class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-6">' +
         '<div>' +
 
         /* ============================ STEP 1 — BASICS ======================= */
@@ -523,7 +525,7 @@
         '</div>' +
 
         /* ============================== PREVIEW ============================= */
-        '<aside class="hidden xl:block">' +
+        '<aside id="' + p + 'PreviewAside" class="hidden xl:block">' +
             '<p class="' + LABEL + '">What visitors will see</p>' +
             '<div id="' + p + 'Preview" class="rounded-2xl overflow-hidden bg-surface-container-low ' +
                 'border border-outline-variant/30 sticky top-0"></div>' +
@@ -576,6 +578,9 @@
         const el = function (suffix) { return document.getElementById(p + suffix); };
 
         let step = 0;
+        // One part only (openSection): no step rail, no Back/Next, no preview —
+        // just that step's fields and Save. The whole listing is still sent.
+        let sectionOnly = false;
         let editingId = '';
         let currentSpot = null;
         let photos = [];
@@ -769,6 +774,15 @@
             el('NextBtn').hidden = last;
             el('SubmitBtn').hidden = !last;
             el('SubmitBtn').textContent = editingId ? editLabel : createLabel;
+
+            el('StepRail').hidden = sectionOnly;
+            el('PreviewAside').classList.toggle('xl:block', !sectionOnly);
+            el('Grid').classList.toggle('xl:grid-cols-[minmax(0,1fr)_20rem]', !sectionOnly);
+            if (sectionOnly) {
+                el('BackBtn').hidden = true;
+                el('NextBtn').hidden = true;
+                el('SubmitBtn').hidden = false;
+            }
 
             // The map is built the first time the Location panel is actually shown
             // with something to show, and re-measured every time after that.
@@ -2175,6 +2189,7 @@
         /* ------------------------------------------------------------- api */
 
         function open(spot) {
+            sectionOnly = false;
             uploadTicket = null;      // re-authorised per dialog
             currentSpot = spot || null;
             editingId = spot && spot._id ? String(spot._id) : '';
@@ -2215,6 +2230,14 @@
             goToStep(0);
         }
 
+        // Edit one part of an existing listing: 0 Basics, 1 Location,
+        // 2 Visiting, 3 Photos.
+        function openSection(spot, index) {
+            open(spot);
+            sectionOnly = true;
+            goToStep(index);
+        }
+
         function close() {
             // Before anything else: an expanded map is parked on <body> and
             // outlives the dialog otherwise.
@@ -2240,6 +2263,7 @@
         return {
             element: form,
             open: open,
+            openSection: openSection,
             close: close,
             goToStep: goToStep,
             clearDraft: clearDraft,

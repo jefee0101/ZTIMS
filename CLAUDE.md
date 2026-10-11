@@ -219,12 +219,29 @@ purpose — see the header comment in `spot-form.js`:
   and cards, sentence-case labels, pill buttons (no gradient) and status
   pills, the current page in the menu a solid burnt-orange pill (`.is-current`
   on the page's own link; `.nav-active` too) with labels wrapping rather than
-  cut, and the subpage tabs (`.settings-tab`). The manager's My Listing card
-  has Edit as an outlined pill and Delete as a solid red pill
-  (`.btn-danger-solid`); My Establishment (`resort_settings.html`) is two tabs
-  like the officer's Settings, `#account` (Details: name, manager, public
-  email, phone, sign-in email, account issued) and `#security` (signed in
-  since, change password, sign out of all devices).
+  cut, and the subpage tabs (`.settings-tab`).
+- **The manager's Establishment** (`resort/resort_spots.html`, the menu's
+  "Establishment"; it was "My Listing"): the whole listing on one page in five
+  subpages — `#basics`, `#location`, `#visiting`, `#photos`, `#contact` — shown
+  as folder tabs hanging upside down from the header's lower edge (`.est-tabs`
+  in `portal-flat.css`, inside the fixed header so they stay with it; the open
+  one is the header's glass with a burnt-orange edge). Each subpage shows the
+  saved facts plainly (`.est-fact`; missing required facts in red, empty
+  optional ones "None") with "Last updated" and one Edit button. Edit opens the
+  shared listing form on that part only (`spotForm.openSection(spot, step)`:
+  no step rail, no preview, just the fields and Save — the whole listing is
+  still sent to `PUT /api/spots/:id`); Contact edits the account's
+  establishment name, manager, phone and public email in a small window
+  (`PATCH /api/establishment-managers/me`). Above them, a checklist of what
+  visitors need (description, map pin, open days and hours, 3 photos, phone),
+  each linking to its subpage, and "See it as visitors do". Location shows a
+  small map from OpenStreetMap tiles (3 × 3 around the pin, `pinMap`). "Remove
+  listing" is a small solid red pill at the end of Basics. With no listing yet,
+  the page offers "Create your listing" (the full four-step form).
+- **The manager's Account** (`resort/resort_settings.html`, was "My
+  Establishment"): sign-in email, account issued, signed in since; change
+  password; sign out of all devices. The establishment's details moved to
+  Establishment → Contact.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
@@ -798,7 +815,7 @@ the page; tabs styled like Statistics').
   one; other devices are signed out and this one gets a fresh token), when this
   session signed in (`last_sign_in_at`, set at each login), and "Sign out of
   all devices" (`POST /api/me/sign-out-everywhere`, this one too). The
-  manager's Settings and the guide's My Profile have the same two.
+  manager's Account and the guide's My Profile have the same two.
   The guide's My Profile (`guide/guide_profile.html`) is laid out like these
   Settings: tabs with their own addresses — `#account` (photo, name, status;
   contact number and bio saved straight away; sign-in email, guide since),

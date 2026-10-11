@@ -450,17 +450,17 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="My Listing" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
-                <span class="material-symbols-outlined text-accent">location_on</span>
-                <span class="sidebar-label">My Listing</span>
+            <a title="Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
+                <span class="sidebar-label">Establishment</span>
             </a>
             <a title="Monthly Report" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Monthly Report</span>
             </a>
-            <a title="My Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
-                <span class="material-symbols-outlined text-accent">storefront</span>
-                <span class="sidebar-label">My Establishment</span>
+            <a title="Account" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+                <span class="material-symbols-outlined text-accent">manage_accounts</span>
+                <span class="sidebar-label">Account</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
@@ -543,7 +543,7 @@ body { overflow-x: hidden; }
                 name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My establishment',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
-                    { label: 'My establishment', icon: 'storefront', href: 'resort_settings.html' },
+                    { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
                     { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
                 ]
             });
@@ -593,7 +593,7 @@ body { overflow-x: hidden; }
                 return;
             }
             if (!myPlaces.length) {
-                host.innerHTML = '<div class="ztims-empty">Your establishment has no listing yet. Add it in My Listing first; its monthly report appears here.</div>';
+                host.innerHTML = '<div class="ztims-empty">Your establishment has no listing yet. Add it under Establishment first; its monthly report appears here.</div>';
                 document.getElementById('rpPlace').disabled = true;
                 document.getElementById('rpPeriod').disabled = true;
                 return;

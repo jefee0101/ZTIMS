@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Tourist Establishment Manager | My Listing</title>
+    <title>Tourist Establishment Manager | Establishment</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -450,17 +450,17 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="My Listing" aria-current="page" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
-                <span class="material-symbols-outlined text-accent">location_on</span>
-                <span class="sidebar-label">My Listing</span>
+            <a title="Establishment" aria-current="page" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
+                <span class="sidebar-label">Establishment</span>
             </a>
             <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Monthly Report</span>
             </a>
-            <a title="My Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
-                <span class="material-symbols-outlined text-accent">storefront</span>
-                <span class="sidebar-label">My Establishment</span>
+            <a title="Account" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+                <span class="material-symbols-outlined text-accent">manage_accounts</span>
+                <span class="sidebar-label">Account</span>
             </a>
         </nav>
         <div class="mt-auto pt-4 border-t border-outline-variant/30">
@@ -482,22 +482,30 @@ body { overflow-x: hidden; }
             </button>
             <div id="accountMenuSlot"></div>
         </div>
+        <!-- The subpages, as folder tabs hanging from the header's lower edge:
+             the open one is the header's own colour, joined to it. -->
+        <nav id="estTabs" class="est-tabs" aria-label="Establishment" hidden>
+            <a href="#basics" data-sub="basics"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span>Basics</a>
+            <a href="#location" data-sub="location"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>Location</a>
+            <a href="#visiting" data-sub="visiting"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>Visiting</a>
+            <a href="#photos" data-sub="photos"><span class="material-symbols-outlined" aria-hidden="true">photo_library</span>Photos</a>
+            <a href="#contact" data-sub="contact"><span class="material-symbols-outlined" aria-hidden="true">call</span>Contact</a>
+        </nav>
     </header>
 
-    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1400px] mx-auto space-y-8">
-            <div class="flex justify-between items-end">
-                <div class="space-y-1">
-                    <h2 class="text-3xl sm:text-4xl lg:text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">My Listing</h2>
-                </div>
-                <!-- One establishment, one listing: offered only until it exists (the server refuses a second). -->
-                <button id="addSpotBtn" hidden onclick="toggleAddSpotModal(true)" class="btn btn-primary">
-                    <span class="material-symbols-outlined">add_circle</span> Add your listing
-                </button>
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-36 sm:pt-40 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[52rem] mx-auto space-y-6">
+            <div class="flex flex-wrap justify-between items-end gap-3">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment</h1>
+                <a id="visitorViewLink" hidden target="_blank" rel="noopener" class="btn btn-secondary min-h-[44px]">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">visibility</span> See it as visitors do
+                </a>
             </div>
 
-            <div id="spotsGrid" class="ztims-stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
-            <p id="spotsEmptyState" class="ztims-empty hidden">Your establishment has no listing yet. Click "Add your listing" to create it.</p>
+            <!-- What visitors still need, each linking to its subpage. -->
+            <div id="estChecklist" hidden></div>
+
+            <div id="estBody"></div>
         </div>
 
         <!-- Add/Edit Spot Modal -->
@@ -512,6 +520,30 @@ body { overflow-x: hidden; }
 
                 <div id="spotFormMount"></div>
             </div>
+        </div>
+
+        <!-- Contact: the establishment's own details (the account's, not the listing's). -->
+        <div id="contactModal" class="fixed inset-0 ztims-scrim hidden items-center justify-center z-[200] p-3 sm:p-4">
+            <form id="contactForm" class="ztims-modal w-full max-w-lg p-5 sm:p-8 space-y-4" novalidate>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-black tracking-tight text-on-surface font-headline">Edit contact</h2>
+                    <button type="button" onclick="closeContactEditor()" aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex items-center">
+                        <span class="material-symbols-outlined text-2xl">close</span></button>
+                </div>
+                <label class="block"><span class="field-label">Establishment name</span>
+                    <input id="cEstablishment" type="text" required maxlength="120" class="field w-full"/></label>
+                <label class="block"><span class="field-label">Manager</span>
+                    <input id="cManager" type="text" maxlength="120" autocomplete="name" placeholder="The person visitors should ask for" class="field w-full"/></label>
+                <label class="block"><span class="field-label">Phone</span>
+                    <input id="cPhone" type="tel" maxlength="40" autocomplete="tel" placeholder="09XX XXX XXXX" class="field w-full"/></label>
+                <label class="block"><span class="field-label">Public email</span>
+                    <input id="cEmail" type="email" maxlength="120" autocomplete="email" placeholder="Leave blank to use your sign-in email" class="field w-full"/></label>
+                <p id="cMessage" hidden class="text-sm px-4 py-3"></p>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeContactEditor()" class="btn btn-ghost flex-1 min-h-[48px]">Cancel</button>
+                    <button type="submit" id="cSaveBtn" class="btn btn-primary flex-[2] min-h-[48px]">Save changes</button>
+                </div>
+            </form>
         </div>
     </main>
 
@@ -606,7 +638,7 @@ body { overflow-x: hidden; }
                 name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My establishment',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
-                    { label: 'My establishment', icon: 'storefront', href: 'resort_settings.html' },
+                    { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
                     { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
                 ]
             });
@@ -732,20 +764,20 @@ body { overflow-x: hidden; }
 
             toggleAddSpotModal(false);
             await loadMySpots();
-            showToast(`${payload.title} ${editingId ? 'updated' : 'published'}.`, 'success');
+            showToast(editingId ? 'Changes saved.' : `${payload.title} is now on the site.`, 'success');
         }
 
         async function deleteSpot(id, button) {
             const spot = mySpots.find(item => String(item._id) === String(id));
             const sure = await ztimsDialog.confirm({
-                title: spot ? `Delete "${spot.title}"?` : 'Delete this listing?',
+                title: spot ? `Remove "${spot.title}"?` : 'Remove this listing?',
                 message: 'It disappears from the public site immediately. This cannot be undone.',
-                confirmLabel: 'Delete listing',
+                confirmLabel: 'Remove listing',
                 cancelLabel: 'Keep it',
                 tone: 'danger'
             });
             if (!sure) return;
-            const restoreButton = setButtonLoading(button, 'Deleting...');
+            const restoreButton = setButtonLoading(button, 'Removing...');
             try {
                 const response = await fetch(`${API_BASE}/spots/${id}`, { method: 'DELETE', headers: authHeaders() });
                 if (response.status === 401) { handleExpiredSession(); return; }
@@ -757,67 +789,252 @@ body { overflow-x: hidden; }
             }
         }
 
-        function renderSpotsGrid() {
-            const grid = document.getElementById('spotsGrid');
-            const emptyState = document.getElementById('spotsEmptyState');
-            grid.innerHTML = '';
+        /* ---------------- the establishment, in five subpages ---------------- */
 
-            document.getElementById('addSpotBtn').hidden = loadFailed || mySpots.length > 0;
+        let manager = null;
+        const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
+        const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
+        const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
+        const CATEGORY_NAMES = { BEACH: 'Beach', DIVING: 'Diving', MOUNTAIN: 'Mountain', CULTURAL: 'Cultural', ACCOMMODATION: 'Accommodation' };
 
-            if (loadFailed) {
-                emptyState.classList.add('hidden');
-                grid.innerHTML = `
-                    <div class="glass-panel rounded-2xl p-5 sm:p-8 text-center md:col-span-2 xl:col-span-3">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-error/70">cloud_off</span>
-                        <p class="text-on-surface font-bold mb-1">Could not load your listings</p>
-                        <p class="text-on-surface-variant text-sm max-w-md mx-auto">${escapeHtml(loadError)}
-                        Your listings are safe — this is only a problem reaching the server. The API sleeps when idle, so give it a moment and refresh.</p>
-                        <button onclick="loadMySpots()" class="btn btn-secondary mt-4 min-h-[44px]">Try again</button>
-                    </div>`;
-                return;
+        const subFromAddress = () => { const h = location.hash.slice(1); return SUBS.includes(h) ? h : 'basics'; };
+        const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+        const photosOf = spot => (Array.isArray(spot.images) && spot.images.length ? spot.images : (spot.imageUrl ? [spot.imageUrl] : []));
+        const updatedLine = spot => spot && spot.updatedAt
+            ? `Last updated ${new Date(spot.updatedAt).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}` : '';
+
+        // An empty fact: red when visitors need it, quiet when it is optional
+        // (empty given as 'None').
+        function fact(label, value, empty) {
+            const blank = empty === 'None' ? '<span class="est-none">None</span>' : `<span class="est-missing">${empty || 'Not added yet'}</span>`;
+            return `<div class="est-fact"><dt>${label}</dt><dd>${value || blank}</dd></div>`;
+        }
+
+        function panel(sub, body, { editLabel = 'Edit', footer = '' } = {}) {
+            const spot = mySpots[0];
+            return `<section class="glass-panel p-5 sm:p-7 space-y-5" aria-labelledby="estHead">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div><h2 id="estHead" class="text-xl font-headline font-bold text-on-surface">${TITLES[sub]}</h2>
+                        ${sub !== 'contact' && spot ? `<p class="text-support mt-0.5">${updatedLine(spot)}</p>` : ''}</div>
+                    <button type="button" data-edit="${sub}" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">edit</span> ${editLabel}</button>
+                </div>
+                ${body}
+                ${footer}
+            </section>`;
+        }
+
+        // A small map with the pin, from OpenStreetMap's own tiles (3 × 3 around it).
+        function pinMap(lat, lng) {
+            const z = 15, size = 256, n = 2 ** z;
+            const x = (lng + 180) / 360 * n * size;
+            const r = lat * Math.PI / 180;
+            const y = (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n * size;
+            const tx = Math.floor(x / size), ty = Math.floor(y / size);
+            let tiles = '';
+            for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+                const left = (tx + dx) * size - x, top = (ty + dy) * size - y;
+                tiles += `<img src="https://a.tile.openstreetmap.org/${z}/${tx + dx}/${ty + dy}.png" alt="" loading="lazy"
+                    style="left:calc(50% + ${left}px);top:calc(50% + ${top}px)">`;
             }
+            return `<div class="est-map" role="img" aria-label="Map with the listing's pin">${tiles}
+                <span class="material-symbols-outlined est-map__pin" aria-hidden="true">location_on</span>
+                <span class="est-map__credit">© OpenStreetMap</span></div>`;
+        }
 
-            if (mySpots.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
+        function subBody(sub, spot) {
+            if (sub === 'basics') {
+                return panel('basics', `<dl class="est-facts">
+                    ${fact('Name', escapeHtml(spot.title))}
+                    ${fact('Category', `<span class="pill border border-outline-variant px-3 py-0.5 text-xs font-bold">${escapeHtml(CATEGORY_NAMES[spot.category] || spot.category)}</span>`)}
+                    ${fact('Tagline', spot.label ? escapeHtml(spot.label) : '', 'None')}
+                    ${fact('Description', spot.description ? `<span class="whitespace-pre-line font-normal">${escapeHtml(spot.description)}</span>` : '')}
+                </dl>`, { footer: `<div class="border-t border-outline-variant/30 pt-4 flex justify-end">
+                    <button type="button" id="removeListingBtn" class="btn btn-danger-solid btn-sm min-h-[40px]">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">delete</span> Remove listing</button></div>` });
             }
-            emptyState.classList.add('hidden');
+            if (sub === 'location') {
+                const pinned = Number.isFinite(Number(spot.latitude)) && Number.isFinite(Number(spot.longitude)) && spot.latitude !== null && spot.longitude !== null;
+                return panel('location', `
+                    ${pinned ? pinMap(Number(spot.latitude), Number(spot.longitude)) : ''}
+                    <dl class="est-facts">
+                    ${fact('Barangay', escapeHtml(spot.barangay))}
+                    ${fact('Street or sitio', escapeHtml(spot.address), 'None')}
+                    ${fact('Map pin', pinned ? 'Set' : '', 'Not set: visitors cannot get directions')}
+                </dl>`);
+            }
+            if (sub === 'visiting') {
+                const fees = spot.type === 'accommodation' ? '' :
+                    fact('Entrance fee', Number(spot.entranceFee) > 0 ? peso(spot.entranceFee) : 'Free');
+                return panel('visiting', `<dl class="est-facts">
+                    ${fact('Open', escapeHtml(spot.workingDays))}
+                    ${fact('Hours', escapeHtml(spot.workingTime))}
+                    ${fees}
+                    ${Number(spot.travelFee) > 0 ? fact('Travel fee', peso(spot.travelFee)) : ''}
+                    ${fact('Booking link', spot.bookingUrl ? `<a class="underline break-all" target="_blank" rel="noopener" href="${escapeHtml(/^https?:/i.test(spot.bookingUrl) ? spot.bookingUrl : 'https://' + spot.bookingUrl)}">${escapeHtml(spot.bookingUrl)}</a>` : '', 'None')}
+                    ${spot.requiresGuide ? fact('Tourist guide', 'Required (set by the Tourism Office)') : ''}
+                </dl>`);
+            }
+            if (sub === 'photos') {
+                const list = photosOf(spot);
+                return panel('photos', list.length
+                    ? `<ul class="est-photos">${list.map((url, i) => `<li><img src="${escapeHtml(url)}" alt="Photo ${i + 1}" loading="lazy"/>${i === 0 ? '<span class="est-photos__cover">Cover</span>' : ''}</li>`).join('')}</ul>
+                       <p class="text-support">${list.length} photo${list.length === 1 ? '' : 's'}. The first is the cover.</p>`
+                    : `<div class="ztims-empty">No photos yet.</div>`, { editLabel: list.length ? 'Edit' : 'Add photos' });
+            }
+            // contact: the establishment's own details, saved to the account
+            const m = manager || {};
+            return panel('contact', `<dl class="est-facts">
+                ${fact('Establishment name', escapeHtml(m.establishmentName))}
+                ${fact('Manager', escapeHtml(m.managerName))}
+                ${fact('Phone', m.phone ? `<a class="underline" href="tel:${escapeHtml(String(m.phone).replace(/[^\d+]/g, ''))}">${escapeHtml(m.phone)}</a>` : '')}
+                ${fact('Public email', escapeHtml(m.contactEmail))}
+            </dl>`);
+        }
 
-            mySpots.forEach(spot => {
-                const card = document.createElement('div');
-                card.className = 'glass-panel rounded-2xl overflow-hidden flex flex-col';
-                const photoCount = Array.isArray(spot.images) && spot.images.length
-                    ? spot.images.length
-                    : (spot.imageUrl ? 1 : 0);
-                card.innerHTML = `
-                    <div class="h-40 bg-surface-variant relative">
-                        <img src="${escapeHtml(spot.imageUrl || 'https://placehold.co/400x200?text=No+Image')}" class="w-full h-full object-cover" alt="${escapeHtml(spot.title)}"/>
-                        ${photoCount > 1 ? `<span class="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-[10px] font-bold">
-                            <span class="material-symbols-outlined !text-xs">photo_library</span>${photoCount}
-                        </span>` : ''}
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col gap-2">
-                        <span class="self-start text-xs font-bold px-2.5 py-0.5 border border-outline-variant text-on-surface" style="border-radius:9999px">${spot.type === 'accommodation' ? 'Accommodation' : 'Tourist spot'}</span>
-                        <h3 class="text-lg font-black text-on-surface leading-tight">${escapeHtml(spot.title)}</h3>
-                        <p class="text-support">${escapeHtml(spot.location)}</p>
-                        <p class="text-support line-clamp-2 flex-1">${escapeHtml(spot.description)}</p>
-                        <div class="flex gap-2 pt-3">
-                            <button class="btn btn-secondary flex-1 min-h-[44px]"><span class="material-symbols-outlined !text-base" aria-hidden="true">edit</span> Edit</button>
-                            <button class="btn btn-danger-solid flex-1 min-h-[44px]"><span class="material-symbols-outlined !text-base" aria-hidden="true">delete</span> Delete</button>
-                        </div>
-                    </div>
-                `;
-                const deleteButton = card.querySelectorAll('button')[1];
-                card.querySelectorAll('button')[0].addEventListener('click', () => toggleAddSpotModal(true, spot));
-                deleteButton.addEventListener('click', () => deleteSpot(spot._id, deleteButton));
-                grid.appendChild(card);
+        // What visitors need, in order of importance.
+        function checklist(spot) {
+            const pinned = spot.latitude !== null && spot.longitude !== null && spot.latitude !== undefined;
+            const items = [
+                { ok: (spot.description || '').trim().length >= 40, text: 'Describe the place', sub: 'basics' },
+                { ok: pinned, text: 'Set the map pin', sub: 'location' },
+                { ok: Boolean((spot.workingDays || '').trim() && (spot.workingTime || '').trim()), text: 'Add open days and hours', sub: 'visiting' },
+                { ok: photosOf(spot).length >= 3, text: 'Add at least 3 photos', sub: 'photos' },
+                { ok: Boolean(manager && (manager.phone || '').trim()), text: 'Add a phone number', sub: 'contact' }
+            ];
+            const done = items.filter(i => i.ok).length;
+            const box = document.getElementById('estChecklist');
+            box.hidden = false;
+            box.className = 'est-check';
+            box.innerHTML = done === items.length
+                ? `<p class="est-check__line"><span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span> Everything visitors need is here.</p>`
+                : `<p class="est-check__line"><b>${done} of ${items.length} done</b></p>
+                   <ul class="est-check__todo">${items.filter(i => !i.ok).map(i =>
+                        `<li><a href="#${i.sub}" class="pill"><span class="material-symbols-outlined !text-base" aria-hidden="true">add_circle</span>${i.text}</a></li>`).join('')}</ul>`;
+        }
+
+        function showSub(sub) {
+            document.querySelectorAll('#estTabs a').forEach(a => {
+                const on = a.dataset.sub === sub;
+                a.classList.toggle('is-open', on);
+                if (on) {
+                    a.setAttribute('aria-current', 'page');
+                    a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                } else a.removeAttribute('aria-current');
             });
+            const spot = mySpots[0];
+            if (!spot) return;
+            document.getElementById('estBody').innerHTML = subBody(sub, spot);
+            const remove = document.getElementById('removeListingBtn');
+            if (remove) remove.addEventListener('click', () => deleteSpot(spot._id, remove));
+        }
+
+        function renderEstablishment() {
+            const body = document.getElementById('estBody');
+            const tabs = document.getElementById('estTabs');
+            const spot = mySpots[0];
+            if (loadFailed) {
+                tabs.hidden = true;
+                body.innerHTML = `<div class="ztims-empty tone-danger">Could not load your establishment. ${escapeHtml(loadError)}
+                    <div class="mt-3"><button onclick="loadMySpots()" class="btn btn-secondary min-h-[44px]">Try again</button></div></div>`;
+                return;
+            }
+            if (!spot) {
+                tabs.hidden = true;
+                document.getElementById('estChecklist').hidden = true;
+                document.getElementById('visitorViewLink').hidden = true;
+                body.innerHTML = `<div class="glass-panel p-6 sm:p-8 text-center space-y-4">
+                    <p class="text-lg font-bold text-on-surface">Your establishment is not on the site yet.</p>
+                    <button type="button" onclick="toggleAddSpotModal(true)" class="btn btn-primary min-h-[48px]">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">add_circle</span> Create your listing</button></div>`;
+                return;
+            }
+            tabs.hidden = false;
+            const link = document.getElementById('visitorViewLink');
+            link.href = `../spot.html?spotId=${encodeURIComponent(spot._id)}`;
+            link.hidden = false;
+            checklist(spot);
+            showSub(subFromAddress());
+        }
+
+        // Edit: the listing's four parts open the shared form on that part only;
+        // Contact is the account's own four fields.
+        function openEditor(sub) {
+            const spot = mySpots[0];
+            if (sub === 'contact') return openContactEditor();
+            const modal = document.getElementById('addSpotModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('spotModalTitle').textContent = 'Edit ' + TITLES[sub].toLowerCase();
+            if (spotForm) spotForm.openSection(spot, STEP_OF[sub]);
+        }
+
+        function openContactEditor() {
+            const m = manager || {};
+            const modal = document.getElementById('contactModal');
+            document.getElementById('cEstablishment').value = m.establishmentName || '';
+            document.getElementById('cManager').value = m.managerName || '';
+            document.getElementById('cPhone').value = m.phone || '';
+            document.getElementById('cEmail').value = (m.contactEmail && m.contactEmail !== m.email) ? m.contactEmail : '';
+            document.getElementById('cMessage').hidden = true;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('cEstablishment').focus();
+        }
+        function closeContactEditor() {
+            const modal = document.getElementById('contactModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function saveContact(event) {
+            event.preventDefault();
+            const msg = document.getElementById('cMessage');
+            const payload = {
+                establishmentName: document.getElementById('cEstablishment').value.trim(),
+                managerName: document.getElementById('cManager').value.trim(),
+                phone: document.getElementById('cPhone').value.trim(),
+                contactEmail: document.getElementById('cEmail').value.trim()
+            };
+            if (!payload.establishmentName) {
+                msg.textContent = 'Your establishment needs a name.'; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false; return;
+            }
+            const restore = setButtonLoading(document.getElementById('cSaveBtn'), 'Saving…');
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me`, {
+                    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload)
+                });
+                if (response.status === 401) { handleExpiredSession(); return; }
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) throw new Error(result.message || `The server refused (status ${response.status}).`);
+                manager = result.manager || manager;
+                try { localStorage.setItem('establishmentName', manager.establishmentName || ''); } catch (e) { /* private browsing */ }
+                closeContactEditor();
+                renderEstablishment();
+                showToast('Contact details saved.', 'success');
+            } catch (error) {
+                msg.textContent = error.message; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false;
+            } finally {
+                restore();
+            }
+        }
+
+        async function loadManager() {
+            try {
+                const response = await fetch(`${API_BASE}/establishment-managers/me`, { headers: authHeaders() });
+                if (response.status === 401) { handleExpiredSession(); return; }
+                const result = await response.json().catch(() => ({}));
+                if (response.ok && result.manager) manager = result.manager;
+            } catch (error) { /* the Contact subpage shows what it has */ }
         }
 
         async function loadMySpots() {
-            const doneLoading = showLoading(document.getElementById('spotsGrid'), 'Loading your listings...');
+            const doneLoading = showLoading(document.getElementById('estBody'), 'Loading your establishment...');
             try {
-                const response = await fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() });
+                const [response] = await Promise.all([
+                    fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() }),
+                    manager ? null : loadManager()
+                ]);
                 if (response.status === 401) { handleExpiredSession(); return; }
                 if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
                 mySpots = await response.json();
@@ -825,13 +1042,11 @@ body { overflow-x: hidden; }
             } catch (error) {
                 console.error('❌ Failed to load spots:', error);
                 mySpots = [];
-                // Told apart from an account with nothing in it, so a failure can
-                // never be mistaken for an empty portfolio.
                 loadFailed = true;
                 loadError = error.message;
             } finally {
                 doneLoading();
-                renderSpotsGrid();
+                renderEstablishment();
             }
         }
 
@@ -868,6 +1083,15 @@ body { overflow-x: hidden; }
             if (!guardEstablishmentManagerSession()) return;
 
             mountListingForm();
+
+            // Subpages: the address names the open one, so a link or a reload
+            // opens it and Back returns to the one before.
+            window.addEventListener('hashchange', () => { if (mySpots[0]) showSub(subFromAddress()); });
+            document.getElementById('estBody').addEventListener('click', event => {
+                const edit = event.target.closest('[data-edit]');
+                if (edit) openEditor(edit.dataset.edit);
+            });
+            document.getElementById('contactForm').addEventListener('submit', saveContact);
 
             loadMySpots();
         });
