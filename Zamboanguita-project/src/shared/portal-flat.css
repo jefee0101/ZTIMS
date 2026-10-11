@@ -60,25 +60,41 @@ aside a[class*="hover:translate-x"]:hover { transform: none !important; }
    The subpages are folder tabs hanging from the header's lower edge, upside
    down: the open one is the header's own glass, joined to it; the others sit
    a little shorter, on a plain ground. */
-.est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; gap: .3rem;
+.est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; align-items: flex-start; gap: .3rem;
             padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin-top: -1px; }
 .est-tabs::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) { .est-tabs { padding: 0 2rem; } }
+/* Curved at the bottom, like a folder's tab turned upside down (the user's
+   choice; corners elsewhere stay square). */
 .est-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
-              padding: .55rem 1.1rem .7rem; min-height: 40px; font-weight: 700; font-size: .875rem;
+              padding: .7rem 1.1rem .75rem; min-height: 44px; font-weight: 700; font-size: .875rem;
               color: rgb(var(--ztims-on-surface-variant));
               background: color-mix(in srgb, rgb(var(--ztims-surface)) 86%, rgb(var(--ztims-on-surface)));
-              clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 9px 100%);
-              transition: color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard); }
+              border-radius: 0 0 14px 14px;
+              transition: transform var(--dur-moderate, 300ms) var(--ease-decelerate, cubic-bezier(.2,0,0,1)),
+                          color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard); }
 .est-tabs a .material-symbols-outlined { font-size: 18px; }
-.est-tabs a:hover { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-secondary) / .25); }
-.est-tabs a.is-open { color: rgb(var(--ztims-primary-text)); padding-top: .75rem; padding-bottom: .85rem;
+.est-tabs a:hover { color: rgb(var(--ztims-on-surface));
+                    background: color-mix(in srgb, rgb(var(--ztims-surface)) 75%, rgb(var(--ztims-secondary))); }
+.est-tabs a.is-open { color: rgb(var(--ztims-primary-text));
                       box-shadow: inset 0 -3px 0 rgb(var(--ztims-primary));
                       background: rgb(var(--glass-fill) / var(--glass-alpha-strong));
                       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
                       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)); }
 .est-tabs a:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
 @media (max-width: 639px) { .est-tabs a { padding-left: .9rem; padding-right: .9rem; } }
+
+/* Where a pointer can hover, the tabs are tucked up behind the header with
+   only their curved edge showing, and each slides down when pointed at or
+   reached with the keyboard. The open one stays down. On touch screens they
+   all stay down: there is nothing to hover with. */
+@media (hover: hover) and (pointer: fine) {
+    .est-tabs { overflow: hidden; pointer-events: none; padding-bottom: 6px; }
+    .est-tabs a { pointer-events: auto; transform: translateY(calc(-100% + 12px)); }
+    .est-tabs a:hover, .est-tabs a:focus-visible, .est-tabs a.is-open { transform: none; }
+    .est-tabs a:not(.is-open) > * { opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
+    .est-tabs a:hover > *, .est-tabs a:focus-visible > * { opacity: 1; }
+}
 
 .est-facts { display: grid; gap: 0; }
 .est-fact { display: grid; grid-template-columns: 9.5rem 1fr; gap: .25rem 1rem; padding: .8rem 0;

@@ -225,7 +225,11 @@ purpose — see the header comment in `spot-form.js`:
   subpages — `#basics`, `#location`, `#visiting`, `#photos`, `#contact` — shown
   as folder tabs hanging upside down from the header's lower edge (`.est-tabs`
   in `portal-flat.css`, inside the fixed header so they stay with it; the open
-  one is the header's glass with a burnt-orange edge). Each subpage shows the
+  one is the header's glass with a burnt-orange edge). The tabs are curved at
+  the bottom (the user's choice) and, where a pointer can hover, tucked up
+  behind the header with only their edge showing: each slides down when
+  pointed at or focused, and the open one stays down. On touch screens all
+  stay down. Each subpage shows the
   saved facts plainly (`.est-fact`; missing required facts in red, empty
   optional ones "None") with "Last updated" and one Edit button. Edit opens the
   shared listing form on that part only (`spotForm.openSection(spot, step)`:
