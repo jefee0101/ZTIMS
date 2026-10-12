@@ -455,71 +455,66 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         }
     });
 
-    /* Form A4 for a year (optionally a range of its months), added up now. */
+    /* Form A4 for a year (optionally a range of its months), added up now.
+       Part I, arrivals, adds every place's report: places to stay and
+       attractions, the office's and private ones (the user's decision,
+       October 2026). It counts arrivals at places: a guest who stays at a
+       resort and visits the falls is two arrivals. Part II (rooms, room-nights,
+       guest nights) comes from places to stay only. */
     async function formA4(year, from, to) {
         const residences = (await query('select code, name, section, continent, region from residences order by sort_order')).rows;
         const reports = (await query(
-            `select id, kind, month, rooms, room_nights_occupied, guest_nights, locked_at from monthly_reports
+            `select id, kind, spot_id, month, rooms, room_nights_occupied, guest_nights, locked_at from monthly_reports
               where year = $1 and month between $2 and $3 and status = 'submitted'
-                and kind in ('accommodation', 'municipal_total')`, [year, from, to])).rows;
+                and kind in ('accommodation', 'attraction', 'municipal_total')`, [year, from, to])).rows;
         // A month recorded as a municipal total is that total; otherwise it is
-        // the sum of the establishments' reports. Never both.
+        // the sum of the places' reports. Never both.
         const municipalMonths = new Set(reports.filter(r => r.kind === 'municipal_total').map(r => r.month));
-        const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total' : r.kind === 'accommodation');
+        const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total' : r.kind !== 'municipal_total');
         const ids = used.map(r => r.id);
         const counts = ids.length ? (await query(
-            `select c.*, r.month from monthly_report_counts c join monthly_reports r on r.id = c.report_id
+            `select c.*, r.month, r.spot_id from monthly_report_counts c join monthly_reports r on r.id = c.report_id
               where c.report_id = any($1)`, [ids])).rows : [];
 
         const zero = () => Array(12).fill(0);
+        const inRange = i => i + 1 >= from && i + 1 <= to;
         const byCode = Object.fromEntries(residences.map(r => [r.code, { total: zero(), male: zero(), female: zero() }]));
+
+        // Every place that could report this year, with what it reported.
+        const placeRows = (await query(
+            `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
+              where s.status <> 'archived'
+                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
+              order by s.type, s.title`, [year])).rows;
+        const placeOf = new Map(placeRows.map(p => [p.id, {
+            _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
+            kind: p.type === 'accommodation' ? 'accommodation' : 'attraction',
+            total: zero(), reported: Array(12).fill(false)
+        }]));
+
         const sexKnown = Array(12).fill(true);
         for (const c of counts) {
             const m = c.month - 1, cell = byCode[c.residence_code];
             cell.total[m] += c.total;
             if (c.male === null) sexKnown[m] = false; else { cell.male[m] += c.male; cell.female[m] += c.female; }
+            const place = placeOf.get(c.spot_id);
+            if (place) place.total[m] += c.total;
         }
         const dae = { rooms: zero(), roomNightsAvailable: zero(), roomNightsOccupied: zero(), guestNights: zero() };
         const reportsPerMonth = zero();
         for (const r of used) {
             const m = r.month - 1;
             reportsPerMonth[m] += 1;
+            const place = placeOf.get(r.spot_id);
+            if (place) place.reported[m] = true;
+            if (r.kind === 'attraction') continue;      // no rooms or nights at an attraction
             dae.rooms[m] += r.rooms || 0;
             dae.roomNightsAvailable[m] += (r.rooms || 0) * daysIn(year, r.month);
             dae.roomNightsOccupied[m] += r.room_nights_occupied || 0;
             dae.guestNights[m] += r.guest_nights || 0;
         }
         dae.roomNightsNotOccupied = dae.roomNightsAvailable.map((a, i) => a - dae.roomNightsOccupied[i]);
-        const inRange = i => i + 1 >= from && i + 1 <= to;
         for (const key of Object.keys(dae)) dae[key] = dae[key].map((v, i) => (inRange(i) ? v : null));
-
-        // Part III: visits to attractions, in the same report but on their own
-        // rows. They are never added to the guest arrivals above: a guest who
-        // stays at a resort and visits the falls is one arrival and one visit.
-        const places = (await query(
-            `select s.id, s.title, s.barangay, s.managed_by from spots s
-              where s.type = 'spot' and (s.status <> 'archived'
-                    or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1 and r.kind = 'attraction'))
-              order by s.title`, [year])).rows;
-        const visitRows = (await query(
-            `select r.spot_id, r.month, c.residence_code, c.male, c.female, c.total
-               from monthly_reports r left join monthly_report_counts c on c.report_id = r.id
-              where r.year = $1 and r.month between $2 and $3 and r.status = 'submitted' and r.kind = 'attraction'`,
-            [year, from, to])).rows;
-        const visits = { total: zero(), male: zero(), female: zero(), counts: {}, places: [] };
-        const placeOf = new Map(places.map(p => [p.id, { _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
-                                                         total: zero(), reported: Array(12).fill(false) }]));
-        for (const v of visitRows) {
-            const m = v.month - 1, place = placeOf.get(v.spot_id);
-            if (place) place.reported[m] = true;
-            if (!v.residence_code) continue;
-            const t = v.total || 0, male = v.male || 0, female = v.female || 0;
-            visits.total[m] += t; visits.male[m] += male; visits.female[m] += female;
-            if (place) place.total[m] += t;
-            const cell = visits.counts[v.residence_code] || (visits.counts[v.residence_code] = { total: zero(), male: zero(), female: zero() });
-            cell.total[m] += t; cell.male[m] += male; cell.female[m] += female;
-        }
-        visits.places = [...placeOf.values()].map(p => ({ ...p, reported: p.reported.map((v, i) => (inRange(i) ? v : null)) }));
 
         return {
             year, fromMonth: from, toMonth: to, residences,
@@ -529,7 +524,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             reportsPerMonth: reportsPerMonth.map((n, i) => (inRange(i) ? n : null)),
             lockedMonths: [...new Set(used.filter(r => r.locked_at).map(r => r.month))].sort((a, b) => a - b),
             dae,
-            visits
+            places: [...placeOf.values()].map(p => ({ ...p, reported: p.reported.map((v, i) => (inRange(i) ? v : null)) }))
         };
     }
 

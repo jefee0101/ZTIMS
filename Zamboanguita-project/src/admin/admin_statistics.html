@@ -840,56 +840,52 @@ body { overflow-x: hidden; }
                 if (used(of)) body += row(withFlag({ code: 'overseas-filipino', name: 'Overseas Filipinos' }), of);
                 if (used(un)) body += row(withFlag({ code: 'unspecified', name: 'Guests with unspecified residence' }), un);
                 const grand = ph.map((v, i) => v + foreign[i] + of[i] + un[i]);
-                body += row('<b>GRAND TOTAL GUEST ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
+                body += row('<b>GRAND TOTAL ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
 
                 const dae = d.dae;
-                let part2 = head('Part II · A. DAE-2 (counts)', 'bg-primary/10 text-primary')
+                let part2 = head('Part II · Overnight stays (places to stay) · A. DAE-2', 'bg-primary/10 text-primary')
                     + row('Room-nights available (rooms × days)', dae.roomNightsAvailable, '', true)
                     + row('Room-nights occupied', dae.roomNightsOccupied, '', true)
                     + row('Room-nights not occupied', dae.roomNightsNotOccupied, '', true)
                     + row('Total guest nights', dae.guestNights, 'font-bold', true);
-                part2 += head('Part II · B. Volume per sex', 'bg-primary/10 text-primary');
+                part2 += head('Part II · B. Arrivals per sex', 'bg-primary/10 text-primary');
                 for (const sex of ['male', 'female']) {
                     let t = Array(12).fill(0);
                     for (const r of d.residences) t = add(t, d.counts[r.code][sex]);
                     const shown = t.map((v, i) => (d.sexKnown[i] ? v : null));
                     part2 += row(sex === 'male' ? 'Male' : 'Female', shown, '', true);
                 }
-                // Part III: visits to attractions, on their own rows. Never added to
-                // the guest arrivals: one guest who visits the falls is one arrival
-                // and one visit.
-                const v = d.visits;
-                let part3 = head('Part III · Attraction visits (not part of Form A4)', 'bg-primary/10 text-primary');
-                for (const p of v.places) {
-                    const shown = p.total.map((t, i) => (p.reported[i] ? t : null));
-                    part3 += row(`<span class="inline-flex flex-wrap items-center gap-2">${escapeHtml(p.title)} ${ownTag(p.keptByOffice)}</span>`, shown, ownRow(p.keptByOffice), true);
-                }
-                part3 += row('<b>Total attraction visits</b>', v.total, 'font-bold');
-                part3 += row('Male', v.male, '', true) + row('Female', v.female, '', true);
-                const visitCountries = d.residences.filter(r => v.counts[r.code]);
-                if (visitCountries.length) {
-                    part3 += head('Part III · By country of residence', 'text-on-surface-variant');
-                    for (const r of visitCountries) if (used(v.counts[r.code].total)) part3 += row(withFlag(r), v.counts[r.code].total, '', true);
+                // Arrivals by place: where Part I's arrivals came from, each place
+                // marked as the office's or private; "–" for a month not reported.
+                let byPlace = head('Arrivals by place', 'bg-primary/10 text-primary');
+                for (const [kind, title] of [['accommodation', 'Places to stay'], ['attraction', 'Attractions']]) {
+                    const list = d.places.filter(p => p.kind === kind);
+                    if (!list.length) continue;
+                    byPlace += head(title, 'text-on-surface-variant');
+                    for (const p of list) {
+                        const shown = p.total.map((t, i) => (p.reported[i] ? t : null));
+                        byPlace += row(`<span class="inline-flex flex-wrap items-center gap-2">${escapeHtml(p.title)} ${ownTag(p.keptByOffice)}</span>`, shown, ownRow(p.keptByOffice), true);
+                    }
                 }
                 const reported = vals(d.reportsPerMonth);
                 const noSex = months.filter(m => d.sexKnown[m - 1] === false && d.reportsPerMonth[m - 1] > 0);
                 host.innerHTML = `
                     <div class="stat-tiles">
-                        <div class="stat-tile"><p>Guest arrivals</p><p>${fmt(sum(vals(grand)))}</p></div>
+                        <div class="stat-tile"><p>Arrivals</p><p>${fmt(sum(vals(grand)))}</p></div>
                         <div class="stat-tile"><p>Guest nights</p><p>${fmt(sum(vals(dae.guestNights)))}</p></div>
-                        <div class="stat-tile"><p>Attraction visits</p><p>${fmt(sum(vals(v.total)))}</p></div>
-                        <div class="stat-tile"><p>Reports from places to stay</p><p>${fmt(sum(reported))}</p></div>
+                        <div class="stat-tile"><p>Places reported</p><p>${fmt(d.places.filter(p => p.reported.some(Boolean)).length)} <span class="text-base font-bold text-on-surface-variant">of ${fmt(d.places.length)}</span></p></div>
+                        <div class="stat-tile"><p>Reports</p><p>${fmt(sum(reported))}</p></div>
                     </div>
                     ${d.municipalTotalMonths.length || d.lockedMonths.length ? `<p class="flex flex-wrap gap-2">
                         ${d.municipalTotalMonths.length ? `<span class="tone-pill tone-neutral rounded-pill text-xs font-bold px-2.5 py-0.5">Municipal totals: ${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
                         ${d.lockedMonths.length ? `<span class="tone-pill tone-success rounded-pill text-xs font-bold px-2.5 py-0.5">Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
                     </p>` : ''}
-                    ${sum(reported) === 0 ? '<p class="text-sm font-semibold tone-warning">No reports from places to stay for these months, so Parts I and II are empty.</p>' : ''}
+                    ${sum(reported) === 0 ? '<p class="text-sm font-semibold tone-warning">No reports for these months yet.</p>' : ''}
                     ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
                     <div class="glass-panel overflow-x-auto">
                         <table class="ztims-table text-sm min-w-[980px]">
                             <thead><tr><th class="text-left px-3 py-2">Country of residence</th>${months.map(m => `<th class="px-2 py-2 text-right">${MON[m - 1]}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
-                            <tbody>${body}${part2}${part3}</tbody>
+                            <tbody>${body}${part2}${byPlace}</tbody>
                         </table>
                     </div>`;
             } catch (e) {
@@ -912,7 +908,7 @@ body { overflow-x: hidden; }
                 a.download = name ? name[1] : `Form_A4_Zamboanguita_${year}.xlsx`;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-                showToast('Arrivals Report (Form A4) downloaded.', 'success');
+                showToast('Arrivals Report downloaded.', 'success');
             } catch (e) {
                 showToast(e.message, 'error');
             } finally {

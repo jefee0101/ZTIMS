@@ -538,25 +538,27 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   managed establishment's reports are its manager's to enter, and the officer
   views them (`mayViewFor` / `mayEnterFor` in `statistics.js`; the officer's
   "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
-  rooms and nights; an attraction reports visitors only, and attraction
-  visitors are never part of Form A4.
+  rooms and nights; an attraction reports its arrivals only (no rooms or
+  nights).
+- **Arrivals are arrivals at places** (the user's decision, October 2026):
+  Form A4's Part I adds every place's report — places to stay and
+  attractions, the office's and private ones — so a guest counts once at each
+  place they arrive at (Mark stays two nights at a resort and visits the falls:
+  2 arrivals, 2 guest nights). Part II (rooms, room-nights, guest nights) is
+  places to stay only; its volume per sex is Part I's arrivals by sex. Don't
+  split attraction arrivals back out into a separate part or page.
 - **One report page.** Statistics has three tabs: Arrivals Report, Enter a
-  report, Tracker (the separate Attractions tab and `GET /statistics/attractions`
-  were removed, the user's decision). The Arrivals Report is Form A4 (Part I
-  guest arrivals by country, Part II DAE-2 and volume per sex — places to stay
-  only) plus **Part III · Attraction visits** on its own rows: by place (– for
-  a month not reported), total, male / female, and by country. Part III is
-  never added to the guest arrivals: a guest who stays two nights and visits
-  the falls is one arrival, two guest nights and one visit. `formA4()` returns
-  it as `visits`; the Excel puts it on a second sheet, "Attraction visits", so
-  the province's Form A4 sheet is unchanged. When no place to stay reported,
-  the page says Parts I and II are empty.
+  report, Tracker (no separate Attractions tab or route). The Arrivals Report:
+  Part I arrivals by country, Part II overnight stays (places to stay), then
+  **Arrivals by place** (`formA4()`'s `places`: every place, places to stay
+  then attractions, each with its Tourism Office / Private tag, "–" for a
+  month not reported). The Excel has the Form A4 sheet ("GRAND TOTAL
+  ARRIVALS") and a "By place" sheet.
 - **The page's look** (the standard): title only; Arrivals Report has Year /
   From / To, Generate, Download Excel and **Only countries with arrivals**
   (ticked by default: a country or region with nobody in those months is left
   out, totals stay; the Excel always lists all 72 rows), four number tiles
-  (Guest arrivals, Guest nights, Attraction visits, Reports from places to
-  stay), municipal-total and finalized months as pills. Tracker: Year and
+  (Arrivals, Guest nights, Places reported of all places, Reports), municipal-total and finalized months as pills. Tracker: Year and
   Places (Places to stay / Attractions), a one-line legend of the cell pills,
   the on-time / late / missing counts as pills. **Who runs a place** shows
   everywhere a place is listed in Statistics (the user's decision): `.own-tag`
@@ -565,7 +567,7 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   (`.own-row--office` tangerine, `.own-row--private` ink with a faint tint);
   Enter a report shows the same as a banner (`.own-banner`): "The Tourism
   Office enters this report" or "Entered by <manager>. View only."
-  `formA4()`'s `visits.places` carry `keptByOffice` for this.
+  `formA4()`'s `places` carry `keptByOffice` for this.
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only

@@ -97,11 +97,11 @@ async function formA4Workbook(data) {
     rowOf('Overseas Filipinos', of);
     rowOf('Guests with unspecified residence', un);
     const grand = phTotal.map((v, i) => v + foreignTotal[i] + of[i] + un[i]);
-    rowOf('GRAND TOTAL GUEST ARRIVALS', grand, { fill: GRAND, bold: true, color: NAVY, size: 11 });
+    rowOf('GRAND TOTAL ARRIVALS', grand, { fill: GRAND, bold: true, color: NAVY, size: 11 });
 
     // ---- Part II. A. DAE-2, as counts
     r++;
-    put(r++, ['PART II. OTHER INDICATORS — A. DAE-2', ...Array(13).fill(null)], { fill: NAVY, bold: true, color: 'FFFFFFFF' });
+    put(r++, ['PART II. OVERNIGHT STAYS (PLACES TO STAY) — A. DAE-2', ...Array(13).fill(null)], { fill: NAVY, bold: true, color: 'FFFFFFFF' });
     const d = data.dae;
     const daeRow = (label, arr, style) => put(r++, [label, ...arr, sum(arr)], { indent: 1, ...style });
     daeRow('Number of rooms', d.rooms);
@@ -144,7 +144,7 @@ async function formA4Workbook(data) {
     r++;
     const notes = [
         '* This should be submitted to the province, then to the region.',
-        '** Data per accommodation establishment is kept in ZTIMS, one report per establishment per month.'
+        '** Arrivals add every place\'s monthly report (places to stay and attractions): a guest counts once at each place they arrive at. Part II is places to stay only.'
     ];
     if (data.municipalTotalMonths.length) {
         notes.push(`Months ${data.municipalTotalMonths.map(m => MONTHS[m - 1]).join(', ')} come from the municipal totals on the printed sheet, which were not split by sex.`);
@@ -152,21 +152,20 @@ async function formA4Workbook(data) {
     for (const note of notes) { ws.getCell(`A${r}`).value = note; ws.getCell(`A${r}`).font = { name: FONT, size: 9, italic: true, color: { argb: 'FF52525B' } }; r++; }
     ws.pageSetup.printTitlesRow = '7:7';
 
-    attractionSheet(wb, data, monthValues);
+    placeSheet(wb, data, monthValues);
     return wb.xlsx.writeBuffer();
 }
 
-/* Part III, on its own sheet so the province's Form A4 stays exactly as it is:
- * visits to attractions by month, by place, by sex and by country of residence.
- * Never added to the guest arrivals on the first sheet. */
-function attractionSheet(wb, data, monthValues) {
-    const v = data.visits;
-    if (!v) return;
-    const ws = wb.addWorksheet('Attraction visits', {
+/* Arrivals by place, on a second sheet so the Form A4 sheet keeps the
+ * province's layout: each place's arrivals by month, the office's and the
+ * private ones marked. */
+function placeSheet(wb, data, monthValues) {
+    if (!data.places) return;
+    const ws = wb.addWorksheet('By place', {
         pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 },
-        views: [{ state: 'frozen', xSplit: 1, ySplit: 5 }]
+        views: [{ state: 'frozen', xSplit: 1, ySplit: 4 }]
     });
-    ws.columns = [{ width: 42 }, ...MONTHS.map(() => ({ width: 9 })), { width: 11 }];
+    ws.columns = [{ width: 46 }, ...MONTHS.map(() => ({ width: 9 })), { width: 11 }];
     const put = (row, values, { fill, bold, color, indent } = {}) => {
         const r = ws.getRow(row);
         values.forEach((val, i) => {
@@ -179,24 +178,24 @@ function attractionSheet(wb, data, monthValues) {
             else if (indent) c.alignment = { indent };
         });
     };
-    let r = 1;
-    ws.getCell('A1').value = 'PART III. ATTRACTION VISITS';
+    ws.getCell('A1').value = `ARRIVALS BY PLACE · ${data.year} · ZAMBOANGUITA`;
     ws.getCell('A1').font = { name: FONT, size: 14, bold: true, color: { argb: NAVY } };
-    ws.getCell('A2').value = `${data.year} · Zamboanguita. Not part of Form A4: a guest who stays overnight and visits an attraction is one arrival and one visit.`;
+    ws.getCell('A2').value = 'Each place\'s own monthly report. "–" means the place did not report that month.';
     ws.getCell('A2').font = { name: FONT, size: 10, color: { argb: 'FF52525B' } };
-    r = 5;
-    const line = (label, arr, style) => put(r++, [label, ...monthValues(arr), sum(monthValues(arr))], style);
-    put(r++, ['', ...MONTHS, 'TOTAL'], { fill: NAVY, bold: true, color: 'FFFFFFFF' });
-    put(r++, ['BY PLACE', ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
-    for (const p of v.places) line(p.title, p.total, { indent: 1 });
-    line('TOTAL ATTRACTION VISITS', v.total, { fill: GRAND, bold: true, color: NAVY });
-    line('Male', v.male, { indent: 1 });
-    line('Female', v.female, { indent: 1 });
-    r++;
-    put(r++, ['BY COUNTRY OF RESIDENCE', ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
-    for (const res of data.residences) {
-        if (v.counts[res.code]) line(res.name, v.counts[res.code].total, { indent: 1 });
+    let r = 4;
+    put(r++, ['PLACE', ...MONTHS, 'TOTAL'], { fill: NAVY, bold: true, color: 'FFFFFFFF' });
+    let all = Array(12).fill(0);
+    for (const [kind, title] of [['accommodation', 'PLACES TO STAY'], ['attraction', 'ATTRACTIONS']]) {
+        const list = data.places.filter(p => p.kind === kind);
+        if (!list.length) continue;
+        put(r++, [title, ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
+        for (const p of list) {
+            const shown = p.total.map((t, i) => (p.reported[i] ? t : (p.reported[i] === false ? '–' : null)));
+            put(r++, [`${p.title} (${p.keptByOffice ? 'Tourism Office' : 'Private'})`, ...shown, sum(monthValues(p.total))], { indent: 1 });
+            all = addArrays(all, p.total);
+        }
     }
+    put(r++, ['ALL PLACES', ...monthValues(all), sum(monthValues(all))], { fill: GRAND, bold: true, color: NAVY });
 }
 
 module.exports = { formA4Workbook };
