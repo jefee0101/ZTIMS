@@ -522,55 +522,13 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-6">
 
-            <div class="space-y-1">
-                <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                    <span class="text-on-surface-variant">Municipal tourism</span>
-                </nav>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h2>
-            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Guide Bookings</h1>
 
-            <!-- How it works: the four steps, once, in plain words -->
-            <details id="howItWorks" class="glass-panel group" open>
-                <summary class="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none">
-                    <span class="flex items-center gap-2 font-bold text-on-surface">
-                        <span class="material-symbols-outlined text-accent !text-xl">help</span>How guide bookings work
-                    </span>
-                    <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
-                </summary>
-                <ol class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 px-5 pb-5">
-                    <li class="ztims-card p-4 space-y-1">
-                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 1 · The visitor</p>
-                        <p class="font-bold text-on-surface">Books on the website</p>
-                        <p class="text-support">They choose a destination, date and time, and get a reference such as <b class="font-mono">TG-2026-00001</b>. Nothing for you to do yet.</p>
-                    </li>
-                    <li class="ztims-card p-4 space-y-1">
-                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 2 · You</p>
-                        <p class="font-bold text-on-surface">Collect the payment</p>
-                        <p class="text-support">When they come to the office, find their reference under <b>Collect payment</b>, take the fee and record it. That confirms the booking.</p>
-                    </li>
-                    <li class="ztims-card p-4 space-y-1">
-                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 3 · You</p>
-                        <p class="font-bold text-on-surface">Assign a guide</p>
-                        <p class="text-support">Under <b>Assign a guide</b>, pick a guide who serves that destination. ZTIMS refuses a guide who is off or already booked at that time.</p>
-                    </li>
-                    <li class="ztims-card p-4 space-y-1">
-                        <p class="text-label font-bold uppercase tracking-widest text-on-surface-variant">Step 4 · After the tour</p>
-                        <p class="font-bold text-on-surface">Close the booking</p>
-                        <p class="text-support">Under <b>Upcoming tours</b>, mark it <b>Completed</b>, or <b>No show</b> if the visitor did not come. Nothing is ever deleted.</p>
-                    </li>
-                </ol>
-            </details>
-
-            <!-- Find a booking: the first thing to do when a visitor is at the counter -->
-            <div class="glass-panel p-4 flex flex-wrap items-center gap-3">
-                <div class="relative flex-1 min-w-[220px]">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                    <input id="bookingSearch" type="search" placeholder="Visitor at the counter? Type their reference or name"
-                           class="field !pl-10 w-full" autocomplete="off"/>
-                </div>
-                <button id="refreshBookingsBtn" class="btn btn-secondary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base">refresh</span> Refresh
-                </button>
+            <div class="relative">
+                <label for="bookingSearch" class="sr-only">Search bookings</label>
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                <input id="bookingSearch" type="search" placeholder="Search by reference, name, phone or destination"
+                       class="field !pl-11 w-full min-h-[44px]" autocomplete="off"/>
             </div>
 
             <!-- Tabs: the steps, each with how many bookings are waiting on it -->
@@ -586,50 +544,31 @@ body { overflow-x: hidden; }
             </div>
 
             <section role="tabpanel" id="panel-pay" aria-labelledby="tab-pay" class="space-y-3">
-                <div id="list-pay" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+                <div class="glass-panel"><div id="list-pay" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
             </section>
 
             <section role="tabpanel" id="panel-assign" aria-labelledby="tab-assign" class="space-y-3" hidden>
-                <div id="list-assign" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+                <div class="glass-panel"><div id="list-assign" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
             </section>
 
             <section role="tabpanel" id="panel-upcoming" aria-labelledby="tab-upcoming" class="space-y-3" hidden>
-                <div id="list-upcoming" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+                <div class="glass-panel"><div id="list-upcoming" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
             </section>
 
             <section role="tabpanel" id="panel-all" aria-labelledby="tab-all" class="space-y-3" hidden>
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <select id="bookingStatusFilter" class="field w-full sm:w-auto">
-                        <option value="all">All statuses</option>
-                        <option value="pending_payment">Waiting for payment</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="no_show">No show</option>
-                    </select>
+                <div id="bookingStatusFilter" class="dest-chips" role="group" aria-label="Status">
+                    <button type="button" data-status-filter="all" aria-pressed="true">All <b data-count="all">0</b></button>
+                    <button type="button" data-status-filter="pending_payment" aria-pressed="false">Waiting for payment <b data-count="pending_payment">0</b></button>
+                    <button type="button" data-status-filter="confirmed" aria-pressed="false">Confirmed <b data-count="confirmed">0</b></button>
+                    <button type="button" data-status-filter="completed" aria-pressed="false">Completed <b data-count="completed">0</b></button>
+                    <button type="button" data-status-filter="cancelled" aria-pressed="false">Cancelled <b data-count="cancelled">0</b></button>
+                    <button type="button" data-status-filter="no_show" aria-pressed="false">No show <b data-count="no_show">0</b></button>
                 </div>
-                <div class="glass-panel overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="ztims-table w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-surface-variant/70 border-b border-outline-variant/30 text-label font-bold uppercase tracking-wider">
-                                    <th class="px-6 py-4">Reference</th>
-                                    <th class="px-6 py-4">Visitor</th>
-                                    <th class="px-6 py-4">Destination</th>
-                                    <th class="px-6 py-4">When</th>
-                                    <th class="px-6 py-4 text-center">Visitors</th>
-                                    <th class="px-6 py-4">Guide</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bookingTableBody" class="divide-y divide-outline-variant/20 text-sm text-on-surface-variant"></tbody>
-                        </table>
-                    </div>
-                    <div class="flex flex-wrap justify-between items-center gap-2 px-6 py-4 border-t border-outline-variant/30 text-sm text-on-surface-variant">
-                        <p>Showing <span id="bookingShown" class="text-on-surface font-bold">0</span>
-                           of <span id="bookingTotal" class="text-on-surface font-bold">0</span> bookings</p>
-                        <p>Collected at the counter: <span id="statCollected" class="text-on-surface font-bold">—</span></p>
+                <div class="glass-panel">
+                    <div id="bookingTableBody" class="ztims-stagger divide-y divide-outline-variant/20"></div>
+                    <div class="flex flex-wrap justify-between items-center gap-2 px-5 py-3 border-t border-outline-variant/30 text-support">
+                        <p>Showing <b id="bookingShown" class="text-on-surface">0</b> of <b id="bookingTotal" class="text-on-surface">0</b></p>
+                        <p>Collected: <b id="statCollected" class="text-on-surface">—</b></p>
                     </div>
                 </div>
             </section>
@@ -642,11 +581,10 @@ body { overflow-x: hidden; }
                   transition: color var(--dur-fast, 160ms) var(--ease-standard, ease), border-color var(--dur-fast, 160ms) var(--ease-standard, ease); }
         .bk-tab:hover { color: rgb(var(--ztims-on-surface)); }
         .bk-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
-        .bk-count { display: inline-flex; min-width: 1.5rem; justify-content: center; padding: 0 .4rem; font-size: .72rem; font-weight: 800;
+        .bk-count { display: inline-flex; min-width: 1.5rem; justify-content: center; padding: 0 .45rem; font-size: .72rem; font-weight: 800; border-radius: 9999px;
                     background: rgb(var(--ztims-on-surface) / .08); color: rgb(var(--ztims-on-surface)); }
         /* Gold fill with navy on it: the design system's "waiting" signal. */
         .bk-count.has-work { background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); }
-        #howItWorks summary::-webkit-details-marker { display: none; }
     </style>
 
     <!-- One booking: its details, the payment, and the guide -->
@@ -662,10 +600,10 @@ body { overflow-x: hidden; }
                 </button>
             </div>
 
-            <div id="bookingDetails" class="bg-surface-variant rounded-xl p-4 space-y-1.5 text-sm"></div>
+            <div id="bookingDetails" class="border border-outline-variant/40 p-4 space-y-1.5 text-sm"></div>
 
             <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Guide</h3>
+                <h3 class="text-sm font-semibold text-on-surface mb-2">Guide</h3>
                 <div class="flex gap-2">
                     <select id="assignGuideSelect" class="field flex-1"></select>
                     <button type="button" id="assignGuideBtn" class="btn btn-secondary shrink-0">Assign</button>
@@ -674,18 +612,18 @@ body { overflow-x: hidden; }
             </div>
 
             <div id="paymentSection">
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Onsite payment</h3>
-                <div id="paymentRecorded" hidden class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-sm space-y-1"></div>
+                <h3 class="text-sm font-semibold text-on-surface mb-2">Payment</h3>
+                <div id="paymentRecorded" hidden class="border border-outline-variant/40 p-4 text-sm space-y-1"></div>
 
                 <form id="paymentForm" class="space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Amount collected (₱)</label>
+                            <label class="block text-sm font-semibold text-on-surface mb-1.5">Amount collected (₱)</label>
                             <input id="payAmount" type="number" min="0" step="1" required
                                    class="field"/>
                         </div>
                         <div>
-                            <label class="block text-label font-bold uppercase tracking-wider mb-1">Method</label>
+                            <label class="block text-sm font-semibold text-on-surface mb-1.5">Method</label>
                             <select id="payMethod" class="field">
                                 <option value="cash">Cash</option>
                                 <option value="gcash">GCash</option>
@@ -694,12 +632,12 @@ body { overflow-x: hidden; }
                         </div>
                     </div>
                     <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Official receipt number</label>
+                        <label class="block text-sm font-semibold text-on-surface mb-1.5">Official receipt number</label>
                         <input id="payReceipt" type="text" placeholder="OR-…"
                                class="field"/>
                     </div>
                     <div>
-                        <label class="block text-label font-bold uppercase tracking-wider mb-1">Remarks</label>
+                        <label class="block text-sm font-semibold text-on-surface mb-1.5">Remarks <span class="font-normal text-on-surface-variant">(optional)</span></label>
                         <input id="payRemarks" type="text"
                                class="field"/>
                     </div>
@@ -711,15 +649,15 @@ body { overflow-x: hidden; }
             </div>
 
             <div>
-                <h3 class="text-label font-bold uppercase tracking-wider mb-2">Mark as</h3>
+                <h3 class="text-sm font-semibold text-on-surface mb-2">Mark as</h3>
                 <div class="flex flex-wrap gap-2">
                     <button data-status="completed" class="booking-status-btn btn btn-secondary">Completed</button>
                     <button data-status="no_show" class="booking-status-btn btn btn-secondary">No show</button>
-                    <button data-status="cancelled" class="booking-status-btn btn btn-secondary !text-error">Cancelled</button>
+                    <button data-status="cancelled" class="booking-status-btn btn btn-danger ml-auto">Cancel booking</button>
                 </div>
             </div>
 
-            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+            <p id="bookingError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
         </div>
     </div>
 
@@ -737,7 +675,7 @@ body { overflow-x: hidden; }
             ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
         const formatPeso = amount =>
-            `₱${(Number(amount) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            `₱${(Number(amount) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 })}`;
 
         const STATUS_LABEL = {
             pending_payment: 'Waiting for payment', confirmed: 'Confirmed',
@@ -785,14 +723,13 @@ body { overflow-x: hidden; }
         }
 
         const METHOD = { gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', cash: 'Cash', bank: 'Bank transfer' };
-        const demoPill = b => b.isDemo ? '<span class="tone-warning tone-pill text-[9px] font-extrabold px-1.5 py-0.5 ml-1 align-middle">DEMO</span>' : '';
+        const demoPill = b => b.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5">Demo</span>' : '';
         const paidOnline = b => !!(b.payment && b.payment.channel === 'online' && !b.payment.refundedAt);
         function paymentLine(b) {
             const p = b.payment;
             if (!p) return '';
-            const how = `${METHOD[p.method] || p.method || 'cash'} · ${p.channel === 'online' ? 'online, test mode' : 'at the counter'}`;
-            return `<p class="text-support"><span class="material-symbols-outlined !text-sm align-middle tone-success">payments</span>
-                Paid ${formatPeso(p.amount)} · ${escapeHtml(how)}${p.receiptNumber ? ` · OR ${escapeHtml(p.receiptNumber)}` : ' · <span class="tone-warning font-bold">no OR yet</span>'}</p>`;
+            const how = `${METHOD[p.method] || p.method || 'cash'}, ${p.channel === 'online' ? 'online' : 'onsite'}`;
+            return `<p class="dest-row__facts">Paid <b class="text-on-surface">${formatPeso(p.amount)}</b> · ${escapeHtml(how)}${p.receiptNumber ? ` · OR ${escapeHtml(p.receiptNumber)}` : ''}</p>`;
         }
 
         /* ---- dates, as the office reads them ------------------------------- */
@@ -875,7 +812,7 @@ body { overflow-x: hidden; }
 
         async function loadEverything() {
             for (const step of Object.keys(STEPS)) {
-                document.getElementById('list-' + step).innerHTML = '<div class="ztims-empty xl:col-span-2">Loading bookings…</div>';
+                document.getElementById('list-' + step).innerHTML = '<div class="p-4"><div class="ztims-empty">Loading bookings…</div></div>';
             }
             try {
                 const [bookingsRes, guidesRes] = await Promise.all([
@@ -891,7 +828,7 @@ body { overflow-x: hidden; }
             } catch (error) {
                 for (const step of Object.keys(STEPS)) {
                     document.getElementById('list-' + step).innerHTML =
-                        `<div class="ztims-empty tone-danger xl:col-span-2">${escapeHtml(error.message)}</div>`;
+                        `<div class="p-4"><div class="ztims-empty tone-danger">${escapeHtml(error.message)}</div></div>`;
                 }
             }
         }
@@ -913,7 +850,7 @@ body { overflow-x: hidden; }
         /* ---- the cards: one booking, and the one thing to do next ---------- */
 
         const EMPTY = {
-            pay: 'Nobody is waiting to pay. New bookings appear here as visitors make them.',
+            pay: 'Nobody is waiting to pay.',
             assign: 'Every paid booking has a guide.',
             upcoming: 'No confirmed tours with a guide yet.'
         };
@@ -921,172 +858,147 @@ body { overflow-x: hidden; }
         function renderCards(step, rows, waitingCount) {
             const list = document.getElementById('list-' + step);
             if (!rows.length) {
-                list.innerHTML = `<div class="ztims-empty xl:col-span-2">${
-                    waitingCount ? 'No booking in this step matches that search. Try the All bookings tab.' : EMPTY[step]}</div>`;
+                list.innerHTML = `<div class="p-4"><div class="ztims-empty">${waitingCount ? 'No booking matches.' : EMPTY[step]}</div></div>`;
                 return;
             }
-            list.innerHTML = rows.map(b => cardHtml(step, b)).join('');
+            list.innerHTML = rows.map(b => rowHtml(step, b)).join('');
         }
 
-        function cardHtml(step, b) {
+        const pill = (tone, text) => `<span class="${tone} tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">${text}</span>`;
+
+        /* One booking per row, read in order: when (left), who and where, the
+           guide, the payment, the visitor's note; then the one thing to do next
+           and a ⋯ menu for the rest. */
+        function rowHtml(step, b) {
+            const id = escapeHtml(b._id);
+            const days = daysFromToday(b.preferredDate);
+            const passed = (days ?? 0) < 0;
+            const [y, m, d] = dayOf(b.preferredDate).split('-').map(Number);
+            const month = y ? new Date(y, m - 1, d).toLocaleDateString('en-PH', { month: 'short' }) : '';
             const rel = relativeDay(b.preferredDate);
-            const passed = (daysFromToday(b.preferredDate) ?? 0) < 0;
-            return `
-            <article class="ztims-card p-5 space-y-4" data-id="${escapeHtml(b._id)}">
-                <div class="flex flex-wrap justify-between items-start gap-3">
-                    <div>
-                        <p class="font-mono font-black text-lg text-on-surface">${escapeHtml(b.reference)}${demoPill(b)}</p>
-                        <p class="text-support">${escapeHtml(b.spotId?.title || '—')}</p>
-                    </div>
-                    <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
-                </div>
-
-                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                    <div>
-                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Visitor</dt>
-                        <dd class="text-on-surface font-bold">${escapeHtml(b.fullName)}</dd>
-                        <dd class="text-support">${escapeHtml(b.contactNumber)} · ${escapeHtml(countryName(b.nationality))}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Tour</dt>
-                        <dd class="text-on-surface font-bold">${friendlyDate(b.preferredDate)}</dd>
-                        <dd class="text-support">${escapeHtml(b.preferredTime)}${rel ? ` · <span class="${passed ? 'tone-danger' : ''}">${rel}</span>` : ''}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-label font-bold uppercase tracking-wider text-on-surface-variant">Group</dt>
-                        <dd class="text-on-surface font-bold">${Number(b.visitors) || 0} visitor${Number(b.visitors) === 1 ? '' : 's'}</dd>
-                        ${b.guideId ? `<dd class="text-support">Guide: ${escapeHtml(b.guideId.fullName)}${b.guideId.contactNumber ? ` · ${escapeHtml(b.guideId.contactNumber)}` : ''}</dd>` : ''}
-                        <dd class="text-support">Asked for: ${requestedGuide(b) ? escapeHtml(requestedGuide(b).fullName) : 'any guide'}</dd>
-                    </div>
-                </dl>
-                ${b.notes ? `<p class="text-support"><b>Visitor's note:</b> ${escapeHtml(b.notes)}</p>` : ''}
-                ${paymentLine(b)}
-
-                ${step === 'pay' ? payAction(b) : step === 'assign' ? assignAction(b) : upcomingAction(b, passed)}
-
-                <p data-error hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
-            </article>`;
-        }
-
-        function payAction(b) {
             const guides = eligibleGuides(b);
-            const fee = guides.length ? guides[0].guideFee : '';
-            return `
-            <form data-action="pay" class="space-y-3 border-t border-outline-variant/30 pt-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Amount (₱)</span>
-                        <input name="amount" type="number" min="0" step="1" required value="${escapeHtml(fee)}" class="field"/>
-                    </label>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Paid by</span>
-                        <select name="method" class="field">
-                            <option value="cash">Cash</option>
-                            <option value="gcash">GCash</option>
-                            <option value="bank">Bank transfer</option>
-                        </select>
-                    </label>
-                    <label class="block">
-                        <span class="block text-label font-bold uppercase tracking-wider mb-1">Receipt no.</span>
-                        <input name="receiptNumber" type="text" placeholder="OR-…" class="field"/>
-                    </label>
-                </div>
-                ${fee !== '' ? `<p class="text-support">Filled in with the guide fee for this destination (${formatPeso(fee)}). Change it if you collected a different amount.</p>` : ''}
-                <div class="flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">check_circle</span> Record payment and confirm
-                    </button>
-                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
-                    <button type="button" data-status="cancelled" class="btn btn-danger min-h-[44px] ml-auto">Cancel booking</button>
-                </div>
-            </form>`;
-        }
+            const wanted = requestedGuide(b);
+            const facts = [
+                escapeHtml(b.spotId?.title || '—'),
+                `${Number(b.visitors) || 0} visitor${Number(b.visitors) === 1 ? '' : 's'}`,
+                escapeHtml(countryName(b.nationality)),
+                b.contactNumber ? escapeHtml(b.contactNumber) : ''
+            ].filter(Boolean).join(' · ');
+            const guideLine = b.guideId
+                ? `Guide: <b class="text-on-surface">${escapeHtml(b.guideId.fullName)}</b>${b.guideId.contactNumber ? ` · ${escapeHtml(b.guideId.contactNumber)}` : ''}`
+                : `Asked for: ${wanted ? escapeHtml(wanted.fullName) : 'any guide'}`;
+            const pills = [
+                step === 'all' ? pill(STATUS_STYLE[b.status]?.split(' ')[0] || 'tone-neutral', escapeHtml(STATUS_LABEL[b.status] || b.status)) : '',
+                rel && ['pending_payment', 'confirmed'].includes(b.status)
+                    ? pill(passed ? 'tone-danger' : days <= 1 ? 'tone-warning' : 'tone-neutral', passed ? `Date passed · ${rel}` : rel) : '',
+                b.payment && !b.payment.receiptNumber && !b.payment.refundedAt ? pill('tone-danger', 'No OR yet') : '',
+                step === 'assign' && !guides.length ? pill('tone-danger', 'No guide available') : '',
+                demoPill(b)
+            ].filter(Boolean).join('');
 
-        function assignAction(b) {
-            const guides = eligibleGuides(b);
-            if (!guides.length) {
-                return `
-                <div class="border-t border-outline-variant/30 pt-4 space-y-3">
-                    <p class="tone-warning text-sm font-bold">No available guide serves this destination with room for ${Number(b.visitors) || 0}${paidCap(b) !== null ? ` at or below the ${formatPeso(paidCap(b))} paid` : ''}.</p>
-                    <p class="text-support">Give a guide this destination, or raise a guide's group size, on the
-                        <a href="admin_guides.html" class="underline font-bold text-primary">Tourist Guides</a> page, then come back.</p>
-                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
-                </div>`;
+            let main = '', menu = [];
+            const cancelItem = `<button type="button" data-status="cancelled" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">cancel</span>${paidOnline(b) ? 'Cancel and refund' : 'Cancel booking'}</button>`;
+            const detailsItem = label => `<button type="button" data-open><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>${label}</button>`;
+            if (step === 'pay') {
+                main = `<button type="button" data-pay class="btn btn-primary btn-sm min-h-[40px]">Record payment</button>`;
+                menu = [detailsItem('Details'), cancelItem];
+            } else if (step === 'assign') {
+                main = guides.length
+                    ? `<button type="button" data-assign class="btn btn-primary btn-sm min-h-[40px]">Assign guide</button>`
+                    : `<a href="admin_guides.html" class="btn btn-secondary btn-sm min-h-[40px]">Tourist Guides</a>`;
+                menu = [detailsItem('Details'), cancelItem];
+            } else if (step === 'upcoming') {
+                main = `<button type="button" data-status="completed" class="btn btn-primary btn-sm min-h-[40px]">Completed</button>`;
+                menu = [`<button type="button" data-status="no_show"><span class="material-symbols-outlined" aria-hidden="true">person_off</span>No show</button>`,
+                        detailsItem('Change guide or details'), cancelItem];
+            } else {
+                main = `<button type="button" data-open class="btn btn-secondary btn-sm min-h-[40px]">Open</button>`;
             }
             return `
-            <form data-action="assign" class="border-t border-outline-variant/30 pt-4 space-y-3">
-                <label class="block">
-                    <span class="block text-label font-bold uppercase tracking-wider mb-1">Choose a guide</span>
-                    <select name="guideId" required class="field">
-                        ${guides.map(g => `<option value="${escapeHtml(g._id)}">${String(g._id) === String(b.requestedGuideId) ? 'Asked for · ' : ''}${escapeHtml(g.fullName)} · ${formatPeso(g.guideFee)} · up to ${Number(g.maxGroupSize) || 0} visitors${g.scope === 'barangay' && g.barangay ? ` · ${escapeHtml(g.barangay)}` : ''}</option>`).join('')}
-                    </select>
-                </label>
-                ${paidCap(b) !== null ? `<p class="text-support">Paid ${formatPeso(paidCap(b))}: only guides at or below that fee are listed.</p>` : ''}
-                ${requestNote(b) ? `<p class="tone-warning text-sm">${escapeHtml(requestNote(b))}</p>` : ''}
-                <div class="flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">person_add</span> Assign this guide
-                    </button>
-                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Details</button>
+            <div class="bk-row" data-id="${id}">
+                <div class="bk-row__date${passed && ['pending_payment', 'confirmed'].includes(b.status) ? ' is-past' : ''}">
+                    <span class="bk-row__day">${d || '—'}</span><span>${escapeHtml(month)}</span><span class="bk-row__time">${escapeHtml(b.preferredTime || '')}</span>
                 </div>
-            </form>`;
-        }
-
-        function upcomingAction(b, passed) {
-            return `
-            <div class="border-t border-outline-variant/30 pt-4 space-y-3">
-                ${passed
-                    ? '<p class="tone-warning text-sm font-bold">The tour date has passed. How did it go?</p>'
-                    : '<p class="text-support">After the tour, mark how it went.</p>'}
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" data-status="completed" class="btn ${passed ? 'btn-primary' : 'btn-secondary'} min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">task_alt</span> Completed
-                    </button>
-                    <button type="button" data-status="no_show" class="btn btn-secondary min-h-[44px]">No show</button>
-                    <button type="button" data-open class="btn btn-ghost min-h-[44px]">Change guide / details</button>
-                    <button type="button" data-status="cancelled" class="btn btn-danger min-h-[44px] ml-auto">${paidOnline(b) ? 'Cancel and refund' : 'Cancel'}</button>
+                <div class="dest-row__body">
+                    <h3 class="dest-row__name">${escapeHtml(b.fullName)} <span class="bk-ref">${escapeHtml(b.reference)}</span></h3>
+                    <p class="dest-row__facts">${facts}</p>
+                    <p class="dest-row__facts">${guideLine}</p>
+                    ${paymentLine(b)}
+                    ${b.notes ? `<p class="bk-note"><b>Note:</b> ${escapeHtml(b.notes)}</p>` : ''}
+                    ${pills ? `<div class="dest-row__issues">${pills}</div>` : ''}
+                </div>
+                <div class="dest-row__actions">
+                    ${main}
+                    ${menu.length ? `<div class="relative">
+                        <button type="button" data-more="${step}-${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(b.reference)}"
+                                class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                        <div class="ztims-dropdown dest-menu" data-menu="${step}-${id}" hidden>${menu.join('')}</div>
+                    </div>` : ''}
                 </div>
             </div>`;
         }
 
+        /* Record an onsite payment: one small window, filled with the fee of
+           the guide most likely to take it. */
+        async function recordPayment(b) {
+            const guides = eligibleGuides(b);
+            const values = await ztimsDialog.form({
+                title: `Record payment for ${b.reference}`,
+                message: `${b.fullName} · ${b.spotId?.title || ''} · ${friendlyDate(b.preferredDate)}`,
+                confirmLabel: 'Record payment and confirm',
+                icon: 'payments',
+                fields: [
+                    { name: 'amount', label: 'Amount collected (₱)', type: 'number', required: true, value: guides.length ? guides[0].guideFee : '' },
+                    { name: 'method', label: 'Paid with', type: 'select', value: 'cash',
+                      options: [{ value: 'cash', label: 'Cash' }, { value: 'gcash', label: 'GCash' }, { value: 'bank', label: 'Bank transfer' }] },
+                    { name: 'receiptNumber', label: 'Official receipt number', optional: true, placeholder: 'OR-…' }
+                ],
+                validate: v => (Number(v.amount) > 0 ? '' : 'Enter the amount collected.')
+            });
+            if (!values) return;
+            await send(bookingUrl(b._id, 'payment'), jsonBody('POST', {
+                amount: Number(values.amount) || 0, method: values.method,
+                receiptNumber: values.receiptNumber.trim(), remarks: ''
+            }), toastError);
+        }
+
+        /* Assign a guide: only guides who can take this booking are offered,
+           the one the visitor asked for first. */
+        async function assignGuide(b) {
+            const guides = eligibleGuides(b);
+            const notes = [paidCap(b) !== null ? `Paid ${formatPeso(paidCap(b))}: only guides at or below that fee are listed.` : '', requestNote(b)].filter(Boolean).join(' ');
+            const values = await ztimsDialog.form({
+                title: `Assign a guide to ${b.reference}`,
+                message: `${b.spotId?.title || ''} · ${friendlyDate(b.preferredDate)} ${b.preferredTime || ''} · ${Number(b.visitors) || 0} visitors${notes ? '\n\n' + notes : ''}`,
+                confirmLabel: 'Assign guide',
+                icon: 'person_add',
+                fields: [{ name: 'guideId', label: 'Guide', type: 'select', options: guides.map(g => ({
+                    value: g._id,
+                    label: `${String(g._id) === String(b.requestedGuideId) ? 'Asked for · ' : ''}${g.fullName} · ${formatPeso(g.guideFee)} · up to ${Number(g.maxGroupSize) || 0}${g.scope === 'barangay' && g.barangay ? ` · ${g.barangay}` : ''}`
+                })) }]
+            });
+            if (!values) return;
+            await send(bookingUrl(b._id, 'assign'), jsonBody('PATCH', { guideId: values.guideId }), toastError);
+        }
+
+        const toastError = message => { if (message) showToast(message, 'error'); };
+
         /* ---- All bookings: the full record --------------------------------- */
 
+        let activeStatus = 'all';
         function renderTable() {
             const body = document.getElementById('bookingTableBody');
-            const status = document.getElementById('bookingStatusFilter').value;
-            const rows = allBookings.filter(b => (status === 'all' || b.status === status) && matchesSearch(b));
+            document.querySelectorAll('#bookingStatusFilter [data-count]').forEach(el => {
+                const k = el.dataset.count;
+                el.textContent = k === 'all' ? allBookings.length : allBookings.filter(b => b.status === k).length;
+            });
+            const rows = allBookings.filter(b => (activeStatus === 'all' || b.status === activeStatus) && matchesSearch(b))
+                .sort((a, b) => dayOf(b.preferredDate).localeCompare(dayOf(a.preferredDate)));
             document.getElementById('bookingShown').textContent = rows.length;
             document.getElementById('bookingTotal').textContent = allBookings.length;
-
-            if (rows.length === 0) {
-                body.innerHTML = `<tr><td colspan="8" class="p-4"><div class="ztims-empty">${
-                    allBookings.length === 0 ? 'No guide bookings yet.' : 'No booking matches that search.'
-                }</div></td></tr>`;
-                return;
-            }
-
-            body.innerHTML = rows.map(b => `
-                <tr class="hover:bg-surface-variant/40 transition-colors">
-                    <td class="px-6 py-4 font-mono font-bold text-on-surface whitespace-nowrap">${escapeHtml(b.reference)}${demoPill(b)}</td>
-                    <td class="px-6 py-4">
-                        <p class="text-on-surface">${escapeHtml(b.fullName)}</p>
-                        <p class="text-support">${escapeHtml(b.contactNumber)}</p>
-                        <p class="text-support">${escapeHtml(countryName(b.nationality))}</p>
-                    </td>
-                    <td class="px-6 py-4">${escapeHtml(b.spotId?.title || '—')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${friendlyDate(b.preferredDate)}<br><span class="text-support">${escapeHtml(b.preferredTime)}</span></td>
-                    <td class="px-6 py-4 text-center">${Number(b.visitors) || 0}</td>
-                    <td class="px-6 py-4">${b.guideId
-                        ? escapeHtml(b.guideId.fullName)
-                        : '<span class="text-support italic">not assigned</span>'}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_STYLE[b.status] || ''}">${escapeHtml(STATUS_LABEL[b.status] || b.status)}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button data-open-id="${escapeHtml(b._id)}" class="btn btn-secondary min-h-[44px]">Open</button>
-                    </td>
-                </tr>
-            `).join('');
+            body.innerHTML = rows.length
+                ? rows.map(b => rowHtml('all', b)).join('')
+                : `<div class="p-4"><div class="ztims-empty">${allBookings.length === 0 ? 'No guide bookings yet.' : 'No booking matches.'}</div></div>`;
         }
 
         /* ---- tabs ---------------------------------------------------------- */
@@ -1139,7 +1051,7 @@ body { overflow-x: hidden; }
             recorded.hidden = !paid;
             if (paid) {
                 recorded.innerHTML = `
-                    <p class="font-bold tone-success">${formatPeso(paid.amount)} ${paid.channel === 'online' ? 'paid online (test mode)' : 'collected'}${paid.refundedAt ? ' · refunded' : ''}</p>
+                    <p class="font-bold tone-success">${formatPeso(paid.amount)} ${paid.channel === 'online' ? 'paid online' : 'collected onsite'}${paid.refundedAt ? ' · refunded' : ''}</p>
                     <p class="text-on-surface-variant">${escapeHtml(METHOD[paid.method] || paid.method || 'cash')}${paid.receiptNumber ? ` · OR ${escapeHtml(paid.receiptNumber)}` : ''}${paid.gatewayRef ? ` · ref ${escapeHtml(paid.gatewayRef)}` : ''}</p>
                     ${!paid.receiptNumber && !paid.refundedAt ? `
                     <form id="orForm" class="flex gap-2 pt-1">
@@ -1166,7 +1078,7 @@ body { overflow-x: hidden; }
                      setBookingError, () => closeBookingModal());
             });
             const cancelBtn = document.querySelector('.booking-status-btn[data-status="cancelled"]');
-            if (cancelBtn) cancelBtn.textContent = paidOnline(booking) ? 'Cancel and refund' : 'Cancelled';
+            if (cancelBtn) cancelBtn.textContent = paidOnline(booking) ? 'Cancel and refund' : 'Cancel booking';
 
             document.getElementById('bookingModal').hidden = false;
         }
@@ -1201,10 +1113,6 @@ body { overflow-x: hidden; }
             method, headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body)
         });
 
-        function cardErrorSetter(card) {
-            const box = card.querySelector('[data-error]');
-            return message => { box.textContent = message || ''; box.hidden = !message; };
-        }
 
         async function setBusy(button, busy) {
             if (!button) return;
@@ -1259,57 +1167,48 @@ body { overflow-x: hidden; }
 
             for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
 
-            // Remember whether the "How it works" box was closed.
-            const help = document.getElementById('howItWorks');
-            try { if (localStorage.getItem('bookingsHelpClosed') === '1') help.open = false; } catch (e) { /* private browsing */ }
-            help.addEventListener('toggle', () => {
-                try { localStorage.setItem('bookingsHelpClosed', help.open ? '0' : '1'); } catch (e) { /* private browsing */ }
-            });
-
             document.getElementById('bookingSearch').addEventListener('input', renderAll);
-            document.getElementById('bookingStatusFilter').addEventListener('change', renderTable);
-            document.getElementById('refreshBookingsBtn').addEventListener('click', loadEverything);
-            document.getElementById('bookingTableBody').addEventListener('click', event => {
-                const open = event.target.closest('[data-open-id]');
-                if (open) openBookingModal(open.dataset.openId);
+            document.getElementById('bookingStatusFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-status-filter]');
+                if (!chip) return;
+                activeStatus = chip.dataset.statusFilter;
+                document.querySelectorAll('#bookingStatusFilter [data-status-filter]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.statusFilter === activeStatus)));
+                renderTable();
             });
 
-            // Every card's buttons and forms, in all three step lists.
-            for (const step of Object.keys(STEPS)) {
-                const list = document.getElementById('list-' + step);
+            // The ⋯ menu on each row: one open at a time; a click elsewhere or
+            // Escape closes it.
+            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
+                if (menu === except) return;
+                menu.hidden = true;
+                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
+                if (opener) opener.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('click', event => {
+                const opener = event.target.closest('[data-more]');
+                if (opener) {
+                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
+                    closeMenus(menu);
+                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
+                    return;
+                }
+                closeMenus();
+            });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
 
-                list.addEventListener('click', event => {
-                    const card = event.target.closest('article[data-id]');
-                    if (!card) return;
-                    const booking = allBookings.find(b => String(b._id) === card.dataset.id);
+            // Every row's buttons, in all four lists.
+            for (const listId of ['list-pay', 'list-assign', 'list-upcoming', 'bookingTableBody']) {
+                document.getElementById(listId).addEventListener('click', event => {
+                    const row = event.target.closest('.bk-row[data-id]');
+                    if (!row) return;
+                    const booking = allBookings.find(b => String(b._id) === row.dataset.id);
                     if (!booking) return;
-                    if (event.target.closest('[data-open]')) { openBookingModal(booking._id); return; }
+                    if (event.target.closest('[data-open]')) return openBookingModal(booking._id);
+                    if (event.target.closest('[data-pay]')) return recordPayment(booking);
+                    if (event.target.closest('[data-assign]')) return assignGuide(booking);
                     const statusBtn = event.target.closest('[data-status]');
-                    if (statusBtn) changeStatus(booking, statusBtn.dataset.status, cardErrorSetter(card), statusBtn);
-                });
-
-                list.addEventListener('submit', async event => {
-                    event.preventDefault();
-                    const form = event.target;
-                    const card = form.closest('article[data-id]');
-                    const booking = allBookings.find(b => String(b._id) === card.dataset.id);
-                    if (!booking) return;
-                    const button = form.querySelector('[type="submit"]');
-                    const data = new FormData(form);
-                    setBusy(button, true);
-                    let done;
-                    if (form.dataset.action === 'pay') {
-                        done = await send(bookingUrl(booking._id, 'payment'), jsonBody('POST', {
-                            amount: Number(data.get('amount')) || 0,
-                            method: data.get('method'),
-                            receiptNumber: String(data.get('receiptNumber') || '').trim(),
-                            remarks: ''
-                        }), cardErrorSetter(card));
-                    } else if (form.dataset.action === 'assign') {
-                        done = await send(bookingUrl(booking._id, 'assign'),
-                            jsonBody('PATCH', { guideId: data.get('guideId') }), cardErrorSetter(card));
-                    }
-                    if (!done) setBusy(button, false);
+                    if (statusBtn) changeStatus(booking, statusBtn.dataset.status, toastError, statusBtn.classList.contains('btn') ? statusBtn : null);
                 });
             }
 

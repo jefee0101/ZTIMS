@@ -261,3 +261,22 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .stat-tile { border: 1px solid rgb(var(--ztims-outline-variant) / .5); background: rgb(var(--ztims-surface)); padding: .9rem 1rem; }
 .stat-tile p:first-child { font-size: .8125rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
 .stat-tile p:nth-child(2) { font-size: 1.75rem; font-weight: 900; color: rgb(var(--ztims-on-surface)); font-variant-numeric: tabular-nums; }
+
+/* ---- The officer's Guide Bookings: one row per booking -------------------
+   The date large on the left (red once it has passed while still open), then
+   who and where, the guide, the payment, the visitor's note; one main button
+   and a ⋯ menu. Shares .dest-row__body / __facts / __issues / __actions. */
+.bk-row { display: grid; grid-template-columns: 4.5rem 1fr auto; gap: 1rem; align-items: start; padding: 1rem 1.25rem; }
+.bk-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
+.bk-row__date { display: flex; flex-direction: column; align-items: center; padding: .4rem 0; border: 1px solid rgb(var(--ztims-outline-variant) / .6);
+                font-size: .75rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); text-align: center; line-height: 1.2; }
+.bk-row__day { font-size: 1.5rem; font-weight: 900; color: rgb(var(--ztims-on-surface)); }
+.bk-row__time { margin-top: .15rem; font-size: .6875rem; }
+.bk-row__date.is-past { border-color: rgb(var(--ztims-error) / .5); }
+.bk-row__date.is-past .bk-row__day { color: rgb(var(--ztims-error)); }
+.bk-ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8125rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); margin-left: .35rem; }
+.bk-note { font-size: .8125rem; padding: .35rem .6rem; background: rgb(var(--brand-tangerine) / .15); color: rgb(var(--ztims-on-surface)); }
+@media (max-width: 639px) {
+    .bk-row { grid-template-columns: 3.75rem 1fr; padding: .9rem 1rem; }
+    .bk-row .dest-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}

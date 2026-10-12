@@ -26,6 +26,7 @@
 
        ztimsDialog.form({ title, message, fields: [{ name, label, value,
                           placeholder, type, help, required, minlength }],
+                          (type 'select' with options: [{ value, label }] gives a dropdown)
                           confirmLabel, cancelLabel, validate })
            -> Promise<object | null>  { name: value } on submit, null when
                                       dismissed
@@ -245,18 +246,24 @@
             }
         }
 
-        const input = document.createElement('input');
+        // type 'select' takes options: [{ value, label }], and value picks one.
+        const isSelect = spec.type === 'select';
+        const input = document.createElement(isSelect ? 'select' : 'input');
         input.id = inputId;
         input.className = 'field';
-        input.type = spec.type || 'text';
+        if (isSelect) {
+            (spec.options || []).forEach(option => input.add(new Option(option.label, option.value)));
+        } else {
+            input.type = spec.type || 'text';
+        }
         input.name = spec.name || ('field' + index);
-        input.value = spec.value === undefined || spec.value === null ? '' : String(spec.value);
-        if (spec.placeholder) input.placeholder = spec.placeholder;
+        input.value = spec.value === undefined || spec.value === null ? (isSelect && input.options.length ? input.options[0].value : '') : String(spec.value);
+        if (spec.placeholder && !isSelect) input.placeholder = spec.placeholder;
         if (spec.required) input.required = true;
         if (spec.minlength) input.minLength = spec.minlength;
         if (spec.maxlength) input.maxLength = spec.maxlength;
         input.autocomplete = spec.autocomplete || 'off';
-        input.spellcheck = false;
+        if (!isSelect) input.spellcheck = false;
 
         // A single unlabelled field (a prompt) is named by the dialog's title.
         if (label) wrap.appendChild(label);
@@ -458,7 +465,7 @@
             // reflex Enter is the safe answer.
             const first = inputs.length ? inputs[0].input : (tone === 'danger' ? cancelButton : confirmButton);
             first.focus();
-            if (inputs.length && first.value) first.select();
+            if (inputs.length && first.value && typeof first.select === 'function' && first.tagName === 'INPUT') first.select();
         });
     }
 

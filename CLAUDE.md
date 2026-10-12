@@ -698,6 +698,24 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   red); Day by day; Demo data as one line with its two buttons. Pesos are whole
   unless a refund left centavos.
 
+### The officer's Guide Bookings (`admin_bookings.html`)
+
+Title and one search (reference, name, phone, destination), then the steps as
+tabs with counts: Collect payment, Assign a guide, Upcoming tours, All bookings
+(the Dashboard still opens a tab through `bookingsTab`). No explainer, no
+Refresh. Each booking is one row (`.bk-row` in `portal-flat.css`): the date
+large on the left (red once it has passed while the booking is still open),
+the visitor's name and reference, destination · visitors · country · phone,
+the guide (or who was asked for), the payment (no cents), the visitor's note
+highlighted, and pills (Today / In n days / Date passed, No OR yet, No guide
+available, Demo). One main button per step — **Record payment**, **Assign
+guide** (or Tourist Guides when none can take it), **Completed** — opens a
+small `ztimsDialog` window (`type: 'select'` fields were added to
+`ztims-dialog.js` for this); the ⋯ menu holds Details, No show, Change guide,
+and Cancel / Cancel and refund in red. All bookings filters by status with
+`.dest-chips` and opens the details window, which keeps every action
+(sentence-case labels, Cancel booking a solid red pill).
+
 ### Attraction setup
 
 `attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window
