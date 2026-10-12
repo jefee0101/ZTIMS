@@ -130,6 +130,7 @@ async function describe(found) {
     return {
         ...base,
         reference: record.reference, preferredDate: record.preferredDate, preferredTime: record.preferredTime,
+        replyTime: notices.REPLY_TIME,
         visitors: record.visitors, name: record.fullName,
         guide: guide ? guide.fullName : null, requestedGuide: asked ? asked.fullName : null,
         maxDate: addDays(manilaToday(), 365),
@@ -210,13 +211,16 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             booking.preferredTime = time;
             // The guide was confirmed for the old date: the office confirms one again.
             booking.guideId = null;
-            // A closed booking was paid: moving it confirms it again on the new date.
+            // A closed booking was paid: moving it confirms it again on the new
+            // date. Unpaid, it was confirmed by its guide alone: back to the office.
+            const paidFor = await paymentFor('booking', booking._id);
             if (booking.status === 'closed') booking.status = 'confirmed';
+            if (!paidFor || paidFor.refundedAt) booking.status = 'pending_payment';
             booking.statusNote = `Moved by the visitor from ${from.date} ${from.time}. The office confirms the guide again.`.slice(0, 500);
             booking.statusUpdatedAt = new Date();
             await GuideBooking.save(booking);
             const told = await notices.bookingMoved(booking._id, from, origin);
-            return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)} at ${time}. The office will confirm your guide for the new date.`, item: await describe(await load(req.body)) });
+            return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)} at ${time}. The office confirms your guide for the new date within ${notices.REPLY_TIME}.`, item: await describe(await load(req.body)) });
         } catch (error) { fail(res, error, '❌ Manage move failure:'); }
     });
 

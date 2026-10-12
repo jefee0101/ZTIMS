@@ -537,32 +537,32 @@ body { overflow-x: hidden; }
 
             <!-- Tabs: the steps, each with how many bookings are waiting on it -->
             <div role="tablist" aria-label="Guide bookings" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
-                <button role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="true" class="bk-tab">
-                    <span class="material-symbols-outlined !text-base">payments</span>Collect payment <span id="count-pay" class="bk-count">0</span></button>
-                <button role="tab" id="tab-assign" aria-controls="panel-assign" aria-selected="false" class="bk-tab">
-                    <span class="material-symbols-outlined !text-base">person_add</span>Assign a guide <span id="count-assign" class="bk-count">0</span></button>
+                <button role="tab" id="tab-confirm" aria-controls="panel-confirm" aria-selected="true" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">person_add</span>To confirm <span id="count-confirm" class="bk-count">0</span></button>
                 <button role="tab" id="tab-upcoming" aria-controls="panel-upcoming" aria-selected="false" class="bk-tab">
                     <span class="material-symbols-outlined !text-base">event</span>Upcoming tours <span id="count-upcoming" class="bk-count">0</span></button>
+                <button role="tab" id="tab-after" aria-controls="panel-after" aria-selected="false" class="bk-tab">
+                    <span class="material-symbols-outlined !text-base">task_alt</span>After the tour <span id="count-after" class="bk-count">0</span></button>
                 <button role="tab" id="tab-all" aria-controls="panel-all" aria-selected="false" class="bk-tab">
                     <span class="material-symbols-outlined !text-base">list_alt</span>All bookings <span id="count-all" class="bk-count">0</span></button>
             </div>
 
-            <section role="tabpanel" id="panel-pay" aria-labelledby="tab-pay" class="space-y-3">
-                <div class="glass-panel"><div id="list-pay" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
-            </section>
-
-            <section role="tabpanel" id="panel-assign" aria-labelledby="tab-assign" class="space-y-3" hidden>
-                <div class="glass-panel"><div id="list-assign" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
+            <section role="tabpanel" id="panel-confirm" aria-labelledby="tab-confirm" class="space-y-3">
+                <div class="glass-panel"><div id="list-confirm" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
             </section>
 
             <section role="tabpanel" id="panel-upcoming" aria-labelledby="tab-upcoming" class="space-y-3" hidden>
                 <div class="glass-panel"><div id="list-upcoming" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
             </section>
 
+            <section role="tabpanel" id="panel-after" aria-labelledby="tab-after" class="space-y-3" hidden>
+                <div class="glass-panel"><div id="list-after" class="ztims-stagger divide-y divide-outline-variant/20"></div></div>
+            </section>
+
             <section role="tabpanel" id="panel-all" aria-labelledby="tab-all" class="space-y-3" hidden>
                 <div id="bookingStatusFilter" class="dest-chips" role="group" aria-label="Status">
                     <button type="button" data-status-filter="all" aria-pressed="true">All <b data-count="all">0</b></button>
-                    <button type="button" data-status-filter="pending_payment" aria-pressed="false">Waiting for payment <b data-count="pending_payment">0</b></button>
+                    <button type="button" data-status-filter="pending_payment" aria-pressed="false">To confirm <b data-count="pending_payment">0</b></button>
                     <button type="button" data-status-filter="confirmed" aria-pressed="false">Confirmed <b data-count="confirmed">0</b></button>
                     <button type="button" data-status-filter="completed" aria-pressed="false">Completed <b data-count="completed">0</b></button>
                     <button type="button" data-status-filter="cancelled" aria-pressed="false">Cancelled <b data-count="cancelled">0</b></button>
@@ -647,7 +647,7 @@ body { overflow-x: hidden; }
                     </div>
                     <button type="submit" id="recordPaymentBtn"
                             class="btn btn-primary w-full min-h-[44px]">
-                        Record payment and confirm
+                        Record payment
                     </button>
                 </form>
             </div>
@@ -682,7 +682,7 @@ body { overflow-x: hidden; }
             `₱${(Number(amount) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 })}`;
 
         const STATUS_LABEL = {
-            pending_payment: 'Waiting for payment', confirmed: 'Confirmed',
+            pending_payment: 'To confirm', confirmed: 'Confirmed',
             completed: 'Completed', cancelled: 'Cancelled', no_show: 'No show',
             closed: 'Date closed — visitor to choose'
         };
@@ -776,10 +776,13 @@ body { overflow-x: hidden; }
         const bySoonest = (a, b) => dayOf(a.preferredDate).localeCompare(dayOf(b.preferredDate))
             || String(a.preferredTime).localeCompare(String(b.preferredTime));
 
+        /* Confirm first, pay later: the office confirms a booking by giving it
+           a guide; the visitor pays onsite on the day, or online before. */
+        const isPaid = b => !!(b.payment && !b.payment.refundedAt);
         const STEPS = {
-            pay: b => b.status === 'pending_payment',
-            assign: b => b.status === 'confirmed' && !b.guideId,
-            upcoming: b => b.status === 'confirmed' && !!b.guideId
+            confirm: b => ['pending_payment', 'confirmed'].includes(b.status) && !b.guideId,
+            upcoming: b => b.status === 'confirmed' && !!b.guideId && (daysFromToday(b.preferredDate) ?? 0) >= 0,
+            after: b => b.status === 'confirmed' && !!b.guideId && (daysFromToday(b.preferredDate) ?? 0) < 0
         };
 
         // Only guides who can actually take this booking are offered, and for a
@@ -854,9 +857,9 @@ body { overflow-x: hidden; }
         /* ---- the cards: one booking, and the one thing to do next ---------- */
 
         const EMPTY = {
-            pay: 'Nobody is waiting to pay.',
-            assign: 'Every paid booking has a guide.',
-            upcoming: 'No confirmed tours with a guide yet.'
+            confirm: 'Every booking is confirmed.',
+            upcoming: 'No confirmed tours coming up.',
+            after: 'Every tour that has passed is closed.'
         };
 
         function renderCards(step, rows, waitingCount) {
@@ -895,24 +898,28 @@ body { overflow-x: hidden; }
                 step === 'all' ? pill(STATUS_STYLE[b.status]?.split(' ')[0] || 'tone-neutral', escapeHtml(STATUS_LABEL[b.status] || b.status)) : '',
                 rel && ['pending_payment', 'confirmed'].includes(b.status)
                     ? pill(passed ? 'tone-danger' : days <= 1 ? 'tone-warning' : 'tone-neutral', passed ? `Date passed · ${rel}` : rel) : '',
+                ['pending_payment', 'confirmed'].includes(b.status) && !isPaid(b) ? pill('tone-warning', 'Not paid yet') : '',
                 b.payment && !b.payment.receiptNumber && !b.payment.refundedAt ? pill('tone-danger', 'No OR yet') : '',
-                step === 'assign' && !guides.length ? pill('tone-danger', 'No guide available') : '',
+                step === 'confirm' && !guides.length ? pill('tone-danger', 'No guide available') : '',
                 demoPill(b)
             ].filter(Boolean).join('');
 
             let main = '', menu = [];
             const cancelItem = `<button type="button" data-status="cancelled" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">cancel</span>${paidOnline(b) ? 'Cancel and refund' : 'Cancel booking'}</button>`;
             const detailsItem = label => `<button type="button" data-open><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>${label}</button>`;
-            if (step === 'pay') {
-                main = `<button type="button" data-pay class="btn btn-primary btn-sm min-h-[40px]">Record payment</button>`;
-                menu = [detailsItem('Details'), cancelItem];
-            } else if (step === 'assign') {
+            const payItem = `<button type="button" data-pay><span class="material-symbols-outlined" aria-hidden="true">payments</span>Record payment</button>`;
+            if (step === 'confirm') {
+                // Giving it a guide is what confirms it.
                 main = guides.length
-                    ? `<button type="button" data-assign class="btn btn-primary btn-sm min-h-[40px]">Assign guide</button>`
+                    ? `<button type="button" data-assign class="btn btn-primary btn-sm min-h-[40px]">Confirm with a guide</button>`
                     : `<a href="admin_guides.html" class="btn btn-secondary btn-sm min-h-[40px]">Tourist Guides</a>`;
-                menu = [detailsItem('Details'), cancelItem];
-            } else if (step === 'upcoming') {
-                main = `<button type="button" data-status="completed" class="btn btn-primary btn-sm min-h-[40px]">Completed</button>`;
+                menu = [detailsItem('Details'), ...(isPaid(b) ? [] : [payItem]), cancelItem];
+            } else if (step === 'upcoming' || step === 'after') {
+                // The fee is usually paid onsite on the day: that first, then
+                // the tour is marked done.
+                main = isPaid(b)
+                    ? `<button type="button" data-status="completed" class="btn btn-primary btn-sm min-h-[40px]">Completed</button>`
+                    : `<button type="button" data-pay class="btn btn-primary btn-sm min-h-[40px]">Record payment</button>`;
                 menu = [`<button type="button" data-status="no_show"><span class="material-symbols-outlined" aria-hidden="true">person_off</span>No show</button>`,
                         detailsItem('Change guide or details'), cancelItem];
             } else {
@@ -949,7 +956,7 @@ body { overflow-x: hidden; }
             const values = await ztimsDialog.form({
                 title: `Record payment for ${b.reference}`,
                 message: `${b.fullName} · ${b.spotId?.title || ''} · ${friendlyDate(b.preferredDate)}`,
-                confirmLabel: 'Record payment and confirm',
+                confirmLabel: 'Record payment',
                 icon: 'payments',
                 fields: [
                     { name: 'amount', label: 'Amount collected (₱)', type: 'number', required: true, value: guides.length ? guides[0].guideFee : '' },
@@ -972,9 +979,9 @@ body { overflow-x: hidden; }
             const guides = eligibleGuides(b);
             const notes = [paidCap(b) !== null ? `Paid ${formatPeso(paidCap(b))}: only guides at or below that fee are listed.` : '', requestNote(b)].filter(Boolean).join(' ');
             const values = await ztimsDialog.form({
-                title: `Assign a guide to ${b.reference}`,
+                title: b.guideId ? `Change the guide for ${b.reference}` : `Confirm ${b.reference} with a guide`,
                 message: `${b.spotId?.title || ''} · ${friendlyDate(b.preferredDate)} ${b.preferredTime || ''} · ${Number(b.visitors) || 0} visitors${notes ? '\n\n' + notes : ''}`,
-                confirmLabel: 'Assign guide',
+                confirmLabel: b.guideId ? 'Change guide' : 'Confirm with this guide',
                 icon: 'person_add',
                 fields: [{ name: 'guideId', label: 'Guide', type: 'select', options: guides.map(g => ({
                     value: g._id,
@@ -1007,7 +1014,7 @@ body { overflow-x: hidden; }
 
         /* ---- tabs ---------------------------------------------------------- */
 
-        const TABS = ['pay', 'assign', 'upcoming', 'all'];
+        const TABS = ['confirm', 'upcoming', 'after', 'all'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
@@ -1202,7 +1209,7 @@ body { overflow-x: hidden; }
             document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
 
             // Every row's buttons, in all four lists.
-            for (const listId of ['list-pay', 'list-assign', 'list-upcoming', 'bookingTableBody']) {
+            for (const listId of ['list-confirm', 'list-upcoming', 'list-after', 'bookingTableBody']) {
                 document.getElementById(listId).addEventListener('click', event => {
                     const row = event.target.closest('.bk-row[data-id]');
                     if (!row) return;
@@ -1263,7 +1270,9 @@ body { overflow-x: hidden; }
             wire();
             let remembered = null;
             try { remembered = sessionStorage.getItem('bookingsTab'); } catch (e) { /* private browsing */ }
-            showTab(TABS.includes(remembered) ? remembered : 'pay');
+            // 'pay' and 'assign' were the steps before confirm-first, pay-later.
+            if (remembered === 'pay' || remembered === 'assign') remembered = 'confirm';
+            showTab(TABS.includes(remembered) ? remembered : 'confirm');
             await loadEverything();
             // First visit this session: open the first step that has work waiting.
             if (!remembered) {

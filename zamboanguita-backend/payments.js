@@ -788,7 +788,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
             const email = String((req.body && req.body.email) || '').trim().toLowerCase();
             const booking = await GuideBooking.findOne({ reference });
             if (!booking || !email || booking.email !== email) return fail(res, 404, 'No booking matches that reference and email address.');
-            if (booking.status !== 'pending_payment') return fail(res, 409, `${booking.reference} does not need paying: it is ${booking.status.replace('_', ' ')}.`);
+            if (!['pending_payment', 'confirmed'].includes(booking.status)) return fail(res, 409, `${booking.reference} does not need paying: it is ${booking.status.replace('_', ' ')}.`);
             if (await Payment.findOne({ bookingId: booking._id })) return fail(res, 409, `${booking.reference} is already paid.`);
 
             // An open checkout is reused, so paying twice takes two deliberate tries.
@@ -1107,16 +1107,19 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
         }
     });
 
-    /* Lets the group in. Only a valid ticket for today, and only once: the
-       update itself checks, so two phones scanning at once cannot both admit. */
+    /* Lets the group in, or marks it used afterwards (an attraction with no
+       staff at the entrance: the office ticks it in the day's list). Only a
+       valid ticket for today or a day gone by, never a later one, and only
+       once: the update itself checks, so two phones at once cannot both admit. */
     router.post('/tickets/:id/admit', requireAdmin, async (req, res) => {
         try {
             const email = await officerEmail(req);
             const { rows } = await query(`
                 update tickets set status = 'used', used_at = now(), used_by_email = $2
-                 where id = $1 and status = 'valid' and visit_date = $3 returning *`, [req.params.id, email, manilaToday()]);
+                 where id = $1 and status = 'valid' and visit_date <= $3 returning *`, [req.params.id, email, manilaToday()]);
             if (!rows[0]) return fail(res, 409, 'This ticket cannot be used now. Check it again to see why.');
-            res.json({ success: true, message: `Admitted: ${rows[0].people} ${rows[0].people === 1 ? 'person' : 'people'}.` });
+            const who = `${rows[0].people} ${rows[0].people === 1 ? 'person' : 'people'}`;
+            res.json({ success: true, message: dayOf(rows[0].visit_date) === manilaToday() ? `Admitted: ${who}.` : `Marked used: ${who}.` });
         } catch (error) {
             return failure(res, error, '❌ Ticket admit failure:');
         }

@@ -319,7 +319,7 @@ module.exports = function attractionsRouter({ requireAdmin }) {
                                            and exists (select 1 from payments p where p.booking_id = b.id and p.refunded_at is null) returning id`,
                                          [spot._id, date, note]),
                     unpaidBookings: await ids(`update guide_bookings b set status = 'cancelled', status_note = $3, status_updated_at = now()
-                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status = 'pending_payment'
+                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status in ('pending_payment', 'confirmed')
                                            and not exists (select 1 from payments p where p.booking_id = b.id) returning id`,
                                          [spot._id, date, note])
                 };

@@ -396,7 +396,12 @@ body { overflow-x: hidden; }
 
     function render(item, notice) {
         const isTicket = item.kind === 'ticket';
-        const [tone, label] = STATUS[item.status] || ['tone-neutral', item.status];
+        const unpaid = !item.paid || item.paid.refundedAt;
+        // Confirm first, pay later: a booking is confirmed by the office giving
+        // it a guide; it is paid onsite on the day, or online before.
+        const [tone, label] = !isTicket && item.status === 'pending_payment' ? ['tone-warning', 'Waiting for the office to confirm']
+            : !isTicket && item.status === 'confirmed' && unpaid ? ['tone-success', 'Confirmed · Not paid yet']
+            : STATUS[item.status] || ['tone-neutral', item.status];
         const date = isTicket ? item.visitDate : item.preferredDate;
         const details = isTicket ? [
             row('Ticket code', `<span class="font-mono">${esc(item.code)}</span>`),
@@ -408,8 +413,9 @@ body { overflow-x: hidden; }
             row('Destination', esc(item.spot && item.spot.title)),
             row('Date and time', `${niceDate(date)} · ${esc(item.preferredTime)}`),
             row('Visitors', esc(item.visitors)),
-            row('Guide', item.guide ? esc(item.guide) : `Not yet confirmed${item.requestedGuide ? ` (you asked for ${esc(item.requestedGuide)})` : ''}`)
+            row('Guide', item.guide ? esc(item.guide) : `To be confirmed within ${esc(item.replyTime || '1 working day')}${item.requestedGuide ? ` (you asked for ${esc(item.requestedGuide)})` : ''}`)
         ];
+        if (!isTicket && !item.paid && ['pending_payment', 'confirmed'].includes(item.status)) details.push(row('Payment', 'Not paid yet'));
         if (item.paid) {
             details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online' : ' · at the office'}`));
             if (item.paid.refundedAt) details.push(row('Refunded', peso(item.paid.refundAmount)));
@@ -429,13 +435,13 @@ body { overflow-x: hidden; }
                 <p id="moveNote" class="text-support">${isTicket ? 'The price and the ticket code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
             </form>` : '';
         // A guide booking nobody has paid for yet: the way to pay, first.
-        const needsPaying = !isTicket && item.status === 'pending_payment' && !item.paid;
+        const needsPaying = !isTicket && ['pending_payment', 'confirmed'].includes(item.status) && !item.paid;
         const payForm = needsPaying ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Pay for this booking</h2>
                 <p class="text-sm text-on-surface-variant">${payOnline
-                    ? 'Pay online now, or pay onsite at the Municipal Tourism Office.'
-                    : 'Pay onsite at the Municipal Tourism Office to confirm your booking.'}</p>
+                    ? 'Pay onsite at the Municipal Tourism Office on the day, before the tour, or online now.'
+                    : 'Pay onsite at the Municipal Tourism Office on the day, before the tour.'}</p>
                 ${payOnline ? `<button type="button" id="payNowBtn" class="btn btn-pill btn-primary min-h-[44px]">
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">payments</span>Pay online now</button>` : ''}
             </div>` : '';

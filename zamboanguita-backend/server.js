@@ -28,6 +28,7 @@ const {
     FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
 } = require('./models');
 const { forgetOldVisitors } = require('./privacy');
+const { remindTomorrowsTours } = require('./reminders');
 const { passwordProblem, generatePassword } = require('./passwords');
 const mailer = require('./mailer');
 
@@ -2930,8 +2931,9 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
             booking: publicBookingView(booking, spot.title),
             requestedGuide: requested ? { fullName: requested.fullName, guideFee: Number(requested.guideFee) || 0 } : null,
             instruction: paymentsGatewayOnline()
-                ? 'Pay online now, or at the Municipal Tourism Office, to confirm the booking.'
-                : 'Please proceed to the Municipal Tourism Office to complete payment and confirmation.',
+                ? `The office confirms your guide within ${notices.REPLY_TIME} and emails you. Pay online now, or pay onsite on the day.`
+                : `The office confirms your guide within ${notices.REPLY_TIME} and emails you. Pay onsite on the day.`,
+            replyTime: notices.REPLY_TIME,
             payOnline: paymentsGatewayOnline()
         });
     } catch (error) {
@@ -2961,7 +2963,8 @@ app.get('/api/guide-bookings/reference/:reference', async (req, res) => {
 
 /* ---- everything below is the Tourism Office's ---------------------------- */
 
-/* Visitors' personal details are erased a year after the visit (privacy.js).
+/* Visitors' personal details are erased a year after the visit (privacy.js),
+   and tomorrow's confirmed tours are reminded (reminders.js).
    Vercel's cron calls this daily with CRON_SECRET; without it the route does
    not exist. The officer opening Guide Bookings runs it too (below). */
 app.get('/api/maintenance/privacy', async (req, res) => {
@@ -2972,7 +2975,10 @@ app.get('/api/maintenance/privacy', async (req, res) => {
         && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(wanted));
     if (!matches) return res.status(404).end();
     try {
-        return res.json({ success: true, erased: await forgetOldVisitors() });
+        const erased = await forgetOldVisitors();
+        // The same daily run reminds tomorrow's confirmed tours.
+        const reminders = await remindTomorrowsTours(originOf(req));
+        return res.json({ success: true, erased, reminders });
     } catch (error) {
         console.error('❌ Privacy clean-up failure:', error);
         return res.status(500).json({ success: false });
@@ -2983,6 +2989,7 @@ app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
     try {
         // Old visitors' details go before the office reads the list.
         await forgetOldVisitors().catch(error => console.error('❌ Privacy clean-up failure:', error));
+        await remindTomorrowsTours(originOf(req)).catch(error => console.error('❌ Tour reminder failure:', error));
         const query = {};
         if (BOOKING_STATUSES.includes(req.query.status)) query.status = req.query.status;
 
@@ -3019,6 +3026,11 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
 
         if (req.body.guideId === null || req.body.guideId === '') {
             booking.guideId = null;
+            // Confirmed by its guide alone (nothing paid): back to the office.
+            if (booking.status === 'confirmed' && !(await Payment.findOne({ bookingId: booking._id }))) {
+                booking.status = 'pending_payment';
+                booking.statusUpdatedAt = new Date();
+            }
             await GuideBooking.save(booking);
             return res.status(200).json({ success: true, message: 'Guide unassigned.', booking });
         }
@@ -3058,7 +3070,16 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
             });
         }
 
+        if (!['pending_payment', 'confirmed'].includes(booking.status)) {
+            return res.status(409).json({ success: false, message: `${booking.reference} is ${String(booking.status).replace('_', ' ')}, so it takes no guide.` });
+        }
         booking.guideId = guide._id;
+        // Confirm first, pay later: giving a booking its guide confirms it. The
+        // visitor pays onsite on the day, or online before.
+        if (booking.status === 'pending_payment') {
+            booking.status = 'confirmed';
+            booking.statusUpdatedAt = new Date();
+        }
         await GuideBooking.save(booking);
 
         const sameDay = await GuideBooking.find({
@@ -3177,16 +3198,19 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
             }
         }
 
-        // Confirmed means paid, and payment is a separate record that this route
-        // does not create. Recording the payment is what confirms a booking.
+        // Confirmed means the office gave it a guide, or it is paid.
         if (status === 'confirmed') {
             const paid = await Payment.findOne({ bookingId: booking._id });
-            if (!paid) {
+            if (!paid && !booking.guideId) {
                 return res.status(409).json({
                     success: false,
-                    message: 'Record the onsite payment to confirm this booking.'
+                    message: 'Assign a guide to confirm this booking.'
                 });
             }
+        }
+        // A tour is completed once its fee is in.
+        if (status === 'completed' && !(await Payment.findOne({ bookingId: booking._id }))) {
+            return res.status(409).json({ success: false, message: 'Record the payment before marking the tour completed.' });
         }
 
         booking.status = status;

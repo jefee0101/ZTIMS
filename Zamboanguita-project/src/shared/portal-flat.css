@@ -216,7 +216,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .tk-row { display: grid; grid-template-columns: 9rem 1fr auto; gap: .75rem 1rem; align-items: center; padding: .75rem 1.25rem; }
 .tk-row__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; color: rgb(var(--ztims-on-surface)); letter-spacing: .04em; }
 .tk-row__who { min-width: 0; display: flex; flex-direction: column; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
-.tk-row__status { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: flex-end; }
+.tk-row__status { display: flex; flex-wrap: wrap; gap: .3rem .5rem; justify-content: flex-end; align-items: center; }
 .pay-row { display: grid; grid-template-columns: 1fr 7rem 15rem; gap: .5rem 1.25rem; align-items: center; padding: .9rem 1.25rem; }
 .pay-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
 .pay-row__body { min-width: 0; display: flex; flex-direction: column; gap: .25rem; }

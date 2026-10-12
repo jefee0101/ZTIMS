@@ -639,6 +639,11 @@ alter table public.guide_bookings add column if not exists is_demo boolean not n
 alter table public.guide_bookings add column if not exists requested_guide_id text
     references public.tourist_guides (id) on delete set null;
 
+-- Confirm first, pay later: the office confirms a booking by giving it a guide,
+-- and the visitor pays onsite on the day or online. The day before a confirmed
+-- tour the visitor is reminded by email, once (reminders.js).
+alter table public.guide_bookings add column if not exists reminder_sent_at timestamptz;
+
 -- An entrance ticket: one date, one attraction, a number of people.
 create table if not exists public.tickets (
     id                  text primary key default public.ztims_new_id(),

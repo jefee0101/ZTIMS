@@ -30,7 +30,12 @@ async function ticketRow(ticketId) {
 async function bookingRow(bookingId) {
     const { rows } = await query(`
         select b.*, s.title as spot_title, g.full_name as guide_name, rg.full_name as requested_name, rg.guide_fee as requested_fee,
-               p.amount as paid_amount, p.method as paid_method, p.channel as paid_channel, p.receipt_number
+               p.amount as paid_amount, p.method as paid_method, p.channel as paid_channel, p.receipt_number,
+               -- What is due if unpaid: the guide's fee, else the one asked for,
+               -- else the lowest here (the same rule as payments.js's bookingFee).
+               coalesce(g.guide_fee, rg.guide_fee,
+                        (select min(tg.guide_fee) from tourist_guides tg join tourist_guide_spots ts on ts.guide_id = tg.id
+                          where ts.spot_id = b.spot_id and tg.status = 'available')) as fee_due
           from guide_bookings b join spots s on s.id = b.spot_id
           left join tourist_guides g on g.id = b.guide_id
           left join tourist_guides rg on rg.id = b.requested_guide_id
@@ -97,6 +102,14 @@ async function ticketCancelled(ticketId, { refundAmount, keptAmount = 0, byVisit
 
 /* ---------------------------------------------------------------- guide bookings */
 
+// How soon the office answers a booking: on the booking form, the Manage page
+// and these emails.
+const REPLY_TIME = '1 working day';
+
+// Confirm first, pay later: what an unpaid booking still has to do.
+const payLater = () => 'Pay onsite at the Municipal Tourism Office on the day, before the tour, or online from the Manage page.';
+const paymentRow = b => ['Payment', b.paid_amount != null ? `Paid · ${paidLine(b)}` : `Not paid yet${b.fee_due != null ? ` · ${pesos(b.fee_due)}` : ''}`];
+
 function bookingRows(b) {
     const rows = [
         ['Reference', b.reference],
@@ -114,13 +127,13 @@ async function bookingReceived(bookingId, origin, { payOnline } = {}) {
     if (!b) return { sent: false, reason: 'not_found' };
     const body = compose({
         heading: 'We have your guide booking',
-        intro: `Thank you. Booking ${b.reference} is saved. It is confirmed once it is paid.`,
+        intro: `Thank you. Booking ${b.reference} is received. The Municipal Tourism Office confirms your guide within ${REPLY_TIME} and emails you.`,
         rows: bookingRows(b),
         paragraphs: [
             payOnline
-                ? 'Pay online from the Manage page, or onsite at the Municipal Tourism Office. Quote your reference.'
-                : 'Please pay at the Municipal Tourism Office. Quote your reference.',
-            'The office confirms your guide. You can move the date or cancel until 11:59 PM the day before.'
+                ? 'You do not need to pay now. Pay onsite at the Municipal Tourism Office on the day, or online from the Manage page. Quote your reference.'
+                : 'You do not need to pay now. Pay onsite at the Municipal Tourism Office on the day. Quote your reference.',
+            'You can move the date or cancel until 11:59 PM the day before.'
         ],
         link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
     });
@@ -131,8 +144,10 @@ async function bookingPaid(bookingId, origin) {
     const b = await bookingRow(bookingId);
     if (!b || b.paid_amount == null) return { sent: false, reason: 'not_found' };
     const body = compose({
-        heading: 'Payment received — your booking is confirmed',
-        intro: `Booking ${b.reference} is paid and confirmed. The office ${b.guide_name ? 'has assigned your guide' : 'will confirm your guide'}.`,
+        heading: 'Payment received',
+        intro: b.guide_name
+            ? `Booking ${b.reference} is paid. Your tour is confirmed with ${b.guide_name}.`
+            : `Booking ${b.reference} is paid. The office confirms your guide within ${REPLY_TIME}.`,
         rows: [...bookingRows(b), ['Paid', paidLine(b)], ...(b.receipt_number ? [['Official receipt', b.receipt_number]] : [])],
         link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
     });
@@ -143,12 +158,33 @@ async function guideAssigned(bookingId, origin) {
     const b = await bookingRow(bookingId);
     if (!b || !b.guide_name) return { sent: false, reason: 'not_found' };
     const body = compose({
-        heading: `Your guide is ${b.guide_name}`,
-        intro: `The Municipal Tourism Office has confirmed ${b.guide_name} as your guide for booking ${b.reference}.`,
-        rows: bookingRows(b),
+        heading: 'Your tour is confirmed',
+        intro: `The Municipal Tourism Office has confirmed booking ${b.reference}. Your guide is ${b.guide_name}.`,
+        rows: [...bookingRows(b), paymentRow(b)],
+        paragraphs: [
+            ...(b.paid_amount == null ? [payLater()] : []),
+            'You can move the date or cancel until 11:59 PM the day before.'
+        ],
         link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
     });
-    return sendMail({ to: b.email, subject: `Your guide for ${b.reference}: ${b.guide_name}`, ...body });
+    return sendMail({ to: b.email, subject: `Tour confirmed: ${b.reference} with ${b.guide_name}`, ...body });
+}
+
+/* The day before a confirmed tour (reminders.js sends it once). */
+async function tourReminder(bookingId, origin) {
+    const b = await bookingRow(bookingId);
+    if (!b || !b.email) return { sent: false, reason: 'not_found' };
+    const body = compose({
+        heading: `Your tour is tomorrow, ${niceDate(b.preferred_date)}`,
+        intro: `A reminder of booking ${b.reference}: ${b.spot_title} at ${b.preferred_time}${b.guide_name ? `, with ${b.guide_name}` : ''}.`,
+        rows: [...bookingRows(b), paymentRow(b)],
+        paragraphs: [
+            ...(b.paid_amount == null ? [payLater()] : []),
+            'If plans change, please tell the Municipal Tourism Office.'
+        ],
+        link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
+    });
+    return sendMail({ to: b.email, subject: `Tomorrow: your tour at ${b.spot_title} (${b.reference})`, ...body });
 }
 
 async function bookingMoved(bookingId, from, origin) {
@@ -156,7 +192,7 @@ async function bookingMoved(bookingId, from, origin) {
     if (!b) return { sent: false, reason: 'not_found' };
     const body = compose({
         heading: 'Your booking has a new date',
-        intro: `Booking ${b.reference} is now for ${niceDate(b.preferred_date)} at ${b.preferred_time} (it was ${niceDate(from.date)} at ${from.time}). The office will confirm your guide for the new date.`,
+        intro: `Booking ${b.reference} is now for ${niceDate(b.preferred_date)} at ${b.preferred_time} (it was ${niceDate(from.date)} at ${from.time}). The office confirms your guide for the new date within ${REPLY_TIME}.`,
         rows: bookingRows(b),
         link: { label: 'Manage my booking', url: manageUrl(origin, b.reference) }
     });
@@ -205,7 +241,7 @@ async function closureNotice(kind, id, { reason }, origin) {
 }
 
 module.exports = {
-    manageUrl, siteUrl, closureNotice,
+    REPLY_TIME, manageUrl, siteUrl, closureNotice, tourReminder,
     ticketReceipt, ticketMoved, ticketCancelled,
     bookingReceived, bookingPaid, guideAssigned, bookingMoved, bookingCancelled
 };

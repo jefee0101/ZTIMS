@@ -715,9 +715,13 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
 - **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Let
   them in), then "Tickets for
-  today" (or the chosen date) with counts that filter (All, Not yet used, Let
-  in, Cancelled or closed) and one box per place ("6 of 8 people let in") with
-  a row per ticket (`.tk-row`: code, name and people, status pill).
+  today" (or the chosen date) with counts that filter (All, Not yet used, Used,
+  Cancelled or closed) and one box per place ("6 of 8 people let in") with
+  a row per ticket (`.tk-row`: code, name and people, status pill). A valid
+  ticket for today or a day gone by has **Mark used** (a check, asked once):
+  most places have no entrance or staff, so the office ticks it afterwards
+  (the user's decision; `POST /api/tickets/:id/admit` takes any day up to
+  today, never a later one).
 - **Collections** (`admin_collections.html`): title with the online-payments
   pill, month and Excel beside it; four tiles (Collected, Guide fees, Entrance
   fees, Waiting for an OR in red when any); Payments as counts that filter (All,
@@ -730,16 +734,35 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 
 ### The officer's Guide Bookings (`admin_bookings.html`)
 
+**Confirm first, pay later** (the program chair's request, October 2026: a
+tourist books from abroad and is confirmed before arriving). A booking arrives
+as `pending_payment` (shown "To confirm"; the status name is kept for old
+data); the office confirms it by giving it a guide (`PATCH …/assign` sets
+`confirmed`; taking the guide off an unpaid one puts it back), within **1
+working day** (`REPLY_TIME` in `notices.js`, said on the booking form, the
+Manage page and the emails). Payment comes after: onsite at the Municipal
+Tourism Office on the day, or online at any time (`…/checkout` takes a
+pending or confirmed unpaid booking). A payment still confirms a booking too
+(a paid one waits for its guide as before). Completed needs the payment
+recorded. A visitor moving an unpaid booking sends it back to To confirm. The
+day before a confirmed tour the visitor gets a reminder email, once
+(`reminders.js`, `guide_bookings.reminder_sent_at`, run by the daily cron and
+when the officer opens Guide Bookings; a database without the column skips
+reminders and logs it).
+
 Title and one search (reference, name, phone, destination), then the steps as
-tabs with counts: Collect payment, Assign a guide, Upcoming tours, All bookings
-(the Dashboard still opens a tab through `bookingsTab`). No explainer, no
+tabs with counts: To confirm (no guide yet), Upcoming tours (confirmed, from
+today), After the tour (confirmed, date passed), All bookings
+(the Dashboard still opens a tab through `bookingsTab`; the old `pay` / `assign`
+keys open To confirm). No explainer, no
 Refresh. Each booking is one row (`.bk-row` in `portal-flat.css`): the date
 large on the left (red once it has passed while the booking is still open),
 the visitor's name and reference, destination · visitors · country · phone,
 the guide (or who was asked for), the payment (no cents), the visitor's note
-highlighted, and pills (Today / In n days / Date passed, No OR yet, No guide
-available, Demo). One main button per step — **Record payment**, **Assign
-guide** (or Tourist Guides when none can take it), **Completed** — opens a
+highlighted, and pills (Today / In n days / Date passed, Not paid yet, No OR
+yet, No guide available, Demo). One main button per step — **Confirm with a
+guide** (or Tourist Guides when none can take it); on a tour, **Record
+payment** while unpaid, then **Completed** — opens a
 small `ztimsDialog` window (`type: 'select'` fields were added to
 `ztims-dialog.js` for this); the ⋯ menu holds Details, No show, Change guide,
 and Cancel / Cancel and refund in red. All bookings filters by status with
@@ -862,10 +885,11 @@ Frontend only, no tables of their own:
 - **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
   number with its label under it, joined by a line; done green with a tick,
   current solid burnt orange): booking a guide is Your details → Pick a guide
-  → Payment (or Pay onsite) → Confirmed — the form has two panes
+  → Request sent → Confirmed — the form has two panes
   (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
   guides free for that date, time and group, and Submit), then the reference
-  with Pay online now or the onsite note. Step 1 asks "Your visit" (date, start
+  with "Next: the office confirms your guide — within 1 working day, by email.
+  No need to pay now" and Pay online now when online. Step 1 asks "Your visit" (date, start
   time, visitors) before "Your details". The ticket window follows the same
   pattern: price line, Your visit (date; who is coming, one row per kind with a
   − / + stepper), Your details (name, email), a summary of lines and the total,
@@ -894,8 +918,10 @@ Frontend only, no tables of their own:
   only say "we have emailed you" when the server says it went (`emailed`).
   `MAIL_TRANSPORT=file:/path` writes messages to a file, for local tests only.
 - **`notices.js`** writes each email from the database: ticket receipt (the ticket
-  code, to show on the email or a screenshot), booking received, booking
-  paid, guide confirmed, moved, cancelled, and (closures) the office's notice.
+  code, to show on the email or a screenshot), booking received (the reply
+  time; no need to pay now), booking paid, tour confirmed (the guide, and "Not
+  paid yet · ₱…" with how to pay), the day-before reminder (`tourReminder`),
+  moved, cancelled, and (closures) the office's notice.
   An online payment's receipt is sent only by the call that recorded it
   (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
   send two. Links carry the code, never the email address.
@@ -994,8 +1020,9 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   emails from guide bookings and tickets a year after the visit, and from
   feedback a year after it was resolved; dates, counts, countries, amounts and
   OR numbers stay. Run daily by Vercel's cron (`vercel.json` →
-  `GET /api/maintenance/privacy`, which needs `CRON_SECRET`) and whenever the
-  officer opens Guide Bookings. The Privacy page says so.
+  `GET /api/maintenance/privacy`, which needs `CRON_SECRET`, 2 AM Manila; the
+  same run sends tomorrow's tour reminders) and whenever the officer opens
+  Guide Bookings. The Privacy page says so.
 - **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
   refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
   falls on it, and names the bookings: the office reassigns them first.
@@ -1165,7 +1192,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   Municipal Tourism Office always stays available. Collecting real fees would need a
   municipal ordinance, the Municipal Treasurer, a merchant account in the
   municipality's name and COA-compliant official receipts — don't switch it to
-  live keys.
+  live keys. (Saved at the user's request, October 2026, as a known limit to
+  state in the manuscript.)
+- Guide bookings are confirmed first and paid later (see "The officer's Guide
+  Bookings"): the office answers within 1 working day, the visitor is reminded
+  the day before, and payment is never needed to be confirmed. Don't make
+  payment the step that confirms a booking again.
+- Tickets have no QR code: the ticket code is shown and typed. Where nobody
+  stands at the entrance, the office marks tickets used from the day's list.
 - Tourism records (spots/listings) are never hard-deleted, only marked
   inactive. Statistics reports likewise: voided, never deleted.
 - Tourism statistics hold counts and totals only — no revenue and no

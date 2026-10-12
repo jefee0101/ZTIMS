@@ -413,8 +413,8 @@ body { overflow-x: hidden; }
             <p id="bookingReference" class="text-2xl font-display font-black text-primary tracking-wider select-all"></p>
             <p class="text-support">Keep this reference.</p>
             <p id="bookingNextStep" class="text-sm text-on-surface bk-summary text-left">
-                <b class="block mb-1">Next: pay onsite</b>
-                Pay at the Municipal Tourism Office to confirm your booking. The office assigns your guide.
+                <b class="block mb-1">Next: the office confirms your guide</b>
+                <span id="bookingReplyLine">Within 1 working day, by email.</span> No need to pay now: pay onsite at the Municipal Tourism Office on the day, before the tour<span id="bookingOrOnline" hidden>, or online now</span>.
             </p>
             <!-- Online payment (Xendit). -->
             <div id="bookingPayOnline" hidden class="space-y-2">
@@ -1099,7 +1099,9 @@ body { overflow-x: hidden; }
         const box = document.getElementById('bookingPayOnline');
         const next = document.getElementById('bookingNextStep');
         box.hidden = !data.payOnline;
-        next.hidden = Boolean(data.payOnline);
+        next.hidden = false;
+        if (data.replyTime) document.getElementById('bookingReplyLine').textContent = `Within ${data.replyTime}, by email.`;
+        document.getElementById('bookingOrOnline').hidden = !data.payOnline;
         if (!data.payOnline) return;
         const button = document.getElementById('bookingPayOnlineBtn');
         const error = document.getElementById('bookingPayError');
@@ -1748,7 +1750,9 @@ body { overflow-x: hidden; }
     }
     function setBookingStep(current, payOnline) {
         const list = document.getElementById('bookSteps');
-        if (list) list.innerHTML = journeySteps(['Your details', 'Pick a guide', payOnline ? 'Payment' : 'Pay onsite', 'Confirmed'], current);
+        // Confirm first, pay later: the office confirms, then the visitor pays
+        // onsite on the day (or online whenever they like).
+        if (list) list.innerHTML = journeySteps(['Your details', 'Pick a guide', 'Request sent', 'Confirmed'], current);
     }
 
     // What this destination lets a visitor do, and the buttons for it: under the

@@ -818,30 +818,34 @@ body { overflow-x: hidden; }
             const due = d.reports;
             const count = (list, test) => (list ? list.filter(test).length : null);
 
-            const unpaid = count(b, x => x.status === 'pending_payment');
-            const noGuide = count(b, x => x.status === 'confirmed' && !x.guideId);
-            const pastOpen = count(b, x => x.status === 'confirmed' && dayKey(x.preferredDate) < today.key);
-            const firstNoGuide = b && b.filter(x => x.status === 'confirmed' && !x.guideId)
+            // Confirm first, pay later: a booking is confirmed by giving it a
+            // guide, and paid onsite on the day (or online before).
+            const live = x => ['pending_payment', 'confirmed'].includes(x.status);
+            const unpaid = x => !(x.payment && !x.payment.refundedAt);
+            const toConfirm = count(b, x => live(x) && !x.guideId);
+            const unpaidToday = count(b, x => x.status === 'confirmed' && x.guideId && unpaid(x) && dayKey(x.preferredDate) === today.key);
+            const pastOpen = count(b, x => x.status === 'confirmed' && x.guideId && dayKey(x.preferredDate) < today.key);
+            const firstNoGuide = b && b.filter(x => live(x) && !x.guideId)
                 .sort((p, q) => dayKey(p.preferredDate).localeCompare(dayKey(q.preferredDate)))[0];
 
             const cards = [
-                { icon: 'payments', tone: 'tone-warning', pill: 'Waiting', count: unpaid,
-                  one: 'visitor waiting to pay', many: 'visitors waiting to pay',
-                  detail: '',
-                  doneText: 'Nobody is waiting to pay.', go: 'Collect payment',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'pay' },
-                { icon: 'person_add', tone: 'tone-warning', pill: 'To do', count: noGuide,
-                  one: 'paid booking needs a guide', many: 'paid bookings need a guide',
+                { icon: 'person_add', tone: 'tone-warning', pill: 'Within 1 working day', count: toConfirm,
+                  one: 'booking to confirm', many: 'bookings to confirm',
                   detail: firstNoGuide
                       ? `Next: ${firstNoGuide.spotId?.title || 'a destination'} · ${friendlyDay(firstNoGuide.preferredDate)} · ${firstNoGuide.visitors} ${plural(Number(firstNoGuide.visitors), 'visitor', 'visitors')}.`
-                      : 'Paid bookings with nobody assigned yet.',
-                  doneText: 'Every paid booking has a guide.', go: 'Assign a guide',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'assign' },
+                      : 'Give each a guide to confirm it.',
+                  doneText: 'Every booking is confirmed.', go: 'Confirm bookings',
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'confirm' },
+                { icon: 'payments', tone: 'tone-warning', pill: 'Today', count: unpaidToday,
+                  one: 'tour today not paid yet', many: 'tours today not paid yet',
+                  detail: 'Collect the guide fee onsite before the tour.',
+                  doneText: 'Every tour today is paid.', go: 'Record payment',
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'upcoming' },
                 { icon: 'schedule', tone: 'tone-danger', pill: 'Overdue', count: pastOpen,
                   one: 'past tour not closed', many: 'past tours not closed',
                   detail: 'The tour date has passed. Mark each Completed or No show.',
                   doneText: 'Every past tour is closed.', go: 'Close them',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'upcoming' },
+                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'after' },
                 { icon: 'description', tone: due && due.overdue ? 'tone-danger' : 'tone-warning',
                   pill: due ? (due.overdue ? 'Overdue' : `Due ${due.dueShort}`) : '',
                   count: due ? due.missing.length : null,

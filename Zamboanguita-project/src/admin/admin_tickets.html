@@ -557,7 +557,7 @@ body { overflow-x: hidden; }
                 <div id="ticketFilter" class="dest-chips" role="group" aria-label="Show">
                     <button type="button" data-show="all" aria-pressed="true">All <b id="countAll">0</b></button>
                     <button type="button" data-show="waiting" aria-pressed="false">Not yet used <b id="countWaiting">0</b></button>
-                    <button type="button" data-show="used" aria-pressed="false">Let in <b id="countUsed">0</b></button>
+                    <button type="button" data-show="used" aria-pressed="false">Used <b id="countUsed">0</b></button>
                     <button type="button" data-show="other" aria-pressed="false" class="dest-chips__warn">Cancelled or closed <b id="countOther">0</b></button>
                 </div>
                 <div id="ticketList" class="space-y-4"></div>
@@ -672,7 +672,7 @@ body { overflow-x: hidden; }
         /* ---- the day's list ----------------------------------------------- */
 
         const STATUS = {
-            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Let in'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired'],
+            valid: ['tone-success', 'Not yet used'], used: ['tone-info', 'Used'], cancelled: ['tone-danger', 'Cancelled'], expired: ['tone-neutral', 'Expired'],
             closed: ['tone-warning', 'Closed, visitor to choose']
         };
 
@@ -715,7 +715,6 @@ body { overflow-x: hidden; }
                 if (!bySpot.has(t.spot)) bySpot.set(t.spot, []);
                 bySpot.get(t.spot).push(t);
             }
-            const past = date < today;
             box.innerHTML = [...bySpot.entries()].map(([spot, list]) => {
                 const all = tickets.filter(t => t.spot === spot && t.status !== 'cancelled');
                 const people = all.reduce((a, t) => a + t.people, 0);
@@ -727,14 +726,19 @@ body { overflow-x: hidden; }
                         <p class="text-sm text-on-surface"><b>${inside}</b> of <b>${people}</b> ${people === 1 ? 'person' : 'people'} let in</p>
                     </div>
                     <div class="divide-y divide-outline-variant/20 border-t border-outline-variant/30">${list.map(t => {
-                        const [tone, label] = t.status === 'valid' && past ? STATUS.expired : (STATUS[t.status] || ['tone-neutral', t.status]);
+                        const [tone, label] = STATUS[t.status] || ['tone-neutral', t.status];
+                        // No one at the entrance (a falls, a beach): the office
+                        // ticks it used, on the day or after.
+                        const canMark = t.status === 'valid' && date <= today;
                         return `<div class="tk-row">
                             <span class="tk-row__code">${escapeHtml(t.code)}</span>
                             <span class="tk-row__who"><b>${escapeHtml(t.name)}</b>
                                 <span class="text-support">${t.people} ${t.people === 1 ? 'person' : 'people'}${t.kindsText ? ` · ${escapeHtml(t.kindsText)}` : ''}</span></span>
                             <span class="tk-row__status">
                                 ${t.isDemo ? '<span class="tone-warning tone-pill rounded-pill text-[11px] font-bold px-2 py-0.5">Demo</span>' : ''}
-                                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">${label}${t.status === 'used' && t.usedAt ? ` · ${timeOf(t.usedAt)}` : ''}</span></span>
+                                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-2.5 py-0.5">${label}${t.status === 'used' && t.usedAt ? ` · ${timeOf(t.usedAt)}` : ''}</span>
+                                ${canMark ? `<button type="button" class="btn btn-secondary btn-sm rounded-pill" data-mark="${escapeHtml(t._id)}">
+                                    <span class="material-symbols-outlined !text-base" aria-hidden="true">check</span> Mark used</button>` : ''}</span>
                         </div>`;
                     }).join('')}</div>
                 </div>`;
@@ -759,6 +763,24 @@ body { overflow-x: hidden; }
                 document.querySelectorAll('#ticketFilter [data-show]').forEach(btn =>
                     btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
                 if (dayTickets) renderList();
+            });
+            document.getElementById('ticketList').addEventListener('click', async event => {
+                const btn = event.target.closest('[data-mark]');
+                if (!btn) return;
+                const t = dayTickets && dayTickets.tickets.find(x => x._id === btn.dataset.mark);
+                if (!t) return;
+                const ok = await window.ztimsDialog.confirm({
+                    title: `Mark ${t.code} used?`,
+                    message: `${t.people} ${t.people === 1 ? 'person' : 'people'} · ${t.name} · ${t.spot}. A used ticket can no longer be moved or refunded.`,
+                    confirmLabel: 'Mark used'
+                });
+                if (!ok) return;
+                btn.disabled = true;
+                try {
+                    const r = await api(`/tickets/${t._id}/admit`, 'POST');
+                    showToast(r.message, 'success');
+                    loadList();
+                } catch (e) { showToast(e.message, 'error'); btn.disabled = false; }
             });
             loadList();
             document.getElementById('checkCode').focus();
