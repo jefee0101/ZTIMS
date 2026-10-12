@@ -520,60 +520,42 @@ body { overflow-x: hidden; }
 
     <!-- Main Workspace Container -->
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="p-2 max-w-[1400px] mx-auto space-y-8">
+        <div class="p-2 max-w-[1100px] mx-auto space-y-6">
 
-            <div class="space-y-1">
-                <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                    <span class="text-on-surface-variant">Municipal tourism</span>
-                </nav>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Feedback</h2>
-            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Feedback</h1>
 
-            <!-- The numbers, in one line rather than three cards. -->
-            <p class="text-sm text-on-surface-variant flex flex-wrap gap-x-5 gap-y-1">
-                <span><b id="statNew" class="text-on-surface">—</b> new (not yet opened)</span>
-                <span><b id="statRead" class="text-on-surface">—</b> read, still open</span>
-                <span><b id="statResolved" class="text-on-surface">—</b> resolved</span>
-            </p>
-
-            <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-                <h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest ml-2 flex items-center gap-2 min-w-0">
-                    <span class="material-symbols-outlined text-accent !text-lg shrink-0">forum</span>
-                    <span class="truncate">Messages</span>
-                </h3>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative w-full sm:w-auto">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-lg">search</span>
-                        <input id="feedbackSearch" type="search" placeholder="Search a message, name or email"
-                               class="field !pl-10 w-full sm:w-72"/>
-                    </div>
-                    <select id="feedbackStatusFilter" class="field w-full sm:w-auto">
-                        <option value="open">Open (new and read)</option>
-                        <option value="new">New only</option>
-                        <option value="read">Read only</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="all">Everything</option>
-                    </select>
-                    <select id="feedbackTopicFilter" class="field w-full sm:w-auto">
-                        <option value="all">All topics</option>
-                        <option value="listing">Listing wrong / out of date</option>
-                        <option value="problem">Something not working</option>
-                        <option value="suggestion">Suggestion</option>
-                        <option value="booking">Guide booking</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <button id="refreshFeedbackBtn" class="btn btn-secondary min-h-[44px]">
-                        <span class="material-symbols-outlined !text-base">refresh</span> Refresh
-                    </button>
+            <!-- Counts that filter, the topics, then the search. -->
+            <div class="space-y-3">
+                <div id="feedbackStatusFilter" class="dest-chips" role="group" aria-label="Show">
+                    <button type="button" data-status="open" aria-pressed="true">Open <b data-count="open">0</b></button>
+                    <button type="button" data-status="new" aria-pressed="false" class="dest-chips__warn">New <b data-count="new">0</b></button>
+                    <button type="button" data-status="resolved" aria-pressed="false">Resolved <b data-count="resolved">0</b></button>
+                    <button type="button" data-status="all" aria-pressed="false">All <b data-count="all">0</b></button>
+                </div>
+                <div id="feedbackTopicFilter" class="dest-chips dest-chips--scroll" role="group" aria-label="Topic">
+                    <button type="button" data-topic="all" aria-pressed="true">All topics</button>
+                    <button type="button" data-topic="listing" aria-pressed="false">Listing wrong</button>
+                    <button type="button" data-topic="problem" aria-pressed="false">Something not working</button>
+                    <button type="button" data-topic="suggestion" aria-pressed="false">Suggestion</button>
+                    <button type="button" data-topic="booking" aria-pressed="false">Guide booking</button>
+                    <button type="button" data-topic="other" aria-pressed="false">Other</button>
+                </div>
+                <div class="relative">
+                    <label for="feedbackSearch" class="sr-only">Search messages</label>
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
+                    <input id="feedbackSearch" type="search" placeholder="Search a message, name or email"
+                           class="field !pl-11 w-full min-h-[44px]" autocomplete="off"/>
                 </div>
             </div>
 
-            <!-- Cards, not a table: a message is a paragraph, and a paragraph in a
-                 table cell is either truncated or makes every row a different
-                 height. Each card is the whole message with its actions beneath. -->
-            <div id="feedbackList" class="ztims-stagger space-y-3"></div>
+            <!-- One row per message: the whole message is the important part, so
+                 it is never cut; who sent it and from which page under it. -->
+            <div class="glass-panel">
+                <div id="feedbackList" class="ztims-stagger divide-y divide-outline-variant/20"></div>
+                <p id="feedbackShown" class="px-5 py-3 border-t border-outline-variant/30 text-support"></p>
+            </div>
 
-            <p id="feedbackError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
+            <p id="feedbackError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
         </div>
     </main>
 
@@ -670,17 +652,17 @@ body { overflow-x: hidden; }
             }
         }
 
+        let activeStatus = 'open', activeTopic = 'all';
+
         function renderStats() {
             const by = status => allFeedback.filter(f => f.status === status).length;
-            document.getElementById('statNew').textContent = by('new');
-            document.getElementById('statRead').textContent = by('read');
-            document.getElementById('statResolved').textContent = by('resolved');
+            const n = { open: allFeedback.length - by('resolved'), new: by('new'), resolved: by('resolved'), all: allFeedback.length };
+            document.querySelectorAll('#feedbackStatusFilter [data-count]').forEach(el => { el.textContent = n[el.dataset.count]; });
         }
 
         function visibleFeedback() {
             const query = (document.getElementById('feedbackSearch').value || '').trim().toLowerCase();
-            const status = document.getElementById('feedbackStatusFilter').value;
-            const topic = document.getElementById('feedbackTopicFilter').value;
+            const status = activeStatus, topic = activeTopic;
             return allFeedback.filter(f => {
                 if (status === 'open' ? f.status === 'resolved' : (status !== 'all' && f.status !== status)) return false;
                 if (topic !== 'all' && f.topic !== topic) return false;
@@ -710,47 +692,56 @@ body { overflow-x: hidden; }
             const items = visibleFeedback();
 
             if (items.length === 0) {
-                list.innerHTML = `<div class="ztims-empty">${
-                    allFeedback.length === 0 ? 'No feedback yet. Messages from the public Contact Us page will appear here.' : 'No message matches that filter.'
-                }</div>`;
+                document.getElementById('feedbackShown').textContent = '';
+                list.innerHTML = `<div class="p-4"><div class="ztims-empty">${
+                    allFeedback.length === 0 ? 'No feedback yet.' : 'No message matches.'
+                }</div></div>`;
                 return;
             }
 
+            document.getElementById('feedbackShown').innerHTML = `Showing <b class="text-on-surface">${items.length}</b> of <b class="text-on-surface">${allFeedback.length}</b>`;
             list.innerHTML = items.map(f => {
+                const id = escapeHtml(f._id);
                 const status = STATUS_LABEL[f.status] ? f.status : 'new';
                 const topic = TOPIC_LABEL[f.topic] ? f.topic : 'other';
-                const who = f.name ? escapeHtml(f.name) : '<span class="italic opacity-70">No name given</span>';
+                const who = f.name ? `<b class="text-on-surface">${escapeHtml(f.name)}</b>` : 'No name given';
                 const mail = f.email
-                    ? `<a href="mailto:${escapeHtml(f.email)}" class="text-primary hover:text-accent underline underline-offset-2 break-all">${escapeHtml(f.email)}</a>`
-                    : '<span class="italic opacity-70">no email — cannot reply</span>';
+                    ? `<a href="mailto:${escapeHtml(f.email)}" class="text-primary underline underline-offset-2 break-all">${escapeHtml(f.email)}</a>`
+                    : 'no email, cannot reply';
                 const handled = f.statusUpdatedAt
-                    ? `<span class="text-support">· ${escapeHtml(STATUS_LABEL[status])} ${escapeHtml(formatWhen(f.statusUpdatedAt))}${f.statusUpdatedByEmail ? ' by ' + escapeHtml(f.statusUpdatedByEmail) : ''}</span>`
+                    ? `${escapeHtml(STATUS_LABEL[status])} ${escapeHtml(formatWhen(f.statusUpdatedAt))}${f.statusUpdatedByEmail ? ' by ' + escapeHtml(f.statusUpdatedByEmail) : ''}`
                     : '';
-
-                const actions = status === 'resolved'
-                    ? `<button type="button" class="btn btn-secondary" data-action="read" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">undo</span> Reopen</button>`
-                    : (status === 'new'
-                        ? `<button type="button" class="btn btn-secondary" data-action="read" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">drafts</span> Mark read</button>`
-                        : '') +
-                      `<button type="button" class="btn btn-primary" data-action="resolved" data-id="${escapeHtml(f._id)}"><span class="material-symbols-outlined !text-base">task_alt</span> Mark resolved</button>`;
+                const reply = f.email
+                    ? `<a href="mailto:${escapeHtml(f.email)}?subject=${encodeURIComponent('Re: your message to the Zamboanguita Tourism Office')}"><span class="material-symbols-outlined" aria-hidden="true">reply</span>Reply by email</a>` : '';
+                const main = status === 'resolved'
+                    ? `<button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-action="read" data-id="${id}">Reopen</button>`
+                    : `<button type="button" class="btn btn-primary btn-sm min-h-[40px]" data-action="resolved" data-id="${id}">Mark resolved</button>`;
+                const menu = [
+                    reply,
+                    status === 'new' ? `<button type="button" data-action="read" data-id="${id}"><span class="material-symbols-outlined" aria-hidden="true">drafts</span>Mark read</button>` : ''
+                ].filter(Boolean).join('');
 
                 return `
-                <article class="glass-panel rounded-2xl p-5 sm:p-6 ${status === 'new' ? 'border-l-4 !border-l-amber-400' : ''}">
-                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                            <span class="material-symbols-outlined !text-sm">${TOPIC_ICON[topic]}</span>${escapeHtml(TOPIC_LABEL[topic])}
-                        </span>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLE[status]}">${escapeHtml(STATUS_LABEL[status])}</span>
-                        <span class="text-support ml-auto">${escapeHtml(formatWhen(f.createdAt))}</span>
-                    </div>
-                    <p class="text-on-surface whitespace-pre-line break-words leading-relaxed">${escapeHtml(f.message)}</p>
-                    <div class="mt-4 pt-4 border-t border-outline-variant/20 flex flex-col lg:flex-row lg:items-end gap-4">
-                        <div class="flex-1 space-y-1 text-sm text-on-surface-variant">
-                            <p><span class="text-label font-bold uppercase tracking-widest mr-2">From</span>${who} <span class="opacity-60">·</span> ${mail}</p>
-                            ${f.page ? `<p><span class="text-label font-bold uppercase tracking-widest mr-2">Page</span>${pageLink(f.page)}</p>` : ''}
-                            ${handled ? `<p>${handled}</p>` : ''}
+                <article class="fb-row${status === 'new' ? ' is-new' : ''}">
+                    <span class="fb-row__icon" aria-hidden="true"><span class="material-symbols-outlined">${TOPIC_ICON[topic]}</span></span>
+                    <div class="dest-row__body">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="dest-row__name">${escapeHtml(TOPIC_LABEL[topic])}</h3>
+                            <span class="${STATUS_STYLE[status]} rounded-pill text-xs font-bold px-2.5 py-0.5">${escapeHtml(STATUS_LABEL[status])}</span>
+                            <span class="text-support">${escapeHtml(formatWhen(f.createdAt))}</span>
                         </div>
-                        <div class="flex flex-wrap gap-2 shrink-0">${actions}</div>
+                        <p class="fb-row__message">${escapeHtml(f.message)}</p>
+                        <p class="dest-row__facts">From ${who} · ${mail}</p>
+                        ${f.page ? `<p class="dest-row__facts">Sent from ${pageLink(f.page)}</p>` : ''}
+                        ${handled ? `<p class="dest-row__facts">${handled}</p>` : ''}
+                    </div>
+                    <div class="dest-row__actions">
+                        ${main}
+                        ${menu ? `<div class="relative">
+                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for this message"
+                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>${menu}</div>
+                        </div>` : ''}
                     </div>
                 </article>`;
             }).join('');
@@ -759,7 +750,7 @@ body { overflow-x: hidden; }
         async function setStatus(id, status, button) {
             const originalHTML = button.innerHTML;
             button.disabled = true;
-            button.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span> Saving…';
+            if (button.classList.contains('btn')) button.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent animate-spin"></span> Saving…';
             try {
                 const response = await fetch(`${API_BASE}/feedback/${encodeURIComponent(id)}/status`, {
                     method: 'PATCH',
@@ -785,9 +776,40 @@ body { overflow-x: hidden; }
         function wire() {
             mountPortalAccountMenu();
             document.getElementById('feedbackSearch').addEventListener('input', renderList);
-            document.getElementById('feedbackStatusFilter').addEventListener('change', renderList);
-            document.getElementById('feedbackTopicFilter').addEventListener('change', renderList);
-            document.getElementById('refreshFeedbackBtn').addEventListener('click', loadFeedback);
+            document.getElementById('feedbackStatusFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-status]');
+                if (!chip) return;
+                activeStatus = chip.dataset.status;
+                document.querySelectorAll('#feedbackStatusFilter [data-status]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.status === activeStatus)));
+                renderList();
+            });
+            document.getElementById('feedbackTopicFilter').addEventListener('click', event => {
+                const chip = event.target.closest('[data-topic]');
+                if (!chip) return;
+                activeTopic = chip.dataset.topic;
+                document.querySelectorAll('#feedbackTopicFilter [data-topic]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.topic === activeTopic)));
+                renderList();
+            });
+
+            // The ⋯ menu on each row: one open at a time; a click elsewhere or
+            // Escape closes it.
+            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
+                if (menu === except) return;
+                menu.hidden = true;
+                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
+                if (opener) opener.setAttribute('aria-expanded', 'false');
+            });
+            document.addEventListener('click', event => {
+                const opener = event.target.closest('[data-more]');
+                if (opener) {
+                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
+                    closeMenus(menu);
+                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
+                    return;
+                }
+                closeMenus();
+            });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
 
             // One listener for every card's buttons, so re-rendering the list
             // never leaves a button unwired.

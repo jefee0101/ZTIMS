@@ -280,3 +280,16 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .bk-row { grid-template-columns: 3.75rem 1fr; padding: .9rem 1rem; }
     .bk-row .dest-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
+
+/* ---- The officer's Feedback: one row per message ---------------------------
+   The topic's icon, then the topic, status and when; the whole message; who
+   sent it and from which page. A new message has a tangerine edge. */
+.fb-row { display: grid; grid-template-columns: 2.5rem 1fr auto; gap: 1rem; align-items: start; padding: 1rem 1.25rem; }
+.fb-row.is-new { box-shadow: inset 4px 0 0 rgb(var(--brand-tangerine)); }
+.fb-row__icon { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center;
+                background: rgb(var(--ztims-secondary) / .2); color: rgb(var(--ztims-on-surface)); }
+.fb-row__message { color: rgb(var(--ztims-on-surface)); white-space: pre-line; overflow-wrap: anywhere; line-height: 1.55; margin: .15rem 0 .25rem; }
+@media (max-width: 639px) {
+    .fb-row { grid-template-columns: 2.25rem 1fr; padding: .9rem 1rem; }
+    .fb-row .dest-row__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}

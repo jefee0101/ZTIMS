@@ -718,6 +718,17 @@ and Cancel / Cancel and refund in red. All bookings filters by status with
 `.dest-chips` and opens the details window, which keeps every action
 (sentence-case labels, Cancel booking a solid red pill).
 
+### The officer's Feedback (`admin_feedback.html`)
+
+Title; counts that filter (Open — new and read, the default — New in red,
+Resolved, All); topic pills (one scrolling row on a phone); search. One row per
+message (`.fb-row` in `portal-flat.css`): the topic's icon, the topic, status
+pill and when, the whole message (never cut), "From" name · email and "Sent
+from" the page; a new message has a tangerine edge. One main button — **Mark
+resolved**, or **Reopen** once resolved — and a ⋯ menu (Reply by email, a
+`mailto:` with a subject, when there is an email; Mark read for a new one). No
+Refresh.
+
 ### Attraction setup
 
 `attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window
