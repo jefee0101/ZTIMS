@@ -238,3 +238,26 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .pay-facts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem 1rem; }
     .pay-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* ---- Who runs a place: the Tourism Office or a private establishment -------
+   A pill on every place in Statistics (and anywhere a place is listed), and a
+   bar down the row's left edge: tangerine for the office's own places, ink
+   for private ones, so the two read apart at a glance. */
+.own-tag { display: inline-flex; align-items: center; gap: .3rem; font-size: .6875rem; font-weight: 700; line-height: 1;
+           padding: .25rem .55rem; border-radius: 9999px; white-space: nowrap; vertical-align: middle; }
+.own-tag .material-symbols-outlined { font-size: 14px; }
+.own-tag--office { background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); }
+.own-tag--private { background: transparent; color: rgb(var(--ztims-on-surface)); border: 1.5px solid rgb(var(--ztims-on-surface)); }
+.own-row--office > :first-child { box-shadow: inset 4px 0 0 rgb(var(--brand-tangerine)); }
+.own-row--private > :first-child { box-shadow: inset 4px 0 0 rgb(var(--ztims-on-surface)); }
+.own-row--private { background: rgb(var(--ztims-on-surface) / .025); }
+.own-banner { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .75rem 1rem; font-size: .875rem;
+              border: 1px solid rgb(var(--ztims-outline-variant) / .5); }
+.own-banner--office { box-shadow: inset 4px 0 0 rgb(var(--brand-tangerine)); }
+.own-banner--private { box-shadow: inset 4px 0 0 rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-on-surface) / .025); }
+/* Statistics' number tiles (Arrivals Report). */
+.stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+@media (min-width: 1024px) { .stat-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat-tile { border: 1px solid rgb(var(--ztims-outline-variant) / .5); background: rgb(var(--ztims-surface)); padding: .9rem 1rem; }
+.stat-tile p:first-child { font-size: .8125rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
+.stat-tile p:nth-child(2) { font-size: 1.75rem; font-weight: 900; color: rgb(var(--ztims-on-surface)); font-variant-numeric: tabular-nums; }

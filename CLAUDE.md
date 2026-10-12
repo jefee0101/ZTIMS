@@ -551,6 +551,21 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   it as `visits`; the Excel puts it on a second sheet, "Attraction visits", so
   the province's Form A4 sheet is unchanged. When no place to stay reported,
   the page says Parts I and II are empty.
+- **The page's look** (the standard): title only; Arrivals Report has Year /
+  From / To, Generate, Download Excel and **Only countries with arrivals**
+  (ticked by default: a country or region with nobody in those months is left
+  out, totals stay; the Excel always lists all 72 rows), four number tiles
+  (Guest arrivals, Guest nights, Attraction visits, Reports from places to
+  stay), municipal-total and finalized months as pills. Tracker: Year and
+  Places (Places to stay / Attractions), a one-line legend of the cell pills,
+  the on-time / late / missing counts as pills. **Who runs a place** shows
+  everywhere a place is listed in Statistics (the user's decision): `.own-tag`
+  pills in `portal-flat.css` — Tourism Office (tangerine, `account_balance`)
+  or Private (ink outline, `storefront`) — and a bar down the row's left edge
+  (`.own-row--office` tangerine, `.own-row--private` ink with a faint tint);
+  Enter a report shows the same as a banner (`.own-banner`): "The Tourism
+  Office enters this report" or "Entered by <manager>. View only."
+  `formA4()`'s `visits.places` carry `keptByOffice` for this.
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only

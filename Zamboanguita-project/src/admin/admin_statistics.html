@@ -543,11 +543,12 @@ body { overflow-x: hidden; }
                     <label class="block"><span class="field-label">To</span><select id="faTo" class="field w-40"></select></label>
                     <button id="faGenerate" type="button" class="btn btn-primary min-h-[44px]"><span class="material-symbols-outlined !text-base">summarize</span>Generate report</button>
                     <button id="faDownload" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">download</span>Download Excel</button>
+                    <label class="inline-flex items-center gap-2 text-sm font-semibold min-h-[44px] cursor-pointer ml-auto"><input id="faOnlyUsed" type="checkbox" class="accent-primary w-4 h-4" checked> Only countries with arrivals</label>
                 </div>
                 <div id="formA4Host" class="space-y-4"></div>
                 <div class="glass-panel p-4 space-y-3">
                     <h3 class="font-bold">Submitted to the Province?</h3>
-                    <p class="text-support">Finalizing the months marks their reports as submitted, so the figures can no longer be changed. The Tourism Officer can reopen a single report to correct it; every change is recorded.</p>
+                    <p class="text-support">Finalizing locks these months' reports. Only the Tourism Officer can reopen one, and every change is recorded.</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have submitted these months to the Province</label>
                         <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Finalize these months</button>
@@ -560,78 +561,18 @@ body { overflow-x: hidden; }
                 <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                     <label class="block"><span class="field-label">Year</span><select id="trYear" class="field w-32"></select></label>
                     <label class="block"><span class="field-label">Places</span>
-                        <select id="trKind" class="field w-56"><option value="accommodation">Accommodations</option><option value="attraction">Attractions</option></select></label>
-                    <p class="text-support flex-1 min-w-[14rem]">Reports are due by the 5th of the following month. Pick a cell to open that month's report.</p>
+                        <select id="trKind" class="field w-56"><option value="accommodation">Places to stay</option><option value="attraction">Attractions</option></select></label>
                 </div>
-                <!-- What the colours mean: the legend, explained once. Closed, it
-                     still shows the short legend; the choice is remembered. -->
-                <details id="trackerHelp" class="glass-panel group" open>
-                    <summary class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none">
-                        <span class="flex items-center gap-2 font-bold text-on-surface">
-                            <span class="material-symbols-outlined text-accent !text-xl">help</span>What the colours mean
-                        </span>
-                        <span class="flex flex-wrap items-center gap-2 text-xs font-bold group-open:hidden" aria-hidden="true">
-                            <span class="tone-pill tone-success px-2 py-0.5">Submitted</span>
-                            <span class="tone-pill tone-warning px-2 py-0.5">Late</span>
-                            <span class="tone-pill tone-danger px-2 py-0.5">Missing</span>
-                            <span class="tone-pill tone-info px-2 py-0.5">Due soon</span>
-                            <span class="tone-pill tone-neutral px-2 py-0.5">Not due / municipal total</span>
-                            <span class="tone-pill tone-neutral px-2 py-0.5">🔒 Finalized</span>
-                        </span>
-                        <span class="material-symbols-outlined text-on-surface-variant transition-transform group-open:rotate-180 ml-auto">expand_more</span>
-                    </summary>
-                    <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 px-5 pb-5">
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-success cursor-default shrink-0" aria-hidden="true">✓</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Submitted</p>
-                            <p class="text-support">Sent in on time, by the 5th.</p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-warning cursor-default shrink-0" aria-hidden="true">Late</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Late</p>
-                            <p class="text-support">Sent in, but after the 5th.</p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-danger cursor-default shrink-0" aria-hidden="true">!</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Missing</p>
-                            <p class="text-support">The 5th has passed and nothing was sent. <b>These need follow-up.</b></p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-info cursor-default shrink-0" aria-hidden="true">Due</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Due soon</p>
-                            <p class="text-support">The month is over and the report is due, but it's not the 5th yet. Not late.</p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-neutral cursor-default shrink-0" aria-hidden="true">–</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Not due</p>
-                            <p class="text-support">That month hasn't ended yet, so nothing is expected.</p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-neutral cursor-default shrink-0" aria-hidden="true">Total</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Municipal total</p>
-                            <p class="text-support">For this month, the office entered one total for the whole town from the paper Form A4, instead of separate reports from each place. So no single place needs to report that month.</p>
-                        </div>
-                    </li>
-                    <li class="ztims-card p-4 flex items-start gap-3">
-                        <span class="st-cell tone-pill tone-success cursor-default shrink-0" aria-hidden="true">🔒✓</span>
-                        <div class="space-y-1">
-                            <p class="font-bold text-on-surface">Finalized</p>
-                            <p class="text-support">The report has been submitted to the Province, so its figures can no longer be changed. Only the Tourism Officer can reopen it to correct an error, and the change is recorded. Months are finalized on the <b>Arrivals Report</b> tab.</p>
-                        </div>
-                    </li>
-                    </ul>
-                </details>
+                <!-- The legend, always in view: one line of the same pills. -->
+                <p class="flex flex-wrap items-center gap-2 text-xs font-bold" aria-label="What the cells mean">
+                    <span class="tone-pill tone-success rounded-pill px-2.5 py-0.5">✓ Submitted</span>
+                    <span class="tone-pill tone-warning rounded-pill px-2.5 py-0.5">Late: after the 5th</span>
+                    <span class="tone-pill tone-danger rounded-pill px-2.5 py-0.5">! Missing</span>
+                    <span class="tone-pill tone-info rounded-pill px-2.5 py-0.5">Due by the 5th</span>
+                    <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">– Not due</span>
+                    <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">Total: municipal total</span>
+                    <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">🔒 Finalized</span>
+                </p>
                 <div id="trackerHost" class="glass-panel overflow-x-auto"></div>
             </section>
 
@@ -641,7 +582,7 @@ body { overflow-x: hidden; }
                     <label class="block flex-1 min-w-[16rem]"><span class="field-label">Place</span><select id="enPlace" class="field"></select></label>
                     <label class="block"><span class="field-label">Month</span><select id="enPeriod" class="field w-56"></select></label>
                 </div>
-                <p id="enWho" class="text-support"></p>
+                <div id="enWho" class="own-banner" hidden></div>
                 <div id="enHost" class="glass-panel p-4 sm:p-6"></div>
             </section>
 
@@ -657,7 +598,6 @@ body { overflow-x: hidden; }
         .stats-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
         .st-cell { display: inline-flex; min-width: 2.6rem; justify-content: center; font-size: .72rem; font-weight: 800; padding: .25rem .35rem; cursor: pointer; }
         .st-cell:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
-        #trackerHelp summary::-webkit-details-marker { display: none; }
     </style>
 
     <script type="module" src="../shared/stat-form.js"></script>
@@ -728,6 +668,12 @@ body { overflow-x: hidden; }
             for (let y = thisYear(); y >= 2025; y--) select.add(new Option(String(y), String(y)));
         }
 
+        // Who runs a place: the Tourism Office or a private establishment.
+        const ownTag = office => office
+            ? '<span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span>'
+            : '<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private</span>';
+        const ownRow = office => (office ? 'own-row--office' : 'own-row--private');
+
         // ---------------------------------------------------------- tabs
         const TABS = ['forma4', 'enter', 'tracker'];
         function showTab(name) {
@@ -757,7 +703,7 @@ body { overflow-x: hidden; }
             try {
                 const data = await getJson(`/tracker?year=${year}&kind=${kind}`);
                 if (!data.places.length) {
-                    host.innerHTML = `<div class="ztims-empty m-4">No ${kind === 'accommodation' ? 'accommodations' : 'attractions'} are listed yet. Add them in Destinations.</div>`;
+                    host.innerHTML = `<div class="ztims-empty m-4">No ${kind === 'accommodation' ? 'places to stay' : 'attractions'} are listed yet.</div>`;
                     return;
                 }
                 const counts = { missing: 0, late: 0, submitted: 0 };
@@ -768,17 +714,17 @@ body { overflow-x: hidden; }
                         return `<td class="px-1 py-1.5 text-center"><button type="button" class="st-cell tone-pill ${tone}" data-place="${p._id}" data-month="${m.month}"
                                     title="${escapeHtml(p.title)} · ${MONTHS[m.month - 1]} ${year}: ${label}${m.locked ? ' · finalized' : ''}">${m.locked ? '🔒' : ''}${short}</button></td>`;
                     }).join('');
-                    return `<tr><td class="px-3 py-2"><div class="font-bold">${escapeHtml(p.title)}</div>
-                                <div class="text-support">${escapeHtml(p.barangay || '')}${p.keptByOffice ? ' · Tourism Office' : ' · ' + escapeHtml(p.managerName || 'Manager')}</div></td>${cells}</tr>`;
+                    return `<tr class="${ownRow(p.keptByOffice)}"><td class="px-3 py-2"><div class="flex flex-wrap items-center gap-2"><span class="font-bold">${escapeHtml(p.title)}</span>${ownTag(p.keptByOffice)}</div>
+                                <div class="text-support">${escapeHtml(p.barangay || '')}${p.keptByOffice ? '' : ' · ' + escapeHtml(p.managerName || 'Manager')}</div></td>${cells}</tr>`;
                 }).join('');
                 host.innerHTML = `
-                    <div class="flex flex-wrap gap-4 p-4 text-sm">
-                        <span><b class="font-mono">${counts.submitted}</b> on time</span>
-                        <span><b class="font-mono">${counts.late}</b> late</span>
-                        <span class="${counts.missing ? 'text-error font-bold' : ''}"><b class="font-mono">${counts.missing}</b> missing</span>
+                    <div class="flex flex-wrap gap-2 p-4 text-sm font-bold">
+                        <span class="tone-pill tone-success rounded-pill px-3 py-1">${counts.submitted} on time</span>
+                        <span class="tone-pill tone-warning rounded-pill px-3 py-1">${counts.late} late</span>
+                        <span class="tone-pill ${counts.missing ? 'tone-danger' : 'tone-neutral'} rounded-pill px-3 py-1">${counts.missing} missing</span>
                     </div>
                     <table class="ztims-table text-sm min-w-[900px]">
-                        <thead><tr><th class="text-left px-3 py-2">${kind === 'accommodation' ? 'Accommodation' : 'Attraction'}</th>${MON.map(m => `<th class="px-1 py-2 text-center">${m}</th>`).join('')}</tr></thead>
+                        <thead><tr><th class="text-left px-3 py-2">${kind === 'accommodation' ? 'Place to stay' : 'Attraction'}</th>${MON.map(m => `<th class="px-1 py-2 text-center">${m}</th>`).join('')}</tr></thead>
                         <tbody>${rows}</tbody>
                     </table>`;
                 host.querySelectorAll('.st-cell').forEach(btn => btn.addEventListener('click', () => {
@@ -800,11 +746,11 @@ body { overflow-x: hidden; }
             if (!select.options.length) {
                 try {
                     const list = await places();
-                    const groups = [['attraction', 'Attractions'], ['accommodation', 'Accommodations']];
+                    const groups = [['attraction', 'Attractions'], ['accommodation', 'Places to stay']];
                     for (const [kind, label] of groups) {
                         const og = document.createElement('optgroup'); og.label = label;
                         for (const p of list.filter(x => x.kind === kind)) {
-                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''}${p.keptByOffice ? '' : ' (privately managed · view only)'}`, p._id));
+                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''} · ${p.keptByOffice ? 'Tourism Office' : 'Private (view only)'}`, p._id));
                         }
                         if (og.children.length) select.appendChild(og);
                     }
@@ -837,9 +783,12 @@ body { overflow-x: hidden; }
             const place = list.find(p => p._id === document.getElementById('enPlace').value);
             if (!place) { document.getElementById('enHost').innerHTML = '<div class="ztims-empty">Pick a place.</div>'; return; }
             const [year, month] = document.getElementById('enPeriod').value.split('-').map(Number);
-            document.getElementById('enWho').textContent = place.keptByOffice
-                ? 'Managed by the Municipal Tourism Office.'
-                : `Privately managed by ${place.managerName || 'an establishment'}. Reports are submitted by the establishment manager and are view only here.`;
+            const who = document.getElementById('enWho');
+            who.hidden = false;
+            who.className = 'own-banner ' + (place.keptByOffice ? 'own-banner--office' : 'own-banner--private');
+            who.innerHTML = ownTag(place.keptByOffice) + (place.keptByOffice
+                ? '<span>The Tourism Office enters this report.</span>'
+                : `<span>Entered by ${escapeHtml(place.managerName || 'the establishment manager')}. View only.</span>`);
             window.ZTIMS_STATS.mount(document.getElementById('enHost'), {
                 apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true, viewOnly: !place.keptByOffice,
                 toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession
@@ -865,10 +814,14 @@ body { overflow-x: hidden; }
                 const withFlag = r => `<span class="sf-name">${(window.ZTIMS_STATS && window.ZTIMS_STATS.flag) ? window.ZTIMS_STATS.flag(r.code) : ''}${escapeHtml(r.name)}</span>`;
                 const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${v === null ? '–' : fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
                 const head = (label, cls) => `<tr class="${cls}"><th colspan="${months.length + 2}" class="text-left px-3 py-2 text-xs font-extrabold uppercase tracking-widest">${label}</th></tr>`;
+                // With "Only countries with arrivals" ticked, a country (or a whole
+                // region) with nobody in these months is left out; totals stay.
+                const onlyUsed = document.getElementById('faOnlyUsed').checked;
+                const used = arr => !onlyUsed || sum(vals(arr)) > 0;
 
                 let body = head('Philippine residents', 'bg-primary/10 text-primary');
                 let ph = Array(12).fill(0);
-                for (const r of d.residences.filter(x => x.section === 'philippine')) { body += row(withFlag(r), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
+                for (const r of d.residences.filter(x => x.section === 'philippine')) { if (used(d.counts[r.code].total)) body += row(withFlag(r), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
                 body += row('<b>Total Philippine residents</b>', ph, 'font-bold');
                 body += head('Non-Philippine residents', 'bg-primary/10 text-primary');
                 let foreign = Array(12).fill(0);
@@ -878,13 +831,14 @@ body { overflow-x: hidden; }
                 }
                 for (const g of regions) {
                     let sub = Array(12).fill(0);
-                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return row(withFlag(r), d.counts[r.code].total, 'fa-country', true); }).join('');
-                    body += head(escapeHtml(g.region), 'text-on-surface-variant') + rowsHtml + row(`Sub-total, ${escapeHtml(g.region)}`, sub, 'font-bold bg-on-surface/[0.03]', true);
+                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return used(d.counts[r.code].total) ? row(withFlag(r), d.counts[r.code].total, 'fa-country', true) : ''; }).join('');
+                    if (used(sub)) body += head(escapeHtml(g.region), 'text-on-surface-variant') + rowsHtml + row(`Sub-total, ${escapeHtml(g.region)}`, sub, 'font-bold bg-on-surface/[0.03]', true);
                     foreign = add(foreign, sub);
                 }
                 body += row('<b>Total non-Philippine residents</b>', foreign, 'font-bold');
                 const of = d.counts['overseas-filipino'].total, un = d.counts['unspecified'].total;
-                body += row(withFlag({ code: 'overseas-filipino', name: 'Overseas Filipinos' }), of) + row(withFlag({ code: 'unspecified', name: 'Guests with unspecified residence' }), un);
+                if (used(of)) body += row(withFlag({ code: 'overseas-filipino', name: 'Overseas Filipinos' }), of);
+                if (used(un)) body += row(withFlag({ code: 'unspecified', name: 'Guests with unspecified residence' }), un);
                 const grand = ph.map((v, i) => v + foreign[i] + of[i] + un[i]);
                 body += row('<b>GRAND TOTAL GUEST ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
 
@@ -908,26 +862,28 @@ body { overflow-x: hidden; }
                 let part3 = head('Part III · Attraction visits (not part of Form A4)', 'bg-primary/10 text-primary');
                 for (const p of v.places) {
                     const shown = p.total.map((t, i) => (p.reported[i] ? t : null));
-                    part3 += row(escapeHtml(p.title), shown, '', true);
+                    part3 += row(`<span class="inline-flex flex-wrap items-center gap-2">${escapeHtml(p.title)} ${ownTag(p.keptByOffice)}</span>`, shown, ownRow(p.keptByOffice), true);
                 }
                 part3 += row('<b>Total attraction visits</b>', v.total, 'font-bold');
                 part3 += row('Male', v.male, '', true) + row('Female', v.female, '', true);
                 const visitCountries = d.residences.filter(r => v.counts[r.code]);
                 if (visitCountries.length) {
                     part3 += head('Part III · By country of residence', 'text-on-surface-variant');
-                    for (const r of visitCountries) part3 += row(withFlag(r), v.counts[r.code].total, '', true);
+                    for (const r of visitCountries) if (used(v.counts[r.code].total)) part3 += row(withFlag(r), v.counts[r.code].total, '', true);
                 }
                 const reported = vals(d.reportsPerMonth);
                 const noSex = months.filter(m => d.sexKnown[m - 1] === false && d.reportsPerMonth[m - 1] > 0);
                 host.innerHTML = `
-                    <div class="glass-panel p-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                        <span>Guest arrivals: <b class="font-mono">${fmt(sum(vals(grand)))}</b></span>
-                        <span>Guest nights: <b class="font-mono">${fmt(sum(vals(dae.guestNights)))}</b></span>
-                        <span>Attraction visits: <b class="font-mono">${fmt(sum(vals(v.total)))}</b></span>
-                        <span>Reports from places to stay: <b class="font-mono">${fmt(sum(reported))}</b></span>
-                        ${d.municipalTotalMonths.length ? `<span class="text-support">${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}: municipal totals from the printed sheet</span>` : ''}
-                        ${d.lockedMonths.length ? `<span class="text-support">🔒 Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
+                    <div class="stat-tiles">
+                        <div class="stat-tile"><p>Guest arrivals</p><p>${fmt(sum(vals(grand)))}</p></div>
+                        <div class="stat-tile"><p>Guest nights</p><p>${fmt(sum(vals(dae.guestNights)))}</p></div>
+                        <div class="stat-tile"><p>Attraction visits</p><p>${fmt(sum(vals(v.total)))}</p></div>
+                        <div class="stat-tile"><p>Reports from places to stay</p><p>${fmt(sum(reported))}</p></div>
                     </div>
+                    ${d.municipalTotalMonths.length || d.lockedMonths.length ? `<p class="flex flex-wrap gap-2">
+                        ${d.municipalTotalMonths.length ? `<span class="tone-pill tone-neutral rounded-pill text-xs font-bold px-2.5 py-0.5">Municipal totals: ${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
+                        ${d.lockedMonths.length ? `<span class="tone-pill tone-success rounded-pill text-xs font-bold px-2.5 py-0.5">Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
+                    </p>` : ''}
                     ${sum(reported) === 0 ? '<p class="text-sm font-semibold tone-warning">No reports from places to stay for these months, so Parts I and II are empty.</p>' : ''}
                     ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
                     <div class="glass-panel overflow-x-auto">
@@ -994,16 +950,11 @@ body { overflow-x: hidden; }
             document.getElementById('enPlace').addEventListener('change', renderEntry);
             document.getElementById('enPeriod').addEventListener('change', renderEntry);
             document.getElementById('faGenerate').addEventListener('click', generateForm);
+            document.getElementById('faOnlyUsed').addEventListener('change', generateForm);
             document.getElementById('faDownload').addEventListener('click', downloadExcel);
             document.getElementById('faLock').addEventListener('click', lockMonths);
             document.getElementById('faConfirmLock').addEventListener('change', e => { document.getElementById('faLock').disabled = !e.target.checked; });
 
-            // Remember whether "What the colours mean" was closed.
-            const help = document.getElementById('trackerHelp');
-            try { if (localStorage.getItem('trackerHelpClosed') === '1') help.open = false; } catch (e) { /* private browsing */ }
-            help.addEventListener('toggle', () => {
-                try { localStorage.setItem('trackerHelpClosed', help.open ? '0' : '1'); } catch (e) { /* private browsing */ }
-            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {

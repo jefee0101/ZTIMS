@@ -497,7 +497,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         // rows. They are never added to the guest arrivals above: a guest who
         // stays at a resort and visits the falls is one arrival and one visit.
         const places = (await query(
-            `select s.id, s.title, s.barangay from spots s
+            `select s.id, s.title, s.barangay, s.managed_by from spots s
               where s.type = 'spot' and (s.status <> 'archived'
                     or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1 and r.kind = 'attraction'))
               order by s.title`, [year])).rows;
@@ -507,7 +507,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
               where r.year = $1 and r.month between $2 and $3 and r.status = 'submitted' and r.kind = 'attraction'`,
             [year, from, to])).rows;
         const visits = { total: zero(), male: zero(), female: zero(), counts: {}, places: [] };
-        const placeOf = new Map(places.map(p => [p.id, { _id: p.id, title: p.title, barangay: p.barangay,
+        const placeOf = new Map(places.map(p => [p.id, { _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
                                                          total: zero(), reported: Array(12).fill(false) }]));
         for (const v of visitRows) {
             const m = v.month - 1, place = placeOf.get(v.spot_id);
