@@ -573,6 +573,34 @@ create table if not exists public.monthly_report_counts (
 
 create index if not exists monthly_report_counts_residence_idx on public.monthly_report_counts (residence_code);
 
+-- The Guest Register: a place's own log of each stay (a place to stay: check-in
+-- date, nights, rooms) or each group (an attraction: the date), kept through
+-- the month so the monthly report can be filled from it. Counts only: who came
+-- from where, male and female, never a name. The monthly report stays the
+-- record; this only helps fill it in.
+create table if not exists public.register_entries (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    entry_date          date not null,
+    nights              integer constraint register_entries_nights check (nights is null or nights between 1 and 365),
+    rooms               integer constraint register_entries_rooms check (rooms is null or rooms between 1 and 1000),
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    -- A stay has both nights and rooms; a group at an attraction has neither.
+    constraint register_entries_stay_or_group check ((nights is null) = (rooms is null))
+);
+create index if not exists register_entries_spot_date_idx on public.register_entries (spot_id, entry_date);
+
+create table if not exists public.register_entry_guests (
+    entry_id            text not null references public.register_entries (id) on delete cascade,
+    residence_code      text not null references public.residences (code),
+    male                integer not null default 0 constraint register_entry_guests_male check (male between 0 and 10000),
+    female              integer not null default 0 constraint register_entry_guests_female check (female between 0 and 10000),
+    primary key (entry_id, residence_code),
+    constraint register_entry_guests_someone check (male + female > 0)
+);
+
 -- Every change to a report: what it was, what it became, who and when.
 create table if not exists public.report_changes (
     id                  text primary key default public.ztims_new_id(),
@@ -1140,7 +1168,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
         'guide_reports', 'guide_bookings', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
-        'emergency_numbers'
+        'emergency_numbers', 'register_entries'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -1154,7 +1182,7 @@ begin
         'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
-        'office_info', 'emergency_numbers'
+        'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

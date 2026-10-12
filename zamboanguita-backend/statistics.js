@@ -31,10 +31,10 @@ function deadlineFor(year, month) {
     return new Date(Date.UTC(year, month, DEADLINE_DAY, 24 - MANILA_OFFSET_HOURS) - 1);
 }
 
-/* Today's year and month in Manila. */
+/* Today's date in Manila. */
 function manilaNow() {
     const now = new Date(Date.now() + MANILA_OFFSET_HOURS * 3600 * 1000);
-    return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1 };
+    return { year: now.getUTCFullYear(), month: now.getUTCMonth() + 1, day: now.getUTCDate() };
 }
 
 const isOfficer = req => req.auth && req.auth.role === 'admin';
@@ -218,11 +218,19 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             const municipal = await query(
                 `select 1 from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1 and month = $2`,
                 [period.year, period.month]);
+            // The number of rooms rarely changes, so a new report starts from the
+            // last one the place sent; the manager changes it when it did.
+            const last = await query(
+                `select rooms from monthly_reports
+                  where spot_id = $1 and status = 'submitted' and rooms is not null
+                    and (year < $2 or (year = $2 and month < $3))
+                  order by year desc, month desc limit 1`, [spot.id, period.year, period.month]);
             return res.json({
                 place: { _id: spot.id, title: spot.title, kind: kindOf(spot), barangay: spot.barangay },
                 year: period.year, month: period.month, daysInMonth: daysIn(period.year, period.month),
                 deadline: deadlineFor(period.year, period.month),
                 recordedAsMunicipalTotal: municipal.rows.length > 0,
+                lastRooms: last.rows.length ? last.rows[0].rooms : null,
                 report, history
             });
         } catch (error) {
@@ -408,6 +416,180 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             return res.json({ success: true, message: `Finalized ${locked} report${locked === 1 ? '' : 's'}.`, locked });
         } catch (error) {
             return failure(res, error, '❌ Statistics lock failure:');
+        }
+    });
+
+    /* ---- The Guest Register ------------------------------------------------
+       A place's own log, entry by entry: a stay at a place to stay (check-in
+       date, nights, rooms, who came) or a group at an attraction (the date and
+       who came). Kept through the month; the monthly report can be filled from
+       its totals for a month. Counts only, never a name. */
+
+    const isoDate = value => /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) && !Number.isNaN(Date.parse(value + 'T00:00:00Z'));
+    const dayNumber = iso => Math.round(Date.parse(iso + 'T00:00:00Z') / 86400000);
+
+    async function entriesFor(spotId, fromIso, toIsoExclusive, client) {
+        const { rows } = await query(
+            `select e.id, e.entry_date::text as date, e.nights, e.rooms, e.created_by_email, e.updated_at,
+                    coalesce(json_agg(json_build_object('code', g.residence_code, 'male', g.male, 'female', g.female)
+                             order by r.sort_order) filter (where g.entry_id is not null), '[]') as guests
+               from register_entries e
+               left join register_entry_guests g on g.entry_id = e.id
+               left join residences r on r.code = g.residence_code
+              where e.spot_id = $1 and e.entry_date < $3::date
+                and e.entry_date + coalesce(e.nights, 1) > $2::date
+              group by e.id order by e.entry_date, e.created_at`, [spotId, fromIso, toIsoExclusive], client);
+        return rows.map(r => ({ _id: r.id, date: r.date, nights: r.nights, rooms: r.rooms, guests: r.guests, updatedAt: r.updated_at }));
+    }
+
+    /* A month's totals from its entries. A stay's guests arrive in the month
+       they check in; its nights fall in whichever months they are spent in,
+       so a stay over the month's end is split between the two. */
+    function registerTotals(entries, year, month) {
+        const start = dayNumber(`${year}-${String(month).padStart(2, '0')}-01`);
+        const end = start + daysIn(year, month);
+        const counts = {};
+        let roomNights = 0, guestNights = 0, arrivals = 0, entriesArriving = 0;
+        for (const e of entries) {
+            const first = dayNumber(e.date);
+            const people = e.guests.reduce((n, g) => n + g.male + g.female, 0);
+            if (first >= start && first < end) {
+                entriesArriving += 1;
+                arrivals += people;
+                for (const g of e.guests) {
+                    const c = counts[g.code] || (counts[g.code] = { male: 0, female: 0 });
+                    c.male += g.male; c.female += g.female;
+                }
+            }
+            if (e.nights) {
+                const inMonth = Math.max(0, Math.min(first + e.nights, end) - Math.max(first, start));
+                roomNights += e.rooms * inMonth;
+                guestNights += people * inMonth;
+            }
+        }
+        return { entries: entriesArriving, arrivals, roomNights, guestNights,
+                 counts: Object.entries(counts).map(([code, c]) => ({ code, male: c.male, female: c.female })) };
+    }
+
+    /* The entries a month touches, and its totals. */
+    router.get('/register/:spotId/:year/:month', requireStaff, async (req, res) => {
+        try {
+            const period = periodFrom(req.params);
+            if (period.error) return badRequest(res, period.error);
+            const spot = await spotById(req.params.spotId);
+            if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
+            if (!mayViewFor(req, spot)) return res.status(403).json({ success: false, message: 'You can only see the register of the places you manage.' });
+            const from = `${period.year}-${String(period.month).padStart(2, '0')}-01`;
+            const next = period.month === 12 ? `${period.year + 1}-01-01` : `${period.year}-${String(period.month + 1).padStart(2, '0')}-01`;
+            const entries = await entriesFor(spot.id, from, next);
+            return res.json({
+                place: { _id: spot.id, title: spot.title, kind: kindOf(spot) },
+                year: period.year, month: period.month,
+                mayEdit: mayEnterFor(req, spot),
+                entries, totals: registerTotals(entries, period.year, period.month)
+            });
+        } catch (error) {
+            return failure(res, error, '❌ Register read failure:');
+        }
+    });
+
+    /* Check an entry as sent by the page; the kind decides what it needs. */
+    async function readEntry(body, spot) {
+        const b = body || {};
+        if (!isoDate(b.date)) return { error: 'Give the date.' };
+        const now = manilaNow();
+        const today = `${now.year}-${String(now.month).padStart(2, '0')}-${String(now.day).padStart(2, '0')}`;
+        if (b.date > today) return { error: 'That date has not come yet.' };
+        if (b.date < '2000-01-01') return { error: 'Give a date from 2000 on.' };
+        let nights = null, rooms = null;
+        if (kindOf(spot) === 'accommodation') {
+            nights = Number(b.nights); rooms = Number(b.rooms);
+            if (!Number.isInteger(nights) || nights < 1 || nights > 365) return { error: 'Nights must be 1 or more.' };
+            if (!Number.isInteger(rooms) || rooms < 1 || rooms > 1000) return { error: 'Rooms must be 1 or more.' };
+        }
+        const codes = await residenceCodes();
+        const list = Array.isArray(b.guests) ? b.guests : [];
+        const guests = [];
+        const seen = new Set();
+        for (const g of list) {
+            const code = String((g && g.code) || '');
+            if (!codes.has(code)) return { error: 'Choose a country for every row.' };
+            if (seen.has(code)) return { error: 'A country appears twice. Put its guests on one row.' };
+            seen.add(code);
+            const male = Number(g.male || 0), female = Number(g.female || 0);
+            if (!Number.isInteger(male) || !Number.isInteger(female) || male < 0 || female < 0 || male > 10000 || female > 10000) {
+                return { error: 'Male and female must be whole numbers, 0 or more.' };
+            }
+            if (male + female > 0) guests.push({ code, male, female });
+        }
+        if (!guests.length) return { error: 'Add at least one guest.' };
+        return { date: b.date, nights, rooms, guests };
+    }
+
+    async function writeGuests(client, entryId, guests) {
+        await query('delete from register_entry_guests where entry_id = $1', [entryId], client);
+        for (const g of guests) {
+            await query('insert into register_entry_guests (entry_id, residence_code, male, female) values ($1, $2, $3, $4)',
+                [entryId, g.code, g.male, g.female], client);
+        }
+    }
+
+    router.post('/register/:spotId', requireStaff, async (req, res) => {
+        try {
+            const spot = await spotById(req.params.spotId);
+            if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
+            if (!mayEnterFor(req, spot)) return res.status(403).json({ success: false, message: 'Only whoever runs this place keeps its register.' });
+            const entry = await readEntry(req.body, spot);
+            if (entry.error) return badRequest(res, entry.error);
+            const who = await whoIsSigningIn(req);
+            const id = await transaction(async client => {
+                const { rows } = await query(
+                    `insert into register_entries (spot_id, entry_date, nights, rooms, created_by_email)
+                     values ($1, $2, $3, $4, $5) returning id`, [spot.id, entry.date, entry.nights, entry.rooms, who.email], client);
+                await writeGuests(client, rows[0].id, entry.guests);
+                return rows[0].id;
+            });
+            return res.status(201).json({ success: true, message: kindOf(spot) === 'accommodation' ? 'Stay added.' : 'Group added.', id });
+        } catch (error) {
+            return failure(res, error, '❌ Register add failure:');
+        }
+    });
+
+    async function entryAndSpot(req, res) {
+        const id = String(req.params.id || '');
+        if (!/^[0-9a-f]{24}$/i.test(id)) { res.status(404).json({ success: false, message: 'That entry could not be found.' }); return null; }
+        const { rows } = await query('select id, spot_id from register_entries where id = $1', [id]);
+        if (!rows.length) { res.status(404).json({ success: false, message: 'That entry could not be found.' }); return null; }
+        const spot = await spotById(rows[0].spot_id);
+        if (!spot || !mayEnterFor(req, spot)) { res.status(403).json({ success: false, message: 'Only whoever runs this place keeps its register.' }); return null; }
+        return { id, spot };
+    }
+
+    router.put('/register/entries/:id', requireStaff, async (req, res) => {
+        try {
+            const found = await entryAndSpot(req, res);
+            if (!found) return;
+            const entry = await readEntry(req.body, found.spot);
+            if (entry.error) return badRequest(res, entry.error);
+            await transaction(async client => {
+                await query('update register_entries set entry_date = $2, nights = $3, rooms = $4 where id = $1',
+                    [found.id, entry.date, entry.nights, entry.rooms], client);
+                await writeGuests(client, found.id, entry.guests);
+            });
+            return res.json({ success: true, message: 'Saved.' });
+        } catch (error) {
+            return failure(res, error, '❌ Register change failure:');
+        }
+    });
+
+    router.delete('/register/entries/:id', requireStaff, async (req, res) => {
+        try {
+            const found = await entryAndSpot(req, res);
+            if (!found) return;
+            await query('delete from register_entries where id = $1', [found.id]);
+            return res.json({ success: true, message: 'Removed.' });
+        } catch (error) {
+            return failure(res, error, '❌ Register remove failure:');
         }
     });
 

@@ -272,6 +272,27 @@ purpose — see the header comment in `spot-form.js`:
   `managerName`/`phone` Establishment → Contact shows visitors — plus the
   sign-in email, read only and set by the Tourism Office, and account issued)
   and `#security` (signed in since, change password, sign out of all devices).
+- **The manager's Guest Register** (`resort/resort_register.html`, in the
+  menu between Establishment and Monthly Report): the place's own log through
+  the month, so nobody adds up by hand. A place to stay logs each **stay**
+  (check-in date, nights, rooms, and who came: country of residence with male
+  and female, − / + steppers, Add a country); an attraction logs each
+  **group** (date and who came). Month picker, four tiles (Guests arrived,
+  Room-nights, Guest nights, Stays — or Visitors, Male, Female, Groups), "By
+  country", one row per entry (`.rg-row` in `portal-flat.css`) with Edit and
+  Remove (red), and "Open the monthly report" (`resort_statistics.html?month=`).
+  Tables `register_entries` (+ `register_entry_guests`, counts per country,
+  never a name); routes `GET /api/statistics/register/:spotId/:year/:month`,
+  `POST /api/statistics/register/:spotId`, `PUT|DELETE
+  /api/statistics/register/entries/:id`, allowed to whoever enters that
+  place's reports (`mayEnterFor`). Totals (`registerTotals`): a stay's guests
+  arrive in its check-in month; its room-nights and guest nights fall in the
+  months they are spent in, so a stay over a month's end is split. The register
+  only helps: the monthly report stays the record — `stat-form.js` shows "Fill
+  from the Guest Register" when the month has entries, fills the boxes, and the
+  manager checks and saves. A new accommodation report starts from the rooms
+  in the place's last report (`lastRooms` on the report read; "From your last
+  report").
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
@@ -628,8 +649,9 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
   belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
   (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 23 tables in all, with `spot_closed_dates`, `spot_photos`,
-  `spot_more_categories`, `office_info` and `emergency_numbers`
+  have `is_demo`. 25 tables in all, with `spot_closed_dates`, `spot_photos`,
+  `spot_more_categories`, `office_info`, `emergency_numbers` and the Guest
+  Register's `register_entries` / `register_entry_guests`
   (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:

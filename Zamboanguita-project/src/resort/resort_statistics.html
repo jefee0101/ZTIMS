@@ -454,6 +454,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Establishment</span>
             </a>
+            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_register.html">
+                <span class="material-symbols-outlined text-accent">menu_book</span>
+                <span class="sidebar-label">Guest Register</span>
+            </a>
             <a title="Monthly Report" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Monthly Report</span>
@@ -486,12 +490,7 @@ body { overflow-x: hidden; }
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1200px] mx-auto space-y-6">
-            <div class="space-y-1">
-                <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                    <span class="text-on-surface-variant">Establishment portal</span>
-                </nav>
-                <h2 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h2>
-            </div>
+            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h1>
 
             <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                 <label class="block flex-1 min-w-[14rem]"><span class="field-label">Place</span><select id="rpPlace" class="field"></select></label>
@@ -602,8 +601,11 @@ body { overflow-x: hidden; }
             for (const p of myPlaces) placeSelect.add(new Option(`${p.title}${p.kind === 'attraction' ? ' (attraction: visitors only)' : ''}`, p._id));
             const periodSelect = document.getElementById('rpPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
-            // Last month is the one usually being reported.
+            // Last month is the one usually being reported; the Guest Register's
+            // link names the month it came from (?month=2026-9).
             if (periodSelect.options.length > 1) periodSelect.selectedIndex = 1;
+            const asked = new URLSearchParams(location.search).get('month');
+            if (asked && [...periodSelect.options].some(o => o.value === asked)) periodSelect.value = asked;
             placeSelect.addEventListener('change', render);
             periodSelect.addEventListener('change', render);
             render();

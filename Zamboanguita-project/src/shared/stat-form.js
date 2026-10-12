@@ -103,6 +103,9 @@
         const readOnly = locked || blocked || viewOnly;
         const given = Object.fromEntries(((report && report.counts) || []).map(c => [c.code, c]));
         const days = state.daysInMonth;
+        // A new report starts from the rooms the place last reported.
+        const roomsFromLast = !report && state.lastRooms != null && !readOnly;
+        const roomsValue = report && report.rooms != null ? report.rooms : (roomsFromLast ? state.lastRooms : '');
 
         // ---- group the rows the way the form does
         const sections = [
@@ -167,7 +170,8 @@
             ${accommodation ? `
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <label class="block"><span class="field-label">Number of rooms</span>
-                    <input id="${uid}-rooms" type="number" inputmode="numeric" min="0" step="1" class="field font-mono" value="${report && report.rooms != null ? report.rooms : ''}" ${readOnly ? 'disabled' : ''}></label>
+                    <input id="${uid}-rooms" type="number" inputmode="numeric" min="0" step="1" class="field font-mono" value="${roomsValue}" ${readOnly ? 'disabled' : ''}>
+                    ${roomsFromLast ? '<span class="field-help">From your last report. Change it if your rooms changed.</span>' : ''}</label>
                 <label class="block"><span class="field-label">Room-nights occupied</span>
                     <input id="${uid}-occ" type="number" inputmode="numeric" min="0" step="1" class="field font-mono" value="${report && report.roomNightsOccupied != null ? report.roomNightsOccupied : ''}" ${readOnly ? 'disabled' : ''}>
                     <span class="field-help">Each night a room is taken counts once.</span></label>
@@ -381,6 +385,46 @@
         if (unlockBtn) unlockBtn.addEventListener('click', () => { const r = reasonOf(); if (r) send('POST', `/reports/${report._id}/unlock`, { reason: r }, unlockBtn, 'Report unlocked.'); });
 
         recalc();
+        if (!readOnly) offerRegister();
+
+        /* The Guest Register: when the place logged stays or groups for this
+           month, offer to fill the report from their totals. The manager still
+           checks the figures and saves. */
+        async function offerRegister() {
+            let data;
+            try {
+                const res = await fetch(`${apiBase}/statistics/register/${place._id}/${year}/${month}`, { headers: headers() });
+                if (!res.ok) return;
+                data = await res.json();
+            } catch (e) { return; }
+            const t = data.totals;
+            if (!t || (!t.entries && !t.roomNights)) return;
+            const what = accommodation ? (t.entries === 1 ? 'stay' : 'stays') : (t.entries === 1 ? 'group' : 'groups');
+            const facts = accommodation
+                ? `${fmt(t.entries)} ${what} · ${fmt(t.arrivals)} guests · ${fmt(t.roomNights)} room-nights · ${fmt(t.guestNights)} guest nights`
+                : `${fmt(t.entries)} ${what} · ${fmt(t.arrivals)} visitors`;
+            const box = document.createElement('div');
+            box.className = 'sf-register';
+            box.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                <p><b>Guest Register, ${esc(MONTHS[month - 1])}:</b> ${facts}</p>
+                <button type="button" class="btn btn-primary btn-sm min-h-[40px]">Fill from the Guest Register</button>`;
+            host.prepend(box);
+            box.querySelector('button').addEventListener('click', () => {
+                const by = Object.fromEntries(t.counts.map(c => [c.code, c]));
+                for (const el of inputs) {
+                    const c = by[el.dataset.code];
+                    el.value = c && c[el.dataset.sex] ? c[el.dataset.sex] : '';
+                }
+                if (accommodation) {
+                    $('occ').value = t.roomNights;
+                    $('nights').value = t.guestNights;
+                }
+                recalc();
+                $('only').checked = true;
+                filter();
+                toast('Filled from the Guest Register. Check the figures, then save.', 'success');
+            });
+        }
     }
 
     window.ZTIMS_STATS = { mount, periodOptions, MONTHS, daysIn, flag };
