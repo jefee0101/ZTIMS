@@ -152,7 +152,51 @@ async function formA4Workbook(data) {
     for (const note of notes) { ws.getCell(`A${r}`).value = note; ws.getCell(`A${r}`).font = { name: FONT, size: 9, italic: true, color: { argb: 'FF52525B' } }; r++; }
     ws.pageSetup.printTitlesRow = '7:7';
 
+    attractionSheet(wb, data, monthValues);
     return wb.xlsx.writeBuffer();
+}
+
+/* Part III, on its own sheet so the province's Form A4 stays exactly as it is:
+ * visits to attractions by month, by place, by sex and by country of residence.
+ * Never added to the guest arrivals on the first sheet. */
+function attractionSheet(wb, data, monthValues) {
+    const v = data.visits;
+    if (!v) return;
+    const ws = wb.addWorksheet('Attraction visits', {
+        pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 },
+        views: [{ state: 'frozen', xSplit: 1, ySplit: 5 }]
+    });
+    ws.columns = [{ width: 42 }, ...MONTHS.map(() => ({ width: 9 })), { width: 11 }];
+    const put = (row, values, { fill, bold, color, indent } = {}) => {
+        const r = ws.getRow(row);
+        values.forEach((val, i) => {
+            const c = r.getCell(i + 1);
+            c.value = val;
+            c.font = { name: FONT, size: 10, bold: !!bold, color: { argb: color || 'FF0B0B0C' } };
+            c.border = BOX;
+            if (fill) c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
+            if (i > 0) { c.numFmt = NUM; c.alignment = { horizontal: 'right' }; }
+            else if (indent) c.alignment = { indent };
+        });
+    };
+    let r = 1;
+    ws.getCell('A1').value = 'PART III. ATTRACTION VISITS';
+    ws.getCell('A1').font = { name: FONT, size: 14, bold: true, color: { argb: NAVY } };
+    ws.getCell('A2').value = `${data.year} · Zamboanguita. Not part of Form A4: a guest who stays overnight and visits an attraction is one arrival and one visit.`;
+    ws.getCell('A2').font = { name: FONT, size: 10, color: { argb: 'FF52525B' } };
+    r = 5;
+    const line = (label, arr, style) => put(r++, [label, ...monthValues(arr), sum(monthValues(arr))], style);
+    put(r++, ['', ...MONTHS, 'TOTAL'], { fill: NAVY, bold: true, color: 'FFFFFFFF' });
+    put(r++, ['BY PLACE', ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
+    for (const p of v.places) line(p.title, p.total, { indent: 1 });
+    line('TOTAL ATTRACTION VISITS', v.total, { fill: GRAND, bold: true, color: NAVY });
+    line('Male', v.male, { indent: 1 });
+    line('Female', v.female, { indent: 1 });
+    r++;
+    put(r++, ['BY COUNTRY OF RESIDENCE', ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
+    for (const res of data.residences) {
+        if (v.counts[res.code]) line(res.name, v.counts[res.code].total, { indent: 1 });
+    }
 }
 
 module.exports = { formA4Workbook };

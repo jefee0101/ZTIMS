@@ -522,17 +522,7 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-            <div class="space-y-1">
-                <nav class="flex text-label uppercase tracking-widest text-primary font-bold mb-2">
-                    <span class="text-on-surface-variant">Municipal tourism</span>
-                </nav>
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h2>
-                <p class="text-on-surface-variant text-sm max-w-3xl">
-                    Monthly tourist arrival statistics of the Municipality of Zamboanguita: the Report on the Regional
-                    Distribution of Travelers (Form A4) submitted to the Province, the establishment reports it is compiled
-                    from, and visitor counts at the attractions managed by the Municipal Tourism Office.
-                </p>
-            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h1>
 
             <!-- Tabs -->
             <div role="tablist" aria-label="Statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
@@ -543,8 +533,6 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
                 <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
-                <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">landscape</span>Attractions</button>
             </div>
 
             <!-- ============ Arrivals Report (Form A4) ============ -->
@@ -657,15 +645,6 @@ body { overflow-x: hidden; }
                 <div id="enHost" class="glass-panel p-4 sm:p-6"></div>
             </section>
 
-            <!-- ============ Attractions ============ -->
-            <section role="tabpanel" id="panel-attractions" aria-labelledby="tab-attractions" class="space-y-4" hidden>
-                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
-                    <label class="block"><span class="field-label">Year</span><select id="atYear" class="field w-32"></select></label>
-                    <p class="text-support flex-1 min-w-[14rem]">Visitors counted at each attraction, kept apart from the Arrivals Report: a guest who stays at a resort and visits the falls would otherwise be counted twice.</p>
-                </div>
-                <div id="attractionsHost" class="glass-panel overflow-x-auto"></div>
-            </section>
-
             <p id="statsError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
         </div>
     </main>
@@ -750,7 +729,7 @@ body { overflow-x: hidden; }
         }
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['forma4', 'enter', 'tracker', 'attractions'];
+        const TABS = ['forma4', 'enter', 'tracker'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
@@ -759,7 +738,6 @@ body { overflow-x: hidden; }
             try { sessionStorage.setItem('statsTab', name); } catch (e) {}
             if (name === 'forma4') generateForm();
             if (name === 'tracker') loadTracker();
-            if (name === 'attractions') loadAttractions();
             if (name === 'enter') loadEntry();
         }
 
@@ -868,40 +846,6 @@ body { overflow-x: hidden; }
             });
         }
 
-        // ---------------------------------------------------------- attractions
-        async function loadAttractions() {
-            const host = document.getElementById('attractionsHost');
-            const year = document.getElementById('atYear').value;
-            host.innerHTML = '<div class="ztims-empty m-4">Loading…</div>';
-            try {
-                const data = await getJson(`/attractions?year=${year}`);
-                if (!data.attractions.length) { host.innerHTML = '<div class="ztims-empty m-4">No attractions are listed yet. Add them in Destinations.</div>'; return; }
-                const col = Array(12).fill(0), male = Array(12).fill(0), female = Array(12).fill(0);
-                const rows = data.attractions.map(a => {
-                    let total = 0;
-                    const cells = a.months.map((m, i) => {
-                        col[i] += m.total; male[i] += m.male; female[i] += m.female; total += m.total;
-                        return `<td class="px-2 py-2 text-right font-mono ${m.reported ? '' : 'text-on-surface-variant'}">${m.reported ? fmt(m.total) : '–'}</td>`;
-                    }).join('');
-                    return `<tr><td class="px-3 py-2"><div class="font-bold">${escapeHtml(a.title)}</div><div class="text-support">${escapeHtml(a.barangay || '')}${a.keptByOffice ? '' : ' · privately managed'}</div></td>${cells}<td class="px-3 py-2 text-right font-mono font-bold">${fmt(total)}</td></tr>`;
-                }).join('');
-                const sum = arr => arr.reduce((x, y) => x + y, 0);
-                const line = (label, arr, cls) => `<tr class="${cls}"><td class="px-3 py-2 font-bold">${label}</td>${arr.map(v => `<td class="px-2 py-2 text-right font-mono">${fmt(v)}</td>`).join('')}<td class="px-3 py-2 text-right font-mono font-bold">${fmt(sum(arr))}</td></tr>`;
-                host.innerHTML = `
-                    <table class="ztims-table text-sm min-w-[960px]">
-                        <thead><tr><th class="text-left px-3 py-2">Attraction</th>${MON.map(m => `<th class="px-2 py-2 text-right">${m}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
-                        <tbody>${rows}
-                            ${line('All attractions', col, 'bg-primary/5')}
-                            ${line('Male', male, '')}
-                            ${line('Female', female, '')}
-                        </tbody>
-                    </table>
-                    `;
-            } catch (e) {
-                if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger m-4">${escapeHtml(e.message)}</div>`;
-            }
-        }
-
         // ---------------------------------------------------------- Arrivals Report (Form A4)
         function formRange() {
             return { year: document.getElementById('faYear').value, from: document.getElementById('faFrom').value, to: document.getElementById('faTo').value };
@@ -919,7 +863,7 @@ body { overflow-x: hidden; }
                 const add = (a, b) => a.map((v, i) => v + b[i]);
                 // The country's flag beside its name (stat-form.js keeps the pictures' rules).
                 const withFlag = r => `<span class="sf-name">${(window.ZTIMS_STATS && window.ZTIMS_STATS.flag) ? window.ZTIMS_STATS.flag(r.code) : ''}${escapeHtml(r.name)}</span>`;
-                const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
+                const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${v === null ? '–' : fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
                 const head = (label, cls) => `<tr class="${cls}"><th colspan="${months.length + 2}" class="text-left px-3 py-2 text-xs font-extrabold uppercase tracking-widest">${label}</th></tr>`;
 
                 let body = head('Philippine residents', 'bg-primary/10 text-primary');
@@ -957,21 +901,39 @@ body { overflow-x: hidden; }
                     const shown = t.map((v, i) => (d.sexKnown[i] ? v : null));
                     part2 += row(sex === 'male' ? 'Male' : 'Female', shown, '', true);
                 }
+                // Part III: visits to attractions, on their own rows. Never added to
+                // the guest arrivals: one guest who visits the falls is one arrival
+                // and one visit.
+                const v = d.visits;
+                let part3 = head('Part III · Attraction visits (not part of Form A4)', 'bg-primary/10 text-primary');
+                for (const p of v.places) {
+                    const shown = p.total.map((t, i) => (p.reported[i] ? t : null));
+                    part3 += row(escapeHtml(p.title), shown, '', true);
+                }
+                part3 += row('<b>Total attraction visits</b>', v.total, 'font-bold');
+                part3 += row('Male', v.male, '', true) + row('Female', v.female, '', true);
+                const visitCountries = d.residences.filter(r => v.counts[r.code]);
+                if (visitCountries.length) {
+                    part3 += head('Part III · By country of residence', 'text-on-surface-variant');
+                    for (const r of visitCountries) part3 += row(withFlag(r), v.counts[r.code].total, '', true);
+                }
                 const reported = vals(d.reportsPerMonth);
                 const noSex = months.filter(m => d.sexKnown[m - 1] === false && d.reportsPerMonth[m - 1] > 0);
                 host.innerHTML = `
                     <div class="glass-panel p-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                        <span>Grand total: <b class="font-mono">${fmt(sum(vals(grand)))}</b></span>
+                        <span>Guest arrivals: <b class="font-mono">${fmt(sum(vals(grand)))}</b></span>
                         <span>Guest nights: <b class="font-mono">${fmt(sum(vals(dae.guestNights)))}</b></span>
-                        <span>Reports included: <b class="font-mono">${fmt(sum(reported))}</b></span>
+                        <span>Attraction visits: <b class="font-mono">${fmt(sum(vals(v.total)))}</b></span>
+                        <span>Reports from places to stay: <b class="font-mono">${fmt(sum(reported))}</b></span>
                         ${d.municipalTotalMonths.length ? `<span class="text-support">${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}: municipal totals from the printed sheet</span>` : ''}
                         ${d.lockedMonths.length ? `<span class="text-support">🔒 Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
                     </div>
+                    ${sum(reported) === 0 ? '<p class="text-sm font-semibold tone-warning">No reports from places to stay for these months, so Parts I and II are empty.</p>' : ''}
                     ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
                     <div class="glass-panel overflow-x-auto">
                         <table class="ztims-table text-sm min-w-[980px]">
                             <thead><tr><th class="text-left px-3 py-2">Country of residence</th>${months.map(m => `<th class="px-2 py-2 text-right">${MON[m - 1]}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
-                            <tbody>${body}${part2}</tbody>
+                            <tbody>${body}${part2}${part3}</tbody>
                         </table>
                     </div>`;
             } catch (e) {
@@ -1024,12 +986,11 @@ body { overflow-x: hidden; }
 
         function wire() {
             for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
-            for (const id of ['trYear', 'atYear', 'faYear']) fillYears(document.getElementById(id));
+            for (const id of ['trYear', 'faYear']) fillYears(document.getElementById(id));
             for (const id of ['faFrom', 'faTo']) MONTHS.forEach((m, i) => document.getElementById(id).add(new Option(m, String(i + 1))));
             document.getElementById('faTo').value = '12';
             document.getElementById('trYear').addEventListener('change', loadTracker);
             document.getElementById('trKind').addEventListener('change', loadTracker);
-            document.getElementById('atYear').addEventListener('change', loadAttractions);
             document.getElementById('enPlace').addEventListener('change', renderEntry);
             document.getElementById('enPeriod').addEventListener('change', renderEntry);
             document.getElementById('faGenerate').addEventListener('click', generateForm);

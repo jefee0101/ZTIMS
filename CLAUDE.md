@@ -540,6 +540,17 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports visitors only, and attraction
   visitors are never part of Form A4.
+- **One report page.** Statistics has three tabs: Arrivals Report, Enter a
+  report, Tracker (the separate Attractions tab and `GET /statistics/attractions`
+  were removed, the user's decision). The Arrivals Report is Form A4 (Part I
+  guest arrivals by country, Part II DAE-2 and volume per sex — places to stay
+  only) plus **Part III · Attraction visits** on its own rows: by place (– for
+  a month not reported), total, male / female, and by country. Part III is
+  never added to the guest arrivals: a guest who stays two nights and visits
+  the falls is one arrival, two guest nights and one visit. `formA4()` returns
+  it as `visits`; the Excel puts it on a second sheet, "Attraction visits", so
+  the province's Form A4 sheet is unchanged. When no place to stay reported,
+  the page says Parts I and II are empty.
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only

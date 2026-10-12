@@ -493,6 +493,34 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         const inRange = i => i + 1 >= from && i + 1 <= to;
         for (const key of Object.keys(dae)) dae[key] = dae[key].map((v, i) => (inRange(i) ? v : null));
 
+        // Part III: visits to attractions, in the same report but on their own
+        // rows. They are never added to the guest arrivals above: a guest who
+        // stays at a resort and visits the falls is one arrival and one visit.
+        const places = (await query(
+            `select s.id, s.title, s.barangay from spots s
+              where s.type = 'spot' and (s.status <> 'archived'
+                    or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1 and r.kind = 'attraction'))
+              order by s.title`, [year])).rows;
+        const visitRows = (await query(
+            `select r.spot_id, r.month, c.residence_code, c.male, c.female, c.total
+               from monthly_reports r left join monthly_report_counts c on c.report_id = r.id
+              where r.year = $1 and r.month between $2 and $3 and r.status = 'submitted' and r.kind = 'attraction'`,
+            [year, from, to])).rows;
+        const visits = { total: zero(), male: zero(), female: zero(), counts: {}, places: [] };
+        const placeOf = new Map(places.map(p => [p.id, { _id: p.id, title: p.title, barangay: p.barangay,
+                                                         total: zero(), reported: Array(12).fill(false) }]));
+        for (const v of visitRows) {
+            const m = v.month - 1, place = placeOf.get(v.spot_id);
+            if (place) place.reported[m] = true;
+            if (!v.residence_code) continue;
+            const t = v.total || 0, male = v.male || 0, female = v.female || 0;
+            visits.total[m] += t; visits.male[m] += male; visits.female[m] += female;
+            if (place) place.total[m] += t;
+            const cell = visits.counts[v.residence_code] || (visits.counts[v.residence_code] = { total: zero(), male: zero(), female: zero() });
+            cell.total[m] += t; cell.male[m] += male; cell.female[m] += female;
+        }
+        visits.places = [...placeOf.values()].map(p => ({ ...p, reported: p.reported.map((v, i) => (inRange(i) ? v : null)) }));
+
         return {
             year, fromMonth: from, toMonth: to, residences,
             counts: byCode,
@@ -500,7 +528,8 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             municipalTotalMonths: [...municipalMonths].sort((a, b) => a - b),
             reportsPerMonth: reportsPerMonth.map((n, i) => (inRange(i) ? n : null)),
             lockedMonths: [...new Set(used.filter(r => r.locked_at).map(r => r.month))].sort((a, b) => a - b),
-            dae
+            dae,
+            visits
         };
     }
 
@@ -534,35 +563,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             return res.send(Buffer.from(buffer));
         } catch (error) {
             return failure(res, error, '❌ Form A4 Excel failure:');
-        }
-    });
-
-    /* Visitors at every attraction, month by month. */
-    router.get('/attractions', requireAdmin, async (req, res) => {
-        try {
-            const year = Number(req.query.year);
-            if (!Number.isInteger(year) || year < 2000 || year > 2100) return badRequest(res, 'Give a year.');
-            const places = (await query(
-                `select s.id, s.title, s.barangay, s.managed_by from spots s
-                  where s.type = 'spot' and (s.status <> 'archived'
-                        or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1))
-                  order by s.title`, [year])).rows;
-            const sums = (await query(
-                `select r.spot_id, r.month, sum(c.total)::int as total, sum(c.male)::int as male, sum(c.female)::int as female
-                   from monthly_reports r left join monthly_report_counts c on c.report_id = r.id
-                  where r.year = $1 and r.kind = 'attraction' and r.status = 'submitted'
-                  group by r.spot_id, r.month`, [year])).rows;
-            const cell = new Map(sums.map(s => [s.spot_id + ':' + s.month, s]));
-            const rows = places.map(p => ({
-                _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
-                months: Array.from({ length: 12 }, (_, i) => {
-                    const s = cell.get(p.id + ':' + (i + 1));
-                    return s ? { reported: true, total: s.total || 0, male: s.male || 0, female: s.female || 0 } : { reported: false, total: 0, male: 0, female: 0 };
-                })
-            }));
-            return res.json({ year, attractions: rows });
-        } catch (error) {
-            return failure(res, error, '❌ Attractions summary failure:');
         }
     });
 
