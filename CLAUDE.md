@@ -293,6 +293,13 @@ purpose — see the header comment in `spot-form.js`:
   manager checks and saves. A new accommodation report starts from the rooms
   in the place's last report (`lastRooms` on the report read; "From your last
   report").
+  The officer has the same page (`admin/admin_register.html`, in the menu after
+  Statistics) with a Place picker, the office's own places first: it keeps the
+  register for those, and sees a private place's register view only (Tourism
+  Office / Private banner, Add and Edit hidden). Its "Open the monthly report"
+  opens Statistics → Enter a report at that place and month
+  (`admin_statistics.html?place=&month=#enter`). A manager with one place sees
+  its name, not a picker, on the Guest Register and Monthly Report.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the

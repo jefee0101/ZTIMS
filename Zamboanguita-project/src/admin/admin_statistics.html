@@ -462,6 +462,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Statistics</span>
             </a>
+            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_register.html">
+                <span class="material-symbols-outlined text-accent">menu_book</span>
+                <span class="sidebar-label">Guest Register</span>
+            </a>
             <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
                 <span class="material-symbols-outlined text-accent">location_on</span>
                 <span class="sidebar-label">Destinations</span>
@@ -969,6 +973,14 @@ body { overflow-x: hidden; }
             const asked = window.location.hash.slice(1);
             if (TABS.includes(asked)) first = asked;
             showTab(TABS.includes(first) ? first : 'forma4');
+            // The Guest Register's "Open the monthly report" names the place and
+            // month (?place=<id>&month=2026-9#enter).
+            const params = new URLSearchParams(window.location.search);
+            const askedPlace = params.get('place'), askedMonth = params.get('month');
+            if (askedPlace && /^\d{4}-\d{1,2}$/.test(askedMonth || '')) {
+                const [y, m] = askedMonth.split('-').map(Number);
+                openEntry(askedPlace, y, m);
+            }
         });
     </script>
 

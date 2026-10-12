@@ -494,6 +494,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap items-end gap-3">
                 <label id="rgPlaceWrap" class="block flex-1 min-w-[14rem]" hidden><span class="field-label">Place</span><select id="rgPlace" class="field"></select></label>
+                <div id="rgPlaceName" class="min-w-[12rem]" hidden><span class="field-label">Place</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
                 <label class="block"><span class="field-label">Month</span><select id="rgPeriod" class="field w-56"></select></label>
                 <button id="rgAdd" type="button" class="btn btn-primary min-h-[44px] ml-auto" disabled>
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span><span id="rgAddLabel">Add a stay</span>
@@ -840,6 +841,11 @@ body { overflow-x: hidden; }
             const placeSelect = document.getElementById('rgPlace');
             for (const p of myPlaces) placeSelect.add(new Option(p.title, p._id));
             document.getElementById('rgPlaceWrap').hidden = myPlaces.length < 2;
+            if (myPlaces.length === 1) {
+                const name = document.getElementById('rgPlaceName');
+                name.hidden = false;
+                name.querySelector('p').textContent = myPlaces[0].title;
+            }
             const periodSelect = document.getElementById('rgPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
             wire();

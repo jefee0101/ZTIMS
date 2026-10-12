@@ -493,7 +493,8 @@ body { overflow-x: hidden; }
             <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h1>
 
             <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
-                <label class="block flex-1 min-w-[14rem]"><span class="field-label">Place</span><select id="rpPlace" class="field"></select></label>
+                <label id="rpPlaceWrap" class="block flex-1 min-w-[14rem]"><span class="field-label">Place</span><select id="rpPlace" class="field"></select></label>
+                <div id="rpPlaceName" class="flex-1 min-w-[14rem]" hidden><span class="field-label">Place</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
                 <label class="block"><span class="field-label">Month</span><select id="rpPeriod" class="field w-56"></select></label>
             </div>
 
@@ -598,7 +599,14 @@ body { overflow-x: hidden; }
                 return;
             }
             const placeSelect = document.getElementById('rpPlace');
-            for (const p of myPlaces) placeSelect.add(new Option(`${p.title}${p.kind === 'attraction' ? ' (attraction: visitors only)' : ''}`, p._id));
+            for (const p of myPlaces) placeSelect.add(new Option(p.title, p._id));
+            // One place (the usual case): its name, not a list to choose from.
+            if (myPlaces.length === 1) {
+                document.getElementById('rpPlaceWrap').hidden = true;
+                const name = document.getElementById('rpPlaceName');
+                name.hidden = false;
+                name.querySelector('p').textContent = myPlaces[0].title;
+            }
             const periodSelect = document.getElementById('rpPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
             // Last month is the one usually being reported; the Guest Register's

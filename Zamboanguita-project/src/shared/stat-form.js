@@ -78,6 +78,9 @@
         const toast = options.toast || (() => {});
         const accommodation = place.kind === 'accommodation';
         const uid = 'sf' + Math.random().toString(36).slice(2, 8);
+        // The page may draw a report again before this one finished loading;
+        // only the latest drawing may add to the host.
+        host._ztimsStatsDrawing = uid;
         host.innerHTML = '<div class="ztims-empty">Loading the report…</div>';
 
         let rows, state;
@@ -95,6 +98,9 @@
             if (error.status === 401 && options.onExpired) options.onExpired();
             return;
         }
+
+        // A newer drawing started while this one loaded: leave the host to it.
+        if (host._ztimsStatsDrawing !== uid) return;
 
         const report = state.report;
         const locked = !!(report && report.lockedAt);
@@ -398,7 +404,9 @@
                 data = await res.json();
             } catch (e) { return; }
             const t = data.totals;
+            if (host._ztimsStatsDrawing !== uid || !host.querySelector('#' + uid + '-only')) return;
             if (!t || (!t.entries && !t.roomNights)) return;
+            host.querySelectorAll('.sf-register').forEach(el => el.remove());
             const what = accommodation ? (t.entries === 1 ? 'stay' : 'stays') : (t.entries === 1 ? 'group' : 'groups');
             const facts = accommodation
                 ? `${fmt(t.entries)} ${what} · ${fmt(t.arrivals)} guests · ${fmt(t.roomNights)} room-nights · ${fmt(t.guestNights)} guest nights`
