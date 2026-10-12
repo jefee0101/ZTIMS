@@ -332,8 +332,7 @@ and Adventure ember, Culture & Heritage and Faith burnt, Places to stay ink),
 always with their name and icon — two share each colour, so the icon tells them
 apart (the map legend shows each as its pin); the
 category badge (`.cat-badge`) is a pill everywhere. Emails
-(`mailer.js`, the reset email in `server.js`) use the same colours; ticket QR
-codes stay black on white so scanners read them.
+(`mailer.js`, the reset email in `server.js`) use the same colours.
 
 - **Theme.** One choice for the whole site: the toggle on any page stores
   `theme` (light or dark) and every page, and every other open tab at once,
@@ -661,9 +660,9 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   Register's `register_entries` / `register_entry_guests`
   (`guide_time_off` and `guide_profile_requests` were dropped).
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
-  refunds, Excel, load/remove demo data), `admin_tickets.html` (the gate's check:
-  type the code or scan the QR with the phone's `BarcodeDetector`, else jsQR
-  loaded on demand; `admit` is one conditional update, so a ticket is used once),
+  refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
+  the ticket code — tickets have no QR, by the user's decision: most places
+  have no entrance or staff to scan one; `admit` is one conditional update, so a ticket is used once),
   "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
   the Dashboard. One refund rule: the office cancels, the visitor is refunded;
   a plain cancel of an online-paid booking is refused. A refund goes back
@@ -714,8 +713,8 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   listing, New password, Suspend / Restore, Delete in red).
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
-- **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Scan
-  QR; Stop scanning is a red outlined pill; Let them in), then "Tickets for
+- **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Let
+  them in), then "Tickets for
   today" (or the chosen date) with counts that filter (All, Not yet used, Let
   in, Cancelled or closed) and one box per place ("6 of 8 people let in") with
   a row per ticket (`.tk-row`: code, name and people, status pill).
@@ -894,8 +893,8 @@ Frontend only, no tables of their own:
   missing setting or a refused message is logged and the change stands. Pages
   only say "we have emailed you" when the server says it went (`emailed`).
   `MAIL_TRANSPORT=file:/path` writes messages to a file, for local tests only.
-- **`notices.js`** writes each email from the database: ticket receipt (the QR as
-  an attached PNG — mail apps block inline images), booking received, booking
+- **`notices.js`** writes each email from the database: ticket receipt (the ticket
+  code, to show on the email or a screenshot), booking received, booking
   paid, guide confirmed, moved, cancelled, and (closures) the office's notice.
   An online payment's receipt is sent only by the call that recorded it
   (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
@@ -1095,7 +1094,7 @@ the page; tabs styled like Statistics').
   (`?idle=1`).
 - **Page security headers** (`vercel.json` `headers`, every path but `/api/`):
   Content-Security-Policy, no framing, nosniff, a referrer policy, a
-  permissions policy (camera and location for this site only) and HSTS. The
+  permissions policy (location for this site only, no camera) and HSTS. The
   CSP lists every outside host the pages use: a new CDN, image host, font or
   API called from a page must be added there, or the browser blocks it.
 
@@ -1103,7 +1102,7 @@ the page; tabs styled like Statistics').
 
 `docs/QUALITY-AND-TOOLS.md` (October 2026): how ZTIMS meets each ISO/IEC
 25010:2023 characteristic, the gaps and the tools that would close them, and
-which outside tools to switch (now: serve Leaflet, jsQR and the fonts from the
+which outside tools to switch (now: serve Leaflet and the fonts from the
 site; before real use: email service, map tiles, routing servers, paid plans).
 Nothing in it is built yet; read it before working on quality, tooling or a
 framework change.

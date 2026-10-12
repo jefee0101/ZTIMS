@@ -80,7 +80,7 @@ const FOOTER = 'Municipal Tourism Office, Municipal Hall, Poblacion, Zamboanguit
 
 /* One email from labelled lines: plain text, and a simple HTML version of the
    same, so it reads well in any mail app. */
-function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid, footer = FOOTER }) {
+function compose({ heading, intro, rows = [], paragraphs = [], link, footer = FOOTER }) {
     const text = [
         heading, '', intro, '',
         ...rows.map(([label, value]) => `${label}: ${value}`),
@@ -92,7 +92,6 @@ function compose({ heading, intro, rows = [], paragraphs = [], link, qrCid, foot
     const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#1C1917;line-height:1.5">
         <h2 style="margin:0 0 8px;color:#7A2E00">${escapeHtml(heading)}</h2>
         <p>${escapeHtml(intro)}</p>
-        ${qrCid ? `<p style="text-align:center"><img src="cid:${qrCid}" alt="Ticket QR code" width="200" height="200"/></p>` : ''}
         ${rows.length ? `<table style="border-collapse:collapse;width:100%">${rows.map(([label, value]) =>
             `<tr><td style="padding:6px 8px;border-bottom:1px solid #E3DCD1;color:#566;width:40%">${escapeHtml(label)}</td>
                  <td style="padding:6px 8px;border-bottom:1px solid #E3DCD1;font-weight:bold">${escapeHtml(value)}</td></tr>`).join('')}</table>` : ''}

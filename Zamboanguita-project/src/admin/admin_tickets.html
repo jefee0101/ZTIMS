@@ -483,7 +483,7 @@ body { overflow-x: hidden; }
                 <span class="sidebar-label">Guide Bookings</span>
             </a>
             <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
-                <span class="material-symbols-outlined text-accent">qr_code_scanner</span>
+                <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Tickets</span>
             </a>
             <a title="Collections" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_collections.html">
@@ -528,7 +528,7 @@ body { overflow-x: hidden; }
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tickets</h1>
 
-            <!-- Check a ticket: type the code or scan its QR, then let them in. -->
+            <!-- Check a ticket: type the code, then let them in. -->
             <section class="glass-panel p-5 sm:p-6 space-y-4" aria-labelledby="checkHeading">
                 <h2 id="checkHeading" class="text-lg font-extrabold text-on-surface">Check a ticket</h2>
                 <form id="checkForm" class="flex flex-wrap gap-2">
@@ -538,17 +538,7 @@ body { overflow-x: hidden; }
                     <button type="submit" class="btn btn-primary min-h-[48px]">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span> Check
                     </button>
-                    <button type="button" id="scanBtn" class="btn btn-secondary min-h-[48px]">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">qr_code_scanner</span> Scan QR
-                    </button>
                 </form>
-                <div id="scanBox" hidden class="space-y-2">
-                    <video id="scanVideo" playsinline muted class="w-full max-w-md bg-black aspect-square object-cover"></video>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button type="button" id="scanStop" class="btn btn-cancel min-h-[44px]">Stop scanning</button>
-                        <p id="scanNote" class="text-support">Point the camera at the ticket's QR code.</p>
-                    </div>
-                </div>
                 <div id="checkResult" aria-live="polite"></div>
             </section>
 
@@ -679,81 +669,6 @@ body { overflow-x: hidden; }
             }
         }
 
-        /* ---- scanning: the phone's own QR reader where there is one, else a
-                small reader loaded only when needed ------------------------- */
-
-        let stream = null, scanning = false;
-        async function qrReader() {
-            if ('BarcodeDetector' in window) {
-                try {
-                    const formats = await window.BarcodeDetector.getSupportedFormats();
-                    if (formats.includes('qr_code')) {
-                        const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-                        return async video => { const found = await detector.detect(video); return found[0] ? found[0].rawValue : null; };
-                    }
-                } catch (e) { /* fall through to jsQR */ }
-            }
-            if (!window.jsQR) {
-                await new Promise((resolve, reject) => {
-                    const s = document.createElement('script');
-                    s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
-                    s.onload = resolve; s.onerror = () => reject(new Error('The QR reader could not load. Type the code instead.'));
-                    document.head.appendChild(s);
-                });
-            }
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            return async video => {
-                if (!video.videoWidth) return null;
-                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
-                const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const found = window.jsQR(img.data, img.width, img.height);
-                return found ? found.data : null;
-            };
-        }
-
-        function stopScan() {
-            scanning = false;
-            if (stream) stream.getTracks().forEach(t => t.stop());
-            stream = null;
-            document.getElementById('scanBox').hidden = true;
-        }
-
-        async function startScan() {
-            const note = document.getElementById('scanNote');
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showToast('This device cannot use its camera here. Type the code instead.', 'error');
-                return;
-            }
-            try {
-                const read = await qrReader();
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                const video = document.getElementById('scanVideo');
-                video.srcObject = stream;
-                await video.play();
-                document.getElementById('scanBox').hidden = false;
-                note.textContent = "Point the camera at the ticket's QR code.";
-                scanning = true;
-                const loop = async () => {
-                    if (!scanning) return;
-                    let value = null;
-                    try { value = await read(video); } catch (e) { /* next frame */ }
-                    if (value) {
-                        stopScan();
-                        document.getElementById('checkCode').value = value;
-                        check(value);
-                        return;
-                    }
-                    setTimeout(loop, 200);
-                };
-                loop();
-            } catch (error) {
-                stopScan();
-                showToast(error.name === 'NotAllowedError' ? 'The camera was not allowed. Type the code instead.' : error.message, 'error');
-            }
-        }
-
         /* ---- the day's list ----------------------------------------------- */
 
         const STATUS = {
@@ -833,8 +748,6 @@ body { overflow-x: hidden; }
                 event.preventDefault();
                 check(document.getElementById('checkCode').value);
             });
-            document.getElementById('scanBtn').addEventListener('click', startScan);
-            document.getElementById('scanStop').addEventListener('click', stopScan);
             const date = document.getElementById('listDate');
             date.value = manilaToday();
             date.addEventListener('change', loadList);

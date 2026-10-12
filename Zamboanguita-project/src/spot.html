@@ -1154,7 +1154,7 @@ body { overflow-x: hidden; }
     }
 
     /* Entrance tickets, for attractions the Tourism Office runs and charges for.
-       Bought online and shown at the entrance as a QR code. */
+       Bought online; the visitor shows the ticket code. */
     async function renderTicketOffer(spotId) {
         const slot = document.getElementById('ticketOffer');
         if (!slot) return;
@@ -1175,7 +1175,7 @@ body { overflow-x: hidden; }
         // like booking a guide. The Entrance tile under At a glance carries the
         // price and the discounts.
         const tileSub = document.querySelector('[data-fact="entrance"] .spot-fact__sub');
-        if (tileSub && cheaper.length) tileSub.textContent = `per person · less for ${cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1')}`;
+        if (tileSub && cheaper.length) tileSub.textContent = `per person · pay online or onsite · less for ${cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1')}`;
         const modal = document.createElement('div');
         modal.id = 'ticketModal';
         modal.hidden = true;
@@ -1193,7 +1193,7 @@ body { overflow-x: hidden; }
                 <h3 id="ticketHeading" class="text-xl font-display font-bold text-on-surface mb-1 pr-10">Buy entrance tickets</h3>
                 <p class="text-on-surface"><b>${escapeHtml(peso(kinds[0].price))}</b> per person${cheaper.length
                     ? ` <span class="text-on-surface-variant">· less for ${escapeHtml(cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1'))}</span>` : ''}</p>
-                <p class="text-support mt-1">Buy ahead and show the QR code at the entrance, or pay onsite.</p>
+                <p class="text-support mt-1">Pay online now, or pay onsite when you arrive.</p>
                 <ol class="journey-steps mt-4" aria-label="Ticket steps">${journeySteps(['Date & visitors', 'Payment', 'Your ticket'], 0)}</ol>
 
                 <form id="ticketForm" class="mt-5" novalidate>
@@ -1893,7 +1893,7 @@ body { overflow-x: hidden; }
         const facts = [
             { icon: 'schedule', label: isStay ? 'Open' : 'Open', value: days, sub: time },
         ];
-        if (!isStay) facts.push({ key: 'entrance', icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person' : '' });
+        if (!isStay) facts.push({ key: 'entrance', icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person · pay online or onsite' : '' });
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
         if (spot.requiresGuide) facts.push({ key: 'guide', icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: '' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });

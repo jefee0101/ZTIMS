@@ -426,7 +426,7 @@ body { overflow-x: hidden; }
                         <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="bk-field"/></label>`}
                     <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Move</button>
                 </div>
-                <p id="moveNote" class="text-support">${isTicket ? 'The price and the QR code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
+                <p id="moveNote" class="text-support">${isTicket ? 'The price and the ticket code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
             </form>` : '';
         // A guide booking nobody has paid for yet: the way to pay, first.
         const needsPaying = !isTicket && item.status === 'pending_payment' && !item.paid;
@@ -460,7 +460,6 @@ body { overflow-x: hidden; }
                 <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">${isTicket ? 'Your entrance ticket' : 'Your guide booking'}</h2>
                 <span class="${tone} tone-pill rounded-pill text-xs font-bold px-3 py-1">${esc(label)}</span>
             </div>
-            ${item.qr ? `<div class="flex justify-center"><div class="bg-white p-3 w-48 h-48 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(item.code)}">${item.qr}</div></div>` : ''}
             <div>${details.join('')}</div>
             ${item.closedByOffice || !(item.canMove || item.canCancel)
                 ? `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`

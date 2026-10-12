@@ -9,7 +9,6 @@
  * Links go to the Manage page with the code only — never the email address,
  * which the visitor types there themselves.
  */
-const QRCode = require('qrcode');
 const { query } = require('./db');
 const { sendMail, compose, niceDate, pesos } = require('./mailer');
 const { describeKinds } = require('./attractions');
@@ -43,25 +42,14 @@ async function bookingRow(bookingId) {
 const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', bank: 'Online banking', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph' };
 const paidLine = row => `${pesos(row.paid_amount)} · ${METHOD[row.paid_method] || row.paid_method || 'online'}${row.paid_channel === 'online' ? ' · online' : ' · at the office'}`;
 
-/* The QR on a ticket, as a PNG attachment: mail apps block images written into
-   the message itself, but show an attached one. */
-async function qrAttachment(content) {
-    return {
-        filename: 'ticket-qr.png',
-        content: await QRCode.toBuffer(content, { type: 'png', margin: 1, width: 400, errorCorrectionLevel: 'M' }),
-        cid: 'ticketqr'
-    };
-}
-
 /* ---------------------------------------------------------------- tickets */
 
-async function ticketReceipt(ticketId, origin, { qrContent } = {}) {
+async function ticketReceipt(ticketId, origin) {
     const t = await ticketRow(ticketId);
     if (!t) return { sent: false, reason: 'not_found' };
     const body = compose({
         heading: 'Your entrance ticket',
-        intro: `Show this QR code at the entrance of ${t.spot_title}. Save this email or take a screenshot: there may be no signal at the attraction.`,
-        qrCid: 'ticketqr',
+        intro: `Your ticket code is ${t.code}. Show it at ${t.spot_title}, on this email or a screenshot: there may be no signal at the attraction.`,
         rows: [
             ['Ticket code', t.code],
             ['Attraction', t.spot_title],
@@ -75,22 +63,19 @@ async function ticketReceipt(ticketId, origin, { qrContent } = {}) {
         ],
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
-    return sendMail({ to: t.email, subject: `Your ticket ${t.code} — ${t.spot_title}, ${niceDate(t.visit_date)}`,
-        ...body, attachments: [await qrAttachment(qrContent || t.code)] });
+    return sendMail({ to: t.email, subject: `Your ticket ${t.code} — ${t.spot_title}, ${niceDate(t.visit_date)}`, ...body });
 }
 
-async function ticketMoved(ticketId, fromDate, origin, { qrContent } = {}) {
+async function ticketMoved(ticketId, fromDate, origin) {
     const t = await ticketRow(ticketId);
     if (!t) return { sent: false, reason: 'not_found' };
     const body = compose({
         heading: 'Your ticket has a new date',
-        intro: `Your ticket for ${t.spot_title} is now for ${niceDate(t.visit_date)} (it was for ${niceDate(fromDate)}). The code and QR are the same.`,
-        qrCid: 'ticketqr',
+        intro: `Your ticket for ${t.spot_title} is now for ${niceDate(t.visit_date)} (it was for ${niceDate(fromDate)}). The ticket code is the same.`,
         rows: [['Ticket code', t.code], ['New date', niceDate(t.visit_date)], ['People', `${t.people}: ${describeKinds(t)}`]],
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
     });
-    return sendMail({ to: t.email, subject: `Ticket ${t.code} moved to ${niceDate(t.visit_date)}`, ...body,
-        attachments: [await qrAttachment(qrContent || t.code)] });
+    return sendMail({ to: t.email, subject: `Ticket ${t.code} moved to ${niceDate(t.visit_date)}`, ...body });
 }
 
 /* `byVisitor`: the visitor cancelled (the office's share is kept); otherwise

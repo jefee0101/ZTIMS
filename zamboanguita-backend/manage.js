@@ -20,7 +20,6 @@
  * Mounted at /api by server.js. Every change is emailed to the visitor.
  */
 const express = require('express');
-const QRCode = require('qrcode');
 const { query } = require('./db');
 const { tickets: Ticket, bookings: GuideBooking, payments: Payment, spots: Spot, guides: TouristGuide } = require('./models');
 const attractions = require('./attractions');
@@ -116,10 +115,6 @@ async function describe(found) {
             ...base,
             code: record.code, visitDate: record.visitDate, people: record.people,
             kindsText: attractions.describeKinds(record), name: record.fullName, maxDate: addDays(manilaToday(), TICKET_DAYS_AHEAD),
-            // The QR again, for a visitor who lost the email — before they set off.
-            qr: ['valid', 'used'].includes(record.status)
-                ? await QRCode.toString(await module.exports.ticketQr(record._id), { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
-                : null,
             canMove: (live && window.open) || closed, canCancel: live && window.open, canRefundClosure: closed,
             why: closed ? `The office closed ${spot ? spot.title : 'the attraction'} on this date. Choose a full refund, or move the ticket to another date.`
                 : record.status === 'used' ? 'This ticket was used at the entrance, so it can no longer be moved or refunded.'
@@ -202,8 +197,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
                     `update tickets set visit_date = $2, status = 'valid'
                       where id = $1 and status in ('valid', 'closed') and visit_date = $3`, [found.record._id, date, from]);
                 if (!rowCount) throw problem(409, 'This ticket changed just now. Look it up again.');
-                const told = await notices.ticketMoved(found.record._id, from, origin, { qrContent: await module.exports.ticketQr(found.record._id) });
-                return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)}. The same QR code works on the new date.`, item: await describe(await load(req.body)) });
+                const told = await notices.ticketMoved(found.record._id, from, origin);
+                return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)}. The same ticket code works on the new date.`, item: await describe(await load(req.body)) });
             }
 
             const time = String((req.body && req.body.time) || found.record.preferredTime).trim();
@@ -277,10 +272,4 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     });
 
     return router;
-};
-
-// What a ticket's QR holds: its code.
-module.exports.ticketQr = async ticketId => {
-    const t = await Ticket.findById(ticketId);
-    return t ? t.code : '';
 };

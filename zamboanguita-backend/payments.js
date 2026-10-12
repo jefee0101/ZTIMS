@@ -29,7 +29,6 @@
  */
 const express = require('express');
 const crypto = require('crypto');
-const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
 const { query, transaction } = require('./db');
 const attractions = require('./attractions');
@@ -334,7 +333,7 @@ async function settle(checkout, { lateToo = false, origin = '' } = {}) {
         // The receipt goes once: only the call that recorded the payment sends
         // it, so the return page and Xendit's callback never send two.
         if (recorded && recorded.justPaid) {
-            if (recorded.kind === 'ticket') await notices.ticketReceipt(recorded.ticketId, origin, { qrContent: await ticketQrContent(recorded.ticketId) });
+            if (recorded.kind === 'ticket') await notices.ticketReceipt(recorded.ticketId, origin);
             else await notices.bookingPaid(recorded.bookingId, origin);
         }
         return recorded;
@@ -350,17 +349,7 @@ async function settle(checkout, { lateToo = false, origin = '' } = {}) {
     return checkout;
 }
 
-/* What a ticket's QR code holds: its code. */
-async function ticketQrContent(ticketId) {
-    const t = await Ticket.findById(ticketId);
-    return t ? t.code : '';
-}
-
 /* ---------------------------------------------------------------- public views */
-
-async function qrSvg(code) {
-    return QRCode.toString(code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } });
-}
 
 async function spotTitle(spotId) {
     const { rows } = await query('select title from spots where id = $1', [spotId]);
@@ -387,11 +376,8 @@ async function checkoutView(checkout) {
             view.ticket = { spot: await spotTitle(t.spotId), spotId: t.spotId, visitDate: dayOf(t.visitDate), people: t.people,
                             unitFee: money(t.unitFee), status: t.status, name: t.fullName,
                             kinds: attractions.kindsOf(t), kindsText: attractions.describeKinds(t) };
-            // The code and its QR only once paid: an unpaid ticket gets nobody in.
-            if (['valid', 'used'].includes(t.status)) {
-                view.ticket.code = t.code;
-                view.ticket.qr = await qrSvg(t.code);
-            }
+            // The code only once paid: an unpaid ticket gets nobody in.
+            if (['valid', 'used'].includes(t.status)) view.ticket.code = t.code;
         }
     }
     return view;

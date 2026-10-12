@@ -447,11 +447,10 @@ body { overflow-x: hidden; }
             const t = c.ticket;
             calendarEntry = { title: `Visit: ${t.spot}`, date: t.visitDate, where: t.spot, ref: t.code };
             show(steps(c) + heading('confirmation_number', 'tone-success', 'Your entrance ticket',
-                    'Show this QR code at the entrance.') + `
+                    'Show this code at the entrance.') + `
                 <div class="border border-outline-variant p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
                     <p class="font-bold text-on-surface">${esc(t.spot)}</p>
                     <p class="text-lg font-bold text-on-surface">${niceDate(t.visitDate)}</p>
-                    <div class="bg-white p-3 w-52 h-52 [&>svg]:w-full [&>svg]:h-full" role="img" aria-label="QR code for ticket ${esc(t.code)}">${t.qr}</div>
                     <p class="font-mono text-2xl font-black tracking-widest text-on-surface select-all">${esc(t.code)}</p>
                     <p class="text-on-surface">${esc(t.people)} ${Number(t.people) === 1 ? 'person' : 'people'} · ${esc(t.name)}</p>
                     ${t.kindsText ? `<p class="text-support">${esc(t.kindsText)}</p>` : ''}

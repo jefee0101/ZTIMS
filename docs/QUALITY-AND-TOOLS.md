@@ -32,7 +32,7 @@ Xendit (test mode), bcrypt + JWT, helmet, the rate limits.
 
 | Now | Switch to | Why | When |
 |---|---|---|---|
-| Leaflet from unpkg, jsQR from jsDelivr | Installed from npm and served from the site | Reliability (no outside CDN outage); Security (no outside code; narrower CSP) | Before the defense |
+| Leaflet from unpkg | Installed from npm and served from the site | Reliability (no outside CDN outage); Security (no outside code; narrower CSP) | Before the defense |
 | Google Fonts + Material Symbols from Google | Self-hosted font files | Privacy (no visitor IPs sent to Google; Data Privacy Act); Performance on weak signal | Before the defense |
 | Gmail App Password (nodemailer) | Brevo (300/day free) or Resend (3,000/month free), from the municipality's domain | Reliability (Gmail sending limits, spam folder); Security (no personal mailbox password) | Before real use |
 | OpenStreetMap's own tiles | MapTiler or Stadia Maps (free tiers) | Reliability (OSM's tile usage policy forbids heavy app use) | Before real use |
