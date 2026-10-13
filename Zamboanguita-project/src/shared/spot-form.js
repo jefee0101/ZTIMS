@@ -53,7 +53,8 @@
         { value: 'NATURE', label: 'Nature', icon: 'forest' },
         { value: 'ADVENTURE', label: 'Adventure', icon: 'hiking' },
         { value: 'CULTURE', label: 'Culture & Heritage', icon: 'museum' },
-        { value: 'FAITH', label: 'Faith', icon: 'church' }
+        { value: 'FAITH', label: 'Faith', icon: 'church' },
+        { value: 'LEISURE', label: 'Leisure & Recreation', icon: 'pool' }
     ];
     const OLD_CATEGORY = { 'BEACH / DIVING': ['BEACH', 'DIVING'], 'MOUNTAIN': ['NATURE'], 'CULTURAL': ['CULTURE'], 'ACCOMMODATION': [] };
     const categoryLabel = function (code) {

@@ -982,7 +982,8 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Categories (October 2026): what a place is known for, by the visitor's
 -- purpose — BEACH (Beach & Sea), DIVING (Diving & Snorkeling), NATURE,
--- ADVENTURE, CULTURE (Culture & Heritage), FAITH. One place can be several:
+-- ADVENTURE, CULTURE (Culture & Heritage), FAITH, and LEISURE (Leisure &
+-- Recreation: swimming pools, water parks, parks; added October 2026). One place can be several:
 -- spots.category is the main one, spot_more_categories holds any others (one
 -- row each, never the main one again). Whether it is a place to stay is a
 -- separate fact, spots.type ('accommodation' | 'spot').
@@ -1000,7 +1001,7 @@ create table if not exists public.spot_more_categories (
     spot_id             text not null references public.spots (id) on delete cascade,
     position            integer not null constraint spot_more_categories_position check (position between 0 and 5),
     category            text not null constraint spot_more_categories_known
-                        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH')),
+                        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE')),
     primary key (spot_id, position),
     constraint spot_more_categories_once unique (spot_id, category)
 );
@@ -1014,7 +1015,7 @@ begin
            coalesce(title, '') as name,
            coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(label, '') as words
       from public.spots
-     where category not in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH');
+     where category not in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE');
 
     -- The other categories first, from the old values.
     insert into public.spot_more_categories (spot_id, position, category)
@@ -1045,7 +1046,11 @@ begin
 
     alter table public.spots drop constraint if exists spots_category_known;
     alter table public.spots add constraint spots_category_known
-        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'));
+        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE'));
+    -- Redrawn every migrate, so a database made before LEISURE accepts it.
+    alter table public.spot_more_categories drop constraint if exists spot_more_categories_known;
+    alter table public.spot_more_categories add constraint spot_more_categories_known
+        check (category in ('BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE'));
 end
 $$;
 

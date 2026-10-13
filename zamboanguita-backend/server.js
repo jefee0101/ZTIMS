@@ -1579,7 +1579,7 @@ function parseCoordinate(latitudeInput, longitudeInput) {
  * read the way schema.sql converted the listings; ACCOMMODATION alone is not
  * guessed at (it said nothing about what the place is known for).
  */
-const SPOT_CATEGORIES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'];
+const SPOT_CATEGORIES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE'];
 const OLD_SPOT_CATEGORIES = { 'BEACH / DIVING': ['BEACH', 'DIVING'], MOUNTAIN: ['NATURE'], CULTURAL: ['CULTURE'] };
 
 function categoryProblem(message) {
@@ -1596,7 +1596,7 @@ function normaliseSpotCategories(payload) {
             if (!('moreCategories' in out)) out.moreCategories = rest;
         }
         if (!SPOT_CATEGORIES.includes(main)) {
-            throw categoryProblem('Choose what the place is known for: Beach & Sea, Diving & Snorkeling, Nature, Adventure, Culture & Heritage or Faith.');
+            throw categoryProblem('Choose what the place is known for: Beach & Sea, Diving & Snorkeling, Nature, Adventure, Culture & Heritage, Faith or Leisure & Recreation.');
         }
         out.category = main;
     }

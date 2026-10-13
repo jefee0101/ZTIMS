@@ -74,7 +74,7 @@ const PROVINCE = 'Negros Oriental';
 
 /* What a listing is known for (see schema.sql, "Categories"): the main
    category is spots.category; any others are spot_more_categories rows. */
-const CATEGORY_CODES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH'];
+const CATEGORY_CODES = ['BEACH', 'DIVING', 'NATURE', 'ADVENTURE', 'CULTURE', 'FAITH', 'LEISURE'];
 const MORE_CATEGORIES_OF = alias => `coalesce((select array_agg(c.category order by c.position) from spot_more_categories c
     where c.spot_id = ${alias}.id), '{}') as more_categories`;
 

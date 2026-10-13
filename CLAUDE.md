@@ -327,10 +327,10 @@ ground; ink `#1C1917` (off-black) text and the visitor's position on a map;
 paper `#FAF7F2` (off-white) the light ground, `#121110` the dark one. Red
 (errors, destructive) and green (success) are the only colours outside the
 identity, so a status never looks like a brand colour. Categories use the four
-shades on badges, map pins and legends (Beach & Sea and Diving tangerine, Nature
-and Adventure ember, Culture & Heritage and Faith burnt, Places to stay ink),
-always with their name and icon — two share each colour, so the icon tells them
-apart (the map legend shows each as its pin); the
+shades on badges, map pins and legends (Beach & Sea, Diving and Leisure &
+Recreation tangerine, Nature and Adventure ember, Culture & Heritage and Faith
+burnt, Places to stay ink), always with their name and icon — several share each
+colour, so the icon tells them apart (the map legend shows each as its pin); the
 category badge (`.cat-badge`) is a pill everywhere. Emails
 (`mailer.js`, the reset email in `server.js`) use the same colours.
 
@@ -825,8 +825,8 @@ Frontend only, no tables of their own:
   outline, the user's choice) — `coveRibbon` in the page draws
   the curve at the cove's real size so tiles and letters are not stretched,
   and redraws on resize) — four category photo tiles
-  (`#categoryTiles`, seven: the six categories and Places to stay — two a row
-  on a phone, all seven in a row from 1280px; tiles and the category menu are one control,
+  (`#categoryTiles`, eight: the seven categories and Places to stay — two a row
+  on a phone, four a row from 1024px; tiles and the category menu are one control,
   `setCategory`; a second tap shows everything), a status line only while a
   search or category narrows the list (`#browseStatus`, with "Show all"), and
   the cards; **Find it on the map** (`#map`, whose ground fades from the
@@ -992,17 +992,19 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 
 - **Categories, by the visitor's purpose** (October 2026, the user's choice):
   Beach & Sea (`BEACH`), Diving & Snorkeling (`DIVING`), Nature (`NATURE`),
-  Adventure (`ADVENTURE`), Culture & Heritage (`CULTURE`), Faith (`FAITH`). A
+  Adventure (`ADVENTURE`), Culture & Heritage (`CULTURE`), Faith (`FAITH`), and
+  Leisure & Recreation (`LEISURE`, icon `pool`: swimming pools, water parks,
+  parks — added so a pool-only place has a home). A
   place can have several: `spots.category` is the main one (checked against the
-  six), `spot_more_categories` holds the others (one row each, never the main
+  seven), `spot_more_categories` holds the others (one row each, never the main
   again; routes see `spot.moreCategories`, written by `spots.create/save` in the
   same transaction as the photos). Whether it is a **place to stay** is its own
   question, `spots.type` (`accommodation` | `spot`), and it alone decides the
   monthly report's kind, tickets and "Book a room". The form asks "Kind of
-  place" (two pills) and "Known for" (six pills to tick; the first ticked is the
+  place" (two pills) and "Known for" (seven pills to tick; the first ticked is the
   main one, marked Main); `normaliseSpotCategories` in `server.js` checks them
   and reads the four old codes a cached page may send. Home's tiles and filter
-  are the six plus Places to stay (`?category=` accepts old names too); a place
+  are the seven plus Places to stay (`?category=` accepts old names too); a place
   shows under every category it has. `schema.sql` converted the old values once
   (ACCOMMODATION → a place to stay, Beach & Sea if its words speak of the sea,
   else Nature; BEACH / DIVING → Beach & Sea + Diving; MOUNTAIN → Nature, +

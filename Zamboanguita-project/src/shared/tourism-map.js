@@ -52,7 +52,7 @@
                   own surfaces — the popup is glass in the page's theme, so its
                   category line uses --ztims-cat-*-ink, light on the night theme */
     /* What a place is known for (October 2026; see schema.sql "Categories"):
-       six, by the visitor's purpose. Colours repeat by twos — the identity has
+       seven, by the visitor's purpose. Colours repeat (the tangerine three times) — the identity has
        four shades — so the icon and the name are what tell them apart, on the
        pin, the badge and the legend alike. A place to stay is pinned as one,
        whatever it is known for: that is what a visitor looks for it as. */
@@ -62,7 +62,8 @@
         'NATURE':    { cat: 'attraction', label: 'Nature',              icon: 'forest',       colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
         'ADVENTURE': { cat: 'attraction', label: 'Adventure',           icon: 'hiking',       colour: 'rgb(var(--brand-ember))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ember))' },
         'CULTURE':   { cat: 'municipal',  label: 'Culture & Heritage',  icon: 'museum',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' },
-        'FAITH':     { cat: 'municipal',  label: 'Faith',               icon: 'church',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' }
+        'FAITH':     { cat: 'municipal',  label: 'Faith',               icon: 'church',       colour: 'rgb(var(--brand-burnt))',     glyph: 'rgb(var(--brand-paper))', ink: 'rgb(163 74 0)' },
+        'LEISURE':   { cat: 'notice',     label: 'Leisure & Recreation', icon: 'pool',        colour: 'rgb(var(--brand-tangerine))', glyph: 'rgb(var(--brand-ink))',   ink: 'rgb(150 66 0)' }
     };
     const STAY = { cat: 'stay', label: 'Places to stay', icon: 'hotel', colour: 'rgb(var(--brand-ink))', glyph: 'rgb(var(--brand-paper))', ink: 'rgb(var(--brand-ink))' };
     // What a page cached before October 2026 may still hold.

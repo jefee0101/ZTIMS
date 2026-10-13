@@ -354,6 +354,7 @@ body { overflow-x: hidden; }
                                 <option value="ADVENTURE">Adventure</option>
                                 <option value="CULTURE">Culture &amp; Heritage</option>
                                 <option value="FAITH">Faith</option>
+                                <option value="LEISURE">Leisure &amp; Recreation</option>
                                 <option value="STAY">Places to stay</option>
                             </select>
                             <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-lg pointer-events-none" aria-hidden="true">expand_more</span>
@@ -677,7 +678,7 @@ body { overflow-x: hidden; }
     }
 
     const CATEGORY_NAMES = { BEACH: 'Beach & Sea', DIVING: 'Diving & Snorkeling', NATURE: 'Nature', ADVENTURE: 'Adventure',
-                             CULTURE: 'Culture & Heritage', FAITH: 'Faith', STAY: 'Places to stay' };
+                             CULTURE: 'Culture & Heritage', FAITH: 'Faith', LEISURE: 'Leisure & Recreation', STAY: 'Places to stay' };
 
     function applyFilters() {
         const query = (searchInput.value || '').trim().toLowerCase();
@@ -860,6 +861,7 @@ body { overflow-x: hidden; }
         { key: 'ADVENTURE', title: 'Adventure', sub: 'Treks and climbs', icon: 'hiking' },
         { key: 'CULTURE', title: 'Culture & Heritage', sub: "The town's story", icon: 'museum' },
         { key: 'FAITH', title: 'Faith', sub: 'Churches and shrines', icon: 'church' },
+        { key: 'LEISURE', title: 'Leisure & Recreation', sub: 'Pools and parks', icon: 'pool' },
         { key: 'STAY', title: 'Places to stay', sub: 'Resorts and inns', icon: 'hotel' }
     ];
     const OLD_CATEGORY_KEYS = { 'BEACH / DIVING': 'BEACH', MOUNTAIN: 'NATURE', CULTURAL: 'CULTURE', ACCOMMODATION: 'STAY' };

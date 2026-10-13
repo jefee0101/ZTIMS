@@ -1647,16 +1647,12 @@ div.leaflet-container {
 
 /* Category tiles: a photograph per kind of place, its name over it. */
 .category-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-/* Seven tiles (six categories and Places to stay): two a row on a phone, the
-   seventh across the row; four a row on a tablet; all seven in one row wide. */
+/* Eight tiles (seven categories and Places to stay): two a row on a phone,
+   four a row from 1024px (two rows; eight in one row would be too narrow). */
 .category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: span 2; }
 @media (min-width: 1024px) {
     .category-tiles { grid-template-columns: repeat(4, 1fr); }
     .category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: auto; }
-}
-@media (min-width: 1280px) {
-    .category-tiles { grid-template-columns: repeat(7, 1fr); }
-    .category-tile__title { font-size: .95rem; }
 }
 .category-tile {
     position: relative; display: block; height: 9.5rem; overflow: hidden; text-align: left;
