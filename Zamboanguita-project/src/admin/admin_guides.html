@@ -703,21 +703,6 @@ body { overflow-x: hidden; }
                 </div>
 
                 <h3 class="gd-section">Where they guide</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label for="guideScope" class="block text-sm font-semibold text-on-surface mb-1.5">Covers</label>
-                        <select id="guideScope" class="field">
-                            <option value="municipal">The whole municipality</option>
-                            <option value="barangay">One barangay</option>
-                        </select>
-                    </div>
-                    <div id="guideBarangayWrap" hidden>
-                        <label for="guideBarangay" class="block text-sm font-semibold text-on-surface mb-1.5">Barangay</label>
-                        <select id="guideBarangay" class="field">
-                            <option value="">Choose a barangay</option>
-                        </select>
-                    </div>
-                </div>
                 <div>
                     <p class="block text-sm font-semibold text-on-surface mb-1.5">Destinations</p>
                     <div id="guideSpotList" class="max-h-52 overflow-y-auto space-y-1 border border-outline-variant/40 px-3 py-1"></div>
@@ -776,7 +761,7 @@ body { overflow-x: hidden; }
         let allGuides = [];
         let guidedSpots = [];       // spots the office has marked as requiring a guide
 
-        // Zamboanguita's barangays, for a barangay guide's scope. Served by the API
+        // Zamboanguita's barangays, for the reports' rollup. Served by the API
         // (GET /api/guides/reports) from its own list, so this page keeps no copy.
         let BARANGAYS = [];
         const WEEKDAYS = [
@@ -965,9 +950,8 @@ body { overflow-x: hidden; }
                 if (language && !(guide.languages || []).some(name => name.toLowerCase() === language)) return false;
                 if (!query) return true;
                 const spotNames = (guide.assignedSpots || []).map(s => s.title || '').join(' ');
-                const scopeWords = guide.scope === 'barangay' ? 'barangay' : 'municipal whole municipality';
-                return [guide.fullName, guide.location, guide.barangay, guide.contactNumber, guide.email,
-                        (guide.languages || []).join(' '), spotNames, scopeWords]
+                return [guide.fullName, guide.location, guide.contactNumber, guide.email,
+                        (guide.languages || []).join(' '), spotNames]
                     .filter(Boolean)
                     .some(field => String(field).toLowerCase().includes(query));
             });
@@ -1017,7 +1001,6 @@ body { overflow-x: hidden; }
                 const verdict = availability ? (availability.get(String(guide._id)) || { free: false, reason: '' }) : null;
                 const group = Number(guide.maxGroupSize) || 1;
                 const facts = [
-                    guide.scope === 'barangay' ? 'Brgy. ' + escapeHtml(guide.barangay || '—') : 'Whole municipality',
                     (guide.languages || []).length ? escapeHtml(guide.languages.join(', ')) : 'No languages',
                     `${formatPeso(guide.guideFee)} · up to ${group}`,
                     guide.contactNumber ? escapeHtml(guide.contactNumber) : ''
@@ -1067,34 +1050,18 @@ body { overflow-x: hidden; }
             box.hidden = !message;
         }
 
-        const sameBarangay = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
-
-        /* The scope decides which destinations are on offer: a barangay guide sees
-           only the ones in their barangay. The server holds the same rule. */
+        /* The destinations a guide serves are where they guide: any destination
+           that requires a guide, in any barangay. */
         function renderSpotChoices(selectedIds) {
             const list = document.getElementById('guideSpotList');
             const chosen = new Set((selectedIds || []).map(String));
-            const scope = document.getElementById('guideScope').value;
-            const barangay = document.getElementById('guideBarangay').value;
 
             if (guidedSpots.length === 0) {
                 list.innerHTML = '<p class="text-support py-2">No destination requires a guide yet.</p>';
                 return;
             }
-            if (scope === 'barangay' && !barangay) {
-                list.innerHTML = '<p class="text-support py-2">Choose the barangay first.</p>';
-                return;
-            }
 
-            const offered = scope === 'barangay'
-                ? guidedSpots.filter(spot => sameBarangay(spot.barangay, barangay))
-                : guidedSpots;
-            if (!offered.length) {
-                list.innerHTML = `<p class="text-support py-2">No destination in ${escapeHtml(barangay)} requires a guide yet.</p>`;
-                return;
-            }
-
-            list.innerHTML = offered.map(spot => `
+            list.innerHTML = guidedSpots.map(spot => `
                 <label class="flex items-center gap-2.5 py-2 cursor-pointer min-h-[44px]">
                     <input type="checkbox" value="${escapeHtml(spot._id)}" ${chosen.has(String(spot._id)) ? 'checked' : ''}
                            class="w-5 h-5 rounded border-outline-variant/60 bg-surface text-primary focus:ring-primary focus:ring-offset-0"/>
@@ -1106,12 +1073,6 @@ body { overflow-x: hidden; }
 
         function checkedSpotIds() {
             return [...document.querySelectorAll('#guideSpotList input:checked')].map(box => box.value);
-        }
-
-        function syncScopeFields() {
-            const barangayScope = document.getElementById('guideScope').value === 'barangay';
-            document.getElementById('guideBarangayWrap').hidden = !barangayScope;
-            renderSpotChoices(checkedSpotIds());
         }
 
         function renderDayChoices(days) {
@@ -1135,11 +1096,6 @@ body { overflow-x: hidden; }
             document.getElementById('guideBio').value = guide?.bio || '';
             document.getElementById('guideLanguages').value = (guide?.languages || []).join(', ');
 
-            document.getElementById('guideBarangay').innerHTML = '<option value="">Choose a barangay</option>' +
-                BARANGAYS.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
-            document.getElementById('guideScope').value = guide?.scope || 'municipal';
-            document.getElementById('guideBarangay').value = guide?.barangay || '';
-            document.getElementById('guideBarangayWrap').hidden = document.getElementById('guideScope').value !== 'barangay';
             renderDayChoices(guide?.availableDays);
 
             renderSpotChoices((guide?.assignedSpots || []).map(s => s._id || s));
@@ -1157,7 +1113,6 @@ body { overflow-x: hidden; }
             setGuideError('');
 
             const id = document.getElementById('guideId').value;
-            const scope = document.getElementById('guideScope').value;
             const payload = {
                 fullName: document.getElementById('guideName').value.trim(),
                 contactNumber: document.getElementById('guideContact').value.trim(),
@@ -1167,15 +1122,12 @@ body { overflow-x: hidden; }
                 status: document.getElementById('guideStatus').value,
                 photoUrl: document.getElementById('guidePhoto').value.trim(),
                 bio: document.getElementById('guideBio').value.trim(),
-                scope,
-                barangay: scope === 'barangay' ? document.getElementById('guideBarangay').value : '',
                 languages: document.getElementById('guideLanguages').value.split(',').map(s => s.trim()).filter(Boolean),
                 availableDays: [...document.querySelectorAll('#guideDays input:checked')].map(box => box.value),
                 assignedSpots: checkedSpotIds()
             };
 
             if (!payload.fullName) { setGuideError('The guide needs a name.'); return; }
-            if (scope === 'barangay' && !payload.barangay) { setGuideError('Choose the barangay this guide is stationed in.'); return; }
             if (!payload.availableDays.length) { setGuideError('Tick at least one working day, or set the guide unavailable.'); return; }
 
             const restore = setButtonLoading(document.getElementById('saveGuideBtn'), 'Saving...');
@@ -1446,8 +1398,6 @@ body { overflow-x: hidden; }
             document.getElementById('closeGuideModalBtn').addEventListener('click', closeGuideModal);
             document.getElementById('cancelGuideBtn').addEventListener('click', closeGuideModal);
             document.getElementById('guideForm').addEventListener('submit', saveGuide);
-            document.getElementById('guideScope').addEventListener('change', syncScopeFields);
-            document.getElementById('guideBarangay').addEventListener('change', syncScopeFields);
             document.getElementById('guideSearch').addEventListener('input', renderTable);
             document.getElementById('showFilter').addEventListener('click', event => {
                 const chip = event.target.closest('[data-show]');

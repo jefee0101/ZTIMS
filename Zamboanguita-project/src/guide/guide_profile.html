@@ -125,8 +125,7 @@
                 <div class="space-y-2">
                     <h3 class="font-bold text-on-surface">Set by the Municipal Tourism Office</h3>
                     <dl class="text-sm divide-y divide-outline-variant/30">
-                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5"><dt class="text-on-surface-variant">Scope</dt><dd id="profileType" class="font-bold text-on-surface text-right">—</dd></div>
-                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5"><dt class="text-on-surface-variant">Stationed at</dt><dd id="profileBase" class="font-bold text-on-surface text-right">—</dd></div>
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5"><dt class="text-on-surface-variant">Meeting point</dt><dd id="profileBase" class="font-bold text-on-surface text-right">—</dd></div>
                         <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5"><dt class="text-on-surface-variant">Guide fee</dt><dd id="profileFee" class="font-bold text-on-surface text-right">—</dd></div>
                         <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5"><dt class="text-on-surface-variant">Largest group</dt><dd id="profileGroup" class="font-bold text-on-surface text-right">—</dd></div>
                     </dl>
@@ -212,11 +211,7 @@
             status.className = `tone-pill ${tone} inline-block mt-1`;
             status.textContent = label;
 
-            document.getElementById('profileType').textContent =
-                guide.scope === 'barangay' ? `Barangay ${guide.barangay} only` : 'Whole municipality';
-            document.getElementById('profileBase').textContent = guide.scope === 'barangay'
-                ? `Barangay ${guide.barangay}`
-                : 'Municipal Tourism Office';
+            document.getElementById('profileBase').textContent = guide.location || 'Municipal Tourism Office';
             document.getElementById('profileFee').textContent =
                 `₱${(Number(guide.guideFee) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 })}`;
             document.getElementById('profileGroup').textContent =

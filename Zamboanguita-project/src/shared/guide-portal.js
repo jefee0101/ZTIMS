@@ -2,10 +2,9 @@
    The Tourist Guide portal — shared by the four pages in src/guide/
    --------------------------------------------------------------------------
    A guide signs in on the same staff page as everyone else and lands here.
-   One kind of account for every guide; its scope is the guide's jurisdiction —
-   the whole municipality, or one barangay. The screens are the same; the scope
-   only filters what the guide sees and what the office may assign them. All
-   guides are managed by the Tourism Officer on the Tourist Guides page.
+   One kind of account for every guide. Where a guide works is the
+   destinations the office gives them; the dashboard counts the tours there.
+   All guides are managed by the Tourism Officer on the Tourist Guides page.
 
    The guide proposes, the office disposes. A guide keeps their availability
    and languages, edits their own contact number and bio, and files reports;
@@ -71,12 +70,10 @@
         return `${((hour + 11) % 12) + 1}:${match[2]} ${hour < 12 ? 'AM' : 'PM'}`;
     }
 
-    // The guide's scope, in words: their jurisdiction and where they are stationed.
+    // The line under the guide's name: where they meet visitors, when set.
     function stationLabel(guide) {
         if (!guide) return '';
-        return guide.scope === 'barangay'
-            ? `Barangay guide · Brgy. ${guide.barangay || '—'}`
-            : 'Municipal guide · whole municipality';
+        return guide.location ? `Tourist guide · meets visitors at ${guide.location}` : 'Tourist guide';
     }
 
     /* ---- toasts ------------------------------------------------------------

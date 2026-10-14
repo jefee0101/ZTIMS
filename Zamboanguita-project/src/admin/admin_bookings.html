@@ -985,7 +985,7 @@ body { overflow-x: hidden; }
                 icon: 'person_add',
                 fields: [{ name: 'guideId', label: 'Guide', type: 'select', options: guides.map(g => ({
                     value: g._id,
-                    label: `${String(g._id) === String(b.requestedGuideId) ? 'Asked for · ' : ''}${g.fullName} · ${formatPeso(g.guideFee)} · up to ${Number(g.maxGroupSize) || 0}${g.scope === 'barangay' && g.barangay ? ` · ${g.barangay}` : ''}`
+                    label: `${String(g._id) === String(b.requestedGuideId) ? 'Asked for · ' : ''}${g.fullName} · ${formatPeso(g.guideFee)} · up to ${Number(g.maxGroupSize) || 0}`
                 })) }]
             });
             if (!values) return;

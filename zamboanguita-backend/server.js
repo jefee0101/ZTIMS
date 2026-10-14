@@ -24,7 +24,7 @@ const {
     bookings: GuideBooking,
     payments: Payment,
     feedback: Feedback,
-    MAX_SPOT_IMAGES, GUIDE_STATUSES, GUIDE_SCOPES, GUIDE_REPORT_TYPES, WEEKDAYS, MAX_GUIDE_LANGUAGES, BOOKING_STATUSES,
+    MAX_SPOT_IMAGES, GUIDE_STATUSES, GUIDE_REPORT_TYPES, WEEKDAYS, MAX_GUIDE_LANGUAGES, BOOKING_STATUSES,
     FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
 } = require('./models');
 const { forgetOldVisitors } = require('./privacy');
@@ -1154,8 +1154,6 @@ app.post('/api/login', sharedRateLimit('login', {
                 phone: account.phone || "",
                 nationality: account.nationality || "",
                 establishmentName: account.establishmentName || "",
-                scope: account.scope || "",
-                barangay: account.barangay || "",
                 // Pre-rename key, still sent so a page cached from before the rename
                 // keeps showing the establishment's name instead of a blank.
                 resortName: account.establishmentName || ""
@@ -1861,30 +1859,26 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
    4a. TOURIST GUIDES
    ------------------------------------------
    Municipal tourism records, managed by the Tourism Office. A guide may also
-   be given a sign-in to the guide portal: one role, 'tourist_guide', whatever
-   the guide's jurisdiction. The jurisdiction is the guide's SCOPE:
-
-     municipal   the whole municipality; stationed at the Municipal Tourism Office
-     barangay    one barangay (`barangay`), where they are stationed
-
-   Every screen is the same for both; the scope only filters. A barangay guide's
-   dashboard counts the bookings at destinations in their barangay, a municipal
-   guide's counts them all — the same query with a different WHERE — and the
-   office can only assign a barangay guide destinations in that barangay.
+   be given a sign-in to the guide portal: one role, 'tourist_guide'. Where a
+   guide works is the destinations the office gives them (assignedSpots), and
+   nothing else: a booking can only go to a guide who serves its destination,
+   and a guide's dashboard counts the tours at their destinations. (A separate
+   area — the whole municipality or one barangay — was taken out in October
+   2026, the user's decision: the destinations already say it.)
 
    Who decides what:
      the guide   proposes — their availability (status and working days) and
                  the languages they speak; keeps their own contact number and
                  bio; files reports
      the office  disposes — assigns every booking, reviews every report, and
-                 alone sets name, scope, fee, group size, destinations, photo
+                 alone sets name, fee, group size, destinations, photo
                  and inactive
 
    Everything a visitor needs to see is served by one public route that reports
    the requirement without exposing a guide's contact details.
 ========================================== */
 
-// Zamboanguita's barangays, the only ones a barangay scope can name. A copy of
+// Zamboanguita's barangays, the only ones a guide's report can name. A copy of
 // BARANGAYS in Zamboanguita-project/src/shared/spot-form.js, which fills every
 // listing's barangay — keep the two in step (CLAUDE.md, "Duplicated facts").
 const BARANGAYS = [
@@ -1948,8 +1942,7 @@ const weekdayOf = date => WEEKDAYS[(new Date(date + 'T00:00:00Z').getUTCDay() + 
 /**
  * Cleans a guide payload from the office. Numbers are coerced, because a form
  * sends strings and a fee of "500" silently stored as text would break every
- * comparison later. The scope is checked against the destinations separately,
- * by checkGuideScope, because that needs the database.
+ * comparison later.
  */
 function applyGuideDetails(guide, body) {
     if (typeof body.fullName === 'string') {
@@ -1985,44 +1978,8 @@ function applyGuideDetails(guide, body) {
             .filter(id => db.isId(id));
         guide.assignedSpots = [...new Set(valid)];
     }
-    if (body.scope !== undefined) {
-        if (!GUIDE_SCOPES.includes(body.scope)) throw guideInvalid('Choose a municipal or a barangay scope.');
-        guide.scope = body.scope;
-    }
-    if (typeof body.barangay === 'string') guide.barangay = body.barangay.trim();
     if (body.availableDays !== undefined) guide.availableDays = cleanAvailableDays(body.availableDays);
     return guide;
-}
-
-/**
- * The scope rule, checked on the guide as it is about to be saved: a barangay
- * guide names a real barangay, and every destination they serve is in it. A
- * municipal guide covers everywhere, so any barangay left over from an earlier
- * scope is cleared rather than left to mislead.
- *
- * A listing whose barangay was never filled in belongs to no barangay, so only
- * a municipal guide can serve it.
- */
-async function checkGuideScope(guide) {
-    if ((guide.scope || 'municipal') === 'municipal') {
-        guide.scope = 'municipal';
-        guide.barangay = '';
-        return;
-    }
-    const barangay = officialBarangay(guide.barangay);
-    if (!barangay) throw guideInvalid('A barangay guide needs the barangay they are stationed in, chosen from the list.');
-    guide.barangay = barangay;
-
-    const ids = (guide.assignedSpots || []).map(String);
-    if (!ids.length) return;
-    const spots = await Spot.find({ _id: { in: ids } });
-    const outside = spots.filter(spot => barangayKey(spot.barangay) !== barangayKey(barangay));
-    if (outside.length) {
-        throw guideInvalid(
-            `A barangay guide for ${barangay} can only serve destinations in ${barangay}. ` +
-            `Untick ${outside.map(spot => spot.title).join(', ')}, or make them a municipal guide.`
-        );
-    }
 }
 
 /**
@@ -2073,8 +2030,6 @@ function guideProfile(guide, spotSummaries, languages) {
         guideFee: guide.guideFee,
         maxGroupSize: guide.maxGroupSize,
         status: guide.status,
-        scope: guide.scope || 'municipal',
-        barangay: guide.barangay || '',
         languages: languages || [],
         availableDays: guide.availableDays || WEEKDAYS.slice(),
         email: guide.email || '',
@@ -2191,7 +2146,7 @@ app.put('/api/guides/me/languages', requireGuide, async (req, res) => {
 
 /**
  * PATCH: the guide's own contact number and "about you", saved straight away.
- * Only these two: name, scope, fee, group size, destinations and photo stay the
+ * Only these two: name, fee, group size, destinations and photo stay the
  * office's, because they decide what the guide may be assigned. Anything else in
  * the body is ignored.
  */
@@ -2247,20 +2202,18 @@ function tally(list, keyOf, weightOf) {
  *              what a guide needs to meet their visitors. Never the email,
  *              nothing about money.
  *   mine       reports on those bookings
- *   area       the tourism traffic in the guide's jurisdiction — every
- *              booking at a destination in their barangay, or in the whole
- *              municipality for a municipal guide. Counts only: whose
- *              booking it is stays with the guide it was assigned to.
+ *   area       the guided tours at the destinations this guide serves,
+ *              whoever guides them. Counts only: whose booking it is stays
+ *              with the guide it was assigned to.
  */
 app.get('/api/guides/me/bookings', requireGuide, async (req, res) => {
     try {
         const guide = await loadSignedInGuide(req, res);
         if (!guide) return;
 
-        const scopeBarangay = guide.scope === 'barangay' ? guide.barangay : null;
         const [bookings, inArea] = await Promise.all([
             GuideBooking.listForGuide(guide._id),
-            GuideBooking.listInJurisdiction(scopeBarangay)
+            GuideBooking.listAtSpots((guide.assignedSpots || []).map(String))
         ]);
 
         const now = today();
@@ -2275,7 +2228,6 @@ app.get('/api/guides/me/bookings', requireGuide, async (req, res) => {
         return res.status(200).json({
             success: true,
             bookings,
-            jurisdiction: scopeBarangay ? `Barangay ${scopeBarangay}` : 'Municipality of Zamboanguita',
             mine: {
                 upcoming: upcoming(bookings).length,
                 confirmed: count(bookings, 'confirmed'),
@@ -2324,10 +2276,9 @@ app.get('/api/guides/me/reports', requireGuide, async (req, res) => {
 });
 
 /**
- * POST: file a report. Where it happened (`barangay`) is worked out here —
- * from the booking's destination, or the guide's own barangay — never taken
- * from the guide, except that a municipal guide filing without a booking may
- * name the barangay, from the list, since their jurisdiction is all of them.
+ * POST: file a report. Where it happened (`barangay`) is the booking's
+ * destination's barangay; a report about no one booking may name a barangay
+ * from the list, or none.
  * Filing never changes a booking; marking a tour completed stays the office's.
  */
 app.post('/api/guides/me/reports', requireGuide, async (req, res) => {
@@ -2343,7 +2294,7 @@ app.post('/api/guides/me/reports', requireGuide, async (req, res) => {
         if (details.length > 2000) return res.status(400).json({ success: false, message: 'Keep the details under 2000 characters.' });
 
         let booking = null;
-        let barangay = guide.scope === 'barangay' ? guide.barangay : '';
+        let barangay = '';
         if (req.body.bookingId) {
             booking = await GuideBooking.findById(req.body.bookingId);
             // Only a booking assigned to this guide; any other is "not found".
@@ -2352,7 +2303,7 @@ app.post('/api/guides/me/reports', requireGuide, async (req, res) => {
             }
             const spot = await Spot.findById(booking.spotId);
             barangay = (spot && officialBarangay(spot.barangay)) || (spot && spot.barangay) || barangay;
-        } else if (guide.scope !== 'barangay' && req.body.barangay) {
+        } else if (req.body.barangay) {
             barangay = officialBarangay(req.body.barangay);
             if (!barangay) return res.status(400).json({ success: false, message: 'Choose the barangay from the list.' });
         }
@@ -2427,8 +2378,6 @@ app.get('/api/guides/search', requireAdmin, async (req, res) => {
                 _id: guide._id,
                 fullName: guide.fullName,
                 contactNumber: guide.contactNumber,
-                scope: guide.scope,
-                barangay: guide.barangay,
                 status: guide.status,
                 languages: guide.languages,
                 availableDays: guide.availableDays,
@@ -2518,10 +2467,9 @@ app.post('/api/guides', requireAdmin, async (req, res) => {
     try {
         const draft = applyGuideDetails({}, req.body);
         const languages = req.body.languages === undefined ? undefined : cleanLanguages(req.body.languages);
-        await checkGuideScope(draft);
         const guide = await TouristGuide.create(draft);
         await saveOfficeLanguages(guide, { languages });
-        console.log(`🧭 Officer added ${guide.scope} guide ${guide.fullName}`);
+        console.log(`🧭 Officer added guide ${guide.fullName}`);
         return res.status(201).json({ success: true, message: `${guide.fullName} added.`, guide });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Guide create failure:');
@@ -2535,7 +2483,6 @@ app.put('/api/guides/:id', requireAdmin, async (req, res) => {
 
         applyGuideDetails(guide, req.body);
         const languages = req.body.languages === undefined ? undefined : cleanLanguages(req.body.languages);
-        await checkGuideScope(guide);
         await TouristGuide.save(guide);
         await saveOfficeLanguages(guide, { languages });
         return res.status(200).json({ success: true, message: `${guide.fullName} updated.`, guide });
@@ -2682,11 +2629,9 @@ app.get('/api/spots/:id/guide-requirement', async (req, res) => {
     }
 });
 
-// A barangay guide only serves destinations in their barangay; checked again
-// wherever a guide meets a destination, since a listing's barangay can change.
+// A guide serves exactly the destinations the office gave them.
 function guideServesSpot(guide, spot) {
-    if (!(guide.assignedSpots || []).some(id => String(id._id || id) === String(spot._id))) return false;
-    return guide.scope !== 'barangay' || barangayKey(spot.barangay) === barangayKey(guide.barangay);
+    return (guide.assignedSpots || []).some(id => String(id._id || id) === String(spot._id));
 }
 
 const pesos = n => `₱${(Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -2697,7 +2642,7 @@ const originOf = req => `${req.protocol}://${req.get('host')}`;
 
 /**
  * PUBLIC: the guides a visitor can ask for at this destination — photo, name,
- * languages, fee, bio, largest group, the area they cover — and, for a chosen
+ * languages, fee, bio, largest group — and, for a chosen
  * date (and time), whether each is free, by isGuideFreeOn, the rule the
  * office's assignment uses. Never a phone number or an email, and never which
  * booking makes a guide busy.
@@ -2726,7 +2671,6 @@ app.get('/api/spots/:id/guides', async (req, res) => {
             guides.push({
                 _id: g._id, fullName: g.fullName, photoUrl: g.photoUrl || '', languages: g.languages || [],
                 guideFee: Number(g.guideFee) || 0, maxGroupSize: g.maxGroupSize, bio: g.bio || '',
-                area: g.scope === 'barangay' ? `Barangay ${g.barangay}` : 'Whole municipality',
                 free, note
             });
         }
@@ -3039,17 +2983,6 @@ app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
         if (!guide.assignedSpots.some(id => String(id) === String(booking.spotId))) {
             return res.status(409).json({ success: false, message: `${guide.fullName} is not assigned to this destination.` });
-        }
-        // The scope, checked again here: a destination's barangay can change
-        // after the guide was given it.
-        if (guide.scope === 'barangay') {
-            const spot = await Spot.findById(booking.spotId);
-            if (!spot || barangayKey(spot.barangay) !== barangayKey(guide.barangay)) {
-                return res.status(409).json({
-                    success: false,
-                    message: `${guide.fullName} is a barangay guide for ${guide.barangay}, and this destination is not in ${guide.barangay}.`
-                });
-            }
         }
         if (booking.visitors > guide.maxGroupSize) {
             return res.status(409).json({

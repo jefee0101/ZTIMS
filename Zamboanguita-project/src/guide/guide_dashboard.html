@@ -116,11 +116,11 @@
                     </section>
                 </div>
 
-                <!-- The jurisdiction -->
+                <!-- The tours at the guide's destinations, whoever guides them -->
                 <section class="glass-panel rounded-2xl p-5 sm:p-6 space-y-5">
                     <div>
                         <h3 class="text-lg font-headline font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-accent">map</span> Guided tours in <span id="jurisdictionName">your area</span>
+                            <span class="material-symbols-outlined text-accent">map</span> Guided tours at your destinations
                         </h3>
                     </div>
                     <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -280,7 +280,6 @@
             renderMonths(mine.byMonth);
             renderNextTour();
 
-            document.getElementById('jurisdictionName').textContent = data.jurisdiction;
             document.getElementById('areaUpcoming').textContent = area.upcoming;
             document.getElementById('areaUnassigned').textContent = area.unassignedUpcoming;
             document.getElementById('areaCompleted').textContent = area.completed;
@@ -300,10 +299,8 @@
                 reportable.map(b => `<option value="${P.escapeHtml(b._id)}" data-date="${P.escapeHtml(b.preferredDate)}" data-visitors="${b.visitors}">
                     ${P.escapeHtml(b.reference)} · ${P.escapeHtml(P.formatDate(b.preferredDate, { month: 'short', day: 'numeric' }))} · ${P.escapeHtml(b.spot.title)}</option>`).join('');
 
-            // A municipal guide covers every barangay, so may say which one; a
-            // barangay guide's reports are always from their own.
-            const wrap = document.getElementById('reportBarangayWrap');
-            wrap.hidden = me.scope === 'barangay';
+            // A report about no one booking may say which barangay it was in.
+            document.getElementById('reportBarangayWrap').hidden = false;
             document.getElementById('reportBarangay').innerHTML = '<option value="">Municipality-wide / not one barangay</option>' +
                 (barangays || []).map(name => `<option value="${P.escapeHtml(name)}">${P.escapeHtml(name)}</option>`).join('');
 
@@ -320,7 +317,7 @@
             document.getElementById('reportBookingOptional').hidden = type === 'tour_completed';
             document.getElementById('reportHeadcountWrap').hidden = !['tour_completed', 'headcount'].includes(type);
             // The booking decides the barangay, so the picker only matters without one.
-            if (me.scope !== 'barangay') document.getElementById('reportBarangayWrap').hidden = Boolean(booking.value);
+            document.getElementById('reportBarangayWrap').hidden = Boolean(booking.value);
             if (chosen && chosen.dataset.date) {
                 document.getElementById('reportDate').value = chosen.dataset.date;
                 const headcount = document.getElementById('reportHeadcount');
@@ -374,7 +371,7 @@
                 details: document.getElementById('reportDetails').value.trim()
             };
             if (['tour_completed', 'headcount'].includes(type)) body.headcount = document.getElementById('reportHeadcount').value;
-            if (!bookingId && me.scope !== 'barangay') body.barangay = document.getElementById('reportBarangay').value || undefined;
+            if (!bookingId) body.barangay = document.getElementById('reportBarangay').value || undefined;
 
             const restore = P.setButtonLoading(document.getElementById('sendReportBtn'), 'Sending...');
             try {

@@ -187,14 +187,10 @@ create index if not exists tourist_guides_status_idx on public.tourist_guides (s
 -- Added with the guide portal. Separate statements, so a database created
 -- before them gains them here and one created after is left alone.
 --
--- One kind of account, Tourist Guide, with a scope — the guide's jurisdiction:
---   municipal  the whole municipality; stationed at the Municipal Tourism Office
---   barangay   only the barangay named in `barangay`, where they are stationed
--- The screens are the same for both; the scope filters what a guide sees and
--- which destinations the office may assign them. `barangay` is the name, the
--- same text spots.barangay holds, so the two compare directly. The API checks
--- it against the barangay list and requires it for a barangay scope, since
--- that rule depends on another column.
+-- scope and barangay: a guide's area (the whole municipality or one barangay).
+-- No longer used (October 2026, the user's decision): where a guide works is
+-- the destinations the office gives them (tourist_guide_spots). The columns
+-- stay, unread, until the user agrees to drop them; nothing writes them now.
 alter table public.tourist_guides
     add column if not exists scope text not null default 'municipal'
         constraint tourist_guides_scope check (scope in ('municipal', 'barangay'));
@@ -310,9 +306,9 @@ create index if not exists guide_bookings_created_at_idx on public.guide_booking
 
 -- What a guide reports to the office: a tour completed, a headcount, an
 -- incident, or feedback a tourist gave them. `barangay` is where it happened,
--- set by the API from the booking's destination or the guide's own barangay,
--- never taken from the guide — it is what the office's per-barangay rollup
--- counts. Filing a report never changes a booking; the office does that.
+-- set by the API from the booking's destination (a report about no one
+-- booking may name a barangay from the list) — it is what the office's
+-- per-barangay rollup counts. Filing a report never changes a booking; the office does that.
 create table if not exists public.guide_reports (
     id                  text primary key default public.ztims_new_id(),
     guide_id            text not null references public.tourist_guides (id) on delete cascade,

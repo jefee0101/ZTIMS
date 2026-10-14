@@ -505,16 +505,17 @@ provider-fallback layer, not a single API call:
 
 ### Tourist guides
 
-One role, `tourist_guide`, with a **scope** on the record (`tourist_guides.scope`):
-`municipal` covers the whole municipality; `barangay` + `barangay` covers one
-barangay. The screens are the same for both — the scope only filters:
-- a barangay guide can be given only destinations whose `spots.barangay` is
-  theirs (`checkGuideScope` on save; re-checked when a booking is assigned,
-  since a listing's barangay can change). A listing with a blank barangay can
-  only go to a municipal guide.
-- a guide's dashboard counts bookings in their jurisdiction
-  (`bookings.listInJurisdiction`) — counts only; visitor names and numbers are
-  shown only for bookings assigned to that guide.
+One role, `tourist_guide`. **Where a guide works is the destinations the
+office gives them** (`assignedSpots`, `tourist_guide_spots`), and nothing else:
+- a booking can only be assigned to a guide who serves its destination
+  (`guideServesSpot`, and the assign route's own check);
+- a guide's dashboard counts the guided tours at their destinations, whoever
+  guides them (`bookings.listAtSpots`) — counts only; visitor names and
+  numbers are shown only for bookings assigned to that guide.
+There is no separate area any more (taken out October 2026, the user's
+decision: "we already have destinations where they guide"). The old
+`tourist_guides.scope` / `barangay` columns stay in the database, unread and
+unwritten, until the user agrees to drop them; don't bring an area back.
 
 The guide proposes, the office disposes. A guide keeps their own availability
 (status available/unavailable and working days) and languages, and files
@@ -523,7 +524,7 @@ feedback — `barangay` is derived server-side, and filing never changes a
 booking), and edits their own contact number and bio directly
 (`PATCH /api/guides/me/details`, no approval). The office assigns every
 booking, reviews every report (rolled up per barangay on `admin_guides.html`),
-and alone sets name, scope, fee, group size, destinations, photo and
+and alone sets name, fee, group size, destinations, photo and
 `inactive` — the fields that decide what a guide may be assigned. Single days
 off (`guide_time_off`) and office-approved profile changes
 (`guide_profile_requests`) were taken out: a guide who cannot work sets
@@ -532,7 +533,7 @@ sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
 a guide record without one has `email`/`password_hash` null.
 
 Visitors choose: `GET /api/spots/:id/guides?date=&time=` (public) lists the
-guides at a destination — photo, name, languages, fee, bio, group size, area,
+guides at a destination — photo, name, languages, fee, bio, group size,
 and whether each is free then by `isGuideFreeOn` — never a phone, an email or
 the booking that makes a guide busy. A booking may carry `requested_guide_id`
 (null: any guide), checked at booking time (serves here, takes the group, free
@@ -699,12 +700,12 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   one; counts that filter (All, Available, Unavailable, Inactive, No
   destination); search, Speaks and Free on (a date asks `/api/guides/search`;
   Clear appears only when something is set). Each guide is one row: photo or
-  initials, name, one line of facts (area · languages · fee · largest group ·
+  initials, name, one line of facts (languages · fee · largest group ·
   phone), their destinations, a status pill (and Free that day / Not free with
   the reason), then **Edit** and ⋯ (Mark available / unavailable / inactive,
   Sign-in and password, Withdraw sign-in in red). The window has three parts:
-  The guide (photo, name, contact, about), Where they guide (covers, barangay,
-  destinations, meeting point), Bookings (fee, largest group, working days as
+  The guide (photo, name, contact, about), Where they guide (destinations,
+  meeting point), Bookings (fee, largest group, working days as
   pills `.gd-day`, languages, status).
 - **Establishment Managers** (`admin_managers.html`): title and **New manager
   account**; counts that filter (All, Active, Suspended, No listing yet);
@@ -1057,7 +1058,7 @@ the page; tabs styled like Statistics').
   The guide's My Profile (`guide/guide_profile.html`) is laid out like these
   Settings: tabs with their own addresses — `#account` (photo, name, status;
   contact number and bio saved straight away; sign-in email, guide since),
-  `#work` (what the office set, read only: scope, station, fee, largest group,
+  `#work` (what the office set, read only: meeting point, fee, largest group,
   destinations; and working days and languages with Change links to their
   pages) and `#security` (signed in since — the token's issue time, change
   password, sign out of all devices). Tab styles `.settings-tab` in
@@ -1156,12 +1157,11 @@ user noted weak signal at many places makes counting at the entrance hard
   wildly-wrong pins and to bias search ranking, not as proof a pin is inside
   the municipality.
 - **Barangay list**: `BARANGAYS` in `spot-form.js`, mirrored in the chips/count
-  on `src/history.html` and in `BARANGAYS` in `server.js` (which validates a
-  guide's barangay scope and serves the list to the guide portal and the
-  officer's Tourist Guides page, so those pages keep no copy). The dropdown
+  on `src/history.html` and in `BARANGAYS` in `server.js` (which checks the
+  barangay a guide's report names and serves the list to the guide portal and
+  the officer's Tourist Guides page, so those pages keep no copy). The dropdown
   only accepts a name in this list, and reverse-geocoding is matched against
-  it — a missing barangay makes auto-detection silently fail for listings in
-  it, and makes a barangay guide for it impossible to create.
+  it — a missing barangay makes auto-detection silently fail for listings in it.
 - **Country list**: `src/shared/countries.js` (names) vs `COUNTRY_CODES` in
   `server.js` (codes only, validates what the form sends). Checked by
   `npm run check` in the frontend.
@@ -1206,6 +1206,15 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   payment the step that confirms a booking again.
 - Tickets have no QR code: the ticket code is shown and typed. Where nobody
   stands at the entrance, the office marks tickets used from the day's list.
+- Tickets have no senior citizen or PWD price (October 2026, the user's
+  decision): regular, plus student and child where the office sets them.
+- A tourist guide has no area (whole municipality / one barangay): the
+  destinations the office gives a guide are where they guide (October 2026,
+  the user's decision). Reports still roll up per barangay, from the
+  destination of the tour.
+- `docs/MANUSCRIPT-NOTES.md` lists what the manuscript must say after each
+  system change; add to it in the same commit as a change the manuscript
+  describes.
 - Tourism records (spots/listings) are never hard-deleted, only marked
   inactive. Statistics reports likewise: voided, never deleted.
 - Tourism statistics hold counts and totals only — no revenue and no
@@ -1231,6 +1240,11 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   pills with no fill (a hairline outline), each number a tangerine circle.
 
 ## What to do 
+(October 2026: the guide's scope below was later taken out at the user's
+request — destinations decide where a guide works; see "Tourist guides". The
+rest still holds: one role, guide proposes / officer disposes, languages as a
+join table, the guide edits their own contact number and bio.)
+
 Make it one role with a scope, not two roles
 
 Create a single Tour Guide role, and give the account an assignment scope:

@@ -18,8 +18,6 @@ const ref = () => ({ type: 'id', nullable: true });
 
 const MAX_SPOT_IMAGES = 30;
 const GUIDE_STATUSES = ['available', 'unavailable', 'inactive'];
-// A guide's jurisdiction: the whole municipality, or one barangay.
-const GUIDE_SCOPES = ['municipal', 'barangay'];
 const GUIDE_REPORT_TYPES = ['tour_completed', 'headcount', 'incident', 'tourist_feedback'];
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const workKey = day => 'works' + day[0].toUpperCase() + day.slice(1);   // 'mon' → worksMon
@@ -236,9 +234,6 @@ const guides = new Table('tourist_guides', {
     guideFee: number({ min: 0 }),
     maxGroupSize: { type: 'integer', default: 1, min: 1 },
     status: text({ default: 'available', enum: GUIDE_STATUSES }),
-    // The guide's jurisdiction. `barangay` is set only for a barangay scope.
-    scope: text({ default: 'municipal', enum: GUIDE_SCOPES }),
-    barangay: text({ trim: true }),
     // The weekdays the guide works, one yes/no column per day (works_mon, …);
     // the routes see them as availableDays, a list like ['mon', 'sat'].
     ...Object.fromEntries(WEEKDAYS.map(day => [workKey(day), flag(true, { hidden: true })])),
@@ -440,7 +435,7 @@ const reports = new Table('guide_reports', {
 reports.listForOffice = async function (filters = {}) {
     const { sql, params } = reports.where(filters, [], 'r');
     const { rows } = await query(`
-        select r.*, g.full_name as guide_name, g.scope as guide_scope, g.barangay as guide_barangay,
+        select r.*, g.full_name as guide_name,
                b.reference as booking_reference, s.title as spot_title
         from guide_reports r
         join tourist_guides g on g.id = r.guide_id
@@ -450,7 +445,7 @@ reports.listForOffice = async function (filters = {}) {
         limit 1000`, params);
     return rows.map(row => ({
         ...reports.fromRow(row),
-        guide: { _id: row.guide_id, fullName: row.guide_name, scope: row.guide_scope, barangay: row.guide_barangay },
+        guide: { _id: row.guide_id, fullName: row.guide_name },
         bookingReference: row.booking_reference || '',
         spotTitle: row.spot_title || ''
     }));
@@ -537,22 +532,16 @@ bookings.listForGuide = async function (guideId) {
     }));
 };
 
-/* Every guide booking inside a jurisdiction — one barangay, or the whole
-   municipality when `barangay` is null — for a guide's dashboard. Deliberately
-   no visitor name, phone or email: only the guide a booking is assigned to
-   sees who it is for (listForGuide above). Matched on the destination's
-   barangay, case- and space-insensitively, as the office's forms may differ. */
-bookings.listInJurisdiction = async function (barangay) {
-    const params = [];
-    let where = '';
-    if (barangay !== null && barangay !== undefined) {
-        params.push(String(barangay));
-        where = ` where lower(btrim(s.barangay)) = lower(btrim($1))`;
-    }
+/* Every guide booking at these destinations — the ones a guide serves — for
+   that guide's dashboard. Deliberately no visitor name, phone or email: only
+   the guide a booking is assigned to sees who it is for (listForGuide above). */
+bookings.listAtSpots = async function (spotIds) {
+    if (!spotIds || !spotIds.length) return [];
     const { rows } = await query(`
         select b.id, b.status, b.visitors, b.nationality, b.preferred_date, b.guide_id,
                s.id as spot_id, s.title as spot_title, s.barangay as spot_barangay
-        from guide_bookings b join spots s on s.id = b.spot_id${where}`, params);
+        from guide_bookings b join spots s on s.id = b.spot_id
+        where b.spot_id = any($1::text[])`, [spotIds.map(String)]);
     return rows.map(row => ({
         _id: row.id,
         status: row.status,
@@ -688,7 +677,6 @@ module.exports = {
     MUNICIPALITY,
     PROVINCE,
     GUIDE_STATUSES,
-    GUIDE_SCOPES,
     GUIDE_REPORT_TYPES,
     WEEKDAYS,
     MAX_GUIDE_LANGUAGES,
