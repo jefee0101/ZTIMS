@@ -795,10 +795,14 @@ guided destinations:
   tickets or live guide bookings is refused: closing a sold date is the
   closure action's job (cancel, refund or move, tell each visitor).
 - **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
-  senior citizen and PWD always 20% off it (a rule, not a setting);
   `student_fee` and `child_fee` + `child_age_max` are offered only when set.
-  A ticket counts people by kind (`tickets.count_regular|senior|pwd|student|child`)
-  and keeps the price each kind paid (`fee_regular|senior|pwd|student|child`,
+  There is no senior citizen or PWD price (taken away October 2026, the
+  user's decision): `priceTickets` refuses a count for a kind that no longer
+  exists, so an old cached page can't buy fewer tickets than it shows, and
+  `schema.sql` drops `count_senior|pwd` / `fee_senior|pwd` once no ticket
+  counts anyone in them (until then they stay, unused).
+  A ticket counts people by kind (`tickets.count_regular|student|child`)
+  and keeps the price each kind paid (`fee_regular|student|child`,
   read by routes as `feeBreakdown`); `people` and `amount` are worked out by
   the database (see "Normalisation"); `priceTickets` prices a purchase from the counts, and the
   gate's check says whose ID to look at. No ID is ever stored.
@@ -868,8 +872,8 @@ Frontend only, no tables of their own:
   guide fee and group size, or that no guide is free — barangay); About;
   Photos (neither tickets nor a guide have a section of their own: "Buy
   tickets" opens the ticket form in a window, `#ticketModal` built by
-  `renderTicketOffer`, and the Entrance tile says "less for seniors and
-  PWDs"; "Book a guide" opens the booking form, where a guide is chosen,
+  `renderTicketOffer`, and the Entrance tile says "less for students and
+  children" when those prices are set; "Book a guide" opens the booking form, where a guide is chosen,
   through the hidden `#openBookGuideBtn`); Book your stay / visit (its
   booking link) or Contact; Getting there (address, emergency numbers, Get
   directions); "Nearby places to visit" (Home's card style; nearest first when

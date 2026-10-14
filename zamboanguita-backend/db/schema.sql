@@ -652,25 +652,20 @@ create table if not exists public.tickets (
     spot_id             text not null references public.spots (id),
     visit_date          date not null,
     -- How many of each kind of visitor. The staff at the entrance see the kinds,
-    -- to check a senior, PWD or student ID.
+    -- to check a student ID.
     count_regular       integer not null default 0,
-    count_senior        integer not null default 0,
-    count_pwd           integer not null default 0,
     count_student       integer not null default 0,
     count_child         integer not null default 0,
     -- The price per person each kind paid, fixed when the ticket was bought (a
     -- receipt keeps the price of the day). Null: that kind was not offered.
     fee_regular         numeric,
-    fee_senior          numeric,
-    fee_pwd             numeric,
     fee_student         numeric,
     fee_child           numeric,
     -- Worked out by the database from the columns above, never typed in.
     people              integer generated always as
-                        (count_regular + count_senior + count_pwd + count_student + count_child) stored,
+                        (count_regular + count_student + count_child) stored,
     amount              numeric generated always as
-                        (coalesce(count_regular * fee_regular, 0) + coalesce(count_senior * fee_senior, 0)
-                         + coalesce(count_pwd * fee_pwd, 0) + coalesce(count_student * fee_student, 0)
+                        (coalesce(count_regular * fee_regular, 0) + coalesce(count_student * fee_student, 0)
                          + coalesce(count_child * fee_child, 0)) stored,
     full_name           text not null,
     email               text not null,
@@ -754,10 +749,8 @@ create index if not exists online_checkouts_ticket_idx on public.online_checkout
 -- visitor's own cancellation it keeps.
 --
 -- Opening days live in spots.working_days, the text visitors already read
--- ("Monday to Saturday"); open-days.js reads and writes it. Senior citizens and
--- persons with disability always pay the regular fee less 20%, so that is a
--- rule in the code, not a price here. A student or child price left empty is
--- not offered. The cancellation percentage applies to tickets and guide
+-- ("Monday to Saturday"); open-days.js reads and writes it. A student or child
+-- price left empty is not offered. The cancellation percentage applies to tickets and guide
 -- bookings at that destination alike.
 -- ---------------------------------------------------------------------------
 alter table public.spots add column if not exists student_fee numeric;
@@ -887,18 +880,19 @@ begin
 
     -- Tickets: the per-kind prices become columns; people and amount are worked out.
     alter table public.tickets add column if not exists count_regular integer not null default 0;
-    alter table public.tickets add column if not exists count_senior integer not null default 0;
-    alter table public.tickets add column if not exists count_pwd integer not null default 0;
     alter table public.tickets add column if not exists count_student integer not null default 0;
     alter table public.tickets add column if not exists count_child integer not null default 0;
     alter table public.tickets add column if not exists fee_regular numeric;
-    alter table public.tickets add column if not exists fee_senior numeric;
-    alter table public.tickets add column if not exists fee_pwd numeric;
     alter table public.tickets add column if not exists fee_student numeric;
     alter table public.tickets add column if not exists fee_child numeric;
     select exists (select 1 from information_schema.columns
                     where table_schema = 'public' and table_name = 'tickets' and column_name = 'fee_breakdown') into has_column;
     if has_column then
+        -- Tickets of that time could still count senior citizens and PWDs.
+        alter table public.tickets add column if not exists count_senior integer not null default 0;
+        alter table public.tickets add column if not exists count_pwd integer not null default 0;
+        alter table public.tickets add column if not exists fee_senior numeric;
+        alter table public.tickets add column if not exists fee_pwd numeric;
         -- Tickets from before the kinds were all at the regular price.
         execute $sql$
             update public.tickets
@@ -939,6 +933,29 @@ begin
              + coalesce(count_child * fee_child, 0)) stored;
     end if;
 
+    -- Senior citizen and PWD prices were taken away (October 2026, the user's
+    -- decision). Their columns go once no ticket counts anyone in them, so no
+    -- ticket ever loses what it recorded; until then they stay, unused.
+    -- (Two steps: the second may only be read where the columns exist.)
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'tickets' and column_name = 'count_senior') then
+        if not exists (select 1 from public.tickets where count_senior <> 0 or count_pwd <> 0) then
+            alter table public.tickets drop constraint if exists tickets_counts_not_negative;
+            alter table public.tickets drop constraint if exists tickets_fees_not_negative;
+            alter table public.tickets drop constraint if exists tickets_priced_by_kind;
+            alter table public.tickets drop constraint if exists tickets_people;
+            alter table public.tickets drop column people;
+            alter table public.tickets drop column amount;
+            alter table public.tickets drop column count_senior, drop column count_pwd,
+                                       drop column fee_senior, drop column fee_pwd;
+            alter table public.tickets add column people integer generated always as
+                (count_regular + count_student + count_child) stored;
+            alter table public.tickets add column amount numeric generated always as
+                (coalesce(count_regular * fee_regular, 0) + coalesce(count_student * fee_student, 0)
+                 + coalesce(count_child * fee_child, 0)) stored;
+        end if;
+    end if;
+
     -- Checkouts: what was being paid is read off which reference is filled in.
     if exists (select 1 from information_schema.columns
                 where table_schema = 'public' and table_name = 'online_checkouts'
@@ -959,21 +976,19 @@ begin
     end if;
     if not exists (select 1 from pg_constraint where conname = 'tickets_counts_not_negative') then
         alter table public.tickets add constraint tickets_counts_not_negative
-            check (count_regular >= 0 and count_senior >= 0 and count_pwd >= 0 and count_student >= 0 and count_child >= 0);
+            check (count_regular >= 0 and count_student >= 0 and count_child >= 0);
     end if;
     if not exists (select 1 from pg_constraint where conname = 'tickets_people') then
         alter table public.tickets add constraint tickets_people check (people between 1 and 50);
     end if;
     if not exists (select 1 from pg_constraint where conname = 'tickets_fees_not_negative') then
         alter table public.tickets add constraint tickets_fees_not_negative
-            check (coalesce(fee_regular, 0) >= 0 and coalesce(fee_senior, 0) >= 0 and coalesce(fee_pwd, 0) >= 0
-                   and coalesce(fee_student, 0) >= 0 and coalesce(fee_child, 0) >= 0);
+            check (coalesce(fee_regular, 0) >= 0 and coalesce(fee_student, 0) >= 0 and coalesce(fee_child, 0) >= 0);
     end if;
     -- A kind with people on the ticket has its price.
     if not exists (select 1 from pg_constraint where conname = 'tickets_priced_by_kind') then
         alter table public.tickets add constraint tickets_priced_by_kind
-            check ((count_regular = 0 or fee_regular is not null) and (count_senior = 0 or fee_senior is not null)
-                   and (count_pwd = 0 or fee_pwd is not null) and (count_student = 0 or fee_student is not null)
+            check ((count_regular = 0 or fee_regular is not null) and (count_student = 0 or fee_student is not null)
                    and (count_child = 0 or fee_child is not null));
     end if;
 end

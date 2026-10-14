@@ -3,10 +3,9 @@
  *
  *   - which weekdays it opens (spots.working_days, read by open-days.js),
  *   - which particular dates it is shut (spot_closed_dates),
- *   - what each kind of visitor pays: the regular entrance fee; senior citizens
- *     and persons with disability always 20% off it (a rule, not a setting);
- *     a student and a child price, each offered only when the office sets it,
- *     and the age up to which a visitor counts as a child,
+ *   - what each kind of visitor pays: the regular entrance fee, and a student
+ *     and a child price, each offered only when the office sets it, with the
+ *     age up to which a visitor counts as a child,
  *   - and what share of the price it keeps when a visitor cancels.
  *
  * dayVerdict() is the one answer to "can visitors come on this date?", used by
@@ -20,7 +19,6 @@ const { query, transaction } = require('./db');
 const { spots: Spot, closedDates: ClosedDate, officers: TourismOfficer } = require('./models');
 const { WEEK, NAMES, parseOpenDays, formatOpenDays, weekdayOf, isOpenOn } = require('./open-days');
 
-const SENIOR_PWD_DISCOUNT = 0.20;          // RA 9994 and RA 10754: 20% off for seniors and PWDs
 const MANILA_OFFSET_HOURS = 8;
 
 const money = n => Math.round(Number(n) * 100) / 100;
@@ -34,17 +32,14 @@ function niceDate(dateKey) {
 }
 
 /* What one person of each kind pays here, or null where that kind is not
-   offered. Regular is the entrance fee; senior and PWD always 20% off it. */
+   offered. Regular is the entrance fee. */
 function feeTable(spot) {
     const regular = money(spot.entranceFee || spot.entrance_fee || 0);
-    const discounted = money(regular * (1 - SENIOR_PWD_DISCOUNT));
     const student = spot.studentFee ?? spot.student_fee;
     const child = spot.childFee ?? spot.child_fee;
     const childAgeMax = spot.childAgeMax ?? spot.child_age_max;
     return {
         regular,
-        senior: discounted,
-        pwd: discounted,
         student: student === null || student === undefined ? null : money(student),
         child: child === null || child === undefined || !childAgeMax ? null : money(child),
         childAgeMax: childAgeMax || null
@@ -55,8 +50,6 @@ function feeTable(spot) {
    with an ID to show at the entrance say so. */
 const KINDS = [
     { key: 'regular', column: 'count_regular', field: 'countRegular', label: 'Regular', plural: 'regular', needsId: false },
-    { key: 'senior', column: 'count_senior', field: 'countSenior', label: 'Senior citizen', plural: 'senior citizens', needsId: true },
-    { key: 'pwd', column: 'count_pwd', field: 'countPwd', label: 'Person with disability', plural: 'PWDs', needsId: true },
     { key: 'student', column: 'count_student', field: 'countStudent', label: 'Student', plural: 'students', needsId: true },
     { key: 'child', column: 'count_child', field: 'countChild', label: 'Child', plural: 'children', needsId: false }
 ];
@@ -69,7 +62,7 @@ function kindsOf(ticket) {
         .filter(k => k.count > 0);
 }
 
-/* "2 regular, 1 senior citizen and 1 child" */
+/* "2 regular, 1 student and 1 child" */
 function describeKinds(ticket) {
     const parts = kindsOf(ticket).map(k => {
         const kind = KINDS.find(x => x.key === k.key);
@@ -83,6 +76,12 @@ function describeKinds(ticket) {
    Throws a 400 with a plain message when a count is not allowed. */
 function priceTickets(spot, rawCounts, { maxPeople = 20 } = {}) {
     const fees = feeTable(spot);
+    // A page from before a kind was taken away (senior and PWD) may still send it.
+    for (const [key, raw] of Object.entries(rawCounts || {})) {
+        if (!KINDS.some(k => k.key === key) && Number(raw) > 0) {
+            const e = new Error('This page is out of date. Please reload it and choose again.'); e.status = 400; throw e;
+        }
+    }
     const counts = {};
     let people = 0;
     for (const k of KINDS) {
@@ -165,7 +164,6 @@ function setupView(spot, closedDates) {
         officeRun: !spot.managedBy,
         requiresGuide: Boolean(spot.requiresGuide),
         entranceFee: fees.regular,
-        seniorPwdFee: fees.senior,
         studentFee: spot.studentFee,
         childFee: spot.childFee,
         childAgeMax: spot.childAgeMax,
@@ -377,4 +375,3 @@ module.exports.visitCalendar = visitCalendar;
 module.exports.closedDatesFor = closedDatesFor;
 module.exports.salesOn = salesOn;
 module.exports.niceDate = niceDate;
-module.exports.SENIOR_PWD_DISCOUNT = SENIOR_PWD_DISCOUNT;

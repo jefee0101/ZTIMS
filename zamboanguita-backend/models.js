@@ -596,8 +596,8 @@ const payments = new Table('payments', {
 });
 
 /* An entrance ticket to an attraction the office runs. */
-const VISITOR_KINDS = ['regular', 'senior', 'pwd', 'student', 'child'];
-const feeKey = kind => 'fee' + kind[0].toUpperCase() + kind.slice(1);   // 'pwd' → feePwd
+const VISITOR_KINDS = ['regular', 'student', 'child'];
+const feeKey = kind => 'fee' + kind[0].toUpperCase() + kind.slice(1);   // 'child' → feeChild
 const tickets = new Table('tickets', {
     code: required(),
     spotId: { type: 'id', required: true },
@@ -614,13 +614,11 @@ const tickets = new Table('tickets', {
     isDemo: flag(false),
     // How many of each kind of visitor; they add up to `people`.
     countRegular: { type: 'integer', default: 0, min: 0 },
-    countSenior: { type: 'integer', default: 0, min: 0 },
-    countPwd: { type: 'integer', default: 0, min: 0 },
     countStudent: { type: 'integer', default: 0, min: 0 },
     countChild: { type: 'integer', default: 0, min: 0 },
     // The price each kind paid per person when the ticket was bought, one
     // column per kind (null: not offered). The routes see them as
-    // feeBreakdown { regular: 20, senior: 16, … } and unitFee (the regular price).
+    // feeBreakdown { regular: 20, child: 10, … } and unitFee (the regular price).
     ...Object.fromEntries(VISITOR_KINDS.map(kind => [feeKey(kind), { type: 'number', nullable: true, min: 0, hidden: true }]))
 }, {
     virtuals: {

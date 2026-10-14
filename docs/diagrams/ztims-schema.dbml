@@ -194,13 +194,9 @@ Table tickets {
   spot_id text [not null]
   visit_date date [not null]
   count_regular integer [not null, default: 0]
-  count_senior integer [not null, default: 0]
-  count_pwd integer [not null, default: 0]
   count_student integer [not null, default: 0]
   count_child integer [not null, default: 0]
   fee_regular numeric
-  fee_senior numeric
-  fee_pwd numeric
   fee_student numeric
   fee_child numeric
   people integer [note: 'worked out by the database from the counts']

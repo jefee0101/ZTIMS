@@ -63,7 +63,7 @@ async function ticketReceipt(ticketId, origin) {
             ['Paid', paidLine(t)]
         ],
         paragraphs: [
-            'Valid on this date only. Senior citizens, persons with disability and students: bring your ID for the discounted price.',
+            'Valid on this date only. Students: bring your school ID for the student price.',
             'You can move the date or cancel until 11:59 PM the day before your visit. A used ticket cannot be refunded.'
         ],
         link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }

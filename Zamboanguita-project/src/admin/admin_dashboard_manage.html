@@ -634,11 +634,6 @@ body { overflow-x: hidden; }
                             <p id="setupRegular" class="font-bold text-on-surface"></p>
                             <p class="text-support">The entrance fee. Change it with <b>Edit</b>.</p>
                         </div>
-                        <div class="ztims-card p-3">
-                            <p class="text-support">Senior citizen and PWD</p>
-                            <p id="setupSenior" class="font-bold text-on-surface"></p>
-                            <p class="text-support">Always 20% off the regular price. The ID is checked at the entrance.</p>
-                        </div>
                         <label class="block">
                             <span class="field-label">Student price (₱)</span>
                             <input id="setupStudent" type="number" min="0" step="0.01" class="field" placeholder="Empty: not offered"/>
@@ -1307,7 +1302,6 @@ body { overflow-x: hidden; }
             const sells = setup.officeRun && setup.type !== 'accommodation';
             document.getElementById('setupPrices').hidden = !sells;
             document.getElementById('setupRegular').textContent = formatPeso(setup.entranceFee);
-            document.getElementById('setupSenior').textContent = formatPeso(setup.seniorPwdFee);
             document.getElementById('setupStudent').value = setup.studentFee ?? '';
             document.getElementById('setupChild').value = setup.childFee ?? '';
             document.getElementById('setupChildAge').value = setup.childAgeMax ?? '';

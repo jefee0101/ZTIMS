@@ -619,12 +619,12 @@ async function seedDemo(officerEmail) {
                     const p = person();
                     const people = 1 + Math.floor(rand() * 6);
                     const unit = money(spot.entrance_fee);
-                    // Mostly regular; now and then a senior, a PWD, a student or a child.
+                    // Mostly regular; now and then a student or a child.
                     const fees = attractions.feeTable(spot);
-                    const counts = { regular: 0, senior: 0, pwd: 0, student: 0, child: 0 };
+                    const counts = { regular: 0, student: 0, child: 0 };
                     for (let k = 0; k < people; k++) {
                         const r = rand();
-                        const kind = r < 0.10 ? 'senior' : r < 0.14 ? 'pwd' : r < 0.24 ? 'student' : r < 0.36 ? 'child' : 'regular';
+                        const kind = r < 0.10 ? 'student' : r < 0.22 ? 'child' : 'regular';
                         counts[fees[kind] === null ? 'regular' : kind] += 1;
                     }
                     const unitFees = { regular: unit };
@@ -648,15 +648,14 @@ async function seedDemo(officerEmail) {
                     const ticket = (await query(`
                         insert into tickets (code, spot_id, visit_date, full_name, email, contact_number,
                                              status, used_at, used_by_email, is_demo, created_at, updated_at,
-                                             count_regular, count_senior, count_pwd, count_student, count_child,
-                                             fee_regular, fee_senior, fee_pwd, fee_student, fee_child)
-                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+                                             count_regular, count_student, count_child,
+                                             fee_regular, fee_student, fee_child)
+                        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $10, $11, $12, $13, $14, $15, $16)
                         on conflict (code) do nothing returning id, amount`,
                         [newTicketCode(spot.title), spot.id, day, p.name, p.email, p.phone,
                          status, usedAt, usedAt ? officerEmail : '', paidAt,
-                         counts.regular, counts.senior, counts.pwd, counts.student, counts.child,
-                         unitFees.regular, unitFees.senior ?? null, unitFees.pwd ?? null,
-                         unitFees.student ?? null, unitFees.child ?? null], client)).rows[0];
+                         counts.regular, counts.student, counts.child,
+                         unitFees.regular, unitFees.student ?? null, unitFees.child ?? null], client)).rows[0];
                     if (!ticket) continue;
                     tickets++;
                     const ageDays = (nowMs - paidAt.getTime()) / 86400000;
@@ -867,7 +866,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
                     ticket = await Ticket.create({
                         code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate,
                         fullName, email, contactNumber, isDemo: true,
-                        countRegular: priced.counts.regular, countSenior: priced.counts.senior, countPwd: priced.counts.pwd,
+                        countRegular: priced.counts.regular,
                         countStudent: priced.counts.student, countChild: priced.counts.child,
                         // The regular price is kept even when no regular visitor came.
                         feeBreakdown: { regular: offer.unitFee, ...priced.unitFees }
