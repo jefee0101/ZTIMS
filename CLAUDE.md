@@ -922,6 +922,9 @@ Frontend only, no tables of their own:
   missing setting or a refused message is logged and the change stands. Pages
   only say "we have emailed you" when the server says it went (`emailed`).
   `MAIL_TRANSPORT=file:/path` writes messages to a file, for local tests only.
+  The staff password-reset email goes through it too; its link is
+  `PUBLIC_SITE_URL`, else the address the request came to (never the CORS
+  list, whose first entry is a local test address when `CORS_ORIGIN` is unset).
 - **`notices.js`** writes each email from the database: ticket receipt (the ticket
   code, to show on the email or a screenshot), booking received (the reply
   time; no need to pay now), booking paid, tour confirmed (the guide, and "Not

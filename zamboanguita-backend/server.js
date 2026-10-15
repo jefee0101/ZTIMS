@@ -2,7 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-const nodemailer = require('nodemailer'); // Added for handling Forgot Password emails
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -1168,18 +1167,10 @@ app.post('/api/login', sharedRateLimit('login', {
 });
 
 
-// Configure Nodemailer for Email Transports. Credentials come from the environment
-// — the address and Gmail App Password must never be committed.
-const mailConfigured = Boolean(process.env.MAIL_USER && process.env.MAIL_PASSWORD);
-
-const transporter = mailConfigured
-    ? nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASSWORD }
-    })
-    : null;
-
-if (!mailConfigured) {
+// Reset emails go out through mailer.js like every other email: the office's
+// Gmail (MAIL_USER / MAIL_PASSWORD, never committed), giving up after 8 seconds
+// rather than holding the request, and MAIL_TRANSPORT=file:… for local tests.
+if (!mailer.mailConfigured()) {
     console.warn('⚠️  MAIL_USER / MAIL_PASSWORD are not set — password reset emails are disabled.');
 }
 
@@ -1226,7 +1217,7 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
         if (!email) return res.status(400).json({ success: false, message: 'Email required.' });
 
         // Say so plainly rather than appearing to send an email that never arrives.
-        if (!mailConfigured) {
+        if (!mailer.mailConfigured()) {
             return res.status(503).json({
                 success: false,
                 message: "Password reset email isn't set up yet. Please contact the tourism office to have your password reset."
@@ -1248,34 +1239,39 @@ app.post('/api/forgot-password', resetRateLimit, async (req, res) => {
         user.resetTokenExpires = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
         await found.table.save(user);
 
-        // Must point at the deployed site, not a local dev server, or the link in
-        // the email is useless to everyone but the developer.
-        const siteUrl = (process.env.PUBLIC_SITE_URL || allowedOrigins[0] || '').replace(/\/$/, '');
+        // The site's own address: PUBLIC_SITE_URL when set, else the address this
+        // request came to (the page and the API share one origin). Never the
+        // CORS list, whose first entry is a local test address when it is unset.
+        const siteUrl = (process.env.PUBLIC_SITE_URL || `${req.protocol}://${req.get('host')}`).trim().replace(/\/+$/, '');
         const resetLink = `${siteUrl}/src/user/reset_password.html?email=${encodeURIComponent(normalizedEmail)}&token=${token}`;
 
-        try {
-            await transporter.sendMail({
-                from: `"Zamboanguita Tourism" <${process.env.MAIL_USER}>`,
-                to: normalizedEmail,
-                subject: 'Reset Password Request - Zamboanguita Tourism',
-                html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #1C1917;">
-                        <h2 style="color: #7A2E00;">Zamboanguita Tourism Staff Portal</h2>
-                        <p>Hello,</p>
-                        <p>We received a request to change the password for your account.</p>
-                        <p>Click the button below to create a new password. This link works once and expires in ${RESET_TOKEN_TTL_MINUTES} minutes.</p>
-                        <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: #FFFDFA; background-color: #BF5700; text-decoration: none; font-weight: bold; margin: 15px 0;">Reset Password</a>
-                        <p style="font-size: 12px; color: #666;">If the button doesn't work, paste this into your browser:<br>${resetLink}</p>
-                        <p>If you didn't ask to change your password, you can ignore this email — your password stays as it is.</p>
-                    </div>
-                `
-            });
-        } catch (mailError) {
+        const sent = await mailer.sendMail({
+            to: normalizedEmail,
+            subject: 'Reset your ZTIMS password',
+            text: [
+                'Zamboanguita Tourism Staff Portal', '',
+                'We received a request to change the password for your account.',
+                `Open this link to choose a new password. It works once and expires in ${RESET_TOKEN_TTL_MINUTES} minutes:`,
+                resetLink, '',
+                "If you didn't ask to change your password, ignore this email — your password stays as it is."
+            ].join('\n'),
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #1C1917;">
+                    <h2 style="color: #7A2E00;">Zamboanguita Tourism Staff Portal</h2>
+                    <p>Hello,</p>
+                    <p>We received a request to change the password for your account.</p>
+                    <p>Click the button below to create a new password. This link works once and expires in ${RESET_TOKEN_TTL_MINUTES} minutes.</p>
+                    <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; color: #FFFDFA; background-color: #BF5700; text-decoration: none; font-weight: bold; margin: 15px 0;">Reset Password</a>
+                    <p style="font-size: 12px; color: #666;">If the button doesn't work, paste this into your browser:<br>${resetLink}</p>
+                    <p>If you didn't ask to change your password, you can ignore this email — your password stays as it is.</p>
+                </div>
+            `
+        });
+        if (!sent.sent) {
             // The token is useless if the email never left, so don't leave it live.
             user.resetTokenHash = null;
             user.resetTokenExpires = null;
             await found.table.save(user);
-            console.error('Reset email failed to send:', mailError);
             return res.status(502).json({ success: false, message: 'Could not send the reset email just now. Please try again in a moment.' });
         }
 
