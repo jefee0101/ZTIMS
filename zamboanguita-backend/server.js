@@ -3318,18 +3318,34 @@ const MODES = {
  * profile because it is keyed and metered to this deployment rather than
  * shared; OSRM's public demo runs the car profile only; Valhalla picks up what
  * is left, which today means motorbike. */
-function resolveMode(mode) {
-    if (ORS_API_KEY && mode.ors) return { router: 'openrouteservice', profile: mode.ors };
-    if (!ORS_API_KEY && mode.osrm) return { router: 'osrm', profile: mode.osrm };
-    if (VALHALLA_URL && mode.valhalla) return { router: 'valhalla', profile: mode.valhalla };
-    return null;
+const ROUTER_ORDER = ['openrouteservice', 'osrm', 'valhalla'];
+
+const PROFILE_KEY = { openrouteservice: 'ors', osrm: 'osrm', valhalla: 'valhalla' };
+
+/* A router can serve a mode only if it is configured and knows a profile for it.
+ * OSRM's demo needs no key; ORS needs one; Valhalla needs a base URL. */
+const ROUTER_AVAILABLE = {
+    openrouteservice: () => Boolean(ORS_API_KEY),
+    osrm: () => true,
+    valhalla: () => Boolean(VALHALLA_URL)
+};
+
+/* Every router a mode can fall back to, primary first. One sick provider must
+ * not take a whole mode down with it: when ORS hangs, the same request goes to
+ * OSRM or Valhalla, and the response names whichever router actually answered. */
+function routerChain(mode) {
+    return ROUTER_ORDER
+        .map(router => mode[PROFILE_KEY[router]] ? { router, profile: mode[PROFILE_KEY[router]] } : null)
+        .filter(link => link && ROUTER_AVAILABLE[link.router]());
 }
 
 const ROUTING_MODES = Object.fromEntries(
     Object.entries(MODES)
         .map(([id, mode]) => {
-            const resolved = resolveMode(mode);
-            return resolved ? [id, { label: mode.label, ...resolved }] : null;
+            const chain = routerChain(mode);
+            return chain.length
+                ? [id, { label: mode.label, router: chain[0].router, profile: chain[0].profile, chain }]
+                : null;
         })
         .filter(Boolean)
 );
@@ -3413,9 +3429,7 @@ function decodePolyline(encoded, precision) {
     return points;
 }
 
-async function routeWithValhalla(from, to, mode) {
-    const { profile } = ROUTING_MODES[mode];
-
+async function routeWithValhalla(from, to, profile) {
     let data;
     try {
         data = await fetchJson(`${VALHALLA_URL}/route`, {
@@ -3497,8 +3511,7 @@ function viaRoadName(legs) {
     return best;
 }
 
-async function routeWithOpenRouteService(from, to, mode) {
-    const { profile } = ROUTING_MODES[mode];
+async function routeWithOpenRouteService(from, to, profile) {
     const coordinates = [[from.longitude, from.latitude], [to.longitude, to.latitude]];
     const url = `https://api.openrouteservice.org/v2/directions/${profile}/geojson`;
     const headers = { Authorization: ORS_API_KEY, 'Content-Type': 'application/json' };
@@ -3541,8 +3554,7 @@ async function routeWithOpenRouteService(from, to, mode) {
         }));
 }
 
-async function routeWithOsrm(from, to, mode) {
-    const { profile } = ROUTING_MODES[mode];
+async function routeWithOsrm(from, to, profile) {
     const path = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
     const data = await fetchJson(
         `https://router.project-osrm.org/route/v1/${profile}/${path}`
@@ -3594,14 +3606,34 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
         return res.status(400).json({ success: false, message: 'That way of travelling is not available here.' });
     }
 
-    // Per mode, not per site: motorbike is served by a different router from the
-    // one answering for car, and both can be configured at once.
-    const router = ROUTING_MODES[mode].router;
+    // Per mode, not per site: the chain lists every router that can compute this
+    // mode, primary first. A provider that hangs or errors costs the visitor one
+    // attempt, not their directions — the same request goes to the next router,
+    // and the response names the one that actually answered.
+    const { chain } = ROUTING_MODES[mode];
 
     try {
-        const routes = router === 'openrouteservice' ? await routeWithOpenRouteService(from, to, mode)
-            : router === 'valhalla' ? await routeWithValhalla(from, to, mode)
-            : await routeWithOsrm(from, to, mode);
+        let routes = null;
+        let router = null;
+        let lastError = null;
+
+        for (const { router: linkRouter, profile } of chain) {
+            try {
+                routes = linkRouter === 'openrouteservice' ? await routeWithOpenRouteService(from, to, profile)
+                    : linkRouter === 'valhalla' ? await routeWithValhalla(from, to, profile)
+                    : await routeWithOsrm(from, to, profile);
+                router = linkRouter;
+                // An empty answer still counts as an answer: "these points are not
+                // connected by this kind of road" needs no second opinion.
+                break;
+            } catch (error) {
+                lastError = error;
+                console.error(`Routing with ${linkRouter} failed:`, error.message);
+            }
+        }
+
+        // Every router in the chain failed — the honest answer stays "unreachable".
+        if (router === null) throw lastError;
 
         if (!routes || !routes.length) {
             return res.status(404).json({
