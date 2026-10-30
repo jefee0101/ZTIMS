@@ -239,7 +239,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .pay-row__actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
 
-/* ---- Who runs a place: the Tourism Office or a private establishment -------
+/* ---- Who runs a place: the Tourism Office or a private enterprise -------
    A pill on every place in Statistics (and anywhere a place is listed), and a
    bar down the row's left edge: tangerine for the office's own places, ink
    for private ones, so the two read apart at a glance. */

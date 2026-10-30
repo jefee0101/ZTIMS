@@ -68,7 +68,7 @@
      *   options.year, month  the period
      *   options.officer      true on the officer's page: shows history, void and reopen
      *   options.viewOnly     true when this account may only look (the officer, at a
-     *                        privately managed establishment's report)
+     *                        private enterprise's report)
      *   options.onSaved      called after a successful save, void or unlock
      *   options.onExpired    called on a 401
      *   options.toast        (message, tone) => void

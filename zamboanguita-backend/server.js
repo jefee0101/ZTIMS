@@ -1460,7 +1460,7 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
  * Decides whether this caller may write to this listing.
  *
  * The Tourism Officer's authority covers every listing, including one a private
- * establishment maintains. That is the point of municipal oversight, and it does
+ * enterprise maintains. That is the point of municipal oversight, and it does
  * not lapse because a manager has been assigned to the day-to-day upkeep.
  */
 function authorizeSpotWrite(auth, spot) {
@@ -1766,7 +1766,7 @@ app.get('/api/spots/:id', async (req, res) => {
 /**
  * PATCH: the Tourism Office decides whether a listing is public.
  *
- * Officer-only, on every listing including those a private establishment
+ * Officer-only, on every listing including those a private enterprise
  * maintains — that is what municipal oversight means, and it is the reason this
  * is separate from editing the listing's information. An establishment keeps its
  * own details accurate; the municipality decides what the public sees.
@@ -1891,7 +1891,8 @@ const REPORT_TYPE_NAMES = {
 };
 
 const guideInvalid = message => Object.assign(new Error(message), { name: 'ValidationError' });
-const today = () => new Date().toISOString().slice(0, 10);
+// Today in Manila: between midnight and 8 AM there, the UTC date is still yesterday.
+const today = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 const isCalendarDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + 'T00:00:00Z').getTime());
 
 // Barangay names compared the way a person would read them.
@@ -1979,19 +1980,15 @@ function applyGuideDetails(guide, body) {
 }
 
 /**
- * Whether a guide can take a tour on `date` (and, when given, at `time`) —
- * the ONE rule, used both when the office assigns a booking and when it
- * searches for a free guide, so the search can never promise a guide the
- * assignment would then refuse. Returns { free: true } or { free: false, reason }.
+ * Whether a guide can take a tour on `date` — the ONE rule, used when the office
+ * assigns a booking, when it searches for a free guide, and when a visitor asks
+ * for a guide, so none of them can promise a guide another would refuse.
+ * Returns { free: true } or { free: false, reason }.
  *
- * With a time, only a confirmed booking at that same date and time clashes:
- * ZTIMS does not record how long a tour runs, so anything wider would mean
- * refusing bookings on a guess. Without a time (a search for a free day), any
- * confirmed booking that day counts, since the office has not said when.
+ * One tour per guide per day, whatever the time: tours here run for hours
+ * (a falls trek, a dive), and a guide who is busy that day leaves the other
+ * guides a turn. Callers may still pass `time`; it does not decide.
  */
-/* One tour per guide per day, whatever the time: tours here run for hours
-   (a falls trek, a dive), and a guide who is busy that day leaves the other
-   guides a turn. `time` is still accepted from callers but no longer decides. */
 async function isGuideFreeOn(guide, date, { exceptBookingId } = {}) {
     if (guide.status !== 'available') return { free: false, reason: `${guide.fullName} is marked ${guide.status}.` };
 
@@ -2012,6 +2009,37 @@ async function isGuideFreeOn(guide, date, { exceptBookingId } = {}) {
         };
     }
     return { free: true };
+}
+
+/**
+ * The confirmed tours still to come that a guide's record, changed to `next`,
+ * could no longer take: not available, the weekday dropped, the destination
+ * taken away, or the group now too large. Used by the guide's own availability
+ * and by the office's edits alike, so neither leaves a visitor with a guide
+ * who cannot come. The office reassigns those tours first.
+ */
+async function toursLeftBehind(guideId, next) {
+    const now = today();
+    const upcoming = (await GuideBooking.find({ guideId, status: 'confirmed' }))
+        .filter(b => String(b.preferredDate).slice(0, 10) >= now);
+    const spots = (next.assignedSpots || []).map(id => String(id._id || id));
+    return upcoming
+        .filter(b => next.status !== 'available'
+            || !(next.availableDays || WEEKDAYS).includes(weekdayOf(String(b.preferredDate).slice(0, 10)))
+            || !spots.includes(String(b.spotId))
+            || b.visitors > next.maxGroupSize)
+        .sort((x, y) => String(x.preferredDate).localeCompare(String(y.preferredDate)));
+}
+
+// The 409 for toursLeftBehind, naming up to five bookings.
+function leftBehindReply(res, leftBehind, whoMustAct) {
+    const list = leftBehind.slice(0, 5).map(b => `${b.reference} on ${String(b.preferredDate).slice(0, 10)}`).join(', ');
+    const n = leftBehind.length;
+    return res.status(409).json({
+        success: false,
+        message: `${whoMustAct.subject} still ${n === 1 ? 'a confirmed tour' : `${n} confirmed tours`} then: ${list}${n > 5 ? ', …' : ''}. ${whoMustAct.action(n === 1 ? 'it' : 'them')}`,
+        bookings: leftBehind.map(b => ({ reference: b.reference, date: String(b.preferredDate).slice(0, 10) }))
+    });
 }
 
 /* What a guide sees of their own record in the portal. Never the hash. */
@@ -2103,19 +2131,9 @@ app.patch('/api/guides/me/availability', requireGuide, async (req, res) => {
 
         // The guide proposes, the office disposes: a guide cannot step away from
         // confirmed tours still to come. The office reassigns them first.
-        const manilaToday = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-        const upcoming = (await GuideBooking.find({ guideId: guide._id, status: 'confirmed' }))
-            .filter(b => String(b.preferredDate).slice(0, 10) >= manilaToday);
-        const leftBehind = upcoming
-            .filter(b => nextStatus !== 'available' || !nextDays.includes(weekdayOf(String(b.preferredDate).slice(0, 10))))
-            .sort((x, y) => String(x.preferredDate).localeCompare(String(y.preferredDate)));
+        const leftBehind = await toursLeftBehind(guide._id, { ...guide, status: nextStatus, availableDays: nextDays });
         if (leftBehind.length) {
-            const list = leftBehind.slice(0, 5).map(b => `${b.reference} on ${String(b.preferredDate).slice(0, 10)}`).join(', ');
-            return res.status(409).json({
-                success: false,
-                message: `You still have ${leftBehind.length === 1 ? 'a confirmed tour' : `${leftBehind.length} confirmed tours`} then: ${list}${leftBehind.length > 5 ? ', …' : ''}. Ask the Tourism Office to reassign ${leftBehind.length === 1 ? 'it' : 'them'} first.`,
-                bookings: leftBehind.map(b => ({ reference: b.reference, date: String(b.preferredDate).slice(0, 10) }))
-            });
+            return leftBehindReply(res, leftBehind, { subject: 'You have', action: it => `Ask the Tourism Office to reassign ${it} first.` });
         }
         guide.status = nextStatus;
         guide.availableDays = nextDays;
@@ -2478,6 +2496,10 @@ app.put('/api/guides/:id', requireAdmin, async (req, res) => {
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
 
         applyGuideDetails(guide, req.body);
+        const leftBehind = await toursLeftBehind(guide._id, guide);
+        if (leftBehind.length) {
+            return leftBehindReply(res, leftBehind, { subject: `${guide.fullName} has`, action: it => `Give ${it} another guide on Guide Bookings first.` });
+        }
         const languages = req.body.languages === undefined ? undefined : cleanLanguages(req.body.languages);
         await TouristGuide.save(guide);
         await saveOfficeLanguages(guide, { languages });
@@ -2499,6 +2521,10 @@ app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
         const guide = await TouristGuide.findById(req.params.id);
         if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
 
+        const leftBehind = await toursLeftBehind(guide._id, { ...guide, status: req.body.status });
+        if (leftBehind.length) {
+            return leftBehindReply(res, leftBehind, { subject: `${guide.fullName} has`, action: it => `Give ${it} another guide on Guide Bookings first.` });
+        }
         guide.status = req.body.status;
         await TouristGuide.save(guide);
         return res.status(200).json({ success: true, message: `${guide.fullName} is now ${guide.status}.`, guide });
@@ -2588,11 +2614,9 @@ app.delete('/api/guides/:id/account', requireAdmin, async (req, res) => {
 });
 
 /**
- * PUBLIC: what a visitor needs to know before asking for a guide.
- *
- * Deliberately no names, no phone numbers and no guide ids: a visitor does not
- * choose their guide, the office assigns one. Only the fee, the group size and
- * whether anyone is actually available leave this route.
+ * PUBLIC: what a visitor needs to know before asking for a guide — the fee
+ * range, the largest group and whether anyone is available. The guides
+ * themselves are listed by /api/spots/:id/guides, below.
  */
 app.get('/api/spots/:id/guide-requirement', async (req, res) => {
     try {
@@ -2791,7 +2815,7 @@ app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
         }
         // Compared as text against today in the same format, which avoids a
         // timezone turning "today" into yesterday for a visitor booking from abroad.
-        if (preferredDate < new Date().toISOString().slice(0, 10)) {
+        if (preferredDate < today()) {
             return res.status(400).json({ success: false, message: 'That date has already passed.' });
         }
 
@@ -2951,13 +2975,9 @@ app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
 });
 
 /**
- * PATCH: assign or change the guide on a booking.
- *
- * The overlap rule is deliberately narrow: it refuses a guide who already has a
- * confirmed booking at the same date and time. ZTIMS does not record how long a
- * tour runs, so anything wider would mean inventing a duration and refusing
- * bookings on a guess. Other bookings that guide has that day are returned as
- * information, for the officer to judge.
+ * PATCH: assign or change the guide on a booking. Giving an unpaid booking its
+ * guide confirms it; taking the guide off sends it back to To confirm. A guide
+ * takes one tour a day (isGuideFreeOn).
  */
 app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
     try {

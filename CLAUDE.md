@@ -591,7 +591,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   the on-time / late / missing counts as pills. **Who runs a place** shows
   everywhere a place is listed in Statistics (the user's decision): `.own-tag`
   pills in `portal-flat.css` — Tourism Office (tangerine, `account_balance`)
-  or Private (ink outline, `storefront`) — and a bar down the row's left edge
+  or Private enterprise (ink outline, `storefront`; "private enterprise", never
+  "private establishment", the panel's wording, October 2026) — and a bar down the row's left edge
   (`.own-row--office` tangerine, `.own-row--private` ink with a faint tint);
   Enter a report shows the same as a banner (`.own-banner`): "The Tourism
   Office enters this report" or "Entered by <manager>. View only."
@@ -681,8 +682,8 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 Flat and short, the important facts first: the title and **Add destination**
 (the shared listing form, empty; a new place is then found, scrolled to and
 marked, as from the Dashboard's `?new=`); the starter list as one line with
-"Publish them" while any are missing; counts that filter — All, By the office,
-By managers, Needs attention (red count) — then the category pills (one
+"Publish them" while any are missing; counts that filter — All, Tourism Office,
+Private enterprises, Needs attention (red count) — then the category pills (one
 scrolling row on a phone) and the search. Each place is one row (`.dest-row`
 in `portal-flat.css`): photo, name, category pills, one line of facts
 (barangay · who runs it · entrance or Free · a travel fee only if set · open
@@ -1035,7 +1036,12 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   Guide Bookings. The Privacy page says so.
 - **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
   refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
-  falls on it, and names the bookings: the office reassigns them first.
+  falls on it, and names the bookings: the office reassigns them first. The
+  office's own edits follow the same rule (`toursLeftBehind` in `server.js`,
+  used by both): `PUT /api/guides/:id` and `PATCH …/status` refuse inactive or
+  unavailable, a dropped weekday, a destination taken away, or a group size
+  below a booked group while a confirmed tour still to come needs it. Guide
+  dates use Manila's today (`today()`).
 - **Emergency numbers** are kept by the officer on Settings → Office Information
   (`emergency_numbers`, one row each) and show in the footer and each
   destination's `[data-emergency]` box; nothing shows while there are none.

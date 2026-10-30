@@ -191,7 +191,7 @@ function placeSheet(wb, data, monthValues) {
         put(r++, [title, ...Array(13).fill(null)], { fill: BLUE, bold: true, color: 'FFFFFFFF' });
         for (const p of list) {
             const shown = p.total.map((t, i) => (p.reported[i] ? t : (p.reported[i] === false ? '–' : null)));
-            put(r++, [`${p.title} (${p.keptByOffice ? 'Tourism Office' : 'Private'})`, ...shown, sum(monthValues(p.total))], { indent: 1 });
+            put(r++, [`${p.title} (${p.keptByOffice ? 'Tourism Office' : 'Private enterprise'})`, ...shown, sum(monthValues(p.total))], { indent: 1 });
             all = addArrays(all, p.total);
         }
     }

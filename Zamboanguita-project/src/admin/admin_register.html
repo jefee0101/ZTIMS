@@ -674,7 +674,7 @@ body { overflow-x: hidden; }
             who.className = 'own-banner ' + (p.keptByOffice ? 'own-banner--office' : 'own-banner--private');
             who.innerHTML = p.keptByOffice
                 ? '<span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span><span>The Tourism Office keeps this register.</span>'
-                : `<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private</span><span>Kept by ${escapeHtml(p.managerName || 'the establishment manager')}. View only.</span>`;
+                : `<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private enterprise</span><span>Kept by ${escapeHtml(p.managerName || 'the establishment manager')}. View only.</span>`;
             const list = document.getElementById('rgList');
             list.innerHTML = '<div class="p-4"><div class="ztims-empty">Loading…</div></div>';
             try {
@@ -880,7 +880,7 @@ body { overflow-x: hidden; }
             const placeSelect = document.getElementById('rgPlace');
             // The office's own places first: those are the ones it keeps.
             myPlaces.sort((a, b) => (b.keptByOffice - a.keptByOffice) || a.title.localeCompare(b.title));
-            for (const p of myPlaces) placeSelect.add(new Option(`${p.title} · ${p.keptByOffice ? 'Tourism Office' : 'Private (view only)'}`, p._id));
+            for (const p of myPlaces) placeSelect.add(new Option(`${p.title} · ${p.keptByOffice ? 'Tourism Office' : 'Private enterprise (view only)'}`, p._id));
             const periodSelect = document.getElementById('rgPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
             wire();

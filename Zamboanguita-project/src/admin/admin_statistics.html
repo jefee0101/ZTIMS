@@ -672,10 +672,10 @@ body { overflow-x: hidden; }
             for (let y = thisYear(); y >= 2025; y--) select.add(new Option(String(y), String(y)));
         }
 
-        // Who runs a place: the Tourism Office or a private establishment.
+        // Who runs a place: the Tourism Office or a private enterprise.
         const ownTag = office => office
             ? '<span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span>'
-            : '<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private</span>';
+            : '<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private enterprise</span>';
         const ownRow = office => (office ? 'own-row--office' : 'own-row--private');
 
         // ---------------------------------------------------------- tabs
@@ -754,7 +754,7 @@ body { overflow-x: hidden; }
                     for (const [kind, label] of groups) {
                         const og = document.createElement('optgroup'); og.label = label;
                         for (const p of list.filter(x => x.kind === kind)) {
-                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''} · ${p.keptByOffice ? 'Tourism Office' : 'Private (view only)'}`, p._id));
+                            og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''} · ${p.keptByOffice ? 'Tourism Office' : 'Private enterprise (view only)'}`, p._id));
                         }
                         if (og.children.length) select.appendChild(og);
                     }
@@ -860,7 +860,7 @@ body { overflow-x: hidden; }
                     part2 += row(sex === 'male' ? 'Male' : 'Female', shown, '', true);
                 }
                 // Arrivals by place: where Part I's arrivals came from, each place
-                // marked as the office's or private; "–" for a month not reported.
+                // marked as the office's or a private enterprise's; "–" for a month not reported.
                 let byPlace = head('Arrivals by place', 'bg-primary/10 text-primary');
                 for (const [kind, title] of [['accommodation', 'Places to stay'], ['attraction', 'Attractions']]) {
                     const list = d.places.filter(p => p.kind === kind);

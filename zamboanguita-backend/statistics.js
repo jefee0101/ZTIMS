@@ -6,7 +6,7 @@
  *
  * Who reports for a place is who runs it in ZTIMS: an establishment manager
  * for the listing they manage, the Tourism Officer for everything the office
- * keeps (spots.managed_by is null). A privately managed establishment's reports
+ * keeps (spots.managed_by is null). A private enterprise's reports
  * are entered by its manager only; the officer views them. Only the officer
  * voids, finalizes (locks) and reopens (unlocks). Every rule is checked here, and
  * the database's constraints (db/schema.sql) hold underneath.
@@ -79,7 +79,7 @@ function mayViewFor(req, spot) {
 }
 
 /* Whether it may enter or change them: whoever runs the place. The officer
-   for the places the office keeps; a privately managed establishment's reports
+   for the places the office keeps; a private enterprise's reports
    are its manager's alone, and the officer only views them. */
 function mayEnterFor(req, spot) {
     if (isOfficer(req)) return spot.managed_by === null;
@@ -247,7 +247,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
             if (!mayEnterFor(req, spot)) {
                 return res.status(403).json({ success: false, message: isOfficer(req)
-                    ? 'This establishment is privately managed. Its monthly reports are submitted by its establishment manager; the Tourism Office can only view them.'
+                    ? 'This place is run by a private enterprise. Its monthly reports are submitted by its establishment manager; the Tourism Office can only view them.'
                     : 'You can only report for the places you manage.' });
             }
             const kind = kindOf(spot);

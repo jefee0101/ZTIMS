@@ -4,6 +4,32 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## "Private enterprise", not "private establishment" (October 2026)
+
+**The change.** At the panel's suggestion, a place the Tourism Office does
+not run is now called a **private enterprise**. The system shows "Private
+enterprise" beside each such place in Statistics, the Guest Register and the
+Excel's "By place" sheet, and Destinations filters by "Tourism Office" and
+"Private enterprises". The account role keeps its name, Establishment
+Manager: the person who runs the enterprise's listing.
+
+**Change in the manuscript:** wherever it says "private establishment",
+"privately managed establishment" or "privately owned establishment" for who
+runs a place, write "private enterprise". Keep "tourist establishment" and
+"Establishment Manager" where they name the place or the role.
+
+## A guide's booked tours are protected from office edits too (October 2026)
+
+**The change.** The office can no longer mark a guide unavailable or
+inactive, drop a working day, take away a destination, or lower the largest
+group while that guide still has a confirmed tour to come that the change would
+break. The system names the bookings and asks the office to give them another
+guide first, the same rule the guide already had.
+
+**Change in the manuscript:** if the Tourist Guide module or its testing
+mentions that a guide cannot leave confirmed tours behind, add "and neither
+can the Tourism Officer's changes to the guide's record".
+
 ## Tourist guides have no area (October 2026)
 
 **The change.** A tourist guide is no longer set to "the whole municipality"
