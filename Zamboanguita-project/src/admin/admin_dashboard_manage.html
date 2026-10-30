@@ -518,11 +518,20 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-            <div class="flex flex-wrap justify-between items-end gap-4">
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Destinations</h1>
-                <button id="addDestinationBtn" type="button" class="btn btn-primary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span> Add destination
-                </button>
+            <div class="pg-head">
+                <div>
+                    <h1 class="pg-title font-headline">Destinations</h1>
+                    <p id="destSubtitle" class="pg-sub"></p>
+                </div>
+                <div class="pg-actions">
+                    <div id="viewToggle" class="pg-view" role="group" aria-label="View">
+                        <button type="button" data-view="grid" aria-pressed="true"><span class="material-symbols-outlined" aria-hidden="true">grid_view</span>Grid view</button>
+                        <button type="button" data-view="map" aria-pressed="false"><span class="material-symbols-outlined" aria-hidden="true">map</span>Map view</button>
+                    </div>
+                    <button id="addDestinationBtn" type="button" class="pg-btn pg-btn--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>Add destination
+                    </button>
+                </div>
             </div>
 
             <!-- One-time import of the destinations the office already documented.
@@ -540,39 +549,47 @@ body { overflow-x: hidden; }
                 <p id="starterImportStatus" hidden class="text-support mt-2"></p>
             </div>
 
-            <!-- Who keeps each place, and what needs fixing: counts that filter. -->
-            <div class="dest-filters space-y-3">
-                <div id="showFilter" class="dest-chips" role="group" aria-label="Show">
-                    <button type="button" data-show="all" aria-pressed="true">All <b id="statTotal">0</b></button>
-                    <button type="button" data-show="office" aria-pressed="false">Tourism Office <b id="statOffice">0</b></button>
-                    <button type="button" data-show="manager" aria-pressed="false">Private enterprises <b id="statManaged">0</b></button>
-                    <button type="button" data-show="incomplete" aria-pressed="false" class="dest-chips__warn">Needs attention <b id="statIncomplete">0</b></button>
+            <!-- Who keeps each place and what needs fixing (counts that filter),
+                 the search, and the categories. -->
+            <div class="pg-filters">
+                <div class="pg-filters__top">
+                    <div id="showFilter" class="pg-seg" role="group" aria-label="Show">
+                        <button type="button" data-show="all" aria-pressed="true">All <b id="statTotal">0</b></button>
+                        <button type="button" data-show="office" aria-pressed="false">Tourism Office <b id="statOffice">0</b></button>
+                        <button type="button" data-show="manager" aria-pressed="false">Private enterprises <b id="statManaged">0</b></button>
+                        <button type="button" data-show="incomplete" aria-pressed="false" class="pg-warn">Needs attention <b id="statIncomplete">0</b></button>
+                    </div>
+                    <div class="pg-search">
+                        <label for="searchInput" class="sr-only">Search destinations</label>
+                        <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                        <input id="searchInput" type="search" placeholder="Search by name, barangay or manager"/>
+                    </div>
                 </div>
-                <div id="categoryFilterContainer" class="dest-chips dest-chips--scroll" role="group" aria-label="Category">
-                    <button type="button" data-category="ALL" aria-pressed="true">All categories</button>
-                    <button type="button" data-category="BEACH" aria-pressed="false">Beach &amp; Sea</button>
-                    <button type="button" data-category="DIVING" aria-pressed="false">Diving &amp; Snorkeling</button>
-                    <button type="button" data-category="NATURE" aria-pressed="false">Nature</button>
-                    <button type="button" data-category="ADVENTURE" aria-pressed="false">Adventure</button>
-                    <button type="button" data-category="CULTURE" aria-pressed="false">Culture &amp; Heritage</button>
-                    <button type="button" data-category="FAITH" aria-pressed="false">Faith</button>
-                    <button type="button" data-category="LEISURE" aria-pressed="false">Leisure &amp; Recreation</button>
-                    <button type="button" data-category="STAY" aria-pressed="false">Places to stay</button>
-                </div>
-                <div class="relative">
-                    <label for="searchInput" class="sr-only">Search destinations</label>
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                    <input id="searchInput" type="search" placeholder="Search by name, barangay or manager"
-                           class="field !pl-11 w-full min-h-[44px]"/>
+                <div class="pg-filters__cats">
+                    <span class="pg-filters__label" id="categoryLabel">Category</span>
+                    <div id="categoryFilterContainer" class="pg-pills" role="group" aria-labelledby="categoryLabel">
+                        <button type="button" data-category="ALL" aria-pressed="true">All categories</button>
+                        <button type="button" data-category="BEACH" aria-pressed="false">Beach &amp; Sea</button>
+                        <button type="button" data-category="DIVING" aria-pressed="false">Diving &amp; Snorkeling</button>
+                        <button type="button" data-category="NATURE" aria-pressed="false">Nature</button>
+                        <button type="button" data-category="ADVENTURE" aria-pressed="false">Adventure</button>
+                        <button type="button" data-category="CULTURE" aria-pressed="false">Culture &amp; Heritage</button>
+                        <button type="button" data-category="FAITH" aria-pressed="false">Faith</button>
+                        <button type="button" data-category="LEISURE" aria-pressed="false">Leisure &amp; Recreation</button>
+                        <button type="button" data-category="STAY" aria-pressed="false">Places to stay</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- The listings themselves -->
-            <div id="listingsPanel" class="rounded-none glass-panel">
-                <div id="listings" class="ztims-stagger divide-y divide-outline-variant/20"></div>
-                <p class="px-5 py-3 border-t border-outline-variant/30 text-support">
-                    Showing <b id="shownCount" class="text-on-surface">0</b> of <b id="totalCount" class="text-on-surface">0</b>
-                </p>
+            <!-- The listings: cards, or the same places on the map. -->
+            <div id="listings" class="pg-grid ztims-stagger"></div>
+            <div id="destMapWrap" hidden>
+                <div id="destMap" class="pg-map"></div>
+                <p id="destMapNote" class="text-support mt-2"></p>
+            </div>
+            <div id="listFoot" class="pg-foot">
+                <p class="pg-foot__count">Showing <b id="shownCount">0</b> of <b id="totalCount">0</b> destinations</p>
+                <button id="loadMoreBtn" type="button" class="pg-btn pg-btn--plain" hidden>Load more</button>
             </div>
         </div>
     </main>
@@ -1033,6 +1050,7 @@ body { overflow-x: hidden; }
             document.getElementById('statOffice').textContent = allSpots.length - managed;
             document.getElementById('statManaged').textContent = managed;
             document.getElementById('statIncomplete').textContent = incomplete;
+            document.getElementById('statIncomplete').toggleAttribute('data-zero', incomplete === 0);
         }
 
         // Its categories as pills, the main one first (the same colours the
@@ -1048,16 +1066,94 @@ body { overflow-x: hidden; }
         const categoryNames = spot => window.ZTIMS_CATEGORIES.of(spot).map(code => window.ZTIMS_CATEGORIES.label(code)).join(' ')
             + (window.ZTIMS_CATEGORIES.isStay(spot) ? ' place to stay' : '');
 
+        // Cards a screenful at a time; "Load more" adds the next lot. Back to the
+        // first lot whenever a filter or the search changes.
+        const PAGE_SIZE = 9;
+        let shownLimit = PAGE_SIZE;
+        let currentView = 'grid';
+        let destMap = null;
+
+        function cardFee(spot) {
+            const entrance = Number(spot.entranceFee) || 0;
+            const travel = Number(spot.travelFee) || 0;
+            const days = escapeHtml(spot.workingDays || 'Every day');
+            if (entrance > 0) return { icon: 'confirmation_number', label: 'Entrance', value: `<b>${formatPeso(entrance)}</b> · ${days}` };
+            if (travel > 0) return { icon: 'airport_shuttle', label: 'Travel fare', value: `<b>${formatPeso(travel)}</b> · ${days}` };
+            if (window.ZTIMS_CATEGORIES.isStay(spot)) return { icon: 'schedule', label: 'Open', value: days };
+            return { icon: 'confirmation_number', label: 'Entrance', value: `<b>Free</b> · ${days}` };
+        }
+
+        function destinationCard(spot) {
+            const C = window.ZTIMS_CATEGORIES;
+            const issues = completenessIssues(spot);
+            const manager = managerOf(spot);
+            const id = escapeHtml(spot._id);
+            const fee = cardFee(spot);
+            const hasSetup = !manager && spot.type !== 'accommodation';
+            const publicHref = `../spot.html?spotId=${encodeURIComponent(spot._id)}`;
+            const cats = C.of(spot).map(code => {
+                const info = C.info(code);
+                return `<span class="cat-badge cat-${info.cat}">${escapeHtml(info.label)}</span>`;
+            }).join('');
+            return `
+            <article data-spot="${id}" class="pg-card">
+                <div class="pg-card__media">
+                    ${photoCount(spot)
+                        ? `<img src="${escapeHtml(spot.imageUrl)}" alt="" loading="lazy"/>`
+                        : '<span class="material-symbols-outlined" aria-hidden="true">image</span>'}
+                    ${C.isStay(spot) ? '<span class="pg-card__badge"><span class="material-symbols-outlined" aria-hidden="true">bed</span>Place to stay</span>' : ''}
+                    ${issues.length ? `<span class="pg-card__badge pg-card__badge--warn"><span class="material-symbols-outlined" aria-hidden="true">error</span>Needs attention</span>` : ''}
+                </div>
+                <div class="pg-card__body">
+                    <h3 class="pg-card__name">${escapeHtml(spot.title)}</h3>
+                    ${cats ? `<div class="pg-card__cats">${cats}</div>` : ''}
+                    <div class="pg-card__facts">
+                        <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay || spot.location || '—')}</span>
+                        <span><span class="material-symbols-outlined" aria-hidden="true">${manager ? 'apartment' : 'account_balance'}</span>${manager ? `Run by <b>${escapeHtml(manager)}</b>` : '<b>Tourism Office</b>'}</span>
+                    </div>
+                    ${issues.length ? `<div class="pg-card__issues">${issues.map(issue => manager
+                        ? `<span>${escapeHtml(issue)}</span>`
+                        : `<button type="button" data-edit="${id}">${escapeHtml(issue)} · Fix</button>`).join('')}</div>` : ''}
+                    <div class="pg-card__rule">
+                        <span><span class="material-symbols-outlined" aria-hidden="true">${fee.icon}</span>${fee.label}</span>
+                        <span>${fee.value}</span>
+                    </div>
+                    <div class="pg-card__actions">
+                        ${manager
+                            ? `<a href="${publicHref}" target="_blank" rel="noopener" class="pg-btn pg-btn--outline">View details</a>`
+                            : `<button type="button" data-edit="${id}" class="pg-btn pg-btn--outline">Edit details</button>`}
+                        <div class="relative">
+                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(spot.title)}"
+                                    class="pg-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
+                                ${manager ? '' : `<a href="${publicHref}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View public page</a>`}
+                                ${hasSetup ? `<button type="button" data-setup="${id}"><span class="material-symbols-outlined" aria-hidden="true">tune</span>Visitor setup</button>` : ''}
+                                <button type="button" data-takedown="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>Take down</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>`;
+        }
+
         function renderListings() {
             const container = document.getElementById('listings');
             const spots = visibleSpots();
+            const shown = currentView === 'map' ? spots : spots.slice(0, shownLimit);
 
-            document.getElementById('shownCount').textContent = spots.length;
-            document.getElementById('totalCount').textContent = allSpots.length;
+            document.getElementById('destSubtitle').textContent =
+                `${allSpots.length} ${allSpots.length === 1 ? 'destination' : 'destinations'} across Zamboanguita`;
+            document.getElementById('shownCount').textContent = shown.length;
+            document.getElementById('totalCount').textContent = spots.length;
+            document.getElementById('loadMoreBtn').hidden = currentView === 'map' || shown.length >= spots.length;
+
+            container.hidden = currentView === 'map';
+            document.getElementById('destMapWrap').hidden = currentView !== 'map';
+            if (currentView === 'map') { drawDestinationMap(spots); return; }
 
             if (spots.length === 0) {
                 container.innerHTML = `
-                    <div class="ztims-empty m-4 sm:m-6">
+                    <div class="ztims-empty md:col-span-2 xl:col-span-3">
                         <span class="material-symbols-outlined">travel_explore</span>
                         <p>
                             ${allSpots.length === 0
@@ -1067,55 +1163,32 @@ body { overflow-x: hidden; }
                     </div>`;
                 return;
             }
-
-            container.innerHTML = spots.map(spot => {
-                const issues = completenessIssues(spot);
-                const photos = photoCount(spot);
-                const manager = managerOf(spot);
-                const id = escapeHtml(spot._id);
-                const entrance = Number(spot.entranceFee) > 0 ? `Entrance ${formatPeso(spot.entranceFee)}`
-                    : (window.ZTIMS_CATEGORIES.isStay(spot) ? '' : 'Free entrance');
-                const facts = [
-                    escapeHtml(spot.barangay || spot.location || '—'),
-                    manager ? `Run by ${escapeHtml(manager)}` : 'Tourism Office',
-                    entrance,
-                    Number(spot.travelFee) > 0 ? `Travel ${formatPeso(spot.travelFee)}` : '',
-                    escapeHtml(spot.workingDays || 'Every day')
-                ].filter(Boolean).join(' · ');
-                const hasSetup = !manager && spot.type !== 'accommodation';
-
-                return `
-                <div data-spot="${id}" class="dest-row">
-                    <div class="dest-row__photo">
-                        ${photos
-                            ? `<img src="${escapeHtml(spot.imageUrl)}" alt="" loading="lazy"/>`
-                            : `<span class="material-symbols-outlined" aria-hidden="true">no_photography</span>`}
-                    </div>
-                    <div class="dest-row__body">
-                        <h3 class="dest-row__name">${escapeHtml(spot.title)}</h3>
-                        <div class="dest-row__cats">${categoryBadges(spot)}</div>
-                        <p class="dest-row__facts">${facts}</p>
-                        ${issues.length ? `<div class="dest-row__issues">${issues.map(issue => manager
-                            ? `<span class="dest-issue">${escapeHtml(issue)}</span>`
-                            : `<button type="button" data-edit="${id}" class="dest-issue">${escapeHtml(issue)} · Fix</button>`).join('')}</div>` : ''}
-                    </div>
-                    <div class="dest-row__actions">
-                        ${manager
-                            ? `<a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm min-h-[40px]">View</a>`
-                            : `<button type="button" data-edit="${id}" class="btn btn-primary btn-sm min-h-[40px]">Edit</button>`}
-                        <div class="relative">
-                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(spot.title)}"
-                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
-                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
-                                ${manager ? '' : `<a href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View public page</a>`}
-                                ${hasSetup ? `<button type="button" data-setup="${id}"><span class="material-symbols-outlined" aria-hidden="true">tune</span>Visitor setup</button>` : ''}
-                                <button type="button" data-takedown="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>Take down</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
+            container.innerHTML = shown.map(destinationCard).join('');
         }
+
+        // The same places on the map (the visitor's map, shared code); a place
+        // without a pin cannot be shown and is counted instead.
+        async function drawDestinationMap(spots) {
+            const note = document.getElementById('destMapNote');
+            if (!window.ZTIMS_MAP) { note.textContent = 'The map could not be loaded.'; return; }
+            try {
+                if (!destMap) {
+                    destMap = await window.ZTIMS_MAP.mountTourismMap({
+                        mount: document.getElementById('destMap'),
+                        detailHref: spot => `../spot.html?spotId=${encodeURIComponent(spot._id)}`
+                    });
+                }
+                destMap.setSpots(spots);
+                destMap.map.invalidateSize();
+                note.textContent = destMap.skipped
+                    ? `${destMap.skipped} of ${spots.length} ${spots.length === 1 ? 'place has' : 'places have'} no map pin yet.`
+                    : '';
+            } catch (error) {
+                note.textContent = 'The map could not be loaded. Check your connection.';
+            }
+        }
+
+        function resetPaging() { shownLimit = PAGE_SIZE; }
 
         function render() {
             renderSummary();
@@ -1470,6 +1543,10 @@ body { overflow-x: hidden; }
             const spot = allSpots.find(s => String(s._id) === id);
             if (!spot) return;
             document.getElementById('searchInput').value = spot.title || '';
+            currentView = 'grid';
+            document.querySelectorAll('#viewToggle [data-view]').forEach(btn =>
+                btn.setAttribute('aria-pressed', String(btn.dataset.view === 'grid')));
+            resetPaging();
             renderListings();
             const row = [...document.querySelectorAll('[data-spot]')].find(el => el.dataset.spot === id);
             if (row) {
@@ -1491,16 +1568,30 @@ body { overflow-x: hidden; }
                 activeCategory = button.dataset.category;
                 document.querySelectorAll('#categoryFilterContainer [data-category]').forEach(btn =>
                     btn.setAttribute('aria-pressed', String(btn.dataset.category === activeCategory)));
+                resetPaging();
                 renderListings();
             });
 
-            document.getElementById('searchInput').addEventListener('input', renderListings);
+            document.getElementById('searchInput').addEventListener('input', () => { resetPaging(); renderListings(); });
             document.getElementById('showFilter').addEventListener('click', event => {
                 const button = event.target.closest('[data-show]');
                 if (!button) return;
                 activeShow = button.dataset.show;
                 document.querySelectorAll('#showFilter [data-show]').forEach(btn =>
                     btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                resetPaging();
+                renderListings();
+            });
+            document.getElementById('loadMoreBtn').addEventListener('click', () => {
+                shownLimit += PAGE_SIZE;
+                renderListings();
+            });
+            document.getElementById('viewToggle').addEventListener('click', event => {
+                const button = event.target.closest('[data-view]');
+                if (!button) return;
+                currentView = button.dataset.view;
+                document.querySelectorAll('#viewToggle [data-view]').forEach(btn =>
+                    btn.setAttribute('aria-pressed', String(btn.dataset.view === currentView)));
                 renderListings();
             });
             document.getElementById('addDestinationBtn').addEventListener('click', openAddModal);

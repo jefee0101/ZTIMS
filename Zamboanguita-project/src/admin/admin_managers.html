@@ -518,34 +518,37 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-            <div class="flex flex-wrap justify-between items-end gap-4">
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Enterprise Managers</h1>
-                <button id="openCreateModalBtn" type="button" class="btn btn-primary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">person_add</span> New manager account
-                </button>
+            <div class="pg-head">
+                <div>
+                    <h1 class="pg-title font-headline">Enterprise Managers</h1>
+                    <p class="pg-sub">Manage enterprise accounts and manager access.</p>
+                </div>
+                <div class="pg-actions">
+                    <button id="openCreateModalBtn" type="button" class="pg-btn pg-btn--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">person_add</span>New manager account
+                    </button>
+                </div>
             </div>
 
             <!-- Counts that filter, then the search. -->
-            <div class="space-y-3">
-                <div id="showFilter" class="dest-chips" role="group" aria-label="Show">
+            <div class="space-y-5">
+                <div id="showFilter" class="pg-pills" role="group" aria-label="Show">
                     <button type="button" data-show="all" aria-pressed="true">All <b id="statManagers">0</b></button>
                     <button type="button" data-show="active" aria-pressed="false">Active <b id="statActive">0</b></button>
                     <button type="button" data-show="suspended" aria-pressed="false">Suspended <b id="statSuspended">0</b></button>
-                    <button type="button" data-show="idle" aria-pressed="false" class="dest-chips__warn">No listing yet <b id="statIdle">0</b></button>
+                    <button type="button" data-show="idle" aria-pressed="false">No listing yet <b id="statIdle">0</b></button>
                 </div>
-                <div class="relative">
+                <div class="pg-search lg:max-w-[65%]">
                     <label for="searchInput" class="sr-only">Search managers</label>
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                    <input id="searchInput" type="search" placeholder="Search by enterprise, name, email or phone"
-                           class="field !pl-11 w-full min-h-[44px]"/>
+                    <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                    <input id="searchInput" type="search" placeholder="Search by enterprise, name, email or phone"/>
                 </div>
             </div>
 
-            <div class="rounded-none glass-panel">
-                <div id="managerTableBody" class="ztims-stagger divide-y divide-outline-variant/20"></div>
-                <p class="px-5 py-3 border-t border-outline-variant/30 text-support">
-                    Showing <b id="shownCount" class="text-on-surface">0</b> of <b id="totalCount" class="text-on-surface">0</b>
-                </p>
+            <div id="managerTableBody" class="pg-grid ztims-stagger"></div>
+            <div class="pg-foot">
+                <p class="pg-foot__count">Showing <b id="shownCount">0</b> of <b id="totalCount">0</b> managers</p>
+                <nav id="managerPager" class="pg-pager" aria-label="Pages"></nav>
             </div>
         </div>
     </main>
@@ -724,54 +727,48 @@ body { overflow-x: hidden; }
             document.getElementById('statIdle').textContent = idle;
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('managerTableBody');
-            const rows = visibleManagers();
+        // A page fills the grid twice over: 6 cards in three columns, 4 in two,
+        // 3 on a phone. Back to page 1 whenever a filter or the search changes.
+        let page = 1;
+        const perPage = () => window.matchMedia('(min-width: 1200px)').matches ? 6
+            : window.matchMedia('(min-width: 768px)').matches ? 4 : 3;
 
-            document.getElementById('shownCount').textContent = rows.length;
-            document.getElementById('totalCount').textContent = managers.length;
+        function sinceDate(value) {
+            const date = new Date(value);
+            return value && !Number.isNaN(date.getTime())
+                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—';
+        }
 
-            if (rows.length === 0) {
-                tbody.innerHTML = `
-                    <div class="p-4"><div class="ztims-empty">
-                        <span class="material-symbols-outlined">storefront</span>
-                        ${managers.length === 0
-                            ? 'No manager accounts yet.'
-                            : 'No account matches.'}
-                    </div></div>`;
-                return;
-            }
-
-            tbody.innerHTML = rows.map(manager => {
-                const id = escapeHtml(manager._id);
-                const listings = listingCounts[String(manager._id)] || 0;
-                const listing = listingOf[String(manager._id)];
-                const suspended = manager.active === false;
-                const name = nameOf(manager) || 'Unnamed enterprise';
-                const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
-                const facts = [
-                    escapeHtml(manager.managerName || 'No manager name'),
-                    escapeHtml(manager.email || '—'),
-                    manager.phone ? escapeHtml(manager.phone) : '',
-                    `Since ${escapeHtml(formatDate(manager.createdAt))}`
-                ].filter(Boolean).join(' · ');
-                const pills = [
-                    suspended ? '<span class="dest-issue">Suspended</span>' : '',
-                    listings ? '' : '<span class="tone-pill tone-warning rounded-pill text-xs font-bold px-2.5 py-0.5">No listing yet</span>'
-                ].filter(Boolean).join('');
-                return `
-                <div class="dest-row${suspended ? ' is-muted' : ''}">
-                    <div class="dest-row__photo dest-row__initials" aria-hidden="true">${escapeHtml(initials || '?')}</div>
-                    <div class="dest-row__body">
-                        <h3 class="dest-row__name">${escapeHtml(name)}</h3>
-                        <p class="dest-row__facts [overflow-wrap:anywhere]">${facts}</p>
-                        ${pills ? `<div class="dest-row__issues">${pills}</div>` : ''}
+        function managerCard(manager) {
+            const id = escapeHtml(manager._id);
+            const listings = listingCounts[String(manager._id)] || 0;
+            const listing = listingOf[String(manager._id)];
+            const suspended = manager.active === false;
+            const name = nameOf(manager) || 'Unnamed enterprise';
+            const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
+            return `
+            <article class="pg-card${suspended ? ' is-muted' : ''}">
+                <div class="pg-card__body">
+                    <div class="mg-card__top">
+                        <div class="mg-initials" aria-hidden="true">${escapeHtml(initials || '?')}</div>
+                        <div class="mg-stack">
+                            <span class="mg-status ${suspended ? 'mg-status--suspended' : 'mg-status--active'}">${suspended ? 'Suspended' : 'Active'}</span>
+                            ${listings ? '' : '<span class="mg-status mg-status--idle">No listing yet</span>'}
+                        </div>
                     </div>
-                    <div class="dest-row__actions">
-                        <button type="button" data-edit="${id}" class="btn btn-primary btn-sm min-h-[40px]">Edit</button>
+                    <h3 class="pg-card__name">${escapeHtml(name)}</h3>
+                    <div class="pg-card__facts">
+                        <span><span class="material-symbols-outlined" aria-hidden="true">person</span><b>${escapeHtml(manager.managerName || 'No manager name')}</b></span>
+                        <span><span class="material-symbols-outlined" aria-hidden="true">mail</span>${escapeHtml(manager.email || '—')}</span>
+                        ${manager.phone ? `<span><span class="material-symbols-outlined" aria-hidden="true">call</span>${escapeHtml(manager.phone)}</span>` : ''}
+                    </div>
+                    <p class="mg-since">Since ${escapeHtml(sinceDate(manager.createdAt))}</p>
+                    <div class="pg-card__actions">
+                        <button type="button" data-edit="${id}" class="pg-btn pg-btn--primary"><span class="material-symbols-outlined" aria-hidden="true">edit_square</span>Edit</button>
                         <div class="relative">
                             <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(name)}"
-                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
+                                    class="pg-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
                             <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
                                 ${listing ? `<a href="../spot.html?spotId=${encodeURIComponent(listing)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View listing</a>` : ''}
                                 <button type="button" data-password="${id}"><span class="material-symbols-outlined" aria-hidden="true">key</span>New password</button>
@@ -780,8 +777,40 @@ body { overflow-x: hidden; }
                             </div>
                         </div>
                     </div>
-                </div>`;
-            }).join('');
+                </div>
+            </article>`;
+        }
+
+        function renderTable() {
+            const grid = document.getElementById('managerTableBody');
+            const rows = visibleManagers();
+            const size = perPage();
+            const pages = Math.max(1, Math.ceil(rows.length / size));
+            page = Math.min(Math.max(1, page), pages);
+            const shown = rows.slice((page - 1) * size, page * size);
+
+            document.getElementById('shownCount').textContent = shown.length;
+            document.getElementById('totalCount').textContent = rows.length;
+            renderPager(pages);
+
+            if (rows.length === 0) {
+                grid.innerHTML = `
+                    <div class="ztims-empty md:col-span-2 xl:col-span-3">
+                        <span class="material-symbols-outlined">storefront</span>
+                        ${managers.length === 0 ? 'No manager accounts yet.' : 'No account matches.'}
+                    </div>`;
+                return;
+            }
+            grid.innerHTML = shown.map(managerCard).join('');
+        }
+
+        function renderPager(pages) {
+            const nav = document.getElementById('managerPager');
+            if (pages <= 1) { nav.innerHTML = ''; return; }
+            const numbers = Array.from({ length: pages }, (_, k) => k + 1)
+                .map(n => `<button type="button" data-page="${n}"${n === page ? ' aria-current="page"' : ''}>${n}</button>`).join('');
+            nav.innerHTML = `<button type="button" data-page="${page - 1}"${page === 1 ? ' disabled' : ''}>Previous</button>${numbers}`
+                + `<button type="button" data-page="${page + 1}"${page === pages ? ' disabled' : ''}>Next</button>`;
         }
 
         function render() {
@@ -1093,13 +1122,26 @@ body { overflow-x: hidden; }
             document.getElementById('closeCreateModalBtn').addEventListener('click', () => toggleCreateModal(false));
             document.getElementById('cancelCreateBtn').addEventListener('click', () => toggleCreateModal(false));
             document.getElementById('createManagerForm').addEventListener('submit', createManager);
-            document.getElementById('searchInput').addEventListener('input', renderTable);
+            document.getElementById('searchInput').addEventListener('input', () => { page = 1; renderTable(); });
+            document.getElementById('managerPager').addEventListener('click', event => {
+                const button = event.target.closest('[data-page]');
+                if (!button || button.disabled) return;
+                page = Number(button.dataset.page);
+                renderTable();
+                document.getElementById('managerTableBody').scrollIntoView({ block: 'start', behavior: 'smooth' });
+            });
+            // The page size follows the number of columns.
+            let lastSize = perPage();
+            window.addEventListener('resize', () => {
+                if (perPage() !== lastSize) { lastSize = perPage(); renderTable(); }
+            });
             document.getElementById('showFilter').addEventListener('click', event => {
                 const chip = event.target.closest('[data-show]');
                 if (!chip) return;
                 activeShow = chip.dataset.show;
                 document.querySelectorAll('#showFilter [data-show]').forEach(btn =>
                     btn.setAttribute('aria-pressed', String(btn.dataset.show === activeShow)));
+                page = 1;
                 renderTable();
             });
 

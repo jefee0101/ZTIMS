@@ -337,7 +337,9 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 - **Foundations.** Type scale `--text-display|title|heading|body|support|label|micro`,
   weights `--weight-*`, a 4px spacing grid `--space-*`, radii `--radius-sm|md|lg|xl`
   (all 0: corners are square everywhere by decision, and each page's Tailwind
-  config maps every `rounded-*` to 0 — the hero's curved cove is the one curve),
+  config maps every `rounded-*` to 0 — the hero's curved cove is the one curve;
+  the officer's Destinations and Enterprise Managers card grids are rounded by
+  the user's design, through their own `.pg-*` classes),
   three elevations `--ztims-shadow-card|raised|overlay`. Icons are Material
   Symbols Outlined, never meaning on their own; `.icon-chip` tints one by tone
   or category.
@@ -617,28 +619,38 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 
 ### The officer's Destinations (`admin_dashboard_manage.html`)
 
-Flat and short, the important facts first: the title and **Add destination**
-(the shared listing form, empty; a new place is then found, scrolled to and
-marked, as from the Dashboard's `?new=`); the starter list as one line with
-"Publish them" while any are missing; counts that filter — All, Tourism Office,
-Private enterprises, Needs attention (red count) — then the category pills (one
-scrolling row on a phone) and the search. Each place is one row (`.dest-row`
-in `portal-flat.css`): photo, name, category pills, one line of facts
-(barangay · who runs it · entrance or Free · a travel fee only if set · open
-days), what is missing as red pills ("No photo · Fix" opens the editor), then
-**Edit** (office-run) or **View** (manager-run: only the manager edits it) and a
-⋯ menu (View public page, Visitor setup where it applies, Take down in red).
-Prices without cents. No Refresh button: the list reloads after every change.
+A card grid, by the user's design (October 2026; styles `.pg-*` at the end of
+`portal-flat.css`): the title with "N destinations across Zamboanguita" under
+it, then **Grid view / Map view** (`#viewToggle`; the map is the visitor's
+map, `ZTIMS_MAP.mountTourismMap`, showing the filtered places and how many have
+no pin) and **Add destination** (the shared listing form, empty; a new place is
+then found, scrolled to and marked, as from the Dashboard's `?new=`); the
+starter list as one line with "Publish them" while any are missing; a filter
+box — the counts as a segmented control (All, Tourism Office, Private
+enterprises, Needs attention with a red count) beside the search, then
+CATEGORY and the category pills (one scrolling row). Each place is a card
+(`destinationCard`, `.pg-card`): photo (a soft placeholder without one), "Place
+to stay" and "Needs attention" badges on it, name, category badges, barangay,
+"Run by …" or Tourism Office, what is missing in red ("No photo · Fix" opens
+the editor), a line with the entrance fee (or travel fare, or Free) · open
+days, then **Edit details** (office-run) or **View details** (manager-run: only
+the manager edits it) and a ⋯ menu (View public page, Visitor setup where it
+applies, Take down in red). Nine cards, then **Load more**; "Showing n of m
+destinations" counts the filtered list. Prices without cents.
 
 ### The officer's Enterprise Managers, Tickets and Collections
 
 Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 `portal-flat.css`), no page intro or help lines:
-- **Enterprise Managers** (`admin_managers.html`): title and **New manager
-  account**; counts that filter (All, Active, Suspended, No listing yet);
-  search; one row per account (initials, enterprise, manager · sign-in
-  email · phone · since, Suspended / No listing yet pills), **Edit** and ⋯ (View
-  listing, New password, Suspend / Restore, Delete in red).
+- **Enterprise Managers** (`admin_managers.html`), a card grid by the user's
+  design like Destinations: title, "Manage enterprise accounts and manager
+  access." (hidden on a phone) and **New manager account**; counts that filter
+  as pills (All, Active, Suspended, No listing yet); the search; one card per
+  account (`managerCard`: initials, ACTIVE / SUSPENDED and No listing yet
+  chips, enterprise, manager, sign-in email, phone, "Since <date>", a full-width
+  **Edit** and ⋯ — View listing, New password, Suspend / Restore, Delete in
+  red). Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
+  Previous / numbers / Next and "Showing n of m managers".
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
 - **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Let
