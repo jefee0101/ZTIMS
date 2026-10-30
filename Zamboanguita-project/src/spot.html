@@ -84,7 +84,7 @@
 
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -330,7 +330,7 @@ body { overflow-x: hidden; }
         return `₱${value.toFixed(2)}`;
     }
 
-    // Spot text comes from establishment managers and admins, so it is escaped before it
+    // Spot text comes from enterprise managers and admins, so it is escaped before it
     // reaches innerHTML rather than trusted as markup.
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -367,14 +367,14 @@ body { overflow-x: hidden; }
         `;
     }
 
-    // The establishment's name, whichever spelling the account was saved under.
-    function managerName(establishment) {
-        return establishment?.establishmentName || establishment?.resortName || '';
+    // The enterprise's name, whichever spelling the account was saved under.
+    function managerName(enterprise) {
+        return enterprise?.establishmentName || enterprise?.resortName || '';
     }
 
     function bookingPanel(spot) {
         const url = safeExternalUrl(spot.bookingUrl);
-        const establishment = spot.managedBy && typeof spot.managedBy === 'object' ? spot.managedBy : null;
+        const enterprise = spot.managedBy && typeof spot.managedBy === 'object' ? spot.managedBy : null;
 
         if (url) {
             // The href is always the real destination so the link still works with
@@ -386,28 +386,28 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined">open_in_new</span> ${isStayPlace(spot) ? 'Book a room' : 'Book now'}
                 </a>
                 <p class="text-support text-center mt-3">
-                    Booking is handled on ${escapeHtml(managerName(establishment) || 'the establishment')}'s own website. This opens in a new tab.
+                    Booking is handled on ${escapeHtml(managerName(enterprise) || 'the enterprise')}'s own website. This opens in a new tab.
                 </p>
             `;
         }
 
-        // No booking link on file. If the establishment left contact details, they
+        // No booking link on file. If the enterprise left contact details, they
         // are worth showing; otherwise there is nothing useful to say here.
         const contactLines = [];
-        if (managerName(establishment)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(establishment))}</p>`);
+        if (managerName(enterprise)) contactLines.push(`<p class="text-sm text-on-surface font-bold">${escapeHtml(managerName(enterprise))}</p>`);
         // The person to ask for, when the office recorded one.
-        if (establishment?.managerName) {
-            contactLines.push(`<p class="text-support">Managed by ${escapeHtml(establishment.managerName)}</p>`);
+        if (enterprise?.managerName) {
+            contactLines.push(`<p class="text-support">Managed by ${escapeHtml(enterprise.managerName)}</p>`);
         }
-        if (establishment?.phone) {
-            contactLines.push(`<a href="tel:${escapeHtml(establishment.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
-                <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(establishment.phone)}
+        if (enterprise?.phone) {
+            contactLines.push(`<a href="tel:${escapeHtml(enterprise.phone)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline">
+                <span class="material-symbols-outlined !text-base">call</span>${escapeHtml(enterprise.phone)}
             </a>`);
         }
         // Only the public address ever reaches this page; the sign-in email stays private.
-        if (establishment?.contactEmail) {
-            contactLines.push(`<a href="mailto:${escapeHtml(establishment.contactEmail)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline break-all">
-                <span class="material-symbols-outlined !text-base">mail</span>${escapeHtml(establishment.contactEmail)}
+        if (enterprise?.contactEmail) {
+            contactLines.push(`<a href="mailto:${escapeHtml(enterprise.contactEmail)}" class="text-sm text-primary font-bold flex items-center justify-center gap-1.5 hover:underline break-all">
+                <span class="material-symbols-outlined !text-base">mail</span>${escapeHtml(enterprise.contactEmail)}
             </a>`);
         }
 
@@ -460,7 +460,7 @@ body { overflow-x: hidden; }
     }
 
     /* ===== TRAVEL DIRECTIONS =============================================
-       The destination comes from what the establishment or the Tourism Office
+       The destination comes from what the enterprise or the Tourism Office
        recorded. The starting point comes from the visitor's own device, or from
        a place they type in. The route, the distance and the travel time are
        worked out per request by a routing service through the ZTIMS API.

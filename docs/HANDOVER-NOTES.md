@@ -393,7 +393,7 @@ unless told `--replace`, for exactly this reason). So:
      removed by hand. They are saved whole in `copy-skipped-<time>.json`
      (git-ignored; it has personal details). If they were real money, stop and
      decide what they belong to before going on.
-   - **"Example Resort" repaired:** it points at establishment account
+   - **"Example Resort" repaired:** it points at enterprise account
      `6aaa83ac…`, which does not exist — the account was evidently deleted and
      re-created (the live "Example Resort" account is `6aae22ec…`). It is copied
      as maintained by the Tourism Office, which is how the site already shows it.
@@ -475,5 +475,5 @@ kind of thing that gets quietly reversed by a later change.
   Manipulating an ID in a URL must not get past the server.
 - **No `tourist` role in the users table**, no Tourist Guide accounts, and no
   online payment anywhere. Guide payment is recorded at the counter.
-- **Tourism records are never hard-deleted** because an establishment stops
+- **Tourism records are never hard-deleted** because an enterprise stops
   operating. They are marked inactive.

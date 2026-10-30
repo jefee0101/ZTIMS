@@ -136,7 +136,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -666,7 +666,7 @@ body { overflow-x: hidden; }
             who.className = 'own-banner ' + (p.keptByOffice ? 'own-banner--office' : 'own-banner--private');
             who.innerHTML = p.keptByOffice
                 ? '<span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span><span>The Tourism Office keeps this register.</span>'
-                : `<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private enterprise</span><span>Kept by ${escapeHtml(p.managerName || 'the establishment manager')}. View only.</span>`;
+                : `<span class="own-tag own-tag--private"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Private enterprise</span><span>Kept by ${escapeHtml(p.managerName || 'the enterprise manager')}. View only.</span>`;
             const list = document.getElementById('rgList');
             list.innerHTML = '<div class="p-4"><div class="ztims-empty">Loading…</div></div>';
             try {

@@ -67,7 +67,7 @@ create table if not exists public.tourism_officers (
 
 
 -- ---------------------------------------------------------------------------
--- Tourist Establishment Managers: the accounts that keep their own listings
+-- Tourist Enterprise Managers: the accounts that keep their own listings
 -- up to date. Copied from MongoDB's `resortOwners` collection.
 -- ---------------------------------------------------------------------------
 create table if not exists public.establishment_managers (
@@ -86,11 +86,11 @@ create table if not exists public.establishment_managers (
     -- The office's switch over the account. Suspended accounts cannot sign in
     -- and their listings leave the public site; nothing is deleted.
     active              boolean not null default true,
-    -- The establishment's own statement about whether it is trading.
+    -- The enterprise's own statement about whether it is trading.
     operational_status  text not null default 'active'
                         constraint establishment_managers_operational_status
                         check (operational_status in ('active', 'inactive', 'closed')),
-    -- Raised when the establishment reports a change, cleared by the officer.
+    -- Raised when the enterprise reports a change, cleared by the officer.
     status_needs_review boolean not null default false,
     status_note         text not null default '',
     status_updated_at   timestamptz,
@@ -117,7 +117,7 @@ create table if not exists public.spots (
     -- Cover photo. Only a link; the file lives on Cloudinary. The rest of the
     -- gallery is in spot_photos.
     image_url           text not null default '',
-    -- Where "Book Now" sends a visitor: the establishment's own site.
+    -- Where "Book Now" sends a visitor: the enterprise's own site.
     booking_url         text not null default '',
     type                text not null default 'spot'
                         constraint spots_type check (type in ('spot', 'accommodation')),
@@ -136,7 +136,7 @@ create table if not exists public.spots (
                         constraint spots_latitude_range check (latitude between -90 and 90),
     longitude           double precision
                         constraint spots_longitude_range check (longitude between -180 and 180),
-    -- Which establishment keeps this listing accurate. Null: the Tourism Office.
+    -- Which enterprise keeps this listing accurate. Null: the Tourism Office.
     managed_by          text references public.establishment_managers (id),
     -- Listings are taken down by status, never deleted.
     status              text not null default 'published'
@@ -149,7 +149,7 @@ create table if not exists public.spots (
 
 create index if not exists spots_managed_by_idx on public.spots (managed_by);
 create index if not exists spots_status_idx on public.spots (status);
--- One establishment, one listing: a manager account keeps exactly one place.
+-- One enterprise, one listing: a manager account keeps exactly one place.
 -- Listings the Tourism Office keeps (managed_by null) are not limited.
 create unique index if not exists spots_one_per_establishment
     on public.spots (managed_by) where managed_by is not null;
@@ -205,7 +205,7 @@ create index if not exists rate_limits_expires_at_idx on public.rate_limits (exp
 --
 -- Counts only. There is no column for money (revenue, rates, fees taken) and
 -- none for a guest's name or any detail about one person, and there must never
--- be one: an establishment reports how many guests came from where, nothing
+-- be one: an enterprise reports how many guests came from where, nothing
 -- more. There are no percentages either; every figure is a count, and every
 -- total is added up when it is asked for, never stored.
 --

@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script src="../shared/theme.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Establishment Managers</title>
+<title>Explore Zamboanguita Admin | Enterprise Managers</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -136,7 +136,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -519,7 +519,7 @@ body { overflow-x: hidden; }
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
             <div class="flex flex-wrap justify-between items-end gap-4">
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment Managers</h1>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Enterprise Managers</h1>
                 <button id="openCreateModalBtn" type="button" class="btn btn-primary min-h-[44px]">
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">person_add</span> New manager account
                 </button>
@@ -536,7 +536,7 @@ body { overflow-x: hidden; }
                 <div class="relative">
                     <label for="searchInput" class="sr-only">Search managers</label>
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                    <input id="searchInput" type="search" placeholder="Search by establishment, name, email or phone"
+                    <input id="searchInput" type="search" placeholder="Search by enterprise, name, email or phone"
                            class="field !pl-11 w-full min-h-[44px]"/>
                 </div>
             </div>
@@ -564,7 +564,7 @@ body { overflow-x: hidden; }
 
             <form id="createManagerForm" class="space-y-4 font-body">
                 <div>
-                    <label for="newManagerEstablishmentName" class="block text-sm font-semibold text-on-surface mb-1.5">Establishment name</label>
+                    <label for="newManagerEstablishmentName" class="block text-sm font-semibold text-on-surface mb-1.5">Enterprise name</label>
                     <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
                            class="field w-full"/>
                 </div>
@@ -747,7 +747,7 @@ body { overflow-x: hidden; }
                 const listings = listingCounts[String(manager._id)] || 0;
                 const listing = listingOf[String(manager._id)];
                 const suspended = manager.active === false;
-                const name = nameOf(manager) || 'Unnamed establishment';
+                const name = nameOf(manager) || 'Unnamed enterprise';
                 const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
                 const facts = [
                     escapeHtml(manager.managerName || 'No manager name'),
@@ -789,7 +789,7 @@ body { overflow-x: hidden; }
             renderTable();
         }
 
-        // A listing's assigned establishment arrives populated, so it can be an
+        // A listing's assigned enterprise arrives populated, so it can be an
         // object or a plain id
         // depending on the route that produced it.
         function managedByIdOf(spot) {
@@ -846,7 +846,7 @@ body { overflow-x: hidden; }
 
         /* ---- Account lifecycle --------------------------------------------
            Every one of these asks first and says exactly what it will do, since
-           suspending takes an establishment's listings off the public site and
+           suspending takes an enterprise's listings off the public site and
            issuing a password locks the manager out of the one they are using. */
 
         function managerById(id) {
@@ -956,7 +956,7 @@ body { overflow-x: hidden; }
                 icon: 'manage_accounts',
                 fields: [
                     {
-                        name: 'establishmentName', label: 'Establishment name', required: true,
+                        name: 'establishmentName', label: 'Enterprise name', required: true,
                         value: nameOf(manager), placeholder: 'e.g., Basay Beach Resort'
                     },
                     {
@@ -1054,7 +1054,7 @@ body { overflow-x: hidden; }
             const password = document.getElementById('newManagerPassword').value;
 
             if (!establishmentName || !email || !password) {
-                setCreateError('An establishment name, email and password are all needed.');
+                setCreateError('An enterprise name, email and password are all needed.');
                 return;
             }
 

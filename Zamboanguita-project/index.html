@@ -94,7 +94,7 @@
            there is one place that turns motion off. */
     
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -508,7 +508,7 @@ body { overflow-x: hidden; }
 
     /* ---------------- shared helpers ---------------- */
 
-    // Spot and review text is written by establishment managers and tourists, so it is
+    // Spot and review text is written by enterprise managers and tourists, so it is
     // escaped before ever reaching innerHTML.
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -548,7 +548,7 @@ body { overflow-x: hidden; }
     }
 
     // Only a tourist account unlocks reviews and settings. Officers and resort
-    // establishment managers have their own portals, so signing in there doesn't apply here.
+    // enterprise managers have their own portals, so signing in there doesn't apply here.
     // Shown in place of reviews or settings when a visitor isn't signed in.
     /* ---------------- destinations ---------------- */
 

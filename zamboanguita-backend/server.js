@@ -314,7 +314,7 @@ const requirePasswordConfirmation = [confirmRateLimit, async (req, res, next) =>
     return next();
 }];
 
-// ZTIMS has two kinds of account: Tourism Officer ('admin') and Establishment
+// ZTIMS has two kinds of account: Tourism Officer ('admin') and Enterprise
 // Manager. 'resort_owner' is not a third — it is the spelling the
 // manager account carried in tokens issued before the rename, kept here only so
 // a session signed in back then is not thrown out mid-visit. Nothing issues it
@@ -324,13 +324,13 @@ const isEstablishmentManager = role => MANAGER_ROLES.includes(role);
 
 const requireEstablishmentManager = [requireAuth, (req, res, next) => {
     if (!isEstablishmentManager(req.auth.role)) {
-        return res.status(403).json({ success: false, message: 'Tourist Establishment Manager access required.' });
+        return res.status(403).json({ success: false, message: 'Tourist Enterprise Manager access required.' });
     }
     return next();
 }];
 
 
-// Tourist Officer or Tourist Establishment Manager — used on routes both manage,
+// Tourist Officer or Tourist Enterprise Manager — used on routes both manage,
 // each scoped to their own data.
 const requireStaff = [requireAuth, (req, res, next) => {
     if (req.auth.role !== 'admin' && !isEstablishmentManager(req.auth.role)) {
@@ -377,7 +377,7 @@ async function emailTakenBy(email, except = {}) {
     const officer = await TourismOfficer.findOne({ email });
     if (officer && String(officer._id) !== String(except.officerId)) return 'a Tourism Officer';
     const manager = await EstablishmentManager.findOne({ email });
-    if (manager && String(manager._id) !== String(except.managerId)) return 'an establishment manager';
+    if (manager && String(manager._id) !== String(except.managerId)) return 'an enterprise manager';
     return null;
 }
 
@@ -575,7 +575,7 @@ app.get('/api/admin/list', requireAdmin, async (req, res) => {
  * The officer's profile page had a Security panel with three password boxes and
  * nowhere to send them — no route existed, so the only way an officer could ever
  * change their own password was the forgot-password email, which needs SMTP
- * credentials that are not configured. Establishment managers have had
+ * credentials that are not configured. Enterprise managers have had
  * /api/establishment-managers/me/password all along; this is the same thing for
  * the account that oversees them, and deliberately mirrors it.
  *
@@ -669,7 +669,7 @@ app.post('/api/admin/:id/password', requireAdmin, requirePasswordConfirmation, a
 });
 
 /**
- * POST: Tourist Officer creates a Tourist Establishment Manager account (managers do
+ * POST: Tourist Officer creates a Tourist Enterprise Manager account (managers do
  * not self-register — the Tourist Officer oversees the whole system and issues these
  * accounts directly)
  * Target URL: http://localhost:5000/api/establishment-managers
@@ -682,7 +682,7 @@ async function createEstablishmentManager(req, res) {
         const establishmentName = req.body.establishmentName || req.body.resortName;
 
         if (!email || !password || !establishmentName) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or establishment name.' });
+            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or enterprise name.' });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -690,7 +690,7 @@ async function createEstablishmentManager(req, res) {
         if (weak) return res.status(400).json({ success: false, message: weak });
         const existingManager = await EstablishmentManager.findOne({ email: normalizedEmail });
         if (existingManager) {
-            return res.status(409).json({ success: false, message: 'This email is already registered as an establishment manager.' });
+            return res.status(409).json({ success: false, message: 'This email is already registered as an enterprise manager.' });
         }
         const takenBy = await emailTakenBy(normalizedEmail);
         if (takenBy) {
@@ -712,15 +712,15 @@ async function createEstablishmentManager(req, res) {
         // The officer chose this password: the manager sets their own at first sign-in.
         await db.query('update establishment_managers set must_change_password = true where id = $1', [created._id]);
 
-        console.log(`🏨 New Tourist Establishment Manager account created by Tourist Officer: ${normalizedEmail}`);
-        return res.status(201).json({ success: true, message: 'Establishment manager account created!' });
+        console.log(`🏨 New Tourist Enterprise Manager account created by Tourist Officer: ${normalizedEmail}`);
+        return res.status(201).json({ success: true, message: 'Enterprise manager account created!' });
     } catch (error) {
-        return reportWriteFailure(res, error, '❌ Create Establishment Manager Endpoint Failure:');
+        return reportWriteFailure(res, error, '❌ Create Enterprise Manager Endpoint Failure:');
     }
 }
 
 /**
- * GET: Tourist Officer lists all establishment manager accounts
+ * GET: Tourist Officer lists all enterprise manager accounts
  * Target URL: http://localhost:5000/api/establishment-managers
  */
 async function listEstablishmentManagers(req, res) {
@@ -732,7 +732,7 @@ async function listEstablishmentManagers(req, res) {
             contactEmail: manager.contactEmail || manager.email
         })));
     } catch (error) {
-        console.error("❌ Get Establishment Manager List Endpoint Failure:", error);
+        console.error("❌ Get Enterprise Manager List Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 }
@@ -803,9 +803,9 @@ app.get('/api/establishment-managers/me', requireEstablishmentManager, async (re
 });
 
 /**
- * PATCH: the establishment reports whether it is operating.
+ * PATCH: the enterprise reports whether it is operating.
  *
- * This is the establishment speaking about its own business, so it is theirs to
+ * This is the enterprise speaking about its own business, so it is theirs to
  * set. It deliberately cannot touch `active` — suspending an account is the
  * office's decision, and a place must not be able to lift its own suspension.
  *
@@ -816,7 +816,7 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
     try {
         const status = String(req.body.operationalStatus || '').trim();
         if (!['active', 'inactive', 'closed'].includes(status)) {
-            return res.status(400).json({ success: false, message: 'Choose whether the establishment is operating, temporarily closed, or permanently closed.' });
+            return res.status(400).json({ success: false, message: 'Choose whether the enterprise is operating, temporarily closed, or permanently closed.' });
         }
 
         const manager = await EstablishmentManager.findById(req.auth.sub);
@@ -840,7 +840,7 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
             manager: managerProfile(manager)
         });
     } catch (error) {
-        return reportWriteFailure(res, error, '❌ Establishment status update failure:');
+        return reportWriteFailure(res, error, '❌ Enterprise status update failure:');
     }
 });
 
@@ -852,7 +852,7 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
 async function applyManagerDetails(manager, body) {
     if (typeof body.establishmentName === 'string') {
         const name = body.establishmentName.trim();
-        if (!name) throw new Error('The establishment needs a name.');
+        if (!name) throw new Error('The enterprise needs a name.');
         manager.establishmentName = name;
     }
     if (typeof body.managerName === 'string') manager.managerName = body.managerName.trim();
@@ -900,7 +900,7 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
             const email = req.body.email.trim().toLowerCase();
             if (email !== manager.email) {
                 const taken = await EstablishmentManager.findOne({ email });
-                if (taken) return res.status(409).json({ success: false, message: 'Another establishment already signs in with that email.' });
+                if (taken) return res.status(409).json({ success: false, message: 'Another enterprise already signs in with that email.' });
                 const takenBy = await emailTakenBy(email, { managerId: manager._id });
                 if (takenBy) return res.status(409).json({ success: false, message: `That email already signs in as ${takenBy}.` });
                 manager.email = email;
@@ -981,7 +981,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
         }
 
         await EstablishmentManager.deleteById(manager._id);
-        console.log(`🗑️ Officer deleted establishment manager account ${manager.email}`);
+        console.log(`🗑️ Officer deleted enterprise manager account ${manager.email}`);
         return res.status(200).json({ success: true, message: 'Account deleted.' });
     } catch (error) {
         console.error('❌ Officer manager delete failure:', error);
@@ -993,7 +993,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
 
 /**
  * POST: Sign in. ZTIMS has two kinds of account: Tourism Officer and Tourist
- * Establishment Manager. Visitors browse without one.
+ * Enterprise Manager. Visitors browse without one.
  * Target URL: http://localhost:5000/api/login
  */
 // Only failed sign-ins count: everyone at the Municipal Hall reaches the site
@@ -1050,7 +1050,7 @@ app.post('/api/login', sharedRateLimit('login', {
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
                 : resolvedRole === 'admin' ? 'Tourist Officer'
-                : 'Tourist Establishment Manager';
+                : 'Tourist Enterprise Manager';
             return res.status(401).json({
                 success: false,
                 message: `Authentication failed: Invalid ${audience} credentials.`
@@ -1102,7 +1102,7 @@ app.post('/api/login', sharedRateLimit('login', {
                 nationality: account.nationality || "",
                 establishmentName: account.establishmentName || "",
                 // Pre-rename key, still sent so a page cached from before the rename
-                // keeps showing the establishment's name instead of a blank.
+                // keeps showing the enterprise's name instead of a blank.
                 resortName: account.establishmentName || ""
             }
         };
@@ -1289,7 +1289,7 @@ app.post('/api/reset-password', resetRateLimit, async (req, res) => {
  * Target URL: http://localhost:5000/api/spots
  *
  * GET stays public — guests browse tourist spots/accommodations without logging in.
- * Pass ?mine=true (Tourist Establishment Manager) to scope results to their own listings.
+ * Pass ?mine=true (Tourist Enterprise Manager) to scope results to their own listings.
  */
 app.get('/api/spots', optionalAuth, async (req, res) => {
     try {
@@ -1299,11 +1299,11 @@ app.get('/api/spots', optionalAuth, async (req, res) => {
             // them — the scope is applied in the query, not left to the caller.
             query.managedBy = req.auth.sub;
         }
-        // The establishment's public-facing details come along so the officer's
+        // The enterprise's public-facing details come along so the officer's
         // oversight page can show who maintains each listing without a request per row.
         const foundSpots = await Spot.findWithManagers(query);
 
-        // A suspended establishment's listings leave the public site, but the
+        // A suspended enterprise's listings leave the public site, but the
         // Tourist Officer still sees them — otherwise the listings they just hid
         // would vanish from the very page they oversee them on.
         const visibleSpots = req.auth?.role === 'admin'
@@ -1381,7 +1381,7 @@ function normaliseSpotImages(payload) {
    ------------------------------------------
    One place decides who may touch a listing, so a route written later cannot
    quietly forget the rule. Every decision is made on ROLE and on the RESOURCE
-   together: being an establishment manager is not enough on its own, the listing
+   together: being an enterprise manager is not enough on its own, the listing
    has to be one that manager is assigned to.
 
    None of this depends on the frontend. The portals hide actions the signed-in
@@ -1390,7 +1390,7 @@ function normaliseSpotImages(payload) {
    refused here no matter what any page did or didn't show.
 ========================================== */
 
-// What an establishment manager may write on a listing assigned to them: its
+// What an enterprise manager may write on a listing assigned to them: its
 // tourism information, and nothing about who is responsible for it.
 const MANAGER_WRITABLE_SPOT_FIELDS = [
     'title', 'location', 'category', 'moreCategories', 'description', 'imageUrl', 'images', 'bookingUrl',
@@ -1398,7 +1398,7 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
     'address', 'barangay', 'latitude', 'longitude'
 ];
 // Note what is absent: status and managedBy. Publication is the municipality's
-// decision, not an establishment's.
+// decision, not an enterprise's.
 
 /**
  * Decides whether this caller may write to this listing.
@@ -1420,7 +1420,7 @@ function authorizeSpotWrite(auth, spot) {
             return {
                 allowed: false,
                 status: 403,
-                message: 'You may only manage listings assigned to your own establishment.'
+                message: 'You may only manage listings assigned to your own enterprise.'
             };
         }
         return { allowed: true, scope: 'manager' };
@@ -1431,9 +1431,9 @@ function authorizeSpotWrite(auth, spot) {
 
 /**
  * Narrows a payload to the fields the caller's scope allows. An officer's passes
- * through whole; a manager's is reduced to their own establishment's information.
+ * through whole; a manager's is reduced to their own enterprise's information.
  *
- * Dropping beats rejecting here: the establishment's editor posts a whole listing
+ * Dropping beats rejecting here: the enterprise's editor posts a whole listing
  * every time, and a field it never offered to change shouldn't fail the save.
  * What it must not set simply never reaches the document.
  */
@@ -1603,7 +1603,7 @@ function normaliseSpotLocation(payload) {
    municipality's account for as long as the preset existed.
 
    Now the browser asks here first. This route is staff-only, so a signature is
-   issued to a signed-in Tourism Officer or establishment manager and to nobody
+   issued to a signed-in Tourism Officer or enterprise manager and to nobody
    else. The API secret never leaves the server; only the resulting signature
    does, and it covers a fixed folder and a timestamp Cloudinary will reject once
    it is an hour old.
@@ -1661,18 +1661,18 @@ app.get('/api/uploads/signature', requireStaff, (req, res) => {
 app.post('/api/spots', requireStaff, async (req, res) => {
     try {
         // A manager's listing is assigned to them, whatever the request claims;
-        // only the officer may assign a listing to an establishment.
+        // only the officer may assign a listing to an enterprise.
         const managedBy = isEstablishmentManager(req.auth.role)
             ? req.auth.sub
             : (req.body.managedBy || null);
-        // One establishment, one listing (spots_one_per_establishment holds it
+        // One enterprise, one listing (spots_one_per_establishment holds it
         // too); said plainly here before anything is written.
         if (managedBy && await Spot.count({ managedBy })) {
             return res.status(409).json({
                 success: false,
                 message: isEstablishmentManager(req.auth.role)
-                    ? 'Your establishment already has its listing. Edit that one instead of adding another.'
-                    : 'That establishment already has its listing. An establishment keeps one listing.'
+                    ? 'Your enterprise already has its listing. Edit that one instead of adding another.'
+                    : 'That enterprise already has its listing. An enterprise keeps one listing.'
             });
         }
         // The record's identity and history are the database's to set, never a request's.
@@ -1693,7 +1693,7 @@ app.post('/api/spots', requireStaff, async (req, res) => {
  */
 app.get('/api/spots/:id', async (req, res) => {
     try {
-        // Only the establishment's public-facing contact details — never the
+        // Only the enterprise's public-facing contact details — never the
         // sign-in email or password hash, since this route is open to anyone.
         const spot = await Spot.findByIdWithManager(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
@@ -1712,7 +1712,7 @@ app.get('/api/spots/:id', async (req, res) => {
  *
  * Officer-only, on every listing including those a private enterprise
  * maintains — that is what municipal oversight means, and it is the reason this
- * is separate from editing the listing's information. An establishment keeps its
+ * is separate from editing the listing's information. An enterprise keeps its
  * own details accurate; the municipality decides what the public sees.
  *
  * Nothing is deleted. Archiving retires a listing while keeping the record.
@@ -1747,7 +1747,7 @@ app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
 });
 
 /**
- * PUT/DELETE: Establishment Managers manage only their own spot; the Tourist Officer manages any.
+ * PUT/DELETE: Enterprise Managers manage only their own spot; the Tourist Officer manages any.
  * Target URL: http://localhost:5000/api/spots/:id
  */
 app.put('/api/spots/:id', requireStaff, async (req, res) => {
@@ -1758,7 +1758,7 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         const verdict = authorizeSpotWrite(req.auth, spot);
         if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
 
-        // Which establishment maintains a listing is never reassigned from here,
+        // Which enterprise maintains a listing is never reassigned from here,
         // and a listing's id and history are never the request's to change: the
         // update is saved against the id in the URL, whatever the body carries.
         const { managedBy, ownerId, _id, createdAt, updatedAt, ...updates } = req.body;
@@ -1931,7 +1931,7 @@ app.patch('/api/feedback/:id/status', requireAdmin, async (req, res) => {
 /* ==========================================
    4b. TRAVEL DIRECTIONS
    ------------------------------------------
-   The establishment says where it is. The visitor's device — or a starting point
+   The enterprise says where it is. The visitor's device — or a starting point
    they type themselves — says where they are. A routing service works out the road
    between the two. ZTIMS stores none of the journey: no travel times are kept, and
    the visitor's coordinates exist only for the length of one request.
@@ -2347,7 +2347,7 @@ app.get('/api/directions/route', directionsRateLimit, async (req, res) => {
 });
 
 /**
- * Address search, used by the establishment's location picker and by a visitor who
+ * Address search, used by the enterprise's location picker and by a visitor who
  * types a starting point instead of sharing their device location.
  */
 app.get('/api/directions/search', directionsRateLimit, async (req, res) => {

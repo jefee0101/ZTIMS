@@ -2099,7 +2099,7 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .sf-choice.is-main .sf-choice__main { display: inline-block; }
 
 /* The listing form (spot-form.js), the standard look wherever it opens — the
-   officer's Destinations and Dashboard, the manager's Establishment. */
+   officer's Destinations and Dashboard, the manager's Enterprise. */
 /* Steps: a round number with its name under it, joined by a line, like the
    visitor's booking steps; done green with a tick, current burnt orange. They
    are buttons: when editing, any step opens straight away. */

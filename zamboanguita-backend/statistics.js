@@ -4,7 +4,7 @@
  * Mounted at /api/statistics by server.js, which hands over its own sign-in
  * checks so this file enforces exactly the same roles.
  *
- * Who reports for a place is who runs it in ZTIMS: an establishment manager
+ * Who reports for a place is who runs it in ZTIMS: an enterprise manager
  * for the listing they manage, the Tourism Officer for everything the office
  * keeps (spots.managed_by is null). A private enterprise's reports
  * are entered by its manager only; the officer views them. Only the officer
@@ -247,7 +247,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
             if (!mayEnterFor(req, spot)) {
                 return res.status(403).json({ success: false, message: isOfficer(req)
-                    ? 'This place is run by a private enterprise. Its monthly reports are submitted by its establishment manager; the Tourism Office can only view them.'
+                    ? 'This place is run by a private enterprise. Its monthly reports are submitted by its enterprise manager; the Tourism Office can only view them.'
                     : 'You can only report for the places you manage.' });
             }
             const kind = kindOf(spot);

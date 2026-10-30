@@ -1,7 +1,7 @@
 /* ==========================================================================
    The listing form — one copy, used by all three editors
    --------------------------------------------------------------------------
-   Before this, the establishment portal, the officer's Destinations page and
+   Before this, the enterprise portal, the officer's Destinations page and
    the officer's Analytics quick-add each carried their own form. They
    collected different fields, validated differently and looked different, so
    the same listing came out complete or half-empty depending on which door
@@ -1655,7 +1655,7 @@
                 renderResults(list);
                 say(list.length
                     ? 'Pick the closest match, then drag the pin to the exact spot.'
-                    : 'We could not find that place. Try the establishment name, a landmark, the barangay or the street — '
+                    : 'We could not find that place. Try the enterprise name, a landmark, the barangay or the street — '
                         + 'or pick it on the map instead.');
             } catch (error) {
                 say(error.message, 'error');
@@ -1892,7 +1892,7 @@
         }
 
         /* The upload is authorised by the ZTIMS API rather than by a preset sitting
-           in the page source. Only a signed-in officer or establishment manager can
+           in the page source. Only a signed-in officer or enterprise manager can
            obtain a signature, so reading this page no longer grants anyone the
            ability to upload to the municipality's Cloudinary account.
 

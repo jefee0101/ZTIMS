@@ -136,7 +136,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -784,7 +784,7 @@ body { overflow-x: hidden; }
             who.className = 'own-banner ' + (place.keptByOffice ? 'own-banner--office' : 'own-banner--private');
             who.innerHTML = ownTag(place.keptByOffice) + (place.keptByOffice
                 ? '<span>The Tourism Office enters this report.</span>'
-                : `<span>Entered by ${escapeHtml(place.managerName || 'the establishment manager')}. View only.</span>`);
+                : `<span>Entered by ${escapeHtml(place.managerName || 'the enterprise manager')}. View only.</span>`);
             window.ZTIMS_STATS.mount(document.getElementById('enHost'), {
                 apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true, viewOnly: !place.keptByOffice,
                 toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession

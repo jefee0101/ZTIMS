@@ -114,7 +114,7 @@ html.theme-switching::view-transition-new(root) {
 }
 
 /* For the pages that have no reason to introduce themselves line by line —
-   the officer's tables, the establishment portal. The whole of main settles
+   the officer's tables, the enterprise portal. The whole of main settles
    once: shorter and smaller than .rise, so it registers as the page arriving,
    not as an animation someone has to sit through. */
 @keyframes ztimsPageIn {

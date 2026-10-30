@@ -130,9 +130,9 @@ function validationError(message, key) {
    definitions do not catch first (a script, a race, a bug). */
 const CONSTRAINT_MESSAGES = {
     spot_photos_position: 'A spot can have at most 30 photos.',
-    spots_one_per_establishment: 'An establishment has one listing, and this one already has its listing. Edit that one instead.',
+    spots_one_per_establishment: 'An enterprise has one listing, and this one already has its listing. Edit that one instead.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
-    spots_managed_by_fkey: 'That establishment account does not exist.',
+    spots_managed_by_fkey: 'That enterprise account does not exist.',
     payments_ticket_id_key: 'Payment for that ticket was already recorded.'
 };
 
@@ -254,7 +254,7 @@ function castField(key, spec, value) {
 }
 
 /* A reference may be the id itself, or the record it points at — a route that
-   read a listing with its establishment filled in, then saved it, hands back
+   read a listing with its enterprise filled in, then saved it, hands back
    the whole record. Mongoose accepted both; so does this. */
 const idOf = value => (value && typeof value === 'object' && '_id' in value ? String(value._id) : String(value));
 

@@ -136,7 +136,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -579,7 +579,7 @@ body { overflow-x: hidden; }
 
 
     <!-- Editing a listing the Tourism Office keeps itself. Listings that belong
-         to an establishment manager are theirs alone, so this never opens for
+         to an enterprise manager are theirs alone, so this never opens for
          one of those. -->
     <div id="editSpotModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
         <div class="ztims-modal w-full max-w-lg xl:max-w-5xl p-5 sm:p-8 space-y-6 overflow-y-auto">
@@ -775,11 +775,11 @@ body { overflow-x: hidden; }
         /* ===== THE DESTINATIONS THE OFFICE ALREADY DOCUMENTED =====
            Written in exactly the shape every other spot uses — same fields, same
            category wording, fees as numbers, a photo gallery — so an imported
-           destination and one created by an establishment manager are identical
+           destination and one created by an enterprise manager are identical
            in the database — including the photos, which live in the same
            Cloudinary account every manager uploads to. An address stored here
            has to resolve from anywhere the API is read, not only from this
-           deployment, so it is absolute rather than a path on this site. They have no assigned establishment, which marks them as kept by the
+           deployment, so it is absolute rather than a path on this site. They have no assigned enterprise, which marks them as kept by the
            Tourism Office rather than run by a manager. */
         const STARTER_DESTINATIONS = [
             {
@@ -1061,7 +1061,7 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined">travel_explore</span>
                         <p>
                             ${allSpots.length === 0
-                                ? 'Nothing is published yet. Establishment managers publish their own listings from their portal.'
+                                ? 'Nothing is published yet. Enterprise managers publish their own listings from their portal.'
                                 : 'No listing matches these filters.'}
                         </p>
                     </div>`;

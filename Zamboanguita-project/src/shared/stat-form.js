@@ -1,5 +1,5 @@
 /* ==========================================================================
-   The monthly statistics report — one form, used by the establishment portal
+   The monthly statistics report — one form, used by the enterprise portal
    and by the Tourism Officer (for the office's own attractions and on anyone's
    behalf). Loaded as a module; it only defines window.ZTIMS_STATS.
 
@@ -160,7 +160,7 @@
 
         const status = report
             ? `<span class="tone-pill ${report.late ? 'tone-warning' : 'tone-success'} text-xs font-bold px-2 py-0.5">${report.late ? 'Submitted late' : 'Submitted'}</span>
-               <span class="text-support">by ${esc(report.submittedByEmail || (report.submittedByRole === 'admin' ? 'the Tourism Office' : 'the establishment'))}, ${esc(formatWhen(report.submittedAt))}</span>`
+               <span class="text-support">by ${esc(report.submittedByEmail || (report.submittedByRole === 'admin' ? 'the Tourism Office' : 'the enterprise'))}, ${esc(formatWhen(report.submittedAt))}</span>`
             : `<span class="tone-pill tone-neutral text-xs font-bold px-2 py-0.5">Not submitted yet</span>
                <span class="text-support">Due by ${esc(new Date(state.deadline).toLocaleDateString('en-PH', { dateStyle: 'medium' }))}</span>`;
 

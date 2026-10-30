@@ -133,7 +133,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -442,7 +442,7 @@ body { overflow-x: hidden; }
     <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
-            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Establishment Manager Portal</p>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Enterprise Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                     class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
@@ -450,9 +450,9 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="Establishment" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="Enterprise" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">storefront</span>
-                <span class="sidebar-label">Establishment</span>
+                <span class="sidebar-label">Enterprise</span>
             </a>
             <a title="Guest Register" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_register.html">
                 <span class="material-symbols-outlined text-accent">menu_book</span>
@@ -577,7 +577,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My establishment',
+                name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My enterprise',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
@@ -835,7 +835,7 @@ body { overflow-x: hidden; }
                 return;
             }
             if (!myPlaces.length) {
-                list.innerHTML = '<div class="p-4"><div class="ztims-empty">Your establishment has no listing yet. Add it under Establishment first.</div></div>';
+                list.innerHTML = '<div class="p-4"><div class="ztims-empty">Your enterprise has no listing yet. Add it under Enterprise first.</div></div>';
                 return;
             }
             const placeSelect = document.getElementById('rgPlace');

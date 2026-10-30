@@ -149,7 +149,7 @@ tailwind.config = {
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -815,8 +815,8 @@ body { overflow-x: hidden; }
                   detail: 'Sent from the Contact Us page.',
                   doneText: 'No new messages.', go: 'Read feedback', href: 'admin_feedback.html' },
                 { icon: 'storefront', tone: 'tone-info', pill: 'To review', count: count(d.managers, m => m.statusNeedsReview),
-                  one: 'establishment status change', many: 'establishment status changes',
-                  detail: 'An establishment reported it is closed, inactive or open again.',
+                  one: 'enterprise status change', many: 'enterprise status changes',
+                  detail: 'An enterprise reported it is closed, inactive or open again.',
                   doneText: 'No status changes to review.', go: 'Review on Managers', href: 'admin_managers.html' },
                 { icon: 'wrong_location', tone: 'tone-warning', pill: 'Fix', count: count(d.spots, s => s.status !== 'archived' && (s.latitude == null || s.longitude == null)),
                   one: 'listing without a map pin', many: 'listings without a map pin',
@@ -978,7 +978,7 @@ body { overflow-x: hidden; }
                 : '';
 
             if (!cur.arrivals) {
-                chart.innerHTML = `<div class="ztims-empty">No reports for ${year} yet. They appear here as establishments send them.</div>`;
+                chart.innerHTML = `<div class="ztims-empty">No reports for ${year} yet. They appear here as enterprises send them.</div>`;
             } else {
                 chart.innerHTML = `
                 <div class="grid gap-1.5 sm:gap-2.5 items-end border-b border-outline-variant/60" style="grid-template-columns: repeat(12, minmax(0, 1fr)); height: 15rem">
@@ -1022,7 +1022,7 @@ body { overflow-x: hidden; }
             box.innerHTML = [
                 n(live.filter(s => s.status === 'published').length, 'published'),
                 n(live.filter(s => s.status === 'unpublished').length, 'unpublished'),
-                n(live.filter(s => s.managedBy).length, 'kept by establishments'),
+                n(live.filter(s => s.managedBy).length, 'kept by enterprises'),
                 n(live.filter(s => !s.managedBy).length, 'kept by the office')
             ].join(' ');
         }

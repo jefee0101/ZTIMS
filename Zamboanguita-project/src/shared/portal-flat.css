@@ -7,7 +7,7 @@
    The standard, flat look (as on the visitor pages): flat outlined panels,
    sentence-case labels, pill buttons and status pills, the current page in
    the menu as a solid burnt-orange pill. Shared by the officer and the
-   establishment manager portals.
+   enterprise manager portals.
    ========================================================================== */
 main .glass-panel {
     background: rgb(var(--ztims-surface)) !important;
@@ -35,7 +35,7 @@ aside a.is-current, aside a.nav-active.nav-active { background: rgb(var(--ztims-
 aside a.is-current .material-symbols-outlined, aside a.nav-active .material-symbols-outlined { color: inherit !important; }
 aside a:not(.is-current):not(.nav-active):hover { background: rgb(var(--ztims-secondary) / .15); color: rgb(var(--ztims-on-surface)); }
 
-/* Subpage tabs (manager Establishment and Account): the same look
+/* Subpage tabs (manager Enterprise and Account): the same look
    as the officer's Settings tabs. */
 .settings-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
                 color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
@@ -56,7 +56,7 @@ main .ztims-card:hover, main .glass-card:hover { transform: none !important; }
 aside .sidebar-label.uppercase { text-transform: none !important; letter-spacing: 0 !important; font-size: .75rem !important; }
 aside a[class*="hover:translate-x"]:hover { transform: none !important; }
 
-/* ---- Establishment (resort_spots.html) ------------------------------------
+/* ---- Enterprise (resort_spots.html) ------------------------------------
    The subpages are folder tabs hanging from the header's lower edge, upside
    down, hanging from the tile strip. */
 .est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; align-items: flex-start; gap: .3rem;

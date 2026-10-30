@@ -13,7 +13,7 @@ profile, reports), no Tourist Guides or Guide Bookings page for the officer, no
 listing. The guide records and guide bookings, and the payments made for those
 bookings, were deleted from the database. What visitors pay for online is
 entrance tickets only; "My booking" in the visitor menu is now "My ticket".
-The users are two: the Tourism Officer and the Establishment Manager, plus
+The users are two: the Tourism Officer and the Enterprise Manager, plus
 visitors without accounts.
 
 **Change in the manuscript:** take out the Tourist Guide as a user (Scope,
@@ -23,19 +23,25 @@ the guide booking and guide payment from the visitor's process and the
 Collections description ("guide fees"), and the guide module from the testing
 chapter. Wherever it lists three kinds of staff account, write two.
 
-## "Private enterprise", not "private establishment" (October 2026)
+## "Enterprise", not "establishment", everywhere (October 2026)
 
-**The change.** At the panel's suggestion, a place the Tourism Office does
-not run is now called a **private enterprise**. The system shows "Private
-enterprise" beside each such place in Statistics, the Guest Register and the
-Excel's "By place" sheet, and Destinations filters by "Tourism Office" and
-"Private enterprises". The account role keeps its name, Establishment
-Manager: the person who runs the enterprise's listing.
+**The change.** At the panel's suggestion, every place a manager runs is an
+**enterprise**, never an "establishment", in the system and in the
+manuscript. The role is the **Enterprise Manager** (was Establishment
+Manager); the manager's menu reads **Enterprise**; the officer's page is
+**Enterprise Managers**; a place the Tourism Office does not run is a
+**private enterprise**, shown "Private enterprise" in Statistics, the Guest
+Register and the Excel's "By place" sheet, and Destinations filters by
+"Tourism Office" and "Private enterprises". FAQ, Terms, Privacy and every
+message say enterprise too. (Only names inside the code and database, which
+nobody sees, keep the old word.)
 
-**Change in the manuscript:** wherever it says "private establishment",
-"privately managed establishment" or "privately owned establishment" for who
-runs a place, write "private enterprise". Keep "tourist establishment" and
-"Establishment Manager" where they name the place or the role.
+**Change in the manuscript:** replace "establishment" with "enterprise"
+throughout: "Establishment Manager" → "Enterprise Manager", "tourist
+establishment" → "tourist enterprise", "private establishment" / "privately
+managed establishment" → "private enterprise", "accommodation
+establishment" → "accommodation enterprise", including the use case and
+context diagrams, the Operational Definition of Terms and the user manual.
 
 ## Tourist guides have no area (October 2026) — superseded: tour guides were removed, see above
 

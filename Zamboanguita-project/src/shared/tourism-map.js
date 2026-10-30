@@ -89,7 +89,7 @@
         return CATEGORIES[mainCode(spot)] || FALLBACK_CATEGORY;
     }
 
-    /* For the pages (Home, destination, Destinations, Establishment, the form):
+    /* For the pages (Home, destination, Destinations, Enterprise, the form):
        one list, one set of names. */
     window.ZTIMS_CATEGORIES = {
         CODES: Object.keys(CATEGORIES),
@@ -453,7 +453,7 @@
         }
 
         // Capture phase, and the event stops here. This map can sit inside a
-        // dialog that also closes on Escape — the establishment's listing form
+        // dialog that also closes on Escape — the enterprise's listing form
         // does. Without this, shrinking the map would close the whole form and
         // throw away everything typed into it. Registered on capture so it runs
         // before the dialog's own bubble-phase listener, whichever was added

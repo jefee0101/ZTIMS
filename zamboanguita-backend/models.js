@@ -3,7 +3,7 @@
  * Each definition mirrors a Mongoose schema that used to live in server.js,
  * field for field: same names, same defaults, same limits, same messages. The
  * columns underneath are in db/schema.sql. Where a route needs a record
- * together with the one it points at — a listing with its establishment —
+ * together with the one it points at — a listing with its enterprise —
  * the query is written out here, so
  * the joins are in one place and the routes keep their shape.
  */
@@ -43,11 +43,11 @@ const officers = new Table('tourism_officers', {
     ...resetFields
 }, { secret: SECRET });
 
-/* Tourist Establishment Managers. MongoDB's `resortOwners`. */
+/* Tourist Enterprise Managers. MongoDB's `resortOwners`. */
 const managers = new Table('establishment_managers', {
     email: email(),
     password: passwordHash(),
-    establishmentName: required({ trim: true, requiredMessage: 'An establishment name is required.' }),
+    establishmentName: required({ trim: true, requiredMessage: 'An enterprise name is required.' }),
     managerName: text({ trim: true }),
     contactEmail: text({ trim: true, lowercase: true }),
     phone: text(),
@@ -181,7 +181,7 @@ spots.save = async function (spot, options = {}) {
     return options.client ? run(options.client) : transaction(run);
 };
 
-/* The establishment's details a listing is allowed to carry. Never the
+/* The enterprise's details a listing is allowed to carry. Never the
    sign-in email, never anything secret: GET /api/spots/:id is public. */
 const MANAGER_SUMMARY = `case when m.id is null then null else jsonb_build_object(
     '_id', m.id,
@@ -193,7 +193,7 @@ const MANAGER_SUMMARY = `case when m.id is null then null else jsonb_build_objec
     'operationalStatus', m.operational_status
 ) end as manager_summary`;
 
-/* Listings with their establishment's summary in managedBy, as Mongoose's
+/* Listings with their enterprise's summary in managedBy, as Mongoose's
    populate() gave them, newest first. */
 spots.findWithManagers = async function (filters = {}, { limit } = {}) {
     const { sql, params } = spots.where(filters, [], 's');

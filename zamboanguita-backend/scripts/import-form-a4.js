@@ -10,8 +10,8 @@
  * The file holds, per month, the arrivals by residence (totals only — the
  * printed sheet was not split by sex), the number of rooms, the room-nights
  * occupied and the guest nights. Each month becomes one `municipal_total`
- * report. Such a month then refuses per-establishment reports, so it is never
- * counted twice; to move a month over to per-establishment reports, the
+ * report. Such a month then refuses per-enterprise reports, so it is never
+ * counted twice; to move a month over to per-enterprise reports, the
  * officer voids its municipal total.
  *
  * The months are locked as they land: a printed sheet already went to the
@@ -19,7 +19,7 @@
  *
  * A month that already has a municipal total is skipped, never overwritten, so
  * running this twice changes nothing. A month that already has
- * per-establishment reports stops the whole import instead — the office should
+ * per-enterprise reports stops the whole import instead — the office should
  * decide which of the two is the record. Every write happens in one
  * transaction: the year lands whole, or not at all.
  *
@@ -71,7 +71,7 @@ async function main() {
         const hasTotal = new Set(existing.filter(r => r.kind === 'municipal_total').map(r => r.month));
         const perPlace = [...new Set(existing.filter(r => r.kind === 'accommodation').map(r => r.month))];
         const clash = data.months.filter(m => perPlace.includes(m.month) && !hasTotal.has(m.month)).map(m => m.month);
-        if (clash.length) throw new Error(`${data.year}: months ${clash.join(', ')} already have establishment reports. Decide which is the record before importing.`);
+        if (clash.length) throw new Error(`${data.year}: months ${clash.join(', ')} already have enterprise reports. Decide which is the record before importing.`);
 
         let grand = 0, printed = 0;
         const todo = [];

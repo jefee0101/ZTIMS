@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Tourist Establishment Manager | Establishment</title>
+    <title>Tourist Enterprise Manager | Enterprise</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -133,7 +133,7 @@
 @keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 
 /* An uploaded photo with its own dimensions must not decide the page's width,
-   and a long unbroken word — a URL in a review, an establishment name — must
+   and a long unbroken word — a URL in a review, an enterprise name — must
    wrap rather than push the layout sideways. */
 img, svg, video, canvas { max-width: 100%; height: auto; }
 body { overflow-x: hidden; }
@@ -442,7 +442,7 @@ body { overflow-x: hidden; }
     <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
         <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
             <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
-            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Establishment Manager Portal</p>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Enterprise Manager Portal</p>
             <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
             <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
                     class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
@@ -450,9 +450,9 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
-            <a title="Establishment" aria-current="page" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+            <a title="Enterprise" aria-current="page" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">storefront</span>
-                <span class="sidebar-label">Establishment</span>
+                <span class="sidebar-label">Enterprise</span>
             </a>
             <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_register.html">
                 <span class="material-symbols-outlined text-accent">menu_book</span>
@@ -488,7 +488,7 @@ body { overflow-x: hidden; }
         </div>
         <!-- The subpages, as folder tabs hanging from the header's lower edge:
              the open one is the header's own colour, joined to it. -->
-        <nav id="estTabs" class="est-tabs" aria-label="Establishment" hidden>
+        <nav id="estTabs" class="est-tabs" aria-label="Enterprise" hidden>
             <a href="#basics" data-sub="basics"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Basics</span></a>
             <a href="#location" data-sub="location"><span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Location</span></a>
             <a href="#visiting" data-sub="visiting"><span class="material-symbols-outlined" aria-hidden="true">schedule</span><span>Visiting</span></a>
@@ -500,7 +500,7 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-36 sm:pt-40 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="max-w-[52rem] mx-auto space-y-6">
             <div class="flex flex-wrap justify-between items-end gap-3">
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Establishment</h1>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Enterprise</h1>
                 <a id="visitorViewLink" hidden target="_blank" rel="noopener" class="btn btn-secondary min-h-[44px]">
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">visibility</span> See it as visitors do
                 </a>
@@ -526,7 +526,7 @@ body { overflow-x: hidden; }
             </div>
         </div>
 
-        <!-- Contact: the establishment's own details (the account's, not the listing's). -->
+        <!-- Contact: the enterprise's own details (the account's, not the listing's). -->
         <div id="contactModal" class="fixed inset-0 ztims-scrim hidden items-center justify-center z-[200] p-3 sm:p-4">
             <form id="contactForm" class="ztims-modal w-full max-w-lg p-5 sm:p-8 space-y-4" novalidate>
                 <div class="flex justify-between items-center">
@@ -534,7 +534,7 @@ body { overflow-x: hidden; }
                     <button type="button" onclick="closeContactEditor()" aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex items-center">
                         <span class="material-symbols-outlined text-2xl">close</span></button>
                 </div>
-                <label class="block"><span class="field-label">Establishment name</span>
+                <label class="block"><span class="field-label">Enterprise name</span>
                     <input id="cEstablishment" type="text" required maxlength="120" class="field w-full"/></label>
                 <label class="block"><span class="field-label">Manager</span>
                     <input id="cManager" type="text" maxlength="120" autocomplete="name" placeholder="The person visitors should ask for" class="field w-full"/></label>
@@ -639,7 +639,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My establishment',
+                name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My enterprise',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
@@ -793,7 +793,7 @@ body { overflow-x: hidden; }
             }
         }
 
-        /* ---------------- the establishment, in five subpages ---------------- */
+        /* ---------------- the enterprise, in five subpages ---------------- */
 
         let manager = null;
         const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
@@ -891,10 +891,10 @@ body { overflow-x: hidden; }
                        <p class="text-support">${list.length} photo${list.length === 1 ? '' : 's'}. The first is the cover.</p>`
                     : `<div class="ztims-empty">No photos yet.</div>`, { editLabel: list.length ? 'Edit' : 'Add photos' });
             }
-            // contact: the establishment's own details, saved to the account
+            // contact: the enterprise's own details, saved to the account
             const m = manager || {};
             return panel('contact', `<dl class="est-facts">
-                ${fact('Establishment name', escapeHtml(m.establishmentName))}
+                ${fact('Enterprise name', escapeHtml(m.establishmentName))}
                 ${fact('Manager', escapeHtml(m.managerName))}
                 ${fact('Phone', m.phone ? `<a class="underline" href="tel:${escapeHtml(String(m.phone).replace(/[^\d+]/g, ''))}">${escapeHtml(m.phone)}</a>` : '')}
                 ${fact('Public email', escapeHtml(m.contactEmail))}
@@ -944,7 +944,7 @@ body { overflow-x: hidden; }
             const spot = mySpots[0];
             if (loadFailed) {
                 tabs.hidden = true;
-                body.innerHTML = `<div class="ztims-empty tone-danger">Could not load your establishment. ${escapeHtml(loadError)}
+                body.innerHTML = `<div class="ztims-empty tone-danger">Could not load your enterprise. ${escapeHtml(loadError)}
                     <div class="mt-3"><button onclick="loadMySpots()" class="btn btn-secondary min-h-[44px]">Try again</button></div></div>`;
                 return;
             }
@@ -953,7 +953,7 @@ body { overflow-x: hidden; }
                 document.getElementById('estChecklist').hidden = true;
                 document.getElementById('visitorViewLink').hidden = true;
                 body.innerHTML = `<div class="glass-panel p-6 sm:p-8 text-center space-y-4">
-                    <p class="text-lg font-bold text-on-surface">Your establishment is not on the site yet.</p>
+                    <p class="text-lg font-bold text-on-surface">Your enterprise is not on the site yet.</p>
                     <button type="button" onclick="toggleAddSpotModal(true)" class="btn btn-primary min-h-[48px]">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">add_circle</span> Create your listing</button></div>`;
                 return;
@@ -1006,7 +1006,7 @@ body { overflow-x: hidden; }
                 contactEmail: document.getElementById('cEmail').value.trim()
             };
             if (!payload.establishmentName) {
-                msg.textContent = 'Your establishment needs a name.'; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false; return;
+                msg.textContent = 'Your enterprise needs a name.'; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false; return;
             }
             const restore = setButtonLoading(document.getElementById('cSaveBtn'), 'Saving…');
             try {
@@ -1038,7 +1038,7 @@ body { overflow-x: hidden; }
         }
 
         async function loadMySpots() {
-            const doneLoading = showLoading(document.getElementById('estBody'), 'Loading your establishment...');
+            const doneLoading = showLoading(document.getElementById('estBody'), 'Loading your enterprise...');
             try {
                 const [response] = await Promise.all([
                     fetch(`${API_BASE}/spots?mine=true`, { headers: authHeaders() }),

@@ -188,12 +188,12 @@
 
                 '<div class="mt-10 pt-6 border-t border-outline-variant/15 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 text-support text-center sm:text-left">' +
                     '<p>© ' + YEAR + ' Zamboanguita Tourism Information Management System</p>' +
-                    /* Quiet on purpose: findable by the officers and establishment
+                    /* Quiet on purpose: findable by the officers and enterprise
                        managers who need it, without putting a staff-only door in
                        front of every tourist. */
                     '<a href="' + src + 'staff_login.html" class="' + LINK + '">' +
                         '<span class="material-symbols-outlined !text-sm" aria-hidden="true">badge</span>' +
-                        'Staff &amp; Tourist Establishment Manager Sign In' +
+                        'Staff &amp; Tourist Enterprise Manager Sign In' +
                     '</a>' +
                 '</div>' +
             '</div>'

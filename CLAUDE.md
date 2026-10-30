@@ -86,7 +86,10 @@ collides. The user's chat is in plain, simple language.
 **Wording on every page** (decided): professional and brief. No page intros
 or help lines under fields; keep only what appears at the moment of an action,
 a warning, an error, or a confirmation before something risky. The roles are
-Tourism Officer and Establishment Manager; visitors pay
+Tourism Officer and Enterprise Manager; a place a manager runs is an
+**enterprise**, never an "establishment" (the panel's wording, October 2026;
+code and database names such as `establishment_managers` keep the old word);
+visitors pay
 **onsite** (never "at the gate"); statistics months are **Finalized** and
 **Reopened**; visitor pages and emails don't say "test mode".
 
@@ -160,7 +163,7 @@ Shared logic lives in `src/shared/` as plain global-scope IIFEs (not ES
 modules), loaded via `<script src="...">` on the pages that need them, on
 purpose — see the header comment in `spot-form.js`:
 - `spot-form.js` (~2200 lines) — the one listing form used by the
-  establishment portal, the officer's Destinations page, and the officer's
+  enterprise portal, the officer's Destinations page, and the officer's
   Dashboard quick-add. Owns barangay list, validation, the location picker
   and its Zamboanguita bounding-box sanity check. Its look is the standard one wherever it
   opens: the four steps as round numbered buttons joined by a line
@@ -220,8 +223,8 @@ purpose — see the header comment in `spot-form.js`:
   in capitals excepted), sideways-scrolling tables holding their own hidden
   labels with labels wrapping rather than
   cut, and the subpage tabs (`.settings-tab`).
-- **The manager's Establishment** (`resort/resort_spots.html`, the menu's
-  "Establishment"; it was "My Listing"): the whole listing on one page in five
+- **The manager's Enterprise** (`resort/resort_spots.html`, the menu's
+  "Enterprise"; it was "My Listing"): the whole listing on one page in five
   subpages — `#basics`, `#location`, `#visiting`, `#photos`, `#contact` — shown
   as folder tabs hanging upside down from the header's lower edge (`.est-tabs`
   in `portal-flat.css`, inside the fixed header so they stay with it; the open
@@ -236,7 +239,7 @@ purpose — see the header comment in `spot-form.js`:
   shared listing form on that part only (`spotForm.openSection(spot, step)`:
   no step rail, no preview, just the fields and Save — the whole listing is
   still sent to `PUT /api/spots/:id`); Contact edits the account's
-  establishment name, manager, phone and public email in a small window
+  enterprise name, manager, phone and public email in a small window
   (`PATCH /api/establishment-managers/me`). Above them, a checklist of what
   visitors need (description, map pin, open days and hours, 3 photos, phone),
   each linking to its subpage, and "See it as visitors do". Location shows a
@@ -244,14 +247,14 @@ purpose — see the header comment in `spot-form.js`:
   listing" is a small solid red pill at the end of Basics. With no listing yet,
   the page offers "Create your listing" (the full four-step form).
 - **The manager's Account** (`resort/resort_settings.html`, was "My
-  Establishment"), laid out like the officer's Settings: two tabs with their
+  Enterprise"), laid out like the officer's Settings: two tabs with their
   own addresses — `#account` (My Account: initials, full name and contact
   number, saved by `PATCH /api/establishment-managers/me` — the same
-  `managerName`/`phone` Establishment → Contact shows visitors — plus the
+  `managerName`/`phone` Enterprise → Contact shows visitors — plus the
   sign-in email, read only and set by the Tourism Office, and account issued)
   and `#security` (signed in since, change password, sign out of all devices).
 - **The manager's Guest Register** (`resort/resort_register.html`, in the
-  menu between Establishment and Monthly Report): the place's own log through
+  menu between Enterprise and Monthly Report): the place's own log through
   the month, so nobody adds up by hand. A place to stay logs each **stay**
   (check-in date, nights, rooms, and who came: country of residence with male
   and female, − / + steppers, Add a country); an attraction logs each
@@ -375,7 +378,7 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 (the file keeps its old name so sign-in and bookmarks still land on it). It holds
 no data of its own: it reads the officer's existing endpoints (spots,
-establishment managers, feedback, `/api/statistics/tracker` and `/form-a4`,
+enterprise managers, feedback, `/api/statistics/tracker` and `/form-a4`,
 `/api/payments`) and shows what is waiting on each — every card links to the
 page where it is dealt with, Statistics through the tab named in the link's
 address (`admin_statistics.html#tracker`) — plus the month just ended's Form A4
@@ -416,7 +419,7 @@ data lives in Postgres on Supabase (it moved off MongoDB Atlas; see
   through a `virtual`), or `external` (not a column of the table; its model
   writes it) — see "Normalisation" below.
 - `models.js` — one `Table` per record type, field for field what the Mongoose
-  schemas were, plus the few joined queries (a listing with its establishment).
+  schemas were, plus the few joined queries (a listing with its enterprise).
   `server.js` imports them under the old model names (`Spot`, `Payment`, …;
   `Admin` became `TourismOfficer`)
   so each route reads as it did.
@@ -448,7 +451,7 @@ the old collection names (`admins`, `resortOwners`) did not.
    open session stops at once), `requirePasswordConfirmation` (after
    `requireAdmin`, on risky actions — see "Sign-in safety") and `optionalAuth`
    (attaches `req.auth` for a current, usable sign-in, never blocks). Roles: `admin` (Tourism Officer) and `establishment_manager` (Tourist
-   Establishment Manager) —
+   Enterprise Manager) —
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
    tokens issued before a rename don't get rejected mid-session; nothing
    issues it anymore. `requireStaff` (officer or manager) guards listing writes
@@ -500,11 +503,11 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,
   room-nights available/occupied/not occupied, guest nights), not as rates.
-- **Nothing from tickets.** Establishments report their own already-totalled
+- **Nothing from tickets.** Enterprises report their own already-totalled
   month; ZTIMS never derives these figures from tickets sold.
 - **Who reports.** A manager, for the listing they manage. The officer, for
   the places the office keeps (listings with no manager) only: a privately
-  managed establishment's reports are its manager's to enter, and the officer
+  managed enterprise's reports are its manager's to enter, and the officer
   views them (`mayViewFor` / `mayEnterFor` in `statistics.js`; the officer's
   "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports its arrivals only (no rooms or
@@ -532,8 +535,7 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   the on-time / late / missing counts as pills. **Who runs a place** shows
   everywhere a place is listed in Statistics (the user's decision): `.own-tag`
   pills in `portal-flat.css` — Tourism Office (tangerine, `account_balance`)
-  or Private enterprise (ink outline, `storefront`; "private enterprise", never
-  "private establishment", the panel's wording, October 2026) — and a bar down the row's left edge
+  or Private enterprise (ink outline, `storefront`) — and a bar down the row's left edge
   (`.own-row--office` tangerine, `.own-row--private` ink with a faint tint);
   Enter a report shows the same as a banner (`.own-banner`): "The Tourism
   Office enters this report" or "Entered by <manager>. View only."
@@ -628,13 +630,13 @@ days), what is missing as red pills ("No photo · Fix" opens the editor), then
 ⋯ menu (View public page, Visitor setup where it applies, Take down in red).
 Prices without cents. No Refresh button: the list reloads after every change.
 
-### The officer's Establishment Managers, Tickets and Collections
+### The officer's Enterprise Managers, Tickets and Collections
 
 Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 `portal-flat.css`), no page intro or help lines:
-- **Establishment Managers** (`admin_managers.html`): title and **New manager
+- **Enterprise Managers** (`admin_managers.html`): title and **New manager
   account**; counts that filter (All, Active, Suspended, No listing yet);
-  search; one row per account (initials, establishment, manager · sign-in
+  search; one row per account (initials, enterprise, manager · sign-in
   email · phone · since, Suspended / No listing yet pills), **Edit** and ⋯ (View
   listing, New password, Suspend / Restore, Delete in red).
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
@@ -881,7 +883,7 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   Adventure for a peak or ridge; CULTURAL → Culture & Heritage, Faith first for
   a church) — the office and managers adjust from there.
 
-- **One establishment, one listing.** A manager account keeps exactly one
+- **One enterprise, one listing.** A manager account keeps exactly one
   listing (`spots_one_per_establishment`, a unique index on `managed_by`, and a
   plain 409 in `POST /api/spots` first). The manager creates it and it is live
   at once; their edits go live directly. Listings the office keeps
@@ -1051,6 +1053,12 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   role or accounts, no guide portal, no guide bookings, no "requires a tourist
   guide" on a listing; the guide tables were deleted (see "No tour guides").
   Don't add any of it back unless the user asks.
+- "Enterprise", never "establishment", in every page, message, email and
+  document (October 2026, the panel's wording): Enterprise Manager, private
+  enterprise. Code and database names keep the old word on purpose
+  (`establishment_managers`, `establishmentName`, `/api/establishment-managers`,
+  the `establishment_manager` role in tokens): renaming them would break saved
+  sign-ins and the live data for no visible gain.
 - Tickets have no QR code: the ticket code is shown and typed. Where nobody
   stands at the entrance, the office marks tickets used from the day's list.
 - Tickets have no senior citizen or PWD price (October 2026, the user's
