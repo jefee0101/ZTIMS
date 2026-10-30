@@ -23,9 +23,9 @@ const { Pool, types } = require('pg');
 // pages do arithmetic on them, so they are numbers here.
 types.setTypeParser(1700, value => (value === null ? null : Number(value)));
 types.setTypeParser(20, value => (value === null ? null : Number(value)));
-// A date column (a booking's preferred date) stays the 'YYYY-MM-DD' string the
+// A date column (a ticket's visit date) stays the 'YYYY-MM-DD' string the
 // form sent. Turned into a Date it would be midnight UTC, which is the previous
-// evening in some timezones — the exact bug the booking route avoids.
+// evening in some timezones.
 types.setTypeParser(1082, value => value);
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgres://postgres@127.0.0.1:5432/ztims';
@@ -133,11 +133,7 @@ const CONSTRAINT_MESSAGES = {
     spots_one_per_establishment: 'An establishment has one listing, and this one already has its listing. Edit that one instead.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
     spots_managed_by_fkey: 'That establishment account does not exist.',
-    tourist_guide_spots_spot_id_fkey: 'One of the assigned destinations no longer exists.',
-    guide_bookings_spot_id_fkey: 'That destination could not be found.',
-    guide_bookings_guide_id_fkey: 'That guide record no longer exists.',
-    payments_booking_id_fkey: 'That booking no longer exists.',
-    payments_booking_id_key: 'Payment for that booking was already recorded.'
+    payments_ticket_id_key: 'Payment for that ticket was already recorded.'
 };
 
 /* Turns a Postgres error into what the routes expect:
@@ -258,8 +254,8 @@ function castField(key, spec, value) {
 }
 
 /* A reference may be the id itself, or the record it points at — a route that
-   read a booking with its guide filled in, then saved it, hands back the whole
-   guide. Mongoose accepted both; so does this. */
+   read a listing with its establishment filled in, then saved it, hands back
+   the whole record. Mongoose accepted both; so does this. */
 const idOf = value => (value && typeof value === 'object' && '_id' in value ? String(value._id) : String(value));
 
 const sameValue = (a, b) => {

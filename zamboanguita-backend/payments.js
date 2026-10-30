@@ -1,7 +1,7 @@
 /* Online payments — a DEMONSTRATION, in the payment gateway's test mode.
  *
- * A visitor may pay a guide booking online, or buy an entrance ticket to an
- * attraction the Tourism Office runs. The money side is a Xendit invoice: the
+ * A visitor may buy an entrance ticket to an attraction the Tourism Office
+ * runs. The money side is a Xendit invoice: the
  * visitor pays on Xendit's own hosted page (GCash, Maya, cards, online banking
  * — whatever the account has switched on), and ZTIMS never sees a card number
  * or a wallet PIN.
@@ -34,8 +34,8 @@ const { query, transaction } = require('./db');
 const attractions = require('./attractions');
 const notices = require('./notices');
 const {
-    bookings: GuideBooking, payments: Payment, tickets: Ticket, checkouts: Checkout,
-    guides: TouristGuide, officers: TourismOfficer, spots: Spot
+    payments: Payment, tickets: Ticket, checkouts: Checkout,
+    officers: TourismOfficer, spots: Spot
 } = require('./models');
 
 // XENDIT_API_BASE exists for local tests against a stand-in; leave it unset.
@@ -46,7 +46,6 @@ const MAX_TICKET_PEOPLE = 20;
 const TICKET_DAYS_AHEAD = 60;
 const MANILA_OFFSET_HOURS = 8;
 const ONLINE_LABEL = 'Online (Xendit test mode)';
-const DEMO_BOOKING_PREFIX = 'TG-DEMO-';
 const TEST_KEY_PREFIX = 'xnd_development_';
 
 /* ---------------------------------------------------------------- gateway */
@@ -204,21 +203,6 @@ function codePrefix(title) {
 const newTicketCode = title => `${codePrefix(title)}-${randomCode(4)}-${randomCode(1)}`;
 const normaliseCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-/* Where the fee for a booking comes from: the assigned guide's fee, else the
-   fee of the guide the visitor asked for, else the lowest fee among the guides
-   free for that destination. Fixed on the checkout; the office then assigns a
-   guide at or below it. */
-async function bookingFee(booking) {
-    for (const id of [booking.guideId, booking.requestedGuideId]) {
-        if (!id) continue;
-        const guide = await TouristGuide.findById(id);
-        if (guide) return money(guide.guideFee);
-    }
-    const guides = await TouristGuide.find({ assignedSpots: booking.spotId, status: 'available' });
-    if (!guides.length) return null;
-    return money(Math.min(...guides.map(g => Number(g.guideFee) || 0)));
-}
-
 /* An attraction sells tickets when the office runs it, it is published and
    charges an entrance fee. */
 async function ticketOffer(spotId) {
@@ -231,9 +215,9 @@ async function ticketOffer(spotId) {
 
 /* ---------------------------------------------------------------- checkout */
 
-async function openCheckout(req, { kind, bookingId = null, ticketId = null, amount, name, description }) {
+async function openCheckout(req, { ticketId, amount, name, description }) {
     const row = await Checkout.create({
-        bookingId, ticketId, amount,   // its kind is read off which one is set
+        ticketId, amount,
         expiresAt: new Date(Date.now() + CHECKOUT_MINUTES * 60 * 1000),
         isDemo: true
     });
@@ -276,34 +260,17 @@ async function recordPaid(checkoutId, paid) {
         if (!checkout || checkout.status === 'paid' || checkout.status === 'duplicate') return checkout;
 
         let duplicate = false;
-        if (checkout.kind === 'guide_booking') {
-            const booking = await GuideBooking.findById(checkout.bookingId, { client });
-            const existing = await Payment.findOne({ bookingId: checkout.bookingId }, { client });
-            if (!booking || existing || booking.status === 'cancelled') {
-                duplicate = true;
-            } else {
-                await Payment.create({
-                    bookingId: booking._id, amount: paid.amount, method: paid.method, channel: 'online',
-                    gatewayRef: paid.ref, paidAt: paid.paidAt, recordedByEmail: ONLINE_LABEL, isDemo: true
-                }, { client });
-                booking.status = 'confirmed';
-                booking.statusUpdatedAt = new Date();
-                booking.isDemo = true;
-                await GuideBooking.save(booking, { client });
-            }
+        const ticket = await Ticket.findById(checkout.ticketId, { client });
+        const existing = await Payment.findOne({ ticketId: checkout.ticketId }, { client });
+        if (!ticket || existing || ticket.status === 'cancelled') {
+            duplicate = true;
         } else {
-            const ticket = await Ticket.findById(checkout.ticketId, { client });
-            const existing = await Payment.findOne({ ticketId: checkout.ticketId }, { client });
-            if (!ticket || existing || ticket.status === 'cancelled') {
-                duplicate = true;
-            } else {
-                await Payment.create({
-                    ticketId: ticket._id, amount: paid.amount, method: paid.method, channel: 'online',
-                    gatewayRef: paid.ref, paidAt: paid.paidAt, recordedByEmail: ONLINE_LABEL, isDemo: true
-                }, { client });
-                ticket.status = 'valid';
-                await Ticket.save(ticket, { client });
-            }
+            await Payment.create({
+                ticketId: ticket._id, amount: paid.amount, method: paid.method, channel: 'online',
+                gatewayRef: paid.ref, paidAt: paid.paidAt, recordedByEmail: ONLINE_LABEL, isDemo: true
+            }, { client });
+            ticket.status = 'valid';
+            await Ticket.save(ticket, { client });
         }
 
         checkout.status = duplicate ? 'duplicate' : 'paid';
@@ -312,7 +279,7 @@ async function recordPaid(checkoutId, paid) {
         checkout.paidAt = paid.paidAt;
         await Checkout.save(checkout, { client });
         checkout.justPaid = !duplicate;   // recorded now, by this call: its receipt is this call's to send
-        if (duplicate) console.warn(`⚠️ Checkout ${checkout._id} was paid but its ${checkout.kind} was already paid or cancelled — refund it.`);
+        if (duplicate) console.warn(`⚠️ Checkout ${checkout._id} was paid but its ticket was already paid or cancelled — refund it.`);
         else console.log(`💳 Online payment (test mode) recorded for checkout ${checkout._id}`);
         return checkout;
     });
@@ -332,10 +299,7 @@ async function settle(checkout, { lateToo = false, origin = '' } = {}) {
         const recorded = await recordPaid(checkout._id, paid);
         // The receipt goes once: only the call that recorded the payment sends
         // it, so the return page and Xendit's callback never send two.
-        if (recorded && recorded.justPaid) {
-            if (recorded.kind === 'ticket') await notices.ticketReceipt(recorded.ticketId, origin);
-            else await notices.bookingPaid(recorded.bookingId, origin);
-        }
+        if (recorded && recorded.justPaid) await notices.ticketReceipt(recorded.ticketId, origin);
         return recorded;
     }
     // Past our own window the invoice has expired at Xendit too
@@ -357,28 +321,20 @@ async function spotTitle(spotId) {
 }
 
 async function checkoutView(checkout) {
-    const view = { id: checkout._id, kind: checkout.kind, status: checkout.status, amount: money(checkout.amount),
+    const view = { id: checkout._id, kind: 'ticket', status: checkout.status, amount: money(checkout.amount),
                    method: checkout.method, testMode: true };
     // A visitor who cancelled at the gateway can go back to the same checkout
     // while it is open.
     if (checkout.status === 'pending' && checkout.checkoutUrl && new Date(checkout.expiresAt) > new Date()) {
         view.payUrl = checkout.checkoutUrl;
     }
-    if (checkout.kind === 'guide_booking') {
-        const b = await GuideBooking.findById(checkout.bookingId);
-        if (b) {
-            view.booking = { reference: b.reference, spot: await spotTitle(b.spotId), spotId: b.spotId, preferredDate: dayOf(b.preferredDate),
-                             preferredTime: b.preferredTime, visitors: b.visitors, status: b.status, guideAssigned: !!b.guideId };
-        }
-    } else {
-        const t = await Ticket.findById(checkout.ticketId);
-        if (t) {
-            view.ticket = { spot: await spotTitle(t.spotId), spotId: t.spotId, visitDate: dayOf(t.visitDate), people: t.people,
-                            unitFee: money(t.unitFee), status: t.status, name: t.fullName,
-                            kinds: attractions.kindsOf(t), kindsText: attractions.describeKinds(t) };
-            // The code only once paid: an unpaid ticket gets nobody in.
-            if (['valid', 'used'].includes(t.status)) view.ticket.code = t.code;
-        }
+    const t = await Ticket.findById(checkout.ticketId);
+    if (t) {
+        view.ticket = { spot: await spotTitle(t.spotId), spotId: t.spotId, visitDate: dayOf(t.visitDate), people: t.people,
+                        unitFee: money(t.unitFee), status: t.status, name: t.fullName,
+                        kinds: attractions.kindsOf(t), kindsText: attractions.describeKinds(t) };
+        // The code only once paid: an unpaid ticket gets nobody in.
+        if (['valid', 'used'].includes(t.status)) view.ticket.code = t.code;
     }
     return view;
 }
@@ -387,13 +343,10 @@ async function checkoutView(checkout) {
 
 async function listPayments(from, to) {
     const { rows } = await query(`
-        select p.*, b.reference as booking_ref, b.full_name as booking_name, bs.title as booking_spot,
-               t.code as ticket_code, t.full_name as ticket_name, t.people as ticket_people, t.visit_date as ticket_date,
+        select p.*, t.code as ticket_code, t.full_name as ticket_name, t.people as ticket_people, t.visit_date as ticket_date,
                t.status as ticket_status,
                ts.title as ticket_spot
           from payments p
-          left join guide_bookings b on b.id = p.booking_id
-          left join spots bs on bs.id = b.spot_id
           left join tickets t on t.id = p.ticket_id
           left join spots ts on ts.id = t.spot_id
          where (p.paid_at at time zone 'Asia/Manila')::date between $1 and $2
@@ -402,10 +355,10 @@ async function listPayments(from, to) {
         _id: r.id,
         paidAt: r.paid_at,
         day: new Date(new Date(r.paid_at).getTime() + MANILA_OFFSET_HOURS * 3600 * 1000).toISOString().slice(0, 10),
-        kind: r.booking_id ? 'guide_fee' : 'entrance_fee',
-        reference: r.booking_id ? r.booking_ref : r.ticket_code,
-        place: r.booking_id ? r.booking_spot : r.ticket_spot,
-        payer: r.booking_id ? r.booking_name : r.ticket_name,
+        kind: 'entrance_fee',
+        reference: r.ticket_code,
+        place: r.ticket_spot,
+        payer: r.ticket_name,
         people: r.ticket_people || null,
         ticketStatus: r.ticket_status || null,
         channel: r.channel,
@@ -430,15 +383,14 @@ function summarise(list) {
     const sum = items => money(items.reduce((a, p) => a + p.kept, 0));
     const byDay = new Map();
     for (const p of kept) {
-        const d = byDay.get(p.day) || { day: p.day, guideFees: 0, entranceFees: 0, count: 0 };
-        d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] = money(d[p.kind === 'guide_fee' ? 'guideFees' : 'entranceFees'] + p.kept);
+        const d = byDay.get(p.day) || { day: p.day, entranceFees: 0, count: 0 };
+        d.entranceFees = money(d.entranceFees + p.kept);
         d.count += 1;
         byDay.set(p.day, d);
     }
     return {
         total: sum(kept),
-        guideFees: sum(kept.filter(p => p.kind === 'guide_fee')),
-        entranceFees: sum(kept.filter(p => p.kind === 'entrance_fee')),
+        entranceFees: sum(kept),
         online: sum(kept.filter(p => p.channel === 'online')),
         counter: sum(kept.filter(p => p.channel === 'counter')),
         refunded: money(list.reduce((a, p) => a + p.refundAmount, 0)),
@@ -484,18 +436,16 @@ function demoRandom(seed) {
     return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
 }
 
-/* The generated sample only: bookings with TG-DEMO- references, tickets that
-   never went through a checkout, and their payments. Test-mode payments made
+/* The generated sample only: tickets that never went through a checkout, and
+   their payments. Test-mode payments made
    through the real checkout stay, so loading the sample never wipes one. */
 async function removeSample(client) {
     await query(`
         delete from payments
-         where booking_id in (select id from guide_bookings where reference like '${DEMO_BOOKING_PREFIX}%')
-            or ticket_id in (select id from tickets t where t.is_demo
+         where ticket_id in (select id from tickets t where t.is_demo
                              and not exists (select 1 from online_checkouts c where c.ticket_id = t.id))`, [], client);
     await query(`delete from tickets t where t.is_demo
                    and not exists (select 1 from online_checkouts c where c.ticket_id = t.id)`, [], client);
-    await query(`delete from guide_bookings where reference like '${DEMO_BOOKING_PREFIX}%'`, [], client);
 }
 
 /* Everything marked demo: the sample and every test-mode payment. */
@@ -503,13 +453,10 @@ async function removeDemo(client) {
     const counts = {};
     counts.payments = (await query(`
         delete from payments where is_demo
-            or booking_id in (select id from guide_bookings where is_demo)
             or ticket_id in (select id from tickets where is_demo)`, [], client)).rowCount;
     await query(`delete from online_checkouts where is_demo
-            and (booking_id is null or booking_id in (select id from guide_bookings where is_demo))
-            and (ticket_id is null or ticket_id in (select id from tickets where is_demo))`, [], client);
+            and ticket_id in (select id from tickets where is_demo)`, [], client);
     counts.tickets = (await query('delete from tickets where is_demo', [], client)).rowCount;
-    counts.bookings = (await query('delete from guide_bookings where is_demo', [], client)).rowCount;
     return counts;
 }
 
@@ -520,14 +467,6 @@ async function seedDemo(officerEmail) {
     const today = manilaToday();
     const nowMs = Date.now();
 
-    const guideSpots = (await query(`
-        select s.id, s.title, g.id as guide_id, g.guide_fee, g.max_group_size,
-               array_remove(array[case when g.works_mon then 'mon' end, case when g.works_tue then 'tue' end,
-                                  case when g.works_wed then 'wed' end, case when g.works_thu then 'thu' end,
-                                  case when g.works_fri then 'fri' end, case when g.works_sat then 'sat' end,
-                                  case when g.works_sun then 'sun' end], null) as available_days
-          from spots s join tourist_guide_spots ts on ts.spot_id = s.id join tourist_guides g on g.id = ts.guide_id
-         where s.requires_guide and s.status = 'published' and g.status = 'available'`)).rows;
     const ticketSpots = (await query(`
         select id, title, entrance_fee, student_fee, child_fee, child_age_max from spots
          where type = 'spot' and status = 'published' and managed_by is null and entrance_fee > 0`)).rows;
@@ -550,64 +489,7 @@ async function seedDemo(officerEmail) {
 
     return transaction(async client => {
         await removeSample(client);
-        let bookings = 0, tickets = 0, payments = 0;
-
-        // ---- guide bookings, over the last 75 days and the next 14
-        const taken = new Set();
-        const byFee = new Map();
-        for (const row of guideSpots) {
-            if (!byFee.has(row.id)) byFee.set(row.id, []);
-            byFee.get(row.id).push(row);
-        }
-        const spotIds = [...byFee.keys()];
-        let serial = 0;
-        for (let i = 0; spotIds.length && i < 42; i++) {
-            const spotId = pick(spotIds);
-            const guides = byFee.get(spotId);
-            const guide = pick(guides);
-            const offset = Math.floor(rand() * 90) - 75;
-            const day = addDays(today, offset);
-            const time = pick(['07:00', '08:00', '09:00', '13:00', '14:00']);
-            const slot = `${guide.guide_id}|${day}|${time}`;
-            if (taken.has(slot)) continue;
-            taken.add(slot);
-
-            const p = person();
-            const visitors = 1 + Math.floor(rand() * Math.min(5, guide.max_group_size || 1));
-            let status, withGuide = true, paid = true;
-            if (offset < 0) status = chance(0.85) ? 'completed' : chance(0.5) ? 'no_show' : 'cancelled';
-            else if (offset === 0) status = 'confirmed';
-            else if (chance(0.25)) { status = 'pending_payment'; paid = false; withGuide = false; }
-            else { status = 'confirmed'; withGuide = !chance(0.25); }
-
-            const reference = DEMO_BOOKING_PREFIX + String(++serial).padStart(4, '0');
-            const created = paidTime(day, 12);
-            const booking = (await query(`
-                insert into guide_bookings (reference, spot_id, guide_id, full_name, contact_number, email, nationality, visitors,
-                                            preferred_date, preferred_time, status, status_updated_at, is_demo, created_at, updated_at)
-                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, $13, $13) returning id`,
-                [reference, spotId, withGuide ? guide.guide_id : null, p.name, p.phone, p.email, p.country, visitors,
-                 day, time, status, created, created], client)).rows[0];
-            bookings++;
-
-            if (paid) {
-                const online = chance(0.7);
-                const paidAt = created;
-                const ageDays = (nowMs - paidAt.getTime()) / 86400000;
-                await query(`
-                    insert into payments (booking_id, amount, method, receipt_number, paid_at, recorded_by_email, channel,
-                                          gateway_ref, refunded_at, refund_reason, refunded_by_email, is_demo)
-                    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true)`,
-                    [booking.id, guide.guide_fee, online ? onlineMethod() : 'cash',
-                     !online || ageDays > 2 ? nextOr() : '', paidAt,
-                     online ? ONLINE_LABEL : officerEmail, online ? 'online' : 'counter',
-                     online ? `demo_pay_${crypto.randomBytes(6).toString('hex')}` : '',
-                     status === 'cancelled' ? new Date(paidAt.getTime() + 86400000) : null,
-                     status === 'cancelled' ? 'Cancelled by the office: bad weather' : '',
-                     status === 'cancelled' ? officerEmail : ''], client);
-                payments++;
-            }
-        }
+        let tickets = 0, payments = 0;
 
         // ---- entrance tickets, over the last 75 days and the next 10
         for (let offset = -75; offset <= 10; offset++) {
@@ -672,7 +554,7 @@ async function seedDemo(officerEmail) {
                 }
             }
         }
-        return { bookings, tickets, payments };
+        return { tickets, payments };
     });
 }
 
@@ -737,15 +619,7 @@ async function sendRefund(payment, reason, officerEmail, refundAmount) {
         payment.refundedByEmail = officerEmail;
         payment.refundAmount = refundAmount;
         await Payment.save(payment, { client });
-        if (payment.bookingId) {
-            const booking = await GuideBooking.findById(payment.bookingId, { client });
-            if (booking && booking.status !== 'cancelled') {
-                booking.status = 'cancelled';
-                booking.statusNote = `Refunded: ${reason}`.slice(0, 500);
-                booking.statusUpdatedAt = new Date();
-                await GuideBooking.save(booking, { client });
-            }
-        } else if (payment.ticketId) {
+        if (payment.ticketId) {
             const ticket = await Ticket.findById(payment.ticketId, { client });
             if (ticket && ticket.status !== 'cancelled') {
                 ticket.status = 'cancelled';
@@ -776,38 +650,6 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
     router.get('/payments/config', (req, res) => {
         const state = gatewayState();
         res.json({ online: state.online, testMode: true, methods: METHODS, minAmount: MIN_ONLINE_AMOUNT });
-    });
-
-    /* PUBLIC: pay a guide booking online. The reference and the booking's email
-       together, so a reference alone (they run in sequence) opens nothing. */
-    router.post('/guide-bookings/:reference/checkout', checkoutLimit, async (req, res) => {
-        try {
-            if (!gatewayState().online) return fail(res, 409, 'Online payment is not available right now. Please pay at the Municipal Tourism Office.');
-            const reference = String(req.params.reference || '').trim().toUpperCase();
-            const email = String((req.body && req.body.email) || '').trim().toLowerCase();
-            const booking = await GuideBooking.findOne({ reference });
-            if (!booking || !email || booking.email !== email) return fail(res, 404, 'No booking matches that reference and email address.');
-            if (!['pending_payment', 'confirmed'].includes(booking.status)) return fail(res, 409, `${booking.reference} does not need paying: it is ${booking.status.replace('_', ' ')}.`);
-            if (await Payment.findOne({ bookingId: booking._id })) return fail(res, 409, `${booking.reference} is already paid.`);
-
-            // An open checkout is reused, so paying twice takes two deliberate tries.
-            const open = (await Checkout.find({ bookingId: booking._id, status: 'pending' }))
-                .find(c => new Date(c.expiresAt) > new Date() && c.checkoutUrl);
-            if (open) return res.json({ success: true, checkoutUrl: open.checkoutUrl, checkoutId: open._id });
-
-            const amount = await bookingFee(booking);
-            if (amount === null) return fail(res, 409, 'No guide fee is set for this destination yet. Please pay at the Municipal Tourism Office.');
-            if (amount < MIN_ONLINE_AMOUNT) return fail(res, 409, `Online payments start at ₱${MIN_ONLINE_AMOUNT}. Please pay at the Municipal Tourism Office.`);
-            const title = await spotTitle(booking.spotId);
-            const checkout = await openCheckout(req, {
-                kind: 'guide_booking', bookingId: booking._id, amount,
-                name: `Tourist guide · ${title}`.slice(0, 120),
-                description: `${booking.reference} · ${dayOf(booking.preferredDate)} ${booking.preferredTime} · ${booking.visitors} visitor${booking.visitors === 1 ? '' : 's'}`
-            });
-            return res.status(201).json({ success: true, checkoutUrl: checkout.checkoutUrl, checkoutId: checkout._id });
-        } catch (error) {
-            return failure(res, error, '❌ Booking checkout failure:');
-        }
     });
 
     /* PUBLIC: does this attraction sell tickets online? */
@@ -879,7 +721,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
             if (!ticket) return fail(res, 503, 'The system is busy. Please try again in a moment.');
 
             const checkout = await openCheckout(req, {
-                kind: 'ticket', ticketId: ticket._id, amount,
+                ticketId: ticket._id, amount,
                 name: `Entrance · ${offer.spot.title}`.slice(0, 120),
                 description: `${visitDate} · ${attractions.describeKinds(ticket)}`
             });
@@ -937,11 +779,10 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
             const { from, to } = rangeFrom(req.query);
             const list = await listPayments(from, to);
             const duplicates = (await query(
-                `select c.id, c.kind, c.amount, c.method, c.payment_ref, c.paid_at, b.reference, t.code
-                   from online_checkouts c left join guide_bookings b on b.id = c.booking_id left join tickets t on t.id = c.ticket_id
+                `select c.id, 'ticket' as kind, c.amount, c.method, c.payment_ref, c.paid_at, t.code
+                   from online_checkouts c left join tickets t on t.id = c.ticket_id
                   where c.status = 'duplicate' order by c.paid_at desc limit 50`)).rows;
             const demo = (await query(`select
-                    (select count(*) from guide_bookings where is_demo)::int as bookings,
                     (select count(*) from tickets where is_demo)::int as tickets,
                     (select count(*) from payments where is_demo)::int as payments`)).rows[0];
             res.json({ from, to, gateway: gatewayState(), summary: summarise(list), payments: list, duplicates, demo });
@@ -969,10 +810,8 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
             const reason = String((req.body && req.body.reason) || '').trim();
             if (!reason) return fail(res, 400, 'Give the reason for the refund, for example "bad weather".');
             const payment = await refund(req.params.id, reason.slice(0, 300), await officerEmail(req));
-            const told = payment.ticketId
-                ? await notices.ticketCancelled(payment.ticketId, { refundAmount: payment.refundAmount, byVisitor: false, reason }, siteOrigin(req))
-                : await notices.bookingCancelled(payment.bookingId, { refundAmount: payment.refundAmount, byVisitor: false, reason }, siteOrigin(req));
-            res.json({ success: true, message: `₱${money(payment.amount).toLocaleString('en-PH')} refunded. The booking or ticket is cancelled.${told.sent ? ' The visitor has been emailed.' : ''}`, payment });
+            const told = await notices.ticketCancelled(payment.ticketId, { refundAmount: payment.refundAmount, byVisitor: false, reason }, siteOrigin(req));
+            res.json({ success: true, message: `₱${money(payment.amount).toLocaleString('en-PH')} refunded. The ticket is cancelled.${told.sent ? ' The visitor has been emailed.' : ''}`, payment });
         } catch (error) {
             return failure(res, error, '❌ Refund failure:');
         }
@@ -999,7 +838,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
                 ws.addRow({
                     day: p.day,
                     time: new Date(new Date(p.paidAt).getTime() + MANILA_OFFSET_HOURS * 3600000).toISOString().slice(11, 16),
-                    kind: p.kind === 'guide_fee' ? 'Guide fee' : 'Entrance fee',
+                    kind: 'Entrance fee',
                     reference: p.reference, place: p.place, payer: p.payer,
                     channel: p.channel === 'online' ? 'Online' : 'Counter', method: p.method,
                     amount: p.amount, or: p.receiptNumber,
@@ -1028,7 +867,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
     router.post('/payments/demo', requireAdmin, async (req, res) => {
         try {
             const made = await seedDemo(await officerEmail(req));
-            res.status(201).json({ success: true, message: `Demo data loaded: ${made.bookings} guide bookings, ${made.tickets} tickets and ${made.payments} payments.`, ...made });
+            res.status(201).json({ success: true, message: `Demo data loaded: ${made.tickets} tickets and ${made.payments} payments.`, ...made });
         } catch (error) {
             return failure(res, error, '❌ Demo data failure:');
         }
@@ -1037,7 +876,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
     router.delete('/payments/demo', requireAdmin, requirePasswordConfirmation, async (req, res) => {
         try {
             const removed = await transaction(client => removeDemo(client));
-            res.json({ success: true, message: `Demo data removed: ${removed.bookings} guide bookings, ${removed.tickets} tickets and ${removed.payments} payments.`, ...removed });
+            res.json({ success: true, message: `Demo data removed: ${removed.tickets} tickets and ${removed.payments} payments.`, ...removed });
         } catch (error) {
             return failure(res, error, '❌ Demo data removal failure:');
         }
@@ -1046,6 +885,8 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
     /* Tickets: the day's list, and the gate's check. */
     router.get('/tickets', requireAdmin, async (req, res) => {
         try {
+            // Old visitors' details go before the office reads the list (privacy.js).
+            await require('./privacy').forgetOldVisitors().catch(error => console.error('❌ Privacy clean-up failure:', error));
             const date = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.date || '')) ? req.query.date : manilaToday();
             const { rows } = await query(`
                 select t.*, s.title as spot_title, p.id as payment_id, p.method, p.refunded_at
@@ -1130,4 +971,3 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
 module.exports.gatewayState = gatewayState;
 module.exports.refund = refund;
 module.exports.siteOrigin = siteOrigin;
-module.exports.DEMO_BOOKING_PREFIX = DEMO_BOOKING_PREFIX;

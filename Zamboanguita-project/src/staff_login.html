@@ -223,7 +223,7 @@ body { overflow-x: hidden; }
 
     <div class="page-head">
       <h1 class="page-title">Staff sign in</h1>
-      <p class="page-lede">For Tourism Officers, Establishment Managers and Tourist Guides.</p>
+      <p class="page-lede">For Tourism Officers and Establishment Managers.</p>
     </div>
 
     <form id="staffLoginForm" class="space-y-5 spot-panel">
@@ -325,8 +325,6 @@ body { overflow-x: hidden; }
   const PORTAL_HOME = {
     admin: 'admin/admin_analystic.html',
     establishment_manager: 'resort/resort_spots.html',
-    // Municipal and barangay guides share one portal.
-    tourist_guide: 'guide/guide_dashboard.html',
     // Sessions issued before the rename still carry the old role name.
     resort_owner: 'resort/resort_spots.html'   // the same account, as older tokens spell it
   };
@@ -419,7 +417,7 @@ body { overflow-x: hidden; }
     const email = document.getElementById('emailInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     // 'staff' asks the server to identify which kind of account this is, so nobody
-    // has to know in advance whether they are filed as an officer, a manager or a guide.
+    // has to know in advance whether they are filed as an officer or a manager.
     const restoreButton = setButtonLoading(document.getElementById('staffSignInBtn'), 'SIGNING IN...');
 
     let response;
@@ -467,7 +465,6 @@ body { overflow-x: hidden; }
     localStorage.setItem('userId', result.userId || '');
     const establishmentName = result.user?.establishmentName || result.user?.resortName;
     if (establishmentName) localStorage.setItem('establishmentName', establishmentName);
-    if (result.role === 'tourist_guide' && result.user?.name) localStorage.setItem('guideName', result.user.name);
     if (result.role === 'admin') {
       if (result.user && result.user.fullName) localStorage.setItem('userName', result.user.fullName);
       else localStorage.removeItem('userName');

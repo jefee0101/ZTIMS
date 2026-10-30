@@ -270,7 +270,7 @@ body { overflow-x: hidden; }
                 <a href="index.html" class="site-link" aria-current="page">Destinations</a>
                 <a href="index.html#map" class="site-link">Map</a>
                 <a href="src/history.html" class="site-link">History</a>
-                <a href="src/manage.html" class="site-link">My booking</a>
+                <a href="src/manage.html" class="site-link">My ticket</a>
                 <a href="src/staff_login.html" class="site-link">Staff</a>
             </nav>
 
@@ -327,7 +327,7 @@ body { overflow-x: hidden; }
                         Welcome to Zamboanguita
                     </h1>
                     <p class="hero-fade text-base md:text-lg max-w-xl leading-relaxed" style="--fade-delay:1.3s">
-                        Beaches, waterfalls and heritage sites in Negros Oriental. Find a place, book a tourist guide or buy tickets, and get directions.
+                        Beaches, waterfalls and heritage sites in Negros Oriental. Find a place, buy tickets, and get directions.
                     </p>
 
                     <!-- The search, first thing on the page. Typing narrows the
@@ -444,11 +444,11 @@ body { overflow-x: hidden; }
                         </li>
                         <li class="how-step">
                             <span class="how-step__num" aria-hidden="true">2</span>
-                            <span><b class="block">Book &amp; pay</b><span class="text-support">Buy entrance tickets or book a tourist guide online, or pay onsite.</span></span>
+                            <span><b class="block">Buy &amp; pay</b><span class="text-support">Buy entrance tickets online, or pay onsite.</span></span>
                         </li>
                         <li class="how-step">
                             <span class="how-step__num" aria-hidden="true">3</span>
-                            <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your ticket code or booking reference.</span></span>
+                            <span><b class="block">Get there</b><span class="text-support">Get directions on each destination's page and show your ticket code.</span></span>
                         </li>
                     </ol>
 
@@ -478,7 +478,7 @@ body { overflow-x: hidden; }
                                 <span class="material-symbols-outlined !text-base" aria-hidden="true">chat</span>Contact the Tourism Office
                             </a>
                             <a href="src/manage.html" class="btn btn-pill btn-highlight">
-                                <span class="material-symbols-outlined !text-base" aria-hidden="true">confirmation_number</span>Manage my booking
+                                <span class="material-symbols-outlined !text-base" aria-hidden="true">confirmation_number</span>Manage my ticket
                             </a>
                         </div>
                     </div>
@@ -622,15 +622,14 @@ body { overflow-x: hidden; }
 
     // The one thing a visitor can do next at this place, the same rules the
     // destination page uses: tickets for an office-run attraction with a fee,
-    // a guide where one is required, the place's own booking link. The
-    // destination page opens on that action (#tickets, #guide).
+    // else the place's own booking link. The destination page opens on the
+    // ticket form (#tickets).
     function mainAction(spot) {
         const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
         const isStay = isStayPlace(spot);
         if (ticketsOnline && spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) {
             return { href: `${page}#tickets`, label: 'Buy tickets', icon: 'confirmation_number' };
         }
-        if (spot.requiresGuide) return { href: `${page}#guide`, label: 'Book a guide', icon: 'hiking' };
         const link = String(spot.bookingUrl || '').trim();
         if (link) {
             const href = /^https?:\/\//i.test(link) ? link : `https://${link}`;

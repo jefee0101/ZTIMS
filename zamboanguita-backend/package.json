@@ -9,7 +9,6 @@
     "dev": "nodemon server.js",
     "migrate": "node migrate.js",
     "create-admin": "node create-admin.js",
-    "copy-from-mongo": "node scripts/copy-from-mongo.js",
     "import-form-a4": "node scripts/import-form-a4.js"
   },
   "dependencies": {
@@ -26,7 +25,6 @@
     "pg": "^8.23.0"
   },
   "devDependencies": {
-    "mongodb": "^6.21.0",
     "nodemon": "^3.1.0"
   },
   "keywords": [],

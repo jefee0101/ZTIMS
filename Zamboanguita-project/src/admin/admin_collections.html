@@ -474,14 +474,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-accent">hiking</span>
-                <span class="sidebar-label">Tourist Guides</span>
-            </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Guide Bookings</span>
-            </a>
             <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
                 <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Tickets</span>
@@ -664,10 +656,10 @@ body { overflow-x: hidden; }
                     ${sub ? `<p class="text-support">${sub}</p>` : ''}
                 </div>`;
             document.getElementById('colTiles').innerHTML =
-                tile('Collected', peso(s.total), `${peso(s.online)} online · ${peso(s.counter)} onsite`) +
-                tile('Guide fees', peso(s.guideFees), '') +
-                tile('Entrance fees', peso(s.entranceFees), '') +
-                tile('Waiting for an OR', String(s.awaitingReceipt), s.refunded ? `${peso(s.refunded)} refunded` : '',
+                tile('Collected', peso(s.total), s.refunded ? `${peso(s.refunded)} refunded` : '') +
+                tile('Online', peso(s.online), '') +
+                tile('Onsite', peso(s.counter), '') +
+                tile('Waiting for an OR', String(s.awaitingReceipt), '',
                      s.awaitingReceipt ? 'text-error' : 'text-on-surface');
 
             const dup = data.duplicates || [];
@@ -678,18 +670,17 @@ body { overflow-x: hidden; }
                     ${dup.map(d => `${escapeHtml(d.reference || d.code)} (${peso(d.amount)}, ${escapeHtml(d.payment_ref)})`).join(' · ')}
                 </div>` : '';
 
-            const max = Math.max(1, ...s.daily.map(d => d.guideFees + d.entranceFees));
+            const max = Math.max(1, ...s.daily.map(d => d.entranceFees));
             document.getElementById('colDaily').innerHTML = s.daily.length ? `
                 <table class="ztims-table w-full text-left border-collapse text-sm">
                     <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
-                        <th class="px-2 py-2">Day</th><th class="px-2 py-2 text-right">Guide</th><th class="px-2 py-2 text-right">Entrance</th><th class="px-2 py-2 text-right">Total</th>
+                        <th class="px-2 py-2">Day</th><th class="px-2 py-2 text-right">Payments</th><th class="px-2 py-2 text-right">Total</th>
                     </tr></thead>
                     <tbody class="divide-y divide-outline-variant/20">${s.daily.map(d => {
-                        const total = d.guideFees + d.entranceFees;
+                        const total = d.entranceFees;
                         return `<tr>
                             <td class="px-2 py-2 whitespace-nowrap">${dayLabel(d.day)}</td>
-                            <td class="px-2 py-2 text-right tabular-nums">${d.guideFees ? peso(d.guideFees) : '–'}</td>
-                            <td class="px-2 py-2 text-right tabular-nums">${d.entranceFees ? peso(d.entranceFees) : '–'}</td>
+                            <td class="px-2 py-2 text-right tabular-nums">${d.count}</td>
                             <td class="px-2 py-2 text-right tabular-nums font-bold text-on-surface">
                                 ${peso(total)}
                                 <span class="block h-1.5 mt-1 ml-auto" style="width:${(total / max * 100).toFixed(0)}%;background:rgb(var(--brand-tangerine))"></span>
@@ -699,7 +690,7 @@ body { overflow-x: hidden; }
 
             renderList();
             document.getElementById('demoCounts').textContent = data.demo.payments
-                ? `${data.demo.bookings} guide bookings, ${data.demo.tickets} tickets and ${data.demo.payments} payments, each marked Demo.`
+                ? `${data.demo.tickets} tickets and ${data.demo.payments} payments, each marked Demo.`
                 : 'None loaded.';
         }
 
@@ -722,11 +713,10 @@ body { overflow-x: hidden; }
                 const refunded = p.refundedAt && !p.kept;
                 // Read in one order on every row: the place, what was paid for,
                 // then each fact with its own label.
-                const what = p.kind === 'guide_fee' ? 'Guide fee'
-                    : `Entrance tickets${p.people ? ` · ${p.people} ${p.people === 1 ? 'person' : 'people'}` : ''}`;
+                const what = `Entrance tickets${p.people ? ` · ${p.people} ${p.people === 1 ? 'person' : 'people'}` : ''}`;
                 const fact = (label, value, mono) => `<div><dt>${label}</dt><dd${mono ? ' class="font-mono"' : ''}>${value}</dd></div>`;
                 const facts = [
-                    fact(p.kind === 'guide_fee' ? 'Booking' : 'Ticket', escapeHtml(p.reference), true),
+                    fact('Ticket', escapeHtml(p.reference), true),
                     fact('Paid by', escapeHtml(p.payer || '—')),
                     fact('Paid with', `${escapeHtml(METHOD[p.method] || p.method)}, ${p.channel === 'online' ? 'online' : 'onsite'}`),
                     fact('Paid on', when(p.paidAt))
@@ -831,7 +821,7 @@ body { overflow-x: hidden; }
                 const p = data.payments.find(x => x._id === row.dataset.id);
                 const values = await ztimsDialog.form({
                     title: `Cancel and refund ${peso(p.amount)} for ${p.reference}?`,
-                    message: 'Refunds are for when the office cancels. The booking or ticket is cancelled, and an online payment goes back through the payment service.',
+                    message: 'Refunds are for when the office cancels. The ticket is cancelled, and an online payment goes back through the payment service.',
                     confirmLabel: 'Cancel and refund', tone: 'danger',
                     fields: [
                         { name: 'reason', label: 'Reason', placeholder: 'e.g. Bad weather, attraction closed', required: true },
@@ -867,7 +857,7 @@ body { overflow-x: hidden; }
             document.getElementById('demoLoad').addEventListener('click', async () => {
                 const ok = await ztimsDialog.confirm({
                     title: 'Load demo data?',
-                    message: 'About three months of sample bookings, tickets and payments, each marked Demo. A sample already loaded is replaced; test-mode payments and real records are kept.',
+                    message: 'About three months of sample tickets and payments, each marked Demo. A sample already loaded is replaced; test-mode payments and real records are kept.',
                     confirmLabel: 'Load demo data'
                 });
                 if (!ok) return;
@@ -880,7 +870,7 @@ body { overflow-x: hidden; }
             document.getElementById('demoRemove').addEventListener('click', async () => {
                 const values = await ztimsDialog.form({
                     title: 'Remove all demo data?',
-                    message: 'Every record marked Demo goes: sample data and test-mode payments, with their bookings and tickets. Real records stay.',
+                    message: 'Every record marked Demo goes: sample data and test-mode payments, with their tickets. Real records stay.',
                     confirmLabel: 'Remove demo data', tone: 'danger',
                     fields: [{ name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }],
                     validate: v => (v.confirmPassword ? '' : 'Enter your password to confirm.')

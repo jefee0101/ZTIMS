@@ -4,6 +4,25 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## The tour guide feature is removed (October 2026)
+
+**The change.** ZTIMS no longer has anything for tourist guides: no Tourist
+Guide user or sign-in, no guide portal (dashboard, schedule, languages,
+profile, reports), no Tourist Guides or Guide Bookings page for the officer, no
+"Book a guide" for visitors, and no "requires a tourist guide" setting on a
+listing. The guide records and guide bookings, and the payments made for those
+bookings, were deleted from the database. What visitors pay for online is
+entrance tickets only; "My booking" in the visitor menu is now "My ticket".
+The users are two: the Tourism Officer and the Establishment Manager, plus
+visitors without accounts.
+
+**Change in the manuscript:** take out the Tourist Guide as a user (Scope,
+Operational Definition of Terms, use case and context diagrams, the ERD's
+guide, guide booking, guide report and language tables, the data dictionary),
+the guide booking and guide payment from the visitor's process and the
+Collections description ("guide fees"), and the guide module from the testing
+chapter. Wherever it lists three kinds of staff account, write two.
+
 ## "Private enterprise", not "private establishment" (October 2026)
 
 **The change.** At the panel's suggestion, a place the Tourism Office does
@@ -18,19 +37,7 @@ Manager: the person who runs the enterprise's listing.
 runs a place, write "private enterprise". Keep "tourist establishment" and
 "Establishment Manager" where they name the place or the role.
 
-## A guide's booked tours are protected from office edits too (October 2026)
-
-**The change.** The office can no longer mark a guide unavailable or
-inactive, drop a working day, take away a destination, or lower the largest
-group while that guide still has a confirmed tour to come that the change would
-break. The system names the bookings and asks the office to give them another
-guide first, the same rule the guide already had.
-
-**Change in the manuscript:** if the Tourist Guide module or its testing
-mentions that a guide cannot leave confirmed tours behind, add "and neither
-can the Tourism Officer's changes to the guide's record".
-
-## Tourist guides have no area (October 2026)
+## Tourist guides have no area (October 2026) — superseded: tour guides were removed, see above
 
 **The change.** A tourist guide is no longer set to "the whole municipality"
 or "one barangay". Where a guide works is the destinations the Tourism Officer

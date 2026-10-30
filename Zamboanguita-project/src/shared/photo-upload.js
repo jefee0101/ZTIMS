@@ -1,13 +1,8 @@
 /* ==========================================================================
    Uploading a photo — one implementation
    --------------------------------------------------------------------------
-   The listing form grew a signed Cloudinary upload; the guide record still
-   asked for a URL and expected somebody to have hosted the photograph
-   somewhere first. That is not a thing a tourism officer can reasonably be
-   asked to do, and it is why guide photos were mostly empty.
-
-   Rather than give the guides page a second uploader, the listing form's one
-   moved here and both call it.
+   The listing form's signed Cloudinary upload lives here, so any page that
+   needs a photo calls the same one rather than a second uploader.
 
    -- Signed, not unsigned --------------------------------------------------
    The server signs each upload at /api/uploads/signature, behind requireStaff.

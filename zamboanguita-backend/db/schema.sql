@@ -142,7 +142,6 @@ create table if not exists public.spots (
     status              text not null default 'published'
                         constraint spots_status check (status in ('published', 'unpublished', 'archived')),
     status_updated_at   timestamptz,
-    requires_guide      boolean not null default false,
     created_at          timestamptz not null default now(),
     updated_at          timestamptz not null default now(),
     constraint spots_coordinates_pair check ((latitude is null) = (longitude is null))
@@ -154,205 +153,10 @@ create index if not exists spots_status_idx on public.spots (status);
 -- Listings the Tourism Office keeps (managed_by null) are not limited.
 create unique index if not exists spots_one_per_establishment
     on public.spots (managed_by) where managed_by is not null;
-create index if not exists spots_requires_guide_idx on public.spots (requires_guide);
 create index if not exists spots_created_at_idx on public.spots (created_at desc);
 
 
--- ---------------------------------------------------------------------------
--- Tourist guides: municipal records the Tourism Office keeps. A guide may also
--- be given a sign-in (email + password below) for the guide portal, where they
--- keep their own availability and languages; everything else stays the
--- office's to set. A guide without a sign-in has email and password_hash null.
--- ---------------------------------------------------------------------------
-create table if not exists public.tourist_guides (
-    id                  text primary key default public.ztims_new_id(),
-    full_name           text not null constraint tourist_guides_name_required check (btrim(full_name) <> ''),
-    photo_url           text not null default '',
-    contact_number      text not null default '',
-    -- A general area, not an address: this is a person.
-    location            text not null default '',
-    bio                 text not null default '',
-    guide_fee           numeric not null default 0
-                        constraint tourist_guides_fee_not_negative check (guide_fee >= 0),
-    max_group_size      integer not null default 1
-                        constraint tourist_guides_group_size check (max_group_size >= 1),
-    status              text not null default 'available'
-                        constraint tourist_guides_status check (status in ('available', 'unavailable', 'inactive')),
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now()
-);
 
-create index if not exists tourist_guides_status_idx on public.tourist_guides (status);
-
--- Added with the guide portal. Separate statements, so a database created
--- before them gains them here and one created after is left alone.
---
--- scope and barangay: a guide's area (the whole municipality or one barangay).
--- No longer used (October 2026, the user's decision): where a guide works is
--- the destinations the office gives them (tourist_guide_spots). The columns
--- stay, unread, until the user agrees to drop them; nothing writes them now.
-alter table public.tourist_guides
-    add column if not exists scope text not null default 'municipal'
-        constraint tourist_guides_scope check (scope in ('municipal', 'barangay'));
-alter table public.tourist_guides
-    add column if not exists barangay text not null default '';
--- The weekdays the guide works, one yes/no column per day. A booking on any
--- other day is not assigned to them.
-alter table public.tourist_guides add column if not exists works_mon boolean not null default true;
-alter table public.tourist_guides add column if not exists works_tue boolean not null default true;
-alter table public.tourist_guides add column if not exists works_wed boolean not null default true;
-alter table public.tourist_guides add column if not exists works_thu boolean not null default true;
-alter table public.tourist_guides add column if not exists works_fri boolean not null default true;
-alter table public.tourist_guides add column if not exists works_sat boolean not null default true;
-alter table public.tourist_guides add column if not exists works_sun boolean not null default true;
--- The sign-in. Null until the office issues one.
-alter table public.tourist_guides
-    add column if not exists email text
-        constraint tourist_guides_email_normalised
-        check (email is null or (email <> '' and email = lower(btrim(email))));
-alter table public.tourist_guides
-    add column if not exists password_hash text;
-alter table public.tourist_guides
-    add column if not exists reset_token_hash text;
-alter table public.tourist_guides
-    add column if not exists reset_token_expires timestamptz;
-
-create unique index if not exists tourist_guides_email_key
-    on public.tourist_guides (email) where email is not null;
-create index if not exists tourist_guides_scope_idx on public.tourist_guides (scope, barangay);
-
--- Guides used to mark single days off here (guide_time_off). That was taken
--- out: a guide who cannot work now sets themselves Unavailable, or drops the
--- weekday from their working days. Dropped on the next migrate, with any days
--- off it still held.
-drop table if exists public.guide_time_off;
-
--- Guides also used to ask here for a change to their contact number or bio,
--- for the office to approve (guide_profile_requests). Taken out too: the
--- office now edits those two fields itself, as it does the rest of the
--- record. Dropped on the next migrate, with any requests it still held.
-drop table if exists public.guide_profile_requests;
-
--- Languages, and who speaks them. A table of their own rather than a list on
--- the guide, so "who speaks Korean" is a join, and "Korean" and "korean" are
--- one language rather than two.
-create table if not exists public.languages (
-    id                  text primary key default public.ztims_new_id(),
-    name                text not null
-                        constraint languages_name_length check (char_length(btrim(name)) between 1 and 40),
-    created_at          timestamptz not null default now()
-);
-
-create unique index if not exists languages_name_key on public.languages (lower(name));
-
-create table if not exists public.guide_languages (
-    guide_id            text not null references public.tourist_guides (id) on delete cascade,
-    language_id         text not null references public.languages (id) on delete cascade,
-    primary key (guide_id, language_id)
-);
-
-create index if not exists guide_languages_language_idx on public.guide_languages (language_id);
-
-
--- Which spots each guide serves. MongoDB held this as an array on the guide;
--- here it is a table of its own so every entry is a real spot. `position`
--- keeps the order the office entered them in.
-create table if not exists public.tourist_guide_spots (
-    guide_id            text not null references public.tourist_guides (id) on delete cascade,
-    spot_id             text not null references public.spots (id) on delete cascade,
-    position            integer not null default 0,
-    primary key (guide_id, spot_id)
-);
-
-create index if not exists tourist_guide_spots_spot_idx on public.tourist_guide_spots (spot_id);
-
-
--- ---------------------------------------------------------------------------
--- Guide bookings: requested by a visitor with no account, paid at the counter.
--- ---------------------------------------------------------------------------
-create table if not exists public.guide_bookings (
-    id                  text primary key default public.ztims_new_id(),
-    -- TG-2026-00001: the visitor's only handle on the booking.
-    reference           text not null unique,
-    spot_id             text not null references public.spots (id),
-    -- Null until the Tourism Office assigns a guide.
-    guide_id            text references public.tourist_guides (id),
-    full_name           text not null,
-    contact_number      text not null,
-    email               text not null,
-    -- ISO 3166-1 alpha-2, or blank on bookings taken before it was asked.
-    nationality         text not null default ''
-                        constraint guide_bookings_nationality check (nationality = '' or nationality ~ '^[A-Z]{2}$'),
-    visitors            integer not null constraint guide_bookings_visitors check (visitors >= 1),
-    preferred_date      date not null,
-    preferred_time      text not null
-                        constraint guide_bookings_preferred_time check (preferred_time ~ '^[0-9]{2}:[0-9]{2}$'),
-    notes               text not null default '',
-    status              text not null default 'pending_payment'
-                        constraint guide_bookings_status
-                        check (status in ('pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show')),
-    status_note         text not null default '',
-    status_updated_at   timestamptz,
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now()
-);
-
-create index if not exists guide_bookings_spot_idx on public.guide_bookings (spot_id);
-create index if not exists guide_bookings_guide_date_idx on public.guide_bookings (guide_id, preferred_date);
-create index if not exists guide_bookings_status_idx on public.guide_bookings (status);
-create index if not exists guide_bookings_nationality_idx on public.guide_bookings (nationality);
-create index if not exists guide_bookings_created_at_idx on public.guide_bookings (created_at desc);
-
-
--- What a guide reports to the office: a tour completed, a headcount, an
--- incident, or feedback a tourist gave them. `barangay` is where it happened,
--- set by the API from the booking's destination (a report about no one
--- booking may name a barangay from the list) — it is what the office's
--- per-barangay rollup counts. Filing a report never changes a booking; the office does that.
-create table if not exists public.guide_reports (
-    id                  text primary key default public.ztims_new_id(),
-    guide_id            text not null references public.tourist_guides (id) on delete cascade,
-    booking_id          text references public.guide_bookings (id) on delete set null,
-    report_type         text not null
-                        constraint guide_reports_type
-                        check (report_type in ('tour_completed', 'headcount', 'incident', 'tourist_feedback')),
-    report_date         date not null,
-    headcount           integer
-                        constraint guide_reports_headcount check (headcount is null or headcount >= 0),
-    barangay            text not null default '',
-    details             text not null default ''
-                        constraint guide_reports_details_length check (char_length(details) <= 2000),
-    status              text not null default 'new'
-                        constraint guide_reports_status check (status in ('new', 'reviewed')),
-    reviewed_by_email   text not null default '',
-    reviewed_at         timestamptz,
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now()
-);
-
-create index if not exists guide_reports_guide_idx on public.guide_reports (guide_id);
-create index if not exists guide_reports_booking_idx on public.guide_reports (booking_id);
-create index if not exists guide_reports_barangay_idx on public.guide_reports (barangay);
-create index if not exists guide_reports_status_idx on public.guide_reports (status);
-create index if not exists guide_reports_report_date_idx on public.guide_reports (report_date desc);
-
--- ---------------------------------------------------------------------------
--- Payments: a record of cash taken at the counter. ZTIMS takes no money
--- online. One payment per booking, enforced here rather than hoped for.
--- ---------------------------------------------------------------------------
-create table if not exists public.payments (
-    id                  text primary key default public.ztims_new_id(),
-    booking_id          text not null unique references public.guide_bookings (id),
-    amount              numeric not null constraint payments_amount_not_negative check (amount >= 0),
-    method              text not null default 'cash',
-    receipt_number      text not null default '',
-    paid_at             timestamptz not null default now(),
-    -- Who took it, by email, so the record outlives the account.
-    recorded_by_email   text not null default '',
-    remarks             text not null default '',
-    created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now()
-);
 
 
 
@@ -618,7 +422,7 @@ create index if not exists report_changes_report_idx on public.report_changes (r
 -- ---------------------------------------------------------------------------
 -- Online payments — a DEMONSTRATION, in the payment gateway's test mode.
 --
--- A visitor may pay a guide booking, or buy an entrance ticket to an attraction
+-- A visitor may buy an entrance ticket to an attraction
 -- the office runs, through the gateway's checkout. The API refuses to start with
 -- a live key, so no real money can move: every online payment is a test one.
 -- Records made for the demonstration carry is_demo, and the officer can remove
@@ -626,19 +430,6 @@ create index if not exists report_changes_report_idx on public.report_changes (r
 -- does. Money stays out of the statistics tables above.
 -- ---------------------------------------------------------------------------
 
--- Demonstration bookings (seeded, or paid in test mode), removable together.
-alter table public.guide_bookings add column if not exists is_demo boolean not null default false;
-
--- The guide the visitor asked for (null: any guide). A request, not an
--- assignment: guide_id stays the office's to set, and for a paid booking only
--- a guide at or below the fee paid can be assigned.
-alter table public.guide_bookings add column if not exists requested_guide_id text
-    references public.tourist_guides (id) on delete set null;
-
--- Confirm first, pay later: the office confirms a booking by giving it a guide,
--- and the visitor pays onsite on the day or online. The day before a confirmed
--- tour the visitor is reminded by email, once (reminders.js).
-alter table public.guide_bookings add column if not exists reminder_sent_at timestamptz;
 
 -- An entrance ticket: one date, one attraction, a number of people.
 create table if not exists public.tickets (
@@ -682,9 +473,22 @@ create index if not exists tickets_status_idx on public.tickets (status);
 -- (A database from before the counts and per-kind prices is brought to this
 -- shape in "Normalisation" at the end of this file.)
 
--- A payment is for one booking or one ticket. Online payments say so, keep the
--- gateway's reference, and may be refunded (the office cancelled).
-alter table public.payments alter column booking_id drop not null;
+-- A payment, for one ticket: paid online, or recorded by the office. Online
+-- payments keep the gateway's reference, and may be refunded. (A database from
+-- before keeps its older columns until "Tour guides taken out", at the end.)
+create table if not exists public.payments (
+    id                  text primary key default public.ztims_new_id(),
+    ticket_id           text not null unique references public.tickets (id),
+    amount              numeric not null constraint payments_amount_not_negative check (amount >= 0),
+    method              text not null default 'cash',
+    receipt_number      text not null default '',
+    paid_at             timestamptz not null default now(),
+    -- Who took it, by email, so the record outlives the account.
+    recorded_by_email   text not null default '',
+    remarks             text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
 alter table public.payments add column if not exists ticket_id text unique references public.tickets (id);
 alter table public.payments add column if not exists channel text not null default 'counter';
 alter table public.payments add column if not exists gateway_ref text not null default '';
@@ -702,9 +506,6 @@ begin
     if not exists (select 1 from pg_constraint where conname = 'payments_channel') then
         alter table public.payments add constraint payments_channel check (channel in ('counter', 'online'));
     end if;
-    if not exists (select 1 from pg_constraint where conname = 'payments_for_one') then
-        alter table public.payments add constraint payments_for_one check ((booking_id is null) <> (ticket_id is null));
-    end if;
 end
 $$;
 
@@ -714,11 +515,7 @@ create index if not exists payments_paid_at_idx on public.payments (paid_at desc
 -- payment that arrives late, or twice, can still be matched to what it was for.
 create table if not exists public.online_checkouts (
     id                  text primary key default public.ztims_new_id(),
-    booking_id          text references public.guide_bookings (id) on delete cascade,
-    ticket_id           text references public.tickets (id) on delete cascade,
-    -- What was being paid, read off which of the two is filled in.
-    kind                text generated always as
-                        (case when booking_id is not null then 'guide_booking' else 'ticket' end) stored,
+    ticket_id           text not null references public.tickets (id) on delete cascade,
     amount              numeric not null constraint online_checkouts_amount check (amount >= 0),
     session_id          text unique,
     checkout_url        text not null default '',
@@ -731,11 +528,9 @@ create table if not exists public.online_checkouts (
     paid_at             timestamptz,
     is_demo             boolean not null default true,
     created_at          timestamptz not null default now(),
-    updated_at          timestamptz not null default now(),
-    constraint online_checkouts_for_one check ((booking_id is null) <> (ticket_id is null))
+    updated_at          timestamptz not null default now()
 );
 
-create index if not exists online_checkouts_booking_idx on public.online_checkouts (booking_id);
 create index if not exists online_checkouts_ticket_idx on public.online_checkouts (ticket_id);
 
 
@@ -746,8 +541,7 @@ create index if not exists online_checkouts_ticket_idx on public.online_checkout
 --
 -- Opening days live in spots.working_days, the text visitors already read
 -- ("Monday to Saturday"); open-days.js reads and writes it. A student or child
--- price left empty is not offered. The cancellation percentage applies to tickets and guide
--- bookings at that destination alike.
+-- price left empty is not offered. The cancellation percentage applies to that destination's tickets.
 -- ---------------------------------------------------------------------------
 alter table public.spots add column if not exists student_fee numeric;
 alter table public.spots add column if not exists child_fee numeric;
@@ -772,19 +566,16 @@ end
 $$;
 
 -- Closures: when the office shuts a destination on a date that already has
--- sales, each paid ticket and booking for it becomes 'closed' — out of use,
+-- sales, each paid ticket for it becomes 'closed' — out of use,
 -- waiting for the visitor to choose a full refund or a new date (Manage page).
 -- Unpaid ones are simply cancelled. The constraints are redrawn every migrate,
 -- so they always carry the current list.
 alter table public.tickets drop constraint if exists tickets_status;
 alter table public.tickets add constraint tickets_status
     check (status in ('pending_payment', 'valid', 'used', 'cancelled', 'expired', 'closed'));
-alter table public.guide_bookings drop constraint if exists guide_bookings_status;
-alter table public.guide_bookings add constraint guide_bookings_status
-    check (status in ('pending_payment', 'confirmed', 'cancelled', 'completed', 'no_show', 'closed'));
 
--- A date a destination is shut (a fiesta, repairs, a typhoon). Tickets and guide
--- bookings are refused for it. Closing a date that already has sales is the
+-- A date a destination is shut (a fiesta, repairs, a typhoon). Tickets are
+-- refused for it. Closing a date that already has sales is the
 -- closure action's job: it cancels them and tells each visitor.
 create table if not exists public.spot_closed_dates (
     id                  text primary key default public.ztims_new_id(),
@@ -802,17 +593,15 @@ create table if not exists public.spot_closed_dates (
 -- ---------------------------------------------------------------------------
 -- Normalisation (October 2026): one fact in one place.
 --
--- A destination's gallery is a table of its own (one row per photo), a guide's
--- working days and a ticket's prices are one value per column, and every total
--- (a ticket's people and amount, a statistics row's total, what a checkout was
--- for) is worked out by the database rather than typed in. Columns nothing used
+-- A destination's gallery is a table of its own (one row per photo) and a
+-- ticket's prices are one value per column, and every total
+-- (a ticket's people and amount, a statistics row's total) is worked out by the database rather than typed in. Columns nothing used
 -- are gone: a listing's municipality and province (always Zamboanguita, Negros
 -- Oriental), its status note, and the account ids beside the emails that
 -- already say who recorded a payment or sent a report.
 --
 -- What a record keeps about the moment it happened stays: the price a ticket
--- was bought at, who recorded or changed something, where a guide's report
--- took place. Those are facts of that record, as a receipt keeps its price.
+-- was bought at, who recorded or changed something. Those are facts of that record, as a receipt keeps its price.
 --
 -- A database created before this is converted below, its data carried across
 -- first; one created after has nothing to convert.
@@ -845,18 +634,6 @@ begin
     alter table public.spots drop column if exists province;
     alter table public.spots drop column if exists status_note;
 
-    -- Guides: the list of weekdays becomes one yes/no per day.
-    select exists (select 1 from information_schema.columns
-                    where table_schema = 'public' and table_name = 'tourist_guides' and column_name = 'available_days') into has_column;
-    if has_column then
-        execute $sql$
-            update public.tourist_guides
-               set works_mon = 'mon' = any(available_days), works_tue = 'tue' = any(available_days),
-                   works_wed = 'wed' = any(available_days), works_thu = 'thu' = any(available_days),
-                   works_fri = 'fri' = any(available_days), works_sat = 'sat' = any(available_days),
-                   works_sun = 'sun' = any(available_days) $sql$;
-        alter table public.tourist_guides drop column available_days;
-    end if;
 
     -- Who did it is the email; the account id beside it was never read.
     alter table public.payments drop column if exists recorded_by;
@@ -952,14 +729,6 @@ begin
         end if;
     end if;
 
-    -- Checkouts: what was being paid is read off which reference is filled in.
-    if exists (select 1 from information_schema.columns
-                where table_schema = 'public' and table_name = 'online_checkouts'
-                  and column_name = 'kind' and is_generated = 'NEVER') then
-        alter table public.online_checkouts drop column kind;
-        alter table public.online_checkouts add column kind text generated always as
-            (case when booking_id is not null then 'guide_booking' else 'ticket' end) stored;
-    end if;
 
     -- The rules, for a converted database and a new one alike.
     if not exists (select 1 from pg_constraint where conname = 'monthly_report_counts_split_or_not') then
@@ -1138,8 +907,6 @@ alter table public.tourism_officers add column if not exists session_version int
 alter table public.tourism_officers add column if not exists must_change_password boolean not null default false;
 alter table public.establishment_managers add column if not exists session_version integer not null default 0;
 alter table public.establishment_managers add column if not exists must_change_password boolean not null default false;
-alter table public.tourist_guides add column if not exists session_version integer not null default 0;
-alter table public.tourist_guides add column if not exists must_change_password boolean not null default false;
 
 -- Data privacy (Data Privacy Act of 2012): the office's Data Protection Officer,
 -- published on the Privacy page, and when the one-year erasure last ran.
@@ -1186,8 +953,7 @@ declare
     t text;
 begin
     foreach t in array array[
-        'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides',
-        'guide_reports', 'guide_bookings', 'payments', 'feedback',
+        'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
         'emergency_numbers', 'register_entries'
     ] loop
@@ -1199,8 +965,7 @@ begin
     end loop;
 
     foreach t in array array[
-        'tourism_officers', 'establishment_managers', 'spots', 'tourist_guides', 'tourist_guide_spots',
-        'languages', 'guide_languages', 'guide_reports', 'guide_bookings', 'payments', 'feedback', 'rate_limits',
+        'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
         'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests'
@@ -1209,3 +974,40 @@ begin
     end loop;
 end
 $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Tour guides taken out (October 2026, the user's decision): no guide
+-- accounts, no guide bookings, no "tourist guide required" on a listing.
+-- Their records are deleted with them — guides, their destinations and
+-- languages, their reports, the guide bookings, and the payments and online
+-- checkouts made for those bookings. Tickets and their payments stay.
+-- Nothing left to do on a database that has already been through this.
+-- ---------------------------------------------------------------------------
+do $$
+begin
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'online_checkouts' and column_name = 'booking_id') then
+        delete from public.online_checkouts where booking_id is not null;
+        -- Takes the generated "kind" and the one-or-the-other rule with it.
+        alter table public.online_checkouts drop column booking_id cascade;
+        alter table public.online_checkouts alter column ticket_id set not null;
+    end if;
+    if exists (select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'payments' and column_name = 'booking_id') then
+        delete from public.payments where booking_id is not null;
+        alter table public.payments drop column booking_id cascade;
+        alter table public.payments alter column ticket_id set not null;
+    end if;
+end
+$$;
+
+drop table if exists public.guide_reports;
+drop table if exists public.guide_languages;
+drop table if exists public.languages;
+drop table if exists public.tourist_guide_spots;
+drop table if exists public.guide_bookings;
+drop table if exists public.tourist_guides;
+drop table if exists public.guide_time_off;
+drop table if exists public.guide_profile_requests;
+alter table public.spots drop column if exists requires_guide;

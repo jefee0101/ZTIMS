@@ -1,5 +1,5 @@
 /* Attraction setup — what the Tourism Office decides, per destination, before a
- * visitor can buy a ticket or book a guide there:
+ * visitor can buy a ticket there:
  *
  *   - which weekdays it opens (spots.working_days, read by open-days.js),
  *   - which particular dates it is shut (spot_closed_dates),
@@ -9,7 +9,7 @@
  *   - and what share of the price it keeps when a visitor cancels.
  *
  * dayVerdict() is the one answer to "can visitors come on this date?", used by
- * ticket sales (payments.js) and guide bookings (server.js) alike, so a form
+ * ticket sales (payments.js) and the Manage page (manage.js) alike, so a form
  * can never be told a day is open that the purchase would then refuse.
  *
  * Mounted at /api by server.js. Every write here is the officer's.
@@ -147,12 +147,9 @@ async function visitCalendar(spot, days) {
 async function salesOn(spotId, dateKey) {
     const { rows } = await query(`
         select (select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'valid')::int as tickets,
-               (select count(*) from guide_bookings where spot_id = $1 and preferred_date = $2
-                   and status in ('pending_payment', 'confirmed'))::int as bookings,
-               ((select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'closed')
-                + (select count(*) from guide_bookings where spot_id = $1 and preferred_date = $2 and status = 'closed'))::int as awaitingChoice`,
+               (select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'closed')::int as awaitingChoice`,
         [spotId, dateKey]);
-    return { tickets: rows[0].tickets, bookings: rows[0].bookings, awaitingChoice: rows[0].awaitingchoice };
+    return { tickets: rows[0].tickets, awaitingChoice: rows[0].awaitingchoice };
 }
 
 function setupView(spot, closedDates) {
@@ -162,7 +159,6 @@ function setupView(spot, closedDates) {
         title: spot.title,
         type: spot.type,
         officeRun: !spot.managedBy,
-        requiresGuide: Boolean(spot.requiresGuide),
         entranceFee: fees.regular,
         studentFee: spot.studentFee,
         childFee: spot.childFee,
@@ -265,12 +261,9 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             if (date < manilaToday()) return fail(res, 400, 'That date has already passed.');
 
             const sales = await salesOn(spot._id, date);
-            if (sales.tickets || sales.bookings) {
-                const parts = [];
-                if (sales.tickets) parts.push(`${sales.tickets} ticket${sales.tickets === 1 ? '' : 's'}`);
-                if (sales.bookings) parts.push(`${sales.bookings} guide booking${sales.bookings === 1 ? '' : 's'}`);
-                const verb = sales.tickets + sales.bookings === 1 ? 'exists' : 'exist';
-                return fail(res, 409, `${parts.join(' and ')} already ${verb} for ${niceDate(date)}. Use "Close this date" so each visitor is refunded or moved.`, { sales });
+            if (sales.tickets) {
+                const what = `${sales.tickets} ticket${sales.tickets === 1 ? '' : 's'} already ${sales.tickets === 1 ? 'exists' : 'exist'}`;
+                return fail(res, 409, `${what} for ${niceDate(date)}. Use "Close this date" so each visitor is refunded or moved.`, { sales });
             }
 
             const closed = await ClosedDate.create({ spotId: spot._id, closedDate: date, reason, createdByEmail: await officerEmail(req) });
@@ -283,7 +276,7 @@ module.exports = function attractionsRouter({ requireAdmin }) {
     });
 
     /* Closing a date that already has sales: one action. The date is marked
-       closed; every paid ticket and booking for it becomes 'closed' (out of
+       closed; every paid ticket for it becomes 'closed' (out of
        use, the visitor to choose a full refund or a new date on the Manage
        page); unpaid ones are cancelled. Each visitor is emailed. All the
        changes are one transaction; the emails follow it. */
@@ -296,7 +289,6 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             if (!isDateKey(date)) return fail(res, 400, 'Choose the date to close.');
             if (date < manilaToday()) return fail(res, 400, 'That date has already passed.');
             const who = await officerEmail(req);
-            const note = `The office closed ${spot.title} on this date${reason ? ` (${reason})` : ''}.`.slice(0, 500);
 
             const changed = await transaction(async client => {
                 await query(`
@@ -311,15 +303,7 @@ module.exports = function attractionsRouter({ requireAdmin }) {
                     // Never paid: no ticket to keep. A payment that still lands on
                     // one is recorded as a duplicate, for a refund.
                     unpaidTickets: await ids(`update tickets set status = 'cancelled'
-                                         where spot_id = $1 and visit_date = $2 and status = 'pending_payment' returning id`, [spot._id, date]),
-                    bookings: await ids(`update guide_bookings b set status = 'closed', status_note = $3, status_updated_at = now()
-                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status in ('pending_payment', 'confirmed')
-                                           and exists (select 1 from payments p where p.booking_id = b.id and p.refunded_at is null) returning id`,
-                                         [spot._id, date, note]),
-                    unpaidBookings: await ids(`update guide_bookings b set status = 'cancelled', status_note = $3, status_updated_at = now()
-                                         where b.spot_id = $1 and b.preferred_date = $2 and b.status in ('pending_payment', 'confirmed')
-                                           and not exists (select 1 from payments p where p.booking_id = b.id) returning id`,
-                                         [spot._id, date, note])
+                                         where spot_id = $1 and visit_date = $2 and status = 'pending_payment' returning id`, [spot._id, date])
                 };
             });
 
@@ -328,20 +312,17 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             const notices = require('./notices');
             const origin = `${req.protocol}://${req.get('host')}`;
             let emailed = 0;
-            for (const id of changed.tickets) emailed += (await notices.closureNotice('ticket', id, { reason }, origin)).sent ? 1 : 0;
-            for (const id of changed.bookings) emailed += (await notices.closureNotice('booking', id, { reason }, origin)).sent ? 1 : 0;
-            for (const id of changed.unpaidBookings) emailed += (await notices.bookingCancelled(id, { byVisitor: false, reason: note }, origin)).sent ? 1 : 0;
+            for (const id of changed.tickets) emailed += (await notices.closureNotice(id, { reason }, origin)).sent ? 1 : 0;
 
-            const affected = changed.tickets.length + changed.bookings.length;
-            const told = affected + changed.unpaidBookings.length;
-            console.log(`🚧 ${spot.title} closed on ${date} by ${who}: ${affected} to choose, ${changed.unpaidBookings.length + changed.unpaidTickets.length} unpaid cancelled`);
+            const affected = changed.tickets.length;
+            const told = affected;
+            console.log(`🚧 ${spot.title} closed on ${date} by ${who}: ${affected} to choose, ${changed.unpaidTickets.length} unpaid cancelled`);
             res.status(201).json({
                 success: true,
                 message: `${spot.title} is closed on ${niceDate(date)}. ${affected
-                    ? `${affected} visitor${affected === 1 ? '' : 's'} with a paid ticket or booking will choose a full refund or a new date.`
+                    ? `${affected} visitor${affected === 1 ? '' : 's'} with a paid ticket will choose a full refund or a new date.`
                     : 'Nothing paid was affected.'}${told ? ` ${emailed} of ${told} emailed.` : ''}`,
-                changed: { tickets: changed.tickets.length, bookings: changed.bookings.length,
-                           unpaidTickets: changed.unpaidTickets.length, unpaidBookings: changed.unpaidBookings.length },
+                changed: { tickets: changed.tickets.length, unpaidTickets: changed.unpaidTickets.length },
                 emailed
             });
         } catch (error) {

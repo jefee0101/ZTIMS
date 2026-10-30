@@ -474,14 +474,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-accent">hiking</span>
-                <span class="sidebar-label">Tourist Guides</span>
-            </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Guide Bookings</span>
-            </a>
             <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
                 <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Tickets</span>
@@ -605,7 +597,7 @@ body { overflow-x: hidden; }
     </div>
 
     <!-- Visitor setup: what the office decides before a visitor can buy a ticket
-         or book a guide here — opening days, prices per kind of visitor, what a
+         here — opening days, prices per kind of visitor, what a
          cancellation keeps, and dates it is shut. -->
     <div id="setupModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
         <div class="ztims-modal w-full max-w-2xl p-5 sm:p-8 space-y-6 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
@@ -623,7 +615,7 @@ body { overflow-x: hidden; }
                 <fieldset class="space-y-2">
                     <legend class="field-label">Open on</legend>
                     <div id="setupDays" class="flex flex-wrap gap-2"></div>
-                    <p id="setupDaysNote" class="text-support">Visitors cannot buy a ticket or book a guide on the other days.</p>
+                    <p id="setupDaysNote" class="text-support">Visitors cannot buy a ticket on the other days.</p>
                 </fieldset>
 
                 <fieldset id="setupPrices" class="space-y-3">
@@ -659,7 +651,7 @@ body { overflow-x: hidden; }
                         <input id="setupKeep" type="number" min="0" max="100" step="1" class="field !w-24" aria-label="Percent kept"/>
                         % and refunds the rest.
                     </label>
-                    <p class="text-support">Visitors can move or cancel until 11:59 PM the day before. This applies to tickets and guide bookings here. When the office cancels or closes, the visitor always gets everything back.</p>
+                    <p class="text-support">Visitors can move or cancel a ticket until 11:59 PM the day before. When the office cancels or closes, the visitor always gets everything back.</p>
                 </fieldset>
 
                 <p id="setupError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
@@ -1090,7 +1082,7 @@ body { overflow-x: hidden; }
                     Number(spot.travelFee) > 0 ? `Travel ${formatPeso(spot.travelFee)}` : '',
                     escapeHtml(spot.workingDays || 'Every day')
                 ].filter(Boolean).join(' · ');
-                const hasSetup = (!manager && spot.type !== 'accommodation') || spot.requiresGuide;
+                const hasSetup = !manager && spot.type !== 'accommodation';
 
                 return `
                 <div data-spot="${id}" class="dest-row">
@@ -1296,7 +1288,7 @@ body { overflow-x: hidden; }
                     <span class="text-sm font-bold">${days.NAMES[i].slice(0, 3)}</span>
                 </label>`).join('');
             document.getElementById('setupDaysNote').textContent = setup.openDays
-                ? 'Visitors cannot buy a ticket or book a guide on the other days.'
+                ? 'Visitors cannot buy a ticket on the other days.'
                 : `The listing says "${setup.workingDays}", which names no days, so every day is treated as open. Tick the real days and save.`;
 
             const sells = setup.officeRun && setup.type !== 'accommodation';
@@ -1388,12 +1380,9 @@ body { overflow-x: hidden; }
                         // Already sold: closing it is the closure action, which tells each visitor.
                         if (!(error.status === 409 && error.data && error.data.sales)) throw error;
                         const sales = error.data.sales;
-                        const parts = [];
-                        if (sales.tickets) parts.push(`${sales.tickets} ticket${sales.tickets === 1 ? '' : 's'}`);
-                        if (sales.bookings) parts.push(`${sales.bookings} guide booking${sales.bookings === 1 ? '' : 's'}`);
                         const sure = await ztimsDialog.confirm({
                             title: `Close ${niceDay(date)} anyway?`,
-                            message: `${parts.join(' and ')} ${sales.tickets + sales.bookings === 1 ? 'exists' : 'exist'} for that day. Each paid one will be put on hold and its visitor emailed to choose a full refund or a new date. Unpaid bookings are cancelled.`,
+                            message: `${sales.tickets} ticket${sales.tickets === 1 ? ' exists' : 's exist'} for that day. Each paid one will be put on hold and its visitor emailed to choose a full refund or a new date.`,
                             confirmLabel: 'Close this date', tone: 'danger'
                         });
                         if (!sure) return;

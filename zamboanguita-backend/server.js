@@ -17,17 +17,12 @@ const {
     officers: TourismOfficer,
     managers: EstablishmentManager,
     spots: Spot,
-    guides: TouristGuide,
-    reports: GuideReport,
-    languagesOf, setGuideLanguages, findGuidesSpeaking,
-    bookings: GuideBooking,
     payments: Payment,
     feedback: Feedback,
-    MAX_SPOT_IMAGES, GUIDE_STATUSES, GUIDE_REPORT_TYPES, WEEKDAYS, MAX_GUIDE_LANGUAGES, BOOKING_STATUSES,
+    MAX_SPOT_IMAGES,
     FEEDBACK_TOPICS, FEEDBACK_STATUSES, FEEDBACK_MESSAGE_MAX
 } = require('./models');
 const { forgetOldVisitors } = require('./privacy');
-const { remindTomorrowsTours } = require('./reminders');
 const { passwordProblem, generatePassword } = require('./passwords');
 const mailer = require('./mailer');
 
@@ -210,25 +205,6 @@ async function bootstrapAdmin() {
     }
 }
 
-/* The set of ISO 3166-1 alpha-2 codes a booking's nationality may be. Mirrors
-   the list in Zamboanguita-project/src/shared/countries.js, which also carries
-   the display names the browser needs. The two deploy separately (Render and
-   Vercel) so they cannot share a file; scripts/check-countries.cjs compares
-   them, because a code the form offers and the API rejects is a booking a
-   visitor cannot submit and cannot see why. */
-const COUNTRY_CODES = new Set((
-    'AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ ' +
-    'BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM ' +
-    'DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS ' +
-    'GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN ' +
-    'KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ ' +
-    'MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM ' +
-    'PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV ' +
-    'SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI ' +
-    'VN VU WF WS YE YT ZA ZM ZW'
-).trim().split(/\s+/));
-
-
 // Every token is checked the same way: signature, issuer and audience, then the
 // account itself. HS256 is named so a token can never choose its own algorithm.
 const TOKEN_CHECK = { algorithms: ['HS256'], issuer: 'ztims-api', audience: 'ztims-web' };
@@ -237,8 +213,7 @@ const TOKEN_CHECK = { algorithms: ['HS256'], issuer: 'ztims-api', audience: 'zti
 const ACCOUNT_TABLES = {
     admin: 'tourism_officers',
     establishment_manager: 'establishment_managers',
-    resort_owner: 'establishment_managers',
-    tourist_guide: 'tourist_guides'
+    resort_owner: 'establishment_managers'
 };
 
 const bearerToken = req => {
@@ -339,8 +314,8 @@ const requirePasswordConfirmation = [confirmRateLimit, async (req, res, next) =>
     return next();
 }];
 
-// ZTIMS has three kinds of account: Tourism Officer ('admin'), Establishment
-// Manager, and Tourist Guide ('tourist_guide'). 'resort_owner' is not a fourth — it is the spelling the
+// ZTIMS has two kinds of account: Tourism Officer ('admin') and Establishment
+// Manager. 'resort_owner' is not a third — it is the spelling the
 // manager account carried in tokens issued before the rename, kept here only so
 // a session signed in back then is not thrown out mid-visit. Nothing issues it
 // any more.
@@ -355,17 +330,8 @@ const requireEstablishmentManager = [requireAuth, (req, res, next) => {
 }];
 
 
-// A Tourist Guide in their own portal. Deliberately NOT part of requireStaff
-// below: a guide has no business creating listings or signing photo uploads.
-const requireGuide = [requireAuth, (req, res, next) => {
-    if (req.auth.role !== 'tourist_guide') {
-        return res.status(403).json({ success: false, message: 'Tourist Guide access required.' });
-    }
-    return next();
-}];
-
 // Tourist Officer or Tourist Establishment Manager — used on routes both manage,
-// each scoped to their own data. Guides are not staff in this sense.
+// each scoped to their own data.
 const requireStaff = [requireAuth, (req, res, next) => {
     if (req.auth.role !== 'admin' && !isEstablishmentManager(req.auth.role)) {
         return res.status(403).json({ success: false, message: 'Staff access required.' });
@@ -402,7 +368,7 @@ const createToken = (account, role, sessionVersion) => jwt.sign(
  * Which kind of account already signs in with this email, or null.
  *
  * The staff sign-in page does not ask which kind of account someone has; the
- * login route searches officers, then managers, then guides, and takes the
+ * login route searches officers, then managers, and takes the
  * first match. Two accounts sharing an email would leave the later one unable
  * to ever sign in, so every place that issues or changes a sign-in email asks
  * this first. `except` is the record being edited, which may keep its own.
@@ -412,8 +378,6 @@ async function emailTakenBy(email, except = {}) {
     if (officer && String(officer._id) !== String(except.officerId)) return 'a Tourism Officer';
     const manager = await EstablishmentManager.findOne({ email });
     if (manager && String(manager._id) !== String(except.managerId)) return 'an establishment manager';
-    const guide = await TouristGuide.findOne({ email });
-    if (guide && String(guide._id) !== String(except.guideId)) return 'a tourist guide';
     return null;
 }
 
@@ -543,7 +507,7 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
         const { email } = req.body;
         const fullName = String(req.body.fullName || '').trim();
         const position = String(req.body.position || '').trim();
-        // Blank asks for one to be generated, as for managers and guides.
+        // Blank asks for one to be generated, as for managers.
         const password = String(req.body.password || '').trim() || generatePassword();
 
         if (!email || !fullName) {
@@ -800,7 +764,7 @@ function reportWriteFailure(res, error, context) {
     if (error && error.code === 11000) {
         const field = Object.keys(error.keyPattern || error.keyValue || {})[0] || 'value';
         // db.js names the specific case when it knows it ("Payment for that
-        // booking was already recorded"); otherwise, the generic wording.
+        // ticket was already recorded"); otherwise, the generic wording.
         return res.status(409).json({ success: false, message: error.specific || `That ${field} is already registered.` });
     }
     return res.status(500).json({
@@ -1028,8 +992,8 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
 
 
 /**
- * POST: Sign in. ZTIMS has three kinds of account: Tourism Officer, Tourist
- * Establishment Manager and Tourist Guide. Visitors browse without one.
+ * POST: Sign in. ZTIMS has two kinds of account: Tourism Officer and Tourist
+ * Establishment Manager. Visitors browse without one.
  * Target URL: http://localhost:5000/api/login
  */
 // Only failed sign-ins count: everyone at the Municipal Hall reaches the site
@@ -1053,9 +1017,9 @@ app.post('/api/login', sharedRateLimit('login', {
         // 'staff' means the caller doesn't know which kind of staff account this is
         // — the shared staff sign-in page. We work it out rather than making the
         // person choose, since picking the wrong portal would reject a correct password.
-        // ZTIMS has exactly three kinds of account. Anything else is refused here
+        // ZTIMS has exactly two kinds of account. Anything else is refused here
         // rather than quietly searched for in a collection that no longer exists.
-        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'tourist_guide', 'staff'].includes(role) ? role : null;
+        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'staff'].includes(role) ? role : null;
         if (!requestedRole) {
             return res.status(400).json({ success: false, message: 'Unknown sign-in type.' });
         }
@@ -1070,14 +1034,8 @@ app.post('/api/login', sharedRateLimit('login', {
                 account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
                 resolvedRole = 'establishment_manager';
             }
-            if (!account) {
-                account = await TouristGuide.findOne({ email: normalizedEmail }, { secrets: true });
-                resolvedRole = 'tourist_guide';
-            }
         } else if (requestedRole === 'admin') {
             account = await TourismOfficer.findOne({ email: normalizedEmail }, { secrets: true });
-        } else if (requestedRole === 'tourist_guide') {
-            account = await TouristGuide.findOne({ email: normalizedEmail }, { secrets: true });
         } else {
             account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
             resolvedRole = 'establishment_manager';
@@ -1086,14 +1044,12 @@ app.post('/api/login', sharedRateLimit('login', {
         // The password is checked first, and for an unknown email too (against a
         // stand-in hash, so the answer takes as long either way). Only someone
         // who knows the password learns that an account exists or is suspended.
-        // A guide record whose sign-in was withdrawn has no hash to compare.
         const passwordMatches = await bcrypt.compare(String(password), (account && account.password) || NO_ACCOUNT_HASH);
         if (!account || !account.password || !passwordMatches) {
             // Deliberately the same wording whichever collection was searched, so the
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
                 : resolvedRole === 'admin' ? 'Tourist Officer'
-                : resolvedRole === 'tourist_guide' ? 'Tourist Guide'
                 : 'Tourist Establishment Manager';
             return res.status(401).json({
                 success: false,
@@ -1113,14 +1069,6 @@ app.post('/api/login', sharedRateLimit('login', {
             return res.status(403).json({
                 success: false,
                 message: 'This account has been deactivated by the Municipal Tourism Office.'
-            });
-        }
-        // An inactive guide no longer works for the office; the record stays,
-        // the portal does not.
-        if (resolvedRole === 'tourist_guide' && account.status === 'inactive') {
-            return res.status(403).json({
-                success: false,
-                message: 'This guide account is marked inactive by the Municipal Tourism Office. Please contact them to have it restored.'
             });
         }
 
@@ -1200,11 +1148,7 @@ async function findResettableAccount(email, withResetFields) {
     const officer = await TourismOfficer.findOne({ email }, options);
     if (officer) return officer.active === false ? null : { account: officer, table: TourismOfficer, role: 'admin' };
 
-    // A guide can reset only a sign-in the office actually issued, and not while
-    // the office has them marked inactive.
-    const guide = await TouristGuide.findOne({ email }, { secrets: true });
-    if (!guide || !guide.password || guide.status === 'inactive') return null;
-    return { account: guide, table: TouristGuide, role: 'tourist_guide' };
+    return null;
 }
 
 /**
@@ -1453,8 +1397,8 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
     'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
     'address', 'barangay', 'latitude', 'longitude'
 ];
-// Note what is absent: status, managedBy and requiresGuide. Publication and the
-// guide requirement are municipal decisions, not an establishment's.
+// Note what is absent: status and managedBy. Publication is the municipality's
+// decision, not an establishment's.
 
 /**
  * Decides whether this caller may write to this listing.
@@ -1744,7 +1688,7 @@ app.post('/api/spots', requireStaff, async (req, res) => {
 });
 
 /**
- * GET: Fetch a single spot by id (public — used to pre-fill a booking from the landing page)
+ * GET: Fetch a single spot by id (public — used by the destination page)
  * Target URL: http://localhost:5000/api/spots/:id
  */
 app.get('/api/spots/:id', async (req, res) => {
@@ -1839,12 +1783,11 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         await Spot.deleteById(spot._id);
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
-        // MongoDB let a listing be deleted out from under its guide bookings;
-        // the database refuses now, since those bookings must keep their destination.
+        // A listing with tickets on record keeps them: the database refuses the delete.
         if (error && error.code === 'STILL_REFERENCED') {
             return res.status(409).json({
                 success: false,
-                message: 'This listing has guide bookings on record, so it cannot be deleted. Archive it instead — the record is kept and the public no longer sees it.'
+                message: 'This listing has tickets on record, so it cannot be deleted. Archive it instead — the record is kept and the public no longer sees it.'
             });
         }
         return res.status(500).json({ error: error.message });
@@ -1852,1085 +1795,12 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
 });
 
 /* ==========================================
-   4a. TOURIST GUIDES
-   ------------------------------------------
-   Municipal tourism records, managed by the Tourism Office. A guide may also
-   be given a sign-in to the guide portal: one role, 'tourist_guide'. Where a
-   guide works is the destinations the office gives them (assignedSpots), and
-   nothing else: a booking can only go to a guide who serves its destination,
-   and a guide's dashboard counts the tours at their destinations. (A separate
-   area — the whole municipality or one barangay — was taken out in October
-   2026, the user's decision: the destinations already say it.)
-
-   Who decides what:
-     the guide   proposes — their availability (status and working days) and
-                 the languages they speak; keeps their own contact number and
-                 bio; files reports
-     the office  disposes — assigns every booking, reviews every report, and
-                 alone sets name, fee, group size, destinations, photo
-                 and inactive
-
-   Everything a visitor needs to see is served by one public route that reports
-   the requirement without exposing a guide's contact details.
+   4c. DAILY MAINTENANCE
 ========================================== */
 
-// Zamboanguita's barangays, the only ones a guide's report can name. A copy of
-// BARANGAYS in Zamboanguita-project/src/shared/spot-form.js, which fills every
-// listing's barangay — keep the two in step (CLAUDE.md, "Duplicated facts").
-const BARANGAYS = [
-    'Basak', 'Calango', 'Jumao-as', 'Lutoban', 'Malongcay Diot', 'Maluay',
-    'Mayabon', 'Nabago', 'Najandig', 'Nasig-id', 'Poblacion'
-];
-
-const WEEKDAY_NAMES = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-const REPORT_TYPE_NAMES = {
-    tour_completed: 'Tour completed',
-    headcount: 'Headcount',
-    incident: 'Incident',
-    tourist_feedback: 'Tourist feedback'
-};
-
-const guideInvalid = message => Object.assign(new Error(message), { name: 'ValidationError' });
-// Today in Manila: between midnight and 8 AM there, the UTC date is still yesterday.
-const today = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-const isCalendarDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value + 'T00:00:00Z').getTime());
-
-// Barangay names compared the way a person would read them.
-const barangayKey = value => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
-const officialBarangay = value => BARANGAYS.find(name => barangayKey(name) === barangayKey(value)) || null;
-
-/* Languages as a guide or the office typed them: trimmed, each once whatever
-   its capitalisation, none empty, none absurdly long. */
-function cleanLanguages(list) {
-    if (!Array.isArray(list)) throw guideInvalid('Languages must be a list.');
-    const seen = new Set();
-    const clean = [];
-    for (const item of list) {
-        let name = String(item || '').trim().replace(/\s+/g, ' ');
-        if (!name) continue;
-        // "korean" or "KOREAN" becomes "Korean". The first spelling saved is the
-        // one everybody sees (languages are shared), so it should be the proper
-        // one; a deliberately mixed-case name is kept as typed.
-        if (name === name.toLowerCase() || name === name.toUpperCase()) {
-            name = name.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, gap, letter) => gap + letter.toUpperCase());
-        }
-        if (name.length > 40) throw guideInvalid(`"${name.slice(0, 40)}…" is too long for a language name.`);
-        if (seen.has(name.toLowerCase())) continue;
-        seen.add(name.toLowerCase());
-        clean.push(name);
-    }
-    if (clean.length > MAX_GUIDE_LANGUAGES) throw guideInvalid(`List at most ${MAX_GUIDE_LANGUAGES} languages.`);
-    return clean;
-}
-
-/* Working days, in week order, each once. At least one: a guide who works no
-   day at all is what the 'unavailable' status is for. */
-function cleanAvailableDays(list) {
-    if (!Array.isArray(list)) throw guideInvalid('Working days must be a list.');
-    const wanted = new Set(list.map(day => String(day || '').trim().toLowerCase()));
-    const days = WEEKDAYS.filter(day => wanted.has(day));
-    if (!days.length) throw guideInvalid('Choose at least one working day, or set the guide as unavailable instead.');
-    return days;
-}
-
-// The weekday of a YYYY-MM-DD date, read as a calendar date (no timezone).
-const weekdayOf = date => WEEKDAYS[(new Date(date + 'T00:00:00Z').getUTCDay() + 6) % 7];
-
-/**
- * Cleans a guide payload from the office. Numbers are coerced, because a form
- * sends strings and a fee of "500" silently stored as text would break every
- * comparison later.
- */
-function applyGuideDetails(guide, body) {
-    if (typeof body.fullName === 'string') {
-        const name = body.fullName.trim();
-        if (!name) throw guideInvalid('The guide needs a name.');
-        guide.fullName = name;
-    }
-    if (typeof body.photoUrl === 'string' && body.photoUrl.trim() && body.photoUrl.trim() !== guide.photoUrl
-        && !isOwnPhoto(body.photoUrl.trim())) {
-        throw guideInvalid('Photos have to be uploaded through ZTIMS. Use "Choose a photo" rather than a link from another site.');
-    }
-    for (const field of ['photoUrl', 'contactNumber', 'location', 'bio']) {
-        if (typeof body[field] === 'string') guide[field] = body[field].trim();
-    }
-    if (body.guideFee !== undefined) {
-        const fee = Number(body.guideFee);
-        if (!Number.isFinite(fee) || fee < 0) throw guideInvalid('The guide fee must be zero or more.');
-        guide.guideFee = fee;
-    }
-    if (body.maxGroupSize !== undefined) {
-        const size = Math.floor(Number(body.maxGroupSize));
-        if (!Number.isFinite(size) || size < 1) throw guideInvalid('The maximum group size must be at least one person.');
-        guide.maxGroupSize = size;
-    }
-    if (body.status !== undefined) {
-        if (!GUIDE_STATUSES.includes(body.status)) throw guideInvalid('Choose available, unavailable, or inactive.');
-        guide.status = body.status;
-    }
-    if (Array.isArray(body.assignedSpots)) {
-        // Only ids that are real, and each one once.
-        const valid = body.assignedSpots
-            .map(id => String(id || '').trim())
-            .filter(id => db.isId(id));
-        guide.assignedSpots = [...new Set(valid)];
-    }
-    if (body.availableDays !== undefined) guide.availableDays = cleanAvailableDays(body.availableDays);
-    return guide;
-}
-
-/**
- * Whether a guide can take a tour on `date` — the ONE rule, used when the office
- * assigns a booking, when it searches for a free guide, and when a visitor asks
- * for a guide, so none of them can promise a guide another would refuse.
- * Returns { free: true } or { free: false, reason }.
- *
- * One tour per guide per day, whatever the time: tours here run for hours
- * (a falls trek, a dive), and a guide who is busy that day leaves the other
- * guides a turn. Callers may still pass `time`; it does not decide.
- */
-async function isGuideFreeOn(guide, date, { exceptBookingId } = {}) {
-    if (guide.status !== 'available') return { free: false, reason: `${guide.fullName} is marked ${guide.status}.` };
-
-    const weekday = weekdayOf(date);
-    if (!(guide.availableDays || WEEKDAYS).includes(weekday)) {
-        return { free: false, reason: `${guide.fullName} does not work on ${WEEKDAY_NAMES[weekday]}s.` };
-    }
-    const clash = await GuideBooking.findOne({
-        _id: exceptBookingId ? { ne: String(exceptBookingId) } : undefined,
-        guideId: guide._id,
-        status: 'confirmed',
-        preferredDate: date
-    });
-    if (clash) {
-        return {
-            free: false,
-            reason: `${guide.fullName} already has a tour that day (${clash.reference}). A guide takes one tour a day.`
-        };
-    }
-    return { free: true };
-}
-
-/**
- * The confirmed tours still to come that a guide's record, changed to `next`,
- * could no longer take: not available, the weekday dropped, the destination
- * taken away, or the group now too large. Used by the guide's own availability
- * and by the office's edits alike, so neither leaves a visitor with a guide
- * who cannot come. The office reassigns those tours first.
- */
-async function toursLeftBehind(guideId, next) {
-    const now = today();
-    const upcoming = (await GuideBooking.find({ guideId, status: 'confirmed' }))
-        .filter(b => String(b.preferredDate).slice(0, 10) >= now);
-    const spots = (next.assignedSpots || []).map(id => String(id._id || id));
-    return upcoming
-        .filter(b => next.status !== 'available'
-            || !(next.availableDays || WEEKDAYS).includes(weekdayOf(String(b.preferredDate).slice(0, 10)))
-            || !spots.includes(String(b.spotId))
-            || b.visitors > next.maxGroupSize)
-        .sort((x, y) => String(x.preferredDate).localeCompare(String(y.preferredDate)));
-}
-
-// The 409 for toursLeftBehind, naming up to five bookings.
-function leftBehindReply(res, leftBehind, whoMustAct) {
-    const list = leftBehind.slice(0, 5).map(b => `${b.reference} on ${String(b.preferredDate).slice(0, 10)}`).join(', ');
-    const n = leftBehind.length;
-    return res.status(409).json({
-        success: false,
-        message: `${whoMustAct.subject} still ${n === 1 ? 'a confirmed tour' : `${n} confirmed tours`} then: ${list}${n > 5 ? ', …' : ''}. ${whoMustAct.action(n === 1 ? 'it' : 'them')}`,
-        bookings: leftBehind.map(b => ({ reference: b.reference, date: String(b.preferredDate).slice(0, 10) }))
-    });
-}
-
-/* What a guide sees of their own record in the portal. Never the hash. */
-function guideProfile(guide, spotSummaries, languages) {
-    return {
-        _id: guide._id,
-        fullName: guide.fullName,
-        photoUrl: guide.photoUrl || '',
-        contactNumber: guide.contactNumber || '',
-        location: guide.location || '',
-        bio: guide.bio || '',
-        guideFee: guide.guideFee,
-        maxGroupSize: guide.maxGroupSize,
-        status: guide.status,
-        languages: languages || [],
-        availableDays: guide.availableDays || WEEKDAYS.slice(),
-        email: guide.email || '',
-        assignedSpots: spotSummaries || [],
-        createdAt: guide.createdAt
-    };
-}
-
-/* ---- The guide's own portal ------------------------------------------------
-   Every route here is scoped to req.auth.sub — the guide id never comes from
-   the request — and registered before the office's /api/guides/:id routes so
-   'me' is never read as an id. The record is re-read on each request, so a
-   sign-in withdrawn or a guide made inactive stops working at once rather
-   than when the two-hour token runs out. */
-
-async function loadSignedInGuide(req, res, options) {
-    const guide = await TouristGuide.findById(req.auth.sub, options);
-    if (!guide || !guide.email) {
-        res.status(401).json({ success: false, message: 'This guide sign-in is no longer active.' });
-        return null;
-    }
-    if (guide.status === 'inactive') {
-        res.status(403).json({ success: false, message: 'Your guide record is marked inactive by the Municipal Tourism Office.' });
-        return null;
-    }
-    return guide;
-}
-
-async function spotSummariesFor(guide) {
-    const ids = (guide.assignedSpots || []).map(String);
-    if (!ids.length) return [];
-    const list = await Spot.find({ _id: { in: ids } });
-    const byId = new Map(list.map(spot => [String(spot._id), spot]));
-    return ids.filter(id => byId.has(id)).map(id => {
-        const spot = byId.get(id);
-        return { _id: spot._id, title: spot.title, location: spot.location, barangay: spot.barangay || '' };
-    });
-}
-
-async function fullGuideProfile(guide) {
-    const [spotSummaries, languages] = await Promise.all([
-        spotSummariesFor(guide),
-        languagesOf(guide._id)
-    ]);
-    return guideProfile(guide, spotSummaries, languages);
-}
-
-app.get('/api/guides/me', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-        return res.status(200).json({ success: true, guide: await fullGuideProfile(guide), barangays: BARANGAYS });
-    } catch (error) {
-        console.error('❌ Guide profile read failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-});
-
-/**
- * PATCH: the guide's own availability — whether they are taking work, and which
- * weekdays. Only available and unavailable: 'inactive' is the office's call, and
- * a guide it has set inactive cannot reach this route at all. Availability is a
- * proposal: it limits what the office may assign, it never assigns anything.
- */
-app.patch('/api/guides/me/availability', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        if (req.body.status !== undefined && !['available', 'unavailable'].includes(req.body.status)) {
-            return res.status(400).json({ success: false, message: 'Choose available or unavailable.' });
-        }
-        const nextStatus = req.body.status !== undefined ? req.body.status : guide.status;
-        const nextDays = req.body.availableDays !== undefined ? cleanAvailableDays(req.body.availableDays) : guide.availableDays;
-
-        // The guide proposes, the office disposes: a guide cannot step away from
-        // confirmed tours still to come. The office reassigns them first.
-        const leftBehind = await toursLeftBehind(guide._id, { ...guide, status: nextStatus, availableDays: nextDays });
-        if (leftBehind.length) {
-            return leftBehindReply(res, leftBehind, { subject: 'You have', action: it => `Ask the Tourism Office to reassign ${it} first.` });
-        }
-        guide.status = nextStatus;
-        guide.availableDays = nextDays;
-
-        await TouristGuide.save(guide);
-        console.log(`🗓️ Guide ${guide.email} updated their availability (${guide.status})`);
-        return res.status(200).json({ success: true, message: 'Your availability has been saved.', guide: await fullGuideProfile(guide) });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide availability failure:');
-    }
-});
-
-app.put('/api/guides/me/languages', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        await setGuideLanguages(guide._id, cleanLanguages(req.body.languages));
-        return res.status(200).json({ success: true, message: 'Your languages have been saved.', guide: await fullGuideProfile(guide) });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide languages failure:');
-    }
-});
-
-/**
- * PATCH: the guide's own contact number and "about you", saved straight away.
- * Only these two: name, fee, group size, destinations and photo stay the
- * office's, because they decide what the guide may be assigned. Anything else in
- * the body is ignored.
- */
-app.patch('/api/guides/me/details', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        if (typeof req.body.contactNumber === 'string') {
-            const contactNumber = req.body.contactNumber.trim();
-            if (contactNumber.length > 40) return res.status(400).json({ success: false, message: 'That contact number is too long.' });
-            guide.contactNumber = contactNumber;
-        }
-        if (typeof req.body.bio === 'string') {
-            const bio = req.body.bio.trim();
-            if (bio.length > 2000) return res.status(400).json({ success: false, message: 'Keep "About you" under 2000 characters.' });
-            guide.bio = bio;
-        }
-
-        await TouristGuide.save(guide);
-        console.log(`✏️ Guide ${guide.email} updated their contact details`);
-        return res.status(200).json({ success: true, message: 'Your details have been saved.', guide: await fullGuideProfile(guide) });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide details failure:');
-    }
-});
-
-app.post('/api/guides/me/password', requireGuide, ownPasswordRateLimit, changeOwnPassword);
-
-// "YYYY-MM" for this month and the five before it, oldest first.
-function lastSixMonths() {
-    const now = today();
-    const year = Number(now.slice(0, 4));
-    const month = Number(now.slice(5, 7)) - 1;
-    const months = [];
-    for (let i = 5; i >= 0; i--) months.push(new Date(Date.UTC(year, month - i, 1)).toISOString().slice(0, 7));
-    return months;
-}
-
-function tally(list, keyOf, weightOf) {
-    const counts = new Map();
-    for (const item of list) {
-        const key = keyOf(item);
-        if (key) counts.set(key, (counts.get(key) || 0) + (weightOf ? weightOf(item) : 1));
-    }
-    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
-}
-
-/**
- * GET: the guide's schedule and dashboard.
- *
- *   bookings   the bookings assigned to THIS guide, with who they are for —
- *              what a guide needs to meet their visitors. Never the email,
- *              nothing about money.
- *   mine       reports on those bookings
- *   area       the guided tours at the destinations this guide serves,
- *              whoever guides them. Counts only: whose booking it is stays
- *              with the guide it was assigned to.
- */
-app.get('/api/guides/me/bookings', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        const [bookings, inArea] = await Promise.all([
-            GuideBooking.listForGuide(guide._id),
-            GuideBooking.listAtSpots((guide.assignedSpots || []).map(String))
-        ]);
-
-        const now = today();
-        const thisMonth = now.slice(0, 7);
-        const months = lastSixMonths();
-        const count = (list, status) => list.filter(b => b.status === status).length;
-        const visitors = list => list.reduce((sum, b) => sum + (b.visitors || 0), 0);
-        const upcoming = list => list.filter(b => b.preferredDate >= now && ['pending_payment', 'confirmed'].includes(b.status));
-        const completed = bookings.filter(b => b.status === 'completed');
-        const areaCompleted = inArea.filter(b => b.status === 'completed');
-
-        return res.status(200).json({
-            success: true,
-            bookings,
-            mine: {
-                upcoming: upcoming(bookings).length,
-                confirmed: count(bookings, 'confirmed'),
-                awaitingPayment: count(bookings, 'pending_payment'),
-                completed: completed.length,
-                cancelled: count(bookings, 'cancelled'),
-                noShow: count(bookings, 'no_show'),
-                visitorsGuided: visitors(completed),
-                toursThisMonth: completed.filter(b => String(b.preferredDate).startsWith(thisMonth)).length,
-                byMonth: months.map(month => {
-                    const inMonth = completed.filter(b => String(b.preferredDate).startsWith(month));
-                    return { month, tours: inMonth.length, visitors: visitors(inMonth) };
-                }),
-                byNationality: tally(completed, b => b.nationality)
-            },
-            area: {
-                upcoming: upcoming(inArea).length,
-                unassignedUpcoming: upcoming(inArea).filter(b => !b.guideId).length,
-                completed: areaCompleted.length,
-                visitors: visitors(areaCompleted),
-                byMonth: months.map(month => {
-                    const inMonth = areaCompleted.filter(b => String(b.preferredDate).startsWith(month));
-                    return { month, tours: inMonth.length, visitors: visitors(inMonth) };
-                }),
-                byDestination: tally(areaCompleted, b => b.spot && b.spot.title, b => b.visitors || 0)
-            }
-        });
-    } catch (error) {
-        console.error('❌ Guide bookings read failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-});
-
-/* ---- Reports a guide files to the office ---------------------------------- */
-
-app.get('/api/guides/me/reports', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-        const list = await GuideReport.listForOffice({ guideId: guide._id });
-        return res.status(200).json({ success: true, reports: list.slice(0, 100) });
-    } catch (error) {
-        console.error('❌ Guide reports read failure:', error);
-        return res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-});
-
-/**
- * POST: file a report. Where it happened (`barangay`) is the booking's
- * destination's barangay; a report about no one booking may name a barangay
- * from the list, or none.
- * Filing never changes a booking; marking a tour completed stays the office's.
- */
-app.post('/api/guides/me/reports', requireGuide, async (req, res) => {
-    try {
-        const guide = await loadSignedInGuide(req, res);
-        if (!guide) return;
-
-        const reportType = String(req.body.reportType || '').trim();
-        if (!GUIDE_REPORT_TYPES.includes(reportType)) {
-            return res.status(400).json({ success: false, message: 'Choose what you are reporting.' });
-        }
-        const details = String(req.body.details || '').trim();
-        if (details.length > 2000) return res.status(400).json({ success: false, message: 'Keep the details under 2000 characters.' });
-
-        let booking = null;
-        let barangay = '';
-        if (req.body.bookingId) {
-            booking = await GuideBooking.findById(req.body.bookingId);
-            // Only a booking assigned to this guide; any other is "not found".
-            if (!booking || String(booking.guideId) !== String(guide._id)) {
-                return res.status(404).json({ success: false, message: 'That booking is not one assigned to you.' });
-            }
-            const spot = await Spot.findById(booking.spotId);
-            barangay = (spot && officialBarangay(spot.barangay)) || (spot && spot.barangay) || barangay;
-        } else if (req.body.barangay) {
-            barangay = officialBarangay(req.body.barangay);
-            if (!barangay) return res.status(400).json({ success: false, message: 'Choose the barangay from the list.' });
-        }
-
-        if (reportType === 'tour_completed' && !booking) {
-            return res.status(400).json({ success: false, message: 'Choose the booking whose tour was completed.' });
-        }
-        let headcount = null;
-        if (req.body.headcount !== undefined && req.body.headcount !== null && req.body.headcount !== '') {
-            headcount = Number(req.body.headcount);
-            if (!Number.isInteger(headcount) || headcount < 0) {
-                return res.status(400).json({ success: false, message: 'The headcount must be a whole number.' });
-            }
-        }
-        if (['tour_completed', 'headcount'].includes(reportType) && headcount === null) {
-            return res.status(400).json({ success: false, message: 'Give the number of visitors.' });
-        }
-        if (['incident', 'tourist_feedback'].includes(reportType) && !details) {
-            return res.status(400).json({ success: false, message: reportType === 'incident' ? 'Describe what happened.' : 'Write down what the tourist said.' });
-        }
-
-        const reportDate = String(req.body.reportDate || (booking && booking.preferredDate) || today()).trim();
-        if (!isCalendarDate(reportDate)) return res.status(400).json({ success: false, message: 'Choose the date it happened.' });
-        if (reportDate > today()) return res.status(400).json({ success: false, message: 'A report is about something that has happened — that date is still to come.' });
-
-        const report = await GuideReport.create({
-            guideId: guide._id,
-            bookingId: booking ? booking._id : null,
-            reportType, reportDate, headcount, barangay, details
-        });
-        console.log(`📝 ${guide.fullName} filed a ${reportType} report${barangay ? ` (${barangay})` : ''}`);
-        return res.status(201).json({ success: true, message: `${REPORT_TYPE_NAMES[reportType]} report sent to the Municipal Tourism Office.`, report });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide report failure:');
-    }
-});
-
-/* ---- The office's side ----------------------------------------------------
-   The fixed paths (search, reports) come before /:id. */
-
-app.get('/api/guides', requireAdmin, async (req, res) => {
-    try {
-        const guides = await TouristGuide.listWithSpots();
-        return res.status(200).json(guides);
-    } catch (error) {
-        console.error('❌ Guide list failure:', error);
-        return res.status(500).json([]);
-    }
-});
-
-/**
- * GET: "who speaks Korean and is free on Saturday the 12th?" Every guide who
- * speaks the language (every guide, when no language is given), each marked
- * free or not on the date with the reason — decided by isGuideFreeOn, the same
- * rule assignment enforces. Optionally only guides who serve one destination.
- */
-app.get('/api/guides/search', requireAdmin, async (req, res) => {
-    try {
-        const language = String(req.query.language || '').trim();
-        const date = String(req.query.date || '').trim();
-        const time = String(req.query.time || '').trim();
-        if (date && !isCalendarDate(date)) return res.status(400).json({ success: false, message: 'That date is not valid.' });
-        if (time && !/^\d{2}:\d{2}$/.test(time)) return res.status(400).json({ success: false, message: 'That time is not valid.' });
-
-        let guides = language ? await findGuidesSpeaking(language) : await TouristGuide.listWithSpots();
-        if (db.isId(req.query.spotId)) guides = guides.filter(g => (g.assignedSpots || []).map(s => String(s._id || s)).includes(String(req.query.spotId)));
-
-        const results = [];
-        for (const guide of guides) {
-            const verdict = date ? await isGuideFreeOn(guide, date, { time: time || undefined }) : { free: guide.status === 'available' };
-            results.push({
-                _id: guide._id,
-                fullName: guide.fullName,
-                contactNumber: guide.contactNumber,
-                status: guide.status,
-                languages: guide.languages,
-                availableDays: guide.availableDays,
-                guideFee: guide.guideFee,
-                maxGroupSize: guide.maxGroupSize,
-                free: verdict.free,
-                reason: verdict.reason || ''
-            });
-        }
-        results.sort((a, b) => Number(b.free) - Number(a.free) || a.fullName.localeCompare(b.fullName));
-        return res.status(200).json({ success: true, language, date, results });
-    } catch (error) {
-        console.error('❌ Guide search failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not search the guides just now.' });
-    }
-});
-
-/**
- * GET: every report guides have filed, and the per-barangay rollup — which
- * barangays are actually getting visitors, as the guides on the ground report
- * it. Filter by ?barangay= (use "none" for reports tied to no barangay),
- * ?type=, ?status=.
- */
-app.get('/api/guides/reports', requireAdmin, async (req, res) => {
-    try {
-        const filters = {};
-        if (req.query.barangay === 'none') filters.barangay = '';
-        else if (req.query.barangay) filters.barangay = officialBarangay(req.query.barangay) || String(req.query.barangay);
-        if (GUIDE_REPORT_TYPES.includes(req.query.type)) filters.reportType = req.query.type;
-        if (['new', 'reviewed'].includes(req.query.status)) filters.status = req.query.status;
-
-        const [list, all] = await Promise.all([
-            GuideReport.listForOffice(filters),
-            Object.keys(filters).length ? GuideReport.listForOffice({}) : null
-        ]);
-        const everything = all || list;
-
-        // One row per barangay, every barangay listed even at zero — a barangay
-        // no guide has reported from is itself worth seeing.
-        const byBarangay = BARANGAYS.concat('').map(name => {
-            const here = everything.filter(r => barangayKey(r.barangay) === barangayKey(name));
-            const counted = here.filter(r => ['tour_completed', 'headcount'].includes(r.reportType));
-            return {
-                barangay: name,
-                reports: here.length,
-                toursCompleted: here.filter(r => r.reportType === 'tour_completed').length,
-                visitorsCounted: counted.reduce((sum, r) => sum + (r.headcount || 0), 0),
-                incidents: here.filter(r => r.reportType === 'incident').length,
-                feedback: here.filter(r => r.reportType === 'tourist_feedback').length,
-                unreviewed: here.filter(r => r.status === 'new').length
-            };
-        });
-
-        return res.status(200).json({ success: true, reports: list, byBarangay, barangays: BARANGAYS });
-    } catch (error) {
-        console.error('❌ Guide report list failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not read the guide reports.' });
-    }
-});
-
-app.patch('/api/guides/reports/:id', requireAdmin, async (req, res) => {
-    try {
-        const report = await GuideReport.findById(req.params.id);
-        if (!report) return res.status(404).json({ success: false, message: 'That report no longer exists.' });
-        if (!['new', 'reviewed'].includes(req.body.status)) {
-            return res.status(400).json({ success: false, message: 'Mark it new or reviewed.' });
-        }
-        const officer = await TourismOfficer.findById(req.auth.sub);
-        report.status = req.body.status;
-        report.reviewedByEmail = req.body.status === 'reviewed' && officer ? officer.email : '';
-        report.reviewedAt = req.body.status === 'reviewed' ? new Date() : null;
-        await GuideReport.save(report);
-        return res.status(200).json({ success: true, message: req.body.status === 'reviewed' ? 'Marked reviewed.' : 'Marked new.', report });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide report review failure:');
-    }
-});
-
-/* Languages are set by the office as a list on create and edit, written to
-   the join table after the record itself. */
-async function saveOfficeLanguages(guide, body) {
-    if (body.languages === undefined) return;
-    guide.languages = await setGuideLanguages(guide._id, cleanLanguages(body.languages));
-}
-
-app.post('/api/guides', requireAdmin, async (req, res) => {
-    try {
-        const draft = applyGuideDetails({}, req.body);
-        const languages = req.body.languages === undefined ? undefined : cleanLanguages(req.body.languages);
-        const guide = await TouristGuide.create(draft);
-        await saveOfficeLanguages(guide, { languages });
-        console.log(`🧭 Officer added guide ${guide.fullName}`);
-        return res.status(201).json({ success: true, message: `${guide.fullName} added.`, guide });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide create failure:');
-    }
-});
-
-app.put('/api/guides/:id', requireAdmin, async (req, res) => {
-    try {
-        const guide = await TouristGuide.findById(req.params.id);
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-
-        applyGuideDetails(guide, req.body);
-        const leftBehind = await toursLeftBehind(guide._id, guide);
-        if (leftBehind.length) {
-            return leftBehindReply(res, leftBehind, { subject: `${guide.fullName} has`, action: it => `Give ${it} another guide on Guide Bookings first.` });
-        }
-        const languages = req.body.languages === undefined ? undefined : cleanLanguages(req.body.languages);
-        await TouristGuide.save(guide);
-        await saveOfficeLanguages(guide, { languages });
-        return res.status(200).json({ success: true, message: `${guide.fullName} updated.`, guide });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide update failure:');
-    }
-});
-
-/**
- * Status on its own, so marking a guide unavailable for a fortnight does not mean
- * resubmitting their whole record.
- */
-app.patch('/api/guides/:id/status', requireAdmin, async (req, res) => {
-    try {
-        if (!GUIDE_STATUSES.includes(req.body.status)) {
-            return res.status(400).json({ success: false, message: 'Choose available, unavailable, or inactive.' });
-        }
-        const guide = await TouristGuide.findById(req.params.id);
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-
-        const leftBehind = await toursLeftBehind(guide._id, { ...guide, status: req.body.status });
-        if (leftBehind.length) {
-            return leftBehindReply(res, leftBehind, { subject: `${guide.fullName} has`, action: it => `Give ${it} another guide on Guide Bookings first.` });
-        }
-        guide.status = req.body.status;
-        await TouristGuide.save(guide);
-        return res.status(200).json({ success: true, message: `${guide.fullName} is now ${guide.status}.`, guide });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide status failure:');
-    }
-});
-
-/**
- * POST: the officer issues a guide a sign-in for the guide portal, or changes
- * its email, or issues a new password for a guide who is locked out — the same
- * route for all three, since each is "this is how they sign in now".
- *
- * A password is generated when none is given and returned once so the officer
- * can pass it on; only its hash is stored. Changing only the email keeps the
- * existing password.
- */
-app.post('/api/guides/:id/account', requireAdmin, requirePasswordConfirmation, async (req, res) => {
-    try {
-        const guide = await TouristGuide.findById(req.params.id, { secrets: true });
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-
-        const email = String(req.body.email || guide.email || '').trim().toLowerCase();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ success: false, message: 'Give the email the guide will sign in with.' });
-        }
-        const takenBy = await emailTakenBy(email, { guideId: guide._id });
-        if (takenBy) {
-            return res.status(409).json({ success: false, message: `That email already signs in as ${takenBy}.` });
-        }
-
-        const typed = String(req.body.newPassword || '').trim();
-        // A new sign-in always needs a password; an existing one gets a new
-        // password only when one is typed or asked for.
-        const issuePassword = !guide.password || typed || req.body.resetPassword === true;
-        const newPassword = issuePassword ? (typed || generatePassword()) : null;
-        const weak = newPassword && passwordProblem(newPassword, { email });
-        if (weak) return res.status(400).json({ success: false, message: weak });
-
-        const firstIssue = !guide.password;
-        guide.email = email;
-        await TouristGuide.save(guide);
-        if (newPassword) {
-            await storePassword('tourist_guide', guide._id, newPassword, { issued: true });
-            if (!firstIssue) {
-                await alertAccountOwner(email, 'A new password was issued for your account',
-                    'The Municipal Tourism Office issued a new password for your ZTIMS account. You will be asked to choose your own when you sign in.');
-            }
-        }
-
-        console.log(`🔑 Officer ${firstIssue ? 'issued' : 'updated'} the guide sign-in for ${guide.fullName} (${email})`);
-        return res.status(200).json({
-            success: true,
-            message: newPassword
-                ? `${guide.fullName} can now sign in as ${email}. Pass the password on — it cannot be read again.`
-                : `${guide.fullName} now signs in as ${email}. Their password is unchanged.`,
-            email,
-            newPassword
-        });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide sign-in issue failure:');
-    }
-});
-
-/**
- * DELETE: withdraw a guide's sign-in. The guide record, its bookings, reports
- * and history all stay; only the way into the portal goes.
- */
-app.delete('/api/guides/:id/account', requireAdmin, async (req, res) => {
-    try {
-        const guide = await TouristGuide.findById(req.params.id, { secrets: true });
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-
-        guide.email = null;
-        guide.password = null;
-        guide.resetTokenHash = null;
-        guide.resetTokenExpires = null;
-        await TouristGuide.save(guide);
-        // Without a password there is no sign-in; one still open ends now too.
-        await endSessions('tourist_guide', guide._id);
-
-        console.log(`🔒 Officer withdrew the guide sign-in for ${guide.fullName}`);
-        return res.status(200).json({ success: true, message: `${guide.fullName} can no longer sign in. Their record is kept.` });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide sign-in withdraw failure:');
-    }
-});
-
-/**
- * PUBLIC: what a visitor needs to know before asking for a guide — the fee
- * range, the largest group and whether anyone is available. The guides
- * themselves are listed by /api/spots/:id/guides, below.
- */
-app.get('/api/spots/:id/guide-requirement', async (req, res) => {
-    try {
-        const spot = await Spot.findById(req.params.id);
-        if (!spot) return res.status(404).json({ success: false, message: 'Spot not found.' });
-
-        if (!spot.requiresGuide) {
-            return res.status(200).json({ success: true, requiresGuide: false });
-        }
-
-        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' });
-
-        const fees = guides.map(g => g.guideFee).sort((a, b) => a - b);
-        return res.status(200).json({
-            success: true,
-            requiresGuide: true,
-            guidesAvailable: guides.length,
-            // A range rather than one number, because two guides at one spot may
-            // legitimately charge differently and quoting one of them would be wrong.
-            feeFrom: fees.length ? fees[0] : null,
-            feeTo: fees.length ? fees[fees.length - 1] : null,
-            maxGroupSize: guides.length ? Math.max(...guides.map(g => g.maxGroupSize)) : null,
-            payment: paymentWays(),
-            payOnline: paymentsGatewayOnline(),
-            ...(await require('./attractions').visitCalendar(spot, 400))
-        });
-    } catch (error) {
-        console.error('❌ Guide requirement failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not read the guide requirement.' });
-    }
-});
-
-// A guide serves exactly the destinations the office gave them.
-function guideServesSpot(guide, spot) {
-    return (guide.assignedSpots || []).some(id => String(id._id || id) === String(spot._id));
-}
-
-const pesos = n => `₱${(Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-// Emails to visitors (notices.js): links in them point at the public site.
-const notices = require('./notices');
-const originOf = req => `${req.protocol}://${req.get('host')}`;
-
-/**
- * PUBLIC: the guides a visitor can ask for at this destination — photo, name,
- * languages, fee, bio, largest group — and, for a chosen
- * date (and time), whether each is free, by isGuideFreeOn, the rule the
- * office's assignment uses. Never a phone number or an email, and never which
- * booking makes a guide busy.
- */
-app.get('/api/spots/:id/guides', async (req, res) => {
-    try {
-        const spot = await Spot.findByIdWithManager(req.params.id);
-        if (!spot || !spot.requiresGuide || !isPubliclyVisible(spot)) {
-            return res.status(404).json({ success: false, message: 'No guides are listed for this destination.' });
-        }
-        const date = isCalendarDate(String(req.query.date || '')) ? String(req.query.date) : null;
-        const time = /^\d{2}:\d{2}$/.test(String(req.query.time || '')) ? String(req.query.time) : undefined;
-
-        const here = (await TouristGuide.listWithSpots())
-            .filter(g => g.status === 'available' && guideServesSpot(g, spot));
-        const guides = [];
-        for (const g of here) {
-            let free = null, note = '';
-            if (date) {
-                const verdict = await isGuideFreeOn(g, date, { time });
-                free = verdict.free;
-                if (!free) note = /does not work on/.test(verdict.reason || '')
-                    ? `Does not guide on ${WEEKDAY_NAMES[weekdayOf(date)]}s`
-                    : 'Not free that day';
-            }
-            guides.push({
-                _id: g._id, fullName: g.fullName, photoUrl: g.photoUrl || '', languages: g.languages || [],
-                guideFee: Number(g.guideFee) || 0, maxGroupSize: g.maxGroupSize, bio: g.bio || '',
-                free, note
-            });
-        }
-        guides.sort((a, b) => a.guideFee - b.guideFee || a.fullName.localeCompare(b.fullName));
-        return res.status(200).json({ success: true, date, guides });
-    } catch (error) {
-        console.error('❌ Public guide list failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not list the guides just now.' });
-    }
-});
-
-/* ==========================================
-   4c. GUIDE BOOKINGS AND ONSITE PAYMENT
-   ------------------------------------------
-   A visitor submits a request without any account, gets a reference, and pays
-   either at the Municipal Tourism Office, where the officer records it here, or
-   online through payments.js — a demonstration in the payment gateway's test
-   mode, which confirms the booking the same way. Then the office assigns a guide.
-
-   A counter payment is the record of cash that changed hands at a desk; an
-   online one carries the gateway's reference and is marked as test-mode demo.
-========================================== */
-
-// Public submission is the one write anyone on the internet can make, so it is
-// held tighter than the browsing routes.
-const bookingRateLimit = sharedRateLimit('booking', {
-    windowMs: 60 * 60 * 1000,
-    limit: 10,
-    message: { success: false, message: 'Too many booking requests from this connection. Please try again later, or call the Municipal Tourism Office.' }
-});
-
-/**
- * Builds the next reference for this year: TG-2026-00001, TG-2026-00002, …
- *
- * Reads the highest existing one rather than counting rows, so a cancelled or
- * deleted booking cannot cause a number to be handed out twice. The unique index
- * on the field is the real guarantee; the caller retries if two submissions race.
- */
-async function nextBookingReference() {
-    const prefix = `TG-${new Date().getFullYear()}-`;
-    const latest = await GuideBooking.latestReference(prefix);
-
-    const previous = latest ? Number(String(latest).slice(prefix.length)) : 0;
-    return prefix + String((Number.isFinite(previous) ? previous : 0) + 1).padStart(5, '0');
-}
-
-// How a visitor may pay, as the pages say it. Online only while the gateway is
-// configured with a test key (see payments.js).
-function paymentsGatewayOnline() {
-    return require('./payments').gatewayState().online;
-}
-function paymentWays() {
-    return paymentsGatewayOnline()
-        ? 'Online, or onsite at the Municipal Tourism Office'
-        : 'Onsite at the Municipal Tourism Office';
-}
-
-// What a visitor may see by quoting a reference. Deliberately no name, phone or
-// email: references run in sequence, so anyone could try the next one along.
-// Enough to confirm the booking is real and know what to do next, nothing more.
-function publicBookingView(booking, spotTitle) {
-    return {
-        reference: booking.reference,
-        spot: spotTitle || '',
-        preferredDate: booking.preferredDate,
-        preferredTime: booking.preferredTime,
-        visitors: booking.visitors,
-        status: booking.status,
-        payment: paymentWays()
-    };
-}
-
-/**
- * POST: a visitor asks for a guide. No account, no login, no payment.
- */
-app.post('/api/guide-bookings', bookingRateLimit, async (req, res) => {
-    try {
-        const body = req.body || {};
-        const fullName = String(body.fullName || '').trim();
-        const contactNumber = String(body.contactNumber || '').trim();
-        const email = String(body.email || '').trim().toLowerCase();
-        const nationality = String(body.nationality || '').trim().toUpperCase();
-        const preferredDate = String(body.preferredDate || '').trim();
-        const preferredTime = String(body.preferredTime || '').trim();
-        const visitors = Math.floor(Number(body.visitors));
-
-        if (!fullName) return res.status(400).json({ success: false, message: 'Please give the name the booking is under.' });
-        if (!contactNumber) {
-            return res.status(400).json({ success: false, message: 'A contact number is required so the office can reach you.' });
-        }
-        // The form sends the country code with the number. Checked here as well,
-        // because a form is a convenience and this route is open to anyone.
-        if (!/^\+\d{1,4}[\s-]?\d[\d\s-]{5,}$/.test(contactNumber)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Give the contact number with its country code, for example +63 917 123 4567.'
-            });
-        }
-        if (!email) {
-            return res.status(400).json({ success: false, message: 'An email address is required so the office can confirm your booking.' });
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ success: false, message: 'That email address does not look right.' });
-        }
-        // Required here rather than on the schema — see the field's own note.
-        if (!nationality) {
-            return res.status(400).json({ success: false, message: 'Please choose the visitor\'s nationality.' });
-        }
-        // The form offers a fixed list, but this route is open to anyone, so the
-        // list is the authority rather than the dropdown.
-        if (!COUNTRY_CODES.has(nationality)) {
-            return res.status(400).json({ success: false, message: 'That is not a country ZTIMS recognises.' });
-        }
-        if (!Number.isFinite(visitors) || visitors < 1) {
-            return res.status(400).json({ success: false, message: 'How many visitors are coming?' });
-        }
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) {
-            return res.status(400).json({ success: false, message: 'Please choose a date.' });
-        }
-        if (!/^\d{2}:\d{2}$/.test(preferredTime)) {
-            return res.status(400).json({ success: false, message: 'Please choose a time.' });
-        }
-        // Compared as text against today in the same format, which avoids a
-        // timezone turning "today" into yesterday for a visitor booking from abroad.
-        if (preferredDate < today()) {
-            return res.status(400).json({ success: false, message: 'That date has already passed.' });
-        }
-
-        const spot = await Spot.findByIdWithManager(body.spotId);
-        if (!spot) return res.status(404).json({ success: false, message: 'That destination could not be found.' });
-        const day = await require('./attractions').dayVerdict(spot, preferredDate);
-        if (!day.open) return res.status(409).json({ success: false, message: day.reason });
-        if (!spot.requiresGuide) {
-            return res.status(400).json({ success: false, message: 'This destination does not require a tourist guide, so there is nothing to book.' });
-        }
-        if (!isPubliclyVisible(spot)) {
-            return res.status(404).json({ success: false, message: 'This destination is not open for visits right now.' });
-        }
-
-        // A group larger than any available guide can take would be accepted and
-        // then refused at the counter, so it is refused here instead.
-        const guides = await TouristGuide.find({ assignedSpots: spot._id, status: 'available' });
-        if (guides.length === 0) {
-            return res.status(409).json({
-                success: false,
-                message: 'No guide is available for this destination at the moment. Please contact the Municipal Tourism Office.'
-            });
-        }
-        const largestGroup = Math.max(...guides.map(g => g.maxGroupSize || 1));
-        if (visitors > largestGroup) {
-            return res.status(400).json({
-                success: false,
-                message: `The largest group a guide here can take is ${largestGroup}. Please contact the Municipal Tourism Office to arrange a bigger party.`
-            });
-        }
-
-        // The guide the visitor asked for, if any: one who guides here, takes a
-        // group this size, and is free then. Still only a request — the office
-        // confirms the guide.
-        let requested = null;
-        const wantedGuide = String(body.requestedGuideId || '').trim();
-        if (wantedGuide) {
-            requested = guides.find(g => String(g._id) === wantedGuide && guideServesSpot(g, spot)) || null;
-            if (!requested) {
-                return res.status(409).json({ success: false, message: 'That guide is not available for this destination. Choose another guide, or "Any guide".' });
-            }
-            if (visitors > requested.maxGroupSize) {
-                return res.status(400).json({ success: false, message: `${requested.fullName} takes groups of up to ${requested.maxGroupSize}. Choose another guide, or "Any guide".` });
-            }
-            const verdict = await isGuideFreeOn(requested, preferredDate, { time: preferredTime });
-            if (!verdict.free) {
-                return res.status(409).json({ success: false, message: `${requested.fullName} is not free then. Choose another date or guide, or "Any guide".` });
-            }
-        }
-
-        // Two submissions can land on the same number; the unique index catches it
-        // and the next attempt reads a higher one.
-        let booking = null;
-        for (let attempt = 0; attempt < 5 && !booking; attempt++) {
-            try {
-                booking = await GuideBooking.create({
-                    reference: await nextBookingReference(),
-                    spotId: spot._id,
-                    fullName, contactNumber, email, nationality, visitors, preferredDate, preferredTime,
-                    notes: String(body.notes || '').trim().slice(0, 1000),
-                    requestedGuideId: requested ? requested._id : null
-                });
-            } catch (error) {
-                if (error && error.code === 11000) continue;
-                throw error;
-            }
-        }
-        if (!booking) {
-            return res.status(503).json({ success: false, message: 'The system is busy. Please try again in a moment.' });
-        }
-
-        console.log(`🎟️ Guide booking ${booking.reference} for ${spot.title}`);
-        await notices.bookingReceived(booking._id, originOf(req), { payOnline: paymentsGatewayOnline() });
-        return res.status(201).json({
-            success: true,
-            message: 'Booking submitted.',
-            booking: publicBookingView(booking, spot.title),
-            requestedGuide: requested ? { fullName: requested.fullName, guideFee: Number(requested.guideFee) || 0 } : null,
-            instruction: paymentsGatewayOnline()
-                ? `The office confirms your guide within ${notices.REPLY_TIME} and emails you. Pay online now, or pay onsite on the day.`
-                : `The office confirms your guide within ${notices.REPLY_TIME} and emails you. Pay onsite on the day.`,
-            replyTime: notices.REPLY_TIME,
-            payOnline: paymentsGatewayOnline()
-        });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide booking failure:');
-    }
-});
-
-/**
- * PUBLIC: check a booking by its reference. Non-personal fields only — see
- * publicBookingView above for why.
- */
-app.get('/api/guide-bookings/reference/:reference', async (req, res) => {
-    try {
-        const reference = String(req.params.reference || '').trim().toUpperCase();
-        const booking = await GuideBooking.findByReferenceWithSpot(reference);
-        if (!booking) return res.status(404).json({ success: false, message: 'No booking found with that reference.' });
-
-        return res.status(200).json({
-            success: true,
-            booking: publicBookingView(booking, booking.spotId ? booking.spotId.title : '')
-        });
-    } catch (error) {
-        console.error('❌ Booking lookup failure:', error);
-        return res.status(500).json({ success: false, message: 'Could not look that up right now.' });
-    }
-});
-
-/* ---- everything below is the Tourism Office's ---------------------------- */
-
-/* Visitors' personal details are erased a year after the visit (privacy.js),
-   and tomorrow's confirmed tours are reminded (reminders.js).
+/* Visitors' personal details are erased a year after the visit (privacy.js).
    Vercel's cron calls this daily with CRON_SECRET; without it the route does
-   not exist. The officer opening Guide Bookings runs it too (below). */
+   not exist. */
 app.get('/api/maintenance/privacy', async (req, res) => {
     const secret = String(process.env.CRON_SECRET || '');
     const given = String(req.get('authorization') || '');
@@ -2940,236 +1810,10 @@ app.get('/api/maintenance/privacy', async (req, res) => {
     if (!matches) return res.status(404).end();
     try {
         const erased = await forgetOldVisitors();
-        // The same daily run reminds tomorrow's confirmed tours.
-        const reminders = await remindTomorrowsTours(originOf(req));
-        return res.json({ success: true, erased, reminders });
+        return res.json({ success: true, erased });
     } catch (error) {
         console.error('❌ Privacy clean-up failure:', error);
         return res.status(500).json({ success: false });
-    }
-});
-
-app.get('/api/guide-bookings', requireAdmin, async (req, res) => {
-    try {
-        // Old visitors' details go before the office reads the list.
-        await forgetOldVisitors().catch(error => console.error('❌ Privacy clean-up failure:', error));
-        await remindTomorrowsTours(originOf(req)).catch(error => console.error('❌ Tour reminder failure:', error));
-        const query = {};
-        if (BOOKING_STATUSES.includes(req.query.status)) query.status = req.query.status;
-
-        const bookings = await GuideBooking.listForOffice(query, { limit: 500 });
-
-        // The payment belongs to a separate record, so it is fetched alongside
-        // rather than duplicated onto the booking.
-        const payments = await Payment.find({ bookingId: { in: bookings.map(b => b._id) } });
-        const byBooking = new Map(payments.map(p => [String(p.bookingId), p]));
-
-        return res.status(200).json(bookings.map(booking => ({
-            ...booking,
-            payment: byBooking.get(String(booking._id)) || null
-        })));
-    } catch (error) {
-        console.error('❌ Booking list failure:', error);
-        return res.status(500).json([]);
-    }
-});
-
-/**
- * PATCH: assign or change the guide on a booking. Giving an unpaid booking its
- * guide confirms it; taking the guide off sends it back to To confirm. A guide
- * takes one tour a day (isGuideFreeOn).
- */
-app.patch('/api/guide-bookings/:id/assign', requireAdmin, async (req, res) => {
-    try {
-        const booking = await GuideBooking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
-
-        if (req.body.guideId === null || req.body.guideId === '') {
-            booking.guideId = null;
-            // Confirmed by its guide alone (nothing paid): back to the office.
-            if (booking.status === 'confirmed' && !(await Payment.findOne({ bookingId: booking._id }))) {
-                booking.status = 'pending_payment';
-                booking.statusUpdatedAt = new Date();
-            }
-            await GuideBooking.save(booking);
-            return res.status(200).json({ success: true, message: 'Guide unassigned.', booking });
-        }
-
-        const guide = await TouristGuide.findById(req.body.guideId);
-        if (!guide) return res.status(404).json({ success: false, message: 'That guide record no longer exists.' });
-        if (!guide.assignedSpots.some(id => String(id) === String(booking.spotId))) {
-            return res.status(409).json({ success: false, message: `${guide.fullName} is not assigned to this destination.` });
-        }
-        if (booking.visitors > guide.maxGroupSize) {
-            return res.status(409).json({
-                success: false,
-                message: `This booking is for ${booking.visitors} visitors and ${guide.fullName} takes at most ${guide.maxGroupSize}.`
-            });
-        }
-        // Status, working days and clashes: the same rule the office's
-        // guide search uses, so a guide it shows as free is one this accepts.
-        const verdict = await isGuideFreeOn(guide, booking.preferredDate, { time: booking.preferredTime, exceptBookingId: booking._id });
-        if (!verdict.free) return res.status(409).json({ success: false, message: verdict.reason });
-        // A paid booking keeps its price: only a guide at or below what was paid.
-        const paid = await Payment.findOne({ bookingId: booking._id });
-        if (paid && !paid.refundedAt && Number(guide.guideFee) > Number(paid.amount)) {
-            return res.status(409).json({
-                success: false,
-                message: `This booking was paid ${pesos(paid.amount)}, and ${guide.fullName} charges ${pesos(guide.guideFee)}. Choose a guide at or below what was paid.`
-            });
-        }
-
-        if (!['pending_payment', 'confirmed'].includes(booking.status)) {
-            return res.status(409).json({ success: false, message: `${booking.reference} is ${String(booking.status).replace('_', ' ')}, so it takes no guide.` });
-        }
-        booking.guideId = guide._id;
-        // Confirm first, pay later: giving a booking its guide confirms it. The
-        // visitor pays onsite on the day, or online before.
-        if (booking.status === 'pending_payment') {
-            booking.status = 'confirmed';
-            booking.statusUpdatedAt = new Date();
-        }
-        await GuideBooking.save(booking);
-
-        const sameDay = await GuideBooking.find({
-            _id: { ne: booking._id },
-            guideId: guide._id,
-            status: 'confirmed',
-            preferredDate: booking.preferredDate
-        });
-
-        console.log(`🧭 ${guide.fullName} assigned to ${booking.reference}`);
-        await notices.guideAssigned(booking._id, originOf(req));
-        return res.status(200).json({
-            success: true,
-            message: `${guide.fullName} assigned to ${booking.reference}.`,
-            booking,
-            alsoThatDay: sameDay.map(b => ({ reference: b.reference, time: b.preferredTime }))
-        });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Guide assignment failure:');
-    }
-});
-
-/**
- * POST: record money taken at the counter, which confirms the booking.
- *
- * Only the Tourism Office can do this. A visitor cannot mark their own booking
- * paid — that is the whole point of the reference and the counter.
- */
-app.post('/api/guide-bookings/:id/payment', requireAdmin, async (req, res) => {
-    try {
-        const booking = await GuideBooking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
-        // The reply names the assigned guide, as it always has.
-        if (booking.guideId) {
-            const assigned = await TouristGuide.findById(booking.guideId);
-            booking.guideId = assigned ? { _id: assigned._id, fullName: assigned.fullName } : booking.guideId;
-        }
-        if (booking.status === 'cancelled') {
-            return res.status(409).json({ success: false, message: 'That booking was cancelled. Reinstate it before recording payment.' });
-        }
-
-        const existing = await Payment.findOne({ bookingId: booking._id });
-        if (existing) {
-            return res.status(409).json({ success: false, message: `Payment for ${booking.reference} was already recorded.` });
-        }
-
-        const amount = Number(req.body.amount);
-        if (!Number.isFinite(amount) || amount < 0) {
-            return res.status(400).json({ success: false, message: 'Enter the amount collected.' });
-        }
-
-        // Read from the account rather than the token: sessions carry only an id
-        // and a role, and a receipt that cannot say who took the money is not a
-        // record of anything.
-        const officer = await TourismOfficer.findById(req.auth.sub);
-
-        // The payment and the confirmation it causes are one event: both are
-        // recorded, or neither is. MongoDB could leave a payment against an
-        // unconfirmed booking if the second write failed.
-        const payment = await db.transaction(async client => {
-            const recorded = await Payment.create({
-                bookingId: booking._id,
-                amount,
-                method: String(req.body.method || 'cash').trim() || 'cash',
-                receiptNumber: String(req.body.receiptNumber || '').trim(),
-                paidAt: req.body.paidAt ? new Date(req.body.paidAt) : new Date(),
-                recordedByEmail: officer ? officer.email : '',
-                remarks: String(req.body.remarks || '').trim().slice(0, 500)
-            }, { client });
-
-            booking.status = 'confirmed';
-            booking.statusUpdatedAt = new Date();
-            await GuideBooking.save(booking, { client });
-            return recorded;
-        });
-
-        console.log(`💵 Payment recorded for ${booking.reference} by ${payment.recordedByEmail || req.auth.sub}`);
-        await notices.bookingPaid(booking._id, originOf(req));
-        return res.status(201).json({
-            success: true,
-            message: `Payment recorded. ${booking.reference} is confirmed.`,
-            booking,
-            payment
-        });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Payment recording failure:');
-    }
-});
-
-/**
- * PATCH: move a booking through the rest of its life — cancelled, completed,
- * or no show. Nothing here deletes a booking.
- */
-app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
-    try {
-        const status = String(req.body.status || '').trim();
-        // 'closed' comes only from closing a date, which also tells the visitor.
-        if (!BOOKING_STATUSES.includes(status) || status === 'closed') {
-            return res.status(400).json({ success: false, message: 'That is not a booking status ZTIMS uses.' });
-        }
-
-        const booking = await GuideBooking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
-
-        // Money taken online goes back when the office cancels, through the
-        // refund route, which cancels the booking as it refunds. Cancelling here
-        // would keep the money and drop the booking.
-        if (status === 'cancelled') {
-            const paid = await Payment.findOne({ bookingId: booking._id });
-            if (paid && paid.channel === 'online' && !paid.refundedAt) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'This booking was paid online. Use "Cancel and refund" so the visitor gets the money back.',
-                    refundPaymentId: paid._id
-                });
-            }
-        }
-
-        // Confirmed means the office gave it a guide, or it is paid.
-        if (status === 'confirmed') {
-            const paid = await Payment.findOne({ bookingId: booking._id });
-            if (!paid && !booking.guideId) {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Assign a guide to confirm this booking.'
-                });
-            }
-        }
-        // A tour is completed once its fee is in.
-        if (status === 'completed' && !(await Payment.findOne({ bookingId: booking._id }))) {
-            return res.status(409).json({ success: false, message: 'Record the payment before marking the tour completed.' });
-        }
-
-        booking.status = status;
-        booking.statusNote = String(req.body.statusNote || '').trim().slice(0, 500);
-        booking.statusUpdatedAt = new Date();
-        await GuideBooking.save(booking);
-
-        return res.status(200).json({ success: true, message: `${booking.reference} is now ${status.replace('_', ' ')}.`, booking });
-    } catch (error) {
-        return reportWriteFailure(res, error, '❌ Booking status failure:');
     }
 });
 
@@ -3182,8 +1826,8 @@ app.patch('/api/guide-bookings/:id/status', requireAdmin, async (req, res) => {
    a message cannot go astray because a mailbox was full or a password expired.
 ========================================== */
 
-// The second write anyone on the internet can make (bookings are the first),
-// so it is held exactly as tightly: ten an hour is plenty for a person, and a
+// One of the writes anyone on the internet can make (buying tickets is the
+// other), so it is held tightly: ten an hour is plenty for a person, and a
 // resort or the office itself behind one shared connection, and nothing for a
 // script.
 const feedbackRateLimit = sharedRateLimit('feedback', {
@@ -3818,7 +2462,7 @@ app.use('/api', attractions({ requireAdmin }));
 app.use('/api', require('./office')({ requireAdmin }));
 
 /* ==========================================
-   MANAGE MY TICKET / BOOKING — a visitor moves or cancels with the code and
+   MANAGE MY TICKET — a visitor moves or cancels with the code and
    the email it was bought with (manage.js)
 ========================================== */
 app.use('/api', require('./manage')({ sharedRateLimit, refund: paymentsModule.refund, siteOrigin: paymentsModule.siteOrigin }));

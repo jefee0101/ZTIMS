@@ -86,7 +86,7 @@ collides. The user's chat is in plain, simple language.
 **Wording on every page** (decided): professional and brief. No page intros
 or help lines under fields; keep only what appears at the moment of an action,
 a warning, an error, or a confirmation before something risky. The roles are
-Tourism Officer, Establishment Manager and Tourist Guide; visitors pay
+Tourism Officer and Establishment Manager; visitors pay
 **onsite** (never "at the gate"); statistics months are **Finalized** and
 **Reopened**; visitor pages and emails don't say "test mode".
 
@@ -101,7 +101,7 @@ npm run build    # vite build — every src/**/*.html page must be wired into
                   # from dist/ silently (see that file's own comment)
 npm run lint     # eslint . (flat config, src/*.jsx only — the standalone
                   # HTML pages' inline <script> blocks are NOT linted by this)
-npm run check    # check-undefined.cjs && check-countries.cjs && check-open-days.cjs
+npm run check    # check-undefined.cjs && check-open-days.cjs
 ```
 `npm run check` is the safety net for the two failure modes ESLint can't see
 because these pages carry inline `<script>`, not modules:
@@ -109,17 +109,13 @@ because these pages carry inline `<script>`, not modules:
   shared scope and flags identifiers that are read/called but never defined
   anywhere on the page. Catches a helper deleted alongside dead code while a
   caller was left behind.
-- `check-countries.cjs` — diffs the country list `src/shared/countries.js`
-  ships to the booking form against `COUNTRY_CODES` in
-  `zamboanguita-backend/server.js`, which validates it. Needs a sibling
-  backend checkout to run; skips (exit 0) if `../zamboanguita-backend` isn't
-  present.
 - `check-open-days.cjs` — runs the page's and the server's opening-days reader
   (`open-days.js`, one on each side) on the same texts and every combination of
-  ticked days, and fails if they disagree. Also skips without the backend.
+  ticked days, and fails if they disagree. Needs a sibling backend checkout;
+  skips (exit 0) if `../zamboanguita-backend` isn't present.
 
-Run both before committing changes to any `src/**/*.html` page or to the
-country lists.
+Run `npm run check` and `npm run build` before committing changes to any
+`src/**/*.html` page.
 
 Backend (`zamboanguita-backend/`):
 ```
@@ -128,8 +124,6 @@ npm start              # node server.js
 npm run migrate        # node migrate.js — applies db/schema.sql (idempotent)
                        # and the first-officer bootstrap (not run at startup)
 npm run create-admin   # node create-admin.js
-npm run copy-from-mongo -- --dry-run   # the one-time MongoDB → Postgres copy;
-                       # see scripts/copy-from-mongo.js before running it for real
 npm run import-form-a4 -- db/form-a4-2025.json --dry-run
                        # loads a paper Form A4 year as locked municipal totals;
                        # skips months already recorded (see the script's header)
@@ -150,7 +144,7 @@ server-independent HTML pages under `src/` (`index.html` at the root, plus
 `src/spot.html`, `src/history.html`, `src/staff_login.html`, the
 information pages `src/terms.html`, `src/privacy.html`, `src/faq.html`,
 `src/contact.html` (visitor feedback form → `POST /api/feedback`),
-`src/admin/*.html`, `src/resort/*.html`, `src/guide/*.html`, `src/user/*.html`), each loading
+`src/admin/*.html`, `src/resort/*.html`, `src/user/*.html`), each loading
 Tailwind from the CDN and its own inline `<script>` blocks. That CDN script only
 runs in development: `npm run build` compiles each page's CSS from its own
 `tailwind.config` (the `ztims-compile-tailwind` plugin in `vite.config.js`),
@@ -170,7 +164,7 @@ purpose — see the header comment in `spot-form.js`:
   Dashboard quick-add. Owns barangay list, validation, the location picker
   and its Zamboanguita bounding-box sanity check. Its look is the standard one wherever it
   opens: the four steps as round numbered buttons joined by a line
-  (`.sf-steps`, like the visitor's booking steps), sentence-case labels, pills
+  (`.sf-steps`, like the visitor's ticket steps), sentence-case labels, pills
   for the secondary controls (`.sf-chip`), open days as pills, yes/no settings
   as switches (`.sf-switch`), and a Cancel / Next / Save row that stays at the
   bottom of the window (`.sf-footer`). **Adding** walks Back / Next to Publish
@@ -209,30 +203,14 @@ purpose — see the header comment in `spot-form.js`:
   they load, the built-in address and hours show and nothing else. It also
   fills Contact Us's `[data-office-field]` spots and the destination pages'
   `[data-emergency]` box.
-- `guide-portal.js` + `guide-portal.css` — the Tourist Guide portal's frame
-  (sidebar, header, account menu, phone drawer) and helpers, shared by the four
-  `src/guide/*.html` pages (Dashboard, Schedule & Availability, Languages, My
-  Profile). Unlike the officer's and manager's pages, which each carry that
-  frame inline, the guide pages draw it from here. The guide pages get the
-  visitor pages' flat, standard look from `portal-flat.css` (below); language
-  chips are pills; the Dashboard's six-month chart
-  says one line when there is nothing to chart. Schedule & Availability's **My tours** is
-  built for a phone in the field: Upcoming / Past as a pill switch with counts
-  (upcoming = from today, awaiting payment or confirmed), the next tour first
-  and larger ("Next tour · Today"), each tour a card with the time large, the
-  place, visitors and name, the visitor's note highlighted, and Call (`tel:`),
-  Text (`sms:`) and Directions (the destination page's directions) on one row;
-  later tours grouped under Today / Tomorrow / the weekday (styles `.tour-*` in
-  `guide-portal.css`). Loaded as a module, so page
-  code calls `window.GuidePortal` only inside `DOMContentLoaded`.
-- **The staff portals' header** (officer, manager and guide — the fixed
+- **The staff portals' header** (officer and manager — the fixed
   `header.glass-nav` beside the sidebar) wears the footer's tile strip, one
   tile high, from `/tiles.svg` (one rule in `theme.css`; no colour, border or
   shadow behind the tiles, so browser zoom can never show a line under them);
   its buttons sit on
   solid grounds, on the right on every portal.
-- `portal-flat.css` — the flat, standard look for all three staff portals
-  (every `src/admin/*.html`, `src/guide/*.html` and `src/resort/*.html`,
+- `portal-flat.css` — the flat, standard look for both staff portals
+  (every `src/admin/*.html` and `src/resort/*.html`,
   after theme.css and motion.css): flat outlined panels
   and cards, sentence-case labels, pill buttons (no gradient) and status
   pills, the current page in the menu a solid burnt-orange pill with
@@ -311,7 +289,7 @@ purpose — see the header comment in `spot-form.js`:
 - `idle-signout.js` — signs an officer out after 30 minutes with no activity on
   any officer tab (loaded as a module on every `src/admin/*.html` page). See
   "Sign-in safety" below.
-- `photo-upload.js`, `countries.js`, `nav-active.js`, `ztims-dialog.js` —
+- `photo-upload.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
 ### Design system
@@ -370,7 +348,7 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
   one rule in `theme.css` (`#toastHost > *`) shapes them all — solid surface,
   hairline outline, the tone in the icon only.
   **Leaving and destroying are red** (the user's decision, every page, rules
-  at the end of `theme.css`): Delete / Remove / Cancel a booking and a
+  at the end of `theme.css`): Delete / Remove / Cancel a ticket and a
   dialog's destroying confirm (`.btn-danger`) are a solid red pill, the same
   deep red in both themes; a Cancel that only closes a form or dialog, Discard,
   and Sign out of all devices (`.btn-cancel`, `#signOutEverywhereBtn`) a red
@@ -396,14 +374,12 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 
 The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 (the file keeps its old name so sign-in and bookmarks still land on it). It holds
-no data of its own: it reads the officer's existing endpoints (guide bookings,
-spots, establishment managers, feedback, guide reports,
-`/api/statistics/tracker` and `/form-a4`) and shows what is waiting on each —
-every card links to the page where it is dealt with, opening Guide Bookings on
-the right tab through its `bookingsTab` session key and Statistics through the
-tab named in the link's address (`admin_statistics.html#tracker`) — plus
-today's tours, the month just ended's Form A4 reports, and Form A4 counts by
-month and by country. Counts only, like the statistics themselves. Its "Add new
+no data of its own: it reads the officer's existing endpoints (spots,
+establishment managers, feedback, `/api/statistics/tracker` and `/form-a4`,
+`/api/payments`) and shows what is waiting on each — every card links to the
+page where it is dealt with, Statistics through the tab named in the link's
+address (`admin_statistics.html#tracker`) — plus the month just ended's Form A4
+reports, the month's collections, and Form A4 counts by month and by country. Counts only, like the statistics themselves. Its "Add new
 spot" publishes, then opens Destinations at `?new=<id>`, which finds that
 listing (search filled in, scrolled to, marked for a moment with
 `.just-published`), says it is live, and drops `?new` from the address.
@@ -440,9 +416,9 @@ data lives in Postgres on Supabase (it moved off MongoDB Atlas; see
   through a `virtual`), or `external` (not a column of the table; its model
   writes it) — see "Normalisation" below.
 - `models.js` — one `Table` per record type, field for field what the Mongoose
-  schemas were, plus the few joined queries (a listing with its establishment,
-  a booking with its destination and guide). `server.js` imports them under the
-  old model names (`Spot`, `GuideBooking`, …; `Admin` became `TourismOfficer`)
+  schemas were, plus the few joined queries (a listing with its establishment).
+  `server.js` imports them under the old model names (`Spot`, `Payment`, …;
+  `Admin` became `TourismOfficer`)
   so each route reads as it did.
 
 Ids are text, 24 hex characters: the records copied from MongoDB kept their
@@ -458,32 +434,31 @@ the old collection names (`admins`, `resortOwners`) did not.
    `*.vercel.app`", which would trust anyone's site there; see
    `isSameOrigin` / `isAllowedOrigin`), rate limits, JSON body parsing
    capped at 1MB (photos go straight browser → Cloudinary, never through this
-   API). The limits that guard something (login, password reset, bookings,
+   API). The limits that guard something (login, password reset, tickets,
    feedback, directions) go through `sharedRateLimit`, which counts in the
    `rate_limits` table (`rate-limit-store.js`) so they hold across serverless
    instances; only the blanket per-request limit stays in memory, on purpose.
-2. `runMigrations` and `bootstrapAdmin` (see below), and `COUNTRY_CODES`.
+2. `runMigrations` and `bootstrapAdmin` (see below).
 3. Auth middleware chains: `requireAuth` (a JWT checked as HS256 with its
    issuer and audience, then the account itself: it must exist, its
    `session_version` must match the token's `sv`, and it must not be waiting to
    replace an issued password; the row is `req.account`) →
-   `requireAdmin`/`requireEstablishmentManager`/`requireStaff`/`requireGuide`
+   `requireAdmin`/`requireEstablishmentManager`/`requireStaff`
    (role checks; `requireAdmin` also refuses a deactivated officer, so their
    open session stops at once), `requirePasswordConfirmation` (after
    `requireAdmin`, on risky actions — see "Sign-in safety") and `optionalAuth`
-   (attaches `req.auth` for a current, usable sign-in, never blocks). Roles: `admin` (Tourism Officer), `establishment_manager` (Tourist
-   Establishment Manager) and `tourist_guide` (Tourist Guide) —
+   (attaches `req.auth` for a current, usable sign-in, never blocks). Roles: `admin` (Tourism Officer) and `establishment_manager` (Tourist
+   Establishment Manager) —
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
    tokens issued before a rename don't get rejected mid-session; nothing
-   issues it anymore. `requireStaff` (officer or manager) deliberately
-   excludes guides: it guards listing writes and upload signing. There is
+   issues it anymore. `requireStaff` (officer or manager) guards listing writes
+   and upload signing. There is
    deliberately no `tourist` role or tourist account at all — visitors browse
-   without logging in. All three sign in on the one staff page; the login
-   route searches officers, then managers, then guides, so `emailTakenBy`
+   without logging in. Both sign in on the one staff page; the login
+   route searches officers, then managers, so `emailTakenBy`
    refuses any sign-in email another account already uses.
 4. Routes, grouped by resource: admin, establishment-managers, login/forgot/
-   reset-password, spots (listings), guides (see "Tourist guides" below),
-   guide-bookings, payments,
+   reset-password, spots (listings), payments and tickets (`payments.js`),
    feedback (public `POST /api/feedback`, rate-limited with a honeypot;
    officer inbox `GET`/`PATCH …/status` read in `src/admin/admin_feedback.html`),
    `/api/directions/*`, and `/api/statistics/*` — mounted from `statistics.js`
@@ -503,49 +478,15 @@ provider-fallback layer, not a single API call:
 - `/api/directions/capabilities` tells the frontend which modes are live, so
   a page only ever renders what the backend can actually calculate.
 
-### Tourist guides
+### No tour guides (taken out October 2026)
 
-One role, `tourist_guide`. **Where a guide works is the destinations the
-office gives them** (`assignedSpots`, `tourist_guide_spots`), and nothing else:
-- a booking can only be assigned to a guide who serves its destination
-  (`guideServesSpot`, and the assign route's own check);
-- a guide's dashboard counts the guided tours at their destinations, whoever
-  guides them (`bookings.listAtSpots`) — counts only; visitor names and
-  numbers are shown only for bookings assigned to that guide.
-There is no separate area any more (taken out October 2026, the user's
-decision: "we already have destinations where they guide"). The old
-`tourist_guides.scope` / `barangay` columns stay in the database, unread and
-unwritten, until the user agrees to drop them; don't bring an area back.
-
-The guide proposes, the office disposes. A guide keeps their own availability
-(status available/unavailable and working days) and languages, and files
-reports (`guide_reports`: tour completed, headcount, incident, tourist
-feedback — `barangay` is derived server-side, and filing never changes a
-booking), and edits their own contact number and bio directly
-(`PATCH /api/guides/me/details`, no approval). The office assigns every
-booking, reviews every report (rolled up per barangay on `admin_guides.html`),
-and alone sets name, fee, group size, destinations, photo and
-`inactive` — the fields that decide what a guide may be assigned. Single days
-off (`guide_time_off`) and office-approved profile changes
-(`guide_profile_requests`) were taken out: a guide who cannot work sets
-themselves Unavailable. `schema.sql` drops both tables on the next migrate. Guide
-sign-ins are issued and withdrawn by the officer (`/api/guides/:id/account`);
-a guide record without one has `email`/`password_hash` null.
-
-Visitors choose: `GET /api/spots/:id/guides?date=&time=` (public) lists the
-guides at a destination — photo, name, languages, fee, bio, group size,
-and whether each is free then by `isGuideFreeOn` — never a phone, an email or
-the booking that makes a guide busy. A booking may carry `requested_guide_id`
-(null: any guide), checked at booking time (serves here, takes the group, free
-then). It stays a request: `guide_id` is still the office's to set, an online
-payment charges the requested guide's fee (else the lowest here), and a paid
-booking can only be assigned a guide at or below what was paid.
-
-Languages are rows, not a list: `languages` (unique on `lower(name)`) and
-`guide_languages`, written by `setGuideLanguages`. That is what makes
-`GET /api/guides/search?language=&date=` ("who speaks Korean and is free
-Saturday") a join. "Free" is decided by `isGuideFreeOn` — the same function the
-assign route uses, so the search never offers a guide assignment would refuse.
+ZTIMS has no tourist guide feature (the user's decision, October 2026): no
+Tourist Guide role or accounts, no guide portal, no Tourist Guides or Guide
+Bookings page, no guide booking for visitors and no "requires a tourist guide"
+on a listing. `schema.sql`'s last block ("Tour guides taken out") deleted the
+guide tables and records — guides, their destinations and languages, their
+reports, the guide bookings, and the payments and checkouts made for them —
+and `spots.requires_guide`. Don't bring any of it back unless the user asks.
 
 ### Tourism statistics
 
@@ -559,8 +500,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,
   room-nights available/occupied/not occupied, guest nights), not as rates.
-- **Nothing from bookings.** Establishments report their own already-totalled
-  month; ZTIMS never derives these figures from guide bookings.
+- **Nothing from tickets.** Establishments report their own already-totalled
+  month; ZTIMS never derives these figures from tickets sold.
 - **Who reports.** A manager, for the listing they manage. The officer, for
   the places the office keeps (listings with no manager) only: a privately
   managed establishment's reports are its manager's to enter, and the officer
@@ -600,8 +541,7 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only
-  in the database — the form fetches it — so unlike the booking form's
-  country list it is not duplicated anywhere. Each row shows its flag beside the name, in the
+  in the database — the form fetches it — so it is not duplicated anywhere. Each row shows its flag beside the name, in the
   report form and the officer's Arrivals Report (`flag` in `stat-form.js`,
   `.sf-flag` in `theme.css`): small SVGs in `Zamboanguita-project/public/flags/`
   (copies of flag-icons 7.5.0, MIT, `LICENSE.txt` beside them; only the
@@ -629,21 +569,19 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 
 ### Online payments (demonstration, test mode)
 
-`payments.js`, mounted at `/api`: a visitor pays a guide booking
-(`POST /api/guide-bookings/:reference/checkout`, reference + the booking's email)
-or buys entrance tickets (`POST /api/tickets`) on a Xendit hosted invoice, and
+`payments.js`, mounted at `/api`: a visitor buys entrance tickets
+(`POST /api/tickets`) on a Xendit hosted invoice, and
 comes back to `src/payment.html?c=<checkout id>`. Tickets are sold only for
 attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 
 - **Test mode only.** `XENDIT_SECRET_KEY` must start `xnd_development_`; anything
   else (a `xnd_production_` key above all) switches online payment off
-  (`gatewayState`). Every online payment, the booking
-  or ticket it paid for, and the generated sample data carry `is_demo`.
+  (`gatewayState`). Every online payment, the ticket it paid for, and the
+  generated sample data carry `is_demo`.
   Visitor pages and emails do not label it "test mode" (decided); Xendit's own
   checkout page shows that, and Terms, Privacy and FAQ still say so. Paying in
   person is called paying **onsite** (never "at the gate").
-- **The server decides.** Amounts come from the fees on record (a booking: its
-  guide's fee, else the lowest available guide fee at the destination). A
+- **The server decides.** Amounts come from the fees on record (`priceTickets`). A
   payment is confirmed only by the server asking Xendit itself (`settle`:
   `GET /v2/invoices/:id` with its own key), when the visitor returns or when
   Xendit's callback (`POST /api/payments/webhook`) arrives carrying the
@@ -654,25 +592,23 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   both arriving at once record it once.
   A payment for something already paid or cancelled is marked `duplicate` for a
   refund.
-- **Tables** (`schema.sql`): `tickets`, `online_checkouts`; `payments` now
-  belongs to a booking *or* a ticket (`payments_for_one`) and has `channel`
-  (counter/online), `gateway_ref`, refund fields and `is_demo`; guide bookings
-  have `is_demo`. 25 tables in all, with `spot_closed_dates`, `spot_photos`,
-  `spot_more_categories`, `office_info`, `emergency_numbers` and the Guest
-  Register's `register_entries` / `register_entry_guests`
-  (`guide_time_off` and `guide_profile_requests` were dropped).
+- **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
+  `payments` belongs to one ticket and has `channel` (counter/online),
+  `gateway_ref`, refund fields and `is_demo`. 19 tables in all, with
+  `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
+  `emergency_numbers` and the Guest Register's `register_entries` /
+  `register_entry_guests`.
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
   the ticket code — tickets have no QR, by the user's decision: most places
   have no entrance or staff to scan one; `admit` is one conditional update, so a ticket is used once),
-  "Paid online" and "Cancel and refund" on Guide Bookings, a collections line on
-  the Dashboard. One refund rule: the office cancels, the visitor is refunded;
-  a plain cancel of an online-paid booking is refused. A refund goes back
+  and a collections line on the Dashboard. One refund rule: the office
+  cancels, the visitor is refunded. A refund goes back
   through Xendit (`POST /refunds`, `invoice_id`, an `Idempotency-key` per
   payment so a second click asks for the same refund) only for a payment one
   of our invoices made; seeded and counter payments are recorded only.
 - **Demo data:** `POST /api/payments/demo` replaces the generated sample
-  (`TG-DEMO-` bookings, tickets with no checkout) and keeps test-mode payments;
+  (tickets with no checkout) and keeps test-mode payments;
   `DELETE /api/payments/demo` removes everything `is_demo`. Real records are
   never touched.
 - Money never reaches Statistics or Form A4, which stay counts only.
@@ -692,22 +628,10 @@ days), what is missing as red pills ("No photo · Fix" opens the editor), then
 ⋯ menu (View public page, Visitor setup where it applies, Take down in red).
 Prices without cents. No Refresh button: the list reloads after every change.
 
-### The officer's Tourist Guides and Establishment Managers
+### The officer's Establishment Managers, Tickets and Collections
 
 Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 `portal-flat.css`), no page intro or help lines:
-- **Tourist Guides** (`admin_guides.html`): title and **New guide**; tabs Guides /
-  Reports; a red line only while a destination needing a guide has no available
-  one; counts that filter (All, Available, Unavailable, Inactive, No
-  destination); search, Speaks and Free on (a date asks `/api/guides/search`;
-  Clear appears only when something is set). Each guide is one row: photo or
-  initials, name, one line of facts (languages · fee · largest group ·
-  phone), their destinations, a status pill (and Free that day / Not free with
-  the reason), then **Edit** and ⋯ (Mark available / unavailable / inactive,
-  Sign-in and password, Withdraw sign-in in red). The window has three parts:
-  The guide (photo, name, contact, about), Where they guide (destinations,
-  meeting point), Bookings (fee, largest group, working days as
-  pills `.gd-day`, languages, status).
 - **Establishment Managers** (`admin_managers.html`): title and **New manager
   account**; counts that filter (All, Active, Suspended, No listing yet);
   search; one row per account (initials, establishment, manager · sign-in
@@ -725,51 +649,15 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   (the user's decision; `POST /api/tickets/:id/admit` takes any day up to
   today, never a later one).
 - **Collections** (`admin_collections.html`): title with the online-payments
-  pill, month and Excel beside it; four tiles (Collected, Guide fees, Entrance
-  fees, Waiting for an OR in red when any); Payments as counts that filter (All,
+  pill, month and Excel beside it; four tiles (Collected, Online, Onsite,
+  Waiting for an OR in red when any); Payments as counts that filter (All,
   Waiting for an OR, Refunded), search, and a row per payment (`.pay-row`,
   read top to bottom: the place, what was paid for and how many people, then
-  labelled facts in fixed columns `.pay-facts` — Ticket / Booking code, Paid
+  labelled facts in fixed columns `.pay-facts` — Ticket code, Paid
   by, Paid with (method, online or onsite), Paid on — the amount large, the OR number or its field with Save, and ⋯ → Cancel and refund in
-  red); Day by day; Demo data as one line with its two buttons. Pesos are whole
+  red); Day by day (payments and total); Demo data as one line with its two buttons. Pesos are whole
   unless a refund left centavos.
 
-### The officer's Guide Bookings (`admin_bookings.html`)
-
-**Confirm first, pay later** (the program chair's request, October 2026: a
-tourist books from abroad and is confirmed before arriving). A booking arrives
-as `pending_payment` (shown "To confirm"; the status name is kept for old
-data); the office confirms it by giving it a guide (`PATCH …/assign` sets
-`confirmed`; taking the guide off an unpaid one puts it back), within **1
-working day** (`REPLY_TIME` in `notices.js`, said on the booking form, the
-Manage page and the emails). Payment comes after: onsite at the Municipal
-Tourism Office on the day, or online at any time (`…/checkout` takes a
-pending or confirmed unpaid booking). A payment still confirms a booking too
-(a paid one waits for its guide as before). Completed needs the payment
-recorded. A visitor moving an unpaid booking sends it back to To confirm. The
-day before a confirmed tour the visitor gets a reminder email, once
-(`reminders.js`, `guide_bookings.reminder_sent_at`, run by the daily cron and
-when the officer opens Guide Bookings; a database without the column skips
-reminders and logs it).
-
-Title and one search (reference, name, phone, destination), then the steps as
-tabs with counts: To confirm (no guide yet), Upcoming tours (confirmed, from
-today), After the tour (confirmed, date passed), All bookings
-(the Dashboard still opens a tab through `bookingsTab`; the old `pay` / `assign`
-keys open To confirm). No explainer, no
-Refresh. Each booking is one row (`.bk-row` in `portal-flat.css`): the date
-large on the left (red once it has passed while the booking is still open),
-the visitor's name and reference, destination · visitors · country · phone,
-the guide (or who was asked for), the payment (no cents), the visitor's note
-highlighted, and pills (Today / In n days / Date passed, Not paid yet, No OR
-yet, No guide available, Demo). One main button per step — **Confirm with a
-guide** (or Tourist Guides when none can take it); on a tour, **Record
-payment** while unpaid, then **Completed** — opens a
-small `ztimsDialog` window (`type: 'select'` fields were added to
-`ztims-dialog.js` for this); the ⋯ menu holds Details, No show, Change guide,
-and Cancel / Cancel and refund in red. All bookings filters by status with
-`.dest-chips` and opens the details window, which keeps every action
-(sentence-case labels, Cancel booking a solid red pill).
 
 ### The officer's Feedback (`admin_feedback.html`)
 
@@ -785,8 +673,7 @@ Refresh.
 ### Attraction setup
 
 `attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window
-on Destinations (`admin_dashboard_manage.html`), for office-run attractions and
-guided destinations:
+on Destinations (`admin_dashboard_manage.html`), for office-run attractions:
 
 - **Opening days** are `spots.working_days`, the text visitors read. The listing
   form and Visitor setup tick weekdays; `open-days.js` (both sides) writes the
@@ -794,7 +681,7 @@ guided destinations:
   included ("Closed Mondays", "Mon–Fri"). Text naming no day is unknown and
   means open every day — a sale is never refused on a guess.
 - **Closed dates** (`spot_closed_dates`). Adding one that already has valid
-  tickets or live guide bookings is refused: closing a sold date is the
+  tickets is refused: closing a sold date is the
   closure action's job (cancel, refund or move, tell each visitor).
 - **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
   `student_fee` and `child_fee` + `child_age_max` are offered only when set.
@@ -808,11 +695,11 @@ guided destinations:
   read by routes as `feeBreakdown`); `people` and `amount` are worked out by
   the database (see "Normalisation"); `priceTickets` prices a purchase from the counts, and the
   gate's check says whose ID to look at. No ID is ever stored.
-- **`cancel_keep_percent`**: the share kept when a visitor cancels, for tickets
-  and guide bookings at that destination.
+- **`cancel_keep_percent`**: the share kept when a visitor cancels a ticket
+  at that destination.
 - `dayVerdict(spot, date)` is the one answer to "can visitors come that day?",
-  used by ticket sales and guide bookings alike; the public ticket offer and
-  guide requirement carry `openDays` and `closedDates` so the forms say so first.
+  used by ticket sales and the Manage page alike; the public ticket offer
+  carries `openDays` and `closedDates` so the form says so first.
 
 ### The visitor's journey (Home → destination → pay → after)
 
@@ -840,22 +727,22 @@ Frontend only, no tables of their own:
   the three "How it works" steps and the Tourism Office card (hours, address,
   phone, email and emergency numbers from `GET /api/office` through
   `site-footer.js`'s `data-office-field` / `data-emergency`), with Contact the
-  Tourism Office and Manage my booking. The search and category are kept for
+  Tourism Office and Manage my ticket. The search and category are kept for
   the visit in `sessionStorage.ztimsBrowse`; `?category=` opens a category.
   A **card** (`.home-card`): photo, category, name (the card's stretched link),
   barangay, "Open …" from `workingDays`/`workingTime`, the fee ("Free
   entrance" at ₱0, none for a place to stay) and its main action
   (`mainAction`, the destination page's rules): Buy tickets (office-run
-  attraction with a fee, and `/api/payments/config` says online), Book a guide
-  (`requiresGuide`), Book a room / Book now (its booking link, new tab), else
-  "Details". On a phone the photo sits beside the words. Tickets and guide
-  open `spot.html` at `#tickets` / `#guide`, which `honourArrival` turns into
-  that action (or, if it never appears, a scroll to its section). Grey
+  attraction with a fee, and `/api/payments/config` says online), Book a room /
+  Book now (its booking link, new tab), else "Details". On a phone the photo
+  sits beside the words. Tickets open `spot.html` at `#tickets`, which
+  `honourArrival` turns into the ticket form (or, if it never appears, a
+  scroll to At a glance). Grey
   skeleton cards while loading; card photos after the fourth load lazily.
 - **Header**: the same on all nine visitor pages (Home, destination, History,
-  My booking, payment, Terms, Privacy, FAQ, Contact; styles `.site-header` and
+  My ticket, payment, Terms, Privacy, FAQ, Contact; styles `.site-header` and
   `.site-link` in `theme.css`): the wordmark, then words-only links
-  Destinations, Map (`index.html#map`), History, My booking, Staff
+  Destinations, Map (`index.html#map`), History, My ticket, Staff
   (→ `staff_login.html`), and the theme toggle last. On a phone it is two
   rows: the name and the toggle, then the links across the full width. A solid tangerine oval on
   hover/focus, a solid burnt-orange one on the current page
@@ -866,56 +753,42 @@ Frontend only, no tables of their own:
 - **Destination** (`spot.html`): one column (`.spot-wrap`, ~52rem), read top to
   bottom in the order a visitor asks — the photo with the category pill, name
   and barangay; a breadcrumb (Destinations › category › place); the actions the
-  place really offers as pills — Buy tickets, Book a guide, Book a room / Book
-  now (its own booking link), Directions — as `#actionBar` on a computer and
+  place really offers as pills — Buy tickets, Book a room / Book now (its own
+  booking link), Directions — as `#actionBar` on a computer and
   `#mobileActions` fixed to the bottom of a phone (`drawActions`; never both);
   **At a glance** tiles (`glanceFacts`: open days and hours, entrance or Free,
-  a travel fee only if set, "Tourist guide: Required" only if so — with the
-  guide fee and group size, or that no guide is free — barangay); About;
-  Photos (neither tickets nor a guide have a section of their own: "Buy
-  tickets" opens the ticket form in a window, `#ticketModal` built by
-  `renderTicketOffer`, and the Entrance tile says "less for students and
-  children" when those prices are set; "Book a guide" opens the booking form, where a guide is chosen,
-  through the hidden `#openBookGuideBtn`); Book your stay / visit (its
+  a travel fee only if set, barangay); About; Photos (tickets have no section
+  of their own: "Buy tickets" opens the ticket form in a window, `#ticketModal`
+  built by `renderTicketOffer`, and the Entrance tile says "less for students
+  and children" when those prices are set); Book your stay / visit (its
   booking link) or Contact; Getting there (address, emergency numbers, Get
   directions); "Nearby places to visit" (Home's card style; nearest first when
   both have a pin, else "More places to explore", same category first;
   `renderRelated`). Flat: the page's older gradient buttons are restyled as
   solid pills in its own style block; prices without cents (`peso`).
-- **My booking, History, Staff sign-in** (and the reset-password page) follow
+- **My ticket, History, Staff sign-in** (and the reset-password page) follow
   the same flat style: sentence-case labels above `.bk-field`s, flat
   `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
-  `.tone-pill.rounded-pill`), short titles ("My booking", "Staff sign in",
+  `.tone-pill.rounded-pill`), short titles ("My ticket", "Staff sign in",
   "How Zamboanguita came to be"), History's figures as `.spot-fact` tiles. The
   footer's Send feedback is a pill too.
 - **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
   number with its label under it, joined by a line; done green with a tick,
-  current solid burnt orange): booking a guide is Your details → Pick a guide
-  → Request sent → Confirmed — the form has two panes
-  (`#bookPaneDetails`, then `#bookPaneGuide` with a summary and Change, the
-  guides free for that date, time and group, and Submit), then the reference
-  with "Next: the office confirms your guide — within 1 working day, by email.
-  No need to pay now" and Pay online now when online. Step 1 asks "Your visit" (date, start
-  time, visitors) before "Your details". The ticket window follows the same
-  pattern: price line, Your visit (date; who is coming, one row per kind with a
+  current solid burnt orange). The ticket window: price line, Your visit (date; who is coming, one row per kind with a
   − / + stepper), Your details (name, email), a summary of lines and the total,
-  and one button that says what it buys ("Buy 4 tickets · ₱180"). Both use the
-  booking-form styles in `theme.css` (`.bk-*`, `.qty` wired by `wireQty`,
-  `.pick-card` for the guide choice, each with the guide's photo large —
-  `.guide-photo`, 80px, 96px from 640px — so the face is easy to see); tickets show Date & visitors → Payment → Your
-  ticket; `payment.html` continues the same steps.
+  and one button that says what it buys ("Buy 4 tickets · ₱180"), in the
+  form styles in `theme.css` (`.bk-*`, `.qty` wired by `wireQty`); the steps
+  are Date & visitors → Payment → Your ticket, and `payment.html` continues
+  them.
 - **After paying** (`payment.html`): "What's next" — the date, Directions
-  (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`
-  for both kinds), Add to calendar (an `.ics` made in the browser: the whole
-  day for a ticket, three hours from the chosen time for a tour, Manila time),
+  (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`),
+  Add to calendar (an `.ics` made in the browser: the whole day, Manila time),
   and Move or cancel (`manage.html?code=`).
-  Flat style like the other visitor pages. A ticket and a guide booking look
-  alike: one bordered card (place, date, the code or reference large, people,
-  a status pill — "Guide to be assigned" / "Guide assigned" from the view's
-  `guideAssigned`), then Paid, then "What's next". The page never says the
+  Flat style like the other visitor pages: one bordered card (place, date, the
+  ticket code large, people), then Paid, then "What's next". The page never says the
   visitor was emailed.
 
-### Visitor emails and "Manage my ticket / booking"
+### Visitor emails and "Manage my ticket"
 
 - **`mailer.js`** sends through the office's Gmail (`MAIL_USER`, `MAIL_PASSWORD`,
   an App Password — the same account as the staff password reset). It never
@@ -927,36 +800,26 @@ Frontend only, no tables of their own:
   `PUBLIC_SITE_URL`, else the address the request came to (never the CORS
   list, whose first entry is a local test address when `CORS_ORIGIN` is unset).
 - **`notices.js`** writes each email from the database: ticket receipt (the ticket
-  code, to show on the email or a screenshot), booking received (the reply
-  time; no need to pay now), booking paid, tour confirmed (the guide, and "Not
-  paid yet · ₱…" with how to pay), the day-before reminder (`tourReminder`),
-  moved, cancelled, and (closures) the office's notice.
+  code, to show on the email or a screenshot), moved, cancelled, and
+  (closures) the office's notice.
   An online payment's receipt is sent only by the call that recorded it
   (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
   send two. Links carry the code, never the email address.
 - **`manage.js`** (`/api/manage/lookup|move|cancel`, rate-limited) and
-  `src/manage.html`: the code (or booking reference) AND the email, together.
-  A guide booking still waiting for payment shows "Pay for this booking" first:
-  Pay online now (when `/api/payments/config` is online; the same
-  `/api/guide-bookings/:reference/checkout` the booking form uses, which reuses
-  an open checkout) or pay onsite — so closing the booking form before paying
-  never strands a booking. Its buttons are pills: Cancel solid red
+  `src/manage.html`: the ticket code AND the email, together. Its buttons are pills: Cancel solid red
   (`.btn-danger-solid`, the same deep red in both themes), Move and Refund
   outlined.
   Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
   refunds the amount less `cancel_keep_percent` (a partial Xendit refund,
   `payments.refund_amount`); the office's refunds return everything. A used
-  ticket is never moved or refunded; a moved guide booking loses its guide and
-  goes back to the office; a counter-paid booking can be moved here but is
-  cancelled at the counter. Collections counts what was kept.
+  ticket is never moved or refunded. Collections counts what was kept.
 - **Closures** (`POST /api/spots/:id/close-date`, Visitor setup's "Close this
   date anyway?"): one transaction marks the date closed, puts every paid ticket
-  and booking for it in status `closed` (out of use; the gate says so) and
+  for it in status `closed` (out of use; the gate says so) and
   cancels the unpaid ones; then each visitor is emailed (`closureNotice`). A
   `closed` one is the visitor's to settle on the Manage page whatever the
   deadline: a full refund (`/api/manage/refund-closure`) or a new date, which
-  makes it valid (ticket) or confirmed without a guide (booking) again. A
-  counter-paid booking is refunded at the counter. The office cannot set
+  makes it valid again. The office cannot set
   `closed` by hand; Visitor setup shows how many visitors still have to choose.
 
 A serverless host has no single startup, so nothing runs at boot: the
@@ -965,8 +828,8 @@ needs one (a route that never queries, like `/api/directions/capabilities`,
 never waits on the database), and the schema and `bootstrapAdmin` run only
 when someone runs `npm run migrate` (see `runMigrations` and the header of
 `migrate.js`). MongoDB's two in-place reshapings (`resortName` →
-`establishmentName`, `ownerId` → `managedBy`) are gone: the copy script
-translated both on the way across, and the schema is that history now.
+`establishmentName`, `ownerId` → `managedBy`) are gone: the one-time copy
+script (since deleted) translated both on the way across.
 `bootstrapAdmin` reads `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD` to create
 the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
 to force a reset on an existing one — both are meant to be deleted from the
@@ -980,12 +843,10 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **Worked out, never typed in** (Postgres generated columns): `tickets.people`
   (the counts added up), `tickets.amount` (counts × prices),
   `monthly_report_counts.total` (male + female, or `total_unsplit` for a month
-  with no split, the 2025 sheet), `online_checkouts.kind` (from which reference
-  is set). Writing one is an error, so models mark them `generated`.
+  with no split, the 2025 sheet). Writing one is an error, so models mark them `generated`.
 - **One value per column or row**: a listing's gallery is `spot_photos` (one
   row per photo, `position` 0–29; routes still see `spot.images`, written by
-  `spots.create/save` in one transaction); a guide's days are
-  `works_mon…works_sun` (routes still see `availableDays`); a listing's other
+  `spots.create/save` in one transaction); a listing's other
   categories are `spot_more_categories` (routes see `moreCategories`); a ticket's prices
   are `fee_*` columns (routes still see `feeBreakdown` and `unitFee`).
 - **Not stored**: a listing's municipality and province (always Zamboanguita,
@@ -994,10 +855,10 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   and `monthly_reports.submitted_by_email`.
 - **Kept on purpose**: what a record says about its own moment — the price a
   ticket was bought at, who recorded or changed something (by email, so it
-  outlives the account), where a guide's report happened. Those are facts of
+  outlives the account). Those are facts of
   that record, like a receipt's price, not copies to keep in step.
 
-### Listings, guides and the visitor's day out
+### Listings and the visitor's day out
 
 - **Categories, by the visitor's purpose** (October 2026, the user's choice):
   Beach & Sea (`BEACH`), Diving & Snorkeling (`DIVING`), Nature (`NATURE`),
@@ -1025,23 +886,12 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   plain 409 in `POST /api/spots` first). The manager creates it and it is live
   at once; their edits go live directly. Listings the office keeps
   (`managed_by` null) are not limited.
-- **One tour per guide per day**, whatever the time (`isGuideFreeOn`): tours run
-  for hours, and a busy guide leaves the others a turn.
 - **Visitors' details are kept one year.** `privacy.js` erases names, phones and
-  emails from guide bookings and tickets a year after the visit, and from
-  feedback a year after it was resolved; dates, counts, countries, amounts and
-  OR numbers stay. Run daily by Vercel's cron (`vercel.json` →
-  `GET /api/maintenance/privacy`, which needs `CRON_SECRET`, 2 AM Manila; the
-  same run sends tomorrow's tour reminders) and whenever the officer opens
-  Guide Bookings. The Privacy page says so.
-- **A guide cannot leave booked tours behind.** `PATCH /api/guides/me/availability`
-  refuses Unavailable, or dropping a weekday, while a confirmed tour still to come
-  falls on it, and names the bookings: the office reassigns them first. The
-  office's own edits follow the same rule (`toursLeftBehind` in `server.js`,
-  used by both): `PUT /api/guides/:id` and `PATCH …/status` refuse inactive or
-  unavailable, a dropped weekday, a destination taken away, or a group size
-  below a booked group while a confirmed tour still to come needs it. Guide
-  dates use Manila's today (`today()`).
+  emails from tickets a year after the visit, and from feedback a year after
+  it was resolved; dates, counts, amounts and OR numbers stay. Run daily by
+  Vercel's cron (`vercel.json` → `GET /api/maintenance/privacy`, which needs
+  `CRON_SECRET`, 2 AM Manila) and whenever the officer opens Tickets
+  (`GET /api/tickets`). The Privacy page says so.
 - **Emergency numbers** are kept by the officer on Settings → Office Information
   (`emergency_numbers`, one row each) and show in the footer and each
   destination's `[data-emergency]` box; nothing shows while there are none.
@@ -1063,15 +913,7 @@ the page; tabs styled like Statistics').
   one; other devices are signed out and this one gets a fresh token), when this
   session signed in (`last_sign_in_at`, set at each login), and "Sign out of
   all devices" (`POST /api/me/sign-out-everywhere`, this one too). The
-  manager's Account and the guide's My Profile have the same two.
-  The guide's My Profile (`guide/guide_profile.html`) is laid out like these
-  Settings: tabs with their own addresses — `#account` (photo, name, status;
-  contact number and bio saved straight away; sign-in email, guide since),
-  `#work` (what the office set, read only: meeting point, fee, largest group,
-  destinations; and working days and languages with Change links to their
-  pages) and `#security` (signed in since — the token's issue time, change
-  password, sign out of all devices). Tab styles `.settings-tab` in
-  `guide-portal.css`.
+  manager's Account has the same two.
 - **Tourism Office Accounts**: every officer with position, date added, last
   sign-in and status. Add one (name required; a blank password is generated
   and shown once), issue a new password (`POST /api/admin/:id/password`), and
@@ -1103,7 +945,7 @@ the page; tabs styled like Statistics').
   form and in `src/user/reset_password.html`.
 - **Sessions end when they should.** Every token carries `sv`, the account's
   `session_version`. Changing a password, an officer issuing one, a reset link,
-  withdrawing a guide's sign-in, and "Sign out of all devices" add one to it
+  and "Sign out of all devices" add one to it
   (`storePassword`, `endSessions`), so every token from before stops working at
   once. A token without `sv` (issued before this) counts as 0.
 - **Issued passwords are replaced first.** `must_change_password` is set when
@@ -1122,13 +964,13 @@ the page; tabs styled like Statistics').
   (`requirePasswordConfirmation`, body field `confirmPassword`, 428 when
   missing, 403 when wrong, 10 wrong per 15 minutes per account): add an
   officer, deactivate/reactivate an officer, issue a password (officer,
-  manager, guide sign-in), refund (`POST /api/payments/:id/refund`) and remove
+  manager), refund (`POST /api/payments/:id/refund`) and remove
   demo data. The pages put a "Your password" field in those dialogs.
 - **Emails to the account's owner** (`alertAccountOwner`, through `mailer.js`):
   their password was changed or reset, or a new one was issued; and every active
   officer when an officer account is added.
 - **Photos only from our own hosting** (`PHOTO_SOURCES`, `checkPhotoSources`):
-  listing and guide photos must be on the municipality's Cloudinary account
+  listing photos must be on the municipality's Cloudinary account
   (or the office's earlier onecompiler folder); a photo already on the record
   is kept. Signed uploads also sign `allowed_formats` (jpg, jpeg, png, webp).
 - **Idle sign-out**: officer pages sign out after 30 minutes without activity
@@ -1151,9 +993,10 @@ Nothing in it is built yet; read it before working on quality, tooling or a
 framework change.
 
 `docs/ideas/VISITOR-ORIGINS.md` (October 2026, held by the user): counting each
-group's countries and male / female when it arrives (at Let them in, and in
-the guide's tour report) so Statistics can suggest a month's visitor report.
-Not built; it needs the user's yes to change "Nothing from bookings", and the
+group's countries and male / female when it arrives (at Let them in) so
+Statistics can suggest a month's visitor report. Its guide-report half no
+longer applies (no guides). Not built; it needs the user's yes to change
+"Nothing from tickets", and the
 user noted weak signal at many places makes counting at the entrance hard
 (see the note's "Weak signal").
 
@@ -1166,14 +1009,9 @@ user noted weak signal at many places makes counting at the entrance hard
   wildly-wrong pins and to bias search ranking, not as proof a pin is inside
   the municipality.
 - **Barangay list**: `BARANGAYS` in `spot-form.js`, mirrored in the chips/count
-  on `src/history.html` and in `BARANGAYS` in `server.js` (which checks the
-  barangay a guide's report names and serves the list to the guide portal and
-  the officer's Tourist Guides page, so those pages keep no copy). The dropdown
+  on `src/history.html`. The dropdown
   only accepts a name in this list, and reverse-geocoding is matched against
   it — a missing barangay makes auto-detection silently fail for listings in it.
-- **Country list**: `src/shared/countries.js` (names) vs `COUNTRY_CODES` in
-  `server.js` (codes only, validates what the form sends). Checked by
-  `npm run check` in the frontend.
 - **Opening-days reader**: `zamboanguita-backend/open-days.js` (decides what is
   sold) and `Zamboanguita-project/src/shared/open-days.js` (the forms). Checked
   by `npm run check` in the frontend.
@@ -1184,7 +1022,7 @@ user noted weak signal at many places makes counting at the entrance hard
   `vercel.json`. A host only in the first is saved but never shown.
 - **Password minimum (10)**: `MIN_PASSWORD_LENGTH` in
   `zamboanguita-backend/passwords.js`, and the password forms' `minlength` and
-  messages (Settings, manager Settings, guide My Profile, staff sign-in,
+  messages (Settings, manager Settings, staff sign-in,
   `user/reset_password.html`, issue-password dialogs).
 
 ## Standing constraints
@@ -1209,18 +1047,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   municipality's name and COA-compliant official receipts — don't switch it to
   live keys. (Saved at the user's request, October 2026, as a known limit to
   state in the manuscript.)
-- Guide bookings are confirmed first and paid later (see "The officer's Guide
-  Bookings"): the office answers within 1 working day, the visitor is reminded
-  the day before, and payment is never needed to be confirmed. Don't make
-  payment the step that confirms a booking again.
+- No tour guide feature (October 2026, the user's decision): no Tourist Guide
+  role or accounts, no guide portal, no guide bookings, no "requires a tourist
+  guide" on a listing; the guide tables were deleted (see "No tour guides").
+  Don't add any of it back unless the user asks.
 - Tickets have no QR code: the ticket code is shown and typed. Where nobody
   stands at the entrance, the office marks tickets used from the day's list.
 - Tickets have no senior citizen or PWD price (October 2026, the user's
   decision): regular, plus student and child where the office sets them.
-- A tourist guide has no area (whole municipality / one barangay): the
-  destinations the office gives a guide are where they guide (October 2026,
-  the user's decision). Reports still roll up per barangay, from the
-  destination of the tour.
 - `docs/MANUSCRIPT-NOTES.md` lists what the manuscript must say after each
   system change; add to it in the same commit as a change the manuscript
   describes.
@@ -1233,7 +1067,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   chose is always replaced at first sign-in; risky officer actions re-ask the
   officer's password; officer pages sign out after 30 idle minutes; left out by
   the user's decision: a per-account lockout after wrong sign-ins, cutting off
-  a suspended manager's or inactive guide's open session at once (it runs to
+  a suspended manager's open session at once (it runs to
   its 2-hour expiry; officers are cut off at once), and an officer activity
   log; two-step sign-in is not built yet. Pages never load anything from a host the CSP doesn't list.
 - The hero video on `index.html` intentionally has no dark scrim over it, and
@@ -1247,28 +1081,3 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   are pills filled flat like the header's ovals (`.btn-pill`): Explore
   destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps are
   pills with no fill (a hairline outline), each number a tangerine circle.
-
-## What to do 
-(October 2026: the guide's scope below was later taken out at the user's
-request — destinations decide where a guide works; see "Tourist guides". The
-rest still holds: one role, guide proposes / officer disposes, languages as a
-join table, the guide edits their own contact number and bio.)
-
-Make it one role with a scope, not two roles
-
-Create a single Tour Guide role, and give the account an assignment scope:
-
-scope = municipal → covers the whole municipality
-scope = barangay + barangay_id → covers only that barangay
-
-Everything else (login, dashboard, schedule, languages, profile) is the same code. The scope just filters what they see and what the officer can assign them to. Two separate roles means two sets of pages, two permission tables, and double the bugs — and in your defense a panelist will ask "why are these different users if the screens are identical?" The scope answer is clean: same function, different jurisdiction.
-
-Per module
-
-Dashboard / reports — barangay guide sees only tours in their barangay; municipal guide sees all. Same query, different WHERE. Reports they file (tour completed, headcount, incident, tourist feedback) should roll up to the officer, and barangay reports should also be filterable by barangay so the officer can see which barangay is actually getting traffic. That rollup is a real finding for your Chapter IV.
-
-Schedule & availability — let the guide set availability, but only the officer confirms an assignment. Guide proposes, officer disposes. Prevents double-booking and keeps your "managed by the tourist officer" claim true in the data, not just on paper.
-
-Languages — make it a many-to-many table (guide_languages), not a text field. Then the officer can search "who speaks Korean and is free Saturday" — that single query is probably the most impressive thing you can demo.
-
-Profile — the guide edits their own contact number and bio directly (no approval step); the officer keeps name, scope, fee, group size, destinations and photo.

@@ -64,7 +64,7 @@
 
     /* Opening days are ticked, one box a weekday, and stored as the words
        visitors read ("Monday to Saturday"). shared/open-days.js turns one into
-       the other; ticket sales and guide bookings refuse the unticked days. */
+       the other; ticket sales refuse the unticked days. */
     const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const openDaysHelper = function () { return window.ZTIMS_OPEN_DAYS; };
@@ -200,9 +200,7 @@
     }
 
     function buildMarkup(p, role) {
-        const isOfficer = role === 'officer';
-
-        // The steps as the visitor's booking form shows them: a round number,
+        // The steps as the visitor's ticket form shows them: a round number,
         // its name under it, joined by a line (.sf-steps in theme.css).
         const stepTabs = STEPS.map(function (step, index) {
             return '<li><button type="button" data-step-tab="' + index + '" class="sf-step">' +
@@ -510,15 +508,6 @@
                 '</div>' +
             '</div>' +
 
-            (isOfficer
-                ? '<div class="pt-1">' +
-                    '<label class="sf-switch">' +
-                        '<input id="' + p + 'RequiresGuide" type="checkbox" role="switch"/>' +
-                        '<span class="sf-switch__track" aria-hidden="true"></span>' +
-                        '<span>Requires a tourist guide</span>' +
-                    '</label>' +
-                  '</div>'
-                : '') +
         '</section>' +
 
         /* ============================ STEP 4 — PHOTOS ======================= */
@@ -573,7 +562,7 @@
      *   mount        element the form is rendered into (required)
      *   prefix       id prefix, so two forms can live on one page (default 'spot')
      *   apiBase      ZTIMS API root, for address search and reverse lookup
-     *   role         'officer' | 'manager'  — officer also sets requiresGuide
+     *   role         'officer' | 'manager'
      *   cloudName / uploadPreset   Cloudinary, for photo uploads
      *   labels       { create, edit } for the submit button
      *   onSubmit(payload, { editingId, spot })  — the page does its own fetch
@@ -1938,7 +1927,7 @@
         }
 
         /* The upload itself lives in src/shared/photo-upload.js, because the
-           guides page needs the same thing and two copies of a signed upload is
+           officer's pages may need the same thing and two copies of a signed upload is
            two places to get the signing wrong. The local path below is kept for
            the case where that module did not load, so a missing script costs the
            page its uploads rather than its whole form. */
@@ -2107,7 +2096,6 @@
                 entranceFee: el('EntranceFee').value,
                 takesBookings: el('TakesBookings').checked,
                 bookingUrl: el('BookingUrl').value,
-                requiresGuide: el('RequiresGuide') ? el('RequiresGuide').checked : false,
                 photos: photos.slice()
             };
         }
@@ -2138,7 +2126,6 @@
             el('TakesBookings').checked = Boolean(data.takesBookings);
             el('BookingUrl').value = data.bookingUrl || '';
             el('BookingRow').hidden = !data.takesBookings;
-            if (el('RequiresGuide')) el('RequiresGuide').checked = Boolean(data.requiresGuide);
             photos = Array.isArray(data.photos) ? data.photos.slice() : [];
 
             paintSchedule();
@@ -2239,7 +2226,6 @@
                 bookingUrl: bookingValue()
             }, scheduleValue(), locationPayload());
 
-            if (el('RequiresGuide')) payload.requiresGuide = el('RequiresGuide').checked;
 
             const button = el('SubmitBtn');
             const originalHTML = button.innerHTML;
@@ -2277,7 +2263,6 @@
             el('Label').value = (spot && spot.label) || '';
             el('TravelFee').value = spot && spot.travelFee != null ? spot.travelFee : '';
             el('EntranceFee').value = spot && spot.entranceFee != null ? spot.entranceFee : '';
-            if (el('RequiresGuide')) el('RequiresGuide').checked = Boolean(spot && spot.requiresGuide);
 
             fillBooking(spot);
             fillSchedule(spot);

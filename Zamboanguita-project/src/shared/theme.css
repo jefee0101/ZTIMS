@@ -1680,7 +1680,7 @@ div.leaflet-container {
    The visitor pages' header
    --------------------------------------------------------------------------
    Every visitor page carries the same header: the wordmark, then words-only
-   links — Destinations, History, My booking, Staff — and the theme toggle
+   links — Destinations, History, My ticket, Staff — and the theme toggle
    last. On hover or keyboard focus a solid tangerine oval swells in behind a
    link, with ink on it (6.7:1); the current page keeps a solid burnt-orange
    oval with off-white on it (4.5:1). The ovals and the round theme toggle are
@@ -1897,7 +1897,7 @@ button[onclick="toggleTheme()"] {
 @media (min-width: 640px) { .spot-panel { padding: 1.5rem; } }
 
 /* ==========================================================================
-   Booking forms (guide booking and entrance tickets on spot.html): flat,
+   Booking forms (entrance tickets on spot.html): flat,
    sentence-case labels above roomy fields, related fields grouped under a
    short heading, people counted with − / + steppers, and a summary with the
    total right above the one main button.
@@ -1949,21 +1949,6 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 .bk-summary__line { display: flex; justify-content: space-between; gap: .75rem; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
 .bk-summary__total { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid rgb(var(--ztims-outline)); font-weight: 800; color: rgb(var(--ztims-on-surface)); }
 .bk-summary__total span:last-child { font-size: 1.375rem; }
-
-/* A choice drawn as a card: the picked one is outlined in burnt orange. */
-.pick-card { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); cursor: pointer; }
-.pick-card:has(input:checked) { border: 2px solid rgb(var(--ztims-primary)); background: rgb(var(--ztims-primary-container)); padding: calc(.85rem - 1px); }
-.pick-card:has(input:disabled) { opacity: .6; cursor: not-allowed; }
-.pick-card input { accent-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-primary)); --tw-ring-color: rgb(var(--ztims-secondary) / .5); width: 1.15rem; height: 1.15rem; margin-top: .2rem; flex-shrink: 0; }
-
-/* A guide's photo when choosing one: big enough to see the face clearly. */
-.guide-photo { width: 5rem; height: 5rem; font-size: 1.5rem; border: 1px solid rgb(var(--ztims-outline)); }
-@media (min-width: 640px) { .guide-photo { width: 6rem; height: 6rem; } }
-.pick-card input:focus, .pick-card input:focus-visible {
-    outline: none;
-    --tw-ring-color: rgb(var(--ztims-secondary) / .6);
-    box-shadow: 0 0 0 2px rgb(var(--ztims-surface)), 0 0 0 4px rgb(var(--ztims-secondary) / .6) !important;
-}
 
 /* A destructive action as a solid red pill (Cancel this booking). The same
    deep red in both themes: off-white on it is 6.4:1. */
@@ -2047,7 +2032,7 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 .sf-flag--icon { box-shadow: none; font-size: 18px; width: 20px; height: auto; text-align: center;
                  color: rgb(var(--ztims-on-surface-variant)); }
 
-/* The staff portals' header (officer, manager, guide: the fixed header beside
+/* The staff portals' header (officer and manager: the fixed header beside
    the sidebar) wears the footer's tile strip — the same ten tiles, from
    /tiles.svg (public/tiles.svg, a copy of TILES in site-footer.js), one tile
    high, repeated across. Its buttons sit on solid grounds so they stay legible

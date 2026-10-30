@@ -7,7 +7,7 @@ here is built yet unless it says so.
 
 | Characteristic | Already in ZTIMS | Gap | Tool / feature that would close it |
 |---|---|---|---|
-| 5.1 Functional Suitability | Every module built; rules enforced by the server (statistics, payments, guide scope) | No automated tests committed to the repo | Playwright (pages) + Node's test runner (API), committed; a requirements traceability matrix |
+| 5.1 Functional Suitability | Every module built; rules enforced by the server (statistics, payments, tickets) | No automated tests committed to the repo | Playwright (pages) + Node's test runner (API), committed; a requirements traceability matrix |
 | 5.2 Performance Efficiency | Tailwind compiled at build, `sin1` region, Cloudinary `q_auto`, no blur on scrolling cards | Never measured | Lighthouse / PageSpeed Insights on slow 3G, Vercel Speed Insights, k6 load test, Supabase performance advisor |
 | 5.3 Compatibility | Works alongside Xendit, Cloudinary, OpenRouteService, Gmail; same-origin API | Tested in Chromium only | Playwright on Chromium, Firefox and WebKit (Safari); one low-end Android phone |
 | 5.4 Interaction Capability | Design system (≥ 4.5:1 contrast), reduced motion, clear errors, password re-check before risky actions | English only; usability not measured | axe DevTools / WAVE, SUS questionnaire with real users, a Filipino/Cebuano language option |
@@ -22,7 +22,7 @@ securityheaders scores, (3) UptimeRobot + Sentry, (4) safety advisories per
 destination, (5) officer activity log, (6) Filipino/Cebuano.
 
 For the manuscript: an ISO 25010 Likert questionnaire answered by officers,
-managers, guides and visitors, each characteristic backed by the tool results
+managers and visitors, each characteristic backed by the tool results
 above.
 
 ## 2. Tools to switch

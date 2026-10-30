@@ -342,7 +342,7 @@ body { overflow-x: hidden; }
                 <a href="../index.html" class="site-link">Destinations</a>
                 <a href="../index.html#map" class="site-link">Map</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link">My booking</a>
+                <a href="manage.html" class="site-link">My ticket</a>
                 <a href="staff_login.html" class="site-link">Staff</a>
             </nav>
 
@@ -366,7 +366,7 @@ body { overflow-x: hidden; }
                         Frequently Asked <span class="text-gradient">Questions</span>
                     </h1>
                     <p class="text-on-surface-variant mt-4 leading-relaxed">
-                        The questions visitors, guides and establishments ask the Tourism Office most. If yours is
+                        The questions visitors and establishments ask the Tourism Office most. If yours is
                         not here, <a href="contact.html" class="text-primary font-semibold hover:text-accent underline underline-offset-4">send it to us</a>
                         and we will answer — and probably add it.
                     </p>
@@ -377,7 +377,7 @@ body { overflow-x: hidden; }
                      to open ten accordions to find the one about payment. -->
                 <div class="relative max-w-3xl mb-8">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none">search</span>
-                    <input id="faqSearch" type="search" class="field !pl-12 !rounded-full" placeholder="Search the questions — try “payment” or “guide”"
+                    <input id="faqSearch" type="search" class="field !pl-12 !rounded-full" placeholder="Search the questions — try “payment” or “ticket”"
                            aria-label="Search the questions" autocomplete="off"/>
                 </div>
                 <p id="faqEmpty" hidden class="text-on-surface-variant mb-8">
@@ -390,7 +390,7 @@ body { overflow-x: hidden; }
                         <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2 hidden lg:block">Topics</p>
                         <ul class="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 lg:sticky lg:top-24">
                             <li><a href="#visiting">Visiting &amp; browsing</a></li>
-                            <li><a href="#guides">Tourist guides &amp; booking</a></li>
+                            <li><a href="#tickets">Tickets &amp; payment</a></li>
                             <li><a href="#directions">Map &amp; directions</a></li>
                             <li><a href="#establishments">For establishments</a></li>
                             <li><a href="#site">About this site</a></li>
@@ -405,14 +405,14 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Do I need an account to use ZTIMS?</summary>
                                 <div class="faq-answer">
-                                    <p>No. Visitors never sign up or sign in. Browsing, directions and guide bookings all work without one. The sign-in link in the footer is for Tourism Office staff and the managers of listed establishments.</p>
+                                    <p>No. Visitors never sign up or sign in. Browsing, directions and tickets all work without one. The sign-in link in the footer is for Tourism Office staff and the managers of listed establishments.</p>
                                 </div>
                             </details>
 
                             <details class="faq">
                                 <summary>Is the site free?</summary>
                                 <div class="faq-answer">
-                                    <p>Yes. ZTIMS is a service of the Municipal Tourism Office. Using it costs nothing. The only fees are a tourist guide's fee and the entrance fee at some attractions, paid onsite or online.</p>
+                                    <p>Yes. ZTIMS is a service of the Municipal Tourism Office. Using it costs nothing. The only fees are the entrance fees at some attractions, paid onsite or online.</p>
                                 </div>
                             </details>
 
@@ -438,21 +438,20 @@ body { overflow-x: hidden; }
                             </details>
                         </section>
 
-                        <section class="faq-group" aria-labelledby="guides">
-                            <h2 id="guides" class="faq-heading">Tourist guides &amp; booking</h2>
+                        <section class="faq-group" aria-labelledby="tickets">
+                            <h2 id="tickets" class="faq-heading">Tickets &amp; payment</h2>
 
                             <details class="faq">
-                                <summary>How do I book a tourist guide?</summary>
+                                <summary>How do I buy an entrance ticket?</summary>
                                 <div class="faq-answer">
-                                    <p>Open the destination's page. If it requires a guide, you will see the guide fee and a booking form: your name, contact number, email, nationality, group size, and the date and time you would like. Submit it and you get a reference number such as <span class="font-mono">TG-2026-00012</span>.</p>
-                                    <p>The Tourism Office confirms your booking within 1 working day by giving it a guide, and emails you. You can book from anywhere, before you travel: you do not need to pay to be confirmed. Pay the fee onsite at the Municipal Tourism Office on the day, before the tour, or online. The day before the tour you get a reminder by email.</p>
+                                    <p>Open the attraction's page and press <b>Buy tickets</b>: choose the date and who is coming, give your name and email, and pay. Your ticket code is shown at once and emailed to you; show it at the entrance or at the Municipal Tourism Office.</p>
                                 </div>
                             </details>
 
                             <details class="faq">
-                                <summary>Can I move or cancel my ticket or booking?</summary>
+                                <summary>Can I move or cancel my ticket?</summary>
                                 <div class="faq-answer">
-                                    <p>Yes, until 11:59 PM the day before, on <a href="manage.html">Manage my ticket or booking</a>. You need the code from your email and the email address you used.</p>
+                                    <p>Yes, until 11:59 PM the day before, on <a href="manage.html">Manage my ticket</a>. You need the code from your email and the email address you used.</p>
                                     <p>If you cancel, you get back what you paid less the share the Tourism Office keeps for that destination; the page shows the exact amount before you confirm. If the office cancels or closes, you get everything back. A ticket already used at the entrance cannot be refunded.</p>
                                 </div>
                             </details>
@@ -460,43 +459,8 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Can I pay online?</summary>
                                 <div class="faq-answer">
-                                    <p>Where a destination's page shows a <b>Pay online</b> button, yes, on the payment service's own page (GCash, Maya, card and others). For now this runs in <b>test mode</b>, a demonstration in which no real money moves. ZTIMS itself never sees or asks for your card or e-wallet details.</p>
-                                    <p>You can always pay onsite at the Municipal Tourism Office instead. A guide booking is confirmed by the office whether it is paid yet or not.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>Is my booking confirmed as soon as I submit it?</summary>
-                                <div class="faq-answer">
-                                    <p>Not yet — it is a request. The Tourism Office confirms it within 1 working day by giving it a guide, and emails you. Your guide is then held for you; pay onsite on the day, or online before.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>How do I check my booking?</summary>
-                                <div class="faq-answer">
-                                    <p>Quote your reference number on the destination page's booking section, or at the office. The site shows only the destination, date, time, group size and status against a reference — never the name or contact details on it — so a reference alone cannot expose anyone.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>Why does the site need my nationality?</summary>
-                                <div class="faq-answer">
-                                    <p>The Tourism Office reports how many domestic and foreign visitors it served to the provincial and national tourism offices. Only the count is reported; your name is never attached to it. See the <a href="privacy.html#collect">Privacy Policy</a>.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>Can I choose my guide?</summary>
-                                <div class="faq-answer">
-                                    <p>The Tourism Office assigns guides, matching availability and group size. If you have a preference, put it in the notes and the officer will do their best.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>What if I have to cancel or I miss the tour?</summary>
-                                <div class="faq-answer">
-                                    <p>Let the office know as early as you can, quoting your reference. The booking is marked cancelled (or no-show) rather than deleted, so the record stays clear. Ask at the counter about the refund of a fee already paid.</p>
+                                    <p>Where a destination's page shows a <b>Buy tickets</b> button, yes, on the payment service's own page (GCash, Maya, card and others). For now this runs in <b>test mode</b>, a demonstration in which no real money moves. ZTIMS itself never sees or asks for your card or e-wallet details.</p>
+                                    <p>You can always pay onsite at the Municipal Tourism Office instead.</p>
                                 </div>
                             </details>
                         </section>
@@ -514,7 +478,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Does the site track my location?</summary>
                                 <div class="faq-answer">
-                                    <p>No. If you allow it, your position is sent once to calculate the route you asked for and then discarded. It is never stored and never linked to a booking. You can always type a starting point instead.</p>
+                                    <p>No. If you allow it, your position is sent once to calculate the route you asked for and then discarded. It is never stored and never linked to a ticket. You can always type a starting point instead.</p>
                                 </div>
                             </details>
 
@@ -685,7 +649,7 @@ body { overflow-x: hidden; }
 
     input.addEventListener('input', apply);
 
-    // A link straight to a question (#guides) still lands on the heading, but
+    // A link straight to a question (#tickets) still lands on the heading, but
     // if someone arrives with a query in the box (browser restore), honour it.
     if (input.value) apply();
 })();

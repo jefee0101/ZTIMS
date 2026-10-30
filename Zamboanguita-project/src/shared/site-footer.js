@@ -140,7 +140,7 @@
                         '</a>' +
                         '<p class="text-support mt-4 max-w-sm">' +
                             'The Municipal Tourism Office’s guide to Zamboanguita’s beaches, dive sites, ' +
-                            'falls, resorts and guided tours in Negros Oriental, Philippines. Browse freely — ' +
+                            'falls and resorts in Negros Oriental, Philippines. Browse freely — ' +
                             'no account needed.' +
                         '</p>' +
                     '</div>' +
@@ -151,7 +151,7 @@
                             link(r + 'index.html', 'Destinations') +
                             link(r + 'index.html#map', 'Map &amp; directions') +
                             link(src + 'history.html', 'Our History') +
-                            link(src + 'manage.html', 'Manage my ticket or booking') +
+                            link(src + 'manage.html', 'Manage my ticket') +
                         '</ul>' +
                     '</nav>' +
 

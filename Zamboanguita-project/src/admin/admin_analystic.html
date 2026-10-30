@@ -487,14 +487,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-accent">hiking</span>
-                <span class="sidebar-label">Tourist Guides</span>
-            </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Guide Bookings</span>
-            </a>
             <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
                 <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Tickets</span>
@@ -561,17 +553,9 @@ body { overflow-x: hidden; }
                 <div id="attnGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
             </section>
 
-            <!-- 2. Today's tours, and the month's Form A4 reports -->
-            <section class="grid grid-cols-1 xl:grid-cols-5 gap-4">
-                <div class="glass-panel p-5 sm:p-6 space-y-4 xl:col-span-3 min-w-0">
-                    <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 class="text-lg font-extrabold text-on-surface">Today's tours</h3>
-                        <a href="admin_bookings.html" data-tab-key="bookingsTab" data-tab="upcoming" class="text-sm font-bold text-primary">All upcoming tours →</a>
-                    </div>
-                    <div id="toursToday" class="overflow-x-auto"></div>
-                </div>
-
-                <div class="glass-panel p-5 sm:p-6 flex flex-col gap-4 xl:col-span-2">
+            <!-- 2. The month's Form A4 reports -->
+            <section>
+                <div class="glass-panel p-5 sm:p-6 flex flex-col gap-4">
                     <div class="flex flex-wrap items-baseline justify-between gap-2">
                         <h3 id="reportsHeading" class="text-lg font-extrabold text-on-surface">Monthly reports</h3>
                         <span id="reportsDue" class="tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1"></span>
@@ -687,7 +671,7 @@ body { overflow-x: hidden; }
     <script>
         /* ==========================================================
            ESCAPING
-           Everything below renders text written by managers, guides and
+           Everything below renders text written by managers and
            visitors. Anything that reaches innerHTML is escaped, so a name or
            a message containing markup is shown rather than run.
            ========================================================== */
@@ -778,8 +762,8 @@ body { overflow-x: hidden; }
         const fmt = n => (Number(n) || 0).toLocaleString('en-US');
         const plural = (n, one, many) => (n === 1 ? one : many);
 
-        // Sets which tab a page opens on, then follows the link: Guide Bookings
-        // and Statistics both remember their tab in sessionStorage.
+        // Sets which tab a page opens on, then follows the link (a page that
+        // remembers its tab in sessionStorage).
         function wireTabLinks(root) {
             root.querySelectorAll('a[data-tab-key]').forEach(link => {
                 link.addEventListener('click', () => {
@@ -814,38 +798,11 @@ body { overflow-x: hidden; }
         }
 
         function renderAttention(d, today) {
-            const b = d.bookings;
             const due = d.reports;
             const count = (list, test) => (list ? list.filter(test).length : null);
 
-            // Confirm first, pay later: a booking is confirmed by giving it a
-            // guide, and paid onsite on the day (or online before).
-            const live = x => ['pending_payment', 'confirmed'].includes(x.status);
-            const unpaid = x => !(x.payment && !x.payment.refundedAt);
-            const toConfirm = count(b, x => live(x) && !x.guideId);
-            const unpaidToday = count(b, x => x.status === 'confirmed' && x.guideId && unpaid(x) && dayKey(x.preferredDate) === today.key);
-            const pastOpen = count(b, x => x.status === 'confirmed' && x.guideId && dayKey(x.preferredDate) < today.key);
-            const firstNoGuide = b && b.filter(x => live(x) && !x.guideId)
-                .sort((p, q) => dayKey(p.preferredDate).localeCompare(dayKey(q.preferredDate)))[0];
 
             const cards = [
-                { icon: 'person_add', tone: 'tone-warning', pill: 'Within 1 working day', count: toConfirm,
-                  one: 'booking to confirm', many: 'bookings to confirm',
-                  detail: firstNoGuide
-                      ? `Next: ${firstNoGuide.spotId?.title || 'a destination'} · ${friendlyDay(firstNoGuide.preferredDate)} · ${firstNoGuide.visitors} ${plural(Number(firstNoGuide.visitors), 'visitor', 'visitors')}.`
-                      : 'Give each a guide to confirm it.',
-                  doneText: 'Every booking is confirmed.', go: 'Confirm bookings',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'confirm' },
-                { icon: 'payments', tone: 'tone-warning', pill: 'Today', count: unpaidToday,
-                  one: 'tour today not paid yet', many: 'tours today not paid yet',
-                  detail: 'Collect the guide fee onsite before the tour.',
-                  doneText: 'Every tour today is paid.', go: 'Record payment',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'upcoming' },
-                { icon: 'schedule', tone: 'tone-danger', pill: 'Overdue', count: pastOpen,
-                  one: 'past tour not closed', many: 'past tours not closed',
-                  detail: 'The tour date has passed. Mark each Completed or No show.',
-                  doneText: 'Every past tour is closed.', go: 'Close them',
-                  href: 'admin_bookings.html', tabKey: 'bookingsTab', tab: 'after' },
                 { icon: 'description', tone: due && due.overdue ? 'tone-danger' : 'tone-warning',
                   pill: due ? (due.overdue ? 'Overdue' : `Due ${due.dueShort}`) : '',
                   count: due ? due.missing.length : null,
@@ -853,10 +810,6 @@ body { overflow-x: hidden; }
                   detail: due ? `Accommodations still to send their monthly counts. Due ${due.dueLong}.` : '',
                   doneText: due ? `Every accommodation has sent its ${due.monthName} report.` : '', go: 'Open the tracker',
                   href: 'admin_statistics.html#tracker' },
-                { icon: 'assignment', tone: 'tone-info', pill: 'New', count: d.guideReports ? d.guideReports.length : null,
-                  one: 'guide report to read', many: 'guide reports to read',
-                  detail: 'Tour, headcount, incident and feedback reports filed by guides.',
-                  doneText: 'Every guide report has been read.', go: 'Read on Tourist Guides', href: 'admin_guides.html' },
                 { icon: 'forum', tone: 'tone-info', pill: 'New', count: d.feedback ? d.feedback.length : null,
                   one: 'new visitor message', many: 'new visitor messages',
                   detail: 'Sent from the Contact Us page.',
@@ -884,40 +837,9 @@ body { overflow-x: hidden; }
                 `${things ? `${things} ${plural(things, 'thing', 'things')} waiting` : 'Nothing waiting'} · updated ${time}`;
         }
 
-        function friendlyDay(value) {
-            const [y, m, d] = dayKey(value).split('-').map(Number);
-            if (!y) return '—';
-            return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-PH', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-        }
-
         /* ==========================================================
-           2. TODAY'S TOURS, AND THE MONTH'S REPORTS
+           2. THE MONTH'S REPORTS
            ========================================================== */
-        function renderTours(bookings, today) {
-            const box = document.getElementById('toursToday');
-            if (!bookings) { box.innerHTML = '<div class="ztims-empty tone-danger">The bookings could not be loaded.</div>'; return; }
-            const rows = bookings
-                .filter(b => b.status === 'confirmed' && dayKey(b.preferredDate) === today.key)
-                .sort((a, b) => String(a.preferredTime).localeCompare(String(b.preferredTime)));
-            if (!rows.length) { box.innerHTML = '<div class="ztims-empty">No confirmed tours today.</div>'; return; }
-            box.innerHTML = `
-            <table class="ztims-table w-full text-left border-collapse text-sm">
-                <thead><tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
-                    <th class="px-3 py-3">Time</th><th class="px-3 py-3">Destination</th><th class="px-3 py-3">Visitor</th>
-                    <th class="px-3 py-3 text-center">Group</th><th class="px-3 py-3">Guide</th>
-                </tr></thead>
-                <tbody class="divide-y divide-outline-variant/20">${rows.map(b => `
-                    <tr>
-                        <td class="px-3 py-3 font-extrabold text-on-surface tabular-nums">${escapeHtml(b.preferredTime)}</td>
-                        <td class="px-3 py-3 font-semibold text-on-surface">${escapeHtml(b.spotId?.title || '—')}</td>
-                        <td class="px-3 py-3 text-on-surface-variant">${escapeHtml(b.fullName)}</td>
-                        <td class="px-3 py-3 text-center">${Number(b.visitors) || 0}</td>
-                        <td class="px-3 py-3">${b.guideId ? escapeHtml(b.guideId.fullName) : '<span class="tone-danger font-bold">No guide yet</span>'}</td>
-                    </tr>`).join('')}
-                </tbody>
-            </table>`;
-        }
-
         /* The month whose reports are being collected now: the one that just
            ended. Reports for it are due on the 5th of this month (Manila). */
         function reportPeriod(today) {
@@ -1105,7 +1027,7 @@ body { overflow-x: hidden; }
             ].join(' ');
         }
 
-        /* Guide fees and entrance fees this month. Online payments are a
+        /* Entrance fees this month. Online payments are a
            test-mode demonstration; the Collections page says so. */
         function renderCollections(col) {
             const box = document.getElementById('collectionCounts');
@@ -1115,7 +1037,6 @@ body { overflow-x: hidden; }
             const n = (value, label, cls) => `<span><b class="text-xl ${cls || 'text-on-surface'}">${value}</b> ${label}</span>`;
             box.innerHTML = [
                 n(peso(s.total), 'collected'),
-                n(peso(s.guideFees), 'guide fees'),
                 n(peso(s.entranceFees), 'entrance fees'),
                 n(fmt(s.awaitingReceipt), plural(s.awaitingReceipt, 'waiting for an OR', 'waiting for an OR'), s.awaitingReceipt ? 'tone-warning' : '')
             ].join(' ') + (col.demo && col.demo.payments ? ' <span class="tone-warning tone-pill text-[10px] font-extrabold px-2 py-1">INCLUDES DEMO DATA</span>' : '');
@@ -1130,12 +1051,10 @@ body { overflow-x: hidden; }
                 `Here is what needs you today, ${new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}.`;
             const period = reportPeriod(today);
 
-            const [bookings, spots, managers, feedback, guideReports, tracker, collections] = await Promise.all([
-                getJson('/guide-bookings'),
+            const [spots, managers, feedback, tracker, collections] = await Promise.all([
                 getJson('/spots'),
                 getJson('/establishment-managers'),
                 getJson('/feedback?status=new'),
-                getJson('/guides/reports?status=new'),
                 getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`),
                 getJson(`/payments?month=${today.key.slice(0, 7)}`)
             ]);
@@ -1143,14 +1062,11 @@ body { overflow-x: hidden; }
 
             const reports = summariseReports(tracker, period);
             renderAttention({
-                bookings: Array.isArray(bookings) ? bookings : null,
                 spots: Array.isArray(spots) ? spots : null,
                 managers: Array.isArray(managers) ? managers : null,
                 feedback: Array.isArray(feedback) ? feedback : null,
-                guideReports: guideReports && Array.isArray(guideReports.reports) ? guideReports.reports : null,
                 reports
             }, today);
-            renderTours(Array.isArray(bookings) ? bookings : null, today);
             renderReports(reports);
             renderListings(Array.isArray(spots) ? spots : null);
             renderCollections(collections);

@@ -254,7 +254,7 @@ body { overflow-x: hidden; }
                 <a href="../index.html" class="site-link" aria-current="page">Destinations</a>
                 <a href="../index.html#map" class="site-link">Map</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link">My booking</a>
+                <a href="manage.html" class="site-link">My ticket</a>
                 <a href="staff_login.html" class="site-link">Staff</a>
             </nav>
 
@@ -276,157 +276,6 @@ body { overflow-x: hidden; }
 
 <!-- Full-size photo viewer. One element reused for every photo, so a spot with
      30 photos still only ever holds one large image in the page. -->
-
-<!-- Booking a municipal guide. No account, no sign-in, and no payment here:
-     the visitor leaves with a reference and pays at the Tourism Office. -->
-<div id="guideBookingModal" hidden class="fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-surface border border-outline-variant/40 rounded-2xl w-full max-w-md p-6 sm:p-7 max-h-[95vh] overflow-y-auto relative">
-        <button id="closeBookingModal" aria-label="Close"
-                class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-
-        <h3 class="text-xl font-display font-bold text-on-surface mb-3">Book a tourist guide</h3>
-        <ol id="bookSteps" class="journey-steps mb-5" aria-label="Booking steps"></ol>
-
-        <form id="guideBookingForm">
-          <!-- Step 1: Your details. -->
-          <div id="bookPaneDetails">
-            <div class="bk-group">
-                <h4 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">event</span>Your visit</h4>
-                <div class="bk-row bk-row--2">
-                    <div>
-                        <label for="bookDate" class="bk-label">Date</label>
-                        <input id="bookDate" type="date" required class="bk-field"/>
-                    </div>
-                    <div>
-                        <label for="bookTime" class="bk-label">Start time</label>
-                        <input id="bookTime" type="time" required value="08:00" class="bk-field"/>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <label for="bookVisitors" class="bk-label !mb-0">Visitors</label>
-                        <p id="bookGroupHint" class="bk-hint !mt-0"></p>
-                    </div>
-                    <div class="qty" data-qty>
-                        <button type="button" data-step="-1" aria-label="One fewer visitor">−</button>
-                        <input id="bookVisitors" type="number" min="1" value="1" required inputmode="numeric"/>
-                        <button type="button" data-step="1" aria-label="One more visitor">+</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bk-group">
-                <h4 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h4>
-                <div>
-                    <label for="bookName" class="bk-label">Full name</label>
-                    <input id="bookName" type="text" required autocomplete="name" class="bk-field"/>
-                </div>
-                <div>
-                    <label for="bookContact" class="bk-label">Mobile number</label>
-                    <div class="flex gap-2">
-                        <select id="bookDialCode" aria-label="Country code" class="bk-field !w-28 sm:!w-32 shrink-0">
-                        <option value="+63" data-example="917 123 4567" selected>PH +63</option>
-                        <option value="+1" data-example="415 555 0123">US/CA +1</option>
-                        <option value="+44" data-example="7700 900123">UK +44</option>
-                        <option value="+61" data-example="412 345 678">AU +61</option>
-                        <option value="+64" data-example="21 123 4567">NZ +64</option>
-                        <option value="+81" data-example="90 1234 5678">JP +81</option>
-                        <option value="+82" data-example="10 1234 5678">KR +82</option>
-                        <option value="+86" data-example="131 2345 6789">CN +86</option>
-                        <option value="+852" data-example="5123 4567">HK +852</option>
-                        <option value="+886" data-example="912 345 678">TW +886</option>
-                        <option value="+65" data-example="8123 4567">SG +65</option>
-                        <option value="+60" data-example="12 345 6789">MY +60</option>
-                        <option value="+62" data-example="812 3456 789">ID +62</option>
-                        <option value="+66" data-example="81 234 5678">TH +66</option>
-                        <option value="+84" data-example="91 234 56 78">VN +84</option>
-                        <option value="+91" data-example="98765 43210">IN +91</option>
-                        <option value="+971" data-example="50 123 4567">AE +971</option>
-                        <option value="+49" data-example="151 23456789">DE +49</option>
-                        <option value="+33" data-example="6 12 34 56 78">FR +33</option>
-                        <option value="+34" data-example="612 34 56 78">ES +34</option>
-                        <option value="+39" data-example="312 345 6789">IT +39</option>
-                        <option value="+31" data-example="6 12345678">NL +31</option>
-                        <option value="+41" data-example="78 123 45 67">CH +41</option>
-                        <option value="+46" data-example="70 123 45 67">SE +46</option>
-                        <option value="+47" data-example="406 12 345">NO +47</option>
-                        <option value="+45" data-example="20 12 34 56">DK +45</option>
-                        </select>
-                        <input id="bookContact" type="tel" required autocomplete="tel" inputmode="tel" placeholder="917 123 4567" class="bk-field flex-1 min-w-0"/>
-                    </div>
-                </div>
-                <div>
-                    <label for="bookEmail" class="bk-label">Email</label>
-                    <input id="bookEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>
-                    <p class="bk-hint">Your reference and updates are sent here.</p>
-                </div>
-                <div>
-                    <label for="bookNationality" class="bk-label">Nationality</label>
-                    <!-- A list, stored as the country code: the office counts
-                         domestic and foreign arrivals. It starts on no country, so
-                         nobody is recorded as Filipino by default. -->
-                    <select id="bookNationality" required class="bk-field">
-                        <option value="">Select nationality…</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="bookNotes" class="bk-label">Anything the office should know <small>(optional)</small></label>
-                    <textarea id="bookNotes" rows="2" placeholder="Accessibility needs, language preference…" class="bk-field"></textarea>
-                </div>
-            </div>
-
-            <p class="text-support mt-4">
-                Used only for this booking. See the
-                <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
-            </p>
-            <button type="button" id="bookNextBtn"
-                    class="mt-4 w-full bg-primary text-on-primary py-3.5 min-h-[48px] font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
-                Next: pick a guide <span class="material-symbols-outlined !text-lg" aria-hidden="true">arrow_forward</span>
-            </button>
-          </div>
-
-          <!-- Step 2: Pick a guide, for the date, time and group just given. -->
-          <div id="bookPaneGuide" hidden class="space-y-4">
-            <div class="bk-summary flex items-start justify-between gap-3">
-                <p id="bookSummary" class="text-sm text-on-surface"></p>
-                <button type="button" id="bookBackBtn" class="shrink-0 text-sm font-bold underline text-primary min-h-[32px]">Change</button>
-            </div>
-            <fieldset>
-                <legend class="bk-group-title mb-3"><span class="material-symbols-outlined" aria-hidden="true">hiking</span>Pick a guide</legend>
-                <div id="bookGuideList" class="space-y-2" role="radiogroup"></div>
-            </fieldset>
-            <button type="submit" id="submitBookingBtn"
-                    class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold btn-primary-gradient">
-                Submit request
-            </button>
-          </div>
-
-          <p id="bookingError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
-        </form>
-
-        <div id="bookingResult" hidden class="text-center space-y-3">
-            <span class="material-symbols-outlined !text-5xl tone-success">task_alt</span>
-            <h4 class="text-lg font-display font-bold text-on-surface">Booking request sent</h4>
-            <p class="text-label uppercase tracking-widest">Reference</p>
-            <p id="bookingReference" class="text-2xl font-display font-black text-primary tracking-wider select-all"></p>
-            <p class="text-support">Keep this reference.</p>
-            <p id="bookingNextStep" class="text-sm text-on-surface bk-summary text-left">
-                <b class="block mb-1">Next: the office confirms your guide</b>
-                <span id="bookingReplyLine">Within 1 working day, by email.</span> No need to pay now: pay onsite at the Municipal Tourism Office on the day, before the tour<span id="bookingOrOnline" hidden>, or online now</span>.
-            </p>
-            <!-- Online payment (Xendit). -->
-            <div id="bookingPayOnline" hidden class="space-y-2">
-                <button type="button" id="bookingPayOnlineBtn"
-                        class="w-full bg-primary text-on-primary py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined !text-lg">payments</span> Pay online now
-                </button>
-                <p id="bookingPayError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="photoLightbox" hidden class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
     <button id="lightboxClose" aria-label="Close photo"
@@ -455,7 +304,6 @@ body { overflow-x: hidden; }
 <!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
      the category markers. Loaded before the page script, which uses it. -->
 <script type="module" src="./shared/tourism-map.js"></script>
-<script type="module" src="./shared/countries.js"></script>
 
 <script type="module">
     const API_BASE = "/api";
@@ -828,304 +676,6 @@ body { overflow-x: hidden; }
         `;
     }
 
-    /* ===== TOURIST GUIDE REQUIREMENT ====================================
-       Some spots may only be visited with a municipal guide. The API reports the
-       requirement without naming anyone: a visitor does not pick their guide, the
-       Tourism Office assigns one, so no guide's name or number is served here.
-
-       A fee range rather than a single figure, because two guides at one spot may
-       charge differently and quoting one of them would be quoting the wrong one. */
-    async function renderGuideRequirement(spotId) {
-        const slot = document.getElementById('guideRequirement');
-        if (!slot) return;
-
-        let info = null;
-        try {
-            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/guide-requirement`);
-            if (response.ok) info = await response.json();
-        } catch (error) {
-            /* Never invent a requirement. Silence is the safe failure here. */
-        }
-        if (!info || !info.requiresGuide) return;
-
-        const fee = info.feeFrom === null
-            ? 'Set by the Municipal Tourism Office'
-            : info.feeFrom === info.feeTo
-                ? formatPeso(info.feeFrom)
-                : `${formatPeso(info.feeFrom)} – ${formatPeso(info.feeTo)}`;
-
-        const group = info.maxGroupSize
-            ? `${info.maxGroupSize} person${info.maxGroupSize === 1 ? '' : 's'}`
-            : '—';
-
-        // Said plainly when nobody is free: better than a booking button that
-        // leads to a request the office cannot fulfil.
-        const availability = info.guidesAvailable > 0
-            ? ''
-            : `<p class="text-support tone-warning mt-3">
-                   No guide is free for this spot at the moment. Contact the Municipal Tourism Office to arrange a visit.
-               </p>`;
-
-        // No panel of its own: the "Book a guide" button at the top opens the
-        // booking form (where a guide is chosen), and what a visitor needs to
-        // know — the fee, the group size, or that no guide is free — goes in the
-        // "Tourist guide" tile under At a glance. The hidden button is what the
-        // top button and a #guide arrival press.
-        slot.innerHTML = info.guidesAvailable > 0
-            ? '<button type="button" id="openBookGuideBtn" hidden tabindex="-1"></button>'
-            : '';
-        const tileValue = document.querySelector('[data-fact="guide"] .spot-fact__value');
-        const tileSub = document.querySelector('[data-fact="guide"] .spot-fact__sub');
-        if (tileSub) {
-            tileSub.textContent = info.guidesAvailable > 0
-                ? [info.feeFrom === null ? '' : (info.feeFrom === info.feeTo ? peso(info.feeFrom) : `${peso(info.feeFrom)} – ${peso(info.feeTo)}`),
-                   info.maxGroupSize ? `up to ${info.maxGroupSize} per guide` : ''].filter(Boolean).join(' · ')
-                : 'No guide is free right now. Contact the Tourism Office.';
-            tileSub.hidden = !tileSub.textContent;
-        }
-        if (tileValue && !(info.guidesAvailable > 0)) tileValue.classList.add('tone-warning');
-
-        wireGuideBooking(spotId, info);
-    }
-
-    /* The guides a visitor can ask for here, from the public list: photo,
-       name, area, languages, fee, bio, and — for a chosen date — free or not.
-       Never a phone number or email. */
-    async function fetchGuides(spotId, date, time) {
-        const q = new URLSearchParams();
-        if (date) q.set('date', date);
-        if (date && time) q.set('time', time);
-        try {
-            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/guides?${q}`);
-            const data = await response.json().catch(() => ({}));
-            return response.ok ? data.guides || [] : [];
-        } catch (e) { return []; }
-    }
-
-    function guideFace(g, size) {
-        return g.photoUrl
-            ? `<img src="${escapeHtml(g.photoUrl)}" alt="" class="${size} object-cover shrink-0 bg-surface-container-high"/>`
-            : `<span class="${size} shrink-0 bg-surface-container-high flex items-center justify-center font-display font-black text-on-surface-variant" aria-hidden="true">${escapeHtml((g.fullName || '?').trim().charAt(0))}</span>`;
-    }
-
-    /* The booking form itself. No account, no sign-in, no payment — the visitor
-       leaves with a reference and pays at the Municipal Tourism Office. */
-    function wireGuideBooking(spotId, info) {
-        const openBtn = document.getElementById('openBookGuideBtn');
-        const modal = document.getElementById('guideBookingModal');
-
-        const lookupBtn = document.getElementById('lookupBtn');
-        if (lookupBtn) lookupBtn.addEventListener('click', async () => {
-            const box = document.getElementById('lookupResult');
-            const reference = document.getElementById('lookupReference').value.trim().toUpperCase();
-            if (!reference) return;
-
-            box.hidden = false;
-            box.textContent = 'Checking\u2026';
-            try {
-                const response = await fetch(`${API_BASE}/guide-bookings/reference/${encodeURIComponent(reference)}`);
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(data.message || 'Could not check that reference.');
-
-                const b = data.booking;
-                box.textContent = `${b.reference} — ${b.spot}, ${b.preferredDate} at ${b.preferredTime}, `
-                    + `${b.visitors} visitor${b.visitors === 1 ? '' : 's'}. Status: ${String(b.status).replace('_', ' ')}.`;
-                box.style.color = '';
-            } catch (error) {
-                box.textContent = error.message;
-                box.style.color = '#f87171';
-            }
-        });
-
-        if (!openBtn || !modal) return;
-        actions.guide = true;
-        drawActions();
-
-        const maxGroup = info.maxGroupSize || 1;
-        document.getElementById('bookVisitors').max = String(maxGroup);
-        document.getElementById('bookGroupHint').textContent =
-            `Up to ${maxGroup} per guide`;
-        wireQty(modal);
-        // A date in the past is not offered in the first place, and a closed day
-        // is said to be closed before anyone submits.
-        const bookDate = document.getElementById('bookDate');
-        bookDate.min = new Date().toISOString().slice(0, 10);
-        bookDate.addEventListener('change', () => setBookingError(closedDayReason(bookDate.value, info)));
-
-        // Who guides: "any guide", or one the visitor picks; redrawn when the
-        // date, time or group changes, since that decides who is free.
-        let chosenGuide = '';
-        async function drawGuidePicker() {
-            const list = document.getElementById('bookGuideList');
-            const date = document.getElementById('bookDate').value;
-            const time = document.getElementById('bookTime').value;
-            const group = Number(document.getElementById('bookVisitors').value) || 1;
-            const guides = await fetchGuides(spotId, date, time);
-            const usable = g => (date ? g.free !== false : true) && group <= (Number(g.maxGroupSize) || 1);
-            if (chosenGuide && !guides.some(g => g._id === chosenGuide && usable(g))) chosenGuide = '';
-            const lowest = guides.length ? Math.min(...guides.map(g => g.guideFee)) : null;
-            const option = (value, body, disabled, note) => `
-                <label class="pick-card">
-                    <input type="radio" name="bookGuide" value="${escapeHtml(value)}" ${chosenGuide === value ? 'checked' : ''} ${disabled ? 'disabled' : ''}/>
-                    <span class="min-w-0 flex-1">${body}${note ? `<span class="block text-support tone-warning">${escapeHtml(note)}</span>` : ''}</span>
-                </label>`;
-            list.innerHTML =
-                option('', `<span class="block font-bold text-on-surface">Any available guide</span>
-                    <span class="block text-support">The office picks${lowest !== null ? ` · from ${escapeHtml(peso(lowest))}` : ''}.</span>`, false, '') +
-                guides.map(g => option(g._id, `
-                    <span class="flex items-start gap-3">${guideFace(g, 'guide-photo')}
-                        <span class="min-w-0 flex-1">
-                            <span class="flex flex-wrap justify-between gap-x-3"><span class="font-bold text-on-surface">${escapeHtml(g.fullName)}</span><span class="font-bold text-on-surface">${escapeHtml(peso(g.guideFee))}</span></span>
-                            ${g.languages.length ? `<span class="block text-support">Speaks ${escapeHtml(g.languages.join(', '))}</span>` : ''}
-                            <span class="block text-support">Up to ${Number(g.maxGroupSize) || 1} visitors</span>
-                            ${g.bio ? `<span class="block text-sm text-on-surface-variant line-clamp-2 mt-0.5">${escapeHtml(g.bio)}</span>` : ''}
-                        </span></span>`,
-                    !usable(g), group > (Number(g.maxGroupSize) || 1) ? `Takes groups of up to ${g.maxGroupSize}` : (date && g.free === false ? g.note : ''))).join('');
-            list.querySelectorAll('input[name=bookGuide]').forEach(r => r.addEventListener('change', () => { chosenGuide = r.value; }));
-        }
-        ['bookDate', 'bookTime', 'bookVisitors'].forEach(id => document.getElementById(id).addEventListener('change', drawGuidePicker));
-
-        function close() { modal.hidden = true; }
-        // Step 1 (details) and step 2 (pick a guide) are two panes of one form.
-        function showPane(which) {
-            document.getElementById('bookPaneDetails').hidden = which !== 'details';
-            document.getElementById('bookPaneGuide').hidden = which !== 'guide';
-            setBookingStep(which === 'guide' ? 1 : 0, info.payOnline);
-            setBookingError('');
-            modal.querySelector('.overflow-y-auto').scrollTop = 0;
-        }
-        document.getElementById('bookNextBtn').addEventListener('click', () => {
-            const pane = document.getElementById('bookPaneDetails');
-            const fields = [...pane.querySelectorAll('input, select, textarea')];
-            const invalid = fields.find(f => !f.checkValidity());
-            if (invalid) { invalid.reportValidity(); return; }
-            const closed = closedDayReason(document.getElementById('bookDate').value, info);
-            if (closed) { setBookingError(closed); return; }
-            const group = Number(document.getElementById('bookVisitors').value) || 1;
-            const date = document.getElementById('bookDate').value;
-            const time = document.getElementById('bookTime').value;
-            const when = date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
-            document.getElementById('bookSummary').innerHTML =
-                `<b>${escapeHtml(when)}</b> at <b>${escapeHtml(time)}</b> · ${group} visitor${group === 1 ? '' : 's'}`;
-            drawGuidePicker();
-            showPane('guide');
-        });
-        document.getElementById('bookBackBtn').addEventListener('click', () => showPane('details'));
-
-        function openBooking(guideId) {
-            document.getElementById('bookingResult').hidden = true;
-            document.getElementById('guideBookingForm').hidden = false;
-            showPane('details');
-            setBookingError('');
-            chosenGuide = guideId || '';
-            drawGuidePicker();
-            modal.hidden = false;
-        }
-        openBtn.addEventListener('click', () => openBooking(''));
-        /* The country list lives in one module so the officer's page and this one
-           agree on spelling. Without it the field is an empty dropdown, which
-           would be a booking nobody could submit — so say so rather than fail
-           silently at the point of sending. */
-        const nationality = document.getElementById('bookNationality');
-        if (window.ZTIMS_COUNTRIES) {
-            window.ZTIMS_COUNTRIES.fillSelect(nationality);
-        } else {
-            setBookingError('The nationality list did not load. Refresh the page and try again.');
-        }
-
-        // The example number follows the country, so nobody is left guessing at
-        // the shape of it.
-        const dialCode = document.getElementById('bookDialCode');
-        dialCode.addEventListener('change', function () {
-            const chosen = dialCode.options[dialCode.selectedIndex];
-            document.getElementById('bookContact').placeholder = chosen.dataset.example || '';
-        });
-
-        document.getElementById('closeBookingModal').addEventListener('click', close);
-        modal.addEventListener('click', event => { if (event.target === modal) close(); });
-        document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) close(); });
-
-        document.getElementById('guideBookingForm').addEventListener('submit', async event => {
-            event.preventDefault();
-            setBookingError('');
-
-            const payload = {
-                spotId,
-                fullName: document.getElementById('bookName').value.trim(),
-                // Stored with its country code, because the office dials what it
-                // stores and a bare local number from abroad is not dialable.
-                contactNumber: fullContactNumber(),
-                email: document.getElementById('bookEmail').value.trim(),
-                // The ISO code, not the country's name — see the note on the field.
-                nationality: document.getElementById('bookNationality').value,
-                visitors: Number(document.getElementById('bookVisitors').value) || 0,
-                preferredDate: document.getElementById('bookDate').value,
-                preferredTime: document.getElementById('bookTime').value,
-                notes: document.getElementById('bookNotes').value.trim(),
-                requestedGuideId: chosenGuide || null
-            };
-
-            const button = document.getElementById('submitBookingBtn');
-            const original = button.textContent;
-            button.disabled = true;
-            button.textContent = 'Submitting\u2026';
-
-            try {
-                const response = await fetch(`${API_BASE}/guide-bookings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(data.message || 'Could not submit that request.');
-
-                document.getElementById('guideBookingForm').hidden = true;
-                document.getElementById('bookingReference').textContent = data.booking.reference;
-                document.getElementById('bookingResult').hidden = false;
-                setBookingStep(2, data.payOnline);
-                offerOnlinePayment(data, payload.email);
-            } catch (error) {
-                setBookingError(error.message);
-            } finally {
-                button.disabled = false;
-                button.textContent = original;
-            }
-        });
-    }
-
-    /* Pay a booking online: ZTIMS opens a checkout on the payment service and
-       sends the visitor there. The amount is decided by the server. */
-    function offerOnlinePayment(data, email) {
-        const box = document.getElementById('bookingPayOnline');
-        const next = document.getElementById('bookingNextStep');
-        box.hidden = !data.payOnline;
-        next.hidden = false;
-        if (data.replyTime) document.getElementById('bookingReplyLine').textContent = `Within ${data.replyTime}, by email.`;
-        document.getElementById('bookingOrOnline').hidden = !data.payOnline;
-        if (!data.payOnline) return;
-        const button = document.getElementById('bookingPayOnlineBtn');
-        const error = document.getElementById('bookingPayError');
-        button.onclick = async () => {
-            error.hidden = true;
-            button.disabled = true;
-            const original = button.innerHTML;
-            button.textContent = 'Opening the payment page\u2026';
-            try {
-                const response = await fetch(`${API_BASE}/guide-bookings/${encodeURIComponent(data.booking.reference)}/checkout`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
-                });
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The payment page could not be opened.');
-                window.location.assign(result.checkoutUrl);
-            } catch (e) {
-                error.textContent = e.message;
-                error.hidden = false;
-                button.disabled = false;
-                button.innerHTML = original;
-            }
-        };
-    }
-
     /* Why a date cannot be chosen here, or '' when it can. The server sends the
        open weekdays (null: every day) and the closed dates, and refuses the
        same days itself; this only saves a visitor a refused payment. */
@@ -1171,8 +721,8 @@ body { overflow-x: hidden; }
         const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
         const kinds = ticketKinds(offer);
         const cheaper = kinds.slice(1).map(k => ({ student: 'students', child: 'children' })[k.key]).filter(Boolean);
-        // No section on the page: "Buy tickets" opens this form in a window,
-        // like booking a guide. The Entrance tile under At a glance carries the
+        // No section on the page: "Buy tickets" opens this form in a window.
+        // The Entrance tile under At a glance carries the
         // price and, where set, the student and child prices.
         const tileSub = document.querySelector('[data-fact="entrance"] .spot-fact__sub');
         if (tileSub && cheaper.length) tileSub.textContent = `per person · pay online or onsite · less for ${cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1')}`;
@@ -1355,22 +905,6 @@ body { overflow-x: hidden; }
             input.addEventListener('change', paint);
             paint();
         });
-    }
-
-    /* The code and the local part are collected separately so the country is a
-       choice rather than something a visitor has to remember to type. They are
-       stored as one number, which is what the office needs to dial. A leading
-       zero is a domestic prefix and would be wrong after a country code. */
-    function fullContactNumber() {
-        const code = document.getElementById('bookDialCode').value;
-        const local = document.getElementById('bookContact').value.trim().replace(/^0+/, '');
-        return local ? `${code} ${local}` : '';
-    }
-
-    function setBookingError(message) {
-        const box = document.getElementById('bookingError');
-        box.textContent = message || '';
-        box.hidden = !message;
     }
 
     function wireDirections(spot) {
@@ -1746,16 +1280,10 @@ body { overflow-x: hidden; }
                 <span class="journey-step__num">${i < current ? '✓' : i + 1}</span><span>${escapeHtml(label)}</span>
             </li>`).join('');
     }
-    function setBookingStep(current, payOnline) {
-        const list = document.getElementById('bookSteps');
-        // Confirm first, pay later: the office confirms, then the visitor pays
-        // onsite on the day (or online whenever they like).
-        if (list) list.innerHTML = journeySteps(['Your details', 'Pick a guide', 'Request sent', 'Confirmed'], current);
-    }
 
     // What this destination lets a visitor do, and the buttons for it: under the
     // photo, and fixed to the bottom of a phone's screen.
-    const actions = { tickets: false, guide: false, directions: false, bookingUrl: '' };
+    const actions = { tickets: false, directions: false, bookingUrl: '' };
     let currentIsStay = false;
     function startActions(spot) {
         currentIsStay = isStayPlace(spot);
@@ -1767,9 +1295,8 @@ body { overflow-x: hidden; }
         const size = 'btn-pill' + (compact ? ' flex-1 min-w-0 !px-2 !text-xs' : '');
         const list = [];
         if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
-        if (actions.guide) list.push(`<button type="button" data-act="guide" class="btn ${actions.tickets ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">hiking</span>Book a guide</button>`);
         if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
-        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.guide || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
         return list.join('');
     }
     function drawActions() {
@@ -1784,16 +1311,16 @@ body { overflow-x: hidden; }
         }
         honourArrival();
     }
-    /* Arriving from a Home page card's action (#tickets, #guide) or from
+    /* Arriving from a Home page card's action (#tickets) or from
        "What's next" (#directionsSection): go to that action once it exists. */
-    const arrivalAct = { '#tickets': 'tickets', '#guide': 'guide', '#directionsSection': 'directions' }[window.location.hash] || '';
+    const arrivalAct = { '#tickets': 'tickets', '#directionsSection': 'directions' }[window.location.hash] || '';
     let arrivalDone = false;
-    // If the action never appears (no guide free to book, tickets off), the
+    // If the action never appears (tickets off), the
     // section that says so is still the place to land.
     if (arrivalAct) setTimeout(() => {
         if (arrivalDone) return;
         arrivalDone = true;
-        const id = { tickets: 'spotFacts', guide: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
+        const id = { tickets: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
         const el = document.getElementById(id);
         if (el && el.offsetHeight) goTo(id);
     }, 3000);
@@ -1803,10 +1330,6 @@ body { overflow-x: hidden; }
         setTimeout(() => {
             if (arrivalAct === 'tickets') openTickets();
             if (arrivalAct === 'directions') goTo('directionsSection');
-            if (arrivalAct === 'guide') {
-                const open = document.getElementById('openBookGuideBtn');
-                if (open) open.click(); else goTo('guideRequirement');
-            }
         }, 150);
     }
     function openTickets() {
@@ -1823,10 +1346,6 @@ body { overflow-x: hidden; }
         const act = button.dataset.act;
         if (act === 'tickets') openTickets();
         if (act === 'directions') goTo('directionsSection');
-        if (act === 'guide') {
-            const open = document.getElementById('openBookGuideBtn');
-            if (open) open.click(); else goTo('guideRequirement');
-        }
     });
 
     // More places, so a visitor who has finished reading one keeps exploring:
@@ -1882,8 +1401,7 @@ body { overflow-x: hidden; }
     }
 
     /* The facts a visitor needs before going, in one row of tiles: when it is
-       open, what it costs to get in, any travel fee, whether a guide must come,
-       and where it is. Only what applies to this place is shown. */
+       open, what it costs to get in, any travel fee, and where it is. Only what applies to this place is shown. */
     function glanceFacts(spot) {
         const isStay = isStayPlace(spot);
         const rawDays = String(spot.workingDays || '').trim();
@@ -1897,7 +1415,6 @@ body { overflow-x: hidden; }
         ];
         if (!isStay) facts.push({ key: 'entrance', icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person · pay online or onsite' : '' });
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
-        if (spot.requiresGuide) facts.push({ key: 'guide', icon: 'hiking', label: 'Tourist guide', value: 'Required', sub: '' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });
         return `
             <ul id="spotFacts" class="spot-facts scroll-mt-24" aria-label="At a glance">
@@ -1958,7 +1475,6 @@ body { overflow-x: hidden; }
 
                 ${photoGallerySection(photos)}
 
-                <div id="guideRequirement" class="scroll-mt-24 empty:hidden"></div>
                 <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
                 ${safeExternalUrl(spot.bookingUrl) ? `
                 <section class="spot-panel">
@@ -2054,7 +1570,6 @@ body { overflow-x: hidden; }
             renderRelated(spot);
             // The footer script may have run before this page was drawn.
             if (window.ztimsEmergency) window.ztimsEmergency.fill();
-            renderGuideRequirement(spotId);
             renderTicketOffer(spotId);
         } catch (error) {
             console.error('❌ Failed to load destination:', error);

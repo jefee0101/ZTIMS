@@ -286,7 +286,7 @@ body { overflow-x: hidden; }
                 <a href="../index.html" class="site-link">Destinations</a>
                 <a href="../index.html#map" class="site-link">Map</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link">My booking</a>
+                <a href="manage.html" class="site-link">My ticket</a>
                 <a href="staff_login.html" class="site-link">Staff</a>
             </nav>
 
@@ -359,7 +359,7 @@ body { overflow-x: hidden; }
 
     // Where the visitor is: chose, paid, done.
     function steps(c) {
-        const labels = c.kind === 'ticket' ? ['Date & visitors', 'Payment', 'Your ticket'] : ['Your details', 'Pick a guide', 'Payment', 'Confirmed'];
+        const labels = ['Date & visitors', 'Payment', 'Your ticket'];
         // Paid: every step done. Otherwise the visitor is at Payment.
         const current = c.status === 'paid' ? labels.length : labels.length - 2;
         return `<ol class="journey-steps" aria-label="Steps">${labels.map((label, i) => `
@@ -368,8 +368,8 @@ body { overflow-x: hidden; }
             </li>`).join('')}</ol>`;
     }
 
-    // A calendar entry made here in the browser: the whole day for a ticket,
-    // three hours from the chosen time for a guided tour (Manila is UTC+8).
+    // A calendar entry made here in the browser: the whole day of the visit
+    // (Manila is UTC+8).
     function calendarFile({ title, date, time, where, ref }) {
         const [y, m, d] = String(date).slice(0, 10).split('-').map(Number);
         const pad = n => String(n).padStart(2, '0');
@@ -423,26 +423,6 @@ body { overflow-x: hidden; }
     }
 
     function render(c) {
-        if (c.status === 'paid' && c.kind === 'guide_booking' && c.booking) {
-            const b = c.booking;
-            calendarEntry = { title: `Guided tour: ${b.spot}`, date: b.preferredDate, time: b.preferredTime, where: b.spot, ref: b.reference };
-            show(steps(c) + heading('task_alt', 'tone-success', 'Your guided tour',
-                    'Show this reference at the Municipal Tourism Office.') + `
-                <div class="border border-outline-variant p-5 sm:p-6 flex flex-col items-center gap-3 text-center">
-                    <p class="font-bold text-on-surface">${esc(b.spot)}</p>
-                    <p class="text-lg font-bold text-on-surface">${niceDate(b.preferredDate)} · ${esc(b.preferredTime)}</p>
-                    <p class="font-mono text-2xl font-black tracking-widest text-on-surface select-all">${esc(b.reference)}</p>
-                    <p class="text-on-surface">${esc(b.visitors)} ${Number(b.visitors) === 1 ? 'visitor' : 'visitors'}</p>
-                    ${b.guideAssigned
-                        ? '<p class="tone-success tone-pill rounded-pill text-xs font-bold px-3 py-1">Guide assigned</p>'
-                        : '<p class="tone-warning tone-pill rounded-pill text-xs font-bold px-3 py-1">Guide to be assigned</p>'}
-                </div>
-                <div>${paidLine(c)}</div>
-                ${whatsNext({ spotId: b.spotId, date: b.preferredDate, time: b.preferredTime, manageCode: b.reference })}
-                ${b.guideAssigned ? '' : '<p class="text-support">The Municipal Tourism Office will assign your guide.</p>'}
-                <p class="text-support">Keep this page or the reference. It can be moved or cancelled until 11:59 PM the day before.</p>`);
-            return;
-        }
         if (c.status === 'paid' && c.kind === 'ticket' && c.ticket && c.ticket.code) {
             const t = c.ticket;
             calendarEntry = { title: `Visit: ${t.spot}`, date: t.visitDate, where: t.spot, ref: t.code };
@@ -470,7 +450,7 @@ body { overflow-x: hidden; }
         }
         if (c.status === 'duplicate') {
             show(heading('info', 'tone-warning', 'Payment received twice',
-                'This payment arrived after the booking or ticket was already paid or cancelled. The Municipal Tourism Office will refund it.'));
+                'This payment arrived after the ticket was already paid or cancelled. The Municipal Tourism Office will refund it.'));
             return;
         }
         if (c.status === 'expired') {
@@ -480,13 +460,11 @@ body { overflow-x: hidden; }
         }
         // Still pending.
         if (cancelled) {
-            const ref = c.booking ? `Your booking <b class="font-mono">${esc(c.booking.reference)}</b> is still saved.` : 'Your tickets were not bought.';
-            show(steps(c) + heading('undo', 'tone-neutral', 'Payment cancelled', `Nothing was charged. ${ref}`) + `
+            show(steps(c) + heading('undo', 'tone-neutral', 'Payment cancelled', 'Nothing was charged. Your tickets were not bought.') + `
                 <div class="flex flex-wrap gap-2">
                     ${c.payUrl ? `<a href="${esc(c.payUrl)}" class="btn btn-pill btn-primary min-h-[44px]">Try paying again</a>` : ''}
                     <a href="../index.html" class="btn btn-pill btn-secondary min-h-[44px]">Back to destinations</a>
-                </div>
-                ${c.booking ? '<p class="text-support">You can also pay at the Municipal Tourism Office.</p>' : ''}`);
+                </div>`);
             return;
         }
         if (tries < 20) {
@@ -495,8 +473,7 @@ body { overflow-x: hidden; }
             return;
         }
         show(steps(c) + heading('hourglass_top', 'tone-warning', 'Still waiting for the payment service',
-            'You can close this page. When the payment arrives, ZTIMS confirms it by itself.') +
-            (c.booking ? `<p class="text-sm">Your reference: <b class="font-mono">${esc(c.booking.reference)}</b></p>` : ''));
+            'You can close this page. When the payment arrives, ZTIMS confirms it by itself.'));
     }
 
     async function load() {

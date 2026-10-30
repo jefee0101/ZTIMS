@@ -1,12 +1,12 @@
 /* ==========================================================================
    portal-flat.css: the visitor pages' flat, standard look for the staff
-   portals that use it (src/guide/*.html, src/resort/*.html). Load it after
+   portals that use it (src/admin/*.html, src/resort/*.html). Load it after
    theme.css and motion.css.
    ========================================================================== */
 /* ==========================================================================
    The standard, flat look (as on the visitor pages): flat outlined panels,
    sentence-case labels, pill buttons and status pills, the current page in
-   the menu as a solid burnt-orange pill. Shared by the guide and the
+   the menu as a solid burnt-orange pill. Shared by the officer and the
    establishment manager portals.
    ========================================================================== */
 main .glass-panel {
@@ -35,7 +35,7 @@ aside a.is-current, aside a.nav-active.nav-active { background: rgb(var(--ztims-
 aside a.is-current .material-symbols-outlined, aside a.nav-active .material-symbols-outlined { color: inherit !important; }
 aside a:not(.is-current):not(.nav-active):hover { background: rgb(var(--ztims-secondary) / .15); color: rgb(var(--ztims-on-surface)); }
 
-/* Subpage tabs (guide My Profile, manager My Establishment): the same look
+/* Subpage tabs (manager Establishment and Account): the same look
    as the officer's Settings tabs. */
 .settings-tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem;
                 color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
@@ -192,7 +192,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .dest-menu .material-symbols-outlined { font-size: 18px; }
 .dest-menu .is-danger { color: rgb(var(--ztims-error)); }
 .dest-menu .is-danger:hover { background: #B3261E; color: #FFFDFA; }
-/* The same rows for people (Managers, Tourist Guides): initials or a face in
+/* The same rows for people (Managers): initials or a face in
    the photo's place, and a suspended or inactive one shown quieter. */
 .dest-row__initials { font-size: 1.25rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-secondary) / .25); }
 .dest-row.is-muted .dest-row__photo, .dest-row.is-muted .dest-row__name, .dest-row.is-muted .dest-row__facts { opacity: .6; }
@@ -262,10 +262,9 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .stat-tile p:first-child { font-size: .8125rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
 .stat-tile p:nth-child(2) { font-size: 1.75rem; font-weight: 900; color: rgb(var(--ztims-on-surface)); font-variant-numeric: tabular-nums; }
 
-/* ---- The officer's Guide Bookings: one row per booking -------------------
-   The date large on the left (red once it has passed while still open), then
-   who and where, the guide, the payment, the visitor's note; one main button
-   and a ⋯ menu. Shares .dest-row__body / __facts / __issues / __actions. */
+/* ---- Rows led by a date (the Guest Register) -------------------------------
+   The date large on the left (red once it has passed), then the details; one
+   main button and a ⋯ menu. Shares .dest-row__body / __facts / __actions. */
 .bk-row { display: grid; grid-template-columns: 4.5rem 1fr auto; gap: 1rem; align-items: start; padding: 1rem 1.25rem; }
 .bk-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
 .bk-row__date { display: flex; flex-direction: column; align-items: center; padding: .4rem 0; border: 1px solid rgb(var(--ztims-outline-variant) / .6);

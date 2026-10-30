@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="./shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Manage my ticket or booking</title>
+    <title>Explore Zamboanguita | Manage my ticket</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -286,7 +286,7 @@ body { overflow-x: hidden; }
                 <a href="../index.html" class="site-link">Destinations</a>
                 <a href="../index.html#map" class="site-link">Map</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link" aria-current="page">My booking</a>
+                <a href="manage.html" class="site-link" aria-current="page">My ticket</a>
                 <a href="staff_login.html" class="site-link">Staff</a>
             </nav>
 
@@ -301,16 +301,16 @@ body { overflow-x: hidden; }
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
                 <div class="space-y-2">
-                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">My booking</h1>
+                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">My ticket</h1>
                     <p class="text-on-surface-variant">Enter the code from your email and the email address you used.</p>
                 </div>
 
                 <form id="findForm" class="spot-panel" novalidate>
                     <div class="bk-row bk-row--2">
                         <div>
-                            <label for="findCode" class="bk-label">Ticket code or booking reference</label>
+                            <label for="findCode" class="bk-label">Ticket code</label>
                             <input id="findCode" type="text" required autocomplete="off" autocapitalize="characters" spellcheck="false"
-                                   placeholder="e.g. TG-2026-00012" class="bk-field bk-field--code"/>
+                                   placeholder="e.g. JF-7K3M-Q" class="bk-field bk-field--code"/>
                         </div>
                         <div>
                             <label for="findEmail" class="bk-label">Email</label>
@@ -319,7 +319,7 @@ body { overflow-x: hidden; }
                     </div>
                     <p id="findError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
                     <button type="submit" id="findBtn" class="btn btn-pill btn-primary min-h-[48px] w-full sm:w-auto mt-4">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span>Find my booking
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span>Find my ticket
                     </button>
                 </form>
 
@@ -339,19 +339,13 @@ body { overflow-x: hidden; }
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
 <script>
-/* Manage my ticket or booking. Everything is decided by the server, which needs
+/* Manage my ticket. Everything is decided by the server, which needs
    both the code and the email each time; this page only shows what it says and
    asks before anything that cannot be undone. */
 (function () {
     const API_BASE = "/api";
     const box = document.getElementById('itemBox');
     let current = null;          // { code, email } of what is on screen
-
-    // Whether online payment is on, asked once: a booking still waiting for
-    // payment offers "Pay online now" only when it can work.
-    let payOnline = false;
-    const payReady = fetch(`${API_BASE}/payments/config`).then(r => r.ok ? r.json() : null)
-        .then(c => { payOnline = Boolean(c && c.online); }).catch(() => {});
 
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -360,7 +354,6 @@ body { overflow-x: hidden; }
     const STATUS = {
         valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the entrance'], cancelled: ['tone-neutral', 'Cancelled'],
         pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],
-        confirmed: ['tone-success', 'Confirmed'], completed: ['tone-info', 'Completed'], no_show: ['tone-neutral', 'No show'],
         closed: ['tone-warning', 'Date closed by the office']
     };
     function niceDate(value) {
@@ -395,27 +388,13 @@ body { overflow-x: hidden; }
     }
 
     function render(item, notice) {
-        const isTicket = item.kind === 'ticket';
-        const unpaid = !item.paid || item.paid.refundedAt;
-        // Confirm first, pay later: a booking is confirmed by the office giving
-        // it a guide; it is paid onsite on the day, or online before.
-        const [tone, label] = !isTicket && item.status === 'pending_payment' ? ['tone-warning', 'Waiting for the office to confirm']
-            : !isTicket && item.status === 'confirmed' && unpaid ? ['tone-success', 'Confirmed · Not paid yet']
-            : STATUS[item.status] || ['tone-neutral', item.status];
-        const date = isTicket ? item.visitDate : item.preferredDate;
-        const details = isTicket ? [
+        const [tone, label] = STATUS[item.status] || ['tone-neutral', item.status];
+        const details = [
             row('Ticket code', `<span class="font-mono">${esc(item.code)}</span>`),
             row('Attraction', esc(item.spot && item.spot.title)),
-            row('Date', niceDate(date)),
+            row('Date', niceDate(item.visitDate)),
             row('People', `${esc(item.people)} · ${esc(item.kindsText)}`)
-        ] : [
-            row('Reference', `<span class="font-mono">${esc(item.reference)}</span>`),
-            row('Destination', esc(item.spot && item.spot.title)),
-            row('Date and time', `${niceDate(date)} · ${esc(item.preferredTime)}`),
-            row('Visitors', esc(item.visitors)),
-            row('Guide', item.guide ? esc(item.guide) : `To be confirmed within ${esc(item.replyTime || '1 working day')}${item.requestedGuide ? ` (you asked for ${esc(item.requestedGuide)})` : ''}`)
         ];
-        if (!isTicket && !item.paid && ['pending_payment', 'confirmed'].includes(item.status)) details.push(row('Payment', 'Not paid yet'));
         if (item.paid) {
             details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online' : ' · at the office'}`));
             if (item.paid.refundedAt) details.push(row('Refunded', peso(item.paid.refundAmount)));
@@ -424,27 +403,14 @@ body { overflow-x: hidden; }
         const minDate = item.today;
         const moveForm = item.canMove ? `
             <form id="moveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
-                <h2 class="font-bold text-on-surface">Move to another ${isTicket ? 'date' : 'date or time'}</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-[1fr_${isTicket ? '' : '10rem_'}auto] gap-3 items-end">
+                <h2 class="font-bold text-on-surface">Move to another date</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
                     <label class="block"><span class="bk-label">New date</span>
                         <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="bk-field"/></label>
-                    ${isTicket ? '' : `<label class="block"><span class="bk-label">Time</span>
-                        <input id="moveTime" type="time" required value="${esc(item.preferredTime)}" class="bk-field"/></label>`}
                     <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Move</button>
                 </div>
-                <p id="moveNote" class="text-support">${isTicket ? 'The price and the ticket code stay the same.' : 'The office confirms your guide again for the new date.'}</p>
+                <p id="moveNote" class="text-support">The price and the ticket code stay the same.</p>
             </form>` : '';
-        // A guide booking nobody has paid for yet: the way to pay, first.
-        const needsPaying = !isTicket && ['pending_payment', 'confirmed'].includes(item.status) && !item.paid;
-        const payForm = needsPaying ? `
-            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
-                <h2 class="font-bold text-on-surface">Pay for this booking</h2>
-                <p class="text-sm text-on-surface-variant">${payOnline
-                    ? 'Pay onsite at the Municipal Tourism Office on the day, before the tour, or online now.'
-                    : 'Pay onsite at the Municipal Tourism Office on the day, before the tour.'}</p>
-                ${payOnline ? `<button type="button" id="payNowBtn" class="btn btn-pill btn-primary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">payments</span>Pay online now</button>` : ''}
-            </div>` : '';
         const closureForm = item.canRefundClosure ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Take a full refund</h2>
@@ -457,20 +423,19 @@ body { overflow-x: hidden; }
                 <p class="text-sm text-on-surface-variant">${item.paid && !item.paid.refundedAt
                     ? `You get <b>${peso(item.refund)}</b> back${item.kept > 0 ? `; the office keeps ${esc(item.keepPercent)}% (${peso(item.kept)})` : ''}. This cannot be undone.`
                     : 'Nothing has been paid, so nothing is refunded. This cannot be undone.'}</p>
-                <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this ${isTicket ? 'ticket' : 'booking'}</button>
+                <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this ticket</button>
             </div>` : '';
 
         box.innerHTML = `
             ${notice ? `<p class="tone-success text-sm font-bold border border-outline-variant/30 p-3">${esc(notice)}</p>` : ''}
             <div class="flex flex-wrap items-start justify-between gap-3">
-                <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">${isTicket ? 'Your entrance ticket' : 'Your guide booking'}</h2>
+                <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">Your entrance ticket</h2>
                 <span class="${tone} tone-pill rounded-pill text-xs font-bold px-3 py-1">${esc(label)}</span>
             </div>
             <div>${details.join('')}</div>
             ${item.closedByOffice || !(item.canMove || item.canCancel)
                 ? `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`
                 : `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`}
-            ${payForm}
             ${moveForm}
             ${closureForm}
             ${cancelForm}
@@ -487,26 +452,6 @@ body { overflow-x: hidden; }
     }
 
     function wireActions(item) {
-        const pay = document.getElementById('payNowBtn');
-        if (pay) pay.addEventListener('click', async () => {
-            showError('actionError', '');
-            pay.disabled = true;
-            const original = pay.innerHTML;
-            pay.textContent = 'Opening the payment page\u2026';
-            try {
-                const response = await fetch(`${API_BASE}/guide-bookings/${encodeURIComponent(item.reference)}/checkout`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: current.email })
-                });
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The payment page could not be opened.');
-                window.location.assign(result.checkoutUrl);
-            } catch (e) {
-                showError('actionError', e.message);
-                pay.disabled = false;
-                pay.innerHTML = original;
-            }
-        });
         const move = document.getElementById('moveForm');
         if (move) {
             const dateInput = document.getElementById('moveDate');
@@ -522,8 +467,7 @@ body { overflow-x: hidden; }
                 if (!dateInput.value) return showError('actionError', 'Choose the new date.');
                 button.disabled = true;
                 try {
-                    const time = document.getElementById('moveTime');
-                    const result = await call('/manage/move', { date: dateInput.value, ...(time ? { time: time.value } : {}) });
+                    const result = await call('/manage/move', { date: dateInput.value });
                     render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
                 } catch (error) {
                     showError('actionError', error.message);
@@ -579,7 +523,6 @@ body { overflow-x: hidden; }
         current = { code, email };
         try {
             const result = await call('/manage/lookup');
-            await payReady;
             render(result.item);
         } catch (error) {
             box.hidden = true;

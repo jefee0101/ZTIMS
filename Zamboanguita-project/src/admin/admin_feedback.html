@@ -474,14 +474,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tourist Guides" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_guides.html">
-                <span class="material-symbols-outlined text-accent">hiking</span>
-                <span class="sidebar-label">Tourist Guides</span>
-            </a>
-            <a title="Guide Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Guide Bookings</span>
-            </a>
             <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
                 <span class="material-symbols-outlined text-accent">confirmation_number</span>
                 <span class="sidebar-label">Tickets</span>
@@ -541,7 +533,7 @@ body { overflow-x: hidden; }
                     <button type="button" data-topic="listing" aria-pressed="false">Listing wrong</button>
                     <button type="button" data-topic="problem" aria-pressed="false">Something not working</button>
                     <button type="button" data-topic="suggestion" aria-pressed="false">Suggestion</button>
-                    <button type="button" data-topic="booking" aria-pressed="false">Guide booking</button>
+                    <button type="button" data-topic="booking" aria-pressed="false">Ticket</button>
                     <button type="button" data-topic="other" aria-pressed="false">Other</button>
                 </div>
                 <div class="relative">
@@ -578,7 +570,7 @@ body { overflow-x: hidden; }
 
         const TOPIC_LABEL = {
             listing: 'Listing wrong / out of date', problem: 'Something not working',
-            suggestion: 'Suggestion', booking: 'Guide booking', other: 'Other'
+            suggestion: 'Suggestion', booking: 'Ticket', other: 'Other'
         };
         const TOPIC_ICON = {
             listing: 'edit_location_alt', problem: 'bug_report', suggestion: 'lightbulb', booking: 'confirmation_number', other: 'chat'
