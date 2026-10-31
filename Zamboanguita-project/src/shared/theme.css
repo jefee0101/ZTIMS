@@ -474,238 +474,6 @@ h1, h2, h3, h4, .font-display, .font-headline {
 }
 
 /* ==========================================================================
-   The cove — a curved window where the photograph carries on
-   --------------------------------------------------------------------------
-   The hero used to stop dead on a straight line, and then on a wave. Neither
-   let the photograph into the page. This does: the picture continues past the
-   bottom of the hero into the top of the section below, and the section's own
-   colour is painted back over it in a curve that is high at both edges and
-   dips through the middle — so what you see through the opening is the
-   photograph itself, at full strength, not a tint of it.
-
-   The trick that makes it seamless: the SAME image is used twice, in the hero
-   and again in the band below it, and both are sized to the hero PLUS the
-   cove. object-fit: cover then computes an identical crop for both, one
-   anchored to the top and one to the bottom, so the two halves line up exactly
-   across the join. Size them differently and cover picks a different scale for
-   each, which shows up as a hard horizontal jump straight through the opening.
-
-   The heading and the search sit over the picture, so a scrim underneath them
-   is not optional. It is built from the section's own surface colour, which
-   means it darkens the photograph on the night theme and lightens it on the
-   day one — the text above it is --ztims-on-surface either way and stays
-   readable without being restated per theme. The two scrims meet at the same
-   value on the join, or the seam reappears as a band of shadow.
-   ========================================================================== */
-:root {
-    /* One source of truth. The hero is sized from this and the continuation
-       below is measured against it, so the crop cannot drift out of step.
-       Tall enough to hold the greeting, the headline, the line under it, the
-       search and the two links on a phone. */
-    --ztims-hero-h: max(46vh, 410px);
-    /* Deep enough to hold the heading and, on a wide screen, the search row —
-       and no deeper. Past this the destination cards begin, and the picture
-       would show through the gaps between them. */
-    --ztims-cove: 200px;
-}
-
-@media (min-width: 640px) {
-    :root { --ztims-hero-h: max(48vh, 420px); --ztims-cove: 215px; }
-}
-
-@media (min-width: 1024px) {
-    :root { --ztims-cove: 235px; }
-}
-
-.ztims-hero { min-height: var(--ztims-hero-h); }
-
-/* One piece of media behind both sections, rather than a copy in each.
-
-   The still version worked by duplicating the image and matching the crops
-   exactly. That cannot work for film: two <video> elements are two downloads
-   that drift apart, and the join would show two different frames meeting. A
-   single layer spanning the hero and the cove has nothing to keep in step.
-
-   The gradient is the floor beneath the floor: if the still never loads and the
-   film never plays, the hero is still the municipality's own blues rather than
-   a white hole with white text on it. */
-.ztims-stage { position: relative; }
-
-.ztims-stage__media {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: calc(var(--ztims-hero-h) + var(--ztims-cove));
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
-    /* Both stops are deep enough to carry white text. It ended on the page
-       background before, which on the light theme is sand — and the cove, where
-       the white heading sits, is the very bottom of this layer. Had the still
-       and the film both failed, the heading would have been white on sand. */
-    background: linear-gradient(160deg,
-        rgb(var(--brand-ember)) 0%,
-        rgb(var(--brand-burnt)) 100%);
-}
-
-.ztims-stage__poster,
-.ztims-stage__video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Over the still, so the first frame is already in place when it starts and
-   there is no flash of empty space between the two. */
-.ztims-stage__video { z-index: 1; }
-
-/* Both sections sit on the stage, so both need to be above it. */
-.ztims-hero,
-.ztims-browse { position: relative; z-index: 1; }
-.ztims-hero { z-index: 2; }
-
-/* The section's colour, but starting at its own cove depth instead of its top
-   edge, so the stage behind shows through the opening. A gradient with two
-   stops at the same position is a hard line, not a fade, and the final colour
-   carries on to the bottom of the section however tall it grows. */
-.ztims-browse {
-    background: linear-gradient(to bottom,
-        rgb(var(--ztims-surface-low) / 0) 0,
-        rgb(var(--ztims-surface-low) / 0) var(--ztims-cove),
-        rgb(var(--ztims-surface-low))     var(--ztims-cove));
-}
-
-/* The hero's words — "Mabuhay", the welcome and the line under it — are a
-   plain light colour and nothing else: no shadow, no outline, no gradient
-   (the user's decision, October 2026), and no shading over the film either.
-   Their legibility rests on the film itself being dark enough behind them. */
-.ztims-hero h1,
-.ztims-hero h2,
-.ztims-hero p {
-    color: rgb(255 253 250);
-    text-shadow: none;
-}
-
-.ztims-cove {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--ztims-cove);
-    overflow: hidden;
-    /* Above the section's flat background, below everything anybody types into
-       or taps. Decoration: it must never take a click meant for the search. */
-    z-index: 0;
-    pointer-events: none;
-}
-
-/* What sits inside the opening: "Browse everything the municipality has to
-   offer." Plain off-white and nothing else — no shadow, like the hero's words
-   (the user's decision, October 2026). */
-.ztims-cove-text {
-    color: rgb(255 253 250);
-    text-shadow: none;
-}
-
-/* The heading's own block, as deep as the opening, with the heading centred in
-   it. Whatever comes next ("How it works", the tiles) therefore starts below
-   the shoreline, on the section's solid colour. Before, the steps sat inside
-   the opening and the picture showed through the top of each card. 0.82 and
-   0.72 are where each curve's flat edge ends (196/240 and 172/240 of the
-   cove), less the section's top padding (py-8, then sm:py-10). */
-.ztims-cove-head {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(var(--ztims-cove) * 0.82 - 2rem);
-    /* Room for the lower half of the ribbon along the edge, and a gap. */
-    margin-bottom: 2.5rem;
-}
-@media (min-width: 640px) {
-    .ztims-cove-head { min-height: calc(var(--ztims-cove) * 0.82 - 2.5rem); }
-}
-@media (min-width: 1280px) {
-    .ztims-cove-head { min-height: calc(var(--ztims-cove) * 0.72 - 2.5rem); }
-}
-
-/* The curve itself: the section's colour, filled from the shoreline downwards,
-   leaving the opening above it clear. Stretched rather than scaled, so it grows
-   wider on a desktop instead of taller. */
-.ztims-cove__curve {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.ztims-cove__curve path { fill: rgb(var(--ztims-surface-low)); }
-
-/* The ribbon on the cove's edge (drawn by index.html's coveRibbon): burnt
-   orange, "EXPLORE ZAMBOANGUITA" repeated along it in off-white (4.5:1).
-   Still, flat, no shadow. */
-.ztims-cove__curve .cove-ribbon {
-    fill: none;
-    stroke: rgb(var(--ztims-primary));
-    stroke-width: 28px;
-    stroke-linejoin: round;
-}
-/* The words over the tiles: off-white with an ember outline drawn under the
-   fill, so they read over any tile behind them. */
-.ztims-cove__curve .cove-ribbon__text--over {
-    fill: rgb(255 253 250);
-    stroke: rgb(var(--brand-ember)); stroke-width: 4px; stroke-linejoin: round;
-    paint-order: stroke fill;
-    font-size: 12px; letter-spacing: .2em;
-}
-@media (min-width: 640px) { .ztims-cove__curve .cove-ribbon__text--over { font-size: 15px; } }
-.ztims-cove__curve .cove-ribbon__text {
-    fill: rgb(var(--ztims-on-primary));
-    font-family: var(--ztims-font-body);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: .18em;
-}
-@media (min-width: 640px) {
-    .ztims-cove__curve .cove-ribbon { stroke-width: 34px; }
-    /* The words over the tiles: off-white with an ember outline drawn under the
-   fill, so they read over any tile behind them. */
-.ztims-cove__curve .cove-ribbon__text--over {
-    fill: rgb(255 253 250);
-    stroke: rgb(var(--brand-ember)); stroke-width: 4px; stroke-linejoin: round;
-    paint-order: stroke fill;
-    font-size: 12px; letter-spacing: .2em;
-}
-@media (min-width: 640px) { .ztims-cove__curve .cove-ribbon__text--over { font-size: 15px; } }
-.ztims-cove__curve .cove-ribbon__text { font-size: 13px; }
-}
-
-/* Two shapes for one idea. preserveAspectRatio stretches the path to the
-   viewport, so a curve that falls away gracefully across 1440px collapses into
-   a sharp V at 360px — and the heading, which is nearly full width on a phone,
-   ends up with its first and last words out on the shoulders where white text
-   has nothing dark behind it. The narrow shape keeps the shoulders to a few
-   per cent so the opening stays as wide as the text. */
-.ztims-cove__curve .is-wide { display: none; }
-
-/* Not 640px: at tablet widths the heading still wraps to two long lines, and
-   the graceful shoulders put the ends of them out on the sand where white text
-   has nothing behind it. Measured, not guessed — 1.06:1 at 820px. The wide
-   shape only earns its keep once the viewport is wide enough that the heading
-   is comfortably narrower than the opening. 1024px is not it either: that is
-   exactly where the heading steps up to its largest size and wraps to two long
-   lines again, so it failed there too. 1280px is the first width where the
-   graceful shape and the heading coexist. */
-@media (min-width: 1280px) {
-    .ztims-cove__curve .is-narrow { display: none; }
-    .ztims-cove__curve .is-wide { display: inline; }
-}
-
-/* ==========================================================================
    Primary, used as text, on the night theme
    --------------------------------------------------------------------------
    Tailwind maps one colour name to both `bg-primary` and `text-primary`, so a
@@ -729,19 +497,6 @@ body.dark-mode .text-primary {
    `bg-gold` and `bg-orange` keep the brand hex. */
 html:not(.dark) .text-gold { color: rgb(var(--ztims-gold-text)); }
 html:not(.dark) .text-orange { color: rgb(var(--ztims-gold-text)); }
-
-/* A hand, for the one or two places that greet rather than label. Kept as a
-   token so the face is named once; the page that uses it is what loads it. The
-   fallbacks matter more than usual here — if the webfont never arrives, a
-   generic cursive is still a script, and a sans-serif at this size would just
-   look like a mistake. */
-.ztims-script {
-    font-family: "Great Vibes", "Segoe Script", "Snell Roundhand", cursive;
-    font-weight: 400;
-    /* Script faces sit high in their em box; without this the descenders of a
-       word like Mabuhay collide with the line beneath. */
-    padding-bottom: 0.12em;
-}
 
 /* ==========================================================================
    Supporting text
@@ -1625,131 +1380,103 @@ div.leaflet-container {
 }
 @media (min-width: 640px) { .journey-step { font-size: .8125rem; } }
 
-/* "How it works": three numbered steps, one row on a wide screen. */
-.how-it-works { display: grid; grid-template-columns: 1fr; gap: .75rem; }
-@media (min-width: 768px) { .how-it-works { grid-template-columns: repeat(3, 1fr); } }
-.how-step {
-    display: flex; align-items: center; gap: .85rem; padding: .85rem 1.75rem .85rem .85rem;
-    color: rgb(var(--ztims-on-surface)); text-decoration: none;
-    /* The header's pill shape, without a fill: only a hairline keeps the
-       shape, and the number carries the colour. */
-    background: transparent;
-    border: 1px solid rgb(var(--ztims-outline));
-    border-radius: 9999px;
-}
-.how-step__num {
-    width: 2.5rem; height: 2.5rem; flex-shrink: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: rgb(var(--ztims-secondary)); color: rgb(var(--ztims-on-secondary));
-    border-radius: 50%;
-    font-weight: 800;
-}
-
-/* Category tiles: a photograph per kind of place, its name over it. */
-.category-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-/* Eight tiles (seven categories and Places to stay): two a row on a phone,
-   four a row from 1024px (two rows; eight in one row would be too narrow). */
-.category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: span 2; }
-@media (min-width: 1024px) {
-    .category-tiles { grid-template-columns: repeat(4, 1fr); }
-    .category-tiles > .category-tile:last-child:nth-child(odd) { grid-column: auto; }
-}
-.category-tile {
-    position: relative; display: block; height: 9.5rem; overflow: hidden; text-align: left;
-    background: rgb(var(--ztims-primary)); color: #fff; border: 0; padding: 0; cursor: pointer;
-    box-shadow: var(--ztims-shadow-card);
-}
-@media (min-width: 640px) { .category-tile { height: 11rem; } }
-.category-tile img {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    transition: transform var(--dur-moderate, 300ms) var(--ease-standard, ease);
-}
-.category-tile:hover img, .category-tile:focus-visible img { transform: scale(1.05); }
-/* A dark scrim, the same in both themes: the text on it is white in both. */
-.category-tile::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(to top, rgb(0 0 0 / .78), rgb(0 0 0 / .15) 65%, transparent);
-}
-.category-tile__text { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: .85rem 1rem; }
-.category-tile__title { display: block; font-weight: 800; font-size: 1.05rem; line-height: 1.2; }
-.category-tile__sub { display: block; font-size: .8rem; opacity: .9; }
-.category-tile[aria-pressed="true"] { outline: 3px solid rgb(var(--ztims-secondary, var(--ztims-primary))); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .category-tile img { transition: none; } }
-
 /* ==========================================================================
-   The visitor pages' header
+   The visitor pages' header (the user's design from UX Pilot, October 2026)
    --------------------------------------------------------------------------
-   Every visitor page carries the same header: the wordmark, then words-only
-   links — Destinations, History, My ticket, Staff — and the theme toggle
-   last. On hover or keyboard focus a solid tangerine oval swells in behind a
-   link, with ink on it (6.7:1); the current page keeps a solid burnt-orange
-   oval with off-white on it (4.5:1). The ovals and the round theme toggle are
-   the header's deliberate curves (corners are square elsewhere), asked for by
-   the user. Transform and opacity only, per motion.css.
+   The same on all nine visitor pages: a floating, rounded glass bar — the
+   orange badge and the name, the links (the current page a solid ink pill),
+   the round theme toggle and Buy tickets. On Home it floats over the hero
+   film (.site-header--over); elsewhere it stays at the top as the page
+   scrolls. Two rows on a phone (name and buttons, then the links), one row
+   from 900px.
    ========================================================================== */
-/* Two rows on a phone (name and toggle, then the links across), one row
-   from 768px. */
+.site-header {
+    position: sticky; top: .75rem; z-index: 40;
+    width: min(77rem, 100% - 1.5rem);
+    margin: .75rem auto 0;
+    border-radius: 1.125rem;
+    background: rgb(var(--ztims-surface-high) / .86);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgb(var(--ztims-on-surface) / .08);
+    box-shadow: 0 12px 32px -14px rgb(28 25 23 / .35);
+}
+.site-header--over { position: fixed; left: 0; right: 0; top: .75rem; margin: 0 auto; }
+@media (min-width: 640px) { .site-header--over { top: 1rem; } }
 .site-header__row {
     display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas: "brand theme" "nav nav";
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand tools" "nav nav";
     align-items: center;
-    column-gap: .75rem;
-    padding-top: .5rem;
-    padding-bottom: .25rem;
+    gap: .35rem .75rem;
+    padding: .5rem .5rem .4rem .75rem;
 }
-.site-header__brand { grid-area: brand; }
-.site-header__theme { grid-area: theme; }
-.site-header__nav {
-    grid-area: nav;
-    display: flex; align-items: center; justify-content: space-between;
-    margin: 0 -.35rem;
-}
-@media (min-width: 768px) {
+@media (min-width: 900px) {
     .site-header__row {
-        grid-template-columns: auto 1fr auto;
-        grid-template-areas: "brand nav theme";
-        padding-top: .75rem; padding-bottom: .75rem;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "brand nav tools";
+        padding: .6rem .65rem .6rem 1rem;
     }
-    .site-header__nav { justify-content: flex-end; gap: .35rem; margin: 0 .5rem 0 0; }
 }
+.site-header__brand {
+    grid-area: brand; display: flex; align-items: center; gap: .7rem; min-width: 0;
+    color: rgb(var(--ztims-on-surface)); text-decoration: none;
+}
+.site-header__logo {
+    width: 2.5rem; height: 2.5rem; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: .65rem;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA;
+    box-shadow: 0 6px 16px -6px rgb(191 87 0 / .65);
+}
+.site-header__logo .material-symbols-outlined { font-size: 1.35rem; font-variation-settings: 'FILL' 1, 'wght' 500; }
+.site-header__name { min-width: 0; line-height: 1.15; }
+.site-header__title { display: block; font-weight: 800; font-size: .95rem; letter-spacing: -.01em; }
+.site-header__sub {
+    display: block; margin-top: 2px; font-size: .625rem; letter-spacing: .16em; text-transform: uppercase;
+    color: rgb(var(--ztims-on-surface-variant)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.site-header__nav {
+    grid-area: nav; display: flex; gap: .2rem; min-width: 0;
+    overflow-x: auto; scrollbar-width: none;
+}
+.site-header__nav::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .site-header__nav { justify-content: center; } }
 .site-link {
-    position: relative;
-    isolation: isolate;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    min-height: 44px;
-    padding: 0 .55rem;
-    font-size: .75rem;
-    font-weight: 700;
-    color: rgb(var(--ztims-on-surface-variant));
-    transition: color var(--dur-fast) var(--ease-standard);
+    display: inline-flex; align-items: center; flex-shrink: 0;
+    min-height: 2.5rem; padding: 0 .85rem; border-radius: 9999px;
+    font-size: .875rem; font-weight: 600; white-space: nowrap; text-decoration: none;
+    color: rgb(var(--ztims-on-surface) / .75);
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease), color var(--dur-fast, 160ms) var(--ease-standard, ease);
 }
-@media (min-width: 420px) { .site-link { font-size: .8125rem; padding: 0 .7rem; } }
-@media (min-width: 1024px) { .site-link { font-size: .875rem; padding: 0 1rem; } }
-.site-link::after {
-    content: '';
-    position: absolute;
-    inset: 6px 0;
-    z-index: -1;
-    border-radius: 9999px;
-    background: rgb(var(--ztims-secondary));
-    opacity: 0;
-    transform: scale(.8);
-    transition: opacity var(--dur-moderate) var(--ease-decelerate),
-                transform var(--dur-moderate) var(--ease-spring);
+@media (min-width: 1024px) { .site-link { font-size: .9375rem; padding: 0 1.05rem; } }
+.site-link:hover { background: rgb(var(--ztims-on-surface) / .07); color: rgb(var(--ztims-on-surface)); }
+.site-link:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.site-link[aria-current="page"], .site-link[aria-current="page"]:hover { background: #1C1917; color: #FAF7F2; }
+html.dark .site-link[aria-current="page"], html.dark .site-link[aria-current="page"]:hover { background: #F5F1EA; color: #1C1917; }
+.site-header__tools { grid-area: tools; display: flex; align-items: center; gap: .5rem; }
+.site-header__theme {
+    width: 2.5rem; height: 2.5rem; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+    border: 1px solid rgb(var(--ztims-outline));
+    transition: transform var(--dur-fast, 160ms) var(--ease-standard, ease);
 }
-.site-link:hover, .site-link:focus-visible { color: rgb(var(--ztims-on-secondary)); }
-.site-link:hover::after, .site-link:focus-visible::after { opacity: 1; transform: scale(1); }
-.site-link:focus-visible { outline: none; }
-.site-link:focus-visible::after { box-shadow: 0 0 0 2px rgb(var(--ztims-on-surface)); }
-.site-link[aria-current="page"], .site-link[aria-current="page"]:hover { color: rgb(var(--ztims-on-primary)); }
-.site-link[aria-current="page"]::after { opacity: 1; transform: scale(1); background: rgb(var(--ztims-primary)); }
+.site-header__theme:hover { transform: scale(1.06); }
+.site-header__cta {
+    display: none; align-items: center; gap: .35rem;
+    min-height: 2.5rem; padding: 0 1.1rem; border-radius: 9999px;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA;
+    font-weight: 700; font-size: .875rem; white-space: nowrap; text-decoration: none;
+    box-shadow: 0 8px 20px -10px rgb(191 87 0 / .8);
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.site-header__cta .material-symbols-outlined { font-size: 1.05rem; }
+.site-header__cta:hover { background: rgb(var(--ztims-primary-dim)); }
+@media (min-width: 420px) { .site-header__cta { display: inline-flex; } }
 
-/* The hero's two buttons wear the header's shape: a pill, filled flat — burnt
-   orange for the main action (off-white on it, 4.5:1), tangerine for the map
-   (ink on it, 6.7:1). No gradient, no inner light. */
+/* Filled pill buttons (the destination page, My ticket, payment, sign-in):
+   burnt orange for the main action, tangerine for the map. */
 .btn-pill { border-radius: 9999px; border: 0; }
 .btn-pill.btn-primary,
 .btn-pill.btn-primary:hover:not(:disabled) {
@@ -1770,36 +1497,13 @@ button[onclick="toggleTheme()"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .site-link, .site-link::after { transition: none; }
+    .site-link, .site-header__theme, .site-header__cta { transition: none; }
 }
 
 /* ==========================================================================
-   Home page (index.html), flat: solid fills, hairline outlines, pill buttons,
-   no gradients and no shadows — the same look as the header's ovals.
+   The flat destination card, kept for the destination page's "Nearby places
+   to visit" (spot.html renderRelated). Home has its own cards (.hm-card).
    ========================================================================== */
-
-/* The hero's search: one pill row — the field, the category (from 640px; on
-   a phone the category photos below do that job) and Search. */
-.hero-search { display: flex; gap: .5rem; align-items: stretch; max-width: 44rem; }
-.hero-search__field {
-    height: 48px;
-    border-radius: 9999px;
-    border: 1px solid rgb(var(--ztims-outline));
-    background: rgb(var(--ztims-surface-high));
-    color: rgb(var(--ztims-on-surface));
-    font-size: 1rem;
-}
-.hero-search__field::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
-.hero-search__field:focus { outline: none; border-color: rgb(var(--ztims-secondary)); box-shadow: 0 0 0 3px rgb(var(--ztims-secondary) / .35); }
-.hero-search .btn { height: 48px; padding: 0 1.4rem; font-size: .9rem; }
-
-
-/* What the list is narrowed to, and the way back. */
-.browse-status {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .75rem;
-    font-weight: 700; color: rgb(var(--ztims-on-surface));
-}
-.browse-status[hidden] { display: none; }
 
 /* Destination cards. A column on a computer; on a phone the photo sits beside
    the words, so a screen holds several places instead of one. */
@@ -1846,27 +1550,429 @@ button[onclick="toggleTheme()"] {
 .home-card:hover .home-card__more .material-symbols-outlined { transform: translateX(3px); }
 .home-card__more .material-symbols-outlined { transition: transform var(--dur-fast) var(--ease-standard); }
 
-/* Plan your visit: the Tourism Office, flat. */
-.office-card { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); padding: 1.25rem 1.25rem 1.4rem; }
-@media (min-width: 640px) { .office-card { padding: 1.75rem; } }
-.office-card__list { display: grid; gap: .85rem; }
-.office-card__list > div[hidden] { display: none; }
-.office-card__list dt { display: flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
-.office-card__list dt .material-symbols-outlined { font-size: 1rem; color: rgb(var(--ztims-accent)); }
-.office-card__list dd { margin: .15rem 0 0 1.4rem; color: rgb(var(--ztims-on-surface)); }
-.office-card__emergency { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid rgb(var(--ztims-outline)); }
-.how-it-works { align-content: start; }
-#plan .how-it-works { grid-template-columns: 1fr; }
-
 @media (prefers-reduced-motion: reduce) {
     .home-card__photo img, .home-card__more .material-symbols-outlined { transition: none; }
     .home-card:hover .home-card__photo img { transform: none; }
 }
 
-/* The footer's top strip of flat tiles (site-footer.js tileStrip). */
-.footer-tiles { display: flex; overflow: hidden; height: 56px; line-height: 0; }
-.footer-tiles__row { height: 100%; width: auto; flex: 0 0 auto; aspect-ratio: 10 / 1; overflow: hidden; }
-@media (min-width: 768px) { .footer-tiles { height: 72px; } }
+/* ==========================================================================
+   Home page (index.html) — the user's design from UX Pilot (October 2026)
+   --------------------------------------------------------------------------
+   A rounded hero frame with the film, a moving strip of what is here, the
+   categories as a photo grid, the destinations as cards, the map with its
+   legend, and Plan your visit with the Tourism Office. Rounded corners,
+   soft shadows and an italic serif accent (Fraunces) are this design's,
+   on the visitor pages only; the staff portals keep their square look.
+   Teal (--hm-teal) is the design's third accent: "Free entrance" and the
+   third step.
+   ========================================================================== */
+:root { --hm-teal: 15 124 134; --hm-serif: 'Fraunces', Georgia, 'Times New Roman', serif; }
+.hm-wrap { width: min(77rem, 100% - 2.5rem); margin-inline: auto; }
+.hm-serif { font-family: var(--hm-serif); font-style: italic; font-weight: 600; letter-spacing: -.01em; }
+.hm-accent { color: rgb(var(--ztims-primary-text)); }
+
+/* The hero frame: the film behind, darkened toward the words on the left. */
+.hm-hero {
+    position: relative; isolation: isolate; overflow: hidden;
+    margin: .75rem; border-radius: 1.5rem;
+    min-height: min(100svh - 1.5rem, 54rem);
+    display: flex; align-items: center;
+    background: #1C1917; color: #FFFDFA;
+}
+@media (min-width: 640px) { .hm-hero { margin: 1rem; border-radius: 1.75rem; min-height: min(100svh - 2rem, 50rem); } }
+.hm-hero__media { position: absolute; inset: 0; z-index: -2; }
+.hm-hero__media img, .hm-hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
+.hm-hero__video { z-index: 1; }
+.hm-hero::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background:
+        linear-gradient(90deg, rgb(18 14 10 / .82) 0%, rgb(18 14 10 / .58) 36%, rgb(18 14 10 / .12) 70%, rgb(18 14 10 / 0) 100%),
+        linear-gradient(0deg, rgb(18 14 10 / .55) 0%, rgb(18 14 10 / 0) 42%);
+}
+.hm-hero__inner { position: relative; width: min(77rem, 100% - 2.5rem); margin: 0 auto; padding: 8.5rem 0 5rem; }
+@media (min-width: 900px) { .hm-hero__inner { padding: 7.5rem 0 6rem; } }
+.hm-hello {
+    display: inline-flex; align-items: center; gap: .55rem;
+    padding: .45rem .95rem; border-radius: 9999px;
+    background: rgb(255 253 250 / .14); border: 1px solid rgb(255 253 250 / .28);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    font-size: .875rem; font-weight: 600;
+}
+.hm-hello::before { content: ''; width: .45rem; height: .45rem; border-radius: 50%; background: #F28500; }
+.hm-title {
+    margin: 1.5rem 0 1.25rem; color: #FFFDFA;
+    font-size: clamp(2.75rem, 8vw, 5.5rem); line-height: .98; font-weight: 800; letter-spacing: -.035em;
+}
+.hm-title .hm-serif {
+    display: block; padding-bottom: .08em; font-size: 1.04em;
+    background: linear-gradient(90deg, #FFE2BF 0%, #F7AE5E 45%, #F28500 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hm-lead { max-width: 36rem; font-size: 1.0625rem; line-height: 1.55; color: rgb(255 253 250 / .9); }
+@media (min-width: 640px) { .hm-lead { font-size: 1.25rem; } }
+
+/* The search: one white bar — the field, the category, Search. */
+.hm-search {
+    position: relative; margin-top: 2rem; max-width: 48rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: .35rem;
+    padding: .45rem; border-radius: 1rem;
+    background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+    border: 1px solid rgb(255 253 250 / .55);
+    box-shadow: 0 24px 50px -20px rgb(0 0 0 / .55);
+}
+.hm-search__field { position: relative; flex: 1 1 14rem; min-width: 0; display: flex; align-items: center; }
+.hm-search__field > .material-symbols-outlined { position: absolute; left: .9rem; color: rgb(var(--ztims-primary-text)); font-size: 1.35rem; pointer-events: none; }
+.hm-search input {
+    width: 100%; height: 3rem; padding: 0 1rem 0 2.9rem; border: 0; border-radius: .7rem;
+    background: transparent; color: inherit; font-size: 1rem;
+}
+.hm-search input::placeholder { color: rgb(var(--ztims-on-surface-variant)); }
+.hm-search input:focus { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+.hm-search__cat { position: relative; display: none; align-items: center; border-left: 1px solid rgb(var(--ztims-outline)); }
+@media (min-width: 640px) { .hm-search__cat { display: flex; } }
+.hm-search__cat > .material-symbols-outlined { position: absolute; pointer-events: none; font-size: 1.2rem; color: rgb(var(--ztims-on-surface-variant)); }
+.hm-search__cat > .material-symbols-outlined:first-child { left: 1rem; }
+.hm-search__cat > .material-symbols-outlined:last-child { right: .75rem; }
+.hm-search select {
+    height: 3rem; padding: 0 2.4rem 0 2.75rem; border: 0; border-radius: .7rem; appearance: none;
+    background: transparent; color: inherit; font-weight: 700; font-size: .95rem; cursor: pointer;
+}
+.hm-search select:focus { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+.hm-search__go {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    height: 3rem; padding: 0 1.6rem; border: 0; border-radius: .75rem; cursor: pointer;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA; font-weight: 700; font-size: 1rem;
+    flex: 1 0 100%;
+}
+@media (min-width: 480px) { .hm-search__go { flex: 0 0 auto; } }
+.hm-search__go:hover { background: rgb(var(--ztims-primary-dim)); }
+.hm-search__go .material-symbols-outlined { font-size: 1.15rem; }
+.hm-popular { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1rem; font-size: .875rem; color: rgb(255 253 250 / .85); }
+.hm-popular[hidden] { display: none; }
+.hm-chip {
+    display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .85rem; border-radius: 9999px;
+    background: rgb(255 253 250 / .14); border: 1px solid rgb(255 253 250 / .3); color: #FFFDFA;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); text-decoration: none;
+}
+.hm-chip:hover { background: rgb(255 253 250 / .26); }
+
+/* The featured place, low on the right of the hero. */
+.hm-feature {
+    display: none; position: absolute; right: 2.5rem; bottom: 6rem; width: 18rem;
+    padding: 1rem; border-radius: 1.1rem; color: #FFFDFA; text-decoration: none;
+    background: rgb(255 253 250 / .14); border: 1px solid rgb(255 253 250 / .28);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+@media (min-width: 1100px) { .hm-feature:not([hidden]) { display: block; } }
+.hm-feature__top { display: flex; gap: .75rem; align-items: center; }
+.hm-feature img { width: 3.5rem; height: 3.5rem; border-radius: .75rem; object-fit: cover; flex-shrink: 0; }
+.hm-feature__kicker { display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+.hm-feature__name { display: block; font-weight: 700; line-height: 1.2; }
+.hm-feature__foot { display: flex; justify-content: space-between; align-items: center; margin-top: .85rem; font-size: .9rem; }
+.hm-feature__foot span { display: inline-flex; align-items: center; gap: .35rem; }
+.hm-feature__foot .material-symbols-outlined { font-size: 1.05rem; }
+.hm-feature:hover .hm-feature__go { text-decoration: underline; }
+
+/* The mouse at the foot of the hero: a way down. */
+.hm-scroll {
+    position: absolute; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+    width: 1.5rem; height: 2.5rem; border-radius: .9rem; border: 2px solid rgb(255 253 250 / .75);
+    display: none; justify-content: center; padding-top: .45rem;
+}
+@media (min-width: 640px) { .hm-scroll { display: flex; } }
+.hm-scroll::before { content: ''; width: 3px; height: .55rem; border-radius: 2px; background: #FFFDFA; animation: hmScroll 1.8s var(--ease-standard, ease) infinite; }
+@keyframes hmScroll { 0% { opacity: 0; transform: translateY(-2px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px); } }
+
+/* The moving strip under the hero. Decoration only. */
+.hm-marquee { overflow: hidden; border-bottom: 1px solid rgb(var(--ztims-outline)); padding: 1.1rem 0; }
+.hm-marquee__track { display: flex; width: max-content; animation: hmMarquee 45s linear infinite; }
+.hm-marquee__set { display: flex; align-items: center; gap: 2.25rem; padding-right: 2.25rem; }
+.hm-marquee__item { font-size: clamp(1.4rem, 2.4vw, 1.9rem); font-weight: 700; letter-spacing: -.02em; color: rgb(var(--ztims-on-surface) / .82); white-space: nowrap; }
+.hm-marquee__item.hm-serif { font-weight: 500; color: rgb(var(--ztims-on-surface)); }
+.hm-marquee__icon { font-size: 1.6rem; }
+.hm-marquee__icon.is-burnt { color: rgb(var(--ztims-primary-text)); }
+.hm-marquee__icon.is-tangerine { color: #F28500; }
+.hm-marquee__icon.is-teal { color: rgb(var(--hm-teal)); }
+@keyframes hmMarquee { to { transform: translateX(-50%); } }
+
+/* Sections, their small kicker and their heading. */
+.hm-section { padding: 4.5rem 0; }
+@media (min-width: 768px) { .hm-section { padding: 6.5rem 0; } }
+.hm-band { background: rgb(var(--ztims-surface-low)); border-top: 1px solid rgb(var(--ztims-outline)); }
+.hm-kicker { font-size: .75rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); margin-bottom: .75rem; }
+.hm-h2 { font-size: clamp(2rem, 4.2vw, 3rem); line-height: 1.08; font-weight: 800; letter-spacing: -.03em; color: rgb(var(--ztims-on-surface)); }
+.hm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 2.5rem; }
+.hm-head__note { max-width: 25rem; font-size: 1.0625rem; line-height: 1.6; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* Browse by interest: a photo grid of the categories, then the rest small. */
+.hm-bento { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 10.5rem; gap: .9rem; }
+.hm-bento > :nth-child(1), .hm-bento > :nth-child(2) { grid-column: span 2; }
+.hm-bento > :nth-child(1) { grid-row: span 2; }
+@media (min-width: 900px) {
+    .hm-bento { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 13.75rem; gap: 1rem; }
+    .hm-bento > :nth-child(1) { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+    .hm-bento > :nth-child(2) { grid-column: 3 / span 2; }
+}
+.hm-tile {
+    position: relative; overflow: hidden; border: 0; padding: 0; cursor: pointer; text-align: left;
+    border-radius: 1.25rem; color: #FFFDFA;
+    background: linear-gradient(135deg, rgb(var(--ztims-primary)), rgb(var(--ztims-primary-dim)));
+}
+.hm-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; transition: transform var(--dur-slow, 400ms) var(--ease-standard, ease); }
+.hm-tile:hover img { transform: scale(1.05); }
+.hm-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgb(15 12 10 / .72) 0%, rgb(15 12 10 / .1) 55%, rgb(15 12 10 / 0) 100%); }
+.hm-tile__text { position: absolute; left: 1.4rem; right: 1.4rem; bottom: 1.25rem; z-index: 1; }
+.hm-tile__name { display: block; font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.15; }
+.hm-tile__count { display: block; margin-top: .2rem; font-size: .875rem; opacity: .9; }
+.hm-bento > :nth-child(1) .hm-tile__name { font-size: clamp(1.75rem, 3vw, 2.4rem); }
+.hm-bento > :nth-child(1) .hm-tile__text { left: 2rem; bottom: 2rem; }
+.hm-tile__go {
+    position: absolute; right: 2rem; bottom: 2rem; z-index: 1;
+    width: 3rem; height: 3rem; border-radius: 50%; background: #FFFDFA; color: #1C1917;
+    display: none; align-items: center; justify-content: center;
+}
+.hm-bento > :nth-child(1) .hm-tile__go { display: inline-flex; }
+.hm-tile[aria-pressed="true"], .hm-mini[aria-pressed="true"] { outline: 3px solid #F28500; outline-offset: 3px; }
+.hm-tile:focus-visible, .hm-mini:focus-visible { outline: 3px solid rgb(var(--ztims-secondary)); outline-offset: 3px; }
+.hm-minis { display: grid; grid-template-columns: 1fr; gap: .75rem; margin-top: .9rem; }
+@media (min-width: 520px) { .hm-minis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; } }
+@media (min-width: 900px) { .hm-minis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; } }
+.hm-mini {
+    display: flex; align-items: center; gap: .9rem; padding: .7rem; text-align: left; cursor: pointer;
+    border-radius: 1rem; border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+    transition: transform var(--dur-fast, 160ms) var(--ease-standard, ease), box-shadow var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.hm-mini:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgb(28 25 23 / .4); }
+.hm-mini__img {
+    width: 4rem; height: 4rem; flex-shrink: 0; border-radius: .65rem; overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-surface-variant)); color: rgb(var(--ztims-primary-text));
+}
+.hm-mini__img img { width: 100%; height: 100%; object-fit: cover; }
+.hm-mini__name { display: block; font-weight: 700; font-size: .95rem; line-height: 1.2; }
+.hm-mini__count { display: block; font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* Featured destinations: the filter, then the cards. */
+.hm-filter {
+    display: flex; gap: .25rem; padding: .3rem; border-radius: 9999px; max-width: 100%;
+    overflow-x: auto; scrollbar-width: none;
+    background: rgb(var(--ztims-surface-high)); border: 1px solid rgb(var(--ztims-outline));
+}
+.hm-filter::-webkit-scrollbar { display: none; }
+.hm-filter button {
+    flex-shrink: 0; min-height: 2.5rem; padding: 0 1.1rem; border: 0; border-radius: 9999px; cursor: pointer;
+    background: transparent; color: rgb(var(--ztims-on-surface)); font-size: .9rem; font-weight: 500; white-space: nowrap;
+}
+.hm-filter button:hover { background: rgb(var(--ztims-on-surface) / .06); }
+.hm-filter button[aria-pressed="true"] { background: rgb(var(--ztims-primary)); color: #FFFDFA; font-weight: 700; }
+.hm-status { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: -1rem 0 1.5rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.hm-status[hidden] { display: none; }
+.hm-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 640px) { .hm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .hm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.hm-card {
+    position: relative; display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 1.25rem; border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface-high));
+    transition: transform var(--dur-standard, 240ms) var(--ease-standard, ease), box-shadow var(--dur-standard, 240ms) var(--ease-standard, ease);
+}
+.hm-card:hover { transform: translateY(-3px); box-shadow: 0 22px 44px -26px rgb(28 25 23 / .45); }
+.hm-card__photo { position: relative; aspect-ratio: 4 / 3; background: rgb(var(--ztims-surface-variant)); overflow: hidden; }
+.hm-card__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; transition: transform var(--dur-slow, 400ms) var(--ease-standard, ease); }
+.hm-card:hover .hm-card__photo img { transform: scale(1.04); }
+.hm-pill {
+    position: absolute; top: 1rem; z-index: 1; display: inline-flex; align-items: center;
+    padding: .3rem .75rem; border-radius: 9999px; font-size: .75rem; font-weight: 700; line-height: 1.2;
+}
+.hm-pill--cat { left: 1rem; background: rgb(255 253 250 / .95); color: #1C1917; }
+.hm-pill--free { right: 1rem; background: rgb(var(--hm-teal)); color: #FFFDFA; }
+.hm-card__body { display: flex; flex-direction: column; flex: 1; padding: 1.4rem 1.5rem 1.5rem; }
+.hm-card__title { font-size: 1.375rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; color: rgb(var(--ztims-on-surface)); }
+.hm-card__link { color: inherit; text-decoration: none; }
+.hm-card__link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+.hm-card__link:focus-visible { outline: none; }
+.hm-card:has(.hm-card__link:focus-visible) { outline: 3px solid rgb(var(--ztims-secondary)); outline-offset: 3px; }
+.hm-card__where, .hm-card__hours { display: flex; align-items: flex-start; gap: .35rem; color: rgb(var(--ztims-on-surface-variant)); }
+.hm-card__where { margin-top: .35rem; font-size: 1rem; }
+.hm-card__hours { margin-top: 1rem; font-size: .875rem; }
+.hm-card__where .material-symbols-outlined, .hm-card__hours .material-symbols-outlined { font-size: 1.05rem; margin-top: .1rem; color: rgb(var(--ztims-primary-text)); }
+.hm-card__where .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+.hm-card__foot {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem;
+    margin-top: auto; padding-top: 1.25rem; border-top: 1px solid rgb(var(--ztims-outline));
+}
+.hm-card__body > .hm-card__hours + .hm-card__foot { margin-top: 1.25rem; }
+.hm-card__price { font-size: 1.125rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.hm-btn {
+    position: relative; z-index: 2; display: inline-flex; align-items: center; gap: .4rem;
+    min-height: 2.75rem; padding: 0 1.25rem; border-radius: 9999px; font-weight: 700; font-size: .95rem; text-decoration: none;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA;
+    transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease);
+}
+.hm-btn:hover { background: rgb(var(--ztims-primary-dim)); }
+.hm-btn .material-symbols-outlined { font-size: 1.05rem; }
+.hm-btn--ghost { background: transparent; color: rgb(var(--ztims-on-surface)); border: 1.5px solid rgb(var(--ztims-on-surface)); }
+.hm-btn--ghost:hover { background: rgb(var(--ztims-on-surface) / .06); }
+.hm-more { display: flex; justify-content: center; margin-top: 3rem; }
+.hm-more[hidden] { display: none; }
+.hm-dark-pill {
+    display: inline-flex; align-items: center; gap: .9rem; min-height: 3.5rem; padding: .4rem .45rem .4rem 1.75rem;
+    border: 0; border-radius: 9999px; cursor: pointer; background: #1C1917; color: #FAF7F2; font-weight: 700; font-size: 1rem;
+}
+html.dark .hm-dark-pill { background: #F5F1EA; color: #1C1917; }
+.hm-dark-pill__go { width: 2.6rem; height: 2.6rem; border-radius: 50%; background: #FAF7F2; color: #1C1917; display: inline-flex; align-items: center; justify-content: center; }
+html.dark .hm-dark-pill__go { background: #1C1917; color: #FAF7F2; }
+
+/* Skeleton cards while the destinations load. */
+.hm-card--skeleton .hm-card__photo, .hm-card--skeleton .hm-sk { background: rgb(var(--ztims-surface-variant)); }
+.hm-sk { height: .9rem; border-radius: .4rem; margin-top: .75rem; }
+
+/* Find it on the map. */
+.hm-center { text-align: center; }
+.hm-mapgrid { display: grid; gap: 1.25rem; margin-top: 2.5rem; }
+@media (min-width: 1024px) { .hm-mapgrid { grid-template-columns: minmax(0, 1fr) 20rem; } }
+.hm-map { position: relative; }
+.hm-map #tourismMap { height: 24rem; border-radius: 1.25rem; overflow: hidden; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-low)); }
+@media (min-width: 640px) { .hm-map #tourismMap { height: 35rem; } }
+.hm-map__hint {
+    position: absolute; left: 1rem; bottom: 1rem; z-index: 500; pointer-events: none;
+    display: inline-flex; align-items: center; gap: .4rem; padding: .55rem .9rem; border-radius: .75rem;
+    background: rgb(var(--ztims-surface-high) / .95); color: rgb(var(--ztims-on-surface));
+    font-size: .875rem; font-weight: 600; box-shadow: 0 8px 20px -12px rgb(28 25 23 / .4);
+}
+.hm-map__hint .material-symbols-outlined { font-size: 1.05rem; color: rgb(var(--ztims-primary-text)); }
+.hm-map__hint .is-touch { display: inline; }
+.hm-map__hint .is-pointer { display: none; }
+@media (hover: hover) and (pointer: fine) { .hm-map__hint .is-touch { display: none; } .hm-map__hint .is-pointer { display: inline; } }
+.hm-side { display: flex; flex-direction: column; gap: 1.25rem; }
+@media (min-width: 1024px) { .hm-side { justify-content: space-between; } }
+.hm-legend { border-radius: 1.25rem; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); padding: 1.5rem; }
+.hm-legend__title { font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); margin-bottom: 1.1rem; }
+.hm-legend #tourismLegend.ztims-legend { flex-direction: column; align-items: flex-start; gap: .9rem; font-size: 1rem; font-weight: 500; color: rgb(var(--ztims-on-surface)); }
+.hm-legend #tourismLegend.ztims-legend span.dot--icon { width: 2rem; height: 2rem; margin-right: .75rem; }
+.hm-legend #tourismLegend.ztims-legend span.dot--icon .material-symbols-outlined { font-size: 1rem; }
+.hm-openmap {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%;
+    padding: 1.5rem; border: 0; border-radius: 1.25rem; cursor: pointer; text-align: left;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA;
+}
+.hm-openmap:hover { background: rgb(var(--ztims-primary-dim)); }
+.hm-openmap small { display: block; font-size: .875rem; opacity: .85; }
+.hm-openmap strong { display: block; font-size: 1.25rem; }
+.hm-openmap__go { width: 3rem; height: 3rem; border-radius: 50%; background: #FFFDFA; color: rgb(var(--ztims-primary)); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hm-mapnote { margin-top: .75rem; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* Plan your visit: three steps, then the Tourism Office. */
+.hm-steps { position: relative; display: grid; gap: 1.25rem; margin-top: 2.5rem; }
+@media (min-width: 768px) {
+    .hm-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hm-steps::before { content: ''; position: absolute; left: 8%; right: 8%; top: 2.5rem; height: 1px; background: rgb(var(--ztims-outline)); z-index: 0; }
+}
+.hm-step {
+    position: relative; z-index: 1; padding: 1.75rem; border-radius: 1.25rem;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+}
+.hm-step__icon {
+    width: 3.5rem; height: 3.5rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;
+    background: rgb(var(--ztims-primary)); color: #FFFDFA; box-shadow: 0 10px 22px -12px rgb(191 87 0 / .8);
+}
+.hm-step__icon .material-symbols-outlined { font-size: 1.5rem; font-variation-settings: 'FILL' 1; }
+.hm-step__n { font-size: .875rem; font-weight: 700; color: rgb(var(--ztims-primary-text)); }
+.hm-step h3 { margin-top: .2rem; font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.hm-step p { margin-top: .5rem; color: rgb(var(--ztims-on-surface-variant)); line-height: 1.55; }
+.hm-step--dark { background: #1C1917; border-color: #1C1917; color: #FAF7F2; }
+.hm-step--dark .hm-step__icon { background: #F28500; color: #1C1917; box-shadow: 0 10px 22px -12px rgb(242 133 0 / .9); }
+.hm-step--dark .hm-step__n { color: #F7A445; }
+.hm-step--dark p { color: rgb(250 247 242 / .72); }
+.hm-step--teal .hm-step__icon { background: rgb(var(--hm-teal)); box-shadow: 0 10px 22px -12px rgb(var(--hm-teal) / .9); }
+.hm-step--teal .hm-step__n { color: rgb(var(--hm-teal)); }
+html.dark .hm-step--teal .hm-step__n { color: #5FC4CC; }
+html.dark .hm-step--dark { background: #0B0A09; border-color: rgb(var(--ztims-outline)); }
+
+.hm-office {
+    display: grid; margin-top: 2.5rem; overflow: hidden; border-radius: 1.25rem;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+}
+@media (min-width: 1024px) { .hm-office { grid-template-columns: minmax(0, 1fr) 21rem; } }
+.hm-office__main { padding: 2rem 1.5rem; }
+@media (min-width: 640px) { .hm-office__main { padding: 2.5rem; } }
+.hm-office__tag {
+    display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .75rem; border-radius: 9999px;
+    background: rgb(var(--ztims-primary-container)); color: rgb(var(--ztims-primary-text));
+    font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.hm-office__tag .material-symbols-outlined { font-size: .95rem; }
+.hm-office h3 { margin-top: 1rem; font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 800; letter-spacing: -.03em; color: rgb(var(--ztims-on-surface)); }
+.hm-facts { display: grid; gap: 1.5rem 2rem; margin-top: 1.75rem; }
+@media (min-width: 640px) { .hm-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hm-fact { display: flex; gap: 1rem; min-width: 0; }
+.hm-fact[hidden] { display: none; }
+.hm-fact__icon {
+    width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: .7rem; display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-surface-variant)); color: rgb(var(--ztims-primary-text));
+}
+.hm-fact__icon .material-symbols-outlined { font-size: 1.25rem; }
+.hm-fact__label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
+.hm-fact__value { margin-top: .2rem; font-weight: 600; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.hm-fact__value > [hidden] { display: none; }
+.hm-fact__value > span { display: block; }
+.hm-fact--danger .hm-fact__icon { background: rgb(var(--ztims-error) / .1); color: rgb(var(--ztims-error)); }
+.hm-fact--danger .hm-fact__value, .hm-fact--danger .hm-fact__value a { color: rgb(var(--ztims-error)); }
+.hm-office__help {
+    display: flex; flex-direction: column; justify-content: center; gap: .9rem; padding: 2rem 1.5rem;
+    background: linear-gradient(135deg, #BF5700 0%, #A64B00 45%, #7A2E00 100%); color: #FFFDFA;
+}
+@media (min-width: 640px) { .hm-office__help { padding: 2.5rem; } }
+.hm-office__help p { font-size: .9375rem; opacity: .85; }
+.hm-office__help a {
+    display: flex; align-items: center; justify-content: center; min-height: 3.25rem; padding: 0 1.25rem; border-radius: 9999px;
+    font-weight: 700; text-decoration: none; text-align: center;
+}
+.hm-office__help .is-solid { background: #FFFDFA; color: #7A2E00; }
+.hm-office__help .is-solid:hover { background: #FCEDDE; }
+.hm-office__help .is-outline { border: 1.5px solid rgb(255 253 250 / .75); color: #FFFDFA; }
+.hm-office__help .is-outline:hover { background: rgb(255 253 250 / .12); }
+
+@media (prefers-reduced-motion: reduce) {
+    .hm-marquee__track, .hm-scroll::before { animation: none; }
+    .hm-tile img, .hm-card, .hm-card__photo img, .hm-mini { transition: none; }
+    .hm-card:hover, .hm-mini:hover { transform: none; }
+}
+
+/* ==========================================================================
+   The visitor pages' footer (site-footer.js): one rounded card with the
+   name, Explore, Information and Contact Us, then the line under it.
+   ========================================================================== */
+.site-footer-host { background: rgb(var(--ztims-background)); border-top: 1px solid rgb(var(--ztims-outline)); }
+.site-footer { width: min(77rem, 100% - 2.5rem); margin-inline: auto; padding: 4rem 0 2.5rem; }
+.site-footer__card {
+    display: grid; gap: 2.25rem; padding: 2rem 1.5rem; border-radius: 1.25rem;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+}
+@media (min-width: 640px) { .site-footer__card { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 3rem; } }
+@media (min-width: 1024px) { .site-footer__card { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.site-footer__brand { display: flex; align-items: center; gap: .75rem; color: rgb(var(--ztims-on-surface)); text-decoration: none; }
+.site-footer__brand .site-header__logo { width: 2.25rem; height: 2.25rem; }
+.site-footer__title { display: block; font-weight: 800; font-size: .95rem; letter-spacing: -.01em; line-height: 1.15; }
+.site-footer__sub { display: block; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
+.site-footer__about { margin-top: 1.25rem; max-width: 16rem; font-size: .875rem; line-height: 1.65; color: rgb(var(--ztims-on-surface-variant)); }
+.site-footer__h { font-size: .75rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); margin-bottom: 1rem; }
+.site-footer__list { display: grid; gap: .15rem; }
+.site-footer__list a { display: inline-flex; align-items: center; min-height: 2.25rem; font-size: .9375rem; color: rgb(var(--ztims-on-surface)); text-decoration: none; }
+.site-footer__list a:hover { color: rgb(var(--ztims-primary-text)); }
+.site-footer__feedback {
+    display: flex; align-items: center; justify-content: center; min-height: 3rem; padding: 0 1.5rem; border-radius: 9999px;
+    background: #1C1917; color: #FAF7F2; font-weight: 700; text-decoration: none;
+}
+.site-footer__feedback:hover { background: #3A3532; }
+html.dark .site-footer__feedback { background: #F5F1EA; color: #1C1917; }
+.site-footer__staff { display: inline-block; margin-top: 1rem; font-size: .875rem; line-height: 1.5; color: rgb(var(--ztims-on-surface-variant)); text-decoration: none; }
+.site-footer__staff:hover { color: rgb(var(--ztims-primary-text)); text-decoration: underline; }
+.site-footer__bottom {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1.5rem; margin-top: 2rem;
+    font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant));
+}
 
 /* ==========================================================================
    Destination page (spot.html): one column, read top to bottom, flat.

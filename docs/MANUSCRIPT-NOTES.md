@@ -4,6 +4,28 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## A new Home page, header and footer (October 2026)
+
+**The change.** The Home page was rebuilt from the group's UX Pilot design: a
+rounded hero with a new film, "Popular" places and one featured place; a
+moving strip of what is here; "Browse by interest" (four big category photos
+and four small cards); "Featured destinations" with category pills and "View
+all destinations"; the map with its legend and "Open full map"; and "Plan
+your visit" (three step cards and the Tourism Office card). Every visitor page
+now has the same floating header (with a Buy tickets button) and the new
+footer. Nothing behind the pages changed: the same places, tickets, map and
+office details.
+
+**Change in the manuscript:** retake the Home page screenshots in the System
+User Interface (the Home figure, and any figure showing a visitor page's
+header or footer), and describe Home in the order above. The design was made
+in UX Pilot; say so where the manuscript names its design tools.
+
+**If the panel asks why the visitor pages look different from the staff
+portals:** "The visitor pages are for tourists, so they follow a more visual
+design made in UX Pilot. The staff portals are work tools and keep their plain,
+square layout. Both use the same colours, and the same records behind them."
+
 ## The tour guide feature is removed (October 2026)
 
 **The change.** ZTIMS no longer has anything for tourist guides: no Tourist

@@ -195,19 +195,22 @@ purpose — see the header comment in `spot-form.js`:
 - `motion.css` — the duration and easing scale, and every shared animation
   (page enter, `.ztims-stagger`, dialogs, menus, skeletons), plus the one
   `prefers-reduced-motion` switch-off.
-- `site-footer.js` — the visitor pages' footer (Explore / Information /
-  Contact Us columns, office address, quiet staff sign-in link), drawn into a
+- `site-footer.js` — the visitor pages' footer, drawn into a
   `<footer data-site-footer data-root="../">` placeholder so the visitor pages
-  share one copy. Across its top runs a strip of ten flat tiles of Zamboanguita
-  (sun and sea, bangka, reef fish, turtle, palms, waterfall, heritage church,
-  Malatapay market, two patterns) in the identity's oranges, cream and ink —
-  inline SVG (`tileStrip`), decoration only. The office's address, hours, phone, email and emergency
-  numbers come from `GET /api/office` (Settings → Office Information); until
-  they load, the built-in address and hours show and nothing else. It also
-  fills Contact Us's `[data-office-field]` spots and the destination pages'
-  `[data-emergency]` box.
+  share one copy. Since October 2026 it is the user's UX Pilot design: one
+  rounded card (`.site-footer*` in `theme.css`) — the orange badge and
+  "ZAMBOANGUITA TOURISM", a sentence, Explore (Destinations, Places to stay,
+  Heritage sites, History), Information (FAQ, Terms & Conditions, Privacy
+  Policy, Tourism Map), Contact us (Send feedback as a dark pill, then the
+  quiet "Staff and Enterprise Manager sign in →"), and a line with the year and
+  the place. It no longer shows the office's details or a tile strip. It still
+  fetches `GET /api/office` and fills every page's `[data-office-field]` spots
+  (a `[data-office-group]` hides while all its `[data-office-row]`s are empty)
+  and the `[data-emergency]` boxes (`data-emergency="inline"`: one line of
+  "Label: number" into its `[data-emergency-list]`, as on Home's Tourism Office
+  card).
 - **The staff portals' header** (officer and manager — the fixed
-  `header.glass-nav` beside the sidebar) wears the footer's tile strip, one
+  `header.glass-nav` beside the sidebar) wears a strip of flat tiles, one
   tile high, from `/tiles.svg` (one rule in `theme.css`; no colour, border or
   shadow behind the tiles, so browser zoom can never show a line under them);
   its buttons sit on
@@ -337,7 +340,9 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 - **Foundations.** Type scale `--text-display|title|heading|body|support|label|micro`,
   weights `--weight-*`, a 4px spacing grid `--space-*`, radii `--radius-sm|md|lg|xl`
   (all 0: corners are square everywhere by decision, and each page's Tailwind
-  config maps every `rounded-*` to 0 — the hero's curved cove is the one curve;
+  config maps every `rounded-*` to 0 — the visitor pages' header and footer and
+  the Home page are rounded by the user's UX Pilot design (their own `.hm-*`,
+  `.site-header*` and `.site-footer*` classes);
   the officer's Destinations and Enterprise Managers card grids are rounded by
   the user's design, through their own `.pg-*` classes),
   three elevations `--ztims-shadow-card|raised|overlay`. Icons are Material
@@ -718,52 +723,54 @@ on Destinations (`admin_dashboard_manage.html`), for office-run attractions:
 ### The visitor's journey (Home → destination → pay → after)
 
 Frontend only, no tables of their own:
-- **Home** (`index.html`), top to bottom, flat (solid fills, hairline
-  outlines, pill buttons, no gradients or shadows; styles in `theme.css`
-  "Home page"): the **hero** — "Mabuhay", the headline "Welcome to
-  Zamboanguita", one line naming the experiences and what the site does, the
-  **search** (`#heroSearch`: field with name suggestions, category from 640px,
-  Search scrolls to the results);
-  **Explore Zamboanguita** (`#browse`; the heading is for screen readers, and on
-  screen the cove's edge is a ribbon made of the footer's flat tiles
-  (`window.ztimsTiles` from `site-footer.js`, as an SVG pattern), the same
-  thickness as before, with one "EXPLORE ZAMBOANGUITA" on it, in the middle of
-  the flat bottom, the tiles behind the letters (off-white with an ember
-  outline, the user's choice) — `coveRibbon` in the page draws
-  the curve at the cove's real size so tiles and letters are not stretched,
-  and redraws on resize) — four category photo tiles
-  (`#categoryTiles`, eight: the seven categories and Places to stay — two a row
-  on a phone, four a row from 1024px; tiles and the category menu are one control,
-  `setCategory`; a second tap shows everything), a status line only while a
-  search or category narrows the list (`#browseStatus`, with "Show all"), and
-  the cards; **Find it on the map** (`#map`, whose ground fades from the
-  destinations' colour into its own over its top 8rem, `.home-map`); **Plan your visit** (`#plan`) —
-  the three "How it works" steps and the Tourism Office card (hours, address,
-  phone, email and emergency numbers from `GET /api/office` through
-  `site-footer.js`'s `data-office-field` / `data-emergency`), with Contact the
-  Tourism Office and Manage my ticket. The search and category are kept for
-  the visit in `sessionStorage.ztimsBrowse`; `?category=` opens a category.
-  A **card** (`.home-card`): photo, category, name (the card's stretched link),
-  barangay, "Open …" from `workingDays`/`workingTime`, the fee ("Free
-  entrance" at ₱0, none for a place to stay) and its main action
-  (`mainAction`, the destination page's rules): Buy tickets (office-run
-  attraction with a fee, and `/api/payments/config` says online), Book a room /
-  Book now (its booking link, new tab), else "Details". On a phone the photo
-  sits beside the words. Tickets open `spot.html` at `#tickets`, which
-  `honourArrival` turns into the ticket form (or, if it never appears, a
-  scroll to At a glance). Grey
-  skeleton cards while loading; card photos after the fourth load lazily.
+- **Home** (`index.html`), the user's design from UX Pilot (October 2026;
+  styles `.hm-*` in `theme.css` "Home page"), top to bottom: the **hero** — a
+  rounded frame holding the film (`hm-hero__media`, still from frame zero, film
+  added by `heroFilm` on wide screens only), darkened toward the words on the
+  left (`.hm-hero::before`), with the header floating over it; a "Mabuhay!
+  Negros Oriental, Philippines" pill, "Welcome to" and *Zamboanguita* (Fraunces
+  italic, a peach-to-tangerine gradient), one line, the **search**
+  (`#heroSearch`: field with name suggestions, category from 640px, Search
+  scrolls to the cards), "Popular:" three published places, a featured place
+  low on the right (1100px and wider; an office-run attraction that sells
+  tickets when there is one) and a mouse to scroll; a moving strip of what is
+  here (`.hm-marquee`, decoration); **Browse by interest** (`#browse`: "What are
+  you *in the mood* for?", four big photo tiles — Beach & Sea, Diving &
+  Snorkeling, Nature, Adventure — in `#categoryTiles` and four small cards —
+  Culture & Heritage, Faith, Leisure & Recreation, Places to stay — in
+  `#categoryMinis`, each with its count; a tap shows that category below, a
+  second tap everything); **Featured destinations** (`#featured`: the
+  category pills `#categoryFilter`, a status line only while something narrows
+  the list, and the cards — six, then **View all destinations**; everything
+  while narrowed); **Find it on the map** (`#map`: the Leaflet map, the
+  legend in its own card, and **Open full map**, which presses the map's own
+  expand control); **Plan your visit** (`#plan`: three step cards — Discover,
+  Book & pay in a dark card, Get there in teal — then the Tourism Office card:
+  hours, address, contact and emergency from `GET /api/office`, with Contact
+  the Tourism Office and Manage my ticket on a burnt-orange panel). The tiles,
+  the pills and the search's category are one control (`setCategory`); the
+  search and category are kept for the visit in `sessionStorage.ztimsBrowse`;
+  `?category=` opens a category.
+  A **card** (`.hm-card`): photo with the category pill and, at ₱0, a teal
+  "Free entrance" pill; name (the card's stretched link), barangay, "Open …"
+  from `workingDays`/`workingTime`; the price (none for a place to stay) and
+  its main action (`mainAction`, the destination page's rules): Buy tickets
+  (office-run attraction with a fee, and `/api/payments/config` says online),
+  Book a room / Book now (its booking link, new tab), else Details. Tickets
+  open `spot.html` at `#tickets`, which `honourArrival` turns into the ticket
+  form. Grey skeleton cards while loading.
 - **Header**: the same on all nine visitor pages (Home, destination, History,
-  My ticket, payment, Terms, Privacy, FAQ, Contact; styles `.site-header` and
-  `.site-link` in `theme.css`): the wordmark, then words-only links
-  Destinations, Map (`index.html#map`), History, My ticket, Staff
-  (→ `staff_login.html`), and the theme toggle last. On a phone it is two
-  rows: the name and the toggle, then the links across the full width. A solid tangerine oval on
-  hover/focus, a solid burnt-orange one on the current page
-  (`aria-current="page"`; the destination page counts as Destinations). The
-  theme toggle is a circle on every page, portals included (`#themeToggleBtn`
-  and the `toggleDarkMode()` buttons, in `theme.css`). These curves are the
-  user's decision; corners stay square elsewhere.
+  My ticket, payment, Terms, Privacy, FAQ, Contact; styles `.site-header*` and
+  `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
+  floating, rounded glass bar — an orange badge (`sunny`) and "ZAMBOANGUITA /
+  Tourism · Information System", the links Destinations, Map
+  (`index.html#map`), History, My ticket, Staff (→ `staff_login.html`), the
+  current page a solid ink pill (`aria-current="page"`; light in dark mode;
+  the destination page counts as Destinations), then the round theme toggle
+  and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
+  top as the page scrolls; on Home it floats over the hero
+  (`.site-header--over`). On a phone it is two rows: the name and the buttons,
+  then the links, scrolling sideways.
 - **Destination** (`spot.html`): one column (`.spot-wrap`, ~52rem), read top to
   bottom in the order a visitor asks — the photo with the category pill, name
   and barangay; a breadcrumb (Destinations › category › place); the actions the
@@ -1029,9 +1036,8 @@ user noted weak signal at many places makes counting at the entrance hard
 - **Opening-days reader**: `zamboanguita-backend/open-days.js` (decides what is
   sold) and `Zamboanguita-project/src/shared/open-days.js` (the forms). Checked
   by `npm run check` in the frontend.
-- **The tile pattern**: `TILES` in `src/shared/site-footer.js` (the footer
-  strip and Home's cove ribbon) and `Zamboanguita-project/public/tiles.svg`
-  (the portals' header), the same ten tiles. Change one, regenerate the other.
+- **The tile pattern**: `Zamboanguita-project/public/tiles.svg` (the portals'
+  header) is now its only copy; the visitor footer and Home no longer draw it.
 - **Photo hosts**: `PHOTO_SOURCES` in `server.js` and the CSP's `img-src` in
   `vercel.json`. A host only in the first is saved but never shown.
 - **Password minimum (10)**: `MIN_PASSWORD_LENGTH` in
@@ -1090,14 +1096,13 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   a suspended manager's open session at once (it runs to
   its 2-hour expiry; officers are cut off at once), and an officer activity
   log; two-step sign-in is not built yet. Pages never load anything from a host the CSP doesn't list.
-- The hero video on `index.html` intentionally has no dark scrim over it, and
-  (October 2026, the user's decision) its words — "Mabuhay", "Welcome to
-  ZAMBOANGUITA." and the line under it — are plain off-white `#FFFDFA` with no
-  shadow, outline or gradient (`.ztims-hero h2, .ztims-hero p` in
-  `theme.css`). They arrive in order (the user's choice): "Mabuhay"
-  letter by letter, each dropping in (`.hero-drop__l`, 80 ms apart), then the
-  welcome fades in (`.hero-fade`, from 0.75 s), then the line under it (1.3 s);
-  the search is there from the start. `prefers-reduced-motion` shows all at once. Their legibility rests on the film being dark behind them. Its two buttons
-  are pills filled flat like the header's ovals (`.btn-pill`): Explore
-  destinations burnt orange, View the map tangerine with ink on it. The "How it works" steps are
-  pills with no fill (a hairline outline), each number a tangerine circle.
+- The Home page, the visitor pages' header and their footer follow the user's
+  UX Pilot design (October 2026): rounded corners, soft shadows, an italic
+  serif accent (Fraunces, Home only) and teal (`--hm-teal`) as a third accent
+  for "Free entrance" and the third step, on the visitor pages only — the staff
+  portals keep their square, flat look. The hero film (Cloudinary
+  `v1793436461/zambo-10_31_2026_4_46_PM`) is darkened toward its words by a
+  gradient (`.hm-hero::before`), not by a brightness setting on the film. Keep
+  what the design shows only where ZTIMS has the thing: the hero's "Popular"
+  places and featured place, the categories' counts and the office's details
+  come from the database, never typed into the page.
