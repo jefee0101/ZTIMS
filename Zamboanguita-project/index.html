@@ -299,7 +299,7 @@ body { overflow-x: hidden; }
                          fails to load. Cloudinary cuts it from frame zero of the
                          same asset, so the two cannot disagree. -->
                     <img class="ztims-stage__poster"
-                         src="https://res.cloudinary.com/xeo3pvpw/video/upload/so_0,q_auto,w_1600,c_limit/v1793187847/zambo.jpg"
+                         src="https://res.cloudinary.com/xeo3pvpw/video/upload/so_0,e_brightness:-35,q_auto,w_1600,c_limit/v1793187847/zambo.jpg"
                          alt="" fetchpriority="high"/>
                     <!-- The film is added here by the script at the foot of this
                          page, and only where it is wanted. -->
@@ -1039,9 +1039,9 @@ body { overflow-x: hidden; }
            first request — if either ever fails to build, the browser simply falls
            through to the file as uploaded rather than showing nothing. */
         const SOURCES = [
-            ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1793187847/zambo.webm', 'video/webm'],
-            ['https://res.cloudinary.com/xeo3pvpw/video/upload/q_auto,vc_auto,w_1600,c_limit/v1793187847/zambo.mp4', 'video/mp4'],
-            ['https://res.cloudinary.com/xeo3pvpw/video/upload/v1793187847/zambo.mp4', 'video/mp4']
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/e_brightness:-35,q_auto,vc_auto,w_1600,c_limit/v1793187847/zambo.webm', 'video/webm'],
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/e_brightness:-35,q_auto,vc_auto,w_1600,c_limit/v1793187847/zambo.mp4', 'video/mp4'],
+            ['https://res.cloudinary.com/xeo3pvpw/video/upload/e_brightness:-35/v1793187847/zambo.mp4', 'video/mp4']
         ];
 
         /* Counted, one by one. Running out of sources is not an error the browser
