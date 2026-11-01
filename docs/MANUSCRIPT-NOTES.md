@@ -4,6 +4,25 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## New Destination, History and Staff sign in pages (November 2026)
+
+**The change.** Three more pages follow the group's UX Pilot designs:
+- **Destination:** a rounded photo; the category, name and barangay under
+  it, with Directions and Buy tickets on the right; tinted "at a glance"
+  tiles; About beside a "Getting there" card (address, emergency numbers, Get
+  directions); a photo grid; and "Nearby places to visit" cards showing each
+  place's opening hours and price. The breadcrumb was removed.
+- **History:** the story without the photo; the municipal facts as tiles;
+  "Where it is" and "The barangays" side by side with their headings; the
+  town fiesta as a dark orange band.
+- **Staff sign in:** the coast on the left, the sign-in card on the right,
+  with "Forgot password?" beside the Password label.
+Nothing behind the pages changed.
+
+**Change in the manuscript:** retake the screenshots of the Destination page
+(and the ticket window over it), the History page and the Staff sign in page
+in the System User Interface, and describe them in the order above.
+
 ## A new Home page, header and footer (October 2026)
 
 **The change.** The Home page was rebuilt from the group's UX Pilot design: a
