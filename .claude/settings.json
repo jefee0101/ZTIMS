@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Framer__*",
+      "mcp__UX_Pilot__*",
+      "mcp__Canva__*"
+    ]
+  }
+}
