@@ -209,59 +209,64 @@ body { overflow-x: hidden; }
 })();
 </script>
 
-<button id="themeToggleBtn" title="Toggle theme"
-        class="fixed top-5 right-5 z-50 p-3 rounded-full bg-surface border border-outline/40 text-accent hover:scale-110 transition-all shadow-lg">
-  <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
-</button>
+<!-- The user's UX Pilot design (November 2026): the coast on the left from
+     1024px, the sign-in card on the right. Styles: .ss-* at the end of theme.css. -->
+<div class="ss-split">
+<aside class="ss-photo" aria-hidden="true">
+  <img src="https://res.cloudinary.com/xeo3pvpw/video/upload/so_0,q_auto,w_1200,c_limit/v1793436461/zambo-10_31_2026_4_46_PM.jpg" alt="" loading="eager" decoding="async"/>
+  <div class="ss-photo__words">
+    <p class="ss-photo__kicker">Municipal Tourism Office</p>
+    <p class="ss-photo__title">Keeping Zamboanguita ready for its visitors.</p>
+  </div>
+</aside>
 
-<main class="page-enter min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-md">
-
-    <a href="../index.html" class="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors mb-8 py-2.5 min-h-[44px]">
-      <span class="material-symbols-outlined !text-lg" aria-hidden="true">arrow_back</span> Back to the site
+<div class="ss-side">
+  <div class="ss-top">
+    <a href="../index.html" class="ss-back">
+      <span class="material-symbols-outlined !text-base" aria-hidden="true">arrow_back</span>Back to the site
     </a>
+    <button id="themeToggleBtn" type="button" title="Toggle theme" aria-label="Toggle theme" class="ss-theme">
+      <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+    </button>
+  </div>
 
-    <div class="page-head">
-      <h1 class="page-title">Staff sign in</h1>
-      <p class="page-lede">For Tourism Officers and Enterprise Managers.</p>
+<main class="page-enter ss-main">
+  <div class="ss-card">
+
+    <div class="ss-head">
+      <h1 class="ss-title">Staff sign in</h1>
+      <p class="ss-lede">For Tourism Officers and Enterprise Managers.</p>
     </div>
 
-    <form id="staffLoginForm" class="space-y-5 spot-panel">
+    <form id="staffLoginForm" class="space-y-5">
       <div>
         <label for="emailInput" class="bk-label">Email address</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">mail</span>
-          <input id="emailInput" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
-            class="bk-field !pl-12"/>
-        </div>
+        <input id="emailInput" type="email" name="email" required autocomplete="username" class="bk-field ss-field"/>
       </div>
 
       <div>
-        <label for="passwordInput" class="bk-label">Password</label>
+        <div class="ss-label-row">
+          <label for="passwordInput" class="bk-label !mb-0">Password</label>
+          <button type="button" id="forgotLink" class="ss-link">Forgot password?</button>
+        </div>
         <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">lock</span>
-          <input id="passwordInput" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
-            class="bk-field !pl-12 !pr-12"/>
+          <input id="passwordInput" type="password" name="password" required autocomplete="current-password"
+            class="bk-field ss-field !pr-12"/>
           <button type="button" id="togglePasswordBtn" aria-label="Show password"
                   class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
             <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
           </button>
         </div>
-        <div class="flex justify-end mt-1">
-          <button type="button" id="forgotLink" class="text-sm font-bold text-primary hover:underline py-2 min-h-[44px]">Forgot password?</button>
-        </div>
       </div>
 
       <p id="loginError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
 
-      <button type="submit" id="staffSignInBtn" class="btn btn-pill btn-primary w-full min-h-[48px]">
-        <span class="material-symbols-outlined !text-base">login</span>Sign in
-      </button>
+      <button type="submit" id="staffSignInBtn" class="btn btn-pill btn-primary ss-submit w-full min-h-[48px]">Sign in</button>
     </form>
 
     <!-- Forgot password: asks for the account's email and sends a one-time
          reset link (POST /api/forgot-password), which opens user/reset_password.html. -->
-    <form id="forgotForm" hidden class="space-y-5 spot-panel" novalidate>
+    <form id="forgotForm" hidden class="space-y-5" novalidate>
       <div>
         <h2 class="text-lg font-bold text-on-surface">Reset your password</h2>
         <p class="text-support mt-1">Enter the email address of your account. A link to set a new password will be sent to it.</p>
@@ -269,9 +274,7 @@ body { overflow-x: hidden; }
       <div>
         <label for="forgotEmail" class="bk-label">Email address</label>
         <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 z-10 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">mail</span>
-          <input id="forgotEmail" type="email" name="email" required autocomplete="username" placeholder="name@zamboanguita.gov.ph"
-            class="bk-field !pl-12"/>
+          <input id="forgotEmail" type="email" name="email" required autocomplete="username" class="bk-field ss-field"/>
         </div>
       </div>
 
@@ -288,18 +291,18 @@ body { overflow-x: hidden; }
     <!-- Choose your own password: shown after signing in with a password someone
          else chose (an officer issued it). Nothing else works until this is done
          (POST /api/me/password). -->
-    <form id="newPasswordForm" hidden class="space-y-5 spot-panel" novalidate>
+    <form id="newPasswordForm" hidden class="space-y-5" novalidate>
       <div>
         <h2 class="text-lg font-bold text-on-surface">Choose your own password</h2>
         <p class="text-support mt-1">The password you signed in with was issued to you. Choose your own to continue.</p>
       </div>
       <div>
         <label for="ownPasswordInput" class="bk-label">New password</label>
-        <input id="ownPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="bk-field"/>
+        <input id="ownPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="bk-field ss-field"/>
       </div>
       <div>
         <label for="ownPasswordAgain" class="bk-label">Repeat the new password</label>
-        <input id="ownPasswordAgain" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="bk-field"/>
+        <input id="ownPasswordAgain" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="bk-field ss-field"/>
       </div>
 
       <p id="newPasswordMessage" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -309,14 +312,12 @@ body { overflow-x: hidden; }
       </button>
     </form>
 
-    <div class="mt-8 space-y-3 text-center">
-            <p class="text-support">
-        Accounts are issued by the Municipal Tourism Office.
-      </p>
-    </div>
+    <p class="ss-note">Accounts are issued by the Municipal Tourism Office.</p>
 
   </div>
 </main>
+</div>
+</div>
 
 <script>
   const API_BASE = "/api";

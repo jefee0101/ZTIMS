@@ -445,20 +445,18 @@ body { overflow-x: hidden; }
 
     function photoGallerySection(photos) {
         if (photos.length < 2) return '';   // the cover is already the hero
+        // The first photo runs tall down the left once there are four or more.
         return `
-            <div>
-                <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Photos <span class="text-on-surface-variant text-base font-normal">(${photos.length})</span></h2>
-                <div id="spotGallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <section>
+                <h2 class="sd-h2">Photos</h2>
+                <div id="spotGallery" class="sd-gallery${photos.length >= 4 ? ' sd-gallery--lead' : ''}">
                     ${photos.map((url, index) => `
-                        <button type="button" data-photo="${index}"
-                                class="group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary">
-                            <img src="${escapeHtml(url)}" loading="lazy" alt="Photo ${index + 1}"
-                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
-                            <span class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors"></span>
+                        <button type="button" data-photo="${index}" class="sd-gallery__item group" aria-label="Open photo ${index + 1} of ${photos.length}">
+                            <img src="${escapeHtml(url)}" loading="lazy" alt="Photo ${index + 1}"/>
                         </button>
                     `).join('')}
                 </div>
-            </div>
+            </section>
         `;
     }
 
@@ -566,11 +564,11 @@ body { overflow-x: hidden; }
 
         if (!destination) {
             return `
-                <section id="directionsSection" class="scroll-mt-24">
-                    <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
-                    <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-3">
+                <section id="directionsSection" class="sd-getting scroll-mt-24">
+                    <h2 class="sd-h3">Getting there</h2>
+                    <div class="space-y-3">
                         ${addressLine}
-                        <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
+                        <div data-emergency hidden class="sd-emergency"></div>
                         <p class="text-sm text-on-surface-variant flex items-start gap-2">
                             <span class="material-symbols-outlined !text-lg text-on-surface-variant/60 shrink-0">wrong_location</span>
                             <span>Directions are currently unavailable because this location has not been configured.</span>
@@ -581,18 +579,17 @@ body { overflow-x: hidden; }
         }
 
         return `
-            <section id="directionsSection" class="scroll-mt-24">
-                <h2 class="text-2xl font-display font-bold text-on-surface mb-4">Getting there</h2>
-                <div class="bg-surface border border-outline-variant/20 rounded-xl p-5 space-y-4">
+            <section id="directionsSection" class="sd-getting scroll-mt-24">
+                <h2 class="sd-h3">Getting there</h2>
+                <div class="space-y-4">
                     ${addressLine}
 
                     <!-- Emergency numbers (shared/site-footer.js): hidden until the office supplies them. -->
-                    <div data-emergency hidden class="tone-danger border border-error/25 rounded-xl p-4"></div>
+                    <div data-emergency hidden class="sd-emergency"></div>
 
 
-                    <button type="button" id="getDirectionsBtn"
-                            class="w-full sm:w-auto bg-primary text-on-primary px-6 py-3.5 min-h-[44px] rounded-full font-display font-bold uppercase tracking-widest text-xs btn-primary-gradient flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                        <span class="material-symbols-outlined !text-lg">near_me</span> Get directions
+                    <button type="button" id="getDirectionsBtn" class="btn btn-pill btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-lg">near_me</span>Get directions
                     </button>
 
                     <div id="directionsPanel" hidden class="space-y-4">
@@ -1203,6 +1200,8 @@ body { overflow-x: hidden; }
         openButton.addEventListener('click', function () {
             const firstOpen = panel.hidden;
             panel.hidden = false;
+            const row = document.querySelector('.sd-two');
+            if (row) row.classList.add('is-routing');
             // Available the moment a valid destination is known, whether or not a
             // route could be calculated.
             refreshMapsLink();
@@ -1297,6 +1296,15 @@ body { overflow-x: hidden; }
     function actionButtons(compact) {
         const size = 'btn-pill' + (compact ? ' flex-1 min-w-0 !px-2 !text-xs' : '');
         const list = [];
+        // On a computer, the user's UX Pilot design: Directions solid first, then
+        // Buy tickets / Book outlined beside it.
+        if (!compact) {
+            if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+            const second = actions.directions ? 'btn-secondary' : 'btn-primary';
+            if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
+            if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
+            return list.join('');
+        }
         if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
         if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
         if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
@@ -1379,18 +1387,22 @@ body { overflow-x: hidden; }
             : (a.same === b.same ? 0 : a.same ? -1 : 1));
         const nearby = here && others[0].km !== null;
         box.innerHTML = `
-            <h2 id="relatedHeading" class="spot-h2">${nearby ? 'Nearby places to visit' : 'More places to explore'}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">${others.slice(0, 3).map(({ spot: s, km }) => {
-                const b = heroBadge(s);
+            <h2 id="relatedHeading" class="sd-h2">${nearby ? 'Nearby places to visit' : 'More places to explore'}</h2>
+            <div class="sd-near">${others.slice(0, 3).map(({ spot: s, km }) => {
+                const fee = Number(s.entranceFee) || 0;
+                const price = isStayPlace(s) ? '' : (fee > 0 ? peso(fee) : 'Free entrance');
+                const where = km !== null ? `${km < 1 ? 'Under 1' : km.toFixed(1)} km away` : (s.barangay || s.location || '');
                 return `
-                <article class="ztims-card home-card group">
-                    <div class="home-card__photo">
+                <article class="sd-near__card">
+                    <div class="sd-near__photo">
                         <img src="${escapeHtml(s.imageUrl || 'https://placehold.co/600x400?text=Zamboanguita')}" alt="" loading="lazy" decoding="async"/>
                     </div>
-                    <div class="home-card__body">
-                        <span class="cat-badge ${b.cls} self-start !text-[10px] !py-0.5">${escapeHtml(categoryTitle(s))}</span>
-                        <h3 class="home-card__title"><a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="home-card__link">${escapeHtml(s.title)}</a></h3>
-                        <p class="home-card__meta"><span class="material-symbols-outlined" aria-hidden="true">${km !== null ? 'near_me' : 'location_on'}</span>${km !== null ? `${km < 1 ? 'Under 1' : km.toFixed(1)} km away` : escapeHtml(s.barangay || s.location || '')}</p>
+                    <div class="sd-near__body">
+                        <p class="sd-kicker">${escapeHtml(categoryTitle(s))}</p>
+                        <h3 class="sd-near__title"><a href="spot.html?spotId=${encodeURIComponent(s._id)}" class="sd-near__link">${escapeHtml(s.title)}</a></h3>
+                        <p class="sd-near__meta">${escapeHtml(openLine(s))}</p>
+                        ${where ? `<p class="sd-near__meta">${escapeHtml(where)}</p>` : ''}
+                        ${price ? `<p class="sd-near__price">${escapeHtml(price)}</p>` : ''}
                     </div>
                 </article>`; }).join('')}
             </div>`;
@@ -1405,12 +1417,22 @@ body { overflow-x: hidden; }
 
     /* The facts a visitor needs before going, in one row of tiles: when it is
        open, what it costs to get in, any travel fee, and where it is. Only what applies to this place is shown. */
-    function glanceFacts(spot) {
-        const isStay = isStayPlace(spot);
+    function openParts(spot) {
         const rawDays = String(spot.workingDays || '').trim();
         const rawTime = String(spot.workingTime || '').trim();
-        const days = !rawDays || /^every ?day$/i.test(rawDays) ? 'Every day' : rawDays;
-        const time = !rawTime || /^all ?day$/i.test(rawTime) ? 'All day' : rawTime;
+        return {
+            days: !rawDays || /^every ?day$/i.test(rawDays) ? 'Every day' : rawDays,
+            time: !rawTime || /^all ?day$/i.test(rawTime) ? 'All day' : rawTime
+        };
+    }
+    // "Open every day, 7:00 AM – 5:00 PM", for the nearby cards.
+    function openLine(spot) {
+        const { days, time } = openParts(spot);
+        return `Open ${days === 'Every day' ? 'every day' : days}, ${time === 'All day' ? 'all day' : time}`;
+    }
+    function glanceFacts(spot) {
+        const isStay = isStayPlace(spot);
+        const { days, time } = openParts(spot);
         const fee = Number(spot.entranceFee) || 0;
         const travel = Number(spot.travelFee) || 0;
         const facts = [
@@ -1420,13 +1442,12 @@ body { overflow-x: hidden; }
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });
         return `
-            <ul id="spotFacts" class="spot-facts scroll-mt-24" aria-label="At a glance">
+            <ul id="spotFacts" class="sd-facts scroll-mt-24" aria-label="At a glance">
                 ${facts.map(f => `
-                    <li class="spot-fact"${f.key ? ` data-fact="${f.key}"` : ''}>
-                        <span class="material-symbols-outlined spot-fact__icon" aria-hidden="true">${f.icon}</span>
-                        <span class="spot-fact__label">${escapeHtml(f.label)}</span>
-                        <span class="spot-fact__value">${escapeHtml(f.value)}</span>
-                        ${f.sub || f.key ? `<span class="spot-fact__sub"${f.sub ? '' : ' hidden'}>${escapeHtml(f.sub)}</span>` : ''}
+                    <li class="sd-fact"${f.key ? ` data-fact="${f.key}"` : ''}>
+                        <span class="sd-fact__label">${escapeHtml(f.label)}</span>
+                        <span class="sd-fact__value">${escapeHtml(f.value)}</span>
+                        ${f.sub || f.key ? `<span class="sd-fact__sub spot-fact__sub"${f.sub ? '' : ' hidden'}>${escapeHtml(f.sub)}</span>` : ''}
                     </li>`).join('')}
             </ul>`;
     }
@@ -1436,60 +1457,51 @@ body { overflow-x: hidden; }
        booking, getting there, and what else is near. */
     function renderSpot(spot) {
         const photos = spotPhotos(spot);
-        const badge = heroBadge(spot);
         const contact = safeExternalUrl(spot.bookingUrl) ? '' : bookingPanel(spot);
 
+        // The user's UX Pilot design (November 2026): a rounded photo, the title
+        // with its actions beside it, tinted facts, About beside a Getting there
+        // card, a photo grid and nearby cards. Styles: .sd-* in theme.css.
+        const more = CATS().of(spot).slice(isStayPlace(spot) ? 0 : 1).map(code => CATS().label(code)).filter(Boolean);
         content.innerHTML = `
-            <section class="spot-hero relative w-full overflow-hidden">
-                <img class="w-full h-full object-cover" src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
-                <!-- A dark scrim under the words, the same in both themes, kept
-                     to the lower part so the picture still reads. -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 right-0">
-                    <div class="spot-wrap pb-6 sm:pb-8">
-                        <span class="cat-badge ${badge.cls} !bg-surface mb-3"><span class="material-symbols-outlined !text-sm" aria-hidden="true">${badge.icon}</span>${escapeHtml(categoryTitle(spot))}</span>
-                        ${moreBadges(spot) ? `<span class="flex flex-wrap gap-1.5 mb-3 -mt-1">${moreBadges(spot)}</span>` : ''}
-                        <h1 class="text-[1.9rem] sm:text-4xl md:text-5xl font-display font-black tracking-tight text-white mb-2 break-words">${escapeHtml(spot.title)}</h1>
-                        <p class="text-white/90 flex items-center gap-1.5 text-sm">
-                            <span class="material-symbols-outlined !text-lg" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay ? `${spot.barangay}, Zamboanguita` : (spot.location || 'Zamboanguita'))}
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <div class="sd-wrap sd-page">
+                <figure class="sd-hero">
+                    <img src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
+                </figure>
 
-            <div class="spot-wrap pt-4 pb-12 space-y-8 sm:space-y-10">
-                <div class="space-y-4">
-                    <nav aria-label="Breadcrumb" class="text-support flex flex-wrap items-center gap-1.5">
-                        <a href="../index.html#browse" class="font-bold hover:text-primary hover:underline">Destinations</a>
-                        <span aria-hidden="true">›</span>
-                        <a href="../index.html?category=${encodeURIComponent(categoryKey(spot))}#browse" class="font-bold hover:text-primary hover:underline">${escapeHtml(categoryTitle(spot))}</a>
-                        <span aria-hidden="true">›</span>
-                        <span aria-current="page" class="text-on-surface">${escapeHtml(spot.title)}</span>
-                    </nav>
-                    <div id="actionBar" hidden class="hidden lg:flex flex-wrap gap-2"></div>
+                <div class="sd-titlebar">
+                    <div class="min-w-0">
+                        <p class="sd-kicker">${escapeHtml([categoryTitle(spot), ...more].join(' · '))}</p>
+                        <h1 class="sd-title">${escapeHtml(spot.title)}</h1>
+                        <p class="sd-place"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay ? `${spot.barangay}, Zamboanguita` : (spot.location || 'Zamboanguita'))}</p>
+                    </div>
+                    <div id="actionBar" hidden class="sd-actions hidden lg:flex"></div>
                 </div>
 
                 ${glanceFacts(spot)}
 
-                <section>
-                    <h2 class="spot-h2">About</h2>
-                    ${describe(spot.description)}
-                </section>
+                <div class="sd-two">
+                    <section class="sd-about">
+                        <h2 class="sd-h2">About</h2>
+                        ${describe(spot.description)}
+                    </section>
+                    <aside class="sd-aside">
+                        ${directionsSection(spot)}
+                    </aside>
+                </div>
 
                 ${photoGallerySection(photos)}
 
                 <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
                 ${safeExternalUrl(spot.bookingUrl) ? `
-                <section class="spot-panel">
-                    <h2 class="spot-h2">${isStayPlace(spot) ? 'Book your stay' : 'Book your visit'}</h2>
+                <section class="sd-panel">
+                    <h2 class="sd-h2">${isStayPlace(spot) ? 'Book your stay' : 'Book your visit'}</h2>
                     ${bookingPanel(spot)}
                 </section>` : contact ? `
-                <section class="spot-panel">
-                    <h2 class="spot-h2">Contact</h2>
+                <section class="sd-panel">
+                    <h2 class="sd-h2">Contact</h2>
                     ${contact}
                 </section>` : ''}
-
-                ${directionsSection(spot)}
 
                 <section id="relatedPlaces" hidden aria-labelledby="relatedHeading"></section>
             </div>

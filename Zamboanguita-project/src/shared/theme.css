@@ -2248,3 +2248,155 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 /* The form's buttons stay in reach at the bottom of a scrolling window. */
 .ztims-modal .sf-footer { position: sticky; bottom: -2rem; z-index: 5; background: rgb(var(--ztims-surface));
                           margin-left: -.25rem; margin-right: -.25rem; padding: 1rem .25rem 1.25rem; }
+
+/* ==========================================================
+   STAFF SIGN IN (staff_login.html) — the user's UX Pilot design,
+   November 2026. The coast fills the left from 1024px; the card sits
+   centred on the right, rounded, with a soft shadow. Below 1024px only
+   the card shows. The photo is the hero film's first frame.
+   ========================================================== */
+.ss-split { min-height: 100vh; min-height: 100dvh; display: flex; }
+.ss-photo { display: none; position: relative; overflow: hidden; flex: 0 0 40%; background: #1C1917; }
+.ss-photo img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.ss-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgb(18 14 10 / .82), rgb(18 14 10 / .25) 45%, rgb(18 14 10 / .05)); }
+.ss-photo__words { position: absolute; left: 3.5rem; right: 3rem; bottom: 3.5rem; z-index: 1; color: #FAF7F2; }
+.ss-photo__kicker { font-size: .75rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; opacity: .85; }
+.ss-photo__title { margin-top: .75rem; font-size: clamp(2.25rem, 3.6vw, 3.25rem); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+@media (min-width: 1024px) { .ss-photo { display: block; } }
+
+.ss-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ss-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.25rem 0; }
+@media (min-width: 640px) { .ss-top { padding: 1.5rem 2.5rem 0; } }
+.ss-back { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; font-size: .875rem; font-weight: 600; color: rgb(var(--ztims-primary-text)); }
+.ss-back:hover { text-decoration: underline; }
+.ss-theme { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface));
+    transition: transform var(--dur-quick, 160ms) var(--ease-standard, ease); }
+.ss-theme:hover { transform: scale(1.06); }
+
+.ss-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1.25rem 3rem; }
+.ss-card { width: 100%; max-width: 28rem; border-radius: 20px; border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface-high)); padding: 2rem 1.5rem;
+    box-shadow: 0 24px 50px -28px rgb(28 25 23 / .35), 0 2px 6px -2px rgb(28 25 23 / .06); }
+@media (min-width: 640px) { .ss-card { padding: 2.5rem; } }
+.ss-head { margin-bottom: 1.75rem; }
+.ss-title { font-size: 2rem; font-weight: 800; letter-spacing: -.025em; line-height: 1.1; color: rgb(var(--ztims-on-surface)); }
+.ss-lede { margin-top: .5rem; color: rgb(var(--ztims-on-surface-variant)); }
+.ss-label-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .35rem; }
+.ss-link { min-height: 32px; font-size: .875rem; font-weight: 600; color: rgb(var(--ztims-primary-text)); }
+.ss-link:hover { text-decoration: underline; }
+.ss-split .bk-field.ss-field { border-radius: 10px; background: rgb(var(--ztims-background)); }
+.ss-split .ss-submit { box-shadow: 0 10px 22px -12px rgb(var(--ztims-primary) / .7); }
+.ss-split .ss-card p[id] { border-radius: 12px; }
+.ss-note { margin-top: 1.5rem; text-align: center; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* ==========================================================
+   HISTORY PAGE (history.html) — the user's UX Pilot design, November 2026.
+   One reading column for the story, tinted fact tiles, "Where it is" and
+   "The barangays" as heading-left / text-right rows from 1024px, and the
+   town fiesta as a rounded ember band.
+   ========================================================== */
+/* Content edges line up with the floating header's (.site-header). */
+.hs-wrap { width: min(77rem, 100% - 2.5rem); margin-left: auto; margin-right: auto; }
+.hs-intro { padding-top: 2.5rem; }
+@media (min-width: 640px) { .hs-intro { padding-top: 3.5rem; } }
+.hs-title { font-size: clamp(2.25rem, 5.5vw, 3.75rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.04; color: rgb(var(--ztims-on-surface)); }
+.hs-lead { margin-top: 1.25rem; max-width: 40rem; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: rgb(var(--ztims-on-surface-variant)); }
+.hs-story { margin-top: 2.5rem; max-width: 40rem; display: grid; gap: 1.1rem; line-height: 1.75; color: rgb(var(--ztims-on-surface)); }
+.hs-section { margin-top: 4rem; }
+@media (min-width: 640px) { .hs-section { margin-top: 5rem; } }
+.hs-h2 { font-size: clamp(1.5rem, 2.6vw, 1.875rem); font-weight: 800; letter-spacing: -.02em; color: rgb(var(--ztims-on-surface)); }
+.hs-tiles { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+@media (min-width: 1024px) { .hs-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; } }
+.hs-tile { border-radius: 16px; border: 1px solid rgb(var(--ztims-outline) / .7); background: rgb(var(--ztims-outline) / .35); padding: 1.1rem 1.1rem 1.25rem; }
+@media (min-width: 640px) { .hs-tile { padding: 1.4rem 1.5rem 1.5rem; } }
+.hs-tile dt { font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
+.hs-tile__value { margin-top: .6rem; font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 800; letter-spacing: -.01em; color: rgb(var(--ztims-on-surface)); }
+.hs-tile__note { margin-top: .2rem; font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+.hs-pair { display: grid; gap: 1rem; }
+@media (min-width: 1024px) { .hs-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 3rem; } }
+.hs-body { max-width: 40rem; font-size: 1.0625rem; line-height: 1.7; color: rgb(var(--ztims-on-surface-variant)); }
+.hs-coords { margin-top: 1.25rem; padding-left: .9rem; border-left: 3px solid rgb(var(--ztims-primary)); font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
+.hs-pills { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: .6rem; }
+.hs-pills li { border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); padding: .55rem 1.1rem; font-size: .9375rem; font-weight: 600; color: rgb(var(--ztims-on-surface)); }
+.hs-fiesta { border-radius: 24px; background: #7A2E00; color: #FAF7F2; padding: 2rem 1.75rem; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; }
+@media (min-width: 640px) { .hs-fiesta { padding: 2.75rem 2.5rem; } }
+.hs-fiesta__kicker { font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #F28500; }
+.hs-fiesta__name { margin-top: .5rem; font-size: clamp(1.875rem, 4vw, 2.75rem); font-weight: 800; letter-spacing: -.025em; line-height: 1.05; }
+.hs-fiesta__when { font-size: 1.125rem; color: rgb(250 247 242 / .85); }
+.hs-source { margin-top: 2.5rem; margin-bottom: 3rem; }
+.hs-source p { max-width: 44rem; font-size: .8125rem; line-height: 1.6; color: rgb(var(--ztims-on-surface-variant)); }
+.hs-source a { font-weight: 700; color: rgb(var(--ztims-primary-text)); }
+.hs-source a:hover { text-decoration: underline; }
+
+/* ==========================================================
+   DESTINATION PAGE (spot.html) — the user's UX Pilot design, November 2026.
+   Content as wide as the floating header: a rounded photo, the title with
+   its actions on the right, tinted fact tiles, About beside a Getting there
+   card (the card takes the whole row once directions are open), a photo
+   grid and rounded nearby cards. The page's own script draws all of it.
+   ========================================================== */
+.sd-wrap { width: min(77rem, 100% - 2.5rem); margin-left: auto; margin-right: auto; }
+.sd-page { padding-top: 1rem; padding-bottom: 3.5rem; display: flex; flex-direction: column; gap: 2.5rem; }
+@media (min-width: 640px) { .sd-page { padding-top: 1.25rem; gap: 3.5rem; } }
+.sd-hero { margin: 0; border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 9; max-height: 30rem; width: 100%;
+    background: rgb(var(--ztims-outline) / .5); box-shadow: 0 22px 44px -30px rgb(28 25 23 / .55); }
+@media (min-width: 1024px) { .sd-hero { aspect-ratio: 21 / 9; } }
+.sd-hero img { width: 100%; height: 100%; object-fit: cover; }
+.sd-titlebar { margin-top: -1rem; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; }
+@media (min-width: 640px) { .sd-titlebar { margin-top: -1.5rem; } }
+.sd-kicker { font-size: .6875rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
+.sd-title { margin-top: .5rem; font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05;
+    color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.sd-place { margin-top: .5rem; display: flex; align-items: center; gap: .3rem; color: rgb(var(--ztims-on-surface-variant)); }
+.sd-place .material-symbols-outlined { font-size: 1.125rem; color: rgb(var(--ztims-primary-text)); }
+.sd-actions { flex-wrap: wrap; gap: .6rem; }
+.sd-actions .btn-primary { box-shadow: 0 10px 22px -12px rgb(var(--ztims-primary) / .7); }
+.sd-h2 { margin-bottom: 1.1rem; font-size: clamp(1.4rem, 2.4vw, 1.75rem); font-weight: 800; letter-spacing: -.02em; color: rgb(var(--ztims-on-surface)); }
+.sd-h3 { margin-bottom: 1rem; font-size: 1.125rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+
+.sd-facts { margin-top: -1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
+@media (min-width: 640px) { .sd-facts { margin-top: -1.5rem; gap: 1rem; } }
+.sd-fact { display: flex; flex-direction: column; gap: .2rem; border-radius: 16px; border: 1px solid rgb(var(--ztims-outline) / .7);
+    background: rgb(var(--ztims-outline) / .35); padding: 1.1rem 1.25rem 1.2rem; }
+@media (min-width: 640px) { .sd-fact { padding: 1.35rem 1.5rem 1.4rem; } }
+.sd-fact__label { font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
+.sd-fact__value { margin-top: .4rem; font-size: 1.125rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.sd-fact__sub { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+
+.sd-two { display: grid; gap: 2rem; align-items: start; }
+@media (min-width: 1024px) { .sd-two:not(.is-routing) { grid-template-columns: minmax(0, 1.9fr) minmax(19rem, 1fr); gap: 3rem; } }
+.sd-about p { max-width: 38rem; line-height: 1.75; color: rgb(var(--ztims-on-surface-variant)); }
+.sd-getting { border-radius: 20px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+    padding: 1.4rem 1.4rem 1.5rem; box-shadow: 0 18px 40px -30px rgb(28 25 23 / .45); }
+.sd-emergency { border-radius: 14px; background: rgb(var(--ztims-outline) / .4); padding: .85rem 1rem; }
+.sd-emergency .text-error { color: rgb(var(--ztims-primary-text)) !important; }
+.sd-getting .btn-primary { box-shadow: 0 10px 22px -12px rgb(var(--ztims-primary) / .7); }
+.sd-getting #directionsMap, .sd-getting #originResults { border-radius: 14px; }
+
+.sd-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 9rem; gap: .75rem; }
+@media (min-width: 640px) { .sd-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 13rem; gap: 1rem; } }
+@media (min-width: 640px) { .sd-gallery--lead .sd-gallery__item:first-child { grid-row: span 2; } }
+.sd-gallery__item { position: relative; display: block; border-radius: 16px; overflow: hidden; background: rgb(var(--ztims-outline) / .5); }
+.sd-gallery__item img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover;
+    transition: transform var(--dur-slow, 400ms) var(--ease-standard, ease); }
+.sd-gallery__item:hover img { transform: scale(1.04); }
+.sd-gallery__item:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+
+.sd-panel { border-radius: 20px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); padding: 1.5rem; }
+
+.sd-near { display: grid; gap: 1rem; }
+@media (min-width: 640px) { .sd-near { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; } }
+.sd-near__card { position: relative; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden;
+    border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+    box-shadow: 0 16px 34px -28px rgb(28 25 23 / .45); transition: transform var(--dur-standard, 220ms) var(--ease-standard, ease); }
+.sd-near__card:hover { transform: translateY(-2px); }
+.sd-near__photo { position: relative; height: 11.5rem; background: rgb(var(--ztims-outline) / .5); overflow: hidden; }
+.sd-near__photo img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.sd-near__body { display: flex; flex-direction: column; gap: .3rem; padding: 1.1rem 1.25rem 1.3rem; }
+.sd-near__title { font-size: 1.125rem; font-weight: 800; letter-spacing: -.01em; color: rgb(var(--ztims-on-surface)); }
+.sd-near__link { color: inherit; }
+.sd-near__link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.sd-near__card:has(.sd-near__link:focus-visible) { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.sd-near__meta { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+.sd-near__price { margin-top: .15rem; font-size: .875rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }

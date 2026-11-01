@@ -342,7 +342,8 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
   (all 0: corners are square everywhere by decision, and each page's Tailwind
   config maps every `rounded-*` to 0 — the visitor pages' header and footer and
   the Home page are rounded by the user's UX Pilot design (their own `.hm-*`,
-  `.site-header*` and `.site-footer*` classes);
+  `.site-header*` and `.site-footer*` classes), and so are the Destination,
+  History and Staff sign in pages (`.sd-*`, `.hs-*`, `.ss-*`, November 2026);
   the officer's Destinations and Enterprise Managers card grids are rounded by
   the user's design, through their own `.pg-*` classes),
   three elevations `--ztims-shadow-card|raised|overlay`. Icons are Material
@@ -771,28 +772,44 @@ Frontend only, no tables of their own:
   top as the page scrolls; on Home it floats over the hero
   (`.site-header--over`). On a phone it is two rows: the name and the buttons,
   then the links, scrolling sideways.
-- **Destination** (`spot.html`): one column (`.spot-wrap`, ~52rem), read top to
-  bottom in the order a visitor asks — the photo with the category pill, name
-  and barangay; a breadcrumb (Destinations › category › place); the actions the
-  place really offers as pills — Buy tickets, Book a room / Book now (its own
-  booking link), Directions — as `#actionBar` on a computer and
-  `#mobileActions` fixed to the bottom of a phone (`drawActions`; never both);
-  **At a glance** tiles (`glanceFacts`: open days and hours, entrance or Free,
-  a travel fee only if set, barangay); About; Photos (tickets have no section
-  of their own: "Buy tickets" opens the ticket form in a window, `#ticketModal`
-  built by `renderTicketOffer`, and the Entrance tile says "less for students
-  and children" when those prices are set); Book your stay / visit (its
-  booking link) or Contact; Getting there (address, emergency numbers, Get
-  directions); "Nearby places to visit" (Home's card style; nearest first when
-  both have a pin, else "More places to explore", same category first;
-  `renderRelated`). Flat: the page's older gradient buttons are restyled as
-  solid pills in its own style block; prices without cents (`peso`).
-- **My ticket, History, Staff sign-in** (and the reset-password page) follow
-  the same flat style: sentence-case labels above `.bk-field`s, flat
+- **Destination** (`spot.html`), the user's UX Pilot design (November 2026;
+  styles `.sd-*` at the end of `theme.css`), as wide as the floating header
+  (`.sd-wrap`), read top to bottom in the order a visitor asks — the photo as a
+  rounded frame; under it the categories as one small label ("Beach & Sea ·
+  Diving & Snorkeling"), the name and barangay, and on a computer the actions
+  the place really offers on the right (`#actionBar`: Directions solid first,
+  then Buy tickets / Book a room / Book now outlined); on a phone the actions
+  are `#mobileActions`, fixed to the bottom (`drawActions`; never both). No
+  breadcrumb (the design has none). **At a glance** tiles (`glanceFacts`,
+  `.sd-fact`, tinted: open days and hours, entrance or Free, a travel fee only
+  if set, barangay); About beside a **Getting there** card (address,
+  emergency numbers, Get directions) that takes the whole row once directions
+  are open (`.sd-two.is-routing`); Photos (`.sd-gallery`, the first one tall
+  from four photos); tickets have no section of their own: "Buy tickets" opens
+  the ticket form in a window, `#ticketModal` built by `renderTicketOffer`, and
+  the Entrance tile says "less for students and children" when those prices are
+  set; Book your stay / visit (its booking link) or Contact; "Nearby places to
+  visit" (`.sd-near` cards: category label, name, "Open …" from `openLine`,
+  distance or barangay, the price or Free entrance; nearest first when both
+  have a pin, else "More places to explore", same category first;
+  `renderRelated`). Prices without cents (`peso`).
+- **History** (`history.html`), the user's UX Pilot design (November 2026;
+  `.hs-*` in `theme.css`): the title and lead, the story in three paragraphs,
+  "The municipality at a glance" as tinted tiles, "Where it is" and "The
+  barangays" as heading-left / text-right rows, the town fiesta as a rounded
+  ember band, and the Wikipedia source note. No photo, no back link.
+- **Staff sign in** (`staff_login.html`), the user's UX Pilot design (November
+  2026; `.ss-*` in `theme.css`): from 1024px the coast (the hero film's first
+  frame) fills the left with "Keeping Zamboanguita ready for its visitors.";
+  on the right "Back to the site", the round theme toggle, and one rounded
+  card — Staff sign in, Email address, Password with "Forgot password?" beside
+  its label and the eye, Sign in, "Accounts are issued by the Municipal Tourism
+  Office." The forgot-password and choose-your-own-password forms swap into the
+  same card.
+- **My ticket** (and the reset-password page) follow the flat style: sentence-case labels above `.bk-field`s, flat
   `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
-  `.tone-pill.rounded-pill`), short titles ("My ticket", "Staff sign in",
-  "How Zamboanguita came to be"), History's figures as `.spot-fact` tiles. The
-  footer's Send feedback is a pill too.
+  `.tone-pill.rounded-pill`), short titles ("My ticket"). The footer's Send
+  feedback is a pill too.
 - **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
   number with its label under it, joined by a line; done green with a tick,
   current solid burnt orange). The ticket window: price line, Your visit (date; who is coming, one row per kind with a
@@ -1105,4 +1122,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   gradient (`.hm-hero::before`), not by a brightness setting on the film. Keep
   what the design shows only where ZTIMS has the thing: the hero's "Popular"
   places and featured place, the categories' counts and the office's details
-  come from the database, never typed into the page.
+  come from the database, never typed into the page. The Destination, History
+  and Staff sign in pages follow the user's UX Pilot designs too (November
+  2026), made in UX Pilot from the Framer mock-ups; UX Pilot's own HTML needs a
+  paid plan, so they were rebuilt from its preview images.

@@ -294,224 +294,105 @@ body { overflow-x: hidden; }
         </div>
     </header>
 
-    <main class="flex-1">
+    <!-- The user's UX Pilot design (November 2026). Styles: .hs-* in theme.css
+         ("History page"). The Cebuano phrases are the point of the story, so
+         they stay marked. -->
+    <main class="flex-1 hs-page">
 
-        <section class="pt-10 sm:pt-14 pb-0">
-            <div class="max-w-6xl mx-auto px-5 sm:px-6 md:px-10">
-                <a href="../index.html" class="inline-flex items-center gap-1.5 text-sm font-bold text-on-surface-variant hover:text-primary transition-colors min-h-[44px]">
-                    <span class="material-symbols-outlined !text-lg" aria-hidden="true">arrow_back</span> Destinations
-                </a>
+        <section class="hs-wrap hs-intro">
+            <h1 class="hs-title">How Zamboanguita came to be</h1>
+            <p class="hs-lead">
+                A town rooted in history and replete with natural resources, Zamboanguita derived its
+                name from an incident involving a <i>coguita</i> (octopus).
+            </p>
+            <div class="hs-story">
+                <p>
+                    Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
+                    would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
+                    &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
+                    nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
+                    in their fishing net, which they then separated from their catch as it had tentacles and
+                    no gills.
+                </p>
+                <p>
+                    The leader of the Moro group then ordered one of his men to go to the beach and find a
+                    tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
+                    Since then, every time an octopus was caught, it was hung on that particular tree.
+                    Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
+                </p>
+                <p>
+                    When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
+                    shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
+                    from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
+                    across the Dipolog Strait: the Zamboanga Peninsula.
+                </p>
             </div>
         </section>
 
-            <!--
-                 Sits below the destinations, as the third section of the main
-                 page. The Cebuano phrases are the point of the story, so they
-                 are marked rather than buried in the paragraph. -->
-            <section class="py-10 sm:py-16 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+        <!-- The municipal facts a visitor actually asks about, as tiles. -->
+        <section class="hs-wrap hs-section">
+            <h2 class="hs-h2">The municipality at a glance</h2>
+            <dl class="hs-tiles">
+                <div class="hs-tile"><dt>Founded</dt><dd class="hs-tile__value">1866</dd></div>
+                <div class="hs-tile"><dt>Population</dt><dd class="hs-tile__value">30,412</dd><dd class="hs-tile__note">2024 census</dd></div>
+                <div class="hs-tile"><dt>Land area</dt><dd class="hs-tile__value">85.86 km²</dd><dd class="hs-tile__note">33.15 sq mi</dd></div>
+                <div class="hs-tile"><dt>Barangays</dt><dd class="hs-tile__value">11</dd></div>
+                <div class="hs-tile"><dt>Elevation</dt><dd class="hs-tile__value">170 m</dd><dd class="hs-tile__note">rising to 1,846 m</dd></div>
+                <div class="hs-tile"><dt>Languages</dt><dd class="hs-tile__value">Cebuano</dd><dd class="hs-tile__note">and Tagalog</dd></div>
+                <div class="hs-tile"><dt>ZIP code</dt><dd class="hs-tile__value">6218</dd><dd class="hs-tile__note">dialling +63 (0)35</dd></div>
+                <div class="hs-tile"><dt>Time zone</dt><dd class="hs-tile__value">UTC+8</dd><dd class="hs-tile__note">PST, no daylight saving</dd></div>
+            </dl>
+        </section>
 
-                    <div class="order-2 lg:order-1">
-                        <div class="w-16 h-1 bg-primary mb-6 sm:mb-8"></div>
+        <section class="hs-wrap hs-section hs-pair">
+            <h2 class="hs-h2">Where it is</h2>
+            <div>
+                <p class="hs-body">
+                    Zamboanguita sits at the southern tip of Negros Oriental, about 28 kilometres down the
+                    coast from Dumaguete, facing the island province of Siquijor across the strait. Its
+                    neighbours are Siaton to the west and Dauin to the north and east. The municipality
+                    belongs to the 3rd district of Negros Oriental, in the Negros Island Region.
+                </p>
+                <p class="hs-coords">9°06′00″N, 123°11′56″E — the land runs from the shoreline up to a highest point of 1,846 metres.</p>
+            </div>
+        </section>
 
-                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-on-surface leading-[1.05] mb-4 sm:mb-6">
-                            How <span class="text-primary">Zamboanguita</span><br class="hidden sm:block"/> came to be
-                        </h2>
+        <section class="hs-wrap hs-section hs-pair">
+            <h2 class="hs-h2">The barangays</h2>
+            <div>
+                <p class="hs-body">
+                    Zamboanguita is divided into eleven barangays. Each is made up of puroks, and several
+                    contain sitios of their own.
+                </p>
+                <ul class="hs-pills">
+                    <li>Basak</li><li>Calango</li><li>Jumao-as</li><li>Lutoban</li><li>Malongcay Diot</li><li>Maluay</li>
+                    <li>Mayabon</li><li>Nabago</li><li>Najandig</li><li>Nasig-id</li><li>Poblacion</li>
+                </ul>
+            </div>
+        </section>
 
-                        <p class="text-base sm:text-lg text-on-surface font-medium leading-relaxed mb-5">
-                            A town rooted in history and replete with natural resources, Zamboanguita derived its
-                            name from an incident involving a <i>coguita</i> (octopus).
-                        </p>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Long before the Spaniards set foot on Negros Island, fishermen from as far as Mindanao
-                                would visit the yet unnamed town and benefit from the bounty of its rich fishing grounds
-                                &mdash; from its small <i>tugnos</i> (juvenile gobies) to the large <i>iho</i> (shark) on
-                                nearby Apo Island. One day, a group of Moro fishermen in the area found a <i>coguita</i>
-                                in their fishing net, which they then separated from their catch as it had tentacles and
-                                no gills.
-                            </p>
-                            <p>
-                                The leader of the Moro group then ordered one of his men to go to the beach and find a
-                                tree to <i>&ldquo;isab-ong ang coguita&rdquo;</i> (&ldquo;hang the octopus&rdquo;).
-                                Since then, every time an octopus was caught, it was hung on that particular tree.
-                                Locals eventually started calling the place <i>&ldquo;Sab-ongan ug coguita.&rdquo;</i>
-                                When the Spaniards arrived, they called the town &ldquo;Zamboangaguita&rdquo;, which was
-                                shortened to &ldquo;Zamboanguita&rdquo;. Another theory has the term Zamboanguita come
-                                from the Spanish diminutive suffix <i>-ita</i> in relation to its neighbour to the south
-                                across the Dipolog Strait: the Zamboanga Peninsula.
-                            </p>
-                        </div>
-
-                        <!-- The name's journey, pulled out of the paragraph above so it
-                             can be read at a glance. -->
-                        <div class="flex flex-wrap items-center gap-2 my-6 text-support font-bold">
-                            <span class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60">Sab-ongan ug coguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60">Zamboangaguita</span>
-                            <span class="material-symbols-outlined text-primary !text-lg">east</span>
-                            <span class="px-3 py-2 pill bg-primary text-on-primary">Zamboanguita</span>
-                        </div>
-
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">location_on</span>
-                                <span>
-                                    Zamboanguita is a coastal municipality in Negros Oriental, Philippines, located at
-                                    approximately 9&deg;6&prime;N latitude and 123&deg;12&prime;E longitude, about 28
-                                    kilometers south of Dumaguete City.
-                                </span>
-                            </p>
-                            <p>
-                                In Zamboanguita, we prioritize high-end experiences that leave no footprint, only
-                                memories. We partner with local guardians to ensure that the beauty we share today
-                                remains untainted for the narratives of tomorrow.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="order-1 lg:order-2">
-                        <div class="aspect-[4/3] lg:aspect-[4/5] overflow-hidden border border-outline-variant/60">
-                            <img class="w-full h-full object-cover" loading="lazy"
-                                 src="https://uploads.onecompiler.io/43fxe3kf9/43tfkk6j5/images.jpg"
-                                 alt="The coast of Zamboanguita, Negros Oriental"/>
-                        </div>
-                    </div>
+        <section class="hs-wrap hs-section">
+            <div class="hs-fiesta">
+                <div>
+                    <p class="hs-fiesta__kicker">Town fiesta</p>
+                    <p class="hs-fiesta__name">San Isidro Labrador</p>
                 </div>
-            </section>
+                <p class="hs-fiesta__when">Celebrated every 15 May.</p>
+            </div>
+        </section>
 
-            <!-- ============ AT A GLANCE ============
-                 The municipal facts a visitor actually asks about, as a panel
-                 rather than a paragraph, so any one of them can be found at speed. -->
-            <section class="py-10 sm:py-14 bg-surface-container-low">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <div class="w-16 h-1 bg-primary mb-6"></div>
-                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-2">
-                        The municipality at a glance
-                    </h2>
-                    <p class="text-on-surface-variant mb-7 max-w-2xl">
-                        Zamboanguita — <i>Lungsod sa Zamboanguita</i> in Cebuano — is a coastal municipality
-                        in the province of Negros Oriental, established in 1866.
-                    </p>
-
-                    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Founded</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">1866</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Population</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">30,412</dd>
-                            <dd class="text-support mt-0.5">2024 census</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Land area</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">85.86 km²</dd>
-                            <dd class="text-support mt-0.5">33.15 sq mi</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Barangays</dt>
-                            <dd class="text-xl sm:text-2xl font-display font-bold text-on-surface">11</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Elevation</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">170 m</dd>
-                            <dd class="text-support mt-0.5">rising to 1,846 m</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Languages</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">Cebuano</dd>
-                            <dd class="text-support mt-0.5">and Tagalog</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">ZIP code</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">6218</dd>
-                            <dd class="text-support mt-0.5">dialling +63 (0)35</dd>
-                        </div>
-                        <div class="spot-fact">
-                            <dt class="spot-fact__label">Time zone</dt>
-                            <dd class="text-lg sm:text-xl font-display font-bold text-on-surface">UTC+8</dd>
-                            <dd class="text-support mt-0.5">PST, no daylight saving</dd>
-                        </div>
-                    </dl>
-                </div>
-            </section>
-
-            <!-- ============ WHERE IT IS ============ -->
-            <section class="py-10 sm:py-14 bg-surface">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            Where it is
-                        </h2>
-                        <div class="space-y-4 text-on-surface-variant leading-relaxed">
-                            <p>
-                                Zamboanguita sits at the southern tip of Negros Oriental, about
-                                <b class="text-on-surface">28 kilometres</b> down the coast from Dumaguete,
-                                facing the island province of Siquijor across the strait.
-                            </p>
-                            <p>
-                                Its neighbours are <b class="text-on-surface">Siaton</b> to the west and
-                                <b class="text-on-surface">Dauin</b> to the north and east. The municipality
-                                belongs to the 3rd district of Negros Oriental, in the Negros Island Region.
-                            </p>
-                            <p class="flex gap-2">
-                                <span class="material-symbols-outlined text-primary !text-lg shrink-0 mt-0.5">explore</span>
-                                <span>9°06′00″N, 123°11′56″E — the land runs from the shoreline up to a
-                                    highest point of 1,846 metres.</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="w-16 h-1 bg-primary mb-6"></div>
-                        <h2 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-on-surface mb-4">
-                            The barangays
-                        </h2>
-                        <p class="text-on-surface-variant leading-relaxed mb-4">
-                            Zamboanguita is divided into eleven barangays. Each is made up of puroks, and
-                            several contain sitios of their own.
-                        </p>
-                        <ul class="flex flex-wrap gap-2">
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Basak</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Calango</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Jumao-as</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Lutoban</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Malongcay Diot</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Maluay</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Mayabon</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Nabago</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Najandig</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Nasig-id</li>
-                            <li class="px-3 py-2 pill bg-surface-container-high text-on-surface border border-outline-variant/60 text-xs font-bold">Poblacion</li>
-                        </ul>
-
-                        <div class="mt-7 spot-fact">
-                            <p class="spot-fact__label">Town fiesta</p>
-                            <p class="text-on-surface font-bold">San Isidro Labrador</p>
-                            <p class="text-on-surface-variant text-sm">Celebrated every 15 May.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Wikipedia's text is CC BY-SA, which asks for attribution. Saying where
-                 the figures came from is also how a reader knows when to re-check them. -->
-            <section class="py-8 bg-surface-container-low border-t border-outline-variant/15">
-                <div class="px-5 sm:px-6 md:px-10 max-w-6xl mx-auto">
-                    <p class="text-support leading-relaxed">
-                        Municipal figures on this page are drawn from the
-                        <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer"
-                           class="text-accent font-bold hover:underline">Wikipedia article on Zamboanguita</a>,
-                        available under CC BY-SA, which cites the Philippine Statistics Authority for the
-                        census and land area. Population and area figures change with each census.
-                        The barangay list is the exception: it has been corrected locally and no longer
-                        matches that article.
-                    </p>
-                </div>
-            </section>
+        <!-- Wikipedia's text is CC BY-SA, which asks for attribution. Saying where
+             the figures came from is also how a reader knows when to re-check them. -->
+        <section class="hs-wrap hs-source">
+            <p>
+                Municipal figures on this page are drawn from the
+                <a href="https://en.wikipedia.org/wiki/Zamboanguita" target="_blank" rel="noopener noreferrer">Wikipedia article on Zamboanguita</a>,
+                available under CC BY-SA, which cites the Philippine Statistics Authority for the
+                census and land area. Population and area figures change with each census.
+                The barangay list is the exception: it has been corrected locally and no longer
+                matches that article.
+            </p>
+        </section>
 
     </main>
 
