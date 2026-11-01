@@ -6,3 +6,6 @@ node_modules/
 # Records the MongoDB copy could not bring across, saved in full by
 # zamboanguita-backend/scripts/copy-from-mongo.js. They hold personal details.
 copy-skipped-*.json
+
+# Per-machine Claude Code permissions (not shared)
+.claude/settings.local.json
