@@ -82,6 +82,16 @@ collides. The user's chat is in plain, simple language.
 6. **Finish with a short report**: what changed, what was tested, and last,
    what the user must do themselves (re-run `schema.sql`, Vercel variables,
    redeploy, manuscript updates).
+7. **Keep the second brain current.** The user keeps an Obsidian vault in the
+   private repo `jefee0101/ztims-notes` (overview, rules, open items,
+   manuscript changes, panel feedback, to-do, session log). Whenever your work
+   changes a decision, a rule, what the manuscript must say, an open item or
+   the user's to-do list, add it there, briefly (a line or two, dated, in the
+   matching note; never passwords, keys or visitors' data), add one line to its
+   `Sessions/Session log.md`, and push to its `main`. If the repo is not
+   attached to your session, attach it with `add_repo` first; if that is
+   refused, say so in your report. This is in addition to updating this file,
+   not instead of it.
 
 **Wording on every page** (decided): professional and brief. No page intros
 or help lines under fields; keep only what appears at the moment of an action,
