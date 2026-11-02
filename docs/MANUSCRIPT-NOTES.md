@@ -4,6 +4,18 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## The conceptual and theoretical framework figures are saved here (November 2026)
+
+**The change.** Nothing in the system. The two framework figures, which lived
+only on an old branch, are now in `docs/diagrams/`:
+`ztims-conceptual-framework.png` (and its editable `.drawio`) and
+`ztims-theoretical-framework.png` (destination management and marketing
+framework, replacing the system theories).
+
+**Change in the manuscript:** the conceptual framework's editable file still
+says "Establishment" once; change it to "Enterprise" to match the rest of the
+paper before it is used again.
+
 ## New Destination, History and Staff sign in pages (November 2026)
 
 **The change.** Three more pages follow the group's UX Pilot designs:
