@@ -68,40 +68,54 @@
         location.reload();
     }
 
+    // The open menu, if any; one pair of document listeners closes it.
+    let openMenu = null;
+    function closeMenu() {
+        if (!openMenu) return;
+        openMenu.menu.hidden = true;
+        openMenu.button.setAttribute('aria-expanded', 'false');
+        openMenu = null;
+    }
+    document.addEventListener('click', event => {
+        if (openMenu && !openMenu.root.contains(event.target)) closeMenu();
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+
+    /* The header's switcher: the same pill and menu as the portals' other
+       buttons and ⋯ menus (.pg-btn, .dest-menu in portal-flat.css). */
     function mount(slot) {
         if (!slot) return;
+        closeMenu();
         const here = current();
         if (!here) { slot.innerHTML = ''; return; }
-        const menuId = 'entMenu';
+        const icon = name => `<span class="material-symbols-outlined" aria-hidden="true">${name}</span>`;
         slot.innerHTML = `
             <div class="ent-switch">
-                <button type="button" class="ent-switch__btn" id="entSwitchBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}">
-                    <span class="material-symbols-outlined" aria-hidden="true">storefront</span>
-                    <span class="ent-switch__name">${esc(nameOf(here))}</span>
-                    <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+                <button type="button" class="pg-btn pg-btn--plain ent-switch__btn" aria-haspopup="menu" aria-expanded="false"
+                        aria-label="Working in ${esc(nameOf(here))}. Switch enterprise">
+                    ${icon('storefront')}<span class="ent-switch__name">${esc(nameOf(here))}</span>${icon('expand_more')}
                 </button>
-                <div class="ztims-dropdown ent-switch__menu" id="${menuId}" role="menu" hidden>
+                <div class="ztims-dropdown dest-menu ent-switch__menu" role="menu" hidden>
                     <p class="ent-switch__label">Working in</p>
-                    ${list.map(s => `<button type="button" role="menuitem" class="ent-switch__item${s._id === here._id ? ' is-current' : ''}" data-id="${esc(s._id)}">
-                        <span>${esc(nameOf(s))}</span>${s._id === here._id ? '<span class="material-symbols-outlined" aria-hidden="true">check</span>' : ''}</button>`).join('')}
-                    <a role="menuitem" class="ent-switch__item" href="resort_enterprises.html">My enterprises</a>
-                    <a role="menuitem" class="ent-switch__item ent-switch__add" href="resort_spots.html?add=1">
-                        <span class="material-symbols-outlined" aria-hidden="true">add</span>Add enterprise</a>
+                    ${list.map(s => s._id === here._id
+                        ? `<button type="button" role="menuitem" class="is-current" aria-current="true" data-id="${esc(s._id)}">${icon('check')}<span>${esc(nameOf(s))}</span></button>`
+                        : `<button type="button" role="menuitem" data-id="${esc(s._id)}">${icon('storefront')}<span>${esc(nameOf(s))}</span></button>`).join('')}
+                    <hr class="ent-switch__rule">
+                    <a role="menuitem" href="resort_enterprises.html">${icon('dashboard')}My enterprises</a>
+                    <a role="menuitem" href="resort_spots.html?add=1">${icon('add_business')}Add enterprise</a>
                 </div>
             </div>`;
-        const button = slot.querySelector('#entSwitchBtn');
-        const menu = slot.querySelector('#' + menuId);
-        const close = () => { menu.hidden = true; button.setAttribute('aria-expanded', 'false'); };
-        button.addEventListener('click', event => {
-            event.stopPropagation();
-            const open = menu.hidden;
-            menu.hidden = !open;
-            button.setAttribute('aria-expanded', String(open));
+        const root = slot.querySelector('.ent-switch');
+        const button = root.querySelector('.ent-switch__btn');
+        const menu = root.querySelector('.ent-switch__menu');
+        button.addEventListener('click', () => {
+            if (openMenu) return closeMenu();
+            menu.hidden = false;
+            button.setAttribute('aria-expanded', 'true');
+            openMenu = { root, button, menu };
         });
-        document.addEventListener('click', event => { if (!slot.contains(event.target)) close(); });
-        document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
         menu.querySelectorAll('[data-id]').forEach(item => item.addEventListener('click', () => {
-            if (item.dataset.id === here._id) return close();
+            if (item.dataset.id === here._id) return closeMenu();
             select(item.dataset.id);
         }));
     }

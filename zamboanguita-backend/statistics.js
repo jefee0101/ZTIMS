@@ -66,7 +66,7 @@ async function spotById(id, client) {
     const { rows } = await query(
         `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by,
                 case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
-           from spots s left join establishment_managers m on m.id = s.managed_by
+           from spots s
           where s.id = $1`, [String(id)], client);
     return rows[0] || null;
 }
@@ -187,7 +187,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             }
             const { rows } = await query(
                 `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
-                   from spots s left join establishment_managers m on m.id = s.managed_by
+                   from spots s
                  ${where} order by s.type, s.title`, params);
             return res.json(rows.map(s => ({
                 _id: s.id, title: s.title, kind: kindOf(s), barangay: s.barangay, status: s.status,
@@ -601,7 +601,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (!Number.isInteger(year) || year < 2000 || year > 2100) return badRequest(res, 'Give a year.');
             const places = await query(
                 `select s.id, s.title, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
-                   from spots s left join establishment_managers m on m.id = s.managed_by
+                   from spots s
                   where s.type = $1 and (s.status <> 'archived'
                         or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $2))
                   order by s.title`, [kind === 'accommodation' ? 'accommodation' : 'spot', year]);

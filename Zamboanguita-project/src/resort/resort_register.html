@@ -499,7 +499,7 @@ body { overflow-x: hidden; }
 
             <div class="flex flex-wrap items-end gap-3">
                 <label id="rgPlaceWrap" class="block flex-1 min-w-[14rem]" hidden><span class="field-label">Place</span><select id="rgPlace" class="field"></select></label>
-                <div id="rgPlaceName" class="min-w-[12rem]" hidden><span class="field-label">Place</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
+                <div id="rgPlaceName" class="min-w-[12rem]" hidden><span class="field-label">Enterprise</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
                 <label class="block"><span class="field-label">Month</span><select id="rgPeriod" class="field w-56"></select></label>
                 <button id="rgAdd" type="button" class="btn btn-primary min-h-[44px] ml-auto" disabled>
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span><span id="rgAddLabel">Add a stay</span>
@@ -852,7 +852,8 @@ body { overflow-x: hidden; }
             document.getElementById('rgPlaceWrap').hidden = true;
             const name = document.getElementById('rgPlaceName');
             name.hidden = false;
-            name.querySelector('p').textContent = (myPlaces.find(p => p._id === placeSelect.value) || myPlaces[0]).title;
+            const shown = myPlaces.find(p => p._id === placeSelect.value) || myPlaces[0];
+            name.querySelector('p').textContent = shown.managerName || shown.title;   // the enterprise's name, as in the switcher
             const periodSelect = document.getElementById('rgPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
             wire();

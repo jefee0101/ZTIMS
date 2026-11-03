@@ -680,7 +680,7 @@ body { overflow-x: hidden; }
             if (show) {
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                document.getElementById('spotModalTitle').textContent = spot ? 'Edit listing' : 'Add a listing';
+                document.getElementById('spotModalTitle').textContent = spot ? 'Edit listing' : 'Add an enterprise';
                 if (spotForm) spotForm.open(spot);
             } else {
                 modal.classList.remove('flex');
@@ -804,7 +804,7 @@ body { overflow-x: hidden; }
 
         let manager = null;
         // The enterprise the portal is working on (the header switcher's choice).
-        const curSpot = () => mySpots.find(s => String(s._id) === String(window.ztimsEnterprise && ztimsEnterprise.currentId())) || mySpots[0];
+        const curSpot = () => (window.ztimsEnterprise && ztimsEnterprise.current()) || mySpots[0];
         const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
         const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
         const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
@@ -963,9 +963,9 @@ body { overflow-x: hidden; }
                 document.getElementById('estChecklist').hidden = true;
                 document.getElementById('visitorViewLink').hidden = true;
                 body.innerHTML = `<div class="glass-panel p-6 sm:p-8 text-center space-y-4">
-                    <p class="text-lg font-bold text-on-surface">Your enterprise is not on the site yet.</p>
+                    <p class="text-lg font-bold text-on-surface">No enterprise on the site yet.</p>
                     <button type="button" onclick="toggleAddSpotModal(true)" class="btn btn-primary min-h-[48px]">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">add_circle</span> Create your listing</button></div>`;
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">add_circle</span> Create your first enterprise</button></div>`;
                 return;
             }
             tabs.hidden = false;

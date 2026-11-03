@@ -494,14 +494,16 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="max-w-[1100px] mx-auto space-y-6">
-            <div class="en-head">
+        <div class="p-2 max-w-[1400px] mx-auto space-y-8">
+            <div class="pg-head">
                 <div>
-                    <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">My enterprises</h1>
-                    <p id="enCount" class="text-support mt-1"></p>
+                    <h1 class="pg-title font-headline">My enterprises</h1>
+                    <p id="enCount" class="pg-sub"></p>
                 </div>
-                <a href="resort_spots.html?add=1" class="btn btn-primary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span> Add enterprise</a>
+                <div class="pg-actions">
+                    <a href="resort_spots.html?add=1" class="pg-btn pg-btn--primary">
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>Add enterprise</a>
+                </div>
             </div>
             <div id="enGrid"></div>
         </div>
@@ -590,36 +592,53 @@ body { overflow-x: hidden; }
         }
 
 
-        const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+        const photosOf = spot => (Array.isArray(spot.images) && spot.images.length ? spot.images : (spot.imageUrl ? [spot.imageUrl] : []));
 
-        // What still needs the manager, before they open the enterprise.
-        function chipsFor(spot) {
-            const chips = [];
-            const photos = (Array.isArray(spot.images) && spot.images.length ? spot.images : (spot.imageUrl ? [spot.imageUrl] : [])).length;
-            if (spot.status === 'published') chips.push('<span class="tone-pill tone-success">Published</span>');
-            else chips.push('<span class="tone-pill tone-neutral">Hidden</span>');
-            if (!photos) chips.push('<span class="tone-pill tone-danger">No photo</span>');
-            if (spot.latitude === null || spot.latitude === undefined) chips.push('<span class="tone-pill tone-danger">No map pin</span>');
-            return chips.join('');
+        // What visitors still need: the same five things as Enterprise's checklist.
+        function issuesOf(spot) {
+            const pinned = spot.latitude !== null && spot.latitude !== undefined;
+            return [
+                (spot.description || '').trim().length >= 40 ? '' : 'Short description',
+                pinned ? '' : 'No map pin',
+                (spot.workingDays || '').trim() && (spot.workingTime || '').trim() ? '' : 'No open days or hours',
+                photosOf(spot).length >= 3 ? '' : 'Fewer than 3 photos',
+                (spot.phone || spot.managerPhone || '').trim() ? '' : 'No phone'
+            ].filter(Boolean);
         }
 
         function card(spot, currentId) {
+            const C = window.ZTIMS_CATEGORIES;
             const here = String(spot._id) === String(currentId);
-            const photo = spot.imageUrl || (spot.images && spot.images[0]) || '';
-            const name = spot.enterpriseName || spot.title;
-            return `<article class="en-card${here ? ' is-current' : ''}">
-                <div class="en-card__photo"${photo ? ` style="background-image:url('${escapeHtml(photo)}')"` : ''}>
-                    <span class="en-card__kind tone-pill tone-neutral">${spot.type === 'accommodation' ? 'Place to stay' : 'Attraction'}</span>
+            const id = escapeHtml(spot._id);
+            const issues = issuesOf(spot);
+            const cats = C ? C.of(spot).map(code => {
+                const info = C.info(code);
+                return `<span class="cat-badge cat-${info.cat}">${escapeHtml(info.label)}</span>`;
+            }).join('') : '';
+            const live = spot.status === 'published';
+            return `
+            <article class="pg-card${here ? ' is-current' : ''}">
+                <div class="pg-card__media">
+                    ${photosOf(spot).length
+                        ? `<img src="${escapeHtml(photosOf(spot)[0])}" alt="" loading="lazy"/>`
+                        : '<span class="material-symbols-outlined" aria-hidden="true">image</span>'}
+                    ${spot.type === 'accommodation' ? '<span class="pg-card__badge"><span class="material-symbols-outlined" aria-hidden="true">bed</span>Place to stay</span>' : ''}
+                    ${here ? '<span class="pg-card__badge pg-card__badge--here"><span class="material-symbols-outlined" aria-hidden="true">check</span>Working in</span>' : ''}
                 </div>
-                <div class="en-card__body">
-                    <h2 class="en-card__name">${escapeHtml(name)}</h2>
-                    <p class="en-card__sub">${escapeHtml(spot.barangay || spot.location || '')}</p>
-                    <div class="en-card__chips">${chipsFor(spot)}</div>
-                    <div class="en-card__actions">
-                        <button type="button" class="btn btn-primary min-h-[44px]" data-open="${escapeHtml(spot._id)}">${here ? 'Continue' : 'Open'}</button>
-                        <a class="btn btn-secondary min-h-[44px]" href="../spot.html?spotId=${encodeURIComponent(spot._id)}">View page</a>
+                <div class="pg-card__body">
+                    <h2 class="pg-card__name">${escapeHtml(ztimsEnterprise.nameOf(spot))}</h2>
+                    ${cats ? `<div class="pg-card__cats">${cats}</div>` : ''}
+                    <div class="pg-card__facts">
+                        <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay || spot.location || '—')}</span>
+                        <span><span class="material-symbols-outlined" aria-hidden="true">${live ? 'public' : 'visibility_off'}</span><b>${live ? 'On the site' : 'Not on the site'}</b></span>
                     </div>
-                </div></article>`;
+                    ${issues.length ? `<div class="pg-card__issues">${issues.map(i => `<span>${escapeHtml(i)}</span>`).join('')}</div>` : ''}
+                    <div class="pg-card__actions">
+                        <button type="button" class="pg-btn pg-btn--primary" data-open="${id}">Open</button>
+                        <a class="pg-btn pg-btn--outline" href="../spot.html?spotId=${encodeURIComponent(spot._id)}" target="_blank" rel="noopener">View page</a>
+                    </div>
+                </div>
+            </article>`;
         }
 
         function draw(list) {
@@ -628,16 +647,17 @@ body { overflow-x: hidden; }
             ztimsEnterprise.mount(document.getElementById('enterpriseSwitcherSlot'));
             if (!list.length) {
                 count.textContent = '';
-                grid.innerHTML = `<div class="glass-panel p-6 sm:p-8 text-center space-y-4">
-                    <p class="text-lg font-bold text-on-surface">You have no enterprise on the site yet.</p>
-                    <a href="resort_spots.html?add=1" class="btn btn-primary min-h-[48px]">Create your first enterprise</a></div>`;
+                grid.innerHTML = `<div class="ztims-empty">
+                    <span class="material-symbols-outlined" aria-hidden="true">storefront</span>
+                    No enterprise on the site yet.
+                    <div class="mt-3"><a href="resort_spots.html?add=1" class="pg-btn pg-btn--primary">Create your first enterprise</a></div></div>`;
                 return;
             }
             const name = localStorage.getItem('userName');
-            count.textContent = `${list.length} enterprise${list.length === 1 ? '' : 's'}${name ? ' under ' + name : ''}`;
+            count.textContent = `${list.length} enterprise${list.length === 1 ? '' : 's'}${name ? ' run by ' + name : ''}`;
             const currentId = ztimsEnterprise.currentId();
-            grid.innerHTML = `<div class="en-grid">${list.map(s => card(s, currentId)).join('')}
-                <a class="en-card en-card--add" href="resort_spots.html?add=1"><span class="material-symbols-outlined" aria-hidden="true">add</span>Add enterprise</a></div>`;
+            grid.innerHTML = `<div class="pg-grid ztims-stagger">${list.map(s => card(s, currentId)).join('')}
+                <a class="pg-card pg-card--add" href="resort_spots.html?add=1"><span class="material-symbols-outlined" aria-hidden="true">add_business</span>Add enterprise</a></div>`;
             grid.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => {
                 ztimsEnterprise.remember(b.dataset.open);
                 location.href = 'resort_spots.html';
@@ -740,6 +760,7 @@ body { overflow-x: hidden; }
     });
 })();
 </script>
+<script type="module" src="../shared/tourism-map.js"></script>
 <script type="module" src="../shared/enterprise-switcher.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 </body>

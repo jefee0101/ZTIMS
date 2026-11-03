@@ -718,10 +718,6 @@ async function createEstablishmentManager(req, res) {
     }
 }
 
-/**
- * GET: Tourist Officer lists all enterprise manager accounts
- * Target URL: http://localhost:5000/api/establishment-managers
- */
 /* Each account's enterprises (its listings), oldest first. */
 async function enterprisesByManager() {
     const { rows } = await db.query(
@@ -736,6 +732,10 @@ async function enterprisesByManager() {
     return byManager;
 }
 
+/**
+ * GET: Tourist Officer lists all enterprise manager accounts
+ * Target URL: http://localhost:5000/api/establishment-managers
+ */
 async function listEstablishmentManagers(req, res) {
     try {
         // Oldest first, the order MongoDB returned them in. Never the hashes.
@@ -849,8 +849,8 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
         return res.status(200).json({
             success: true,
             message: status === 'active'
-                ? 'Recorded as operating. Your listings are public again.'
-                : `Recorded. Your ${listings} listing${listings === 1 ? '' : 's'} ${listings === 1 ? 'is' : 'are'} hidden from the public site, and the Tourism Office has been notified for review. Nothing has been deleted.`,
+                ? 'Recorded as operating. Your enterprises are public again.'
+                : `Recorded. Your ${listings} enterprise${listings === 1 ? '' : 's'} ${listings === 1 ? 'is' : 'are'} hidden from the public site, and the Tourism Office has been notified for review. Nothing has been deleted.`,
             manager: managerProfile(manager)
         });
     } catch (error) {
@@ -932,7 +932,7 @@ app.patch('/api/establishment-managers/:id', requireAdmin, async (req, res) => {
         return res.status(200).json({
             success: true,
             message: manager.active === false
-                ? `Account suspended. Its ${listings} listing${listings === 1 ? '' : 's'} are hidden from the public site.`
+                ? `Account suspended. Its ${listings} enterprise${listings === 1 ? ' is' : 's are'} hidden from the public site.`
                 : 'Account updated.',
             manager: managerProfile(manager)
         });
@@ -985,7 +985,7 @@ app.delete('/api/establishment-managers/:id', requireAdmin, async (req, res) => 
         if (listings > 0) {
             return res.status(409).json({
                 success: false,
-                message: `This account still has ${listings} listing${listings === 1 ? '' : 's'}. Suspend it instead, or take those listings down first.`
+                message: `This account still runs ${listings} enterprise${listings === 1 ? '' : 's'}. Suspend it instead, or take those listings down first.`
             });
         }
 
@@ -1438,14 +1438,6 @@ function authorizeSpotWrite(auth, spot) {
     return { allowed: false, status: 403, message: 'Staff access required.' };
 }
 
-/**
- * Narrows a payload to the fields the caller's scope allows. An officer's passes
- * through whole; a manager's is reduced to their own enterprise's information.
- *
- * Dropping beats rejecting here: the enterprise's editor posts a whole listing
- * every time, and a field it never offered to change shouldn't fail the save.
- * What it must not set simply never reaches the document.
- */
 /* The enterprise's public email, when one is sent, must look like one. */
 function enterpriseContactProblem(prepared) {
     if (typeof prepared.contactEmail === 'string') {
@@ -1457,6 +1449,14 @@ function enterpriseContactProblem(prepared) {
     return '';
 }
 
+/**
+ * Narrows a payload to the fields the caller's scope allows. An officer's passes
+ * through whole; a manager's is reduced to their own enterprise's information.
+ *
+ * Dropping beats rejecting here: the enterprise's editor posts a whole listing
+ * every time, and a field it never offered to change shouldn't fail the save.
+ * What it must not set simply never reaches the document.
+ */
 function scopeSpotPayload(payload, scope) {
     if (scope === 'officer') return payload;
 

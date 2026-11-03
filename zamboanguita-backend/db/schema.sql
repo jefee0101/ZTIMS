@@ -1016,8 +1016,9 @@ alter table public.spots drop column if exists requires_guide;
 -- account is the person; each listing is an enterprise with its own name,
 -- phone and public email. The one-listing limit goes, and the enterprise's
 -- details copy across from the account once (only while a listing's is blank).
--- The account's own enterprise-name, phone and public-email columns stay,
--- unused, as the record of what they were.
+-- The account keeps the person's name and phone; its contact_email is the
+-- fallback when an enterprise has no public email of its own, and its
+-- establishment_name stays, unused, as the record of what it was.
 -- ---------------------------------------------------------------------------
 alter table public.spots add column if not exists enterprise_name text not null default '';
 alter table public.spots add column if not exists phone text not null default '';

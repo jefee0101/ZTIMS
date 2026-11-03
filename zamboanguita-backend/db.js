@@ -130,7 +130,6 @@ function validationError(message, key) {
    definitions do not catch first (a script, a race, a bug). */
 const CONSTRAINT_MESSAGES = {
     spot_photos_position: 'A spot can have at most 30 photos.',
-    spots_one_per_establishment: 'An enterprise has one listing, and this one already has its listing. Edit that one instead.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
     spots_managed_by_fkey: 'That enterprise account does not exist.',
     payments_ticket_id_key: 'Payment for that ticket was already recorded.'

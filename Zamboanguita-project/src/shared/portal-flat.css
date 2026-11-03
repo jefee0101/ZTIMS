@@ -454,39 +454,27 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .pg-seg button { flex-shrink: 0; }
 }
 
-/* The manager's enterprise switcher: one account, several enterprises. */
+/* The manager's enterprise switcher (enterprise-switcher.js): one account,
+   several enterprises. The button is a .pg-btn--plain, the menu a .dest-menu. */
 .ent-switch { position: relative; min-width: 0; }
-.ent-switch__btn { display: inline-flex; align-items: center; gap: .5rem; max-width: 100%; min-height: 44px; padding: 0 .9rem;
-                   border-radius: 999px; border: 1px solid rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-surface));
-                   color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .95rem; cursor: pointer; }
-.ent-switch__btn .material-symbols-outlined { font-size: 1.15rem; color: rgb(var(--ztims-primary-text)); flex: none; }
+.ent-switch__btn { max-width: 100%; border-radius: 9999px; font-weight: 700; padding: 0 1rem; }
+.ent-switch__btn .material-symbols-outlined:first-child { color: rgb(var(--ztims-primary-text)); }
 .ent-switch__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: min(46vw, 22rem); }
-.ent-switch__menu { position: absolute; left: 0; top: calc(100% + .4rem); min-width: 16rem; max-width: 22rem; z-index: 60; padding: .35rem; }
-.ent-switch__label { margin: 0; padding: .45rem .75rem .25rem; font-size: .75rem; font-weight: 700; letter-spacing: .06em;
-                     text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
-.ent-switch__item { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; text-align: left;
-                    padding: .6rem .75rem; border: 0; background: transparent; color: rgb(var(--ztims-on-surface));
-                    font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; border-radius: 10px; }
-.ent-switch__item:hover, .ent-switch__item:focus-visible { background: rgb(var(--ztims-on-surface) / .06); }
-.ent-switch__item.is-current { background: rgb(var(--ztims-on-surface) / .06); }
-.ent-switch__add { color: rgb(var(--ztims-primary-text)); justify-content: flex-start; border-top: 1px solid rgb(var(--ztims-outline)); border-radius: 0; margin-top: .25rem; }
-@media (max-width: 639px) { .ent-switch__name { max-width: 38vw; } }
+.ent-switch__menu { left: 0; right: auto; min-width: 16rem; max-width: min(22rem, calc(100vw - 2rem)); z-index: 60; }
+.ent-switch__menu span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ent-switch__menu .is-current { background: rgb(var(--ztims-secondary) / .15); }
+.ent-switch__menu .is-current .material-symbols-outlined { color: rgb(var(--ztims-primary-text)); }
+.ent-switch__label { margin: 0; padding: .4rem .75rem .2rem; font-size: .75rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+.ent-switch__rule { border: 0; border-top: 1px solid rgb(var(--ztims-outline)); margin: .3rem 0; }
+@media (max-width: 639px) { .ent-switch__name { max-width: 34vw; } }
 
-/* My enterprises: the manager's cards. */
-.en-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.en-head h2 { font-size: var(--text-title); font-weight: 800; margin: 0; }
-.en-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
-.en-card { display: flex; flex-direction: column; border: 1px solid rgb(var(--ztims-outline)); border-radius: 16px; overflow: hidden;
-           background: rgb(var(--ztims-surface)); }
-.en-card.is-current { border: 2px solid rgb(var(--ztims-primary)); }
-.en-card__photo { height: 130px; background: rgb(var(--ztims-secondary) / .25) center / cover no-repeat; position: relative; }
-.en-card__kind { position: absolute; left: .6rem; top: .6rem; }
-.en-card__body { display: flex; flex-direction: column; gap: .35rem; padding: 1rem; flex: 1; }
-.en-card__name { font-weight: 800; font-size: 1.1rem; margin: 0; }
-.en-card__sub { color: rgb(var(--ztims-on-surface-variant)); font-size: .92rem; }
-.en-card__chips { display: flex; flex-wrap: wrap; gap: .35rem; margin: .25rem 0 .5rem; }
-.en-card__actions { margin-top: auto; display: flex; gap: .5rem; flex-wrap: wrap; }
-.en-card--add { border: 2px dashed rgb(var(--ztims-primary)); align-items: center; justify-content: center; text-align: center;
-                min-height: 240px; gap: .5rem; padding: 1.5rem; color: rgb(var(--ztims-primary-text)); font-weight: 700; cursor: pointer;
-                background: transparent; font-family: inherit; font-size: 1rem; }
-.en-card--add .material-symbols-outlined { font-size: 2rem; }
+/* My enterprises (resort_enterprises.html): Destinations' cards (.pg-card),
+   the one being worked in outlined in burnt orange, and an Add card. */
+.pg-card.is-current { border: 2px solid rgb(var(--ztims-primary)); }
+.pg-card__badge--here { left: auto; right: .75rem; background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.pg-card__badge--here .material-symbols-outlined { color: inherit; }
+.pg-card--add { align-items: center; justify-content: center; gap: .5rem; min-height: 18rem; padding: 1.5rem; text-align: center;
+                border: 2px dashed rgb(var(--ztims-primary) / .6); background: transparent; box-shadow: none;
+                color: rgb(var(--ztims-primary-text)); font-weight: 700; text-decoration: none; }
+.pg-card--add:hover { background: rgb(var(--ztims-primary) / .06); }
+.pg-card--add .material-symbols-outlined { font-size: 40px; }

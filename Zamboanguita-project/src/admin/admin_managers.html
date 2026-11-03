@@ -536,7 +536,7 @@ body { overflow-x: hidden; }
                     <button type="button" data-show="all" aria-pressed="true">All <b id="statManagers">0</b></button>
                     <button type="button" data-show="active" aria-pressed="false">Active <b id="statActive">0</b></button>
                     <button type="button" data-show="suspended" aria-pressed="false">Suspended <b id="statSuspended">0</b></button>
-                    <button type="button" data-show="idle" aria-pressed="false">No listing yet <b id="statIdle">0</b></button>
+                    <button type="button" data-show="idle" aria-pressed="false">No enterprise yet <b id="statIdle">0</b></button>
                 </div>
                 <div class="pg-search lg:max-w-[65%]">
                     <label for="searchInput" class="sr-only">Search managers</label>
@@ -577,7 +577,7 @@ body { overflow-x: hidden; }
                            class="field w-full"/>
                 </div>
                 <div>
-                    <label for="newManagerContactEmail" class="block text-sm font-semibold text-on-surface mb-1.5">Public contact email <span class="font-normal text-on-surface-variant">(optional)</span></label>
+                    <label for="newManagerContactEmail" class="block text-sm font-semibold text-on-surface mb-1.5">Contact email <span class="font-normal text-on-surface-variant">(optional)</span></label>
                     <input id="newManagerContactEmail" type="email" placeholder="Same as sign-in email if left blank"
                            class="field w-full"/>
                 </div>
@@ -609,8 +609,8 @@ body { overflow-x: hidden; }
         // Which count above the list is pressed: all, active, suspended or idle.
         let activeShow = 'all';
         // Each manager's listing, so a row can open it.
-        let listingOf = {};
-        let listingCounts = {};     // manager id -> number of published listings
+        // A manager's enterprises (their listings), as the server lists them.
+        const enterprisesOf = manager => (Array.isArray(manager.enterprises) ? manager.enterprises : []);
 
         function authHeaders(extra) {
             return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
@@ -706,15 +706,15 @@ body { overflow-x: hidden; }
                 const suspended = manager.active === false;
                 if (activeShow === 'active' && suspended) return false;
                 if (activeShow === 'suspended' && !suspended) return false;
-                if (activeShow === 'idle' && listingCounts[String(manager._id)]) return false;
-                return !search || [nameOf(manager), manager.managerName, manager.email, contactEmailOf(manager), manager.phone]
+                if (activeShow === 'idle' && enterprisesOf(manager).length) return false;
+                return !search || [nameOf(manager), manager.email, contactEmailOf(manager), manager.phone, ...enterprisesOf(manager).map(e => e.name)]
                     .some(field => String(field || '').toLowerCase().includes(search));
             });
         }
 
         function renderSummary() {
             const suspended = managers.filter(manager => manager.active === false).length;
-            const idle = managers.filter(manager => !listingCounts[String(manager._id)]).length;
+            const idle = managers.filter(manager => !enterprisesOf(manager).length).length;
 
             document.getElementById('statManagers').textContent = managers.length;
             document.getElementById('statActive').textContent = managers.length - suspended;
@@ -737,11 +737,9 @@ body { overflow-x: hidden; }
 
         function managerCard(manager) {
             const id = escapeHtml(manager._id);
-            const listings = listingCounts[String(manager._id)] || 0;
-            const listing = listingOf[String(manager._id)];
             const suspended = manager.active === false;
             const name = nameOf(manager) || manager.email || 'Unnamed manager';
-            const enterprises = Array.isArray(manager.enterprises) ? manager.enterprises : [];
+            const enterprises = enterprisesOf(manager);
             const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
             return `
             <article class="pg-card${suspended ? ' is-muted' : ''}">
@@ -750,7 +748,7 @@ body { overflow-x: hidden; }
                         <div class="mg-initials" aria-hidden="true">${escapeHtml(initials || '?')}</div>
                         <div class="mg-stack">
                             <span class="mg-status ${suspended ? 'mg-status--suspended' : 'mg-status--active'}">${suspended ? 'Suspended' : 'Active'}</span>
-                            ${listings ? (enterprises.length > 1 ? `<span class="mg-status mg-status--idle">${enterprises.length} enterprises</span>` : '') : '<span class="mg-status mg-status--idle">No listing yet</span>'}
+                            ${enterprises.length ? (enterprises.length > 1 ? `<span class="mg-status mg-status--idle">${enterprises.length} enterprises</span>` : '') : '<span class="mg-status mg-status--idle">No enterprise yet</span>'}
                         </div>
                     </div>
                     <h3 class="pg-card__name">${escapeHtml(name)}</h3>
@@ -814,42 +812,16 @@ body { overflow-x: hidden; }
             renderTable();
         }
 
-        // A listing's assigned enterprise arrives populated, so it can be an
-        // object or a plain id
-        // depending on the route that produced it.
-        function managedByIdOf(spot) {
-            const assigned = spot.managedBy;
-            if (!assigned) return '';
-            return String(typeof assigned === 'object' ? (assigned._id || '') : assigned);
-        }
-
         async function loadDirectory() {
             const tbody = document.getElementById('managerTableBody');
             const doneLoading = showLoading(tbody, 'Loading manager accounts...');
 
             try {
-                const [managersResponse, spotsResponse] = await Promise.all([
-                    fetch(`${API_BASE}/establishment-managers`, { headers: authHeaders() }),
-                    fetch(`${API_BASE}/spots`, { headers: authHeaders() }).catch(() => null)
-                ]);
+                const managersResponse = await fetch(`${API_BASE}/establishment-managers`, { headers: authHeaders() });
 
                 if (!managersResponse.ok) throw new Error(`The server returned status ${managersResponse.status}.`);
                 const payload = await managersResponse.json();
                 managers = Array.isArray(payload) ? payload : [];
-
-                // Listing counts are a nice-to-have; losing them must not empty the table.
-                listingCounts = {};
-                listingOf = {};
-                if (spotsResponse && spotsResponse.ok) {
-                    const spots = await spotsResponse.json().catch(() => []);
-                    (Array.isArray(spots) ? spots : []).forEach(spot => {
-                        const id = managedByIdOf(spot);
-                        if (id) {
-                            listingCounts[id] = (listingCounts[id] || 0) + 1;
-                            listingOf[id] = spot._id;
-                        }
-                    });
-                }
 
                 doneLoading();
                 render();
@@ -857,7 +829,6 @@ body { overflow-x: hidden; }
                 console.error('❌ Could not load manager accounts:', error);
                 doneLoading();
                 managers = [];
-                listingCounts = {};
                 renderSummary();
                 document.getElementById('shownCount').textContent = 0;
                 document.getElementById('totalCount').textContent = 0;
@@ -897,10 +868,10 @@ body { overflow-x: hidden; }
             if (!manager) return;
 
             const suspended = manager.active === false;
-            const listings = listingCounts[String(id)] || 0;
+            const listings = enterprisesOf(manager).length;
             const name = nameOf(manager) || manager.email;
 
-            const listingWord = `${listings} listing${listings === 1 ? '' : 's'}`;
+            const listingWord = `${listings} enterprise${listings === 1 ? '' : 's'}`;
             const sure = await ztimsDialog.confirm(suspended
                 ? {
                     title: `Restore ${name}?`,
@@ -985,7 +956,7 @@ body { overflow-x: hidden; }
                         value: manager.managerName || '', placeholder: 'e.g., Maria Santos'
                     },
                     {
-                        name: 'contactEmail', label: 'Public contact email', optional: true, type: 'email',
+                        name: 'contactEmail', label: 'Contact email', optional: true, type: 'email',
                         value: manager.contactEmail === manager.email ? '' : (manager.contactEmail || ''),
                         placeholder: 'Same as sign-in email if left blank'
                     },
@@ -1014,14 +985,14 @@ body { overflow-x: hidden; }
             const manager = managerById(id);
             if (!manager) return;
 
-            const listings = listingCounts[String(id)] || 0;
+            const listings = enterprisesOf(manager).length;
             const name = nameOf(manager) || manager.email;
 
             if (listings > 0) {
                 showToast(
-                    `${name} still has ${listings} listing${listings === 1 ? '' : 's'}.\n\n` +
+                    `${name} still runs ${listings} enterprise${listings === 1 ? '' : 's'}.\n\n` +
                     `Deleting the account would leave ${listings === 1 ? 'it' : 'them'} belonging to nobody. ` +
-                    `Suspend it instead, which hides the listings and can be undone, or take the listings down from Destinations first.`,
+                    `Suspend it instead, which hides them and can be undone, or take their listings down from Destinations first.`,
                     'error', { duration: 9000 });
                 return;
             }

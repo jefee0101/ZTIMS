@@ -241,10 +241,13 @@ purpose — see the header comment in `spot-form.js`:
   id, checked against `GET /api/spots?mine=true` so a stale id falls back to the
   first; cleared at sign-in), draws the switcher in each manager page's header
   (`#enterpriseSwitcherSlot`, `.ent-switch` in `portal-flat.css`: a pill with the
-  enterprise's name, "Working in" list, My enterprises, Add enterprise) and
-  reloads the page on a change. **My enterprises** (`resort/resort_enterprises.html`,
-  first in the menu): a card per enterprise (`.en-card`: photo, kind, name, barangay,
-  Published / No photo / No map pin chips, Open and View page) and an Add card;
+  enterprise's name, a `.pg-btn--plain`; its menu a `.dest-menu`: "Working in"
+  list, My enterprises, Add enterprise) and reloads the page on a change.
+  **My enterprises** (`resort/resort_enterprises.html`, first in the menu):
+  Destinations' head and cards (`.pg-head`, `.pg-grid`, `.pg-card`: photo, Place
+  to stay and Working in badges, name, categories, barangay, on the site or not,
+  what visitors still need in red — Enterprise's five checklist items — Open
+  and View page; the current one outlined) and an Add card (`.pg-card--add`);
   Add opens the listing form on Enterprise (`resort_spots.html?add=1`), and the new
   enterprise becomes the current one. Enterprise, Guest Register and Monthly Report
   all work on the current enterprise (the two reports' Place picker is gone, the
@@ -306,8 +309,9 @@ purpose — see the header comment in `spot-form.js`:
   register for those, and sees a private place's register view only (Tourism
   Office / Private banner, Add and Edit hidden). Its "Open the monthly report"
   opens Statistics → Enter a report at that place and month
-  (`admin_statistics.html?place=&month=#enter`). A manager with one place sees
-  its name, not a picker, on the Guest Register and Monthly Report.
+  (`admin_statistics.html?place=&month=#enter`). A manager sees the current
+  enterprise's name (from the header switcher), not a picker, on the Guest
+  Register and Monthly Report.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
@@ -675,13 +679,14 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 - **Enterprise Managers** (`admin_managers.html`), a card grid by the user's
   design like Destinations: title, "Manage enterprise accounts and manager
   access." (hidden on a phone) and **New manager account**; counts that filter
-  as pills (All, Active, Suspended, No listing yet); the search; one card per
-  account (`managerCard`: initials, ACTIVE / SUSPENDED, No listing yet and
+  as pills (All, Active, Suspended, No enterprise yet); the search; one card per
+  account (`managerCard`: initials, ACTIVE / SUSPENDED, No enterprise yet and
   "n enterprises" chips, the manager's name, their enterprises (`enterprises` on
   `GET /api/establishment-managers`), sign-in email, phone, "Since <date>", a
   full-width **Edit** and ⋯ — View <each enterprise>, New password, Suspend /
   Restore, Delete in red). New manager account asks for the manager's name,
-  sign-in email, password (and optional public email, phone), never an enterprise. Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
+  sign-in email, password (and optional contact email, phone), never an
+  enterprise. The page reads everything from that one list (no listing fetch). Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
   Previous / numbers / Next and "Showing n of m managers".
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
@@ -950,9 +955,11 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   `manager_name`, `phone`); each **enterprise is one listing** (`spots.managed_by`
   no longer unique — `schema.sql`'s last block dropped `spots_one_per_establishment`)
   with its own `enterprise_name`, `phone` and `contact_email` on the listing
-  (copied once from the account by that block; the account's own
-  `establishment_name`, `contact_email` columns stay, unused, and the name is no
-  longer required). The manager adds enterprises themselves, live at once, no
+  (copied once from the account by that block; the account's `contact_email`
+  is the fallback where an enterprise has no public email, and its
+  `establishment_name` stays unused and is no longer required). Everywhere an
+  enterprise is named it is `enterprise_name`, else the listing's title
+  (`ztimsEnterprise.nameOf`, `MANAGER_SUMMARY`, statistics' `managerName`). The manager adds enterprises themselves, live at once, no
   limit (the user's choices); the officer creates the account with a manager name
   and no enterprise. A new listing's enterprise name defaults to its title;
   `PUT /api/spots/:id` takes `enterpriseName`, `phone`, `contactEmail` from a
