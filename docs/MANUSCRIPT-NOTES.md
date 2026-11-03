@@ -4,6 +4,23 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Count visitors here (November 2026)
+
+**The change.** Visitor counting applies to places that receive and record
+visitors. The Tourism Officer can switch off "Count visitors here" for a place
+the office runs that has nothing to count, such as a statue or a marker. It
+stays on the site and the map, but it leaves the monthly report tracker, the
+report and Guest Register lists and Form A4's arrivals by place, so it is never
+shown as "missing". A private enterprise always counts. A place that already
+has reports or register entries stays counted; nothing is deleted.
+
+**Change in the manuscript:** where the statistics module says every
+destination submits a monthly report, add: "Visitor counting applies to places
+that receive and record visitors; the Tourism Officer marks office-run places
+with nothing to count, such as monuments, as not counted." Screenshot: the
+listing form's Visiting step (the switch) and a Destinations card with "Not
+counted".
+
 ## One manager, many enterprises (November 2026)
 
 **The change.** The panel asked that one Enterprise Manager be able to run

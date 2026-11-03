@@ -1095,6 +1095,8 @@ body { overflow-x: hidden; }
                 const info = C.info(code);
                 return `<span class="cat-badge cat-${info.cat}">${escapeHtml(info.label)}</span>`;
             }).join('');
+            // Left out of Statistics by the officer ("Count visitors here" off).
+            const notCounted = spot.countsVisitors === false ? '<span class="tone-pill tone-neutral">Not counted</span>' : '';
             return `
             <article data-spot="${id}" class="pg-card">
                 <div class="pg-card__media">
@@ -1106,7 +1108,7 @@ body { overflow-x: hidden; }
                 </div>
                 <div class="pg-card__body">
                     <h3 class="pg-card__name">${escapeHtml(spot.title)}</h3>
-                    ${cats ? `<div class="pg-card__cats">${cats}</div>` : ''}
+                    ${cats || notCounted ? `<div class="pg-card__cats">${cats}${notCounted}</div>` : ''}
                     <div class="pg-card__facts">
                         <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay || spot.location || '—')}</span>
                         <span><span class="material-symbols-outlined" aria-hidden="true">${manager ? 'apartment' : 'account_balance'}</span>${manager ? `Run by <b>${escapeHtml(manager)}</b>` : '<b>Tourism Office</b>'}</span>

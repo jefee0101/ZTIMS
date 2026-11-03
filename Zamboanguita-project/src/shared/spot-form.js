@@ -508,6 +508,18 @@
                 '</div>' +
             '</div>' +
 
+            // Whether the place belongs in Statistics: the officer's to set,
+            // for the places the office runs only (the API enforces both).
+            (role === 'officer'
+                ? '<div id="' + p + 'CountRow" class="pt-1">' +
+                      '<label class="sf-switch">' +
+                          '<input id="' + p + 'CountsVisitors" type="checkbox" role="switch" checked/>' +
+                          '<span class="sf-switch__track" aria-hidden="true"></span>' +
+                          '<span>Count visitors here</span>' +
+                      '</label>' +
+                  '</div>'
+                : '') +
+
         '</section>' +
 
         /* ============================ STEP 4 — PHOTOS ======================= */
@@ -2225,6 +2237,8 @@
                 imageUrl: photos[0] || '',          // photo one is the cover
                 bookingUrl: bookingValue()
             }, scheduleValue(), locationPayload());
+            // Sent only for an office-run place; a private enterprise always counts.
+            if (el('CountsVisitors') && !el('CountRow').hidden) payload.countsVisitors = el('CountsVisitors').checked;
 
 
             const button = el('SubmitBtn');
@@ -2267,6 +2281,10 @@
             fillBooking(spot);
             fillSchedule(spot);
             fillLocation(spot);
+            if (el('CountsVisitors')) {
+                el('CountsVisitors').checked = !(spot && spot.countsVisitors === false);
+                el('CountRow').hidden = Boolean(spot && spot.managedBy);
+            }
 
             // A listing saved before galleries existed has only a cover image;
             // showing it as photo one keeps it from being wiped on the next save.

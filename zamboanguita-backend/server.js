@@ -1438,6 +1438,25 @@ function authorizeSpotWrite(auth, spot) {
     return { allowed: false, status: 403, message: 'Staff access required.' };
 }
 
+/* "Count visitors here" (spots.counts_visitors): the officer's to switch, for
+   the places the office runs only, since a private enterprise always reports.
+   It is never switched off over records already kept: a place with a live
+   monthly report or a Guest Register entry stays counted. Managers never
+   reach this (the field is not in MANAGER_WRITABLE_SPOT_FIELDS). */
+async function visitorCountingProblem(prepared, { managedBy, spotId, counted }) {
+    if (!('countsVisitors' in prepared)) return '';
+    if (typeof prepared.countsVisitors !== 'boolean') return 'Count visitors here must be on or off.';
+    if (prepared.countsVisitors) return '';
+    if (managedBy) return 'A private enterprise always counts its visitors.';
+    if (spotId && counted) {
+        const { rows } = await db.query(
+            `select exists (select 1 from monthly_reports where spot_id = $1 and status <> 'void')
+                 or exists (select 1 from register_entries where spot_id = $1) as kept`, [spotId]);
+        if (rows[0].kept) return 'This place already has visitor reports or Guest Register entries, so its visitors stay counted.';
+    }
+    return '';
+}
+
 /* The enterprise's public email, when one is sent, must look like one. */
 function enterpriseContactProblem(prepared) {
     if (typeof prepared.contactEmail === 'string') {
@@ -1692,6 +1711,8 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])]);
         const contactProblem = enterpriseContactProblem(prepared);
         if (contactProblem) return res.status(400).json({ success: false, message: contactProblem });
+        const countingProblem = await visitorCountingProblem(prepared, { managedBy });
+        if (countingProblem) return res.status(400).json({ success: false, message: countingProblem });
         // An enterprise's name defaults to its listing's title.
         if (managedBy && !String(prepared.enterpriseName || '').trim()) prepared.enterpriseName = prepared.title;
         const savedSpot = await Spot.create({ ...prepared, managedBy });
@@ -1782,6 +1803,11 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         if (contactProblem) return res.status(400).json({ success: false, message: contactProblem });
         if (spot.managedBy && 'enterpriseName' in prepared && !String(prepared.enterpriseName || '').trim()) {
             return res.status(400).json({ success: false, message: 'The enterprise needs a name.' });
+        }
+        const countingProblem = await visitorCountingProblem(prepared,
+            { managedBy: spot.managedBy, spotId: spot._id, counted: spot.countsVisitors !== false });
+        if (countingProblem) {
+            return res.status(/stay counted/.test(countingProblem) ? 409 : 400).json({ success: false, message: countingProblem });
         }
         Object.assign(spot, normaliseSpotCategories(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await Spot.save(spot);

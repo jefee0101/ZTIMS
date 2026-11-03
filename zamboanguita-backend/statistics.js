@@ -64,12 +64,17 @@ function periodFrom(params) {
 async function spotById(id, client) {
     if (!/^[0-9a-f]{24}$/i.test(String(id || ''))) return null;
     const { rows } = await query(
-        `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by,
+        `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, s.counts_visitors,
                 case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
            from spots s
           where s.id = $1`, [String(id)], client);
     return rows[0] || null;
 }
+
+/* Visitor counting applies to places that receive and record visitors: a
+   place the officer has switched off ("Count visitors here") takes no report
+   or register entry, and no list in Statistics shows it. */
+const NOT_COUNTED = 'Visitors are not counted at this place. Switch on "Count visitors here" in its details first.';
 
 /* Whether the signed-in account may see this place's reports: the officer
    any place's, a manager their own. */
@@ -180,7 +185,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
     router.get('/places', requireStaff, async (req, res) => {
         try {
             const params = [];
-            let where = `where s.status <> 'archived'`;
+            let where = `where s.status <> 'archived' and s.counts_visitors`;
             if (!isOfficer(req)) {
                 params.push(String(req.auth.sub));
                 where += ` and s.managed_by = $1`;
@@ -250,6 +255,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                     ? 'This place is run by a private enterprise. Its monthly reports are submitted by its enterprise manager; the Tourism Office can only view them.'
                     : 'You can only report for the places you manage.' });
             }
+            if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             const kind = kindOf(spot);
             const body = req.body || {};
 
@@ -539,6 +545,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             const spot = await spotById(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
             if (!mayEnterFor(req, spot)) return res.status(403).json({ success: false, message: 'Only whoever runs this place keeps its register.' });
+            if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             const entry = await readEntry(req.body, spot);
             if (entry.error) return badRequest(res, entry.error);
             const who = await whoIsSigningIn(req);
@@ -602,7 +609,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             const places = await query(
                 `select s.id, s.title, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
                    from spots s
-                  where s.type = $1 and (s.status <> 'archived'
+                  where s.type = $1 and s.counts_visitors and (s.status <> 'archived'
                         or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $2))
                   order by s.title`, [kind === 'accommodation' ? 'accommodation' : 'spot', year]);
             const reports = await query(
@@ -665,8 +672,8 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         // Every place that could report this year, with what it reported.
         const placeRows = (await query(
             `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
-              where s.status <> 'archived'
-                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
+              where s.counts_visitors and (s.status <> 'archived'
+                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1))
               order by s.type, s.title`, [year])).rows;
         const placeOf = new Map(placeRows.map(p => [p.id, {
             _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,

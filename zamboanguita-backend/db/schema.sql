@@ -1037,3 +1037,14 @@ drop index if exists public.spots_one_per_establishment;
 alter table public.establishment_managers drop constraint if exists establishment_managers_name_required;
 alter table public.establishment_managers alter column establishment_name set default '';
 alter table public.establishment_managers alter column establishment_name drop not null;
+
+
+-- ---------------------------------------------------------------------------
+-- Count visitors here (November 2026). Visitor counting applies to places that
+-- receive and record visitors: a statue or a marker the office keeps has
+-- nothing to count, and switched off it leaves Statistics (the Tracker, Enter
+-- a report, the Guest Register, Form A4's places) while staying on the site
+-- and the map. Only the officer sets it, only for office-run places; a private
+-- enterprise always counts. Every existing place keeps counting.
+-- ---------------------------------------------------------------------------
+alter table public.spots add column if not exists counts_visitors boolean not null default true;

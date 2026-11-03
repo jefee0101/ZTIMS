@@ -104,6 +104,8 @@ const spots = new Table('spots', {
     enterpriseName: text({ trim: true }),
     phone: text({ trim: true }),
     contactEmail: text({ trim: true, lowercase: true }),
+    // Whether Statistics counts visitors here (office-run places only may be off).
+    countsVisitors: flag(true),
     status: text({ default: 'published', enum: ['published', 'unpublished', 'archived'] }),
     statusUpdatedAt: when(),
     // Attraction setup (see schema.sql): null means that price is not offered.

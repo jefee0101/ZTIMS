@@ -589,6 +589,22 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   unspecified take an icon. A country added to `residences` needs its flag
   copied there too.
 - (Statistics read a place's kind from `spots.type`, never its categories.)
+- **Count visitors here** (`spots.counts_visitors`, default true; November
+  2026). Visitor counting applies to places that receive and record visitors:
+  a statue or marker the office keeps has nothing to count. Switched off, the
+  place stays on the site and the map but every Statistics place list leaves it
+  out — the Tracker, `GET /api/statistics/places` (Enter a report, the officer's
+  and manager's Guest Register pickers), and `formA4()`'s `places` (Arrivals by
+  place, "Places reported", the Excel's By place sheet, the Dashboard) — and a
+  report or register entry for it is refused (409, `NOT_COUNTED` in
+  `statistics.js`). Only the officer sets it (not in
+  `MANAGER_WRITABLE_SPOT_FIELDS`, so a manager's value is dropped), only for an
+  office-run place (a private enterprise always counts: 400), and never over
+  kept records: a place with a non-void report or any register entry stays on
+  (409; `visitorCountingProblem` in `server.js`). Nothing is deleted. The
+  listing form shows the switch (`.sf-switch`, "Count visitors here") to the
+  officer only and hides it for a privately managed listing; Destinations'
+  card shows a "Not counted" pill.
 - **Rules the API enforces**, whatever the page does: one live report per
   place per month; male + female = total; room-nights occupied ≤ rooms × days
   in the month; guest nights ≥ arrivals; no month that hasn't started. Due on
