@@ -236,6 +236,19 @@ purpose — see the header comment in `spot-form.js`:
   in capitals excepted), sideways-scrolling tables holding their own hidden
   labels with labels wrapping rather than
   cut, and the subpage tabs (`.settings-tab`).
+- **Many enterprises, one sign-in.** `src/shared/enterprise-switcher.js` keeps
+  which enterprise the portal works in (`localStorage.ztimsEnterprise`, a listing
+  id, checked against `GET /api/spots?mine=true` so a stale id falls back to the
+  first; cleared at sign-in), draws the switcher in each manager page's header
+  (`#enterpriseSwitcherSlot`, `.ent-switch` in `portal-flat.css`: a pill with the
+  enterprise's name, "Working in" list, My enterprises, Add enterprise) and
+  reloads the page on a change. **My enterprises** (`resort/resort_enterprises.html`,
+  first in the menu): a card per enterprise (`.en-card`: photo, kind, name, barangay,
+  Published / No photo / No map pin chips, Open and View page) and an Add card;
+  Add opens the listing form on Enterprise (`resort_spots.html?add=1`), and the new
+  enterprise becomes the current one. Enterprise, Guest Register and Monthly Report
+  all work on the current enterprise (the two reports' Place picker is gone, the
+  name shows instead). The corner menu names the person (`localStorage.userName`).
 - **The manager's Enterprise** (`resort/resort_spots.html`, the menu's
   "Enterprise"; it was "My Listing"): the whole listing on one page in five
   subpages — `#basics`, `#location`, `#visiting`, `#photos`, `#contact` — shown
@@ -251,9 +264,9 @@ purpose — see the header comment in `spot-form.js`:
   optional ones "None") with "Last updated" and one Edit button. Edit opens the
   shared listing form on that part only (`spotForm.openSection(spot, step)`:
   no step rail, no preview, just the fields and Save — the whole listing is
-  still sent to `PUT /api/spots/:id`); Contact edits the account's
-  enterprise name, manager, phone and public email in a small window
-  (`PATCH /api/establishment-managers/me`). Above them, a checklist of what
+  still sent to `PUT /api/spots/:id`); Contact edits this enterprise's
+  name, phone and public email in a small window (a partial `PUT /api/spots/:id`;
+  the manager's own name is the Account's). Above them, a checklist of what
   visitors need (description, map pin, open days and hours, 3 photos, phone),
   each linking to its subpage, and "See it as visitors do". Location shows a
   small map from OpenStreetMap tiles (3 × 3 around the pin, `pinMap`). "Remove
@@ -262,8 +275,9 @@ purpose — see the header comment in `spot-form.js`:
 - **The manager's Account** (`resort/resort_settings.html`, was "My
   Enterprise"), laid out like the officer's Settings: two tabs with their
   own addresses — `#account` (My Account: initials, full name and contact
-  number, saved by `PATCH /api/establishment-managers/me` — the same
-  `managerName`/`phone` Enterprise → Contact shows visitors — plus the
+  number, saved by `PATCH /api/establishment-managers/me` — the
+  `managerName` Enterprise → Contact shows as "Manager" — with how many
+  enterprises, plus the
   sign-in email, read only and set by the Tourism Office, and account issued)
   and `#security` (signed in since, change password, sign out of all devices).
 - **The manager's Guest Register** (`resort/resort_register.html`, in the
@@ -662,10 +676,12 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   design like Destinations: title, "Manage enterprise accounts and manager
   access." (hidden on a phone) and **New manager account**; counts that filter
   as pills (All, Active, Suspended, No listing yet); the search; one card per
-  account (`managerCard`: initials, ACTIVE / SUSPENDED and No listing yet
-  chips, enterprise, manager, sign-in email, phone, "Since <date>", a full-width
-  **Edit** and ⋯ — View listing, New password, Suspend / Restore, Delete in
-  red). Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
+  account (`managerCard`: initials, ACTIVE / SUSPENDED, No listing yet and
+  "n enterprises" chips, the manager's name, their enterprises (`enterprises` on
+  `GET /api/establishment-managers`), sign-in email, phone, "Since <date>", a
+  full-width **Edit** and ⋯ — View <each enterprise>, New password, Suspend /
+  Restore, Delete in red). New manager account asks for the manager's name,
+  sign-in email, password (and optional public email, phone), never an enterprise. Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
   Previous / numbers / Next and "Showing n of m managers".
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
@@ -929,11 +945,24 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   Adventure for a peak or ridge; CULTURAL → Culture & Heritage, Faith first for
   a church) — the office and managers adjust from there.
 
-- **One enterprise, one listing.** A manager account keeps exactly one
-  listing (`spots_one_per_establishment`, a unique index on `managed_by`, and a
-  plain 409 in `POST /api/spots` first). The manager creates it and it is live
-  at once; their edits go live directly. Listings the office keeps
-  (`managed_by` null) are not limited.
+- **One manager, many enterprises** (November 2026, the panelist's request).
+  The account is the person (`establishment_managers`: sign-in email, password,
+  `manager_name`, `phone`); each **enterprise is one listing** (`spots.managed_by`
+  no longer unique — `schema.sql`'s last block dropped `spots_one_per_establishment`)
+  with its own `enterprise_name`, `phone` and `contact_email` on the listing
+  (copied once from the account by that block; the account's own
+  `establishment_name`, `contact_email` columns stay, unused, and the name is no
+  longer required). The manager adds enterprises themselves, live at once, no
+  limit (the user's choices); the officer creates the account with a manager name
+  and no enterprise. A new listing's enterprise name defaults to its title;
+  `PUT /api/spots/:id` takes `enterpriseName`, `phone`, `contactEmail` from a
+  manager like its other fields. Public reads (`MANAGER_SUMMARY`) show the
+  listing's own phone and public email, falling back to the account's when blank.
+  Suspending an account hides all its enterprises; an account with enterprises
+  cannot be deleted. The trading status (`operational_status`, `status_needs_review`)
+  stays on the account for now (no page sets it). Statistics already filed per
+  place, so Form A4 and the Guest Register are unchanged. Listings the office
+  keeps (`managed_by` null) are not limited.
 - **Visitors' details are kept one year.** `privacy.js` erases names, phones and
   emails from tickets a year after the visit, and from feedback a year after
   it was resolved; dates, counts, amounts and OR numbers stay. Run daily by

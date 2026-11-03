@@ -676,13 +676,13 @@ app.post('/api/admin/:id/password', requireAdmin, requirePasswordConfirmation, a
  */
 async function createEstablishmentManager(req, res) {
     try {
-        const { email, password, phone, managerName } = req.body;
-        // Either spelling is accepted so a page that has not been redeployed since
-        // the rename still creates accounts correctly.
-        const establishmentName = req.body.establishmentName || req.body.resortName;
+        const { email, password, phone } = req.body;
+        const managerName = String(req.body.managerName || '').trim();
 
-        if (!email || !password || !establishmentName) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory email, password, or enterprise name.' });
+        // The account is the person; their enterprises are added afterwards,
+        // by them or by the officer, as listings.
+        if (!email || !password || !managerName) {
+            return res.status(400).json({ success: false, message: 'Missing mandatory manager name, email or password.' });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -701,8 +701,7 @@ async function createEstablishmentManager(req, res) {
         const created = await EstablishmentManager.create({
             email: normalizedEmail,
             password: passwordHash,
-            establishmentName: establishmentName.trim(),
-            managerName: (managerName || "").trim(),
+            managerName,
             // Left blank, the sign-in address doubles as the public one, so a
             // listing never ends up with no way to reach anybody.
             contactEmail: (req.body.contactEmail || normalizedEmail).toLowerCase().trim(),
@@ -723,13 +722,29 @@ async function createEstablishmentManager(req, res) {
  * GET: Tourist Officer lists all enterprise manager accounts
  * Target URL: http://localhost:5000/api/establishment-managers
  */
+/* Each account's enterprises (its listings), oldest first. */
+async function enterprisesByManager() {
+    const { rows } = await db.query(
+        `select id, managed_by, coalesce(nullif(enterprise_name, ''), title) as name, status, type, barangay
+           from spots where managed_by is not null order by created_at`);
+    const byManager = new Map();
+    for (const r of rows) {
+        const list = byManager.get(r.managed_by) || [];
+        list.push({ id: r.id, name: r.name, status: r.status, type: r.type, barangay: r.barangay });
+        byManager.set(r.managed_by, list);
+    }
+    return byManager;
+}
+
 async function listEstablishmentManagers(req, res) {
     try {
         // Oldest first, the order MongoDB returned them in. Never the hashes.
         const managers = await EstablishmentManager.find({}, { sort: { createdAt: 1 } });
+        const enterprises = await enterprisesByManager();
         return res.status(200).json(managers.map(manager => ({
             ...manager,
-            contactEmail: manager.contactEmail || manager.email
+            contactEmail: manager.contactEmail || manager.email,
+            enterprises: enterprises.get(String(manager._id)) || []
         })));
     } catch (error) {
         console.error("❌ Get Enterprise Manager List Endpoint Failure:", error);
@@ -777,7 +792,6 @@ function reportWriteFailure(res, error, context) {
 function managerProfile(manager) {
     return {
         _id: manager._id,
-        establishmentName: manager.establishmentName,
         managerName: manager.managerName || '',
         email: manager.email,
         contactEmail: manager.contactEmail || manager.email,
@@ -850,11 +864,6 @@ app.patch('/api/establishment-managers/me/status', requireEstablishmentManager, 
  * currently using if they mistype it, so only the Tourist Officer may do that.
  */
 async function applyManagerDetails(manager, body) {
-    if (typeof body.establishmentName === 'string') {
-        const name = body.establishmentName.trim();
-        if (!name) throw new Error('The enterprise needs a name.');
-        manager.establishmentName = name;
-    }
     if (typeof body.managerName === 'string') manager.managerName = body.managerName.trim();
     if (typeof body.phone === 'string') manager.phone = body.phone.trim();
     if (typeof body.contactEmail === 'string') {
@@ -1096,14 +1105,13 @@ app.post('/api/login', sharedRateLimit('login', {
             userId: account._id, // Sends valid object database identifier instead of 'anonymous_guest'
             user: {
                 email: account.email,
-                name: account.fullName || account.establishmentName || account.email.split('@')[0],
+                name: account.fullName || account.managerName || account.email.split('@')[0],
                 fullName: account.fullName || "",
                 phone: account.phone || "",
                 nationality: account.nationality || "",
-                establishmentName: account.establishmentName || "",
-                // Pre-rename key, still sent so a page cached from before the rename
-                // keeps showing the enterprise's name instead of a blank.
-                resortName: account.establishmentName || ""
+                // Pre-rename keys, blank now: a page cached from before still reads them.
+                establishmentName: "",
+                resortName: ""
             }
         };
 
@@ -1395,7 +1403,8 @@ function normaliseSpotImages(payload) {
 const MANAGER_WRITABLE_SPOT_FIELDS = [
     'title', 'location', 'category', 'moreCategories', 'description', 'imageUrl', 'images', 'bookingUrl',
     'type', 'label', 'workingDays', 'workingTime', 'travelFee', 'entranceFee',
-    'address', 'barangay', 'latitude', 'longitude'
+    'address', 'barangay', 'latitude', 'longitude',
+    'enterpriseName', 'phone', 'contactEmail'
 ];
 // Note what is absent: status and managedBy. Publication is the municipality's
 // decision, not an enterprise's.
@@ -1437,6 +1446,17 @@ function authorizeSpotWrite(auth, spot) {
  * every time, and a field it never offered to change shouldn't fail the save.
  * What it must not set simply never reaches the document.
  */
+/* The enterprise's public email, when one is sent, must look like one. */
+function enterpriseContactProblem(prepared) {
+    if (typeof prepared.contactEmail === 'string') {
+        prepared.contactEmail = prepared.contactEmail.trim().toLowerCase();
+        if (prepared.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(prepared.contactEmail)) {
+            return 'That contact email does not look like an email address.';
+        }
+    }
+    return '';
+}
+
 function scopeSpotPayload(payload, scope) {
     if (scope === 'officer') return payload;
 
@@ -1665,21 +1685,15 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         const managedBy = isEstablishmentManager(req.auth.role)
             ? req.auth.sub
             : (req.body.managedBy || null);
-        // One enterprise, one listing (spots_one_per_establishment holds it
-        // too); said plainly here before anything is written.
-        if (managedBy && await Spot.count({ managedBy })) {
-            return res.status(409).json({
-                success: false,
-                message: isEstablishmentManager(req.auth.role)
-                    ? 'Your enterprise already has its listing. Edit that one instead of adding another.'
-                    : 'That enterprise already has its listing. An enterprise keeps one listing.'
-            });
-        }
         // The record's identity and history are the database's to set, never a request's.
         const { _id, createdAt, updatedAt, ...body } = req.body;
         const scoped = scopeSpotPayload(body, isEstablishmentManager(req.auth.role) ? 'manager' : 'officer');
         const prepared = normaliseSpotCategories(deriveSpotLocation(normaliseSpotLocation(normaliseSpotImages(scoped)), ''));
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])]);
+        const contactProblem = enterpriseContactProblem(prepared);
+        if (contactProblem) return res.status(400).json({ success: false, message: contactProblem });
+        // An enterprise's name defaults to its listing's title.
+        if (managedBy && !String(prepared.enterpriseName || '').trim()) prepared.enterpriseName = prepared.title;
         const savedSpot = await Spot.create({ ...prepared, managedBy });
         return res.status(201).json(savedSpot);
     } catch (error) {
@@ -1764,6 +1778,11 @@ app.put('/api/spots/:id', requireStaff, async (req, res) => {
         const { managedBy, ownerId, _id, createdAt, updatedAt, ...updates } = req.body;
         const prepared = normaliseSpotLocation(normaliseSpotImages(scopeSpotPayload(updates, verdict.scope)));
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])], [spot.imageUrl, ...(spot.images || [])]);
+        const contactProblem = enterpriseContactProblem(prepared);
+        if (contactProblem) return res.status(400).json({ success: false, message: contactProblem });
+        if (spot.managedBy && 'enterpriseName' in prepared && !String(prepared.enterpriseName || '').trim()) {
+            return res.status(400).json({ success: false, message: 'The enterprise needs a name.' });
+        }
         Object.assign(spot, normaliseSpotCategories(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await Spot.save(spot);
         return res.status(200).json(savedSpot);

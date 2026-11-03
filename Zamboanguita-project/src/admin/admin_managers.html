@@ -567,13 +567,8 @@ body { overflow-x: hidden; }
 
             <form id="createManagerForm" class="space-y-4 font-body">
                 <div>
-                    <label for="newManagerEstablishmentName" class="block text-sm font-semibold text-on-surface mb-1.5">Enterprise name</label>
-                    <input id="newManagerEstablishmentName" type="text" required placeholder="e.g., Basay Beach Resort"
-                           class="field w-full"/>
-                </div>
-                <div>
                     <label for="newManagerName" class="block text-sm font-semibold text-on-surface mb-1.5">Manager's name</label>
-                    <input id="newManagerName" type="text" placeholder="e.g., Maria Santos"
+                    <input id="newManagerName" type="text" required placeholder="e.g., Maria Santos"
                            class="field w-full"/>
                 </div>
                 <div>
@@ -687,8 +682,8 @@ body { overflow-x: hidden; }
         }
 
         function nameOf(manager) {
-            // Accounts created before the rename stored the same field as resortName.
-            return manager.establishmentName || manager.resortName || '';
+            // The account is the person; their enterprises are listed under the name.
+            return manager.managerName || '';
         }
 
         // Blank means the account never got its own public address, so the sign-in
@@ -745,7 +740,8 @@ body { overflow-x: hidden; }
             const listings = listingCounts[String(manager._id)] || 0;
             const listing = listingOf[String(manager._id)];
             const suspended = manager.active === false;
-            const name = nameOf(manager) || 'Unnamed enterprise';
+            const name = nameOf(manager) || manager.email || 'Unnamed manager';
+            const enterprises = Array.isArray(manager.enterprises) ? manager.enterprises : [];
             const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
             return `
             <article class="pg-card${suspended ? ' is-muted' : ''}">
@@ -754,12 +750,12 @@ body { overflow-x: hidden; }
                         <div class="mg-initials" aria-hidden="true">${escapeHtml(initials || '?')}</div>
                         <div class="mg-stack">
                             <span class="mg-status ${suspended ? 'mg-status--suspended' : 'mg-status--active'}">${suspended ? 'Suspended' : 'Active'}</span>
-                            ${listings ? '' : '<span class="mg-status mg-status--idle">No listing yet</span>'}
+                            ${listings ? (enterprises.length > 1 ? `<span class="mg-status mg-status--idle">${enterprises.length} enterprises</span>` : '') : '<span class="mg-status mg-status--idle">No listing yet</span>'}
                         </div>
                     </div>
                     <h3 class="pg-card__name">${escapeHtml(name)}</h3>
                     <div class="pg-card__facts">
-                        <span><span class="material-symbols-outlined" aria-hidden="true">person</span><b>${escapeHtml(manager.managerName || 'No manager name')}</b></span>
+                        <span><span class="material-symbols-outlined" aria-hidden="true">storefront</span><b>${enterprises.length ? escapeHtml(enterprises.map(e => e.name).join(', ')) : 'No enterprise yet'}</b></span>
                         <span><span class="material-symbols-outlined" aria-hidden="true">mail</span>${escapeHtml(manager.email || '—')}</span>
                         ${manager.phone ? `<span><span class="material-symbols-outlined" aria-hidden="true">call</span>${escapeHtml(manager.phone)}</span>` : ''}
                     </div>
@@ -770,7 +766,7 @@ body { overflow-x: hidden; }
                             <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for ${escapeHtml(name)}"
                                     class="pg-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
                             <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
-                                ${listing ? `<a href="../spot.html?spotId=${encodeURIComponent(listing)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View listing</a>` : ''}
+                                ${enterprises.map(e => `<a href="../spot.html?spotId=${encodeURIComponent(e.id)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View ${escapeHtml(e.name)}</a>`).join('')}
                                 <button type="button" data-password="${id}"><span class="material-symbols-outlined" aria-hidden="true">key</span>New password</button>
                                 <button type="button" data-suspend="${id}"><span class="material-symbols-outlined" aria-hidden="true">${suspended ? 'how_to_reg' : 'person_off'}</span>${suspended ? 'Restore' : 'Suspend'}</button>
                                 <button type="button" data-delete="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
@@ -985,11 +981,7 @@ body { overflow-x: hidden; }
                 icon: 'manage_accounts',
                 fields: [
                     {
-                        name: 'establishmentName', label: 'Enterprise name', required: true,
-                        value: nameOf(manager), placeholder: 'e.g., Basay Beach Resort'
-                    },
-                    {
-                        name: 'managerName', label: "Manager's name",
+                        name: 'managerName', label: "Manager's name", required: true,
                         value: manager.managerName || '', placeholder: 'e.g., Maria Santos'
                     },
                     {
@@ -1065,7 +1057,7 @@ body { overflow-x: hidden; }
             modal.hidden = !show;
             if (show) {
                 setCreateError('');
-                document.getElementById('newManagerEstablishmentName').focus();
+                document.getElementById('newManagerName').focus();
             } else {
                 document.getElementById('createManagerForm').reset();
             }
@@ -1075,15 +1067,14 @@ body { overflow-x: hidden; }
             event.preventDefault();
             setCreateError('');
 
-            const establishmentName = document.getElementById('newManagerEstablishmentName').value.trim();
             const managerName = document.getElementById('newManagerName').value.trim();
             const email = document.getElementById('newManagerEmail').value.trim();
             const contactEmail = document.getElementById('newManagerContactEmail').value.trim();
             const phone = document.getElementById('newManagerPhone').value.trim();
             const password = document.getElementById('newManagerPassword').value;
 
-            if (!establishmentName || !email || !password) {
-                setCreateError('An enterprise name, email and password are all needed.');
+            if (!managerName || !email || !password) {
+                setCreateError('A manager name, email and password are all needed.');
                 return;
             }
 
@@ -1093,7 +1084,7 @@ body { overflow-x: hidden; }
                 const response = await fetch(`${API_BASE}/establishment-managers`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ establishmentName, managerName, email, contactEmail, phone, password })
+                    body: JSON.stringify({ managerName, email, contactEmail, phone, password })
                 });
 
                 const result = await response.json().catch(() => ({}));
@@ -1105,7 +1096,7 @@ body { overflow-x: hidden; }
                 toggleCreateModal(false);
                 await loadDirectory();
                 showToast(
-                    `Account created for ${establishmentName}.\nSign-in email: ${email}\nPassword: ${password}\n\nPass these on — the password cannot be read again.`,
+                    `Account created for ${managerName}.\nSign-in email: ${email}\nPassword: ${password}\n\nPass these on — the password cannot be read again.`,
                     'success', { duration: 0 });
             } catch (error) {
                 restoreButton();

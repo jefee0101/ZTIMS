@@ -47,7 +47,8 @@ const officers = new Table('tourism_officers', {
 const managers = new Table('establishment_managers', {
     email: email(),
     password: passwordHash(),
-    establishmentName: required({ trim: true, requiredMessage: 'An enterprise name is required.' }),
+    // Unused since an account may run many enterprises; each listing has its own.
+    establishmentName: text({ trim: true }),
     managerName: text({ trim: true }),
     contactEmail: text({ trim: true, lowercase: true }),
     phone: text(),
@@ -99,6 +100,10 @@ const spots = new Table('spots', {
     latitude: { type: 'number', nullable: true, min: -90, max: 90 },
     longitude: { type: 'number', nullable: true, min: -180, max: 180 },
     managedBy: ref(),
+    // The enterprise's own details (one account may run several).
+    enterpriseName: text({ trim: true }),
+    phone: text({ trim: true }),
+    contactEmail: text({ trim: true, lowercase: true }),
     status: text({ default: 'published', enum: ['published', 'unpublished', 'archived'] }),
     statusUpdatedAt: when(),
     // Attraction setup (see schema.sql): null means that price is not offered.
@@ -185,10 +190,10 @@ spots.save = async function (spot, options = {}) {
    sign-in email, never anything secret: GET /api/spots/:id is public. */
 const MANAGER_SUMMARY = `case when m.id is null then null else jsonb_build_object(
     '_id', m.id,
-    'establishmentName', m.establishment_name,
+    'establishmentName', coalesce(nullif(s.enterprise_name, ''), s.title),
     'managerName', m.manager_name,
-    'contactEmail', m.contact_email,
-    'phone', m.phone,
+    'contactEmail', coalesce(nullif(s.contact_email, ''), m.contact_email),
+    'phone', coalesce(nullif(s.phone, ''), m.phone),
     'active', m.active,
     'operationalStatus', m.operational_status
 ) end as manager_summary`;

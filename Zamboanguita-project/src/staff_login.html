@@ -464,11 +464,14 @@ body { overflow-x: hidden; }
     localStorage.setItem('userRole', result.role);
     localStorage.setItem('userEmail', email);
     localStorage.setItem('userId', result.userId || '');
-    const establishmentName = result.user?.establishmentName || result.user?.resortName;
-    if (establishmentName) localStorage.setItem('establishmentName', establishmentName);
+    // The portal's corner menu names the person; a manager's enterprises are chosen in the portal.
+    localStorage.removeItem('establishmentName');
+    localStorage.removeItem('ztimsEnterprise');
     if (result.role === 'admin') {
       if (result.user && result.user.fullName) localStorage.setItem('userName', result.user.fullName);
       else localStorage.removeItem('userName');
+    } else if (result.user && result.user.name) {
+      localStorage.setItem('userName', result.user.name);
     }
 
     // A password someone else chose is replaced before anything else.

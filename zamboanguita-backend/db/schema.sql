@@ -149,10 +149,8 @@ create table if not exists public.spots (
 
 create index if not exists spots_managed_by_idx on public.spots (managed_by);
 create index if not exists spots_status_idx on public.spots (status);
--- One enterprise, one listing: a manager account keeps exactly one place.
--- Listings the Tourism Office keeps (managed_by null) are not limited.
-create unique index if not exists spots_one_per_establishment
-    on public.spots (managed_by) where managed_by is not null;
+-- A manager account may run any number of enterprises, one listing each
+-- (the "One manager, many enterprises" block at the end of this file).
 create index if not exists spots_created_at_idx on public.spots (created_at desc);
 
 
@@ -1011,3 +1009,30 @@ drop table if exists public.tourist_guides;
 drop table if exists public.guide_time_off;
 drop table if exists public.guide_profile_requests;
 alter table public.spots drop column if exists requires_guide;
+
+
+-- ---------------------------------------------------------------------------
+-- One manager, many enterprises (November 2026, the panelist's request). The
+-- account is the person; each listing is an enterprise with its own name,
+-- phone and public email. The one-listing limit goes, and the enterprise's
+-- details copy across from the account once (only while a listing's is blank).
+-- The account's own enterprise-name, phone and public-email columns stay,
+-- unused, as the record of what they were.
+-- ---------------------------------------------------------------------------
+alter table public.spots add column if not exists enterprise_name text not null default '';
+alter table public.spots add column if not exists phone text not null default '';
+alter table public.spots add column if not exists contact_email text not null default '';
+
+update public.spots s
+   set enterprise_name = m.establishment_name,
+       phone = m.phone,
+       contact_email = m.contact_email
+  from public.establishment_managers m
+ where m.id = s.managed_by and s.enterprise_name = '';
+
+drop index if exists public.spots_one_per_establishment;
+
+-- An account no longer has to name an enterprise.
+alter table public.establishment_managers drop constraint if exists establishment_managers_name_required;
+alter table public.establishment_managers alter column establishment_name set default '';
+alter table public.establishment_managers alter column establishment_name drop not null;

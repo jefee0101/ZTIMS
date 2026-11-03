@@ -65,7 +65,7 @@ async function spotById(id, client) {
     if (!/^[0-9a-f]{24}$/i.test(String(id || ''))) return null;
     const { rows } = await query(
         `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by,
-                m.establishment_name as manager_name
+                case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
            from spots s left join establishment_managers m on m.id = s.managed_by
           where s.id = $1`, [String(id)], client);
     return rows[0] || null;
@@ -186,7 +186,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
                 where += ` and s.managed_by = $1`;
             }
             const { rows } = await query(
-                `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, m.establishment_name as manager_name
+                `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
                    from spots s left join establishment_managers m on m.id = s.managed_by
                  ${where} order by s.type, s.title`, params);
             return res.json(rows.map(s => ({
@@ -600,7 +600,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             const kind = req.query.kind === 'attraction' ? 'attraction' : 'accommodation';
             if (!Number.isInteger(year) || year < 2000 || year > 2100) return badRequest(res, 'Give a year.');
             const places = await query(
-                `select s.id, s.title, s.barangay, s.status, s.managed_by, m.establishment_name as manager_name
+                `select s.id, s.title, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
                    from spots s left join establishment_managers m on m.id = s.managed_by
                   where s.type = $1 and (s.status <> 'archived'
                         or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $2))

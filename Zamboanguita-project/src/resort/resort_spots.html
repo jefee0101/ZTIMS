@@ -450,6 +450,10 @@ body { overflow-x: hidden; }
             </button>
         </div>
         <nav class="flex-1 space-y-2 font-body">
+            <a title="My enterprises" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_enterprises.html">
+                <span class="material-symbols-outlined text-accent">dashboard</span>
+                <span class="sidebar-label">My enterprises</span>
+            </a>
             <a title="Enterprise" aria-current="page" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Enterprise</span>
@@ -480,6 +484,7 @@ body { overflow-x: hidden; }
                 class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-on-surface/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
             <span class="material-symbols-outlined">menu</span>
         </button>
+        <div id="enterpriseSwitcherSlot" class="min-w-0 mr-auto"></div>
         <div class="flex items-center gap-3">
             <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
                 <span id="themeIcon" class="material-symbols-outlined text-accent">dark_mode</span>
@@ -536,8 +541,6 @@ body { overflow-x: hidden; }
                 </div>
                 <label class="block"><span class="field-label">Enterprise name</span>
                     <input id="cEstablishment" type="text" required maxlength="120" class="field w-full"/></label>
-                <label class="block"><span class="field-label">Manager</span>
-                    <input id="cManager" type="text" maxlength="120" autocomplete="name" placeholder="The person visitors should ask for" class="field w-full"/></label>
                 <label class="block"><span class="field-label">Phone</span>
                     <input id="cPhone" type="tel" maxlength="40" autocomplete="tel" placeholder="09XX XXX XXXX" class="field w-full"/></label>
                 <label class="block"><span class="field-label">Public email</span>
@@ -561,6 +564,7 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/spot-form.js"></script>
 <!-- The site's own confirm/prompt, in place of the browser's. Used by the
      form above and by this page's delete and duplicate-listing questions. -->
+<script type="module" src="../shared/enterprise-switcher.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 
 
@@ -639,7 +643,7 @@ body { overflow-x: hidden; }
         function mountPortalAccountMenu() {
             mountAccountMenu({
                 container: document.getElementById('accountMenuSlot'),
-                name: localStorage.getItem('establishmentName') || localStorage.getItem('resortName') || 'My enterprise',
+                name: localStorage.getItem('userName') || 'Manager',
                 email: localStorage.getItem('userEmail') || '',
                 items: [
                     { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
@@ -766,7 +770,10 @@ body { overflow-x: hidden; }
                 throw new Error(result.message || result.error || `The server refused this (status ${response.status}).`);
             }
 
+            const saved = await response.json().catch(() => ({}));
             toggleAddSpotModal(false);
+            // A new enterprise becomes the one the portal works in.
+            if (!editingId && saved._id && window.ztimsEnterprise) ztimsEnterprise.remember(saved._id);
             await loadMySpots();
             showToast(editingId ? 'Changes saved.' : `${payload.title} is now on the site.`, 'success');
         }
@@ -796,6 +803,8 @@ body { overflow-x: hidden; }
         /* ---------------- the enterprise, in five subpages ---------------- */
 
         let manager = null;
+        // The enterprise the portal is working on (the header switcher's choice).
+        const curSpot = () => mySpots.find(s => String(s._id) === String(window.ztimsEnterprise && ztimsEnterprise.currentId())) || mySpots[0];
         const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
         const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
         const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
@@ -820,7 +829,7 @@ body { overflow-x: hidden; }
         }
 
         function panel(sub, body, { editLabel = 'Edit', footer = '' } = {}) {
-            const spot = mySpots[0];
+            const spot = curSpot();
             return `<section class="glass-panel p-5 sm:p-7 space-y-5" aria-labelledby="estHead">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div><h2 id="estHead" class="text-xl font-headline font-bold text-on-surface">${TITLES[sub]}</h2>
@@ -891,13 +900,14 @@ body { overflow-x: hidden; }
                        <p class="text-support">${list.length} photo${list.length === 1 ? '' : 's'}. The first is the cover.</p>`
                     : `<div class="ztims-empty">No photos yet.</div>`, { editLabel: list.length ? 'Edit' : 'Add photos' });
             }
-            // contact: the enterprise's own details, saved to the account
+            // contact: this enterprise's own details, saved on its listing
             const m = manager || {};
+            const phone = spot.phone || m.phone || '';
             return panel('contact', `<dl class="est-facts">
-                ${fact('Enterprise name', escapeHtml(m.establishmentName))}
+                ${fact('Enterprise name', escapeHtml(spot.enterpriseName || spot.title))}
                 ${fact('Manager', escapeHtml(m.managerName))}
-                ${fact('Phone', m.phone ? `<a class="underline" href="tel:${escapeHtml(String(m.phone).replace(/[^\d+]/g, ''))}">${escapeHtml(m.phone)}</a>` : '')}
-                ${fact('Public email', escapeHtml(m.contactEmail))}
+                ${fact('Phone', phone ? `<a class="underline" href="tel:${escapeHtml(String(phone).replace(/[^\d+]/g, ''))}">${escapeHtml(phone)}</a>` : '')}
+                ${fact('Public email', escapeHtml(spot.contactEmail || m.contactEmail || m.email))}
             </dl>`);
         }
 
@@ -909,7 +919,7 @@ body { overflow-x: hidden; }
                 { ok: pinned, text: 'Set the map pin', sub: 'location' },
                 { ok: Boolean((spot.workingDays || '').trim() && (spot.workingTime || '').trim()), text: 'Add open days and hours', sub: 'visiting' },
                 { ok: photosOf(spot).length >= 3, text: 'Add at least 3 photos', sub: 'photos' },
-                { ok: Boolean(manager && (manager.phone || '').trim()), text: 'Add a phone number', sub: 'contact' }
+                { ok: Boolean((spot.phone || (manager && manager.phone) || '').trim()), text: 'Add a phone number', sub: 'contact' }
             ];
             const done = items.filter(i => i.ok).length;
             const box = document.getElementById('estChecklist');
@@ -931,7 +941,7 @@ body { overflow-x: hidden; }
                     a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                 } else a.removeAttribute('aria-current');
             });
-            const spot = mySpots[0];
+            const spot = curSpot();
             if (!spot) return;
             document.getElementById('estBody').innerHTML = subBody(sub, spot);
             const remove = document.getElementById('removeListingBtn');
@@ -941,7 +951,7 @@ body { overflow-x: hidden; }
         function renderEstablishment() {
             const body = document.getElementById('estBody');
             const tabs = document.getElementById('estTabs');
-            const spot = mySpots[0];
+            const spot = curSpot();
             if (loadFailed) {
                 tabs.hidden = true;
                 body.innerHTML = `<div class="ztims-empty tone-danger">Could not load your enterprise. ${escapeHtml(loadError)}
@@ -969,8 +979,8 @@ body { overflow-x: hidden; }
         // Edit: the listing's four parts open the shared form on that part only;
         // Contact is the account's own four fields.
         function openEditor(sub) {
-            const spot = mySpots[0];
-            if (sub === 'contact') return openContactEditor();
+            const spot = curSpot();
+            if (sub === 'contact') return openContactEditor(spot);
             const modal = document.getElementById('addSpotModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -978,13 +988,13 @@ body { overflow-x: hidden; }
             if (spotForm) spotForm.openSection(spot, STEP_OF[sub]);
         }
 
-        function openContactEditor() {
+        function openContactEditor(spot) {
+            spot = spot || curSpot();
             const m = manager || {};
             const modal = document.getElementById('contactModal');
-            document.getElementById('cEstablishment').value = m.establishmentName || '';
-            document.getElementById('cManager').value = m.managerName || '';
-            document.getElementById('cPhone').value = m.phone || '';
-            document.getElementById('cEmail').value = (m.contactEmail && m.contactEmail !== m.email) ? m.contactEmail : '';
+            document.getElementById('cEstablishment').value = spot.enterpriseName || spot.title || '';
+            document.getElementById('cPhone').value = spot.phone || '';
+            document.getElementById('cEmail').value = spot.contactEmail && spot.contactEmail !== m.email ? spot.contactEmail : '';
             document.getElementById('cMessage').hidden = true;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -996,30 +1006,29 @@ body { overflow-x: hidden; }
             modal.classList.remove('flex');
         }
 
+        // Saved on this enterprise's listing: each enterprise keeps its own.
         async function saveContact(event) {
             event.preventDefault();
             const msg = document.getElementById('cMessage');
+            const spot = curSpot();
             const payload = {
-                establishmentName: document.getElementById('cEstablishment').value.trim(),
-                managerName: document.getElementById('cManager').value.trim(),
+                enterpriseName: document.getElementById('cEstablishment').value.trim(),
                 phone: document.getElementById('cPhone').value.trim(),
                 contactEmail: document.getElementById('cEmail').value.trim()
             };
-            if (!payload.establishmentName) {
+            if (!payload.enterpriseName) {
                 msg.textContent = 'Your enterprise needs a name.'; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false; return;
             }
             const restore = setButtonLoading(document.getElementById('cSaveBtn'), 'Saving…');
             try {
-                const response = await fetch(`${API_BASE}/establishment-managers/me`, {
-                    method: 'PATCH', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload)
+                const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spot._id)}`, {
+                    method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload)
                 });
                 if (response.status === 401) { handleExpiredSession(); return; }
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) throw new Error(result.message || `The server refused (status ${response.status}).`);
-                manager = result.manager || manager;
-                try { localStorage.setItem('establishmentName', manager.establishmentName || ''); } catch (e) { /* private browsing */ }
+                if (!response.ok) throw new Error(result.message || result.error || `The server refused (status ${response.status}).`);
                 closeContactEditor();
-                renderEstablishment();
+                await loadMySpots();
                 showToast('Contact details saved.', 'success');
             } catch (error) {
                 msg.textContent = error.message; msg.className = 'text-sm px-4 py-3 tone-danger'; msg.hidden = false;
@@ -1048,6 +1057,10 @@ body { overflow-x: hidden; }
                 if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
                 mySpots = await response.json();
                 loadFailed = false;
+                if (window.ztimsEnterprise) {
+                    ztimsEnterprise.set(mySpots);
+                    ztimsEnterprise.mount(document.getElementById('enterpriseSwitcherSlot'));
+                }
             } catch (error) {
                 console.error('❌ Failed to load spots:', error);
                 mySpots = [];
@@ -1095,14 +1108,22 @@ body { overflow-x: hidden; }
 
             // Subpages: the address names the open one, so a link or a reload
             // opens it and Back returns to the one before.
-            window.addEventListener('hashchange', () => { if (mySpots[0]) showSub(subFromAddress()); });
+            window.addEventListener('hashchange', () => { if (curSpot()) showSub(subFromAddress()); });
             document.getElementById('estBody').addEventListener('click', event => {
                 const edit = event.target.closest('[data-edit]');
                 if (edit) openEditor(edit.dataset.edit);
             });
             document.getElementById('contactForm').addEventListener('submit', saveContact);
 
-            loadMySpots();
+            loadMySpots().then(() => {
+                // "Add enterprise" in the switcher and on My enterprises opens the form here.
+                const url = new URL(location.href);
+                if (url.searchParams.get('add') === '1') {
+                    url.searchParams.delete('add');
+                    history.replaceState(null, '', url.pathname + url.search + url.hash);
+                    toggleAddSpotModal(true);
+                }
+            });
         });
     </script>
 

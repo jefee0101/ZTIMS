@@ -4,6 +4,23 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## One manager, many enterprises (November 2026)
+
+**The change.** The panel asked that one Enterprise Manager be able to run
+several private enterprises. The account is now the person; each enterprise is
+its own listing with its own name, phone and public email. A manager signs in
+once, sees My enterprises, picks the one to work on from a switcher in the
+header, and can add another at any time (it goes live at once, with no limit).
+The officer creates a manager account without any enterprise.
+
+**Change in the manuscript:** wherever it says an enterprise manager manages
+"an enterprise" or "a listing" (one each), say the manager may run one or more
+enterprises. The manager's menu is now My enterprises, Enterprise, Guest
+Register, Monthly Report, Account. Screenshots to retake: the manager's header
+(switcher), My enterprises, and the officer's Enterprise Managers (a manager's
+enterprises under their name and "New manager account" without an enterprise
+name). Statistics are unchanged: reports are still filed per place.
+
 ## The conceptual and theoretical framework figures are saved here (November 2026)
 
 **The change.** Nothing in the system. The two framework figures, which lived
