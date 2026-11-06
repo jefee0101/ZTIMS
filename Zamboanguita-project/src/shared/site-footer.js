@@ -114,7 +114,7 @@
                 '<div class="site-footer__card">' +
                     '<div>' +
                         '<a href="' + r + 'index.html" class="site-footer__brand">' +
-                            '<span class="site-header__logo" aria-hidden="true"><span class="material-symbols-outlined">sunny</span></span>' +
+                            '<img class="site-header__logo" src="/ztims-logo.png" alt="" width="44" height="44" decoding="async">' +
                             '<span><span class="site-footer__title">ZAMBOANGUITA TOURISM</span>' +
                             '<span class="site-footer__sub">Information Management System</span></span>' +
                         '</a>' +

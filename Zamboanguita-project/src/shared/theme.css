@@ -1461,14 +1461,14 @@ div.leaflet-container {
     grid-area: brand; display: flex; align-items: center; gap: .7rem; min-width: 0;
     color: rgb(var(--ztims-on-surface)); text-decoration: none;
 }
+/* The ZTIMS seal (public/ztims-logo.png, round, transparent around it),
+   beside the name in the header and the footer (November 2026, the user's
+   logo; it replaced the orange sun badge). */
 .site-header__logo {
-    width: 2.5rem; height: 2.5rem; flex-shrink: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: .65rem;
-    background: rgb(var(--ztims-primary)); color: #FFFDFA;
-    box-shadow: 0 6px 16px -6px rgb(191 87 0 / .65);
+    width: 2.75rem; height: 2.75rem; flex-shrink: 0; display: block;
+    border-radius: 50%; object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgb(28 25 23 / .25));
 }
-.site-header__logo .material-symbols-outlined { font-size: 1.35rem; font-variation-settings: 'FILL' 1, 'wght' 500; }
 .site-header__name { min-width: 0; line-height: 1.15; }
 .site-header__title { display: block; font-weight: 800; font-size: .95rem; letter-spacing: -.01em; }
 .site-header__sub {
@@ -1980,7 +1980,7 @@ html.dark .hm-step--dark { background: #0B0A09; border-color: rgb(var(--ztims-ou
 @media (min-width: 640px) { .site-footer__card { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 3rem; } }
 @media (min-width: 1024px) { .site-footer__card { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .site-footer__brand { display: flex; align-items: center; gap: .75rem; color: rgb(var(--ztims-on-surface)); text-decoration: none; }
-.site-footer__brand .site-header__logo { width: 2.25rem; height: 2.25rem; }
+.site-footer__brand .site-header__logo { width: 3rem; height: 3rem; }
 .site-footer__title { display: block; font-weight: 800; font-size: .95rem; letter-spacing: -.01em; line-height: 1.15; }
 .site-footer__sub { display: block; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant)); }
 .site-footer__about { margin-top: 1.25rem; max-width: 16rem; font-size: .875rem; line-height: 1.65; color: rgb(var(--ztims-on-surface-variant)); }

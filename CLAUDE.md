@@ -208,7 +208,7 @@ purpose — see the header comment in `spot-form.js`:
 - `site-footer.js` — the visitor pages' footer, drawn into a
   `<footer data-site-footer data-root="../">` placeholder so the visitor pages
   share one copy. Since October 2026 it is the user's UX Pilot design: one
-  rounded card (`.site-footer*` in `theme.css`) — the orange badge and
+  rounded card (`.site-footer*` in `theme.css`) — the ZTIMS seal and
   "ZAMBOANGUITA TOURISM", a sentence, Explore (Destinations, Places to stay,
   Heritage sites, History), Information (FAQ, Terms & Conditions, Privacy
   Policy, Tourism Map), Contact us (Send feedback as a dark pill, then the
@@ -896,7 +896,8 @@ Frontend only, no tables of their own:
 - **Header**: the same on all eleven visitor pages (Home, destination, History,
   My ticket, payment, Terms, Privacy, FAQ, Contact, Announcements, Events; styles `.site-header*` and
   `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
-  floating, rounded glass bar — an orange badge (`sunny`) and "ZAMBOANGUITA /
+  floating, rounded glass bar — the ZTIMS seal (`public/ztims-logo.png`, the
+  user's logo, November 2026; it replaced the orange sun badge) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
   (`index.html#map`), Announcements, Events, History, My ticket (no Staff link since November
   2026, the user's choice: staff sign in from the footer's "Staff and
