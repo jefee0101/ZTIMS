@@ -968,6 +968,45 @@ textarea.field[aria-invalid="true"],
 }
 .notice-date { font-size: 0.75rem; color: rgb(var(--ztims-on-surface-variant)); }
 
+/* The four kinds of notice (announcements.js), the same on the officer's page
+   and the visitor's: advisory tangerine with ink on it, event ink, closure
+   ember, general outlined. Brand values, so each reads the same in both themes
+   (the ink one keeps a hairline so it never sinks into the dark ground). */
+.an-cat { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .7rem; border-radius: 9999px;
+          font-size: .78rem; font-weight: 700; line-height: 1.4; white-space: nowrap; border: 1px solid transparent; }
+.an-cat--advisory { background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); }
+.an-cat--event    { background: rgb(var(--brand-ink)); color: rgb(var(--brand-paper)); border-color: rgb(var(--brand-paper) / .25); }
+.an-cat--closure  { background: rgb(var(--brand-ember)); color: rgb(var(--brand-paper)); }
+.an-cat--general  { background: transparent; color: rgb(var(--ztims-on-surface)); border-color: rgb(var(--ztims-outline)); }
+/* An event's date as a block: the day large, the month under it. */
+.an-dateblock { display: grid; place-items: center; align-content: center; width: 3.5rem; height: 3.5rem; flex: none;
+                background: rgb(var(--brand-ink)); color: rgb(var(--brand-paper)); border: 1px solid rgb(var(--brand-paper) / .2); }
+.an-dateblock b { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+.an-dateblock span { font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-top: .15rem; }
+/* The month calendar (officer and visitor): seven columns, an event as a
+   tangerine chip on each day it covers, those days faintly tinted. */
+.an-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-left: 1px solid rgb(var(--ztims-outline)); border-top: 1px solid rgb(var(--ztims-outline)); }
+.an-cal__dow { padding: .45rem .6rem; font-size: .8rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant));
+               background: rgb(var(--ztims-surface-low, var(--ztims-surface))); border-right: 1px solid rgb(var(--ztims-outline)); border-bottom: 1px solid rgb(var(--ztims-outline)); }
+.an-cal__day { min-height: 6.5rem; padding: .45rem; display: flex; flex-direction: column; gap: .3rem; min-width: 0;
+               background: rgb(var(--ztims-surface)); border-right: 1px solid rgb(var(--ztims-outline)); border-bottom: 1px solid rgb(var(--ztims-outline)); }
+.an-cal__day--blank { background: transparent; }
+.an-cal__day--busy { background: rgb(var(--brand-tangerine) / .08); }
+.an-cal__day--today .an-cal__num { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.an-cal__num { align-self: flex-start; min-width: 1.6rem; padding: 0 .3rem; border-radius: 9999px; text-align: center; font-weight: 700; font-size: .9rem; }
+.an-cal__chip { display: block; width: 100%; text-align: left; padding: .2rem .4rem; background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink));
+                font-size: .76rem; font-weight: 700; line-height: 1.25; border: 0; cursor: pointer; overflow-wrap: anywhere; }
+.an-cal__chip:hover { filter: brightness(1.06); }
+.an-cal__chip:focus-visible { outline: 2px solid rgb(var(--ztims-on-surface)); outline-offset: 1px; }
+.an-cal__chip.is-hidden { opacity: .55; text-decoration: line-through; }
+@media (max-width: 639px) {
+    .an-cal__day { min-height: 4.25rem; padding: .3rem; }
+    .an-cal__dow { padding: .35rem .3rem; font-size: .72rem; }
+    /* On a phone a day shows a dot per event; the list beside the calendar has the words. */
+    .an-cal__chip { width: .55rem; height: .55rem; padding: 0; border-radius: 9999px; font-size: 0; }
+    .an-cal__chips { display: flex; flex-wrap: wrap; gap: .2rem; }
+}
+
 /* ==========================================================================
    The map's pin controls
    --------------------------------------------------------------------------

@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/>
+<script src="../shared/theme.js"></script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Explore Zamboanguita Admin | Announcements and events</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                // Sharp edges: every rounded-* utility draws a square corner.
+                borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+                transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+                transitionDuration: { DEFAULT: '220ms' },
+                colors: {
+                    "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                    "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                    "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                    "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                    "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+                    "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                    "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                    "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                    "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+                    "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+                    "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+                    "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                    "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                    "success": "rgb(var(--ztims-success) / <alpha-value>)"
+                },
+                fontFamily: {
+                    headline: ["Poppins", "sans-serif"],
+                    body: ["Inter", "sans-serif"],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+}
+
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), margin-left var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity var(--dur-fast) var(--ease-standard) 60ms, max-width var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard) !important;
+    }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+
+/* ==========================================================
+   MOBILE NAVIGATION (below 640px)
+   The rail is fixed and 16rem wide at every size, so on a phone it simply sat
+   on top of the page: the content began underneath it and could not be read.
+   Below 640px it becomes a drawer that slides in from the left, opened by the
+   button in the header and closed by the scrim, the Escape key, or choosing a
+   destination. The collapse rules above are desktop-only, so the two never meet.
+   ========================================================== */
+@media (max-width: 639px) {
+    aside {
+        width: 17rem !important;
+        max-width: 86vw !important;
+        transform: translateX(-100%);
+        transition: transform var(--dur-moderate) var(--ease-decelerate) !important;
+    }
+    body.nav-open aside {
+        transform: none;
+        box-shadow: var(--ztims-shadow-overlay);
+    }
+    header, main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    #navScrim {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        background: rgb(var(--ztims-background) / .6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--dur-moderate) var(--ease-standard);
+    }
+    body.nav-open #navScrim { opacity: 1; pointer-events: auto; }
+    body.nav-open { overflow: hidden; }
+}
+@media (min-width: 640px) {
+    #navScrim, #navOpenBtn { display: none !important; }
+}
+
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/portal-flat.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+<script>
+/* ==========================================================
+   ACCOUNT AVATAR + MENU (upper right)
+   One button showing who is signed in, and a small menu under it. Built in
+   JavaScript rather than markup so every page mounts the same thing with its
+   own links, the way the toast module is shared.
+
+   mountAccountMenu({ container, name, email, imageUrl, items, signedOutLabel,
+                      signedOutHref })
+     name / email : shown in the menu's header; the initial becomes the avatar
+     imageUrl     : optional photo (Google accounts have one)
+     items        : [{ label, icon, href }] or [{ label, icon, onSelect }]
+     signedOut*   : when name and email are both empty, the avatar is replaced
+                    by this link, so a guest gets a way in rather than a
+                    meaningless blank circle
+   ========================================================== */
+(function () {
+    function initialFrom(name, email) {
+        var source = (name || email || '').trim();
+        return source ? source.charAt(0).toUpperCase() : '?';
+    }
+
+    window.mountAccountMenu = function (options) {
+        var container = options.container;
+        if (!container) return;
+        container.innerHTML = '';
+
+        var signedIn = Boolean((options.name || '').trim() || (options.email || '').trim());
+
+        if (!signedIn) {
+            var signIn = document.createElement('a');
+            signIn.href = options.signedOutHref || '#';
+            signIn.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current/30 text-sm font-bold hover:opacity-80 transition-opacity';
+            signIn.innerHTML = '<span class="material-symbols-outlined !text-lg">account_circle</span>' +
+                               '<span>' + (options.signedOutLabel || 'Sign in') + '</span>';
+            container.appendChild(signIn);
+            return;
+        }
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative';
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-haspopup', 'menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.title = options.name || options.email || 'Account';
+        button.style.cssText = [
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'width:2.5rem', 'height:2.5rem', 'border-radius:0',
+            'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
+            'color:rgb(var(--ztims-accent))',
+            'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
+            'transition:transform var(--dur-fast) var(--ease-standard)'
+        ].join(';');
+
+        if (options.imageUrl) {
+            var photo = document.createElement('img');
+            photo.src = options.imageUrl;
+            photo.alt = '';
+            photo.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            // A broken photo link would otherwise leave an empty circle.
+            photo.addEventListener('error', function () {
+                photo.remove();
+                button.textContent = initialFrom(options.name, options.email);
+            });
+            button.appendChild(photo);
+        } else {
+            button.textContent = initialFrom(options.name, options.email);
+        }
+        button.addEventListener('mouseenter', function () { button.style.transform = 'scale(1.06)'; });
+        button.addEventListener('mouseleave', function () { button.style.transform = 'none'; });
+
+        var menu = document.createElement('div');
+        menu.setAttribute('role', 'menu');
+        menu.hidden = true;
+        menu.style.cssText = [
+            'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
+            'min-width:15rem', 'padding:.4rem',
+            'border-radius:var(--radius-lg, 1rem)',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'border:1px solid var(--glass-hairline)',
+            'color:rgb(var(--ztims-on-surface))',
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'transform-origin:top right',
+            'animation:ztimsMenuIn var(--dur-base, 220ms) var(--ease-decelerate, ease-out)',
+            'font-size:.85rem'
+        ].join(';');
+
+        var header = document.createElement('div');
+        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgb(var(--ztims-outline));margin-bottom:.3rem';
+        var nameLine = document.createElement('div');
+        nameLine.textContent = options.name || options.email;
+        nameLine.style.cssText = 'font-weight:800;word-break:break-word';
+        header.appendChild(nameLine);
+        if (options.email && options.name) {
+            var emailLine = document.createElement('div');
+            emailLine.textContent = options.email;
+            emailLine.style.cssText = 'font-size:.75rem;color:rgb(var(--ztims-on-surface-variant));word-break:break-all;margin-top:.1rem';
+            header.appendChild(emailLine);
+        }
+        menu.appendChild(header);
+
+        function close() {
+            menu.hidden = true;
+            button.setAttribute('aria-expanded', 'false');
+        }
+
+        (options.items || []).forEach(function (item) {
+            var entry = document.createElement(item.href ? 'a' : 'button');
+            entry.setAttribute('role', 'menuitem');
+            if (item.href) entry.href = item.href; else entry.type = 'button';
+            entry.style.cssText = [
+                'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
+                'padding:.6rem .75rem', 'border:0', 'border-radius:0',
+                'background:none', 'color:' + (item.danger ? 'rgb(var(--ztims-error))' : 'inherit'),
+                'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
+            ].join(';');
+            entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
+            var label = document.createElement('span');
+            label.textContent = item.label;   // text, never markup
+            entry.appendChild(label);
+
+            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgb(var(--ztims-on-surface) / .06)'; });
+            entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
+            entry.addEventListener('click', function () {
+                close();
+                if (item.onSelect) item.onSelect();
+            });
+            menu.appendChild(entry);
+        });
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var opening = menu.hidden;
+            menu.hidden = !opening;
+            button.setAttribute('aria-expanded', String(opening));
+        });
+        document.addEventListener('click', function (event) {
+            if (!menu.hidden && !wrap.contains(event.target)) close();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') close();
+        });
+
+        wrap.appendChild(button);
+        wrap.appendChild(menu);
+        container.appendChild(wrap);
+    };
+})();
+</script>
+
+    <!-- Left Sidebar Control Desk -->
+    <div id="navScrim" aria-hidden="true"></div>
+    <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
+        </div>
+
+        <nav class="flex-1 space-y-2 font-body">
+            <a title="Dashboard" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_analystic.html">
+                <span class="material-symbols-outlined text-accent">space_dashboard</span>
+                <span class="sidebar-label">Dashboard</span>
+            </a>
+            <a title="Statistics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
+                <span class="material-symbols-outlined text-accent">bar_chart</span>
+                <span class="sidebar-label">Statistics</span>
+            </a>
+            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_register.html">
+                <span class="material-symbols-outlined text-accent">menu_book</span>
+                <span class="sidebar-label">Guest Register</span>
+            </a>
+            <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_dashboard_manage.html">
+                <span class="material-symbols-outlined text-accent">location_on</span>
+                <span class="sidebar-label">Destinations</span>
+            </a>
+            <a title="Managers" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_managers.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
+                <span class="sidebar-label">Managers</span>
+            </a>
+            <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
+                <span class="material-symbols-outlined text-accent">confirmation_number</span>
+                <span class="sidebar-label">Tickets</span>
+            </a>
+            <a title="Collections" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_collections.html">
+                <span class="material-symbols-outlined text-accent">payments</span>
+                <span class="sidebar-label">Collections</span>
+            </a>
+            <a title="Announcements" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_announcements.html">
+                <span class="material-symbols-outlined text-accent">campaign</span>
+                <span class="sidebar-label">Announcements</span>
+            </a>
+            <a title="Feedback" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_feedback.html">
+                <span class="material-symbols-outlined text-accent">forum</span>
+                <span class="sidebar-label">Feedback</span>
+            </a>
+            <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
+                <span class="material-symbols-outlined text-accent">settings</span>
+                <span class="sidebar-label">Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant dark:text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-error dark:hover:text-error transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="sidebar-label">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Header Control Anchor -->
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 glass-nav border-b border-outline-variant/20 transition-colors duration-300">
+        <button id="navOpenBtn" type="button" aria-label="Open navigation" aria-expanded="false"
+                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-on-surface/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div class="flex items-center gap-4">
+            
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+                <span id="themeIcon" class="material-symbols-outlined text-accent">dark_mode</span>
+            </button>
+            <div id="accountMenuSlot"></div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="p-2 max-w-[1400px] mx-auto space-y-6">
+
+            <div class="an-head">
+                <div class="pb-3">
+                    <p class="an-kicker">Tourism Office</p>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Announcements and events</h1>
+                </div>
+                <div role="tablist" aria-label="Announcements and events" class="flex gap-x-2">
+                    <button role="tab" id="tab-announcements" aria-controls="announcementsPanel" aria-selected="true" class="settings-tab">Announcements</button>
+                    <button role="tab" id="tab-calendar" aria-controls="calendarPanel" aria-selected="false" tabindex="-1" class="settings-tab">Calendar of events</button>
+                </div>
+            </div>
+
+            <!-- Announcements: the notices, and the form that adds or edits one. -->
+            <section id="announcementsPanel" role="tabpanel" aria-labelledby="tab-announcements" class="an-panel">
+                <div class="an-split">
+                    <div>
+                        <div class="an-bar">
+                            <h2 id="listTitle">Published notices</h2>
+                            <button type="button" id="listSwitch" class="an-link">Past announcements</button>
+                        </div>
+                        <div id="noticeList" class="an-list"></div>
+                        <p class="an-note">A notice stops showing on the website after its end date.</p>
+                    </div>
+
+                    <form id="noticeForm" class="an-form" novalidate>
+                        <h2 id="formTitle">New announcement</h2>
+                        <label class="block"><span class="field-label">Title</span>
+                            <input id="fTitle" type="text" maxlength="140" required class="field"/></label>
+                        <div class="an-two">
+                            <label class="block"><span class="field-label">Category</span>
+                                <select id="fCategory" class="field">
+                                    <option value="advisory">Advisory</option>
+                                    <option value="event">Event</option>
+                                    <option value="closure">Closure</option>
+                                    <option value="general">General</option>
+                                </select></label>
+                            <label class="block"><span class="field-label">Place</span>
+                                <select id="fPlace" class="field"><option value="">No place</option></select></label>
+                        </div>
+                        <div class="an-two">
+                            <label class="block"><span class="field-label">Start</span>
+                                <input id="fStart" type="datetime-local" required class="field"/></label>
+                            <label class="block"><span class="field-label">End</span>
+                                <input id="fEnd" type="datetime-local" required class="field"/></label>
+                        </div>
+                        <label class="block"><span class="field-label">Text (English)</span>
+                            <textarea id="fBody" maxlength="4000" required class="field"></textarea></label>
+                        <label class="block"><span class="field-label">Text (Filipino or Bisaya)</span>
+                            <textarea id="fBodyOther" maxlength="4000" class="field"></textarea></label>
+                        <div class="an-photo">
+                            <div class="an-photo__side">
+                                <img id="fPhotoPreview" alt="" hidden/>
+                                <span id="fPhotoLabel">Photo (optional)</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" id="fPhotoRemove" class="pg-btn pg-btn--plain" hidden>Remove</button>
+                                <button type="button" id="fPhotoBtn" class="pg-btn pg-btn--plain">Choose photo</button>
+                            </div>
+                            <input id="fPhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden/>
+                        </div>
+                        <p id="formError" hidden class="text-sm px-4 py-3 tone-danger"></p>
+                        <div class="an-form__actions">
+                            <button type="button" id="formCancel" class="btn btn-cancel min-h-[48px] px-6">Cancel</button>
+                            <button type="submit" id="formSave" class="btn btn-primary min-h-[48px] px-6">Save and publish</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Calendar of events: the month, and the events to come or past. -->
+            <section id="calendarPanel" role="tabpanel" aria-labelledby="tab-calendar" class="an-panel" hidden>
+                <div class="an-split an-split--cal">
+                    <div>
+                        <div class="an-calhead">
+                            <h2 id="calTitle"></h2>
+                            <div class="flex gap-2">
+                                <button type="button" id="calPrev" class="pg-btn pg-btn--plain">Previous</button>
+                                <button type="button" id="calNext" class="pg-btn pg-btn--plain">Next</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto"><div id="calGrid" class="an-cal min-w-[20rem]"></div></div>
+                        <p id="calEmpty" class="an-note" hidden>No events this month.</p>
+                    </div>
+                    <div>
+                        <div class="an-bar">
+                            <h2 id="eventsTitle">Upcoming events</h2>
+                            <button type="button" id="eventsSwitch" class="an-link">Past events</button>
+                        </div>
+                        <div id="eventList" class="an-list"></div>
+                        <p class="an-note">Events move to Past events when they end.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "/api";
+        const CLOUDINARY_CLOUD_NAME = "xeo3pvpw";
+        const CLOUDINARY_UPLOAD_PRESET = "ZTIMSAsianCollege";
+        const TZ = 'Asia/Manila';
+        const CATEGORY_LABEL = { advisory: 'Advisory', event: 'Event', closure: 'Closure', general: 'General' };
+
+        let notices = [];          // everything, from GET /api/announcements/admin
+        let editing = null;        // the notice in the form, or null for a new one
+        let photoUrl = '';
+        let showPast = false;      // Announcements tab: past ones instead of current
+        let showPastEvents = false;
+        let calMonth = null;       // { year, month } on the calendar, Manila
+
+        const authHeaders = extra =>
+            Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+        // Shared with the sidebar's Log Out, so both doors behave identically.
+        function signOutStaff() {
+            try {
+                window.ztimsTheme.clearStorage();
+                sessionStorage.clear();
+            } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
+
+        // Who is signed in, in the corner, with the way out of the portal.
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: localStorage.getItem('userName') || 'Tourism Officer',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Settings', icon: 'settings', href: 'admin_profile.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
+
+        function guardOfficerSession() {
+            if (localStorage.getItem('userRole') !== 'admin' || !localStorage.getItem('authToken')) {
+                window.location.href = '../staff_login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function handleExpiredSession() {
+            showToast('Your session has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace('../staff_login.html'), 900);
+        }
+
+        async function api(path, options) {
+            const response = await fetch(API_BASE + path, Object.assign({ headers: authHeaders({ 'Content-Type': 'application/json' }) }, options || {}));
+            if (response.status === 401) { handleExpiredSession(); throw new Error('Signed out'); }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.message || `The server refused (status ${response.status}).`);
+            return data;
+        }
+
+        /* ---- Manila time ------------------------------------------------ */
+
+        const fmt = (iso, opts) => new Intl.DateTimeFormat('en-GB', Object.assign({ timeZone: TZ }, opts)).format(new Date(iso));
+        const fmtDate = iso => fmt(iso, { day: 'numeric', month: 'short', year: 'numeric' });
+        const fmtTime = iso => new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+        const fmtDateTime = iso => `${fmtDate(iso)}, ${fmtTime(iso)}`;
+        // "2026-11-21" for a time, as the calendar in Manila sees it.
+        const dayKey = iso => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+        // What a datetime-local field shows for a time: Manila's wall clock.
+        const localValue = iso => `${dayKey(iso)}T${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso))}`;
+        const isAllDay = n => localValue(n.startsAt).endsWith('T00:00') && /T23:5\d$/.test(localValue(n.endsAt));
+        function whenLine(n) {
+            if (isAllDay(n)) return 'all day';
+            const sameDay = dayKey(n.startsAt) === dayKey(n.endsAt);
+            return sameDay ? `${fmtTime(n.startsAt)} to ${fmtTime(n.endsAt)}` : `${fmtDate(n.startsAt)} to ${fmtDate(n.endsAt)}`;
+        }
+
+        /* ---- the list --------------------------------------------------- */
+
+        const catPill = c => `<span class="an-cat an-cat--${escapeHtml(c)}">${CATEGORY_LABEL[c] || escapeHtml(c)}</span>`;
+
+        function statusLine(n) {
+            if (n.state === 'ended') return `Hidden after ${fmtDate(n.endsAt)}`;
+            if (n.hidden) return 'Hidden';
+            if (n.category === 'event') return fmtDateTime(n.startsAt);
+            return `Live until ${fmtDate(n.endsAt)}`;
+        }
+
+        function renderList() {
+            const box = document.getElementById('noticeList');
+            document.getElementById('listTitle').textContent = showPast ? 'Past announcements' : 'Published notices';
+            document.getElementById('listSwitch').textContent = showPast ? 'Published notices' : 'Past announcements';
+            const rows = notices.filter(n => (n.state === 'ended') === showPast);
+            if (!rows.length) {
+                box.innerHTML = `<div class="ztims-empty m-4">${showPast ? 'No past announcements.' : 'No notices yet.'}</div>`;
+                return;
+            }
+            box.innerHTML = rows.map(n => `
+                <article class="an-row${n.hidden ? ' is-hidden' : ''}">
+                    <div class="min-w-0">
+                        <div class="an-row__meta">${catPill(n.category)}<span>${escapeHtml(statusLine(n))}</span>${n.place ? `<span>· ${escapeHtml(n.place.title)}</span>` : ''}</div>
+                        <h3 class="an-row__title">${escapeHtml(n.title)}</h3>
+                    </div>
+                    <div class="an-row__actions">
+                        <button type="button" class="pg-btn pg-btn--plain" data-edit="${escapeHtml(n._id)}">Edit</button>
+                        <button type="button" class="pg-btn pg-btn--plain" data-hide="${escapeHtml(n._id)}" data-hidden="${n.hidden ? '1' : ''}">${n.hidden ? 'Show' : 'Hide'}</button>
+                    </div>
+                </article>`).join('');
+        }
+
+        async function load() {
+            const box = document.getElementById('noticeList');
+            try {
+                notices = await api('/announcements/admin');
+            } catch (error) {
+                if (error.message !== 'Signed out') box.innerHTML = `<div class="ztims-empty tone-danger m-4">${escapeHtml(error.message)}</div>`;
+                return;
+            }
+            renderList();
+            renderCalendar();
+            renderEvents();
+        }
+
+        async function setHidden(id, hidden, button) {
+            button.disabled = true;
+            try {
+                const result = await api(`/announcements/${encodeURIComponent(id)}/hidden`, { method: 'PATCH', body: JSON.stringify({ hidden }) });
+                const i = notices.findIndex(n => n._id === id);
+                if (i >= 0) notices[i] = result.announcement;
+                renderList(); renderCalendar(); renderEvents();
+                showToast(hidden ? 'Hidden from the website.' : 'Shown on the website.', 'success');
+            } catch (error) {
+                if (error.message !== 'Signed out') showToast(error.message, 'error');
+                button.disabled = false;
+            }
+        }
+
+        /* ---- the form --------------------------------------------------- */
+
+        function setFormError(message) {
+            const box = document.getElementById('formError');
+            box.textContent = message || '';
+            box.hidden = !message;
+        }
+
+        function showPhoto(url) {
+            photoUrl = url || '';
+            const img = document.getElementById('fPhotoPreview');
+            img.hidden = !photoUrl;
+            if (photoUrl) img.src = photoUrl; else img.removeAttribute('src');
+            document.getElementById('fPhotoLabel').textContent = photoUrl ? 'Photo' : 'Photo (optional)';
+            document.getElementById('fPhotoRemove').hidden = !photoUrl;
+            document.getElementById('fPhotoBtn').textContent = photoUrl ? 'Change photo' : 'Choose photo';
+        }
+
+        function fillForm(n) {
+            editing = n || null;
+            setFormError('');
+            document.getElementById('formTitle').textContent = n ? 'Edit announcement' : 'New announcement';
+            document.getElementById('formSave').textContent = n ? 'Save changes' : 'Save and publish';
+            document.getElementById('fTitle').value = n ? n.title : '';
+            document.getElementById('fCategory').value = n ? n.category : 'advisory';
+            document.getElementById('fPlace').value = n && n.spotId ? n.spotId : '';
+            document.getElementById('fStart').value = n ? localValue(n.startsAt) : localValue(new Date(Math.ceil(Date.now() / 3600e3) * 3600e3).toISOString());
+            document.getElementById('fEnd').value = n ? localValue(n.endsAt) : '';
+            document.getElementById('fBody').value = n ? n.body : '';
+            document.getElementById('fBodyOther').value = n ? n.bodyOther : '';
+            showPhoto(n ? n.photoUrl : '');
+        }
+
+        function openForEdit(id) {
+            const n = notices.find(x => x._id === id);
+            if (!n) return;
+            showTab('announcements');
+            fillForm(n);
+            const form = document.getElementById('noticeForm');
+            form.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+            document.getElementById('fTitle').focus({ preventScroll: true });
+        }
+
+        async function save(event) {
+            event.preventDefault();
+            setFormError('');
+            const value = id => document.getElementById(id).value.trim();
+            const body = {
+                title: value('fTitle'), category: value('fCategory'), spotId: value('fPlace') || null,
+                startsAt: value('fStart'), endsAt: value('fEnd'),
+                body: value('fBody'), bodyOther: value('fBodyOther'), photoUrl
+            };
+            if (!body.title) return setFormError('Give the notice a title.');
+            if (!body.startsAt || !body.endsAt) return setFormError('Give the start and end.');
+            if (body.endsAt < body.startsAt) return setFormError('The end cannot be before the start.');
+            if (!body.body) return setFormError('Write the text in English.');
+            const button = document.getElementById('formSave');
+            button.disabled = true;
+            button.textContent = 'Saving…';
+            try {
+                const result = editing
+                    ? await api(`/announcements/${encodeURIComponent(editing._id)}`, { method: 'PUT', body: JSON.stringify(body) })
+                    : await api('/announcements', { method: 'POST', body: JSON.stringify(body) });
+                showToast(editing ? 'Saved.' : 'Published.', 'success');
+                const saved = result.announcement;
+                notices = [saved, ...notices.filter(n => n._id !== saved._id)]
+                    .sort((a, b) => String(b.startsAt).localeCompare(String(a.startsAt)));
+                showPast = saved.state === 'ended';
+                fillForm(null);
+                renderList(); renderCalendar(); renderEvents();
+            } catch (error) {
+                if (error.message !== 'Signed out') setFormError(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = editing ? 'Save changes' : 'Save and publish';
+            }
+        }
+
+        async function choosePhoto(file) {
+            if (!file) return;
+            const button = document.getElementById('fPhotoBtn');
+            button.disabled = true;
+            button.textContent = 'Uploading…';
+            try {
+                showPhoto(await window.ZTIMS_UPLOAD.uploadImage(file, {
+                    apiBase: API_BASE, cloudName: CLOUDINARY_CLOUD_NAME, uploadPreset: CLOUDINARY_UPLOAD_PRESET
+                }));
+            } catch (error) {
+                showToast(error.message || 'The photo could not be uploaded.', 'error');
+                showPhoto(photoUrl);
+            } finally {
+                button.disabled = false;
+                document.getElementById('fPhotoInput').value = '';
+            }
+        }
+
+        async function loadPlaces() {
+            try {
+                const response = await fetch(`${API_BASE}/spots`, { headers: authHeaders() });
+                const spots = response.ok ? await response.json() : [];
+                const select = document.getElementById('fPlace');
+                spots.filter(s => s.status !== 'archived')
+                    .sort((a, b) => a.title.localeCompare(b.title))
+                    .forEach(s => select.add(new Option(s.title, s._id)));
+                if (editing && editing.spotId) select.value = editing.spotId;
+            } catch (error) { /* the notice can still be saved without a place */ }
+        }
+
+        /* ---- the calendar ----------------------------------------------- */
+
+        const events = () => notices.filter(n => n.category === 'event');
+
+        function thisMonth() {
+            const [y, m] = dayKey(new Date().toISOString()).split('-').map(Number);
+            return { year: y, month: m };
+        }
+
+        function renderCalendar() {
+            if (!calMonth) calMonth = thisMonth();
+            const { year, month } = calMonth;
+            const title = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(Date.UTC(year, month - 1, 1));
+            document.getElementById('calTitle').textContent = title;
+            const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+            const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+            const today = dayKey(new Date().toISOString());
+            const pad = n => String(n).padStart(2, '0');
+            let shown = 0;
+            const cells = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="an-cal__dow">${d}</div>`);
+            for (let i = 0; i < first; i++) cells.push('<div class="an-cal__day an-cal__day--blank" aria-hidden="true"></div>');
+            for (let d = 1; d <= days; d++) {
+                const key = `${year}-${pad(month)}-${pad(d)}`;
+                const onDay = events().filter(e => dayKey(e.startsAt) <= key && dayKey(e.endsAt) >= key);
+                shown += onDay.filter(e => dayKey(e.startsAt) === key || d === 1).length;
+                cells.push(`<div class="an-cal__day${onDay.length ? ' an-cal__day--busy' : ''}${key === today ? ' an-cal__day--today' : ''}">
+                    <span class="an-cal__num">${d}</span>
+                    <div class="an-cal__chips">${onDay.map(e => `<button type="button" class="an-cal__chip${e.hidden ? ' is-hidden' : ''}" data-edit="${escapeHtml(e._id)}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</button>`).join('')}</div>
+                </div>`);
+            }
+            document.getElementById('calGrid').innerHTML = cells.join('');
+            document.getElementById('calEmpty').hidden = shown > 0;
+        }
+
+        function renderEvents() {
+            const box = document.getElementById('eventList');
+            document.getElementById('eventsTitle').textContent = showPastEvents ? 'Past events' : 'Upcoming events';
+            document.getElementById('eventsSwitch').textContent = showPastEvents ? 'Upcoming events' : 'Past events';
+            const list = events().filter(e => (e.state === 'ended') === showPastEvents)
+                .sort((a, b) => showPastEvents ? String(b.endsAt).localeCompare(String(a.endsAt)) : String(a.startsAt).localeCompare(String(b.startsAt)));
+            if (!list.length) {
+                box.innerHTML = `<div class="ztims-empty m-4">${showPastEvents ? 'No past events.' : 'No upcoming events.'}</div>`;
+                return;
+            }
+            box.innerHTML = list.map(e => `
+                <button type="button" class="an-event" data-edit="${escapeHtml(e._id)}">
+                    <span class="an-dateblock"><b>${fmt(e.startsAt, { day: 'numeric' })}</b><span>${fmt(e.startsAt, { month: 'short' })}</span></span>
+                    <span class="min-w-0"><b>${escapeHtml(e.title)}${e.hidden ? ' <span class="tone-pill tone-neutral">Hidden</span>' : ''}</b>
+                        <small>${escapeHtml([e.place ? e.place.title : '', whenLine(e)].filter(Boolean).join(' · '))}</small></span>
+                </button>`).join('');
+        }
+
+        /* ---- the tabs --------------------------------------------------- */
+
+        const TABS = ['announcements', 'calendar'];
+        function showTab(name, { focus = false } = {}) {
+            if (!TABS.includes(name)) name = 'announcements';
+            for (const tab of TABS) {
+                const on = tab === name;
+                const button = document.getElementById('tab-' + tab);
+                button.setAttribute('aria-selected', String(on));
+                button.tabIndex = on ? 0 : -1;
+                document.getElementById(tab + 'Panel').hidden = !on;
+                if (on && focus) button.focus();
+            }
+            if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
+        }
+
+        function wire() {
+            document.querySelector('[role="tablist"]').addEventListener('click', event => {
+                const tab = event.target.closest('[role="tab"]');
+                if (tab) showTab(tab.id.replace('tab-', ''));
+            });
+            document.querySelector('[role="tablist"]').addEventListener('keydown', event => {
+                if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+                const current = TABS.findIndex(t => document.getElementById('tab-' + t).getAttribute('aria-selected') === 'true');
+                showTab(TABS[(current + (event.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length], { focus: true });
+            });
+            window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+            document.getElementById('noticeList').addEventListener('click', event => {
+                const edit = event.target.closest('[data-edit]');
+                if (edit) return openForEdit(edit.dataset.edit);
+                const hide = event.target.closest('[data-hide]');
+                if (hide) setHidden(hide.dataset.hide, !hide.dataset.hidden, hide);
+            });
+            for (const id of ['calGrid', 'eventList']) {
+                document.getElementById(id).addEventListener('click', event => {
+                    const edit = event.target.closest('[data-edit]');
+                    if (edit) openForEdit(edit.dataset.edit);
+                });
+            }
+            document.getElementById('listSwitch').addEventListener('click', () => { showPast = !showPast; renderList(); });
+            document.getElementById('eventsSwitch').addEventListener('click', () => { showPastEvents = !showPastEvents; renderEvents(); });
+            document.getElementById('calPrev').addEventListener('click', () => {
+                calMonth = calMonth.month === 1 ? { year: calMonth.year - 1, month: 12 } : { year: calMonth.year, month: calMonth.month - 1 };
+                renderCalendar();
+            });
+            document.getElementById('calNext').addEventListener('click', () => {
+                calMonth = calMonth.month === 12 ? { year: calMonth.year + 1, month: 1 } : { year: calMonth.year, month: calMonth.month + 1 };
+                renderCalendar();
+            });
+
+            document.getElementById('noticeForm').addEventListener('submit', save);
+            document.getElementById('formCancel').addEventListener('click', () => fillForm(null));
+            document.getElementById('fPhotoBtn').addEventListener('click', () => document.getElementById('fPhotoInput').click());
+            document.getElementById('fPhotoInput').addEventListener('change', event => choosePhoto(event.target.files[0]));
+            document.getElementById('fPhotoRemove').addEventListener('click', () => showPhoto(''));
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            mountPortalAccountMenu();
+            if (!guardOfficerSession()) return;
+            wire();
+            showTab(location.hash.slice(1));
+            fillForm(null);
+            loadPlaces();
+            load();
+        });
+    </script>
+
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
+
+<script>
+/* Signing out goes straight back to the public site: the session is cleared here
+   and the person lands on the main page, instead of stopping at a page whose only
+   purpose was to say they had left. */
+(function () {
+    var link = document.getElementById('logoutLink');
+    if (!link) return;
+
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        try {
+            window.ztimsTheme.clearStorage();
+            sessionStorage.clear();
+        } catch (e) { /* private browsing */ }
+
+        if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+        // replace(), not href: the portal must not come back with the back button.
+        setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+    });
+})();
+</script>
+
+<script>
+/* The drawer's open state. Only ever active below 640px, where the CSS above
+   turns the rail into one; above that the button and scrim are hidden and this
+   does nothing. */
+(function () {
+    var openBtn = document.getElementById('navOpenBtn');
+    var scrim = document.getElementById('navScrim');
+    var aside = document.querySelector('aside');
+    if (!openBtn || !scrim || !aside) return;
+
+    function setOpen(open) {
+        document.body.classList.toggle('nav-open', open);
+        openBtn.setAttribute('aria-expanded', String(open));
+    }
+
+    openBtn.addEventListener('click', function () {
+        setOpen(!document.body.classList.contains('nav-open'));
+    });
+    scrim.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+    // Choosing a destination should take you there, not leave the drawer over it.
+    aside.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+
+    // Rotating to landscape or resizing past the breakpoint must not leave the
+    // body locked by a drawer that is no longer on screen.
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 640) setOpen(false);
+    });
+})();
+</script>
+<!-- Marks the sidebar link for the page you are on. -->
+<script type="module" src="../shared/photo-upload.js"></script>
+<script type="module" src="../shared/nav-active.js"></script>
+<script type="module" src="../shared/idle-signout.js"></script>
+</body>
+</html>

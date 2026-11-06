@@ -478,3 +478,49 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
                 color: rgb(var(--ztims-primary-text)); font-weight: 700; text-decoration: none; }
 .pg-card--add:hover { background: rgb(var(--ztims-primary) / .06); }
 .pg-card--add .material-symbols-outlined { font-size: 40px; }
+
+/* The officer's Announcements and events (admin_announcements.html): the
+   title with its two tabs on the right, the list beside the form, and the
+   calendar beside the upcoming events. Each tab fades in. */
+.an-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem 2rem;
+           border-bottom: 1px solid rgb(var(--ztims-outline)); }
+.an-head .settings-tab { font-size: .95rem; }
+.an-kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
+.an-panel[hidden] { display: none; }
+.an-panel { animation: ztimsFadeIn var(--dur-standard, 240ms) var(--ease-decelerate, ease) both; }
+@media (prefers-reduced-motion: reduce) { .an-panel { animation: none; } }
+.an-split { display: grid; gap: 1.5rem; align-items: start; }
+@media (min-width: 1100px) { .an-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (min-width: 1100px) { .an-split--cal { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+.an-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.an-bar h2 { font-size: 1.05rem; font-weight: 800; }
+.an-link { font-weight: 700; color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; cursor: pointer; }
+.an-list { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); }
+.an-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; }
+.an-row + .an-row { border-top: 1px solid rgb(var(--ztims-outline)); }
+.an-row.is-hidden .an-row__title { color: rgb(var(--ztims-on-surface-variant)); }
+.an-row__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .88rem; color: rgb(var(--ztims-on-surface-variant)); }
+.an-row__title { font-weight: 800; font-size: 1.02rem; margin-top: .45rem; overflow-wrap: anywhere; }
+.an-row__actions { display: flex; gap: .4rem; flex: none; }
+.an-row__actions .pg-btn { min-height: 38px; padding: 0 .95rem; font-size: .88rem; }
+.an-note { margin-top: .6rem; font-size: .88rem; color: rgb(var(--ztims-on-surface-variant)); }
+.an-form { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); padding: 1.35rem; display: grid; gap: 1rem; }
+.an-form h2 { font-size: 1.3rem; font-weight: 800; }
+.an-form .field { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.an-split > *, .an-form > *, .an-two > * { min-width: 0; }
+.an-form textarea.field { min-height: 6.5rem; resize: vertical; }
+.an-two { display: grid; gap: 1rem; }
+@media (min-width: 560px) { .an-two { grid-template-columns: 1fr 1fr; } }
+.an-photo { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem;
+            border: 1px dashed rgb(var(--ztims-outline-variant, var(--ztims-outline))); color: rgb(var(--ztims-on-surface-variant)); }
+.an-photo img { width: 5.5rem; height: 3.6rem; object-fit: cover; }
+.an-photo #fPhotoRemove { color: rgb(var(--ztims-error)); }
+.an-photo__side { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.an-form__actions { display: flex; justify-content: flex-end; gap: .6rem; padding-top: .25rem; }
+.an-calhead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.an-calhead h2 { font-size: 1.25rem; font-weight: 800; }
+.an-event { display: flex; gap: 1rem; align-items: center; width: 100%; padding: .9rem 1.15rem; text-align: left; background: none; border: 0; cursor: pointer; color: inherit; }
+.an-event + .an-event { border-top: 1px solid rgb(var(--ztims-outline)); }
+.an-event:hover { background: rgb(var(--ztims-secondary) / .08); }
+.an-event b { display: block; font-size: 1.02rem; font-weight: 800; }
+.an-event small { display: block; color: rgb(var(--ztims-on-surface-variant)); font-size: .88rem; }

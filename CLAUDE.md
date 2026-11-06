@@ -764,6 +764,26 @@ Refresh.
 - Checked on the server: category, title and text lengths, end ≥ start, the
   place exists, and the photo passes `checkPhotoSources` (the listings' hosts).
 - No Facebook feature: no Facebook code, tokens or fields (the user's decision).
+- **The officer's page** (`admin/admin_announcements.html`, "Announcements" in
+  the officer menu after Collections; `nav-active.js` marks it by its file
+  name), from the design images in the notes repo
+  (`Design/Announcements and events/`): "Tourism Office" kicker, the title, and
+  two tabs on the right with their own addresses (`#announcements`,
+  `#calendar`; `.settings-tab`; each panel fades in, `.an-panel`, stilled by
+  reduced motion). **Announcements**: Published notices (current and hidden;
+  "Past announcements" swaps to the ended ones) as rows (`.an-row`: category
+  pill `.an-cat--*`, "Live until …", an event's start, "Hidden", or "Hidden
+  after …" once ended; Edit and Hide / Show, no confirmation, nothing deleted)
+  beside the form (`.an-form`: Title, Category, Place — any listing not
+  archived — Start and End as `datetime-local` in Manila time, Text (English),
+  Text (Filipino or Bisaya), Photo through `photo-upload.js`, Cancel and Save
+  and publish; Edit fills the same form, "Save changes"). **Calendar of
+  events**: the month (`.an-cal`, Previous / Next; an event is a tangerine chip
+  on each day it covers, a dot on a phone; hidden ones struck through) beside
+  Upcoming events (`.an-dateblock`; "Past events" swaps the list). Clicking an
+  event opens it in the form. The pills, date block and month grid are in
+  `theme.css` (shared with the visitor pages); the page layout `.an-*` is in
+  `portal-flat.css`.
 
 ### Attraction setup
 
