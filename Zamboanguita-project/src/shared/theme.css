@@ -1677,6 +1677,11 @@ button[onclick="toggleTheme()"] {
     background: transparent; color: inherit; font-weight: 700; font-size: .95rem; cursor: pointer;
 }
 .hm-search select:focus { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+/* A select's open list takes its colours from the select. On Windows a
+   transparent select (this one, over the search bar) opens a white list
+   with the dark theme's light text, which can't be read. Every option gets
+   the page's own surface and text, in both themes. */
+select option, select optgroup { background-color: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface)); }
 .hm-search__go {
     display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
     height: 3rem; padding: 0 1.6rem; border: 0; border-radius: .75rem; cursor: pointer;
@@ -1694,23 +1699,6 @@ button[onclick="toggleTheme()"] {
     -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); text-decoration: none;
 }
 .hm-chip:hover { background: rgb(255 253 250 / .26); }
-
-/* The featured place, low on the right of the hero. */
-.hm-feature {
-    display: none; position: absolute; right: 2.5rem; bottom: 6rem; width: 18rem;
-    padding: 1rem; border-radius: 1.1rem; color: #FFFDFA; text-decoration: none;
-    background: rgb(255 253 250 / .14); border: 1px solid rgb(255 253 250 / .28);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-}
-@media (min-width: 1100px) { .hm-feature:not([hidden]) { display: block; } }
-.hm-feature__top { display: flex; gap: .75rem; align-items: center; }
-.hm-feature img { width: 3.5rem; height: 3.5rem; border-radius: .75rem; object-fit: cover; flex-shrink: 0; }
-.hm-feature__kicker { display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
-.hm-feature__name { display: block; font-weight: 700; line-height: 1.2; }
-.hm-feature__foot { display: flex; justify-content: space-between; align-items: center; margin-top: .85rem; font-size: .9rem; }
-.hm-feature__foot span { display: inline-flex; align-items: center; gap: .35rem; }
-.hm-feature__foot .material-symbols-outlined { font-size: 1.05rem; }
-.hm-feature:hover .hm-feature__go { text-decoration: underline; }
 
 /* The mouse at the foot of the hero: a way down. */
 .hm-scroll {

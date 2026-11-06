@@ -380,7 +380,10 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 - **Components.** Buttons `.btn` + `.btn-primary|secondary|ghost|accent|highlight|danger`
   (+ `.btn-sm`); fields `.field`, `.glass-field` (search over the hero);
   surfaces `.glass-panel`, `.glass-card`, `.ztims-card`, `.ztims-modal`;
-  `.ztims-dropdown` for anything that opens from a control; `.ztims-table`;
+  `.ztims-dropdown` for anything that opens from a control (a native
+  `<select>`'s options take the theme's surface and text, one rule in
+  `theme.css`, so a transparent select's list stays readable in dark mode on
+  Windows); `.ztims-table`;
   `.ztims-empty` for "nothing here yet" (add a `.tone-*` for a failed load);
   `.tone-*`/`.tone-pill` for status; `.cat-badge .cat-*` for categories.
   Toasts are pills on every page: each page builds them in `#toastHost`, and
@@ -863,9 +866,8 @@ Frontend only, no tables of their own:
   Negros Oriental, Philippines" pill, "Welcome to" and *Zamboanguita* (Fraunces
   italic, a peach-to-tangerine gradient), one line, the **search**
   (`#heroSearch`: field with name suggestions, category from 640px, Search
-  scrolls to the cards), "Popular:" three published places, a featured place
-  low on the right (1100px and wider; an office-run attraction that sells
-  tickets when there is one) and a mouse to scroll; a moving strip of what is
+  scrolls to the cards), "Popular:" three published places and a mouse to
+  scroll (no featured place: taken out November 2026, the user's choice); a moving strip of what is
   here (`.hm-marquee`, decoration); **Browse by interest** (`#browse`: "What are
   you *in the mood* for?", four big photo tiles — Beach & Sea, Diving &
   Snorkeling, Nature, Adventure — in `#categoryTiles` and four small cards —
@@ -896,7 +898,9 @@ Frontend only, no tables of their own:
   `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
   floating, rounded glass bar — an orange badge (`sunny`) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), Announcements, Events, History, My ticket, Staff (→ `staff_login.html`), the
+  (`index.html#map`), Announcements, Events, History, My ticket (no Staff link since November
+  2026, the user's choice: staff sign in from the footer's "Staff and
+  Enterprise Manager sign in"), the
   current page a solid ink pill (`aria-current="page"`; light in dark mode;
   the destination page counts as Destinations), then the round theme toggle
   and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
@@ -1271,7 +1275,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   `v1793436461/zambo-10_31_2026_4_46_PM`) is darkened toward its words by a
   gradient (`.hm-hero::before`), not by a brightness setting on the film. Keep
   what the design shows only where ZTIMS has the thing: the hero's "Popular"
-  places and featured place, the categories' counts and the office's details
+  places, the categories' counts and the office's details
   come from the database, never typed into the page. The Destination, History
   and Staff sign in pages follow the user's UX Pilot designs too (November
   2026), made in UX Pilot from the Framer mock-ups; UX Pilot's own HTML needs a

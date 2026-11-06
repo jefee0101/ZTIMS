@@ -273,7 +273,6 @@ body { overflow-x: hidden; }
                 <a href="src/events.html" class="site-link">Events</a>
                 <a href="src/history.html" class="site-link">History</a>
                 <a href="src/manage.html" class="site-link">My ticket</a>
-                <a href="src/staff_login.html" class="site-link">Staff</a>
             </nav>
 
             <div class="site-header__tools">
@@ -339,7 +338,6 @@ body { overflow-x: hidden; }
             </div>
 
             <!-- One place to start, low on the right (wide screens; filled once loaded). -->
-            <a id="heroFeature" class="hm-feature" hidden href="#featured"></a>
 
             <a href="#browse" class="hm-scroll" aria-label="Scroll to the destinations"></a>
         </section>
@@ -1052,9 +1050,8 @@ body { overflow-x: hidden; }
     }
 
     /* ---------------- the hero's places ----------------
-       "Popular": three published places with a photo, to start from; and one
-       featured place on the right — an office-run attraction that sells
-       tickets when there is one. Both only from what is published. */
+       "Popular": three published places with a photo, to start from, only
+       from what is published. (No featured place: taken out November 2026.) */
     function drawHeroExtras() {
         const withPhoto = allSpots.filter(spot => spot.imageUrl);
         const pick = (withPhoto.length ? withPhoto : allSpots).slice(0, 3);
@@ -1064,21 +1061,6 @@ body { overflow-x: hidden; }
                 `<a class="hm-chip" href="src/spot.html?spotId=${encodeURIComponent(spot._id)}">${escapeHtml(spot.title)}</a>`).join('');
             popular.hidden = false;
         }
-        const feature = withPhoto.find(spot => spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) || withPhoto[0];
-        const box = document.getElementById('heroFeature');
-        if (!feature) return;
-        const fee = Number(feature.entranceFee) || 0;
-        box.href = `src/spot.html?spotId=${encodeURIComponent(feature._id)}`;
-        box.innerHTML = `
-            <span class="hm-feature__top">
-                <img src="${escapeHtml(feature.imageUrl)}" alt=""/>
-                <span><span class="hm-feature__kicker">Featured</span><span class="hm-feature__name">${escapeHtml(feature.title)}</span></span>
-            </span>
-            <span class="hm-feature__foot">
-                <span><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span>${escapeHtml(isStayPlace(feature) ? 'Place to stay' : (priceText(feature) === 'Free' ? 'Free entrance' : priceText(feature)))}</span>
-                <span class="hm-feature__go">Explore →</span>
-            </span>`;
-        box.hidden = false;
     }
 
     /* ---------------- the tourism map ---------------- */
