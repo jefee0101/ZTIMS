@@ -913,7 +913,10 @@ Frontend only, no tables of their own:
   `.hs-*` in `theme.css`): the title and lead, the story in three paragraphs,
   "The municipality at a glance" as tinted tiles, "Where it is" and "The
   barangays" as heading-left / text-right rows, the town fiesta as a rounded
-  ember band, and the Wikipedia source note. No photo, no back link.
+  ember band, and the Wikipedia source note. Its one image is the Zamboanguita
+  Tourism Office logo (`public/zamboanguita-tourism-office.png`, the user's
+  choice, November 2026; `.hs-logo`: on a white tile so it reads in dark mode,
+  beside the title from 1024px, above it on a phone). No back link.
 - **Staff sign in** (`staff_login.html`), the user's UX Pilot design (November
   2026; `.ss-*` in `theme.css`): from 1024px the coast (the hero film's first
   frame) fills the left with "Keeping Zamboanguita ready for its visitors.";
