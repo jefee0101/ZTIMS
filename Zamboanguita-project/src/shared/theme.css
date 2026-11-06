@@ -2339,12 +2339,13 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .hs-wrap { width: min(77rem, 100% - 2.5rem); margin-left: auto; margin-right: auto; }
 .hs-intro { padding-top: 2.5rem; }
 @media (min-width: 640px) { .hs-intro { padding-top: 3.5rem; } }
-.hs-logo { margin: 0 0 1.5rem; width: 9rem; padding: .6rem; background: #FFFFFF; border: 1px solid rgb(var(--ztims-outline) / .7); border-radius: 24px; }
-.hs-logo img { display: block; width: 100%; height: auto; border-radius: 16px; }
+.hs-logo { margin: 0 auto 2rem; width: min(100%, 20rem); aspect-ratio: 4 / 5; display: grid; place-items: center; padding: 1.25rem;
+            background: #FFFFFF; border: 1px solid rgb(var(--ztims-outline) / .7); border-radius: 28px; box-shadow: var(--ztims-shadow-card); }
+.hs-logo img { display: block; width: 100%; height: auto; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
 @media (min-width: 1024px) {
-    .hs-intro { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; column-gap: 4rem; align-items: start; }
+    .hs-intro { display: grid; grid-template-columns: minmax(0, 1fr) 26rem; column-gap: 4rem; align-items: start; }
     .hs-intro > :not(.hs-logo) { grid-column: 1; }
-    .hs-logo { grid-column: 2; grid-row: 1 / span 3; width: 100%; margin: 0; padding: 1rem; }
+    .hs-logo { grid-column: 2; grid-row: 1 / span 3; width: 100%; margin: 0; padding: 2rem; }
 }
 .hs-title { font-size: clamp(2.25rem, 5.5vw, 3.75rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.04; color: rgb(var(--ztims-on-surface)); }
 .hs-lead { margin-top: 1.25rem; max-width: 40rem; font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: rgb(var(--ztims-on-surface-variant)); }
