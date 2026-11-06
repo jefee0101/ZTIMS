@@ -9,6 +9,7 @@
  */
 const { Table, query, transaction, normaliseDbError, isId, castField, sameValue } = require('./db');
 
+const ANNOUNCEMENT_CATEGORIES = ['advisory', 'event', 'closure', 'general'];
 const text = (options = {}) => ({ type: 'string', default: '', ...options });
 const required = (options = {}) => ({ type: 'string', required: true, ...options });
 const number = (options = {}) => ({ type: 'number', default: 0, ...options });
@@ -312,7 +313,22 @@ const feedback = new Table('feedback', {
     statusUpdatedByEmail: text()
 });
 
+/* Announcements and events (announcements.js). Only the officer writes them. */
+const announcements = new Table('announcements', {
+    category: required({ enum: ANNOUNCEMENT_CATEGORIES }),
+    title: required({ trim: true }),
+    body: required({ trim: true }),
+    bodyOther: text({ trim: true }),
+    startsAt: { type: 'date', required: true },
+    endsAt: { type: 'date', required: true },
+    spotId: ref(),
+    photoUrl: text({ trim: true }),
+    hidden: flag(false),
+    createdByEmail: text()
+});
+
 module.exports = {
+    announcements, ANNOUNCEMENT_CATEGORIES,
     officers,
     managers,
     spots,

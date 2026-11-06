@@ -2506,6 +2506,10 @@ app.use('/api', attractions({ requireAdmin }));
 ========================================== */
 app.use('/api', require('./office')({ requireAdmin }));
 
+/* Announcements and the calendar of events (announcements.js): the public
+   reads, the officer posts. Photos pass the same source check as listings. */
+app.use('/api', require('./announcements')({ requireAdmin, checkPhotoSources }));
+
 /* ==========================================
    MANAGE MY TICKET — a visitor moves or cancels with the code and
    the email it was bought with (manage.js)

@@ -944,6 +944,40 @@ $$;
 
 
 -- ---------------------------------------------------------------------------
+-- Announcements and the calendar of events (November 2026). Only the Tourism
+-- Officer posts; a notice is live when saved and leaves the public site after
+-- its end. Never deleted: `hidden` takes one down and brings it back.
+-- ---------------------------------------------------------------------------
+create table if not exists public.announcements (
+    id                  text primary key default public.ztims_new_id(),
+    category            text not null
+                        constraint announcements_category
+                        check (category in ('advisory', 'event', 'closure', 'general')),
+    title               text not null
+                        constraint announcements_title_length check (char_length(btrim(title)) between 1 and 140),
+    body                text not null
+                        constraint announcements_body_length check (char_length(btrim(body)) between 1 and 4000),
+    -- The same notice in Filipino or Bisaya, when the office writes one.
+    body_other          text not null default ''
+                        constraint announcements_body_other_length check (char_length(body_other) <= 4000),
+    starts_at           timestamptz not null,
+    ends_at             timestamptz not null,
+    spot_id             text references public.spots (id),
+    photo_url           text not null default ''
+                        constraint announcements_photo_url_length check (char_length(photo_url) <= 500),
+    hidden              boolean not null default false,
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint announcements_ends_after_start check (ends_at >= starts_at)
+);
+
+create index if not exists announcements_hidden_ends_idx on public.announcements (hidden, ends_at);
+create index if not exists announcements_category_starts_idx on public.announcements (category, starts_at);
+create index if not exists announcements_spot_idx on public.announcements (spot_id);
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -953,7 +987,7 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
-        'emergency_numbers', 'register_entries'
+        'emergency_numbers', 'register_entries', 'announcements'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -966,7 +1000,7 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
-        'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests'
+        'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

@@ -648,7 +648,7 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 19 tables in all, with
+  `gateway_ref`, refund fields and `is_demo`. 20 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
   `emergency_numbers` and the Guest Register's `register_entries` /
   `register_entry_guests`.
@@ -736,6 +736,34 @@ from" the page; a new message has a tangerine edge. One main button — **Mark
 resolved**, or **Reopen** once resolved — and a ⋯ menu (Reply by email, a
 `mailto:` with a subject, when there is an email; Mark read for a new one). No
 Refresh.
+
+### Announcements and events (November 2026)
+
+`announcements.js`, mounted at `/api`; one table, `announcements` (category
+`advisory` | `event` | `closure` | `general`, `title` ≤ 140, `body` ≤ 4000,
+`body_other` — the same notice in Filipino or Bisaya, optional — `starts_at`,
+`ends_at` ≥ start, `spot_id` (optional place), `photo_url`, `hidden`,
+`created_by_email`; index on `(hidden, ends_at)`). The user's decisions:
+- **Only the Tourism Officer posts**, no approval step: live when saved.
+  `POST /api/announcements`, `PUT /api/announcements/:id`, `PATCH
+  /api/announcements/:id/hidden` and `GET /api/announcements/admin`
+  (everything, hidden and ended included) are `requireAdmin`. **No delete
+  route**: records are never deleted, only hidden.
+- **The public** (`Cache-Control` 60 s): `GET /api/announcements` (not hidden,
+  not ended; `?category=`, `?spotId=` for a destination's notices,
+  `?page=&limit=`, returns `{ items, total, page, pages }`),
+  `GET /api/announcements/:id` (a hidden one, or an ended one that is not an
+  event, is 404), `GET /api/events?month=YYYY-MM` (every event touching that
+  Manila month, ended ones too, for the calendar; without `month`, the events
+  still to come, soonest first, `?limit=`) and `GET /api/events/past` (ended
+  events, latest first, paged). A notice's `place` is shown only while that
+  listing is published; the public never sees `created_by_email`.
+- **Manila time.** A time sent without an offset ("2026-11-21T07:00", what a
+  `datetime-local` field gives) is Manila's (`manilaTime`); the API returns ISO
+  times and each item's `state` (`live` | `upcoming` | `ended` | `hidden`).
+- Checked on the server: category, title and text lengths, end ≥ start, the
+  place exists, and the photo passes `checkPhotoSources` (the listings' hosts).
+- No Facebook feature: no Facebook code, tokens or fields (the user's decision).
 
 ### Attraction setup
 
