@@ -298,44 +298,57 @@ body { overflow-x: hidden; }
 
     <!-- The calendar of events (announcements.js), from the design image in
          the notes repo. Styles: .np-* and .an-* in theme.css. -->
-    <main class="flex-1 np-page">
+    <!-- Styles: .ev-* at the end of theme.css (this page only), over the
+         shared .np-* and .an-* ones. -->
+    <main class="flex-1 np-page ev-page">
         <div class="np-wrap">
-            <nav class="np-crumbs" aria-label="Breadcrumb"><a href="../index.html">Home</a> › Calendar of events</nav>
-            <div class="np-head">
+            <div class="ev-head">
                 <div>
                     <p class="np-kicker">Municipal Tourism Office</p>
-                    <h1 class="np-title">Calendar of events</h1>
+                    <h1 class="ev-title">Calendar <span class="hm-serif">of events</span></h1>
+                    <a href="announcements.html" class="ev-pill">Announcements<span class="ev-pill__go" aria-hidden="true"><span class="material-symbols-outlined">arrow_forward</span></span></a>
                 </div>
-                <a href="announcements.html" class="np-link">Go to announcements</a>
+                <!-- The next event and how long until it starts (nextUp below). -->
+                <section id="nextUp" class="ev-next" aria-labelledby="nextTitle" hidden>
+                    <div class="ev-next__top"><span>Next up</span><span id="nextTag" class="ev-next__tag">Upcoming</span></div>
+                    <h2 id="nextTitle"></h2>
+                    <p id="nextWhen"></p>
+                    <div id="nextCount" class="ev-count" aria-hidden="true">
+                        <span><b data-unit="d">0</b>Days</span><span><b data-unit="h">0</b>Hrs</span><span><b data-unit="m">0</b>Min</span><span><b data-unit="s">0</b>Sec</span>
+                    </div>
+                </section>
             </div>
 
-            <div class="np-bar">
-                <div id="whichEvents" class="np-chips" role="group" aria-label="Events">
+            <div class="ev-bar">
+                <div id="whichEvents" class="ev-seg" role="group" aria-label="Events">
                     <button type="button" data-which="upcoming" aria-pressed="true">Upcoming</button>
                     <button type="button" data-which="past" aria-pressed="false">Past events</button>
                 </div>
-                <div class="np-month">
-                    <button type="button" id="monthPrev" class="np-btn np-btn--plain">Previous</button>
+                <div class="ev-month">
+                    <button type="button" id="monthPrev" class="ev-nav"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>Previous</button>
                     <h2 id="monthTitle" aria-live="polite"></h2>
-                    <button type="button" id="monthNext" class="np-btn np-btn--plain">Next</button>
+                    <button type="button" id="monthNext" class="ev-nav">Next<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
+                    <button type="button" id="monthToday" class="ev-today">Today</button>
                 </div>
             </div>
 
             <div class="np-grid np-grid--cal">
-                <div>
+                <div class="ev-calcard">
                     <div class="overflow-x-auto"><div id="calGrid" class="an-cal min-w-[20rem]"></div></div>
                     <p id="calEmpty" class="np-nothing" hidden>No events this month.</p>
+                    <p class="ev-legend"><span><i class="ev-dot ev-dot--today" aria-hidden="true"></i>Today</span><span><i class="ev-dot" aria-hidden="true"></i>Event</span><span><span class="material-symbols-outlined" aria-hidden="true">touch_app</span>Select an event to see details</span></p>
                 </div>
                 <aside class="grid gap-6">
                     <section class="np-box" aria-labelledby="listHead">
                         <div id="eventDetail" hidden></div>
-                        <h2 id="listHead" class="np-box__h">Upcoming events</h2>
+                        <div class="ev-listhead"><h2 id="listHead">Upcoming events</h2><span id="listCount" class="ev-badge" hidden></span></div>
                         <div id="eventList"></div>
                     </section>
-                    <section class="np-box--plain" aria-labelledby="planHead">
+                    <section class="ev-plan" aria-labelledby="planHead">
+                        <span class="ev-plan__icon" aria-hidden="true"><span class="material-symbols-outlined">celebration</span></span>
                         <h2 id="planHead">Plan around an event</h2>
                         <p>Check opening days and buy tickets for places near the event.</p>
-                        <a href="../index.html#featured" class="np-btn">Browse destinations</a>
+                        <a href="../index.html#featured" class="ev-plan__go">Browse destinations<span aria-hidden="true"><span class="material-symbols-outlined">arrow_forward</span></span></a>
                     </section>
                 </aside>
             </div>
@@ -359,9 +372,40 @@ body { overflow-x: hidden; }
     function eventRow(e, past) {
         const N = window.ZTIMS_NOTICES;
         return `<div class="np-event">${N.dateBlock(e.startsAt)}
-            <div class="min-w-0"><b>${N.esc(e.title)}</b>
+            <div class="min-w-0 ev-rowtext"><b>${N.esc(e.title)}</b>
                 <small>${[e.place ? N.place(e, '') : '', past ? N.shortDate(e.startsAt) : N.when(e)].filter(Boolean).join(' · ')}</small>
-                ${past ? '' : `<button type="button" class="np-link" data-ics="${N.esc(e._id)}">Add to calendar</button>`}</div></div>`;
+                ${past ? '' : `<button type="button" class="np-link ev-ics" data-ics="${N.esc(e._id)}"><span class="material-symbols-outlined" aria-hidden="true">calendar_add_on</span>Add to calendar</button>`}</div>
+            <button type="button" class="ev-open" data-event="${N.esc(e._id)}" aria-label="Open ${N.esc(e.title)}"><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button></div>`;
+    }
+
+    /* The next event to come and how long until it starts; one that has
+       already started says so instead of counting. */
+    let nextTimer = null;
+    async function loadNext() {
+        const N = window.ZTIMS_NOTICES;
+        const box = document.getElementById('nextUp');
+        clearInterval(nextTimer);
+        let e;
+        try { e = remember(await N.get(API_BASE, '/events?limit=1'))[0]; } catch (error) { e = null; }
+        if (!e) { box.hidden = true; return; }
+        document.getElementById('nextTitle').textContent = e.title;
+        document.getElementById('nextWhen').textContent = `${N.shortDate(e.startsAt)} · ${N.when(e)}`;
+        const start = new Date(e.startsAt).getTime();
+        const count = document.getElementById('nextCount');
+        const tag = document.getElementById('nextTag');
+        const pad = n => String(n).padStart(2, '0');
+        const tick = () => {
+            const left = Math.max(0, Math.floor((start - Date.now()) / 1000));
+            const started = left === 0;
+            tag.textContent = started ? 'Happening now' : 'Upcoming';
+            count.hidden = started;
+            if (started) { clearInterval(nextTimer); return; }
+            const parts = { d: Math.floor(left / 86400), h: Math.floor(left / 3600) % 24, m: Math.floor(left / 60) % 60, s: left % 60 };
+            count.querySelectorAll('[data-unit]').forEach(b => { b.textContent = b.dataset.unit === 'd' ? parts.d : pad(parts[b.dataset.unit]); });
+        };
+        tick();
+        nextTimer = setInterval(tick, 1000);
+        box.hidden = false;
     }
 
     async function loadMonth() {
@@ -389,8 +433,12 @@ body { overflow-x: hidden; }
             const events = remember(past ? (await N.get(API_BASE, '/events/past?limit=10')).items : await N.get(API_BASE, '/events?limit=10'));
             box.innerHTML = events.length ? events.map(e => eventRow(e, past)).join('')
                 : `<p class="np-empty">${past ? 'No past events.' : 'Nothing scheduled.'}</p>`;
+            const badge = document.getElementById('listCount');
+            badge.textContent = events.length;
+            badge.hidden = !events.length;
         } catch (error) {
             box.innerHTML = '<p class="np-empty">Not available right now.</p>';
+            document.getElementById('listCount').hidden = true;
         }
     }
 
@@ -423,6 +471,10 @@ body { overflow-x: hidden; }
             month = month.month === 12 ? { year: month.year + 1, month: 1 } : { year: month.year, month: month.month + 1 };
             loadMonth();
         });
+        document.getElementById('monthToday').addEventListener('click', () => {
+            month = N.thisMonth();
+            loadMonth();
+        });
         document.getElementById('whichEvents').addEventListener('click', e => {
             const b = e.target.closest('button[data-which]');
             if (!b) return;
@@ -437,9 +489,12 @@ body { overflow-x: hidden; }
         document.querySelector('aside').addEventListener('click', e => {
             const b = e.target.closest('[data-ics]');
             if (b && known.get(b.dataset.ics)) N.downloadCalendar(known.get(b.dataset.ics));
+            const open = e.target.closest('[data-event]');
+            if (open) showDetail(open.dataset.event);
         });
         loadMonth();
         loadList();
+        loadNext();
     });
 </script>
 

@@ -482,10 +482,6 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 /* The officer's Announcements and events (admin_announcements.html): the
    title with its two tabs on the right, the list beside the form, and the
    calendar beside the upcoming events. Each tab fades in. */
-.an-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem 2rem;
-           border-bottom: 1px solid rgb(var(--ztims-outline)); }
-.an-head .settings-tab { font-size: .95rem; }
-.an-kicker { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
 .an-panel[hidden] { display: none; }
 .an-panel { animation: ztimsFadeIn var(--dur-standard, 240ms) var(--ease-decelerate, ease) both; }
 @media (prefers-reduced-motion: reduce) { .an-panel { animation: none; } }
@@ -494,6 +490,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 @media (min-width: 1100px) { .an-split--cal { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
 .an-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
 .an-bar h2 { font-size: 1.05rem; font-weight: 800; }
+.an-switch { min-height: 38px; padding: 0 .95rem; font-size: .88rem; }
 .an-link { font-weight: 700; color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; cursor: pointer; }
 .an-list { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); }
 .an-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; }

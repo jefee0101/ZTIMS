@@ -522,15 +522,13 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-6">
 
-            <div class="an-head">
-                <div class="pb-3">
-                    <p class="an-kicker">Tourism Office</p>
-                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Announcements and events</h1>
-                </div>
-                <div role="tablist" aria-label="Announcements and events" class="flex gap-x-2">
-                    <button role="tab" id="tab-announcements" aria-controls="announcementsPanel" aria-selected="true" class="settings-tab">Announcements</button>
-                    <button role="tab" id="tab-calendar" aria-controls="calendarPanel" aria-selected="false" tabindex="-1" class="settings-tab">Calendar of events</button>
-                </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Announcements and events</h1>
+
+            <div role="tablist" aria-label="Announcements and events" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-announcements" aria-controls="announcementsPanel" aria-selected="true" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">campaign</span>Announcements</button>
+                <button role="tab" id="tab-calendar" aria-controls="calendarPanel" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">calendar_month</span>Calendar of events</button>
             </div>
 
             <!-- Announcements: the notices, and the form that adds or edits one. -->
@@ -539,7 +537,7 @@ body { overflow-x: hidden; }
                     <div>
                         <div class="an-bar">
                             <h2 id="listTitle">Published notices</h2>
-                            <button type="button" id="listSwitch" class="an-link">Past announcements</button>
+                            <button type="button" id="listSwitch" class="pg-btn pg-btn--plain an-switch">Past announcements</button>
                         </div>
                         <div id="noticeList" class="an-list"></div>
                         <p class="an-note">A notice stops showing on the website after its end date.</p>
@@ -607,7 +605,7 @@ body { overflow-x: hidden; }
                     <div>
                         <div class="an-bar">
                             <h2 id="eventsTitle">Upcoming events</h2>
-                            <button type="button" id="eventsSwitch" class="an-link">Past events</button>
+                            <button type="button" id="eventsSwitch" class="pg-btn pg-btn--plain an-switch">Past events</button>
                         </div>
                         <div id="eventList" class="an-list"></div>
                         <p class="an-note">Events move to Past events when they end.</p>

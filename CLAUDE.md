@@ -767,10 +767,12 @@ Refresh.
 - **The officer's page** (`admin/admin_announcements.html`, "Announcements" in
   the officer menu after Collections; `nav-active.js` marks it by its file
   name), from the design images in the notes repo
-  (`Design/Announcements and events/`): "Tourism Office" kicker, the title, and
-  two tabs on the right with their own addresses (`#announcements`,
+  (`Design/Announcements and events/`), laid out like Statistics and Settings
+  (November 2026, to match the other officer pages): the title only, then two
+  tabs under it with icons and their own addresses (`#announcements`,
   `#calendar`; `.settings-tab`; each panel fades in, `.an-panel`, stilled by
-  reduced motion). **Announcements**: Published notices (current and hidden;
+  reduced motion). The Past announcements / Past events switches are
+  `.pg-btn--plain` buttons (`.an-switch`). **Announcements**: Published notices (current and hidden;
   "Past announcements" swaps to the ended ones) as rows (`.an-row`: category
   pill `.an-cat--*`, "Live until …", an event's start, "Hidden", or "Hidden
   after …" once ended; Edit and Hide / Show, no confirmation, nothing deleted)
@@ -788,18 +790,31 @@ Refresh.
   `src/shared/notices.js` — `window.ZTIMS_NOTICES`: Manila dates, `when`
   ("7:00 AM to 11:00 AM", "all day"), the pill, the date block, the month grid
   and **Add to calendar**, an `.ics` made in the browser like `payment.html`'s):
-  `src/announcements.html` (crumbs, "Municipal Tourism Office" kicker,
+  `src/announcements.html` ("Municipal Tourism Office" kicker, no breadcrumb,
+  "Calendar of events" as an `.hm-btn--ghost` pill,
   category chips kept in `?category=`, a card per notice — pill, date, place
   linked to its page, title, English and second-language text, "Shown until …"
   or an event's time and Add to calendar, photo — 10 a page with Previous /
   Next, `#n-<id>` opens on one notice; beside it Upcoming events and the
-  Tourism Office box) and `src/events.html` (Upcoming / Past events, the month
-  with Previous / Next, a day's event opened above the list, Add to calendar
-  for events to come, "Plan around an event"). Both pages are in the visitor
+  Tourism Office box) and `src/events.html`. Both are rounded like the other
+  visitor pages (November 2026; the block "ANNOUNCEMENTS AND EVENTS ON THE
+  VISITOR PAGES" at the end of `theme.css`: rounded outlined cards, no coloured
+  left bars, no rule under the title). **Calendar of events** follows the
+  user's design (`.ev-*` at the end of `theme.css`, this page only): "Calendar
+  *of events*" (the serif accent), an Announcements pill, **Next up** — the next
+  event with a days / hours / minutes / seconds countdown, "Happening now" once
+  it has started (`loadNext`, `GET /api/events?limit=1`) — Upcoming / Past
+  events as a segmented pill, Previous / Next / **Today**, the month as rounded
+  day tiles in a card (today a tangerine circle, an event a burnt-orange chip,
+  a dot on a phone) with a legend, Upcoming events with a count and an open
+  arrow per event, and "Plan around an event" as a burnt-orange card. No photo
+  behind the title (the user's choice). The officer's calendar keeps its
+  square look. Both pages are in the visitor
   header (Announcements, Events, after Map, on every visitor page) and the
   footer's Explore column (Announcements, Calendar of events).
-- **Home** has one section for it, `#happening` ("What is happening in
-  Zamboanguita", between the hero's strip and Browse by interest): the newest
+- **Home** has one section for it, `#happening` ("What is *happening* in
+  Zamboanguita" in Home's own heading style, `.hm-section`/`.hm-head`, between
+  the hero's strip and Browse by interest): the newest
   notice that is not an event, the next three events, "See all" links, and
   "Nothing scheduled." when there is nothing. Nothing else on Home uses it.
 - **A destination's notices** show under its title on `spot.html`

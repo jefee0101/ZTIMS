@@ -2537,3 +2537,120 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
     .np-bar { flex-direction: column; align-items: stretch; }
     .np-month { justify-content: space-between; }
 }
+
+/* ==========================================================================
+   ANNOUNCEMENTS AND EVENTS ON THE VISITOR PAGES — the rounded look
+   --------------------------------------------------------------------------
+   The visitor pages follow the user's UX Pilot design (rounded cards, soft
+   shadows, pill buttons, no rules under titles); these pages and Home's
+   "What is happening" section use the same, so they no longer look like the
+   square staff portals. The shared pills, date block and month grid stay
+   square on the officer's page (portal look); they are rounded here only
+   inside the visitor wrappers (.np-page, .np-home, .sd-page).
+   ========================================================================== */
+.np-head { border-bottom: 0; padding-bottom: 0; }
+.np-title { font-size: clamp(2rem, 4.2vw, 3rem); line-height: 1.08; }
+.np-kicker { font-size: .75rem; letter-spacing: .18em; }
+.np-link { text-decoration: none; }
+.np-link:hover { text-decoration: underline; text-underline-offset: 3px; color: rgb(var(--ztims-primary-text)); }
+.np-card { border: 1px solid rgb(var(--ztims-outline)); border-radius: 1.25rem; background: rgb(var(--ztims-surface-high));
+           transition: box-shadow var(--dur-standard, 240ms) var(--ease-standard, ease); }
+.np-card:hover { box-shadow: 0 22px 44px -26px rgb(28 25 23 / .35); }
+.np-card--advisory, .np-card--closure, .np-card--event { border-left-color: rgb(var(--ztims-outline)); }
+.np-card.is-target { box-shadow: 0 0 0 3px rgb(var(--ztims-secondary)); }
+.np-card__photo { border-radius: .9rem; }
+.np-box { border-radius: 1.25rem; overflow: hidden; background: rgb(var(--ztims-surface-high)); }
+.np-box--plain { border: 1px solid rgb(var(--ztims-outline)); border-radius: 1.25rem; background: rgb(var(--ztims-secondary-container)); }
+.np-chips button { border-color: rgb(var(--ztims-outline)); font-weight: 600; }
+.np-chips button[aria-pressed="true"] { border-color: rgb(var(--ztims-on-surface)); }
+.np-notice { border: 1px solid rgb(var(--ztims-outline)); border-radius: 1rem; background: rgb(var(--ztims-secondary-container)); }
+.np-page .an-dateblock, .np-home .an-dateblock { border-radius: .85rem; border: 0; }
+.np-page .an-cal { border-radius: 1.25rem; overflow: hidden; }
+.np-page .an-cal__chip, .np-home .an-cal__chip { border-radius: .45rem; }
+.np-head__go { flex: none; }
+
+/* ==========================================================
+   CALENDAR OF EVENTS (src/events.html only, .ev-page) — the user's design,
+   November 2026: "Calendar of events" with the serif accent, the next event
+   with a countdown, rounded day tiles, a legend, Today, and the orange
+   "Plan around an event" card. No photo behind the title (the user's
+   choice). The officer's calendar keeps its square look (.an-cal alone).
+   ========================================================== */
+.ev-head { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1.5rem 2rem; }
+.ev-title { margin-top: .35rem; font-size: clamp(2.5rem, 6vw, 4.25rem); font-weight: 800; letter-spacing: -.035em; line-height: 1; color: rgb(var(--ztims-on-surface)); }
+.ev-title .hm-serif { display: block; padding-bottom: .06em; color: rgb(var(--ztims-primary-text)); }
+.ev-pill { display: inline-flex; align-items: center; gap: .7rem; margin-top: 1.25rem; min-height: 2.75rem; padding: .3rem .35rem .3rem 1.1rem; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .9rem; text-decoration: none; }
+.ev-pill__go { width: 2.1rem; height: 2.1rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-background)); }
+.ev-pill__go .material-symbols-outlined { font-size: 1.05rem; }
+.ev-pill:hover { border-color: rgb(var(--ztims-on-surface)); }
+
+.ev-next { width: min(100%, 24rem); padding: 1.1rem 1.25rem 1.25rem; border-radius: 1.25rem; background: rgb(28 25 23); color: rgb(250 247 242); box-shadow: 0 22px 44px -26px rgb(28 25 23 / .6); }
+.ev-next__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(250 247 242 / .75); }
+.ev-next__tag { display: inline-flex; align-items: center; gap: .35rem; letter-spacing: .04em; text-transform: none; font-size: .78rem; color: rgb(250 247 242); }
+.ev-next__tag::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: rgb(242 133 0); }
+.ev-next h2 { margin-top: .5rem; font-size: 1.2rem; font-weight: 800; line-height: 1.25; }
+.ev-next p { margin-top: .25rem; font-size: .88rem; color: rgb(250 247 242 / .78); }
+.ev-count { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-top: 1rem; }
+.ev-count[hidden] { display: none; }
+.ev-count > span { display: grid; justify-items: center; padding: .55rem 0 .5rem; border-radius: .75rem; background: rgb(250 247 242 / .1); border: 1px solid rgb(250 247 242 / .16); font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgb(250 247 242 / .75); }
+.ev-count b { font-size: 1.5rem; font-weight: 800; line-height: 1.1; letter-spacing: 0; color: rgb(250 247 242); font-variant-numeric: tabular-nums; }
+
+.ev-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin: 2rem 0 1.25rem; }
+.ev-seg { display: inline-flex; gap: .25rem; padding: .3rem; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); }
+.ev-seg button { min-height: 2.5rem; padding: 0 1.15rem; border-radius: 9999px; font-weight: 600; font-size: .9rem; color: rgb(var(--ztims-on-surface)); }
+.ev-seg button[aria-pressed="true"] { background: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-background)); font-weight: 700; }
+.ev-month { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.ev-month h2 { min-width: 10rem; text-align: center; font-size: 1.3rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.ev-nav, .ev-today { display: inline-flex; align-items: center; gap: .35rem; min-height: 2.75rem; padding: 0 1rem; border-radius: 9999px; font-weight: 700; font-size: .9rem; }
+.ev-nav { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); color: rgb(var(--ztims-on-surface)); }
+.ev-nav:hover { border-color: rgb(var(--ztims-on-surface)); }
+.ev-nav .material-symbols-outlined { font-size: 1.05rem; }
+.ev-today { background: rgb(var(--ztims-secondary-container)); color: rgb(var(--ztims-on-secondary-container)); border: 1px solid rgb(var(--brand-tangerine) / .35); }
+
+.ev-calcard { padding: 1rem; border-radius: 1.5rem; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high)); box-shadow: 0 22px 44px -32px rgb(28 25 23 / .45); }
+.ev-page .an-cal { gap: .45rem; border: 0; border-radius: 0; overflow: visible; }
+.ev-page .an-cal__dow { padding: .3rem 0 .5rem; text-align: center; background: none; border: 0; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.ev-page .an-cal__day { min-height: 6rem; padding: .5rem; border: 1px solid transparent; border-radius: .85rem; background: rgb(var(--ztims-surface-low)); }
+.ev-page .an-cal__day--blank { background: none; }
+.ev-page .an-cal__day--busy { background: rgb(var(--ztims-secondary-container)); border-color: rgb(var(--brand-tangerine) / .45); }
+.ev-page .an-cal__num { min-width: 1.75rem; height: 1.75rem; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-size: .85rem; }
+.ev-page .an-cal__day--today .an-cal__num { background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); box-shadow: 0 0 0 3px rgb(var(--brand-tangerine) / .3); }
+.ev-page .an-cal__chip { border-radius: .5rem; padding: .3rem .45rem; background: rgb(var(--ztims-primary)); color: rgb(255 253 250); }
+.ev-legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: 1rem; padding-top: .85rem; border-top: 1px solid rgb(var(--ztims-outline)); font-size: .82rem; color: rgb(var(--ztims-on-surface-variant)); }
+.ev-legend > span { display: inline-flex; align-items: center; gap: .4rem; }
+.ev-legend .material-symbols-outlined { font-size: 1rem; color: rgb(var(--ztims-primary-text)); }
+.ev-dot { width: .65rem; height: .65rem; border-radius: 50%; background: rgb(var(--ztims-primary)); }
+.ev-dot--today { background: rgb(var(--brand-tangerine)); }
+
+.ev-listhead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.4rem; }
+.ev-listhead h2 { font-size: 1.15rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.ev-badge { min-width: 1.6rem; height: 1.6rem; padding: 0 .45rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgb(var(--ztims-surface-low)); border: 1px solid rgb(var(--ztims-outline)); font-size: .8rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.ev-page .np-event { align-items: center; }
+.ev-page .np-event + .np-event { border-top: 0; }
+.ev-rowtext { flex: 1; }
+.ev-page .an-dateblock span { color: rgb(242 133 0); }
+.ev-ics { display: inline-flex !important; align-items: center; gap: .3rem; }
+.ev-ics .material-symbols-outlined { font-size: 1rem; }
+.ev-open { width: 2.5rem; height: 2.5rem; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: rgb(var(--ztims-on-surface-variant)); }
+.ev-open:hover { background: rgb(var(--ztims-surface-low)); color: rgb(var(--ztims-on-surface)); }
+.ev-open .material-symbols-outlined { font-size: 1.15rem; }
+
+.ev-plan { display: grid; gap: .75rem; justify-items: start; padding: 1.5rem; border-radius: 1.5rem; background: linear-gradient(135deg, #bf5700, #a64b00 45%, #7a2e00); color: rgb(255 253 250); }
+.ev-plan__icon { width: 2.75rem; height: 2.75rem; border-radius: .8rem; display: inline-flex; align-items: center; justify-content: center; background: rgb(255 253 250 / .16); }
+.ev-plan__icon .material-symbols-outlined { font-size: 1.3rem; }
+.ev-plan h2 { margin-top: .25rem; font-size: 1.35rem; font-weight: 800; }
+.ev-plan p { font-size: .95rem; line-height: 1.55; color: rgb(255 253 250 / .88); }
+.ev-plan__go { display: inline-flex; align-items: center; gap: .75rem; margin-top: .25rem; min-height: 2.9rem; padding: .3rem .35rem .3rem 1.2rem; border-radius: 9999px; background: rgb(255 253 250); color: rgb(28 25 23); font-weight: 700; text-decoration: none; }
+.ev-plan__go > span { width: 2.2rem; height: 2.2rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgb(191 87 0); color: rgb(255 253 250); }
+.ev-plan__go .material-symbols-outlined { font-size: 1.05rem; }
+
+@media (max-width: 639px) {
+    .ev-next { width: 100%; }
+    .ev-bar { flex-direction: column; align-items: stretch; }
+    .ev-month { justify-content: space-between; }
+    .ev-month h2 { order: -1; width: 100%; min-width: 0; text-align: left; }
+    .ev-calcard { padding: .6rem; }
+    .ev-page .an-cal { gap: .25rem; }
+    .ev-page .an-cal__day { min-height: 3.5rem; padding: .3rem; border-radius: .6rem; }
+    .ev-page .an-cal__chip { width: .55rem; height: .55rem; padding: 0; }
+}
