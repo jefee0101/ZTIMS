@@ -2439,3 +2439,93 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .sd-near__card:has(.sd-near__link:focus-visible) { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
 .sd-near__meta { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
 .sd-near__price { margin-top: .15rem; font-size: .875rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+
+/* ==========================================================================
+   Announcements and events, the visitor's side (November 2026)
+   --------------------------------------------------------------------------
+   announcements.html, events.html, Home's "What is happening in
+   Zamboanguita" and the destination page's notice line, from the design
+   images in the notes repo. The category pills, date block and month grid are
+   the .an-* rules above, shared with the officer's page.
+   ========================================================================== */
+.np-wrap { width: min(77rem, 100% - 2.5rem); margin-left: auto; margin-right: auto; }
+.np-page { padding: 2rem 0 4rem; }
+.np-crumbs { font-size: .95rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-crumbs a { color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; }
+.np-head { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .5rem 2rem;
+           padding-bottom: 1rem; border-bottom: 3px solid rgb(var(--ztims-primary)); }
+.np-kicker { font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--ztims-primary-text)); }
+.np-title { margin-top: .35rem; font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; color: rgb(var(--ztims-on-surface)); }
+.np-link { font-weight: 700; color: rgb(var(--ztims-primary-text)); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-size: inherit; }
+.np-link:hover { color: rgb(var(--ztims-on-surface)); }
+.np-chips { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.5rem 0; }
+.np-chips button { min-height: 44px; padding: 0 1.15rem; border-radius: 9999px; border: 1px solid rgb(var(--ztims-on-surface)); background: transparent;
+                   color: rgb(var(--ztims-on-surface)); font-weight: 700; cursor: pointer; }
+.np-chips button[aria-pressed="true"] { background: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-background)); }
+.np-chips button:focus-visible, .np-btn:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.np-grid { display: grid; gap: 1.5rem; align-items: start; }
+@media (min-width: 1024px) { .np-grid { grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); } }
+@media (min-width: 1024px) { .np-grid--cal { grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 1fr); } }
+.np-list { display: grid; gap: 1rem; }
+.np-card { display: grid; gap: 1rem 1.5rem; padding: 1.4rem 1.5rem; background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline));
+           border-left: 4px solid rgb(var(--ztims-outline)); scroll-margin-top: 6rem; }
+.np-card--advisory { border-left-color: rgb(var(--brand-tangerine)); }
+.np-card--closure { border-left-color: rgb(var(--brand-ember)); }
+.np-card--event { border-left-color: rgb(var(--ztims-on-surface)); }
+.np-card.is-target { box-shadow: 0 0 0 3px rgb(var(--ztims-secondary)); }
+@media (min-width: 720px) { .np-card--photo { grid-template-columns: minmax(0, 1fr) 15rem; } }
+.np-card__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem; font-size: .92rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-card__title { margin-top: .6rem; font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 800; letter-spacing: -.015em; line-height: 1.2; color: rgb(var(--ztims-on-surface)); overflow-wrap: anywhere; }
+.np-card__body { margin-top: .6rem; font-size: 1.02rem; line-height: 1.65; color: rgb(var(--ztims-on-surface)); white-space: pre-line; overflow-wrap: anywhere; }
+.np-card__other { margin-top: .5rem; font-size: .98rem; line-height: 1.6; color: rgb(var(--ztims-on-surface-variant)); white-space: pre-line; overflow-wrap: anywhere; }
+.np-card__foot { margin-top: .7rem; display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; font-size: .92rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-card__photo { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: rgb(var(--ztims-surface-low)); }
+.np-place { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.np-place:hover { color: rgb(var(--ztims-primary-text)); }
+.np-box { background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline)); }
+.np-box__h { padding: 1.1rem 1.4rem; font-size: 1.15rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); border-bottom: 1px solid rgb(var(--ztims-outline)); }
+.np-box__foot { padding: 1rem 1.4rem; border-top: 1px solid rgb(var(--ztims-outline)); }
+.np-box--plain { border: 2px solid rgb(var(--ztims-on-surface)); padding: 1.3rem 1.4rem; display: grid; gap: .75rem; }
+.np-box--plain h2 { font-size: 1.15rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.np-box--plain p { color: rgb(var(--ztims-on-surface-variant)); }
+.np-event { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem 1.4rem; }
+.np-event + .np-event { border-top: 1px solid rgb(var(--ztims-outline)); }
+.np-event b { display: block; font-size: 1.05rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.np-event .an-dateblock b { display: inline; color: inherit; font-size: 1.35rem; }
+.np-event small { display: block; font-size: .92rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-event .np-link { display: inline-block; margin-top: .2rem; font-size: .92rem; }
+.np-empty { padding: 1.25rem 1.4rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 48px; padding: 0 1.4rem; border-radius: 9999px;
+          background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); font-weight: 700; text-decoration: none; border: 0; cursor: pointer; }
+.np-btn:hover { background: rgb(var(--ztims-primary-dim)); }
+.np-btn--plain { background: transparent; color: rgb(var(--ztims-on-surface)); border: 1px solid rgb(var(--ztims-on-surface)); }
+.np-btn--plain:hover { background: rgb(var(--ztims-on-surface) / .06); }
+.np-btn--plain:disabled { opacity: .4; cursor: default; }
+.np-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; color: rgb(var(--ztims-on-surface-variant)); }
+.np-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.5rem 0; }
+.np-bar .np-chips { margin: 0; }
+.np-month { display: flex; align-items: center; gap: .75rem; }
+.np-month h2 { min-width: 10rem; text-align: center; font-size: 1.3rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.np-detail { padding: 1.1rem 1.4rem; border-bottom: 1px solid rgb(var(--ztims-outline)); display: grid; gap: .45rem; }
+.np-detail h3 { font-size: 1.2rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.np-detail p { color: rgb(var(--ztims-on-surface)); white-space: pre-line; overflow-wrap: anywhere; }
+.np-detail .np-card__other { margin-top: 0; }
+/* The destination page's notice line. */
+.np-notice { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding: .75rem 1rem; margin-top: 1rem;
+             background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline)); border-left: 4px solid rgb(var(--brand-tangerine)); }
+.np-notice b { color: rgb(var(--ztims-on-surface)); }
+.np-notice > span:not(.an-cat) { color: rgb(var(--ztims-on-surface-variant)); font-size: .92rem; }
+/* Home: "What is happening in Zamboanguita", between the hero and Browse. */
+.np-home { padding: 3.5rem 0 1rem; }
+.np-home .np-head { margin-top: 0; }
+.np-home__grid { margin-top: 1.5rem; display: grid; gap: 1.25rem; align-items: start; }
+@media (min-width: 900px) { .np-home__grid { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); } }
+.np-home .np-card__body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+.np-home__label { padding: 1rem 1.4rem .25rem; font-size: .92rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+.np-nothing { margin-top: 1.25rem; color: rgb(var(--ztims-on-surface-variant)); }
+@media (max-width: 639px) {
+    .np-card { padding: 1.1rem 1.1rem; }
+    .np-month h2 { min-width: 0; font-size: 1.1rem; }
+    .np-bar { flex-direction: column; align-items: stretch; }
+    .np-month { justify-content: space-between; }
+}

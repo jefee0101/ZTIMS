@@ -253,6 +253,8 @@ body { overflow-x: hidden; }
             <nav class="site-header__nav" aria-label="Main">
                 <a href="../index.html" class="site-link" aria-current="page">Destinations</a>
                 <a href="../index.html#map" class="site-link">Map</a>
+                <a href="announcements.html" class="site-link">Announcements</a>
+                <a href="events.html" class="site-link">Events</a>
                 <a href="history.html" class="site-link">History</a>
                 <a href="manage.html" class="site-link">My ticket</a>
                 <a href="staff_login.html" class="site-link">Staff</a>
@@ -308,6 +310,7 @@ body { overflow-x: hidden; }
      the category markers. Loaded before the page script, which uses it. -->
 <script type="module" src="./shared/tourism-map.js"></script>
 
+<script type="module" src="./shared/notices.js"></script>
 <script type="module">
     const API_BASE = "/api";
     const content = document.getElementById('spotContent');
@@ -1478,6 +1481,8 @@ body { overflow-x: hidden; }
                     <div id="actionBar" hidden class="sd-actions hidden lg:flex"></div>
                 </div>
 
+                <div id="spotNotices" class="empty:hidden"></div>
+
                 ${glanceFacts(spot)}
 
                 <div class="sd-two">
@@ -1557,6 +1562,20 @@ body { overflow-x: hidden; }
         });
     }
 
+    /* The Tourism Office's notices for this place (announcements.js): one
+       short line each, linked to the notice on the Announcements page. */
+    async function renderNotices(spotId) {
+        const N = window.ZTIMS_NOTICES;
+        const box = document.getElementById('spotNotices');
+        if (!N || !box) return;
+        try {
+            const { items } = await N.get(API_BASE, `/announcements?spotId=${encodeURIComponent(spotId)}&limit=3`);
+            box.innerHTML = items.map(n => `<p class="np-notice">${N.pill(n.category)}<b>Notice: ${N.esc(n.title)}</b>
+                <span>${n.category === 'event' ? N.date(n.startsAt) + ', ' + N.when(n) : 'Until ' + N.date(n.endsAt)}</span>
+                <a class="np-link" href="announcements.html#n-${encodeURIComponent(n._id)}">Read the notice</a></p>`).join('');
+        } catch (error) { /* a missing notice line is no reason to fail the page */ }
+    }
+
     async function loadSpot() {
         const spotId = new URLSearchParams(window.location.search).get('spotId');
 
@@ -1586,6 +1605,7 @@ body { overflow-x: hidden; }
             // The footer script may have run before this page was drawn.
             if (window.ztimsEmergency) window.ztimsEmergency.fill();
             renderTicketOffer(spotId);
+            renderNotices(spotId);
         } catch (error) {
             console.error('❌ Failed to load destination:', error);
             doneLoading();

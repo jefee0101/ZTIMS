@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="./shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Explore Zamboanguita | Calendar of events</title>
+    <link rel="icon" href="../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+                    transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+                    transitionDuration: { DEFAULT: '220ms' },
+                    colors: {
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "primary-dim": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "secondary": "rgb(var(--ztims-secondary) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--ztims-surface-low) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "error": "rgb(var(--ztims-error) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
+                    },
+                    fontFamily: {
+                        headline: ["Poppins", "sans-serif"],
+                        display: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Plus Jakarta Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Both themes are defined as tokens so every component follows automatically,
+           rather than each one carrying its own light-mode override. */
+        :root {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+        html.dark {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+
+        body { background: var(--bg); color: var(--on-surface); }
+
+        /* The hidden attribute only gets display:none from the browser default,
+           which any Tailwind display class (.flex here) outranks. Without this,
+           elements toggled via el.hidden stay on screen. */
+        [hidden] { display: none !important; }
+
+        /* The identity gradient. It was gold into orange, which on the sand
+           ground was both unreadable and the loudest thing on the page — the
+           one element most responsible for the site reading as an orange
+           template. Ocean into teal carries the same emphasis and is legible
+           in both themes. */
+        .text-gradient {
+            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Likewise: a primary button is ocean into coastal blue. Gold is for the
+           occasional highlight, not for every call to action. */
+        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .star-input { cursor: pointer; transition: transform var(--dur-instant) var(--ease-spring); }
+        .star-input.filled { font-variation-settings: 'FILL' 1; }
+
+        /* .rise, its easing and the reduced-motion rule all live in
+           src/shared/motion.css now, so every page animates the same way and
+           there is one place that turns motion off. */
+    
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="./shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="./shared/motion.css"/>
+</head>
+<body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+
+<div class="content-shell min-h-screen flex flex-col">
+
+    <!-- The site's navigation. It was a rail down the side when this page had
+         several views to switch between; with browsing and history as ordinary
+         pages, a header says the same thing and gives the destinations the
+         whole width. -->
+    <!-- The visitor pages' header, the same on every one (styles: .site-header
+         and .site-link in src/shared/theme.css). Words only; the round theme
+         toggle is the one icon and comes last. On a phone it is two rows: the
+         name and the toggle, then the links across the full width. -->
+    <!-- The visitor pages' header, the same on every one (styles: .site-header
+         and .site-link in src/shared/theme.css). -->
+    <header class="site-header">
+        <div class="site-header__row">
+            <a href="../index.html" class="site-header__brand">
+                <span class="site-header__logo" aria-hidden="true"><span class="material-symbols-outlined">sunny</span></span>
+                <span class="site-header__name">
+                    <span class="site-header__title">ZAMBOANGUITA</span>
+                    <span class="site-header__sub">Tourism · Information System</span>
+                </span>
+            </a>
+
+            <nav class="site-header__nav" aria-label="Main">
+                <a href="../index.html" class="site-link">Destinations</a>
+                <a href="../index.html#map" class="site-link">Map</a>
+                <a href="announcements.html" class="site-link">Announcements</a>
+                <a href="events.html" class="site-link" aria-current="page">Events</a>
+                <a href="history.html" class="site-link">History</a>
+                <a href="manage.html" class="site-link">My ticket</a>
+                <a href="staff_login.html" class="site-link">Staff</a>
+            </nav>
+
+            <div class="site-header__tools">
+                <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
+                    <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+                </button>
+                <a href="../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
+            </div>
+        </div>
+    </header>
+
+    <!-- The calendar of events (announcements.js), from the design image in
+         the notes repo. Styles: .np-* and .an-* in theme.css. -->
+    <main class="flex-1 np-page">
+        <div class="np-wrap">
+            <nav class="np-crumbs" aria-label="Breadcrumb"><a href="../index.html">Home</a> › Calendar of events</nav>
+            <div class="np-head">
+                <div>
+                    <p class="np-kicker">Municipal Tourism Office</p>
+                    <h1 class="np-title">Calendar of events</h1>
+                </div>
+                <a href="announcements.html" class="np-link">Go to announcements</a>
+            </div>
+
+            <div class="np-bar">
+                <div id="whichEvents" class="np-chips" role="group" aria-label="Events">
+                    <button type="button" data-which="upcoming" aria-pressed="true">Upcoming</button>
+                    <button type="button" data-which="past" aria-pressed="false">Past events</button>
+                </div>
+                <div class="np-month">
+                    <button type="button" id="monthPrev" class="np-btn np-btn--plain">Previous</button>
+                    <h2 id="monthTitle" aria-live="polite"></h2>
+                    <button type="button" id="monthNext" class="np-btn np-btn--plain">Next</button>
+                </div>
+            </div>
+
+            <div class="np-grid np-grid--cal">
+                <div>
+                    <div class="overflow-x-auto"><div id="calGrid" class="an-cal min-w-[20rem]"></div></div>
+                    <p id="calEmpty" class="np-nothing" hidden>No events this month.</p>
+                </div>
+                <aside class="grid gap-6">
+                    <section class="np-box" aria-labelledby="listHead">
+                        <div id="eventDetail" hidden></div>
+                        <h2 id="listHead" class="np-box__h">Upcoming events</h2>
+                        <div id="eventList"></div>
+                    </section>
+                    <section class="np-box--plain" aria-labelledby="planHead">
+                        <h2 id="planHead">Plan around an event</h2>
+                        <p>Check opening days and buy tickets for places near the event.</p>
+                        <a href="../index.html#featured" class="np-btn">Browse destinations</a>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- Drawn by shared/site-footer.js, the same on every visitor page.
+         data-root is the way back to the project root from here. -->
+    <footer data-site-footer data-root="../"></footer>
+</div>
+<script type="module" src="./shared/site-footer.js"></script>
+<script type="module" src="./shared/notices.js"></script>
+<script>
+    const API_BASE = "/api";
+    let month = null, which = 'upcoming';
+    const known = new Map();     // every event drawn so far, by id
+
+    const remember = list => { list.forEach(e => known.set(e._id, e)); return list; };
+
+    function eventRow(e, past) {
+        const N = window.ZTIMS_NOTICES;
+        return `<div class="np-event">${N.dateBlock(e.startsAt)}
+            <div class="min-w-0"><b>${N.esc(e.title)}</b>
+                <small>${[e.place ? N.place(e, '') : '', past ? N.shortDate(e.startsAt) : N.when(e)].filter(Boolean).join(' · ')}</small>
+                ${past ? '' : `<button type="button" class="np-link" data-ics="${N.esc(e._id)}">Add to calendar</button>`}</div></div>`;
+    }
+
+    async function loadMonth() {
+        const N = window.ZTIMS_NOTICES;
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('monthTitle').textContent = N.monthTitle(month.year, month.month);
+        try {
+            const events = remember(await N.get(API_BASE, `/events?month=${month.year}-${pad(month.month)}`));
+            document.getElementById('calGrid').innerHTML = N.monthGrid(month.year, month.month, events);
+            document.getElementById('calEmpty').hidden = events.length > 0;
+        } catch (error) {
+            document.getElementById('calGrid').innerHTML = '';
+            const empty = document.getElementById('calEmpty');
+            empty.textContent = 'The calendar could not be loaded. Reload the page to try again.';
+            empty.hidden = false;
+        }
+    }
+
+    async function loadList() {
+        const N = window.ZTIMS_NOTICES;
+        const box = document.getElementById('eventList');
+        const past = which === 'past';
+        document.getElementById('listHead').textContent = past ? 'Past events' : 'Upcoming events';
+        try {
+            const events = remember(past ? (await N.get(API_BASE, '/events/past?limit=10')).items : await N.get(API_BASE, '/events?limit=10'));
+            box.innerHTML = events.length ? events.map(e => eventRow(e, past)).join('')
+                : `<p class="np-empty">${past ? 'No past events.' : 'Nothing scheduled.'}</p>`;
+        } catch (error) {
+            box.innerHTML = '<p class="np-empty">Not available right now.</p>';
+        }
+    }
+
+    /* A day's event, opened from the calendar, above the list. */
+    function showDetail(id) {
+        const N = window.ZTIMS_NOTICES;
+        const e = known.get(id);
+        const box = document.getElementById('eventDetail');
+        if (!e) return;
+        const ended = e.state === 'ended';
+        box.innerHTML = `<div class="np-detail">
+            <div class="np-card__meta">${N.pill('event')}<span>${N.date(e.startsAt)}${e.place ? ' · ' + N.place(e, '') : ''}</span></div>
+            <h3>${N.esc(e.title)}</h3>
+            <p>${N.esc(e.body)}</p>
+            ${e.bodyOther ? `<p class="np-card__other">${N.esc(e.bodyOther)}</p>` : ''}
+            <div class="np-card__foot"><span>${N.when(e)}</span>${ended ? '' : `<button type="button" class="np-link" data-ics="${N.esc(e._id)}">Add to calendar</button>`}</div>
+        </div>`;
+        box.hidden = false;
+        box.scrollIntoView({ block: 'nearest' });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const N = window.ZTIMS_NOTICES;
+        month = N.thisMonth();
+        document.getElementById('monthPrev').addEventListener('click', () => {
+            month = month.month === 1 ? { year: month.year - 1, month: 12 } : { year: month.year, month: month.month - 1 };
+            loadMonth();
+        });
+        document.getElementById('monthNext').addEventListener('click', () => {
+            month = month.month === 12 ? { year: month.year + 1, month: 1 } : { year: month.year, month: month.month + 1 };
+            loadMonth();
+        });
+        document.getElementById('whichEvents').addEventListener('click', e => {
+            const b = e.target.closest('button[data-which]');
+            if (!b) return;
+            which = b.dataset.which;
+            document.querySelectorAll('#whichEvents button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+            loadList();
+        });
+        document.getElementById('calGrid').addEventListener('click', e => {
+            const chip = e.target.closest('[data-event]');
+            if (chip) showDetail(chip.dataset.event);
+        });
+        document.querySelector('aside').addEventListener('click', e => {
+            const b = e.target.closest('[data-ics]');
+            if (b && known.get(b.dataset.ics)) N.downloadCalendar(known.get(b.dataset.ics));
+        });
+        loadMonth();
+        loadList();
+    });
+</script>
+
+
+</body>
+</html>

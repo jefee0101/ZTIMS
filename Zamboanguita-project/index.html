@@ -269,6 +269,8 @@ body { overflow-x: hidden; }
             <nav class="site-header__nav" aria-label="Main">
                 <a href="index.html" class="site-link" aria-current="page">Destinations</a>
                 <a href="index.html#map" class="site-link">Map</a>
+                <a href="src/announcements.html" class="site-link">Announcements</a>
+                <a href="src/events.html" class="site-link">Events</a>
                 <a href="src/history.html" class="site-link">History</a>
                 <a href="src/manage.html" class="site-link">My ticket</a>
                 <a href="src/staff_login.html" class="site-link">Staff</a>
@@ -365,6 +367,24 @@ body { overflow-x: hidden; }
                 </div>
             </div>
         </div>
+
+        <!-- ============ WHAT IS HAPPENING ============
+             The latest notice and the next three events from the Tourism
+             Office (announcements.js), drawn by the script at the end of this
+             page; styles .np-* in theme.css. The only part of Home that
+             announcements touch. -->
+        <section id="happening" class="np-home" aria-labelledby="happeningTitle">
+            <div class="np-wrap">
+                <div class="np-head">
+                    <div>
+                        <p class="np-kicker">Announcements and events</p>
+                        <h2 id="happeningTitle" class="np-title" style="font-size: clamp(1.6rem, 3.4vw, 2.4rem)">What is happening in Zamboanguita</h2>
+                    </div>
+                    <a href="src/announcements.html" class="np-link">See all announcements and events</a>
+                </div>
+                <div id="happeningBody" class="np-home__grid" aria-live="polite"></div>
+            </div>
+        </section>
 
         <!-- ============ BROWSE BY INTEREST ============
              One photograph per kind of place; a tap shows only those in the
@@ -514,6 +534,46 @@ body { overflow-x: hidden; }
     <footer data-site-footer data-root="./"></footer>
 </div>
 <script type="module" src="./src/shared/site-footer.js"></script>
+<script type="module" src="./src/shared/notices.js"></script>
+<script>
+/* "What is happening in Zamboanguita": the newest notice (not an event) and
+   the next three events. Nothing to show leaves one short line. */
+(function () {
+    async function drawHappening() {
+        const N = window.ZTIMS_NOTICES;
+        const box = document.getElementById('happeningBody');
+        if (!N || !box) return;
+        let notice = null, events = [];
+        try {
+            const [list, upcoming] = await Promise.all([N.get('/api', '/announcements?limit=10'), N.get('/api', '/events?limit=3')]);
+            notice = list.items.find(n => n.category !== 'event') || null;
+            events = upcoming;
+        } catch (error) { /* shown as nothing scheduled */ }
+        if (!notice && !events.length) {
+            box.outerHTML = '<p class="np-nothing">Nothing scheduled.</p>';
+            return;
+        }
+        const noticeCard = notice ? `<article class="np-card np-card--${N.esc(notice.category)}">
+            <div class="min-w-0">
+                <div class="np-card__meta">${N.pill(notice.category)}<span>Latest notice · ${N.date(notice.startsAt)}</span></div>
+                <h3 class="np-card__title">${N.esc(notice.title)}</h3>
+                <p class="np-card__body">${N.esc(notice.body)}</p>
+                <div class="np-card__foot"><a class="np-link" href="src/announcements.html#n-${encodeURIComponent(notice._id)}">Read more</a></div>
+            </div></article>`
+            : '<div class="np-box np-empty">No notices right now.</div>';
+        const eventBox = `<section class="np-box" aria-label="Upcoming events">
+            <p class="np-home__label">Upcoming events</p>
+            ${events.length ? events.map(e => `<div class="np-event">${N.dateBlock(e.startsAt)}
+                <div class="min-w-0"><b>${N.esc(e.title)}</b><small>${[e.place ? N.esc(e.place.title) : '', N.when(e)].filter(Boolean).join(' · ')}</small></div></div>`).join('')
+              : '<p class="np-empty">Nothing scheduled.</p>'}
+            <div class="np-box__foot"><a href="src/events.html" class="np-link">See all events</a></div>
+        </section>`;
+        box.innerHTML = noticeCard + eventBox;
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', drawHappening);
+    else drawHappening();
+})();
+</script>
 
 <!-- The map layer: OpenStreetMap tiles through Leaflet, with ZTIMS's own
      category markers. Loaded before the page script below, which uses it.

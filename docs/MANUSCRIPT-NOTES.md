@@ -4,6 +4,26 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Announcements and calendar of events (November 2026)
+
+**The change.** The Tourism Officer posts announcements (advisory, event,
+closure or general) with a start and end in Manila time, an optional place and
+photo, and the text in English plus Filipino or Bisaya. There is no approval
+step: a notice is live when saved, leaves the website after its end, and is
+never deleted (the officer can hide it and show it again). The officer works on
+one page with two tabs, Announcements and Calendar of events. Visitors get two
+new pages, Announcements and Calendar of events (with Add to calendar), a "What
+is happening in Zamboanguita" section on Home, and a notice line on the
+destination it concerns. No Facebook feature.
+
+**Change in the manuscript:** add the module to the system's features, scope
+and the officer's functions; add the `announcements` table to the ERD and data
+dictionary (20 tables); add the officer's page and the two public pages to the
+System User Interface (screenshots: officer Announcements and Calendar tabs,
+public Announcements, public Calendar of events, Home's new section, a
+destination with a notice line); the visitor header now has Announcements and
+Events links.
+
 ## Count visitors here (November 2026)
 
 **The change.** Visitor counting applies to places that receive and record

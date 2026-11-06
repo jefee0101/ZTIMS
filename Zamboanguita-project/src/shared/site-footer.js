@@ -128,6 +128,8 @@
                             link(r + 'index.html#featured', 'Destinations') +
                             link(r + 'index.html?category=STAY#featured', 'Places to stay') +
                             link(r + 'index.html?category=CULTURE#featured', 'Heritage sites') +
+                            link(src + 'announcements.html', 'Announcements') +
+                            link(src + 'events.html', 'Calendar of events') +
                             link(src + 'history.html', 'History') +
                         '</ul>' +
                     '</nav>' +

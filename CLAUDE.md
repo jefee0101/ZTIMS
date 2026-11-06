@@ -784,6 +784,27 @@ Refresh.
   event opens it in the form. The pills, date block and month grid are in
   `theme.css` (shared with the visitor pages); the page layout `.an-*` is in
   `portal-flat.css`.
+- **The visitor's side** (`.np-*` in `theme.css`, helpers in
+  `src/shared/notices.js` — `window.ZTIMS_NOTICES`: Manila dates, `when`
+  ("7:00 AM to 11:00 AM", "all day"), the pill, the date block, the month grid
+  and **Add to calendar**, an `.ics` made in the browser like `payment.html`'s):
+  `src/announcements.html` (crumbs, "Municipal Tourism Office" kicker,
+  category chips kept in `?category=`, a card per notice — pill, date, place
+  linked to its page, title, English and second-language text, "Shown until …"
+  or an event's time and Add to calendar, photo — 10 a page with Previous /
+  Next, `#n-<id>` opens on one notice; beside it Upcoming events and the
+  Tourism Office box) and `src/events.html` (Upcoming / Past events, the month
+  with Previous / Next, a day's event opened above the list, Add to calendar
+  for events to come, "Plan around an event"). Both pages are in the visitor
+  header (Announcements, Events, after Map, on every visitor page) and the
+  footer's Explore column (Announcements, Calendar of events).
+- **Home** has one section for it, `#happening` ("What is happening in
+  Zamboanguita", between the hero's strip and Browse by interest): the newest
+  notice that is not an event, the next three events, "See all" links, and
+  "Nothing scheduled." when there is nothing. Nothing else on Home uses it.
+- **A destination's notices** show under its title on `spot.html`
+  (`#spotNotices`, `.np-notice`: pill, "Notice: …", until or when, Read the
+  notice), from `GET /api/announcements?spotId=`.
 
 ### Attraction setup
 
@@ -855,12 +876,12 @@ Frontend only, no tables of their own:
   Book a room / Book now (its booking link, new tab), else Details. Tickets
   open `spot.html` at `#tickets`, which `honourArrival` turns into the ticket
   form. Grey skeleton cards while loading.
-- **Header**: the same on all nine visitor pages (Home, destination, History,
-  My ticket, payment, Terms, Privacy, FAQ, Contact; styles `.site-header*` and
+- **Header**: the same on all eleven visitor pages (Home, destination, History,
+  My ticket, payment, Terms, Privacy, FAQ, Contact, Announcements, Events; styles `.site-header*` and
   `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
   floating, rounded glass bar — an orange badge (`sunny`) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), History, My ticket, Staff (→ `staff_login.html`), the
+  (`index.html#map`), Announcements, Events, History, My ticket, Staff (→ `staff_login.html`), the
   current page a solid ink pill (`aria-current="page"`; light in dark mode;
   the destination page counts as Destinations), then the round theme toggle
   and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
