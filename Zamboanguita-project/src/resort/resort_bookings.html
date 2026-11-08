@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Explore Zamboanguita | Bookings</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)",
+              "error": "rgb(var(--ztims-error) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <style>
+
+    
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), margin-left var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity var(--dur-fast) var(--ease-standard) 60ms, max-width var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard) !important;
+    }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+
+/* ==========================================================
+   MOBILE NAVIGATION (below 640px)
+   The rail is fixed and 16rem wide at every size, so on a phone it simply sat
+   on top of the page: the content began underneath it and could not be read.
+   Below 640px it becomes a drawer that slides in from the left, opened by the
+   button in the header and closed by the scrim, the Escape key, or choosing a
+   destination. The collapse rules above are desktop-only, so the two never meet.
+   ========================================================== */
+@media (max-width: 639px) {
+    aside {
+        width: 17rem !important;
+        max-width: 86vw !important;
+        transform: translateX(-100%);
+        transition: transform var(--dur-moderate) var(--ease-decelerate) !important;
+    }
+    body.nav-open aside {
+        transform: none;
+        box-shadow: var(--ztims-shadow-overlay);
+    }
+    header, main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    #navScrim {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        background: rgb(var(--ztims-background) / .6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--dur-moderate) var(--ease-standard);
+    }
+    body.nav-open #navScrim { opacity: 1; pointer-events: auto; }
+    body.nav-open { overflow: hidden; }
+}
+@media (min-width: 640px) {
+    #navScrim, #navOpenBtn { display: none !important; }
+}
+
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/portal-flat.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+<script>
+/* ==========================================================
+   ACCOUNT AVATAR + MENU (upper right)
+   One button showing who is signed in, and a small menu under it. Built in
+   JavaScript rather than markup so every page mounts the same thing with its
+   own links, the way the toast module is shared.
+
+   mountAccountMenu({ container, name, email, imageUrl, items, signedOutLabel,
+                      signedOutHref })
+     name / email : shown in the menu's header; the initial becomes the avatar
+     imageUrl     : optional photo (Google accounts have one)
+     items        : [{ label, icon, href }] or [{ label, icon, onSelect }]
+     signedOut*   : when name and email are both empty, the avatar is replaced
+                    by this link, so a guest gets a way in rather than a
+                    meaningless blank circle
+   ========================================================== */
+(function () {
+    function initialFrom(name, email) {
+        var source = (name || email || '').trim();
+        return source ? source.charAt(0).toUpperCase() : '?';
+    }
+
+    window.mountAccountMenu = function (options) {
+        var container = options.container;
+        if (!container) return;
+        container.innerHTML = '';
+
+        var signedIn = Boolean((options.name || '').trim() || (options.email || '').trim());
+
+        if (!signedIn) {
+            var signIn = document.createElement('a');
+            signIn.href = options.signedOutHref || '#';
+            signIn.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current/30 text-sm font-bold hover:opacity-80 transition-opacity';
+            signIn.innerHTML = '<span class="material-symbols-outlined !text-lg">account_circle</span>' +
+                               '<span>' + (options.signedOutLabel || 'Sign in') + '</span>';
+            container.appendChild(signIn);
+            return;
+        }
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative';
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-haspopup', 'menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.title = options.name || options.email || 'Account';
+        button.style.cssText = [
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'width:2.5rem', 'height:2.5rem', 'border-radius:0',
+            'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
+            'color:rgb(var(--ztims-accent))',
+            'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
+            'transition:transform var(--dur-fast) var(--ease-standard)'
+        ].join(';');
+
+        if (options.imageUrl) {
+            var photo = document.createElement('img');
+            photo.src = options.imageUrl;
+            photo.alt = '';
+            photo.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            // A broken photo link would otherwise leave an empty circle.
+            photo.addEventListener('error', function () {
+                photo.remove();
+                button.textContent = initialFrom(options.name, options.email);
+            });
+            button.appendChild(photo);
+        } else {
+            button.textContent = initialFrom(options.name, options.email);
+        }
+        button.addEventListener('mouseenter', function () { button.style.transform = 'scale(1.06)'; });
+        button.addEventListener('mouseleave', function () { button.style.transform = 'none'; });
+
+        var menu = document.createElement('div');
+        menu.setAttribute('role', 'menu');
+        menu.hidden = true;
+        menu.style.cssText = [
+            'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
+            'min-width:15rem', 'padding:.4rem',
+            'border-radius:var(--radius-lg, 1rem)',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'border:1px solid var(--glass-hairline)',
+            'color:rgb(var(--ztims-on-surface))',
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'transform-origin:top right',
+            'animation:ztimsMenuIn var(--dur-base, 220ms) var(--ease-decelerate, ease-out)',
+            'font-size:.85rem'
+        ].join(';');
+
+        var header = document.createElement('div');
+        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgb(var(--ztims-outline));margin-bottom:.3rem';
+        var nameLine = document.createElement('div');
+        nameLine.textContent = options.name || options.email;
+        nameLine.style.cssText = 'font-weight:800;word-break:break-word';
+        header.appendChild(nameLine);
+        if (options.email && options.name) {
+            var emailLine = document.createElement('div');
+            emailLine.textContent = options.email;
+            emailLine.style.cssText = 'font-size:.75rem;color:rgb(var(--ztims-on-surface-variant));word-break:break-all;margin-top:.1rem';
+            header.appendChild(emailLine);
+        }
+        menu.appendChild(header);
+
+        function close() {
+            menu.hidden = true;
+            button.setAttribute('aria-expanded', 'false');
+        }
+
+        (options.items || []).forEach(function (item) {
+            var entry = document.createElement(item.href ? 'a' : 'button');
+            entry.setAttribute('role', 'menuitem');
+            if (item.href) entry.href = item.href; else entry.type = 'button';
+            entry.style.cssText = [
+                'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
+                'padding:.6rem .75rem', 'border:0', 'border-radius:0',
+                'background:none', 'color:' + (item.danger ? 'rgb(var(--ztims-error))' : 'inherit'),
+                'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
+            ].join(';');
+            entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
+            var label = document.createElement('span');
+            label.textContent = item.label;   // text, never markup
+            entry.appendChild(label);
+
+            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgb(var(--ztims-on-surface) / .06)'; });
+            entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
+            entry.addEventListener('click', function () {
+                close();
+                if (item.onSelect) item.onSelect();
+            });
+            menu.appendChild(entry);
+        });
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var opening = menu.hidden;
+            menu.hidden = !opening;
+            button.setAttribute('aria-expanded', String(opening));
+        });
+        document.addEventListener('click', function (event) {
+            if (!menu.hidden && !wrap.contains(event.target)) close();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') close();
+        });
+
+        wrap.appendChild(button);
+        wrap.appendChild(menu);
+        container.appendChild(wrap);
+    };
+})();
+</script>
+    <div id="navScrim" aria-hidden="true"></div>
+
+    <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Tourist Enterprise Manager Portal</p>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
+        </div>
+        <nav class="flex-1 space-y-2 font-body">
+            <a title="My enterprises" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_enterprises.html">
+                <span class="material-symbols-outlined text-accent">dashboard</span>
+                <span class="sidebar-label">My enterprises</span>
+            </a>
+            <a title="Enterprise" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_spots.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
+                <span class="sidebar-label">Enterprise</span>
+            </a>
+            <a title="Rooms" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_rooms.html">
+                <span class="material-symbols-outlined text-accent">bed</span>
+                <span class="sidebar-label">Rooms</span>
+            </a>
+            <a title="Bookings" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_bookings.html">
+                <span class="material-symbols-outlined text-accent">event_available</span>
+                <span class="sidebar-label">Bookings</span>
+            </a>
+            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_register.html">
+                <span class="material-symbols-outlined text-accent">menu_book</span>
+                <span class="sidebar-label">Guest Register</span>
+            </a>
+            <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_statistics.html">
+                <span class="material-symbols-outlined text-accent">bar_chart</span>
+                <span class="sidebar-label">Monthly Report</span>
+            </a>
+            <a title="Account" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_settings.html">
+                <span class="material-symbols-outlined text-accent">manage_accounts</span>
+                <span class="sidebar-label">Account</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-error transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="sidebar-label">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 glass-nav border-b border-outline-variant/20 transition-colors duration-300">
+        <button id="navOpenBtn" type="button" aria-label="Open navigation" aria-expanded="false"
+                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-on-surface/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div id="enterpriseSwitcherSlot" class="min-w-0 mr-auto"></div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+                <span id="themeIcon" class="material-symbols-outlined text-accent">dark_mode</span>
+            </button>
+            <div id="accountMenuSlot"></div>
+        </div>
+    </header>
+
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="p-2 max-w-[1100px] mx-auto space-y-6">
+            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Bookings</h1>
+
+            <div id="bkEmpty" class="ztims-empty" hidden></div>
+
+            <div id="bkPage" hidden class="space-y-6">
+                <div role="tablist" aria-label="Bookings" class="bkm-tabs flex gap-2 border-b border-outline-variant/30">
+                    <button role="tab" id="tab-inbox" aria-controls="inboxPanel" aria-selected="true" class="settings-tab">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">inbox</span>Inbox</button>
+                    <button role="tab" id="tab-month" aria-controls="monthPanel" aria-selected="false" tabindex="-1" class="settings-tab">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">calendar_month</span>Month view</button>
+                </div>
+
+                <section id="inboxPanel" role="tabpanel" aria-labelledby="tab-inbox" class="space-y-6">
+                    <!-- Requests waiting for an answer, oldest first. -->
+                    <section class="bkm-needs" aria-labelledby="needsTitle">
+                        <div class="bkm-needs__head">
+                            <h2 id="needsTitle">Needs your answer</h2>
+                            <span id="needsCount" class="bkm-count">0</span>
+                        </div>
+                        <div id="needsList" class="space-y-3"></div>
+                    </section>
+
+                    <section aria-labelledby="listTitle" class="space-y-3">
+                        <h2 id="listTitle" class="sr-only">Bookings</h2>
+                        <div id="bkFilters" class="dest-chips bkm-scroll" role="group" aria-label="Show"></div>
+                        <div class="glass-panel"><div id="bkList" class="divide-y divide-outline-variant/20"></div></div>
+                    </section>
+                </section>
+
+                <!-- Rooms free and taken, night by night. -->
+                <section id="monthPanel" role="tabpanel" aria-labelledby="tab-month" class="space-y-4" hidden>
+                    <div class="bkm-bar">
+                        <h2 id="calTitle" class="text-xl font-extrabold text-on-surface"></h2>
+                        <div class="flex gap-2">
+                            <button type="button" id="calPrev" class="pg-btn pg-btn--plain"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>Previous</button>
+                            <button type="button" id="calNext" class="pg-btn pg-btn--plain">Next<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
+                        </div>
+                    </div>
+                    <div class="glass-panel bkm-cal-wrap"><div id="calGrid"></div></div>
+                    <p class="bkm-legend">
+                        <span><i class="bkm-key is-free"></i>All free</span>
+                        <span><i class="bkm-key is-some"></i>Some taken</span>
+                        <span><i class="bkm-key is-full"></i>Full</span>
+                        <span><i class="bkm-key is-wait"></i>Request waiting</span>
+                        <span><i class="bkm-key is-block"></i>Blocked</span>
+                    </p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- One booking, in full. -->
+    <div id="itemModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-0 sm:p-4">
+        <div class="ztims-modal bkm-sheet w-full max-w-2xl overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="itemTitle">
+            <div class="bkm-sheet__head">
+                <div class="min-w-0">
+                    <p id="itemCode" class="bkm-code"></p>
+                    <h2 id="itemTitle" class="text-2xl font-black tracking-tight font-headline"></h2>
+                </div>
+                <button type="button" data-close aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div id="itemBody" class="bkm-sheet__body"></div>
+            <div id="itemActions" class="bkm-sheet__foot"></div>
+        </div>
+    </div>
+
+    <!-- Declining: a ready-made reason, or the manager's own. -->
+    <div id="declineModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
+        <form id="declineForm" class="ztims-modal w-full max-w-lg p-5 sm:p-7 space-y-4" novalidate>
+            <div class="flex justify-between items-start gap-4">
+                <h2 id="declineTitle" class="text-2xl font-black tracking-tight font-headline">Decline this request?</h2>
+                <button type="button" data-close aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div>
+                <span class="field-label">Reason for the guest</span>
+                <div id="declineReasons" class="bkm-reasons" role="radiogroup" aria-label="Reason for the guest">
+                    <button type="button" role="radio" aria-checked="false">Fully booked for those dates.</button>
+                    <button type="button" role="radio" aria-checked="false">We are closed on those dates.</button>
+                    <button type="button" role="radio" aria-checked="false">Our rooms cannot take that many guests.</button>
+                    <button type="button" role="radio" aria-checked="false">The stay does not meet our minimum nights.</button>
+                    <button type="button" role="radio" aria-checked="false" data-other>Another reason</button>
+                </div>
+                <textarea id="declineOther" rows="3" maxlength="300" class="field mt-3" aria-label="Another reason" hidden></textarea>
+            </div>
+            <p id="declineError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+            <div class="flex justify-end gap-3 pt-1">
+                <button type="button" data-close class="btn btn-ghost min-h-[44px]">Go back</button>
+                <button type="submit" id="declineSave" class="btn btn-danger min-h-[44px]">Decline request</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = "/api";
+        const PAGE = 'resort/resort_bookings.html';
+
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+        }
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+        function signOutStaff() {
+            try { window.ztimsTheme.clearStorage(); sessionStorage.clear(); } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: localStorage.getItem('userName') || 'Manager',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Account', icon: 'manage_accounts', href: 'resort_settings.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
+        // Signing in again comes back here, to the same request (?code=).
+        const signInHere = () => `../staff_login.html?next=${encodeURIComponent(PAGE + location.search)}`;
+        function guardEstablishmentManagerSession() {
+            const role = localStorage.getItem('userRole');
+            if (!['establishment_manager', 'resort_owner'].includes(role) || !localStorage.getItem('authToken')) {
+                window.location.href = signInHere();
+                return false;
+            }
+            return true;
+        }
+        function handleExpiredSession() {
+            showToast('Your sign-in has expired. Please sign in again.', 'error');
+            ['authToken', 'userRole', 'userEmail', 'userId'].forEach(k => localStorage.removeItem(k));
+            setTimeout(() => window.location.replace(signInHere()), 900);
+        }
+        async function api(path, method = 'GET', body) {
+            const res = await fetch(`${API_BASE}${path}`, {
+                method, headers: authHeaders(body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined
+            });
+            if (res.status === 401) { handleExpiredSession(); throw new Error('Signed out'); }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'That did not work. Try again.');
+            return data;
+        }
+
+        /* ---- words and dates ------------------------------------------ */
+        const peso = n => {
+            const v = Number(n) || 0;
+            return '₱' + v.toLocaleString('en-US', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 });
+        };
+        const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+        const manilaToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        const key = iso => String(iso || '').slice(0, 10);
+        const utc = iso => new Date(key(iso) + 'T00:00:00Z');
+        const dateFmt = (iso, opts) => new Intl.DateTimeFormat('en-GB', Object.assign({ timeZone: 'UTC' }, opts)).format(utc(iso));
+        const dayLong = iso => dateFmt(iso, { weekday: 'short', day: 'numeric', month: 'short' });
+        // "Tue, 10 Nov, 12:52 AM": the date as elsewhere, the time on a 12-hour clock, Manila's.
+        const whenFmt = iso => new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Manila' }).format(new Date(iso)) +
+            ', ' + new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).format(new Date(iso));
+        const time12 = hhmm => {
+            if (!hhmm) return '';
+            const [h, m] = hhmm.split(':').map(Number);
+            return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+        };
+        const guests = b => [plural(b.adults, 'adult'), b.children ? plural(b.children, 'child').replace('childs', 'children') : ''].filter(Boolean).join(', ');
+
+        const STATUS = {
+            requested: ['Needs your answer', 'tone-warning'],
+            confirmed: ['Confirmed', 'tone-success'],
+            checked_in: ['Checked in', 'tone-info'],
+            completed: ['Checked out', 'tone-neutral'],
+            declined: ['Declined', 'tone-neutral'],
+            expired: ['Expired', 'tone-neutral'],
+            cancelled: ['Cancelled by the guest', 'tone-neutral'],
+            no_show: ['No-show', 'tone-danger']
+        };
+        const isWaiting = b => b.status === 'requested' && new Date(b.expiresAt) > new Date();
+        const statusPill = b => {
+            const [label, tone] = b.status === 'requested' && !isWaiting(b) ? ['Expired', 'tone-neutral'] : (STATUS[b.status] || [b.status, 'tone-neutral']);
+            return `<span class="tone-pill ${tone} rounded-pill">${label}</span>`;
+        };
+        /* The answer's deadline: when, and how long is left. */
+        function deadline(b) {
+            const left = new Date(b.expiresAt) - new Date();
+            if (left <= 0) return { text: 'The time to answer has passed', urgent: true };
+            const mins = Math.floor(left / 60000);
+            const span = mins < 60 ? plural(mins, 'minute') : mins < 48 * 60 ? plural(Math.floor(mins / 60), 'hour') : plural(Math.floor(mins / 1440), 'day');
+            return { text: `Answer by ${whenFmt(b.expiresAt)} · ${span} left`, urgent: left < 3 * 3600 * 1000 };
+        }
+        const METHODS = [['cash', 'Cash'], ['gcash', 'GCash'], ['maya', 'Maya'], ['bank', 'Bank transfer'], ['card', 'Card'], ['other', 'Other']];
+        const methodName = m => (METHODS.find(x => x[0] === m) || [m, m])[1];
+
+        let spot = null, list = [], residences = [], filter = 'upcoming', openId = null, calMonth = manilaToday().slice(0, 7);
+        const countryName = code => (residences.find(r => r.code === code) || {}).name || code || '';
+        // On a card, the two Philippine rows of Form A4 read as the country.
+        const countryShort = code => (/^ph-/.test(code || '') ? 'Philippines' : countryName(code));
+
+        /* ---- tabs ----------------------------------------------------- */
+        const TABS = { inbox: 'inboxPanel', month: 'monthPanel' };
+        function showTab(name) {
+            if (!TABS[name]) name = 'inbox';
+            for (const [k, panel] of Object.entries(TABS)) {
+                const on = k === name;
+                document.getElementById(panel).hidden = !on;
+                const tab = document.getElementById(`tab-${k}`);
+                tab.setAttribute('aria-selected', String(on));
+                tab.tabIndex = on ? 0 : -1;
+            }
+            if (name === 'month') loadMonth();
+        }
+
+        /* ---- the inbox ------------------------------------------------ */
+        const FILTERS = [
+            ['upcoming', 'Upcoming', b => b.status === 'confirmed'],
+            ['staying', 'Staying now', b => b.status === 'checked_in'],
+            ['past', 'Past', b => ['completed', 'no_show'].includes(b.status)],
+            ['closed', 'Declined and cancelled', b => ['declined', 'expired', 'cancelled'].includes(b.status) || (b.status === 'requested' && !isWaiting(b))],
+            ['all', 'All', () => true]
+        ];
+
+        function actionsFor(b, where) {
+            const today = manilaToday();
+            const arrived = today >= key(b.checkIn);
+            const btn = (act, label, cls, icon) => `<button type="button" data-act="${act}" class="${cls}">${icon ? `<span class="material-symbols-outlined !text-base" aria-hidden="true">${icon}</span>` : ''}${label}</button>`;
+            const small = where === 'row' ? ' btn-sm min-h-[40px]' : ' min-h-[44px]';
+            if (isWaiting(b)) return [
+                btn('confirm', 'Confirm', 'btn btn-primary' + small, 'check'),
+                btn('decline', 'Decline', 'btn btn-cancel' + small),
+                btn('price', 'Adjust price', 'btn btn-secondary' + small)
+            ];
+            if (b.status === 'confirmed') return [
+                arrived ? btn('checked_in', 'Check in', 'btn btn-primary' + small, 'login') : '',
+                btn('payment', 'Record payment', 'btn btn-secondary' + small, 'payments'),
+                arrived ? btn('no_show', 'No-show', 'btn btn-cancel' + small) : ''
+            ].filter(Boolean);
+            if (b.status === 'checked_in') return [
+                btn('completed', 'Check out', 'btn btn-primary' + small, 'logout'),
+                btn('payment', 'Record payment', 'btn btn-secondary' + small, 'payments')
+            ];
+            if (b.status === 'completed') return [btn('payment', 'Record payment', 'btn btn-secondary' + small, 'payments')];
+            return [];
+        }
+
+        function requestCard(b) {
+            const d = deadline(b);
+            return `
+            <article class="bkm-req" data-id="${escapeHtml(b._id)}">
+                <button type="button" class="bkm-req__main" data-open aria-label="Open ${escapeHtml(b.guestName)}'s request">
+                    <span class="bkm-req__top"><b>${escapeHtml(b.guestName)}</b><span class="bkm-code">${escapeHtml(b.code)}</span></span>
+                    <span class="bkm-req__line">${dayLong(b.checkIn)} → ${dayLong(b.checkOut)} · ${plural(b.nights, 'night')}</span>
+                    <span class="bkm-req__line">${escapeHtml(b.roomsText)} · ${guests(b)}${b.countryCode ? ` · ${escapeHtml(countryShort(b.countryCode))}` : ''}</span>
+                    <span class="bkm-req__total">${peso(b.totalAmount)}</span>
+                </button>
+                <p class="bkm-deadline${d.urgent ? ' is-urgent' : ''}"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${d.text}</p>
+                <div class="bkm-actions">${actionsFor(b, 'card').join('')}</div>
+            </article>`;
+        }
+
+        function bookingRow(b) {
+            const today = manilaToday();
+            const tag = b.status === 'confirmed' && key(b.checkIn) === today ? '<span class="tone-pill tone-warning rounded-pill">Arrives today</span>'
+                : b.status === 'checked_in' && key(b.checkOut) === today ? '<span class="tone-pill tone-warning rounded-pill">Leaves today</span>'
+                : b.status === 'confirmed' && key(b.checkIn) < today ? '<span class="tone-pill tone-danger rounded-pill">Not checked in</span>' : '';
+            const money = ['confirmed', 'checked_in', 'completed'].includes(b.status)
+                ? `${b.paid >= b.totalAmount ? 'Paid in full' : `Paid ${peso(b.paid)} of ${peso(b.totalAmount)}`}` : peso(b.totalAmount);
+            return `
+            <div class="bkm-row" data-id="${escapeHtml(b._id)}">
+                <button type="button" class="bkm-row__main" data-open aria-label="Open ${escapeHtml(b.guestName)}'s booking">
+                    <span class="bk-row__date"><span class="bk-row__day">${dateFmt(b.checkIn, { day: 'numeric' })}</span><span>${dateFmt(b.checkIn, { month: 'short' })}</span></span>
+                    <span class="bkm-row__body">
+                        <span class="bkm-row__name">${escapeHtml(b.guestName)} ${statusPill(b)} ${tag}</span>
+                        <span>${plural(b.nights, 'night')} · ${escapeHtml(b.roomsText)} · ${guests(b)}</span>
+                        <span class="bkm-row__money">${money}</span>
+                    </span>
+                </button>
+                <div class="bkm-actions">${actionsFor(b, 'row').join('')}</div>
+            </div>`;
+        }
+
+        function draw() {
+            const waiting = list.filter(isWaiting)
+                .sort((a, b) => String(a.requestedAt || a.expiresAt).localeCompare(String(b.requestedAt || b.expiresAt)));
+            document.getElementById('needsCount').textContent = waiting.length;
+            document.getElementById('needsCount').classList.toggle('is-zero', !waiting.length);
+            document.getElementById('needsList').innerHTML = waiting.length
+                ? waiting.map(requestCard).join('')
+                : '<div class="ztims-empty">No requests waiting.</div>';
+
+            document.getElementById('bkFilters').innerHTML = FILTERS.map(([k, label, test]) =>
+                `<button type="button" data-filter="${k}" aria-pressed="${k === filter}">${label} <b>${list.filter(test).length}</b></button>`).join('');
+            const [, , test] = FILTERS.find(f => f[0] === filter);
+            const shown = list.filter(test).sort((a, b) => filter === 'past' || filter === 'closed'
+                ? key(b.checkIn).localeCompare(key(a.checkIn)) : key(a.checkIn).localeCompare(key(b.checkIn)));
+            document.getElementById('bkList').innerHTML = shown.length
+                ? shown.map(bookingRow).join('')
+                : '<div class="p-4"><div class="ztims-empty">Nothing here.</div></div>';
+        }
+
+        async function loadList() {
+            list = await api(`/bookings/manage/${spot._id}`);
+            draw();
+        }
+
+        /* ---- one booking ---------------------------------------------- */
+        const CHANGE = {
+            requested: 'Requested', confirmed: 'Confirmed', declined: 'Declined', expired: 'Expired (not answered in time)',
+            cancelled: 'Cancelled by the guest', moved: 'Moved by the guest', price_adjusted: 'Price adjusted',
+            payment_recorded: 'Payment recorded', checked_in: 'Checked in', completed: 'Checked out', no_show: 'Marked no-show'
+        };
+        function itemHtml(b, settings) {
+            const fact = (label, value) => value ? `<div class="bkm-fact"><span>${label}</span><span>${value}</span></div>` : '';
+            const money = ['confirmed', 'checked_in', 'completed'].includes(b.status);
+            const balance = Math.max(0, b.totalAmount - b.paidTotal);
+            return `
+                <div class="bkm-sheet__status">${statusPill(b)}${isWaiting(b) ? (() => { const d = deadline(b); return `<span class="bkm-deadline${d.urgent ? ' is-urgent' : ''}"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${d.text}</span>`; })() : ''}</div>
+                <section class="bkm-sec"><h3>Guest</h3>
+                    ${fact('Email', `<a href="mailto:${escapeHtml(b.email)}">${escapeHtml(b.email)}</a>`)}
+                    ${fact('Phone', `<a href="tel:${escapeHtml(String(b.phone).replace(/[^+0-9]/g, ''))}">${escapeHtml(b.phone)}</a>`)}
+                    ${fact('Country of residence', escapeHtml(countryName(b.countryCode)))}
+                    ${fact('Guests', guests(b))}
+                    ${b.note ? fact('Note', escapeHtml(b.note)) : ''}
+                </section>
+                <section class="bkm-sec"><h3>Stay</h3>
+                    ${fact('Check-in', `${dayLong(b.checkIn)}${settings ? `, from ${time12(settings.checkInTime)}` : ''}`)}
+                    ${fact('Check-out', `${dayLong(b.checkOut)}${settings ? `, by ${time12(settings.checkOutTime)}` : ''}`)}
+                    ${fact('Nights', String(b.nights))}
+                    ${b.rooms.map(r => fact(`${r.units} × ${escapeHtml(r.name)}`, `${peso(r.ratePerNight)} a night`)).join('')}
+                </section>
+                <section class="bkm-sec"><h3>Price</h3>
+                    ${fact('Total', `<b>${peso(b.totalAmount)}</b>`)}
+                    ${money ? fact('Paid', peso(b.paidTotal)) + fact('Balance', balance ? `<b class="text-error">${peso(balance)}</b>` : 'Paid in full') : ''}
+                    ${b.payments.map(p => `<div class="bkm-fact bkm-pay"><span></span><span>${peso(p.amount)} · ${methodName(p.method)} · ${dayLong(p.receivedOn)}${p.reference ? ` · ${escapeHtml(p.reference)}` : ''}</span></div>`).join('')}
+                </section>
+                ${b.declineReason ? `<section class="bkm-sec"><h3>Reason given</h3><p>${escapeHtml(b.declineReason)}</p></section>` : ''}
+                ${b.registerDraft ? `<section class="bkm-sec bkm-sec--note"><h3>Guest Register</h3><p>Count these guests in the Guest Register.</p>
+                    <button type="button" data-act="register" class="btn btn-primary btn-sm min-h-[40px]"><span class="material-symbols-outlined !text-base" aria-hidden="true">menu_book</span>Add to the Guest Register</button></section>` : ''}
+                ${b.registerEntryId ? `<section class="bkm-sec"><h3>Guest Register</h3><p>Counted in the Guest Register.</p></section>` : ''}
+                <section class="bkm-sec"><h3>History</h3>
+                    <ol class="bkm-history">
+                        ${b.changes.some(c => c.action === 'requested') ? '' : `<li><span>Requested</span><span>${whenFmt(b.requestedAt)}</span></li>`}
+                        ${b.changes.map(c => `<li><span>${CHANGE[c.action] || escapeHtml(c.action)}${c.after && c.after.reason ? `: ${escapeHtml(c.after.reason)}` : ''}</span><span>${whenFmt(c.at)}</span></li>`).join('')}
+                    </ol>
+                </section>`;
+        }
+
+        let roomsSettings = null;
+        async function openItem(id, view) {
+            openId = id;
+            const modal = document.getElementById('itemModal');
+            try {
+                const b = view || await api(`/bookings/manage/item/${id}`);
+                if (!roomsSettings) roomsSettings = (await api(`/rooms/manage/${spot._id}`)).settings;
+                document.getElementById('itemCode').textContent = b.code;
+                document.getElementById('itemTitle').textContent = b.guestName;
+                document.getElementById('itemBody').innerHTML = itemHtml(b, roomsSettings);
+                const acts = actionsFor(b, 'sheet');
+                const foot = document.getElementById('itemActions');
+                foot.innerHTML = acts.join('');
+                foot.hidden = !acts.length;
+                modal.dataset.id = b._id;
+                modal._booking = b;
+                modal.hidden = false;
+            } catch (e) {
+                if (e.message !== 'Signed out') showToast(e.message, 'error');
+            }
+        }
+        function closeItem() { document.getElementById('itemModal').hidden = true; openId = null; }
+
+        /* After any change: the list, and the open booking with what came back. */
+        async function after(result, toastTone) {
+            showToast(result.message, toastTone || 'success');
+            if (result.emailed === false) showToast('The email to the guest could not be sent. Tell them by phone.', 'error', { duration: 8000 });
+            await loadList();
+            if (openId && result.booking) openItem(result.booking._id, result.booking);
+            return result.booking;
+        }
+
+        /* ---- the decisions -------------------------------------------- */
+        async function confirmBooking(b) {
+            try { await after(await api(`/bookings/manage/item/${b._id}/confirm`, 'POST')); }
+            catch (e) { if (e.message !== 'Signed out') { showToast(e.message, 'error'); loadList(); } }
+        }
+
+        let declining = null;
+        function openDecline(b) {
+            declining = b;
+            document.getElementById('declineTitle').textContent = `Decline ${b.guestName}'s request?`;
+            document.querySelectorAll('#declineReasons button').forEach(x => x.setAttribute('aria-checked', 'false'));
+            const other = document.getElementById('declineOther');
+            other.value = ''; other.hidden = true;
+            setDeclineError('');
+            document.getElementById('declineModal').hidden = false;
+            document.querySelector('#declineReasons button').focus();
+        }
+        function setDeclineError(m) { const x = document.getElementById('declineError'); x.textContent = m || ''; x.hidden = !m; }
+        async function sendDecline(event) {
+            event.preventDefault();
+            const chosen = document.querySelector('#declineReasons [aria-checked="true"]');
+            if (!chosen) return setDeclineError('Choose a reason for the guest.');
+            const reason = chosen.hasAttribute('data-other') ? document.getElementById('declineOther').value.trim() : chosen.textContent.trim();
+            if (!reason) return setDeclineError('Write the reason for the guest.');
+            const btn = document.getElementById('declineSave');
+            btn.disabled = true;
+            try {
+                const r = await api(`/bookings/manage/item/${declining._id}/decline`, 'POST', { reason });
+                document.getElementById('declineModal').hidden = true;
+                await after(r);
+            } catch (e) {
+                if (e.message !== 'Signed out') setDeclineError(e.message);
+            } finally { btn.disabled = false; }
+        }
+
+        async function adjustPrice(b) {
+            const values = await ztimsDialog.form({
+                title: 'Adjust the price',
+                message: `Now ${peso(b.totalAmount)} for ${plural(b.nights, 'night')}. The guest sees the new total when you confirm.`,
+                fields: [
+                    { name: 'total', label: 'New total (₱)', type: 'number', value: String(Math.round(b.totalAmount)), required: true },
+                    { name: 'reason', label: 'Reason', placeholder: 'Discount for a long stay', required: true }
+                ],
+                confirmLabel: 'Save price',
+                validate: v => !(Number(v.total) >= 0) || v.total === '' ? 'Give the new total in pesos.' : !v.reason.trim() ? 'Say why the price changes.' : ''
+            });
+            if (!values) return;
+            try { await after(await api(`/bookings/manage/item/${b._id}/price`, 'POST', { totalAmount: Number(values.total), reason: values.reason.trim() })); }
+            catch (e) { if (e.message !== 'Signed out') showToast(e.message, 'error'); }
+        }
+
+        async function recordPayment(b) {
+            const total = b.totalAmount, paid = b.paidTotal ?? b.paid ?? 0;
+            const values = await ztimsDialog.form({
+                title: 'Record a payment',
+                message: `${b.guestName} · ${peso(paid)} paid of ${peso(total)}`,
+                fields: [
+                    { name: 'amount', label: 'Amount received (₱)', type: 'number', value: String(Math.max(0, Math.round((total - paid) * 100) / 100) || ''), required: true },
+                    { name: 'method', label: 'Paid with', type: 'select', value: 'gcash', options: METHODS.map(([value, label]) => ({ value, label })) },
+                    { name: 'receivedOn', label: 'Received on', type: 'date', value: manilaToday(), required: true },
+                    { name: 'reference', label: 'Reference (optional)', placeholder: 'GCash reference number' }
+                ],
+                confirmLabel: 'Record payment',
+                validate: v => !(Number(v.amount) > 0) ? 'Give the amount received.' : v.receivedOn > manilaToday() ? 'The day received cannot be later than today.' : ''
+            });
+            if (!values) return;
+            try {
+                await after(await api(`/bookings/manage/item/${b._id}/payments`, 'POST', {
+                    amount: Number(values.amount), method: values.method, receivedOn: values.receivedOn, reference: values.reference.trim()
+                }));
+            } catch (e) { if (e.message !== 'Signed out') showToast(e.message, 'error'); }
+        }
+
+        async function setStatus(b, status) {
+            if (status === 'no_show') {
+                const ok = await ztimsDialog.confirm({
+                    title: `Mark ${b.guestName} as a no-show?`,
+                    message: 'The rooms are free again from tonight.',
+                    confirmLabel: 'Mark no-show', cancelLabel: 'Go back', tone: 'danger'
+                });
+                if (!ok) return;
+            }
+            try {
+                const view = await after(await api(`/bookings/manage/item/${b._id}/status`, 'POST', { status }));
+                // At check-in the guests are counted in the Guest Register.
+                if (status === 'checked_in' && view && view.registerDraft) addToRegister(view);
+            } catch (e) { if (e.message !== 'Signed out') showToast(e.message, 'error'); }
+        }
+
+        async function addToRegister(b) {
+            const draft = b.registerDraft;
+            if (!draft) return;
+            const values = await ztimsDialog.form({
+                title: 'Add to the Guest Register',
+                message: `${dayLong(draft.date)} · ${plural(draft.nights, 'night')} · ${plural(draft.rooms, 'room')} · ${plural(draft.guests, 'guest')}`,
+                fields: [
+                    { name: 'code', label: 'Country of residence', type: 'select', value: draft.countryCode,
+                      options: residences.map(r => ({ value: r.code, label: r.name })) },
+                    { name: 'male', label: 'Male', type: 'number', value: '0', required: true },
+                    { name: 'female', label: 'Female', type: 'number', value: '0', required: true }
+                ],
+                confirmLabel: 'Save to the register', cancelLabel: 'Later',
+                validate: v => {
+                    const m = parseInt(v.male, 10), f = parseInt(v.female, 10);
+                    if (!(m >= 0) || !(f >= 0)) return 'Give whole numbers.';
+                    return m + f < 1 ? 'Count at least one guest.' : '';
+                }
+            });
+            if (!values) return;
+            try {
+                const res = await fetch(`${API_BASE}/statistics/register/${spot._id}`, {
+                    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ date: key(draft.date), nights: draft.nights, rooms: draft.rooms, bookingId: draft.bookingId,
+                        guests: [{ code: values.code, male: parseInt(values.male, 10), female: parseInt(values.female, 10) }] })
+                });
+                if (res.status === 401) return handleExpiredSession();
+                const r = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(r.message || 'That did not work. Try again.');
+                showToast('Saved in the Guest Register.', 'success');
+                if (openId) openItem(openId);
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        function act(name, b) {
+            if (name === 'confirm') return confirmBooking(b);
+            if (name === 'decline') return openDecline(b);
+            if (name === 'price') return adjustPrice(b);
+            if (name === 'payment') return recordPayment(b);
+            if (name === 'register') return addToRegister(b);
+            if (['checked_in', 'completed', 'no_show'].includes(name)) return setStatus(b, name);
+        }
+
+        /* ---- the month view ------------------------------------------- */
+        async function loadMonth() {
+            const grid = document.getElementById('calGrid');
+            const [y, m] = calMonth.split('-').map(Number);
+            document.getElementById('calTitle').textContent = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(Date.UTC(y, m - 1, 1));
+            grid.innerHTML = '<div class="p-4"><div class="ztims-empty">Loading…</div></div>';
+            let cal;
+            try { cal = await api(`/rooms/manage/${spot._id}/calendar?month=${calMonth}`); }
+            catch (e) { if (e.message !== 'Signed out') grid.innerHTML = `<div class="p-4"><div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div></div>`; return; }
+            if (!cal.rooms.length) {
+                grid.innerHTML = '<div class="p-4"><div class="ztims-empty">No room types yet. <a class="font-bold underline" href="resort_rooms.html">Add them on Rooms</a></div></div>';
+                return;
+            }
+            const days = cal.rooms[0].nights.map(n => n.date);
+            const head = days.map(d => `<th scope="col" class="${d === cal.today ? 'is-today' : ''}"><span>${dateFmt(d, { weekday: 'narrow' })}</span><b>${Number(d.slice(8))}</b></th>`).join('');
+            const body = cal.rooms.map(r => `<tr><th scope="row"><b>${escapeHtml(r.name)}</b><small>${plural(r.units, 'room')}</small></th>${r.nights.map(n => {
+                const taken = n.booked + n.waiting + n.blocked;
+                const cls = [n.free === 0 ? 'is-full' : taken ? 'is-some' : 'is-free', n.waiting ? 'is-wait' : '', n.blocked ? 'is-block' : '',
+                    n.date === cal.today ? 'is-today' : '', n.date < cal.today ? 'is-past' : ''].filter(Boolean).join(' ');
+                const title = `${dayLong(n.date)}: ${n.free} free of ${r.units}` +
+                    [n.booked ? `${n.booked} booked` : '', n.waiting ? `${n.waiting} waiting for your answer` : '', n.blocked ? `${n.blocked} blocked` : ''].filter(Boolean).map(s => `, ${s}`).join('');
+                return `<td class="${cls}" title="${escapeHtml(title)}"><span class="sr-only">${escapeHtml(title)}</span><span aria-hidden="true">${n.free}</span></td>`;
+            }).join('')}</tr>`).join('');
+            grid.innerHTML = `<table class="bkm-cal"><thead><tr><th scope="col" class="bkm-cal__corner">Free rooms</th>${head}</tr></thead><tbody>${body}</tbody></table>`;
+            // Today in view: scrolled to only when it would be off to the right.
+            const today = grid.querySelector('thead .is-today'), wrap = grid.parentElement;
+            const names = grid.querySelector('.bkm-cal__corner').offsetWidth;
+            wrap.scrollLeft = today && today.offsetLeft + today.offsetWidth > wrap.clientWidth ? today.offsetLeft - names - 6 : 0;
+        }
+        function shiftMonth(step) {
+            const [y, m] = calMonth.split('-').map(Number);
+            const d = new Date(Date.UTC(y, m - 1 + step, 1));
+            calMonth = d.toISOString().slice(0, 7);
+            loadMonth();
+        }
+
+        /* ---- the email's Review request link (?code=) ----------------- */
+        async function openFromLink() {
+            const params = new URLSearchParams(location.search);
+            const wanted = String(params.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!wanted) return;
+            const tidy = () => history.replaceState(null, '', location.pathname + location.hash);
+            const match = b => b.code.toUpperCase().replace(/[^A-Z0-9]/g, '') === wanted;
+            const here = list.find(match);
+            if (here) { tidy(); return openItem(here._id); }
+            // The request may be for another of the manager's places to stay.
+            for (const other of ztimsEnterprise.list().filter(s => s._id !== spot._id && s.type === 'accommodation')) {
+                try {
+                    const theirs = await api(`/bookings/manage/${other._id}`);
+                    if (theirs.some(match)) { ztimsEnterprise.remember(other._id); location.reload(); return; }
+                } catch (e) { /* keep looking */ }
+            }
+            tidy();
+            showToast('That booking is not in your enterprises.', 'error');
+        }
+
+        function wire() {
+            Object.keys(TABS).forEach(k => document.getElementById(`tab-${k}`).addEventListener('click', () => {
+                history.replaceState(null, '', location.pathname + location.search + `#${k}`);
+                showTab(k);
+            }));
+            const onList = event => {
+                const host = event.target.closest('[data-id]');
+                const b = host && list.find(x => x._id === host.dataset.id);
+                if (!b) return;
+                const a = event.target.closest('[data-act]');
+                if (a) return act(a.dataset.act, b);
+                if (event.target.closest('[data-open]')) openItem(b._id);
+            };
+            document.getElementById('needsList').addEventListener('click', onList);
+            document.getElementById('bkList').addEventListener('click', onList);
+            document.getElementById('bkFilters').addEventListener('click', event => {
+                const f = event.target.closest('[data-filter]');
+                if (f) { filter = f.dataset.filter; draw(); }
+            });
+            const item = document.getElementById('itemModal');
+            item.addEventListener('click', event => {
+                if (event.target === item || event.target.closest('[data-close]')) return closeItem();
+                const a = event.target.closest('[data-act]');
+                if (a && item._booking) act(a.dataset.act, item._booking);
+            });
+            const decline = document.getElementById('declineModal');
+            decline.addEventListener('click', event => {
+                if (event.target === decline || event.target.closest('[data-close]')) { decline.hidden = true; return; }
+                const r = event.target.closest('#declineReasons button');
+                if (!r) return;
+                document.querySelectorAll('#declineReasons button').forEach(x => x.setAttribute('aria-checked', String(x === r)));
+                const other = document.getElementById('declineOther');
+                other.hidden = !r.hasAttribute('data-other');
+                if (!other.hidden) other.focus();
+                setDeclineError('');
+            });
+            document.getElementById('declineForm').addEventListener('submit', sendDecline);
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape' || document.querySelector('.ztims-dialog-open')) return;
+                if (!decline.hidden) decline.hidden = true; else if (!item.hidden) closeItem();
+            });
+            document.getElementById('calPrev').addEventListener('click', () => shiftMonth(-1));
+            document.getElementById('calNext').addEventListener('click', () => shiftMonth(1));
+            // A deadline counts down while the page is open.
+            setInterval(() => { if (document.visibilityState === 'visible') draw(); }, 60 * 1000);
+        }
+
+        function empty(html) {
+            const box = document.getElementById('bkEmpty');
+            box.innerHTML = html;
+            box.hidden = false;
+        }
+
+        async function start() {
+            if (!window.ztimsEnterprise) return setTimeout(start, 50);
+            await ztimsEnterprise.load();
+            ztimsEnterprise.mount(document.getElementById('enterpriseSwitcherSlot'));
+            spot = ztimsEnterprise.current();
+            if (!spot) return empty('Add your enterprise first. <a class="font-bold underline" href="resort_spots.html?add=1">Add enterprise</a>');
+            if (spot.type !== 'accommodation') {
+                // The link may be for one of the manager's places to stay.
+                const stay = ztimsEnterprise.list().find(s => s.type === 'accommodation');
+                if (stay && new URLSearchParams(location.search).get('code')) { ztimsEnterprise.remember(stay._id); return location.reload(); }
+                return empty(`Rooms and bookings are for places to stay. ${escapeHtml(ztimsEnterprise.nameOf(spot))} is listed as an attraction.`);
+            }
+            try {
+                [residences] = await Promise.all([api('/statistics/residences').catch(() => []), loadList()]);
+            } catch (e) {
+                if (e.message !== 'Signed out') empty(escapeHtml(e.message));
+                return;
+            }
+            document.getElementById('bkPage').hidden = false;
+            wire();
+            draw();
+            showTab(location.hash.slice(1));
+            openFromLink();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            mountPortalAccountMenu();
+            if (!guardEstablishmentManagerSession()) return;
+            start();
+        });
+    </script>
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
+
+<script>
+/* Signing out goes straight back to the public site: the session is cleared here
+   and the person lands on the main page, instead of stopping at a page whose only
+   purpose was to say they had left. */
+(function () {
+    var link = document.getElementById('logoutLink');
+    if (!link) return;
+
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        try {
+            window.ztimsTheme.clearStorage();
+            sessionStorage.clear();
+        } catch (e) { /* private browsing */ }
+
+        if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+        // replace(), not href: the portal must not come back with the back button.
+        setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+    });
+})();
+</script>
+
+<script>
+/* The drawer's open state. Only ever active below 640px, where the CSS above
+   turns the rail into one; above that the button and scrim are hidden and this
+   does nothing. */
+(function () {
+    var openBtn = document.getElementById('navOpenBtn');
+    var scrim = document.getElementById('navScrim');
+    var aside = document.querySelector('aside');
+    if (!openBtn || !scrim || !aside) return;
+
+    function setOpen(open) {
+        document.body.classList.toggle('nav-open', open);
+        openBtn.setAttribute('aria-expanded', String(open));
+    }
+
+    openBtn.addEventListener('click', function () {
+        setOpen(!document.body.classList.contains('nav-open'));
+    });
+    scrim.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+    // Choosing a destination should take you there, not leave the drawer over it.
+    aside.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+
+    // Rotating to landscape or resizing past the breakpoint must not leave the
+    // body locked by a drawer that is no longer on screen.
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 640) setOpen(false);
+    });
+})();
+</script>
+<script type="module" src="../shared/enterprise-switcher.js"></script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
+</body>
+</html>

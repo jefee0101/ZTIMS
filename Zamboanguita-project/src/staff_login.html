@@ -330,6 +330,16 @@ body { overflow-x: hidden; }
     resort_owner: 'resort/resort_spots.html'   // the same account, as older tokens spell it
   };
 
+  /* ?next= brings someone back to the portal page they were sent from (the
+     email's Review request link, an expired session). Only a page in that
+     person's own portal, by a plain relative path, is accepted: anything
+     else, another site above all, is ignored and they land on their home. */
+  function returnTo(role) {
+    const next = new URLSearchParams(location.search).get('next') || '';
+    const folder = role === 'admin' ? 'admin' : 'resort';
+    return new RegExp('^' + folder + '/[a-z_]+\\.html(\\?[A-Za-z0-9=&%._-]*)?(#[a-z]+)?$').test(next) ? next : '';
+  }
+
   const errorBox = document.getElementById('loginError');
 
   // The portals send people here with ?expired=1 when their two-hour sign-in runs
@@ -451,7 +461,7 @@ body { overflow-x: hidden; }
       return;
     }
 
-    const destination = PORTAL_HOME[result.role];
+    const destination = PORTAL_HOME[result.role] && (returnTo(result.role) || PORTAL_HOME[result.role]);
     if (!destination) {
       restoreButton();
       showError('This account does not have access to the staff portal.');

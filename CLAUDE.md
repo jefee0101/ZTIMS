@@ -283,8 +283,11 @@ purpose — see the header comment in `spot-form.js`:
   enterprises, plus the
   sign-in email, read only and set by the Tourism Office, and account issued)
   and `#security` (signed in since, change password, sign out of all devices).
+- **The manager's Rooms and Bookings** (`resort/resort_rooms.html`,
+  `resort/resort_bookings.html`, in the menu after Enterprise): see "Room
+  booking" below.
 - **The manager's Guest Register** (`resort/resort_register.html`, in the
-  menu between Enterprise and Monthly Report): the place's own log through
+  menu between Bookings and Monthly Report): the place's own log through
   the month, so nobody adds up by hand. A place to stay logs each **stay**
   (check-in date, nights, rooms, and who came: country of residence with male
   and female, − / + steppers, Add a country); an attraction logs each
@@ -1036,7 +1039,7 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   outlives the account). Those are facts of
   that record, like a receipt's price, not copies to keep in step.
 
-### Room booking (November 2026; database and API only, no pages yet)
+### Room booking (November 2026; database, API and the manager's pages)
 
 `bookings.js`, mounted at `/api`, for private places to stay (`spots.type`
 `accommodation` with a manager). The user's decisions (notes repo,
@@ -1072,8 +1075,8 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   types — the page's figure is never read; status Requested, `expires_at` =
   now + response hours). Emails: request received (guest), new request
   (manager's sign-in email, a Review request link to
-  `src/resort/resort_bookings.html?code=` — a page not built yet; it never
-  confirms by itself).
+  `src/resort/resort_bookings.html?code=`, which opens that request, signed
+  in — see the manager's pages below; it never confirms by itself).
 - **Visitor** (`manage.js`, code + email like a ticket; `kind: 'booking'`):
   lookup, move (new dates, same rooms at the same rates, back to Requested with
   a new expiry; both sides emailed), cancel (while requested or confirmed).
@@ -1083,7 +1086,13 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   `GET /api/rooms/manage/:spotId` (settings, rooms, blocks), `PUT …/settings`,
   `POST …/types`, `PUT /api/rooms/manage/types/:id`, `POST
   /api/rooms/manage/types/:id/blocks`, `DELETE /api/rooms/manage/blocks/:id`;
-  `GET /api/bookings/manage/:spotId` (`?status=`, `?when=upcoming|past`),
+  `GET /api/rooms/manage/:spotId/calendar?month=YYYY-MM` (the Bookings
+  page's month view: per room type and Manila night, rooms `booked`
+  (confirmed, checked in), `waiting` (requests still open), `blocked` and
+  `free`, by the same "held" rule as `freeRooms`; a retired type shows only
+  while something holds it that month);
+  `GET /api/bookings/manage/:spotId` (`?status=`, `?when=upcoming|past`;
+  each row carries `requestedAt` for the inbox's oldest-first order),
   `GET /api/bookings/manage/item/:id`, and on an item `POST confirm`,
   `decline` {reason}, `price` {totalAmount, reason} (requested only),
   `payments` {amount, method, receivedOn, reference} (confirmed on), `status`
@@ -1107,8 +1116,51 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **Privacy:** `privacy.js` erases a booking's name, email, phone and note a
   year after check-out; dates, rooms, counts, country and price stay.
 - Version 1 has blocked dates only, no seasonal rates. No SMS. ZTIMS never
-  takes the money. Pages (the visitor's form, the manager's Rooms and
-  Bookings, the officer's overview) come next.
+  takes the money. Still to build: the visitor's request form and the
+  officer's overview page.
+- **The manager's pages** (November 2026), in the manager menu after
+  Enterprise (My enterprises, Enterprise, Rooms, Bookings, Guest Register,
+  Monthly Report, Account, on every `src/resort/` page), both working on the
+  current enterprise from the header switcher; an attraction gets "Rooms and
+  bookings are for places to stay". Styles `.bkm-*` at the end of
+  `portal-flat.css`; dialogs, toasts, pills and tabs are the shared ones.
+  - **Rooms** (`resort/resort_rooms.html`), three tabs with their own
+    addresses: `#types` — a card per room type (photo through
+    `photo-upload.js`, beds, sleeps, rooms, price a night; Edit; Retire with a
+    confirm / Bring back; retired ones last), Add a room type; `#blocked` —
+    Block dates (room type, first and last night, how many rooms, a reason
+    from Maintenance / Renovation / Private event / Owner's use or typed) and
+    a row per block with Lift (asked once); `#settings` — Take bookings
+    (`.sf-switch`), time to answer (hours), check-in and check-out times,
+    shortest and longest stay, how far ahead, free cancellation days, how
+    guests pay (required to take bookings). A pill by the title says Taking
+    bookings / Not taking bookings / No rooms to book / Paused by the Tourism
+    Office.
+  - **Bookings** (`resort/resort_bookings.html`), two tabs: `#inbox` — **Needs
+    your answer** with its count, oldest request first, one card each (guest,
+    code, dates, rooms, guests, country, total, the deadline "Answer by … · n
+    hours left", red under 3 hours) with **Confirm** (one tap), **Decline**
+    (ready-made reasons as one-tap choices, or Another reason typed) and
+    **Adjust price** (new total and a reason, before confirming); then the
+    rest filtered as pills (Upcoming, Staying now, Past, Declined and
+    cancelled, All) with Arrives today / Leaves today / Not checked in tags
+    and, by status, **Record payment** (amount, GCash / Maya / cash / bank /
+    card / other, day received, reference), **Check in** and **No-show** (from
+    the check-in date; no-show asked once), **Check out** (`completed`). A row
+    opens the booking (a full-screen sheet on a phone): guest and contact
+    links, stay with the resort's times, rooms and rates, total, paid,
+    balance, payments, the reason given, history. Checking in asks at once for
+    the Guest Register entry (country, male, female), saved with the
+    booking's `bookingId`; later, "Add to the Guest Register" in the booking.
+    `#month` — rooms free per room type and night (`.bkm-cal`, sideways
+    scroll with the names kept in view; all free, some taken, full, a request
+    waiting dashed, blocked striped; today circled), Previous / Next.
+  - **The email's Review request link** (`?code=`) opens that booking; if it
+    belongs to another of the manager's places to stay, the switcher moves
+    there first. Signed out, the page sends the manager to the staff sign-in
+    with `?next=`, which comes back to it: `staff_login.html` accepts `next`
+    only as a page in the signer's own portal (`resort/…` for a manager,
+    `admin/…` for an officer; `returnTo`), never another site.
 
 ### Listings and the visitor's day out
 

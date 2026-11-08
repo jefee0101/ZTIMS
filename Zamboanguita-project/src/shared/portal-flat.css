@@ -44,7 +44,7 @@ aside a:not(.is-current):not(.nav-active):hover { background: rgb(var(--ztims-se
 .settings-tab[aria-selected="true"] { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
 .settings-tab:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
 @media (max-width: 639px) { .settings-tab { padding: .6rem .6rem; gap: .3rem; } }
-main .field-label { text-transform: none; letter-spacing: 0; font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
+main .field-label, .ztims-modal .field-label { text-transform: none; letter-spacing: 0; font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
 
 /* The manager pages' leftovers from the glass look: the gradient primary
    button, card shadows, capitals under the brand, the hover nudge. */
@@ -521,3 +521,150 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .an-event:hover { background: rgb(var(--ztims-secondary) / .08); }
 .an-event b { display: block; font-size: 1.02rem; font-weight: 800; }
 .an-event small { display: block; color: rgb(var(--ztims-on-surface-variant)); font-size: .88rem; }
+
+/* ==========================================================
+   ROOMS AND BOOKINGS (the manager's resort_rooms.html and
+   resort_bookings.html, November 2026). Flat like the rest of the portal;
+   pills, chips, tabs and buttons are the shared ones. The inbox is read on a
+   phone first: one card per request, its deadline, and the actions under it.
+   ========================================================== */
+.bkm-head { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
+.bkm-tabs { overflow-x: auto; scrollbar-width: none; }
+.bkm-tabs::-webkit-scrollbar { display: none; }
+.bkm-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.bkm-red { color: rgb(var(--ztims-error)) !important; }
+.bkm-scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: .15rem; }
+.bkm-scroll::-webkit-scrollbar { display: none; }
+.bkm-scroll button { flex-shrink: 0; }
+.bkm-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; letter-spacing: .04em; font-size: .85rem; color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bkm-actions:empty { display: none; }
+
+/* Room types */
+.bkm-rooms { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+.bkm-room { display: flex; flex-direction: column; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); }
+.bkm-room__photo { position: relative; aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-secondary-container)); color: rgb(var(--ztims-on-secondary-container)); overflow: hidden; }
+.bkm-room__photo img { width: 100%; height: 100%; object-fit: cover; }
+.bkm-room__photo > .material-symbols-outlined { font-size: 2.25rem; }
+.bkm-room__tag { position: absolute; top: .6rem; left: .6rem; }
+.bkm-room__body { display: flex; flex-direction: column; gap: .35rem; flex: 1; padding: 1rem 1.1rem 1.1rem; }
+.bkm-room__body h3 { font-size: 1.1rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.bkm-room__facts, .bkm-room__desc { font-size: .88rem; color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-room__desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bkm-room__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; margin-top: auto; padding-top: .75rem; border-top: 1px solid rgb(var(--ztims-outline)); }
+.bkm-room__foot b { font-size: 1.15rem; font-weight: 900; color: rgb(var(--ztims-on-surface)); }
+.bkm-room.is-retired .bkm-room__photo, .bkm-room.is-retired h3, .bkm-room.is-retired .bkm-room__foot p { opacity: .55; }
+.bkm-photo { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: .8rem; border: 1px dashed rgb(var(--ztims-outline)); }
+.bkm-photo__img { width: 7rem; aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: rgb(var(--ztims-secondary-container)); color: rgb(var(--ztims-on-secondary-container)); }
+.bkm-photo__img img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Blocked dates */
+.bkm-block { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; }
+.bkm-block h3 { font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.bkm-block p { font-size: .9rem; color: rgb(var(--ztims-on-surface)); }
+
+/* Settings */
+.bkm-form { display: grid; gap: 1.1rem; padding: 1.25rem; }
+.bkm-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
+.bkm-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bkm-form__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.bkm-form .tone-pill { justify-self: start; }
+
+/* The inbox: Needs your answer */
+.bkm-needs { display: grid; gap: .9rem; }
+.bkm-needs__head { display: flex; align-items: center; gap: .6rem; }
+.bkm-needs__head h2 { font-size: 1.2rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.bkm-count { min-width: 1.9rem; height: 1.9rem; padding: 0 .55rem; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 9999px; background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); font-weight: 900; font-variant-numeric: tabular-nums; }
+.bkm-count.is-zero { background: rgb(var(--ztims-surface-low)); color: rgb(var(--ztims-on-surface-variant)); border: 1px solid rgb(var(--ztims-outline)); }
+.bkm-req { display: grid; gap: .7rem; padding: 1rem 1.1rem; border: 1px solid rgb(var(--ztims-outline)); border-left: 4px solid rgb(var(--brand-tangerine));
+    background: rgb(var(--ztims-surface)); }
+.bkm-req__main { display: grid; gap: .2rem; width: 100%; text-align: left; color: rgb(var(--ztims-on-surface)); }
+.bkm-req__top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem .75rem; }
+.bkm-req__top b { font-size: 1.1rem; font-weight: 800; }
+.bkm-req__line { font-size: .92rem; }
+.bkm-req__total { font-size: 1.15rem; font-weight: 900; margin-top: .15rem; }
+.bkm-deadline { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-deadline .material-symbols-outlined { font-size: 1.05rem; }
+.bkm-deadline.is-urgent { color: rgb(var(--ztims-error)); }
+
+/* The list */
+.bkm-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; padding: .9rem 1.25rem; }
+.bkm-row:hover { background: rgb(var(--ztims-on-surface) / .03); }
+.bkm-row__main { display: grid; grid-template-columns: 3.75rem 1fr; gap: 1rem; align-items: start; flex: 1 1 20rem; min-width: 0; text-align: left; color: rgb(var(--ztims-on-surface)); }
+.bkm-row__body { display: grid; gap: .2rem; min-width: 0; font-size: .9rem; }
+.bkm-row__name { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; font-weight: 800; font-size: 1rem; }
+.bkm-row__money { color: rgb(var(--ztims-on-surface-variant)); }
+
+/* One booking: a full-screen sheet on a phone */
+.bkm-sheet { max-height: 92vh; display: flex; flex-direction: column; padding: 0 !important; }
+.bkm-sheet__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.25rem 1.5rem .75rem; border-bottom: 1px solid rgb(var(--ztims-outline)); }
+.bkm-sheet__body { display: grid; gap: 1rem; padding: 1rem 1.5rem; overflow-y: auto; }
+.bkm-sheet__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem; padding: .9rem 1.5rem; border-top: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-low)); }
+.bkm-sheet__foot[hidden] { display: none; }
+.bkm-sheet__status { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .9rem; }
+.bkm-sec { display: grid; gap: .3rem; }
+.bkm-sec h3 { font-size: .8rem; font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); margin-bottom: .1rem; }
+.bkm-sec--note { padding: .9rem 1rem; background: rgb(var(--ztims-secondary-container)); color: rgb(var(--ztims-on-secondary-container)); justify-items: start; }
+.bkm-fact { display: grid; grid-template-columns: 9.5rem 1fr; gap: .75rem; font-size: .93rem; color: rgb(var(--ztims-on-surface)); }
+.bkm-fact > span:first-child { color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-fact a { color: rgb(var(--ztims-primary-text)); font-weight: 700; overflow-wrap: anywhere; }
+.bkm-pay { font-size: .88rem; }
+.bkm-pay > span:last-child { color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-history { display: grid; gap: .3rem; font-size: .88rem; }
+.bkm-history li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .2rem 1rem; color: rgb(var(--ztims-on-surface)); }
+.bkm-history li span:last-child { color: rgb(var(--ztims-on-surface-variant)); }
+
+/* Decline: the ready-made reasons as one-tap choices */
+.bkm-reasons { display: grid; gap: .45rem; }
+.bkm-reasons button { min-height: 44px; padding: .55rem .95rem; text-align: left; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline));
+    background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); font-weight: 600; }
+.bkm-reasons button:hover { border-color: rgb(var(--ztims-secondary)); }
+.bkm-reasons button[aria-checked="true"] { background: rgb(var(--ztims-on-surface)); border-color: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-background)); }
+
+/* The month view: one row per room type, one column per night; the number is
+   the rooms still free. Scrolls sideways with the room names kept in view. */
+/* Positioned, so the cells' hidden screen-reader labels scroll inside it instead
+   of widening the whole page on a phone. */
+.bkm-cal-wrap { position: relative; overflow-x: auto; }
+.bkm-cal { border-collapse: separate; border-spacing: 3px; font-size: .82rem; }
+.bkm-cal th, .bkm-cal td { text-align: center; }
+.bkm-cal thead th { min-width: 2.35rem; padding: .3rem 0; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-cal thead th span { display: block; font-size: .7rem; }
+.bkm-cal thead th b { display: block; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.bkm-cal thead th.is-today b { display: inline-flex; width: 1.6rem; height: 1.6rem; align-items: center; justify-content: center; border-radius: 50%;
+    background: rgb(var(--brand-tangerine)); color: rgb(var(--brand-ink)); }
+.bkm-cal tbody th, .bkm-cal__corner { position: sticky; left: 0; z-index: 1; min-width: 10rem; max-width: 12rem; padding: .4rem .75rem .4rem .25rem; text-align: left;
+    background: rgb(var(--ztims-surface)); }
+.bkm-cal__corner { font-size: .72rem; font-weight: 700 !important; }
+.bkm-cal tbody th b { display: block; font-weight: 800; color: rgb(var(--ztims-on-surface)); line-height: 1.2; }
+.bkm-cal tbody th small { display: block; font-size: .72rem; color: rgb(var(--ztims-on-surface-variant)); font-weight: 600; }
+.bkm-cal td { height: 2.6rem; min-width: 2.35rem; font-weight: 800; font-variant-numeric: tabular-nums; border: 2px solid transparent; }
+.bkm-cal td.is-free, .bkm-key.is-free { background: rgb(var(--ztims-surface-low)); color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-cal td.is-some, .bkm-key.is-some { background: rgb(var(--brand-tangerine) / .28); color: rgb(var(--ztims-on-surface)); }
+.bkm-cal td.is-full, .bkm-key.is-full { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+.bkm-cal td.is-wait, .bkm-key.is-wait { border-color: rgb(var(--brand-tangerine)); border-style: dashed; }
+.bkm-cal td.is-block, .bkm-key.is-block { background-image: repeating-linear-gradient(135deg, rgb(var(--ztims-on-surface) / .18) 0 3px, transparent 3px 7px); }
+.bkm-cal td.is-today { box-shadow: inset 0 0 0 2px rgb(var(--ztims-on-surface)); }
+.bkm-cal td.is-past { opacity: .5; }
+.bkm-legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: .82rem; color: rgb(var(--ztims-on-surface-variant)); }
+.bkm-legend span { display: inline-flex; align-items: center; gap: .4rem; }
+.bkm-key { display: inline-block; width: 1.1rem; height: 1.1rem; border: 1px solid rgb(var(--ztims-outline)); }
+.bkm-key.is-wait { background: rgb(var(--ztims-surface-low)); }
+.bkm-key.is-block { background-color: rgb(var(--ztims-surface-low)); }
+
+@media (max-width: 639px) {
+    .bkm-grid--2 { grid-template-columns: 1fr; }
+    .bkm-row { padding: .9rem 1rem; }
+    .bkm-actions .btn { flex: 1 1 auto; }
+    .bkm-req .bkm-actions .btn { flex: 1 1 30%; }
+    .bkm-fact { grid-template-columns: 7rem 1fr; }
+    #itemModal .bkm-sheet { max-height: 100vh; height: 100%; max-width: none; }
+    .bkm-cal tbody th, .bkm-cal__corner { min-width: 6.25rem; max-width: 6.25rem; padding-right: .4rem; }
+    .bkm-cal tbody th b { font-size: .8rem; }
+    .bkm-cal thead th, .bkm-cal td { min-width: 2rem; }
+    .bkm-cal td { height: 2.4rem; }
+    .bkm-sheet__foot .btn { flex: 1 1 40%; }
+}

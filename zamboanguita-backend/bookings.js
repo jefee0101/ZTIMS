@@ -547,6 +547,50 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
         } catch (error) { return fail(res, error, '❌ Rooms (manager) read failure:'); }
     });
 
+    /* The Bookings page's month view: for each room type and night of one
+       Manila month, the rooms booked (confirmed or checked in), waiting on a
+       request still open, blocked, and free. The same "held" rule as
+       freeRooms, so the view never disagrees with what can be booked. */
+    router.get('/rooms/manage/:spotId/calendar', requireEstablishmentManager, async (req, res) => {
+        try {
+            await sweepIfDue(siteOrigin(req));
+            const spot = await ownResort(req, req.params.spotId);
+            const month = String(req.query.month || manilaToday().slice(0, 7));
+            if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw problem(400, 'Give the month as YYYY-MM.');
+            const first = `${month}-01`;
+            const last = addDays(addDays(first, 32).slice(0, 7) + '-01', -1);
+            const { rows } = await query(`
+                with nights as (
+                    select d::date as night from generate_series($2::date, $3::date, interval '1 day') d)
+                select rt.id, rt.name, rt.units, rt.active, rt.position, to_char(n.night, 'YYYY-MM-DD') as night,
+                       coalesce(held.booked, 0)::int as booked, coalesce(held.waiting, 0)::int as waiting,
+                       coalesce(blocked.units, 0)::int as blocked
+                  from room_types rt
+                 cross join nights n
+                  left join lateral (
+                        select sum(br.units) filter (where b.status in ('confirmed', 'checked_in')) as booked,
+                               sum(br.units) filter (where b.status = 'requested') as waiting
+                          from booking_rooms br join bookings b on b.id = br.booking_id
+                         where br.room_type_id = rt.id and b.check_in <= n.night and b.check_out > n.night
+                           and ${HOLDING}) held on true
+                  left join lateral (
+                        select sum(k.units) as units from room_blocks k
+                         where k.room_type_id = rt.id and k.starts_on <= n.night and k.ends_on >= n.night) blocked on true
+                 where rt.spot_id = $1
+                 order by rt.position, rt.name, n.night`, [spot.id, first, last]);
+            const rooms = [];
+            for (const r of rows) {
+                let room = rooms[rooms.length - 1];
+                if (!room || room._id !== r.id) rooms.push(room = { _id: r.id, name: r.name, units: r.units, active: r.active, nights: [] });
+                room.nights.push({ date: r.night, booked: r.booked, waiting: r.waiting, blocked: r.blocked,
+                    free: Math.max(0, r.units - r.booked - r.waiting - r.blocked) });
+            }
+            // A retired room type shows only while something still holds it that month.
+            const shown = rooms.filter(r => r.active || r.nights.some(n => n.booked || n.waiting || n.blocked));
+            return res.json({ month, first, last, today: manilaToday(), rooms: shown });
+        } catch (error) { return fail(res, error, '❌ Rooms calendar failure:'); }
+    });
+
     router.put('/rooms/manage/:spotId/settings', requireEstablishmentManager, async (req, res) => {
         try {
             const spot = await ownResort(req, req.params.spotId);
@@ -703,7 +747,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             return res.json(rows.map(b => ({
                 _id: b.id, code: b.code, status: b.status, guestName: b.guest_name, countryCode: b.country_code,
                 adults: b.adults, children: b.children, checkIn: b.check_in, checkOut: b.check_out, nights: b.nights,
-                roomsText: b.rooms_text || '', totalAmount: money(b.total_amount), paid: money(b.paid), expiresAt: b.expires_at
+                roomsText: b.rooms_text || '', totalAmount: money(b.total_amount), paid: money(b.paid),
+                requestedAt: b.requested_at, expiresAt: b.expires_at
             })));
         } catch (error) { return fail(res, error, '❌ Bookings list failure:'); }
     });

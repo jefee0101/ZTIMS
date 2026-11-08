@@ -23,6 +23,16 @@ rooms), the data dictionary (the seven tables), the use cases (request, confirm
 or decline, move or cancel, record payment, check in, pause), the Limitations
 (payment outside the system; no seasonal rates; email only, no SMS).
 
+**The manager's pages are built** (November 2026): Rooms (room types with
+price, rooms and photo; blocked dates; booking settings) and Bookings (an inbox
+with "Needs your answer" and each request's deadline, Confirm, Decline with a
+reason, Adjust price, Record payment, Check in / Check out / No-show, and a
+month view of rooms free and taken). The System User Interface section gains
+these two screens (screenshots from the manager portal, desktop and phone);
+the use cases above can now point to them. The email's Review request button
+opens the request after signing in. Still to build: the visitor's request form
+and the officer's overview.
+
 ## Announcements and calendar of events (November 2026)
 
 **The change.** The Tourism Officer posts announcements (advisory, event,
