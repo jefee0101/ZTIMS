@@ -970,38 +970,13 @@ body { overflow-x: hidden; }
             } catch (e) { if (e.message !== 'Signed out') showToast(e.message, 'error'); }
         }
 
-        async function addToRegister(b) {
-            const draft = b.registerDraft;
-            if (!draft) return;
-            const values = await ztimsDialog.form({
-                title: 'Add to the Guest Register',
-                message: `${dayLong(draft.date)} · ${plural(draft.nights, 'night')} · ${plural(draft.rooms, 'room')} · ${plural(draft.guests, 'guest')}`,
-                fields: [
-                    { name: 'code', label: 'Country of residence', type: 'select', value: draft.countryCode,
-                      options: residences.map(r => ({ value: r.code, label: r.name })) },
-                    { name: 'male', label: 'Male', type: 'number', value: '0', required: true },
-                    { name: 'female', label: 'Female', type: 'number', value: '0', required: true }
-                ],
-                confirmLabel: 'Save to the register', cancelLabel: 'Later',
-                validate: v => {
-                    const m = parseInt(v.male, 10), f = parseInt(v.female, 10);
-                    if (!(m >= 0) || !(f >= 0)) return 'Give whole numbers.';
-                    return m + f < 1 ? 'Count at least one guest.' : '';
-                }
-            });
-            if (!values) return;
-            try {
-                const res = await fetch(`${API_BASE}/statistics/register/${spot._id}`, {
-                    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ date: key(draft.date), nights: draft.nights, rooms: draft.rooms, bookingId: draft.bookingId,
-                        guests: [{ code: values.code, male: parseInt(values.male, 10), female: parseInt(values.female, 10) }] })
-                });
-                if (res.status === 401) return handleExpiredSession();
-                const r = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(r.message || 'That did not work. Try again.');
-                showToast('Saved in the Guest Register.', 'success');
-                if (openId) openItem(openId);
-            } catch (e) { showToast(e.message, 'error'); }
+        /* The Guest Register's own entry window, filled from the booking
+           (resort_register.html?booking=): the manager adds male and female,
+           checks it and saves. A booking itself is never a count. */
+        function addToRegister(b) {
+            if (!b || !b.registerDraft) return;
+            // A moment for the check-in message, then the register.
+            setTimeout(() => { location.href = `resort_register.html?booking=${encodeURIComponent(b._id)}`; }, 700);
         }
 
         function act(name, b) {

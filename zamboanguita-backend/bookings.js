@@ -918,20 +918,26 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
 
     /* ---- the Tourism Officer: counts and a pause, no money ---------- */
 
+    /* Per enterprise: open or paused, rooms, and how many bookings of each
+       status. ?month=YYYY-MM counts the stays starting that month (Manila);
+       without it, all of them. Never prices, money or a guest's details. */
     router.get('/bookings/overview', requireAdmin, async (req, res) => {
         try {
+            const month = req.query.month ? String(req.query.month) : '';
+            if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw problem(400, 'Give the month as YYYY-MM.');
             const { rows } = await query(`
                 select s.id, s.title, coalesce(nullif(s.enterprise_name, ''), s.title) as enterprise_name, m.manager_name,
                        coalesce(es.accepts_bookings, false) as accepts_bookings, coalesce(es.paused_by_office, false) as paused_by_office,
                        (select count(*) from room_types rt where rt.spot_id = s.id and rt.active)::int as room_types,
                        (select coalesce(sum(rt.units), 0) from room_types rt where rt.spot_id = s.id and rt.active)::int as rooms,
-                       (select jsonb_object_agg(x.status, x.n) from (select status, count(*) as n from bookings b where b.spot_id = s.id group by status) x) as by_status,
+                       (select jsonb_object_agg(x.status, x.n) from (select status, count(*) as n from bookings b
+                          where b.spot_id = s.id and ($2 = '' or to_char(b.check_in, 'YYYY-MM') = $2) group by status) x) as by_status,
                        (select count(*) from bookings b where b.spot_id = s.id and b.status in ('confirmed', 'checked_in') and b.check_out >= $1)::int as upcoming
                   from spots s
                   join establishment_managers m on m.id = s.managed_by
                   left join enterprise_booking_settings es on es.spot_id = s.id
                  where s.type = 'accommodation' and s.status <> 'archived'
-                 order by enterprise_name`, [manilaToday()]);
+                 order by enterprise_name`, [manilaToday(), month]);
             return res.json(rows.map(r => ({
                 spotId: r.id, title: r.title, enterpriseName: r.enterprise_name, managerName: r.manager_name,
                 acceptsBookings: r.accepts_bookings, pausedByOffice: r.paused_by_office,

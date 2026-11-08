@@ -536,6 +536,7 @@ body { overflow-x: hidden; }
                 <h2 id="entryTitle" class="text-2xl font-black tracking-tight font-headline">Add a stay</h2>
                 <button type="button" data-close aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex"><span class="material-symbols-outlined">close</span></button>
             </div>
+            <p id="entryFrom" hidden class="tone-pill tone-info rounded-pill text-sm font-bold px-3 py-1 inline-flex"></p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="block"><span id="entryDateLabel" class="block text-sm font-semibold text-on-surface mb-1.5">Check-in date</span>
                     <input id="entryDate" type="date" required class="field min-h-[44px]"/></label>
@@ -615,6 +616,9 @@ body { overflow-x: hidden; }
         }
 
         let myPlaces = [], residenceList = [], current = null, editing = null;
+        // A booking checked in (?booking=): its registerDraft fills the window,
+        // and the entry is saved with its bookingId, once (statistics.js).
+        let fromBooking = null;
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const fmt = n => (Number(n) || 0).toLocaleString('en-US');
         const place = () => myPlaces.find(p => p._id === document.getElementById('rgPlace').value);
@@ -723,14 +727,19 @@ body { overflow-x: hidden; }
         }
         function updateTotal() {
             const n = readGuests().reduce((a, g) => a + g.male + g.female, 0);
-            document.getElementById('entryTotal').textContent = `${n} ${isStay() ? 'guest' : 'visitor'}${n === 1 ? '' : 's'}`;
+            document.getElementById('entryTotal').textContent = `${n} ${isStay() ? 'guest' : 'visitor'}${n === 1 ? '' : 's'}`
+                + (fromBooking && n !== fromBooking.guests ? ` · the booking says ${fromBooking.guests}` : '');
             const rows = document.querySelectorAll('#entryGuests .rg-guest-row');
             rows.forEach(r => { r.querySelector('[data-remove-row]').hidden = rows.length === 1; });
         }
         function setError(m) { const b = document.getElementById('entryError'); b.textContent = m || ''; b.hidden = !m; }
 
-        function openEntry(entry) {
+        function openEntry(entry, draft) {
             editing = entry || null;
+            fromBooking = draft || null;
+            const from = document.getElementById('entryFrom');
+            from.textContent = draft ? `From booking ${draft.code} · ${draft.guests} guest${draft.guests === 1 ? '' : 's'}` : '';
+            from.hidden = !draft;
             const stay = isStay();
             const [year, month] = period();
             document.getElementById('entryTitle').textContent = `${entry ? 'Change' : 'Add'} a ${stay ? 'stay' : 'group'}`;
@@ -740,18 +749,20 @@ body { overflow-x: hidden; }
             const date = document.getElementById('entryDate');
             date.max = manilaToday();
             const first = `${year}-${String(month).padStart(2, '0')}-01`;
-            date.value = entry ? entry.date : (manilaToday().slice(0, 7) === first.slice(0, 7) ? manilaToday() : first);
-            document.getElementById('entryNights').value = entry && entry.nights ? entry.nights : 1;
-            document.getElementById('entryRooms').value = entry && entry.rooms ? entry.rooms : 1;
+            const base = entry || (draft ? { date: String(draft.date).slice(0, 10), nights: draft.nights, rooms: draft.rooms,
+                guests: [{ code: draft.countryCode || 'ph-filipino', male: 0, female: 0 }] } : null);
+            date.value = base ? base.date : (manilaToday().slice(0, 7) === first.slice(0, 7) ? manilaToday() : first);
+            document.getElementById('entryNights').value = base && base.nights ? base.nights : 1;
+            document.getElementById('entryRooms').value = base && base.rooms ? base.rooms : 1;
             const host = document.getElementById('entryGuests');
             host.innerHTML = '';
-            (entry ? entry.guests : [{ code: 'ph-filipino', male: 0, female: 0 }]).forEach(g => host.appendChild(guestRow(g)));
+            (base ? base.guests : [{ code: 'ph-filipino', male: 0, female: 0 }]).forEach(g => host.appendChild(guestRow(g)));
             updateTotal();
             setError('');
             document.getElementById('entryModal').hidden = false;
             date.focus();
         }
-        function closeEntry() { document.getElementById('entryModal').hidden = true; editing = null; }
+        function closeEntry() { document.getElementById('entryModal').hidden = true; editing = null; fromBooking = null; }
 
         async function saveEntry(event) {
             event.preventDefault();
@@ -764,6 +775,7 @@ body { overflow-x: hidden; }
                 nights: parseInt(document.getElementById('entryNights').value, 10),
                 rooms: parseInt(document.getElementById('entryRooms').value, 10)
             });
+            if (fromBooking && !editing) body.bookingId = fromBooking.bookingId;
             const btn = document.getElementById('entrySave');
             btn.disabled = true;
             try {
@@ -865,7 +877,41 @@ body { overflow-x: hidden; }
             const periodSelect = document.getElementById('rgPeriod');
             for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
             wire();
-            load();
+            await load();
+            openFromBooking();
+        }
+
+        /* Bookings → Check in sends the manager here (?booking=<id>): the
+           entry opens filled from the booking, to add male and female and save. */
+        async function openFromBooking() {
+            const id = new URLSearchParams(location.search).get('booking');
+            if (!id) return;
+            history.replaceState(null, '', location.pathname + location.hash);
+            let b;
+            try {
+                const res = await fetch(`${API_BASE}/bookings/manage/item/${encodeURIComponent(id)}`, { headers: authHeaders() });
+                if (res.status === 401) return handleExpiredSession();
+                b = await res.json();
+                if (!res.ok) throw new Error(b.message || 'That booking could not be opened.');
+            } catch (e) { return showToast(e.message, 'error'); }
+            if (b.registerEntryId) return showToast('This booking is already in the Guest Register.', 'info');
+            if (!b.registerDraft) return showToast('Check the guest in on Bookings first; then count them here.', 'info');
+            const placeSelect = document.getElementById('rgPlace');
+            if (placeSelect.value !== b.spotId) {
+                // The booking is for another of the manager's places: work there.
+                if (window.ztimsEnterprise && myPlaces.some(p => p._id === b.spotId)) {
+                    ztimsEnterprise.remember(b.spotId);
+                    location.search = `?booking=${encodeURIComponent(id)}`;
+                }
+                return;
+            }
+            const [y, m] = String(b.registerDraft.date).slice(0, 7).split('-').map(Number);
+            const periodSelect = document.getElementById('rgPeriod');
+            if ([...periodSelect.options].some(o => o.value === `${y}-${m}`) && periodSelect.value !== `${y}-${m}`) {
+                periodSelect.value = `${y}-${m}`;
+                await load();
+            }
+            openEntry(null, { ...b.registerDraft, code: b.code });
         }
 
         document.addEventListener('DOMContentLoaded', () => {

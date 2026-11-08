@@ -771,7 +771,7 @@ Refresh.
   place exists, and the photo passes `checkPhotoSources` (the listings' hosts).
 - No Facebook feature: no Facebook code, tokens or fields (the user's decision).
 - **The officer's page** (`admin/admin_announcements.html`, "Announcements" in
-  the officer menu after Collections; `nav-active.js` marks it by its file
+  the officer menu after Collections and Bookings; `nav-active.js` marks it by its file
   name), from the design images in the notes repo
   (`Design/Announcements and events/`), laid out like Statistics and Settings
   (November 2026, to match the other officer pages): the title only, then two
@@ -1131,7 +1131,18 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **Privacy:** `privacy.js` erases a booking's name, email, phone and note a
   year after check-out; dates, rooms, counts, country and price stay.
 - Version 1 has blocked dates only, no seasonal rates. No SMS. ZTIMS never
-  takes the money. Still to build: the officer's overview page.
+  takes the money.
+- **The officer's Bookings** (`admin/admin_bookings.html`, "Bookings" in the
+  officer menu after Collections, on all eleven officer pages): one month at a
+  time (Previous / Next; stays whose check-in falls in it,
+  `GET /api/bookings/overview?month=YYYY-MM`), four tiles (Waiting for an
+  answer, Confirmed, Checked in or stayed, Declined / expired / cancelled /
+  no-show), and a row per private place to stay (`.bko-row` in
+  `portal-flat.css`: name, Taking bookings / Not taking bookings / No rooms to
+  book / Paused by the Tourism Office, manager, room types, rooms, stays ahead,
+  the counts) with a **Paused** switch, asked once
+  (`PATCH /api/bookings/overview/:spotId/pause`). Counts only: no prices, money
+  or guest details.
 - **The visitor's side** (November 2026): on a place to stay taking requests,
   `spot.html` shows **Book a room** in the action bar and the phone's bottom
   bar (it replaces the resort's own booking link, whose panel is hidden; a
@@ -1180,9 +1191,13 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
     the check-in date; no-show asked once), **Check out** (`completed`). A row
     opens the booking (a full-screen sheet on a phone): guest and contact
     links, stay with the resort's times, rooms and rates, total, paid,
-    balance, payments, the reason given, history. Checking in asks at once for
-    the Guest Register entry (country, male, female), saved with the
-    booking's `bookingId`; later, "Add to the Guest Register" in the booking.
+    balance, payments, the reason given, history. Checking in opens the Guest
+    Register (`resort_register.html?booking=<id>`) with the entry filled from
+    the booking (check-in date, nights, rooms, the country, "From booking …");
+    the manager adds male and female (the line shows "the booking says n") and
+    saves, which sets `register_entries.booking_id`; later, "Add to the Guest
+    Register" in the booking does the same. A booking never checked in is
+    never counted.
     `#month` — rooms free per room type and night (`.bkm-cal`, sideways
     scroll with the names kept in view; all free, some taken, full, a request
     waiting dashed, blocked striped; today circled), Previous / Next.
@@ -1279,7 +1294,8 @@ the page; tabs styled like Statistics').
 - **Data Privacy**: the Data Protection Officer's name and email
   (`office_info.dpo_name|dpo_email`, `PUT /api/office/privacy`, both or
   neither), published on the Privacy page through `GET /api/office`; the
-  one-year erasure rule; and when it last ran (`office_info.privacy_checked_at`,
+  one-year erasure rule (room guests' details too, a year after check-out);
+  and when it last ran (`office_info.privacy_checked_at`,
   written by `privacy.js`, officer-only via `GET /api/office/admin`). office_info
   has its own `updated_at` trigger (`ztims_touch_office_info`) so that daily run
   never changes Office Information's "last updated".

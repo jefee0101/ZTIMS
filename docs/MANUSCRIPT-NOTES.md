@@ -4,6 +4,119 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Room booking: the complete module (9 November 2026)
+
+Everything below is built and on `main`: the database and API (8 November),
+the manager's Rooms and Bookings, the visitor's Book a room and My ticket or
+booking, check-in into the Guest Register, and the officer's Bookings
+overview. The earlier entries below give the detail of each step.
+
+**New module for the manuscript.** *Room Booking*: a visitor asks a private
+place to stay for rooms on given dates; the resort's Enterprise Manager
+confirms or declines by hand; payment stays between guest and resort; at
+check-in the guests are counted in the Guest Register, which feeds the monthly
+Form A4 report. The Tourism Officer sees counts per enterprise and month and
+can pause an enterprise's bookings, but never money or a guest's details.
+
+**Use cases** (actor: use case).
+- Visitor: Request a room (choose dates and guests, see only the rooms free,
+  give details, get a booking code); Manage a booking (find by code + email,
+  see the status and, once confirmed, how to pay; ask for new dates; cancel by
+  the resort's deadline).
+- Enterprise Manager: Manage room types (add, edit, price, rooms, photo,
+  retire); Block dates; Set booking rules (take bookings, answer time,
+  check-in/out times, nights, how far ahead, free cancellation, how to pay);
+  Answer a request (confirm, decline with a reason, adjust the price with a
+  reason); Record a payment; Check in / check out / mark no-show; Count the
+  guests in the Guest Register (filled from the booking; male and female added
+  by the manager).
+- Tourism Officer: View the bookings overview (counts per enterprise and
+  month); Pause or resume an enterprise's bookings.
+- System (daily and as bookings are read): Remind the resort halfway through
+  the answer time; Expire an unanswered request; Erase a guest's details a
+  year after check-out.
+
+**ERD** (new entities and links; one-to-many unless said).
+- SPOT 1 — 0..1 ENTERPRISE_BOOKING_SETTINGS (spot_id is its key)
+- SPOT 1 — n ROOM_TYPE; ROOM_TYPE 1 — n ROOM_BLOCK
+- SPOT 1 — n BOOKING; RESIDENCE 1 — n BOOKING (country_code)
+- BOOKING n — n ROOM_TYPE through BOOKING_ROOM (units, rate_per_night)
+- BOOKING 1 — n BOOKING_CHANGE; BOOKING 1 — n BOOKING_PAYMENT
+- BOOKING 1 — 0..1 REGISTER_ENTRY (register_entries.booking_id, unique)
+
+**Data dictionary** (PK primary key, FK foreign key; every table also has
+created/updated times where shown).
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| enterprise_booking_settings | spot_id | text PK, FK spots | The place to stay |
+| | accepts_bookings | boolean | The manager takes requests |
+| | paused_by_office | boolean | The Tourism Officer's pause |
+| | response_hours | integer 1–72 | Time to answer a request |
+| | check_in_time, check_out_time | time | The resort's times |
+| | min_nights, max_nights | integer 1–60 | Shortest and longest stay |
+| | advance_days | integer 1–730 | How far ahead a stay may start |
+| | free_cancel_days | integer 0–60 | Days before check-in that changes close (at least 1) |
+| | payment_instructions | text | How guests pay the resort; required to take bookings |
+| | updated_by_email | text | Who last changed it |
+| room_types | id | text PK | |
+| | spot_id | text FK spots | |
+| | name, description | text | |
+| | beds, max_guests | integer | Beds; guests per room |
+| | base_rate | numeric | Price per night (₱) |
+| | units | integer | How many rooms of this type |
+| | photo_url | text | |
+| | active | boolean | Retired types stay, inactive (never deleted) |
+| | position | integer | Display order |
+| room_blocks | id | text PK | |
+| | room_type_id | text FK room_types | |
+| | starts_on, ends_on | date | First and last night out of booking |
+| | units | integer | Rooms blocked |
+| | reason, created_by_email | text | |
+| bookings | id | text PK | |
+| | code | text, unique | Booking code shown to the guest (e.g. CC-SXDM9S) |
+| | spot_id | text FK spots | |
+| | guest_name, email, phone | text | Erased a year after check-out |
+| | country_code | text FK residences | Country of residence (Form A4 row) |
+| | adults, children | integer | |
+| | check_in, check_out | date | |
+| | nights | integer, generated | check_out − check_in |
+| | status | text | requested, confirmed, checked_in, completed, declined, expired, cancelled, no_show |
+| | total_amount | numeric | Worked out by the server from the rates |
+| | note | text | The guest's note; erased with the details |
+| | requested_at, expires_at, reminder_sent_at | timestamptz | The answer deadline and reminder |
+| | decided_by_email, decided_at, decline_reason | | Who answered, when, why declined |
+| booking_rooms | booking_id, room_type_id | text PK/FK | |
+| | units | integer | Rooms of that type |
+| | rate_per_night | numeric | The rate when booked (kept) |
+| booking_changes | id | text PK | |
+| | booking_id | text FK bookings | |
+| | action | text | requested, confirmed, declined, price_adjusted, moved, cancelled, payment_recorded, checked_in, completed, no_show, expired |
+| | before, after | jsonb | Status, dates, guests, total — never a guest's name, email or phone |
+| | by_email, at | | Who and when |
+| booking_payments | id | text PK | |
+| | booking_id | text FK bookings | |
+| | amount | numeric | What the guest paid the resort |
+| | method | text | cash, gcash, maya, bank, card, other |
+| | received_on | date | |
+| | reference, recorded_by_email | text | |
+| register_entries (changed) | booking_id | text FK bookings, unique, nullable | The booking a Guest Register entry was counted from |
+
+27 tables in all.
+
+**Wording to use in the manuscript.** "Room booking" (the module); "Book a
+room" (the visitor's button); a booking is a **request until the resort
+confirms**; the guest **pays the resort directly** (never "pay online" for
+rooms); "My ticket or booking" (never "Manage my ticket"); "Enterprise
+Manager" and "enterprise" (never "establishment"); "checked in" is when guests
+are **counted**, through the Guest Register — a booking itself is never a
+visitor count.
+
+**Limitations to state.** Payment for rooms is outside the system; version 1
+has blocked dates only, no seasonal rates; email only, no SMS; the resort
+confirms by hand; expiry relies on the daily run and on bookings being read
+(Vercel Hobby's cron is daily).
+
 ## Room booking at private places to stay (November 2026; database and API)
 
 **The change.** A visitor can ask a private place to stay for rooms on given
@@ -46,7 +159,8 @@ sees it, erased a year after check-out) are updated, dated 9 November 2026.
 In the manuscript: the visitor use case "Request a room" and "Manage a
 booking", the System User Interface screenshots of the window's four steps and
 of My ticket or booking, and every "Manage my ticket" in the text becomes "My
-ticket or booking". Still to build: the officer's overview.
+ticket or booking". (The officer's overview is now built: see "Room booking:
+the complete module".)
 
 ## Announcements and calendar of events (November 2026)
 
