@@ -978,6 +978,156 @@ create index if not exists announcements_spot_idx on public.announcements (spot_
 
 
 -- ---------------------------------------------------------------------------
+-- Room booking (November 2026, decided 8 November; bookings.js). A private
+-- place to stay takes booking requests for its own rooms; its manager
+-- confirms or declines each by hand. ZTIMS never holds the money: the guest
+-- pays the resort as it instructs, and the manager may record that payment.
+-- A booking is not a count: a guest is counted only through the Guest
+-- Register entry the manager saves at check-in. Nothing here is deleted:
+-- bookings end Declined, Expired, Cancelled, Completed or No-show, with every
+-- change in booking_changes.
+-- ---------------------------------------------------------------------------
+create table if not exists public.enterprise_booking_settings (
+    spot_id                 text primary key references public.spots (id),
+    -- The manager's switch, and the Tourism Office's pause over it: bookings
+    -- are open only while the first is on and the second off.
+    accepts_bookings        boolean not null default false,
+    paused_by_office        boolean not null default false,
+    response_hours          integer not null default 24
+                            constraint booking_settings_response_hours check (response_hours between 1 and 72),
+    check_in_time           time not null default '14:00',
+    check_out_time          time not null default '12:00',
+    min_nights              integer not null default 1,
+    max_nights              integer not null default 14,
+    -- How many days ahead a stay can start.
+    advance_days            integer not null default 180
+                            constraint booking_settings_advance_days check (advance_days between 1 and 730),
+    -- Moves and cancellations close this many days before check-in.
+    free_cancel_days        integer not null default 2
+                            constraint booking_settings_free_cancel_days check (free_cancel_days between 0 and 60),
+    payment_instructions    text not null default ''
+                            constraint booking_settings_payment_instructions_length check (char_length(payment_instructions) <= 2000),
+    updated_by_email        text not null default '',
+    created_at              timestamptz not null default now(),
+    updated_at              timestamptz not null default now(),
+    constraint booking_settings_nights check (min_nights between 1 and 60 and max_nights between min_nights and 60)
+);
+
+create table if not exists public.room_types (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    name                text not null constraint room_types_name_length check (char_length(btrim(name)) between 1 and 80),
+    description         text not null default '' constraint room_types_description_length check (char_length(description) <= 1000),
+    beds                integer not null default 1 constraint room_types_beds check (beds between 1 and 20),
+    max_guests          integer not null default 2 constraint room_types_max_guests check (max_guests between 1 and 30),
+    -- One price per room per night until seasonal rates (a later version).
+    base_rate           numeric(10, 2) not null constraint room_types_base_rate check (base_rate > 0 and base_rate <= 1000000),
+    -- How many rooms of this type the place has.
+    units               integer not null constraint room_types_units check (units between 1 and 500),
+    photo_url           text not null default '' constraint room_types_photo_url_length check (char_length(photo_url) <= 500),
+    -- Retired, never deleted: old bookings still point at it.
+    active              boolean not null default true,
+    position            integer not null default 0,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+create index if not exists room_types_spot_idx on public.room_types (spot_id, position);
+
+-- Rooms taken out of booking on some nights (repairs, a private event):
+-- `units` rooms of the type, every night from starts_on to ends_on inclusive.
+create table if not exists public.room_blocks (
+    id                  text primary key default public.ztims_new_id(),
+    room_type_id        text not null references public.room_types (id),
+    starts_on           date not null,
+    ends_on             date not null,
+    units               integer not null constraint room_blocks_units check (units between 1 and 500),
+    reason              text not null default '' constraint room_blocks_reason_length check (char_length(reason) <= 200),
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint room_blocks_dates check (ends_on >= starts_on)
+);
+create index if not exists room_blocks_type_dates_idx on public.room_blocks (room_type_id, starts_on, ends_on);
+
+create table if not exists public.bookings (
+    id                  text primary key default public.ztims_new_id(),
+    -- What the guest is given and types on the Manage page, with the email.
+    code                text not null unique,
+    spot_id             text not null references public.spots (id),
+    guest_name          text not null constraint bookings_guest_name_length check (char_length(guest_name) between 1 and 120),
+    email               text not null default '' constraint bookings_email_length check (char_length(email) <= 254),
+    phone               text not null default '' constraint bookings_phone_length check (char_length(phone) <= 40),
+    -- Where the guest lives (Form A4's rows), for the Guest Register at check-in.
+    country_code        text not null references public.residences (code),
+    adults              integer not null constraint bookings_adults check (adults between 1 and 100),
+    children            integer not null default 0 constraint bookings_children check (children between 0 and 100),
+    check_in            date not null,
+    check_out           date not null,
+    nights              integer generated always as (check_out - check_in) stored,
+    status              text not null default 'requested'
+                        constraint bookings_status check (status in
+                            ('requested', 'confirmed', 'checked_in', 'completed', 'declined', 'expired', 'cancelled', 'no_show')),
+    -- Worked out by the server from the rooms' prices; the manager may adjust
+    -- it once, before confirming, with a reason (booking_changes).
+    total_amount        numeric(12, 2) not null constraint bookings_total_amount check (total_amount >= 0),
+    note                text not null default '' constraint bookings_note_length check (char_length(note) <= 1000),
+    -- A request is held until then; unanswered, it expires and frees the rooms.
+    requested_at        timestamptz not null default now(),
+    expires_at          timestamptz,
+    reminder_sent_at    timestamptz,
+    decided_by_email    text not null default '',
+    decided_at          timestamptz,
+    decline_reason      text not null default '' constraint bookings_decline_reason_length check (char_length(decline_reason) <= 300),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint bookings_dates check (check_out > check_in)
+);
+create index if not exists bookings_spot_dates_idx on public.bookings (spot_id, check_in, check_out);
+create index if not exists bookings_status_expires_idx on public.bookings (status, expires_at);
+
+-- Which rooms a booking holds, at the price each had when it was made.
+create table if not exists public.booking_rooms (
+    booking_id          text not null references public.bookings (id),
+    room_type_id        text not null references public.room_types (id),
+    units               integer not null constraint booking_rooms_units check (units between 1 and 50),
+    rate_per_night      numeric(10, 2) not null constraint booking_rooms_rate check (rate_per_night >= 0),
+    primary key (booking_id, room_type_id)
+);
+create index if not exists booking_rooms_type_idx on public.booking_rooms (room_type_id);
+
+-- Every change, with what it was before and after (never a guest's name,
+-- email or phone, so the yearly erasure leaves nothing behind here).
+create table if not exists public.booking_changes (
+    id                  text primary key default public.ztims_new_id(),
+    booking_id          text not null references public.bookings (id),
+    action              text not null,
+    before              jsonb,
+    after               jsonb,
+    by_email            text not null default '',
+    at                  timestamptz not null default now()
+);
+create index if not exists booking_changes_booking_idx on public.booking_changes (booking_id, at);
+
+-- Money the guest paid the resort directly, as the manager records it.
+create table if not exists public.booking_payments (
+    id                  text primary key default public.ztims_new_id(),
+    booking_id          text not null references public.bookings (id),
+    amount              numeric(12, 2) not null constraint booking_payments_amount check (amount > 0 and amount <= 10000000),
+    method              text not null
+                        constraint booking_payments_method check (method in ('cash', 'gcash', 'maya', 'bank', 'card', 'other')),
+    received_on         date not null,
+    reference           text not null default '' constraint booking_payments_reference_length check (char_length(reference) <= 120),
+    recorded_by_email   text not null default '',
+    created_at          timestamptz not null default now()
+);
+create index if not exists booking_payments_booking_idx on public.booking_payments (booking_id);
+
+-- A Guest Register stay made from a booking at check-in (one per booking).
+alter table public.register_entries add column if not exists booking_id text references public.bookings (id);
+create unique index if not exists register_entries_booking_idx on public.register_entries (booking_id) where booking_id is not null;
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -987,7 +1137,8 @@ begin
     foreach t in array array[
         'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
-        'emergency_numbers', 'register_entries', 'announcements'
+        'emergency_numbers', 'register_entries', 'announcements',
+        'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -1000,7 +1151,9 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback', 'rate_limits',
         'residences', 'monthly_reports', 'monthly_report_counts', 'report_changes',
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
-        'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements'
+        'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements',
+        'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings', 'booking_rooms',
+        'booking_changes', 'booking_payments'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

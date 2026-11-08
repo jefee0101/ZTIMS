@@ -436,7 +436,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
 
     async function entriesFor(spotId, fromIso, toIsoExclusive, client) {
         const { rows } = await query(
-            `select e.id, e.entry_date::text as date, e.nights, e.rooms, e.created_by_email, e.updated_at,
+            `select e.id, e.entry_date::text as date, e.nights, e.rooms, e.booking_id, e.created_by_email, e.updated_at,
                     coalesce(json_agg(json_build_object('code', g.residence_code, 'male', g.male, 'female', g.female)
                              order by r.sort_order) filter (where g.entry_id is not null), '[]') as guests
                from register_entries e
@@ -445,7 +445,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
               where e.spot_id = $1 and e.entry_date < $3::date
                 and e.entry_date + coalesce(e.nights, 1) > $2::date
               group by e.id order by e.entry_date, e.created_at`, [spotId, fromIso, toIsoExclusive], client);
-        return rows.map(r => ({ _id: r.id, date: r.date, nights: r.nights, rooms: r.rooms, guests: r.guests, updatedAt: r.updated_at }));
+        return rows.map(r => ({ _id: r.id, date: r.date, nights: r.nights, rooms: r.rooms, bookingId: r.booking_id, guests: r.guests, updatedAt: r.updated_at }));
     }
 
     /* A month's totals from its entries. A stay's guests arrive in the month
@@ -548,11 +548,22 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             const entry = await readEntry(req.body, spot);
             if (entry.error) return badRequest(res, entry.error);
+            // A room booking pre-fills the entry at check-in (bookings.js'
+            // registerDraft); the entry keeps which booking it came from, once.
+            let bookingId = null;
+            if (req.body && req.body.bookingId) {
+                bookingId = String(req.body.bookingId);
+                const { rows: found } = await query('select spot_id, status from bookings where id = $1', [bookingId]);
+                if (!found.length || found[0].spot_id !== spot.id) return badRequest(res, 'That booking is not for this place.');
+                if (!['checked_in', 'completed'].includes(found[0].status)) return badRequest(res, 'Save the register entry once the guest has checked in.');
+                const { rows: linked } = await query('select 1 from register_entries where booking_id = $1', [bookingId]);
+                if (linked.length) return res.status(409).json({ success: false, message: 'This booking is already in the Guest Register.' });
+            }
             const who = await whoIsSigningIn(req);
             const id = await transaction(async client => {
                 const { rows } = await query(
-                    `insert into register_entries (spot_id, entry_date, nights, rooms, created_by_email)
-                     values ($1, $2, $3, $4, $5) returning id`, [spot.id, entry.date, entry.nights, entry.rooms, who.email], client);
+                    `insert into register_entries (spot_id, entry_date, nights, rooms, booking_id, created_by_email)
+                     values ($1, $2, $3, $4, $5, $6) returning id`, [spot.id, entry.date, entry.nights, entry.rooms, bookingId, who.email], client);
                 await writeGuests(client, rows[0].id, entry.guests);
                 return rows[0].id;
             });

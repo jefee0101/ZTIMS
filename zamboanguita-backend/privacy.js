@@ -27,9 +27,14 @@ async function forgetOldVisitors() {
             `update feedback set name = '', email = ''
               where status = 'resolved' and coalesce(status_updated_at, created_at) < now() - ${RETAIN}
                 and (name <> '' or email <> '')`, [], client);
-        const done = { tickets: tickets.rowCount, feedback: feedback.rowCount };
-        if (done.tickets + done.feedback) {
-            console.log(`🔒 Privacy: personal details erased from ${done.tickets} ticket(s), ${done.feedback} feedback message(s) older than a year.`);
+        // A room booking keeps its dates, rooms, counts, country and price;
+        // the guest's name, email, phone and note go a year after check-out.
+        const bookings = await query(
+            `update bookings set guest_name = $1, email = '', phone = '', note = ''
+              where check_out < ${MANILA_TODAY} - ${RETAIN} and guest_name <> $1`, [ERASED_NAME], client);
+        const done = { tickets: tickets.rowCount, feedback: feedback.rowCount, bookings: bookings.rowCount };
+        if (done.tickets + done.feedback + done.bookings) {
+            console.log(`🔒 Privacy: personal details erased from ${done.tickets} ticket(s), ${done.bookings} booking(s), ${done.feedback} feedback message(s) older than a year.`);
         }
         return done;
     }).then(async done => {

@@ -651,10 +651,10 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 20 tables in all, with `announcements`,
+  `gateway_ref`, refund fields and `is_demo`. 27 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
-  `emergency_numbers` and the Guest Register's `register_entries` /
-  `register_entry_guests`.
+  `emergency_numbers`, the Guest Register's `register_entries` /
+  `register_entry_guests`, and room booking's seven (see "Room booking").
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
   the ticket code — tickets have no QR, by the user's decision: most places
@@ -1036,6 +1036,80 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   outlives the account). Those are facts of
   that record, like a receipt's price, not copies to keep in step.
 
+### Room booking (November 2026; database and API only, no pages yet)
+
+`bookings.js`, mounted at `/api`, for private places to stay (`spots.type`
+`accommodation` with a manager). The user's decisions (notes repo,
+`Design/Booking system/Booking system proposal.md`, 8 November 2026):
+- **Tables** (`schema.sql`, block "Room booking"): `enterprise_booking_settings`
+  (one row per listing: `accepts_bookings`, `paused_by_office` — the officer's
+  pause, which the manager's settings save leaves alone — `response_hours`
+  1–72, check-in/out times, `min_nights`/`max_nights`, `advance_days`,
+  `free_cancel_days`, `payment_instructions`, required before taking bookings);
+  `room_types` (name, beds, `max_guests`, `base_rate`, `units`, photo, `active`,
+  `position`; retired, never deleted); `room_blocks` (a room type's units out
+  of booking, `starts_on`–`ends_on` inclusive nights); `bookings` (`code`
+  like `LR-XXXXXX`, the guest's name/email/phone/country, adults, children,
+  dates, `nights` generated, `status` one of `requested`, `confirmed`,
+  `checked_in`, `completed`, `declined`, `expired`, `cancelled`, `no_show`,
+  `total_amount`, `expires_at`, `reminder_sent_at`, decided by/at,
+  `decline_reason`); `booking_rooms` (units and `rate_per_night` at booking);
+  `booking_changes` (action, before/after, by, at — never a guest's name, email
+  or phone); `booking_payments` (what the guest paid the resort, recorded by
+  the manager). `register_entries.booking_id` (unique) links a Guest Register
+  entry to its booking.
+- **Rooms held** = confirmed, checked in, and requested while `expires_at` is
+  ahead. Free = units − held − blocked, the lowest over the stay's nights
+  (`freeRooms`). Every write that takes rooms locks the room types' rows
+  (`for update`) and counts again in the same transaction (`holdRooms`), so two
+  requests for the last room can't both get it. Blocks are refused where rooms
+  are already held.
+- **Public:** `GET /api/rooms/:spotId` (open or not, rules, active rooms),
+  `GET /api/rooms/:spotId/availability?checkIn=&checkOut=` (free per room type
+  and the stay's price), `POST /api/bookings` (rate-limited 10 an hour per
+  connection, honeypot `website`; checks dates against the resort's rules,
+  capacity ≥ guests, the country; the **server** prices it from the room
+  types — the page's figure is never read; status Requested, `expires_at` =
+  now + response hours). Emails: request received (guest), new request
+  (manager's sign-in email, a Review request link to
+  `src/resort/resort_bookings.html?code=` — a page not built yet; it never
+  confirms by itself).
+- **Visitor** (`manage.js`, code + email like a ticket; `kind: 'booking'`):
+  lookup, move (new dates, same rooms at the same rates, back to Requested with
+  a new expiry; both sides emailed), cancel (while requested or confirmed).
+  Changes close at 11:59 PM Manila, `free_cancel_days` (at least 1) before
+  check-in. A wrong pair is answered as "nothing matches".
+- **Manager** (`requireEstablishmentManager`, own listings only, else 403):
+  `GET /api/rooms/manage/:spotId` (settings, rooms, blocks), `PUT …/settings`,
+  `POST …/types`, `PUT /api/rooms/manage/types/:id`, `POST
+  /api/rooms/manage/types/:id/blocks`, `DELETE /api/rooms/manage/blocks/:id`;
+  `GET /api/bookings/manage/:spotId` (`?status=`, `?when=upcoming|past`),
+  `GET /api/bookings/manage/item/:id`, and on an item `POST confirm`,
+  `decline` {reason}, `price` {totalAmount, reason} (requested only),
+  `payments` {amount, method, receivedOn, reference} (confirmed on), `status`
+  {checked_in | completed | no_show} (check-in and no-show on or after the
+  check-in date). Confirmed sends the guest the resort's payment instructions;
+  declined, expired and cancelled are emailed too. Checked in returns a
+  `registerDraft`; `POST /api/statistics/register/:spotId` takes `bookingId`
+  (once per booking) and the manager adds male and female — a booking itself is
+  never a count, a no-show is never counted.
+- **Officer** (`requireAdmin`): `GET /api/bookings/overview` (per enterprise:
+  open, paused, rooms, counts per status, upcoming — no prices or money) and
+  `PATCH /api/bookings/overview/:spotId/pause` {paused}. A paused place refuses
+  new requests; requests already made stay for the manager.
+- **Expiry and reminders** (`sweepBookings`): the reminder goes to the manager
+  halfway through the response time; an unanswered request becomes Expired
+  (rooms free, guest emailed). Run by the daily cron (`/api/maintenance/privacy`
+  calls it, one Vercel cron) and, at most once a minute per instance, before
+  availability, requests, the manager's reads and a visitor's lookup — Vercel
+  Hobby's cron is daily, so this keeps expiry on time. An overdue request holds
+  nothing even before the sweep marks it.
+- **Privacy:** `privacy.js` erases a booking's name, email, phone and note a
+  year after check-out; dates, rooms, counts, country and price stay.
+- Version 1 has blocked dates only, no seasonal rates. No SMS. ZTIMS never
+  takes the money. Pages (the visitor's form, the manager's Rooms and
+  Bookings, the officer's overview) come next.
+
 ### Listings and the visitor's day out
 
 - **Categories, by the visitor's purpose** (October 2026, the user's choice):
@@ -1253,6 +1327,13 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   stands at the entrance, the office marks tickets used from the day's list.
 - Tickets have no senior citizen or PWD price (October 2026, the user's
   decision): regular, plus student and child where the office sets them.
+- Room booking (8 November 2026, the user's decisions): the resort confirms by
+  hand (the email's Review request button only opens it); unanswered requests
+  expire after the resort's response hours, with a reminder halfway; payment
+  stays outside ZTIMS; the server computes every price and a booking keeps its
+  rates; the officer sees counts and can pause, never money; a booking is not
+  a count (only the Guest Register entry saved at check-in is); no visitor
+  accounts, no SMS, no seasonal rates in version 1; nothing deleted.
 - `docs/MANUSCRIPT-NOTES.md` lists what the manuscript must say after each
   system change; add to it in the same commit as a change the manuscript
   describes.

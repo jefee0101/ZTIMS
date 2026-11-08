@@ -313,6 +313,66 @@ const feedback = new Table('feedback', {
     statusUpdatedByEmail: text()
 });
 
+/* Room booking (bookings.js). Each enterprise's booking settings are one row
+   keyed by its listing (enterprise_booking_settings), read and written with
+   plain SQL there, since it has no id of its own. */
+const BOOKING_STATUSES = ['requested', 'confirmed', 'checked_in', 'completed', 'declined', 'expired', 'cancelled', 'no_show'];
+const BOOKING_PAYMENT_METHODS = ['cash', 'gcash', 'maya', 'bank', 'card', 'other'];
+
+const roomTypes = new Table('room_types', {
+    spotId: { type: 'id', required: true },
+    name: required({ trim: true }),
+    description: text({ trim: true }),
+    beds: { type: 'integer', default: 1, min: 1, max: 20 },
+    maxGuests: { type: 'integer', default: 2, min: 1, max: 30 },
+    baseRate: { type: 'number', required: true, min: 0.01, max: 1000000 },
+    units: { type: 'integer', required: true, min: 1, max: 500 },
+    photoUrl: text({ trim: true }),
+    active: flag(true),
+    position: { type: 'integer', default: 0 }
+});
+
+const roomBlocks = new Table('room_blocks', {
+    roomTypeId: { type: 'id', required: true },
+    startsOn: required(),   // YYYY-MM-DD
+    endsOn: required(),     // YYYY-MM-DD, the last blocked night
+    units: { type: 'integer', required: true, min: 1, max: 500 },
+    reason: text({ trim: true }),
+    createdByEmail: text()
+});
+
+const bookings = new Table('bookings', {
+    code: required(),
+    spotId: { type: 'id', required: true },
+    guestName: required({ trim: true }),
+    email: text({ trim: true, lowercase: true }),
+    phone: text({ trim: true }),
+    countryCode: required(),
+    adults: { type: 'integer', required: true, min: 1, max: 100 },
+    children: { type: 'integer', default: 0, min: 0, max: 100 },
+    checkIn: required(),    // YYYY-MM-DD
+    checkOut: required(),   // YYYY-MM-DD
+    nights: { type: 'integer', generated: true },
+    status: text({ default: 'requested', enum: BOOKING_STATUSES }),
+    totalAmount: { type: 'number', required: true, min: 0 },
+    note: text({ trim: true }),
+    requestedAt: when(),
+    expiresAt: when(),
+    reminderSentAt: when(),
+    decidedByEmail: text(),
+    decidedAt: when(),
+    declineReason: text({ trim: true })
+});
+
+const bookingPayments = new Table('booking_payments', {
+    bookingId: { type: 'id', required: true },
+    amount: { type: 'number', required: true, min: 0.01, max: 10000000 },
+    method: required({ enum: BOOKING_PAYMENT_METHODS }),
+    receivedOn: required(),  // YYYY-MM-DD
+    reference: text({ trim: true }),
+    recordedByEmail: text()
+});
+
 /* Announcements and events (announcements.js). Only the officer writes them. */
 const announcements = new Table('announcements', {
     category: required({ enum: ANNOUNCEMENT_CATEGORIES }),
@@ -329,6 +389,7 @@ const announcements = new Table('announcements', {
 
 module.exports = {
     announcements, ANNOUNCEMENT_CATEGORIES,
+    roomTypes, roomBlocks, bookings, bookingPayments, BOOKING_STATUSES, BOOKING_PAYMENT_METHODS,
     officers,
     managers,
     spots,

@@ -13,6 +13,10 @@
  *     keeps there (spots.cancel_keep_percent); the office's own cancellation
  *     (payments.js, closures) refunds everything.
  *
+ * Room bookings (bookings.js) use the same routes with their own rules: a
+ * change closes at the resort's free-cancel days before check-in, and new
+ * dates go back to the resort to confirm.
+ *
  * Mounted at /api by server.js. Every change is emailed to the visitor.
  */
 const express = require('express');
@@ -20,6 +24,7 @@ const { query } = require('./db');
 const { tickets: Ticket, payments: Payment, spots: Spot } = require('./models');
 const attractions = require('./attractions');
 const notices = require('./notices');
+const bookings = require('./bookings');
 
 const MANILA_OFFSET_HOURS = 8;
 const TICKET_DAYS_AHEAD = 60;
@@ -38,7 +43,7 @@ const normaliseCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9
 function problem(status, message) {
     return Object.assign(new Error(message), { status });
 }
-const NOT_FOUND = 'Nothing matches that code and email address. Check both, exactly as on your ticket email.';
+const NOT_FOUND = 'Nothing matches that code and email address. Check both, exactly as in your email.';
 
 /* The ticket for a code and an email, or null. */
 async function findRecord(code, email) {
@@ -48,6 +53,9 @@ async function findRecord(code, email) {
     const { rows } = await query(
         `select id from tickets where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and email = $2`, [wanted, address]);
     if (rows[0]) return { kind: 'ticket', record: await Ticket.findById(rows[0].id) };
+    // A room booking (bookings.js) is managed the same way: its code and email.
+    const booking = await bookings.findBooking(code, email);
+    if (booking) return { kind: 'booking', record: booking };
     return null;
 }
 
@@ -135,6 +143,11 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     router.post('/manage/lookup', limit, async (req, res) => {
         try {
             const found = await load(req.body);
+            if (found.kind === 'booking') {
+                await bookings.sweepBookings(siteOrigin(req)).catch(error => console.error('❌ Booking sweep failure:', error));
+                const fresh = await load(req.body);
+                return res.json({ success: true, item: await bookings.describeForVisitor(fresh.record) });
+            }
             res.json({ success: true, item: await describe(found) });
         } catch (error) { fail(res, error, '❌ Manage lookup failure:'); }
     });
@@ -142,6 +155,13 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     router.post('/manage/move', limit, async (req, res) => {
         try {
             const found = await load(req.body);
+            if (found.kind === 'booking') {
+                const done = await bookings.visitorMove(found.record, req.body, siteOrigin(req));
+                const fresh = await load(req.body);
+                return res.json({ success: true, emailed: done.emailed,
+                    message: 'New dates sent to the resort. It will confirm or decline them by email.',
+                    item: await bookings.describeForVisitor(fresh.record) });
+            }
             const view = await describe(found);
             if (!view.canMove) throw problem(409, view.why || 'This can no longer be moved.');
             const date = String((req.body && req.body.date) || '').trim();
@@ -169,6 +189,12 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     router.post('/manage/cancel', limit, async (req, res) => {
         try {
             const found = await load(req.body);
+            if (found.kind === 'booking') {
+                const done = await bookings.visitorCancel(found.record, siteOrigin(req));
+                const fresh = await load(req.body);
+                return res.json({ success: true, emailed: done.emailed, message: 'Cancelled. The resort has been told.',
+                    item: await bookings.describeForVisitor(fresh.record) });
+            }
             const view = await describe(found);
             if (!view.canCancel) throw problem(409, view.why || 'This can no longer be cancelled.');
             const origin = siteOrigin(req);
@@ -192,6 +218,7 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     router.post('/manage/refund-closure', limit, async (req, res) => {
         try {
             const found = await load(req.body);
+            if (found.kind === 'booking') throw problem(409, 'There is no closure refund to take here.');
             const view = await describe(found);
             if (!view.canRefundClosure) throw problem(409, view.why || 'There is no closure refund to take here.');
             const payment = await paymentFor(found.record._id);

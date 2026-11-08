@@ -1855,7 +1855,10 @@ app.get('/api/maintenance/privacy', async (req, res) => {
     if (!matches) return res.status(404).end();
     try {
         const erased = await forgetOldVisitors();
-        return res.json({ success: true, erased });
+        // The same daily run reminds resorts of unanswered booking requests and
+        // expires the overdue ones (bookings.js; also run as bookings are read).
+        const bookings = await bookingsModule.sweepBookings(paymentsModule.siteOrigin(req));
+        return res.json({ success: true, erased, bookings });
     } catch (error) {
         console.error('❌ Privacy clean-up failure:', error);
         return res.status(500).json({ success: false });
@@ -2509,6 +2512,14 @@ app.use('/api', require('./office')({ requireAdmin }));
 /* Announcements and the calendar of events (announcements.js): the public
    reads, the officer posts. Photos pass the same source check as listings. */
 app.use('/api', require('./announcements')({ requireAdmin, checkPhotoSources }));
+
+/* Room booking at private places to stay (bookings.js): visitors ask, the
+   resort's manager confirms by hand, the officer sees counts and can pause. */
+const bookingsModule = require('./bookings');
+app.use('/api', bookingsModule({
+    requireAdmin, requireEstablishmentManager, sharedRateLimit, isPubliclyVisible,
+    siteOrigin: paymentsModule.siteOrigin, checkPhotoSources
+}));
 
 /* ==========================================
    MANAGE MY TICKET — a visitor moves or cancels with the code and

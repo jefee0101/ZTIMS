@@ -4,6 +4,25 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Room booking at private places to stay (November 2026; database and API)
+
+**The change.** A visitor can ask a private place to stay for rooms on given
+dates. The resort's Enterprise Manager confirms or declines by hand; an
+unanswered request expires after the resort's response time (a reminder goes
+halfway). The server works out the price; payment stays between the guest and
+the resort (ZTIMS shows the resort's payment instructions and the manager may
+record what was received). The guest manages the booking with its code and
+email, like a ticket. The Tourism Officer sees counts per enterprise and can
+pause one. A booking is not a visitor count: guests are counted through the
+Guest Register entry saved at check-in. Guests' names, emails and phones are
+erased a year after check-out. Seven new tables (27 in all).
+
+**Change in the manuscript** (once the pages are built): the scope (room
+booking for private places to stay, confirm by hand, no online payment for
+rooms), the data dictionary (the seven tables), the use cases (request, confirm
+or decline, move or cancel, record payment, check in, pause), the Limitations
+(payment outside the system; no seasonal rates; email only, no SMS).
+
 ## Announcements and calendar of events (November 2026)
 
 **The change.** The Tourism Officer posts announcements (advisory, event,
