@@ -256,7 +256,7 @@ body { overflow-x: hidden; }
                 <a href="announcements.html" class="site-link">Announcements</a>
                 <a href="events.html" class="site-link">Events</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link">My ticket</a>
+                <a href="manage.html" class="site-link">My ticket or booking</a>
             </nav>
 
             <div class="site-header__tools">
@@ -883,6 +883,320 @@ body { overflow-x: hidden; }
         });
     }
 
+    /* ---- Book a room (a private place to stay that takes bookings) -------
+       A request, not a sale: the resort confirms or declines by email, and its
+       payment instructions come with the confirmation. The server prices the
+       stay and checks every rule again; this only shows them first. Steps:
+       Dates and guests → Rooms (only what is free) → Your details → Sent. */
+    const manilaDay = (offsetDays = 0) => new Date(Date.now() + (8 + 24 * offsetDays) * 3600 * 1000).toISOString().slice(0, 10);
+    const addDay = (key, n) => { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+    const nightsFrom = (a, b) => Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000);
+    const longDay = key => new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(key + 'T00:00:00Z'));
+    const clock12 = hhmm => { const [h, m] = String(hhmm || '00:00').split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+    const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+
+    async function renderRoomOffer(spot) {
+        const slot = document.getElementById('roomOffer');
+        if (!slot || !isStayPlace(spot)) return;
+        let offer = null;
+        try {
+            const response = await fetch(`${API_BASE}/rooms/${encodeURIComponent(spot._id)}`);
+            if (response.ok) offer = await response.json();
+        } catch (e) { /* not taking bookings here: the resort's own link stays */ }
+        if (!offer || !offer.open) return;
+        const rules = offer.rules;
+        const place = offer.spot.enterpriseName || spot.title;
+        const times = `Check-in from ${clock12(rules.checkInTime)} · check-out by ${clock12(rules.checkOutTime)}`;
+
+        // Book a room replaces the resort's own booking link.
+        actions.rooms = true;
+        actions.bookingUrl = '';
+        drawActions();
+        const linkPanel = document.getElementById('stayLinkPanel');
+        if (linkPanel) linkPanel.hidden = true;
+        const lowest = Math.min(...offer.rooms.map(r => r.rate));
+        slot.innerHTML = `
+            <section class="sd-panel" aria-labelledby="stayHeading">
+                <h2 id="stayHeading" class="sd-h2">Book your stay</h2>
+                <p class="rb-times"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${escapeHtml(times)}</p>
+                <ul class="rb-list">${offer.rooms.map(r => `
+                    <li><span><b>${escapeHtml(r.name)}</b> · sleeps ${r.maxGuests}</span><span>${escapeHtml(peso(r.rate))} a night</span></li>`).join('')}
+                </ul>
+                <button type="button" data-act="rooms" class="btn btn-primary btn-pill min-h-[48px] mt-4">
+                    <span class="material-symbols-outlined !text-base" aria-hidden="true">bed</span>Book a room · from ${escapeHtml(peso(lowest))} a night</button>
+            </section>`;
+
+        const today = manilaDay(0), last = addDay(today, rules.advanceDays);
+        const modal = document.createElement('div');
+        modal.id = 'roomModal';
+        modal.hidden = true;
+        modal.className = 'fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'roomHeading');
+        document.body.appendChild(modal);
+        const field = (id, label, input) => `<div><label for="${id}" class="bk-label">${label}</label>${input}</div>`;
+        modal.innerHTML = `
+            <div class="bg-surface border border-outline-variant/40 w-full max-w-xl p-6 sm:p-7 max-h-[95vh] overflow-y-auto relative">
+                <button type="button" data-rb-close aria-label="Close"
+                        class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <h3 id="roomHeading" class="text-xl font-display font-bold text-on-surface mb-1 pr-10">Book a room</h3>
+                <p class="text-on-surface"><b>${escapeHtml(place)}</b></p>
+                <p class="text-support mt-1">${escapeHtml(times)}</p>
+                <ol id="rbSteps" class="journey-steps mt-4" aria-label="Booking steps"></ol>
+
+                <form id="roomForm" class="mt-5" novalidate>
+                    <div data-rb-step="0" class="bk-group">
+                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">event</span>Your stay</h3>
+                        <div class="bk-row bk-row--2">
+                            ${field('rbIn', 'Check-in', `<input id="rbIn" type="date" required min="${today}" max="${last}" value="${today}" class="bk-field"/>`)}
+                            ${field('rbOut', 'Check-out', `<input id="rbOut" type="date" required min="${addDay(today, 1)}" max="${addDay(last, rules.maxNights)}" value="${addDay(today, rules.minNights)}" class="bk-field"/>`)}
+                        </div>
+                        <p id="rbNights" class="rb-nights"></p>
+                        <fieldset>
+                            <legend class="bk-label">Who is coming</legend>
+                            <div class="bk-people">
+                                ${[['adults', 'Adults', 1, 1], ['children', 'Children', 0, 0]].map(([key, label, min, value]) => `
+                                <div class="bk-person">
+                                    <span class="bk-person__name">${label}</span>
+                                    <span class="qty" data-qty>
+                                        <button type="button" data-step="-1" aria-label="${label}: one fewer">−</button>
+                                        <input type="number" id="rb-${key}" min="${min}" max="60" step="1" inputmode="numeric" value="${value}" aria-label="${label}"/>
+                                        <button type="button" data-step="1" aria-label="${label}: one more">+</button>
+                                    </span>
+                                </div>`).join('')}
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div data-rb-step="1" hidden>
+                        <div class="bk-group">
+                            <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">bed</span>Rooms free</h3>
+                            <p id="rbWhen" class="rb-nights"></p>
+                            <div id="rbRooms" class="rb-rooms"></div>
+                        </div>
+                    </div>
+
+                    <div data-rb-step="2" hidden class="bk-group">
+                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h3>
+                        <div class="bk-row bk-row--2">
+                            ${field('rbName', 'Full name', '<input id="rbName" type="text" required autocomplete="name" maxlength="120" class="bk-field"/>')}
+                            ${field('rbPhone', 'Phone', '<input id="rbPhone" type="tel" required autocomplete="tel" maxlength="40" class="bk-field" placeholder="0917 123 4567"/>')}
+                        </div>
+                        ${field('rbEmail', 'Email', '<input id="rbEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>')}
+                        ${field('rbCountry', 'Country where you live', '<select id="rbCountry" required class="bk-field"><option value="">Loading…</option></select>')}
+                        ${field('rbNote', 'Note for the resort (optional)', '<textarea id="rbNote" rows="2" maxlength="1000" class="bk-field"></textarea>')}
+                        <div class="rb-trap" aria-hidden="true"><label>Website <input id="rbWebsite" type="text" tabindex="-1" autocomplete="off"/></label></div>
+                    </div>
+
+                    <div data-rb-step="3" hidden class="rb-sent" aria-live="polite"></div>
+
+                    <div id="rbSummary" class="bk-summary mt-5" aria-live="polite" hidden>
+                        <div id="rbLines" class="space-y-1"></div>
+                        <p class="bk-summary__total"><span>Total</span><span id="rbTotal"></span></p>
+                    </div>
+                    <p id="rbError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+                    <div class="rb-foot">
+                        <button type="button" id="rbBack" class="btn btn-secondary btn-pill min-h-[48px]" hidden>Back</button>
+                        <button type="submit" id="rbNext" class="btn btn-primary btn-pill min-h-[48px]"><span id="rbNextLabel">See free rooms</span></button>
+                    </div>
+                    <p id="rbPrivacy" class="text-support mt-3" hidden>
+                        Your details go to the resort for this booking only. See the
+                        <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
+                    </p>
+                </form>
+            </div>`;
+        wireQty(modal);
+
+        const $ = id => document.getElementById(id);
+        const state = { step: 0, rooms: [], picks: {}, nights: 0 };
+        const guests = () => (Number($('rb-adults').value) || 0) + (Number($('rb-children').value) || 0);
+        const say = message => { $('rbError').textContent = message || ''; $('rbError').hidden = !message; };
+
+        function show(step) {
+            state.step = step;
+            modal.querySelectorAll('[data-rb-step]').forEach(p => { p.hidden = Number(p.dataset.rbStep) !== step; });
+            $('rbSteps').innerHTML = journeySteps(['Dates and guests', 'Rooms', 'Your details', 'Sent'], step);
+            $('rbBack').hidden = step === 0 || step === 3;
+            $('rbSummary').hidden = !(step === 1 || step === 2);
+            $('rbPrivacy').hidden = step !== 2;
+            $('rbNextLabel').textContent = ['See free rooms', 'Continue', 'Send request', 'Done'][step];
+            // Each step starts usable; the rooms step's own rule may hold it back.
+            $('rbNext').disabled = false;
+            say('');
+            if (step === 1 || step === 2) summarise();
+            modal.firstElementChild.scrollTop = 0;
+        }
+
+        function drawNights() {
+            const a = $('rbIn').value, b = $('rbOut').value;
+            const n = a && b ? nightsFrom(a, b) : 0;
+            $('rbNights').textContent = n > 0 ? `${plural(n, 'night')} · ${longDay(a)} to ${longDay(b)}` : '';
+        }
+        $('rbIn').addEventListener('change', () => {
+            const a = $('rbIn').value;
+            if (!a) return;
+            $('rbOut').min = addDay(a, 1);
+            if (!$('rbOut').value || $('rbOut').value <= a) $('rbOut').value = addDay(a, rules.minNights);
+            drawNights();
+        });
+        $('rbOut').addEventListener('change', drawNights);
+        drawNights();
+
+        /* Step 1: the rooms free on every night of the stay, and the price. */
+        async function findRooms() {
+            const a = $('rbIn').value, b = $('rbOut').value;
+            const n = a && b ? nightsFrom(a, b) : 0;
+            if (!a || !b) return say('Choose the check-in and check-out dates.');
+            if (n < 1) return say('Check-out must be after check-in.');
+            if (n < rules.minNights) return say(`The shortest stay here is ${plural(rules.minNights, 'night')}.`);
+            if (n > rules.maxNights) return say(`The longest stay here is ${plural(rules.maxNights, 'night')}.`);
+            if (guests() < 1 || (Number($('rb-adults').value) || 0) < 1) return say('At least one adult.');
+            const button = $('rbNext');
+            button.disabled = true;
+            try {
+                const response = await fetch(`${API_BASE}/rooms/${encodeURIComponent(spot._id)}/availability?checkIn=${a}&checkOut=${b}`);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'The rooms could not be checked just now.');
+                state.nights = data.nights;
+                state.rooms = data.rooms.filter(r => r.free > 0);
+                state.picks = {};
+                // One room picked to start with, when one room is enough.
+                const fits = state.rooms.find(r => r.maxGuests >= guests());
+                if (fits) state.picks[fits._id] = 1;
+                drawRooms();
+                show(1);
+            } catch (e) { say(e.message); }
+            // On the rooms step, Continue waits for a room that fits everyone.
+            finally { if (state.step === 0) button.disabled = false; else summarise(); }
+        }
+
+        function drawRooms() {
+            $('rbWhen').textContent = `${longDay($('rbIn').value)} to ${longDay($('rbOut').value)} · ${plural(state.nights, 'night')}`;
+            const box = $('rbRooms');
+            if (!state.rooms.length) {
+                box.innerHTML = '<div class="ztims-empty rb-empty">No rooms are free for those dates. Go back and try other dates.</div>';
+                return;
+            }
+            box.innerHTML = state.rooms.map(r => `
+                <div class="rb-room${state.picks[r._id] ? ' is-picked' : ''}" data-room="${escapeHtml(r._id)}">
+                    <div class="rb-room__photo">${r.photoUrl ? `<img src="${escapeHtml(r.photoUrl)}" alt="" loading="lazy"/>` : '<span class="material-symbols-outlined" aria-hidden="true">bed</span>'}</div>
+                    <div class="rb-room__body">
+                        <p class="rb-room__name">${escapeHtml(r.name)}</p>
+                        <p class="rb-room__facts">${plural(r.beds, 'bed')} · sleeps ${r.maxGuests}${r.free <= 2 ? ` · <b>${r.free === 1 ? 'Last room' : 'Only 2 left'}</b>` : ''}</p>
+                        ${r.description ? `<p class="rb-room__desc">${escapeHtml(r.description)}</p>` : ''}
+                        <p class="rb-room__price"><b>${escapeHtml(peso(r.rate))}</b> a night · ${escapeHtml(peso(r.stayPrice))} for ${plural(state.nights, 'night')}</p>
+                    </div>
+                    <span class="qty" data-qty>
+                        <button type="button" data-step="-1" aria-label="${escapeHtml(r.name)}: one room fewer">−</button>
+                        <input type="number" data-room-units="${escapeHtml(r._id)}" min="0" max="${r.free}" step="1" inputmode="numeric" value="${state.picks[r._id] || 0}" aria-label="${escapeHtml(r.name)}: rooms"/>
+                        <button type="button" data-step="1" aria-label="${escapeHtml(r.name)}: one room more">+</button>
+                    </span>
+                </div>`).join('');
+            wireQty(box);
+            box.querySelectorAll('[data-room-units]').forEach(input => input.addEventListener('input', () => {
+                state.picks[input.dataset.roomUnits] = Math.max(0, Math.min(Number(input.max), Math.floor(Number(input.value)) || 0));
+                input.closest('.rb-room').classList.toggle('is-picked', state.picks[input.dataset.roomUnits] > 0);
+                summarise();
+            }));
+        }
+
+        const chosen = () => state.rooms.filter(r => state.picks[r._id] > 0).map(r => ({ room: r, units: state.picks[r._id] }));
+        function summarise() {
+            const lines = chosen();
+            const total = lines.reduce((t, l) => t + l.units * l.room.stayPrice, 0);
+            const sleeps = lines.reduce((t, l) => t + l.units * l.room.maxGuests, 0);
+            $('rbLines').innerHTML = (lines.length ? lines.map(l =>
+                `<p class="bk-summary__line"><span>${l.units} × ${escapeHtml(l.room.name)} · ${plural(state.nights, 'night')}</span><span>${escapeHtml(peso(l.units * l.room.stayPrice))}</span></p>`).join('')
+                : '<p class="bk-summary__line"><span>No room chosen yet</span><span></span></p>')
+                + `<p class="bk-summary__line"><span>${plural(Number($('rb-adults').value) || 0, 'adult')}${Number($('rb-children').value) ? `, ${plural(Number($('rb-children').value), 'child', 'children')}` : ''}</span><span></span></p>`;
+            $('rbTotal').textContent = peso(total);
+            const short = lines.length && sleeps < guests();
+            if (state.step === 1) {
+                $('rbNext').disabled = !lines.length || Boolean(short);
+                say(short ? `These rooms sleep ${sleeps}; you are ${guests()}. Add a room.` : '');
+            }
+        }
+
+        let countriesLoaded = false;
+        async function loadCountries() {
+            if (countriesLoaded) return;
+            try {
+                const list = await (await fetch(`${API_BASE}/rooms/countries`)).json();
+                $('rbCountry').innerHTML = '<option value="">Choose…</option>' + list.map(c => `<option value="${escapeHtml(c.code)}">${escapeHtml(c.name)}</option>`).join('');
+                countriesLoaded = true;
+            } catch (e) { $('rbCountry').innerHTML = '<option value="">Could not load the list. Close and try again.</option>'; }
+        }
+
+        /* Step 2 → Sent. */
+        async function send() {
+            const name = $('rbName').value.trim(), email = $('rbEmail').value.trim(), phone = $('rbPhone').value.trim();
+            if (name.length < 2) return say('Give your full name.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say('Give an email address the resort can answer.');
+            if (phone.replace(/[^0-9]/g, '').length < 7) return say('Give a phone number the resort can call.');
+            if (!$('rbCountry').value) return say('Choose the country where you live.');
+            const button = $('rbNext');
+            button.disabled = true;
+            $('rbNextLabel').textContent = 'Sending…';
+            try {
+                const response = await fetch(`${API_BASE}/bookings`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        spotId: spot._id, guestName: name, email, phone, countryCode: $('rbCountry').value,
+                        adults: Number($('rb-adults').value) || 0, children: Number($('rb-children').value) || 0,
+                        checkIn: $('rbIn').value, checkOut: $('rbOut').value, note: $('rbNote').value.trim(),
+                        rooms: chosen().map(l => ({ roomTypeId: l.room._id, units: l.units })), website: $('rbWebsite').value
+                    })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    // Rooms taken meanwhile: back to the rooms, counted again.
+                    if (response.status === 409) { await findRooms(); say(result.message); return; }
+                    throw new Error(result.message || 'The request could not be sent just now.');
+                }
+                const sent = modal.querySelector('[data-rb-step="3"]');
+                sent.innerHTML = `
+                    <span class="rb-sent__icon material-symbols-outlined" aria-hidden="true">mark_email_read</span>
+                    <p class="rb-sent__title">Request sent</p>
+                    <p>${escapeHtml(place)} will reply by email${rules.responseHours ? ` within ${plural(rules.responseHours, 'hour')}` : ''}. Nothing is booked until it confirms.</p>
+                    <p class="rb-sent__label">Your booking code</p>
+                    <p class="rb-sent__code">${escapeHtml(result.code || '')}</p>
+                    <p class="rb-sent__facts">${longDay($('rbIn').value)} to ${longDay($('rbOut').value)} · ${plural(result.nights || state.nights, 'night')} · ${escapeHtml(peso(result.totalAmount))}</p>
+                    <p>You pay the resort directly. How to pay comes with its confirmation.</p>
+                    <a href="manage.html?code=${encodeURIComponent(result.code || '')}" class="rb-sent__link">See it under My ticket or booking<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>`;
+                show(3);
+            } catch (e) { say(e.message); }
+            finally {
+                button.disabled = false;
+                if (state.step === 2) $('rbNextLabel').textContent = 'Send request';
+            }
+        }
+
+        $('roomForm').addEventListener('submit', event => {
+            event.preventDefault();
+            if (state.step === 0) return findRooms();
+            if (state.step === 1) { loadCountries(); return show(2); }
+            if (state.step === 2) return send();
+            closeRooms();
+        });
+        $('rbBack').addEventListener('click', () => show(Math.max(0, state.step - 1)));
+        const closeRooms = () => {
+            modal.hidden = true;
+            // After a request is sent, the window starts again next time.
+            if (state.step === 3) { $('roomForm').reset(); drawNights(); show(0); }
+        };
+        modal.querySelector('[data-rb-close]').addEventListener('click', closeRooms);
+        modal.addEventListener('click', event => { if (event.target === modal) closeRooms(); });
+        document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeRooms(); });
+        show(0);
+    }
+    function openRooms() {
+        const modal = document.getElementById('roomModal');
+        if (modal) modal.hidden = false;
+    }
+
     /* − / + steppers ([data-qty]): change the number between the input's own
        min and max, tell the page it changed, and grey out a button at the end
        of its range. */
@@ -1287,7 +1601,7 @@ body { overflow-x: hidden; }
 
     // What this destination lets a visitor do, and the buttons for it: under the
     // photo, and fixed to the bottom of a phone's screen.
-    const actions = { tickets: false, directions: false, bookingUrl: '' };
+    const actions = { tickets: false, rooms: false, directions: false, bookingUrl: '' };
     let currentIsStay = false;
     function startActions(spot) {
         currentIsStay = isStayPlace(spot);
@@ -1304,12 +1618,14 @@ body { overflow-x: hidden; }
             if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
             const second = actions.directions ? 'btn-secondary' : 'btn-primary';
             if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
+            if (actions.rooms) list.push(`<button type="button" data-act="rooms" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">bed</span>Book a room</button>`);
             if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
             return list.join('');
         }
         if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
+        if (actions.rooms) list.push(`<button type="button" data-act="rooms" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">bed</span>Book a room</button>`);
         if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
-        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.rooms || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
         return list.join('');
     }
     function drawActions() {
@@ -1326,14 +1642,14 @@ body { overflow-x: hidden; }
     }
     /* Arriving from a Home page card's action (#tickets) or from
        "What's next" (#directionsSection): go to that action once it exists. */
-    const arrivalAct = { '#tickets': 'tickets', '#directionsSection': 'directions' }[window.location.hash] || '';
+    const arrivalAct = { '#tickets': 'tickets', '#rooms': 'rooms', '#directionsSection': 'directions' }[window.location.hash] || '';
     let arrivalDone = false;
     // If the action never appears (tickets off), the
     // section that says so is still the place to land.
     if (arrivalAct) setTimeout(() => {
         if (arrivalDone) return;
         arrivalDone = true;
-        const id = { tickets: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
+        const id = { tickets: 'spotFacts', rooms: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
         const el = document.getElementById(id);
         if (el && el.offsetHeight) goTo(id);
     }, 3000);
@@ -1342,6 +1658,7 @@ body { overflow-x: hidden; }
         arrivalDone = true;
         setTimeout(() => {
             if (arrivalAct === 'tickets') openTickets();
+            if (arrivalAct === 'rooms') openRooms();
             if (arrivalAct === 'directions') goTo('directionsSection');
         }, 150);
     }
@@ -1358,6 +1675,7 @@ body { overflow-x: hidden; }
         if (!button) return;
         const act = button.dataset.act;
         if (act === 'tickets') openTickets();
+        if (act === 'rooms') openRooms();
         if (act === 'directions') goTo('directionsSection');
     });
 
@@ -1497,8 +1815,9 @@ body { overflow-x: hidden; }
                 ${photoGallerySection(photos)}
 
                 <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
+                <div id="roomOffer" class="scroll-mt-24 empty:hidden"></div>
                 ${safeExternalUrl(spot.bookingUrl) ? `
-                <section class="sd-panel">
+                <section id="stayLinkPanel" class="sd-panel">
                     <h2 class="sd-h2">${isStayPlace(spot) ? 'Book your stay' : 'Book your visit'}</h2>
                     ${bookingPanel(spot)}
                 </section>` : contact ? `
@@ -1604,6 +1923,7 @@ body { overflow-x: hidden; }
             // The footer script may have run before this page was drawn.
             if (window.ztimsEmergency) window.ztimsEmergency.fill();
             renderTicketOffer(spotId);
+            renderRoomOffer(spot);
             renderNotices(spotId);
         } catch (error) {
             console.error('❌ Failed to load destination:', error);

@@ -272,7 +272,7 @@ body { overflow-x: hidden; }
                 <a href="src/announcements.html" class="site-link">Announcements</a>
                 <a href="src/events.html" class="site-link">Events</a>
                 <a href="src/history.html" class="site-link">History</a>
-                <a href="src/manage.html" class="site-link">My ticket</a>
+                <a href="src/manage.html" class="site-link">My ticket or booking</a>
             </nav>
 
             <div class="site-header__tools">
@@ -519,7 +519,7 @@ body { overflow-x: hidden; }
                     <div class="hm-office__help">
                         <p>Need help planning?</p>
                         <a href="src/contact.html" class="is-solid">Contact the Tourism Office</a>
-                        <a href="src/manage.html" class="is-outline">Manage my ticket</a>
+                        <a href="src/manage.html" class="is-outline">My ticket or booking</a>
                     </div>
                 </div>
             </div>
@@ -694,16 +694,27 @@ body { overflow-x: hidden; }
     fetch(`${API_BASE}/payments/config`).then(r => r.ok ? r.json() : null)
         .then(config => { if (config && config.online) { ticketsOnline = true; if (allSpots.length) applyFilters(); } })
         .catch(() => {});
+    // The places to stay taking room requests through ZTIMS now: their card
+    // says Book a room and opens the destination page's booking window.
+    let takingBookings = new Set();
+    fetch(`${API_BASE}/rooms/open`).then(r => r.ok ? r.json() : [])
+        .then(ids => { takingBookings = new Set(Array.isArray(ids) ? ids : []); if (takingBookings.size && allSpots.length) applyFilters(); })
+        .catch(() => {});
 
     // The one thing a visitor can do next at this place, the same rules the
     // destination page uses: tickets for an office-run attraction with a fee,
-    // else the place's own booking link. The destination page opens on the
+    // Book a room for a place to stay taking bookings, else the place's own
+    // booking link. The destination page opens on the
     // ticket form (#tickets).
     function mainAction(spot) {
         const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
         const isStay = isStayPlace(spot);
         if (ticketsOnline && spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) {
             return { href: `${page}#tickets`, label: 'Buy tickets', icon: 'confirmation_number' };
+        }
+        // Book a room replaces the resort's own link only while it takes bookings here.
+        if (isStay && takingBookings.has(spot._id)) {
+            return { href: `${page}#rooms`, label: 'Book a room', icon: 'bed' };
         }
         const link = String(spot.bookingUrl || '').trim();
         if (link) {

@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="./shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Manage my ticket</title>
+    <title>Explore Zamboanguita | My ticket or booking</title>
     <link rel="icon" href="../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../apple-touch-icon.png"/>
@@ -288,7 +288,7 @@ body { overflow-x: hidden; }
                 <a href="announcements.html" class="site-link">Announcements</a>
                 <a href="events.html" class="site-link">Events</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link" aria-current="page">My ticket</a>
+                <a href="manage.html" class="site-link" aria-current="page">My ticket or booking</a>
             </nav>
 
             <div class="site-header__tools">
@@ -305,14 +305,13 @@ body { overflow-x: hidden; }
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
                 <div class="space-y-2">
-                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">My ticket</h1>
-                    <p class="text-on-surface-variant">Enter the code from your email and the email address you used.</p>
+                    <h1 class="text-3xl sm:text-4xl font-display font-extrabold tracking-tight text-on-surface">My ticket or booking</h1>
                 </div>
 
                 <form id="findForm" class="spot-panel" novalidate>
                     <div class="bk-row bk-row--2">
                         <div>
-                            <label for="findCode" class="bk-label">Ticket code</label>
+                            <label for="findCode" class="bk-label">Ticket or booking code</label>
                             <input id="findCode" type="text" required autocomplete="off" autocapitalize="characters" spellcheck="false"
                                    placeholder="e.g. JF-7K3M-Q" class="bk-field bk-field--code"/>
                         </div>
@@ -323,7 +322,7 @@ body { overflow-x: hidden; }
                     </div>
                     <p id="findError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
                     <button type="submit" id="findBtn" class="btn btn-pill btn-primary min-h-[48px] w-full sm:w-auto mt-4">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span>Find my ticket
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">search</span>Find it
                     </button>
                 </form>
 
@@ -343,7 +342,7 @@ body { overflow-x: hidden; }
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
 <script>
-/* Manage my ticket. Everything is decided by the server, which needs
+/* My ticket or booking. Everything is decided by the server, which needs
    both the code and the email each time; this page only shows what it says and
    asks before anything that cannot be undone. */
 (function () {
@@ -392,6 +391,7 @@ body { overflow-x: hidden; }
     }
 
     function render(item, notice) {
+        if (item.kind === 'booking') return renderBooking(item, notice);
         const [tone, label] = STATUS[item.status] || ['tone-neutral', item.status];
         const details = [
             row('Ticket code', `<span class="font-mono">${esc(item.code)}</span>`),
@@ -446,6 +446,99 @@ body { overflow-x: hidden; }
             <p id="actionError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>`;
         box.hidden = false;
         wireActions(item);
+    }
+
+    /* ---- a room booking (bookings.js' describeForVisitor) ------------ */
+    const BOOKING = {
+        requested: ['tone-warning', 'Waiting for the resort'], confirmed: ['tone-success', 'Confirmed'],
+        checked_in: ['tone-info', 'Checked in'], completed: ['tone-neutral', 'Stay completed'],
+        declined: ['tone-neutral', 'Declined'], expired: ['tone-neutral', 'Expired'],
+        cancelled: ['tone-neutral', 'Cancelled'], no_show: ['tone-danger', 'No-show']
+    };
+    const wholePeso = n => { const v = Number(n) || 0; return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+    const clock = hhmm => { if (!hhmm) return ''; const [h, m] = hhmm.split(':').map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+    const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+    const addDay = (key, n) => { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+    const answerBy = iso => new Intl.DateTimeFormat('en-PH', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).format(new Date(iso));
+
+    function renderBooking(b, notice) {
+        const [tone, label] = BOOKING[b.status] || ['tone-neutral', b.status];
+        const place = b.enterpriseName || (b.spot && b.spot.title) || 'The resort';
+        const details = [
+            row('Booking code', `<span class="font-mono">${esc(b.code)}</span>`),
+            row('Place to stay', b.spot ? `<a class="underline" href="spot.html?spotId=${encodeURIComponent(b.spot._id)}">${esc(place)}</a>` : esc(place)),
+            row('Check-in', `${niceDate(b.checkIn)}${b.checkInTime ? `, from ${clock(b.checkInTime)}` : ''}`),
+            row('Check-out', `${niceDate(b.checkOut)}${b.checkOutTime ? `, by ${clock(b.checkOutTime)}` : ''}`),
+            row('Guests', `${plural(b.adults, 'adult')}${b.children ? `, ${plural(b.children, 'child', 'children')}` : ''}`),
+            ...b.rooms.map(r => row(`${r.units} × ${esc(r.name)}`, `${wholePeso(r.ratePerNight)} a night`)),
+            row(`Total · ${plural(b.nights, 'night')}`, wholePeso(b.totalAmount))
+        ];
+        const state = b.status === 'requested' && b.expiresAt
+            ? `<p class="text-sm tone-warning border border-outline-variant/30 p-3">${esc(place)} answers by ${esc(answerBy(b.expiresAt))}. Nothing is booked until it confirms.</p>`
+            : b.status === 'declined' && b.declineReason ? `<p class="text-sm tone-neutral border border-outline-variant/30 p-3">The resort's reason: ${esc(b.declineReason)}</p>` : '';
+        // How to pay: only once the resort has accepted the stay.
+        const pay = b.paymentInstructions ? `
+            <div class="space-y-2 border-t border-outline-variant/30 pt-4">
+                <h2 class="font-bold text-on-surface">How to pay ${esc(place)}</h2>
+                <p class="text-sm text-on-surface whitespace-pre-line">${esc(b.paymentInstructions)}</p>
+            </div>` : '';
+        const nightsLimit = b.minNights === b.maxNights ? plural(b.minNights, 'night') : `${b.minNights} to ${b.maxNights} nights`;
+        const moveForm = b.canMove ? `
+            <form id="bookingMoveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
+                <h2 class="font-bold text-on-surface">Ask for new dates</h2>
+                <div class="bk-row bk-row--2">
+                    <label class="block"><span class="bk-label">Check-in</span>
+                        <input id="moveIn" type="date" required min="${esc(b.today)}" max="${esc(b.lastCheckIn)}" value="${esc(String(b.checkIn).slice(0, 10))}" class="bk-field"/></label>
+                    <label class="block"><span class="bk-label">Check-out</span>
+                        <input id="moveOut" type="date" required min="${esc(addDay(b.today, 1))}" value="${esc(String(b.checkOut).slice(0, 10))}" class="bk-field"/></label>
+                </div>
+                <p class="text-support">The same rooms, ${esc(nightsLimit)}. The resort confirms the new dates again.</p>
+                <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Send new dates</button>
+            </form>` : '';
+        const cancelForm = b.canCancel ? `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
+                <h2 class="font-bold text-on-surface">Cancel</h2>
+                <p class="text-sm text-on-surface-variant">The resort is told and the rooms are freed. This cannot be undone.</p>
+                <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this booking</button>
+            </div>` : '';
+        box.innerHTML = `
+            ${notice ? `<p class="tone-success text-sm font-bold border border-outline-variant/30 p-3">${esc(notice)}</p>` : ''}
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">Your room booking</h2>
+                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-3 py-1">${esc(label)}</span>
+            </div>
+            ${state}
+            <div>${details.join('')}</div>
+            ${pay}
+            ${b.canMove || b.canCancel
+                ? `<p class="text-support">You can change this until 11:59 PM on ${niceDate(b.changeUntil)}.</p>${b.why ? `<p class="text-sm tone-warning">${esc(b.why)}</p>` : ''}`
+                : (b.why ? `<p class="text-sm tone-warning">${esc(b.why)}</p>` : '')}
+            ${moveForm}
+            ${cancelForm}
+            <p id="actionError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>`;
+        box.hidden = false;
+
+        const move = document.getElementById('bookingMoveForm');
+        if (move) {
+            const a = document.getElementById('moveIn'), z = document.getElementById('moveOut');
+            a.addEventListener('change', () => { z.min = addDay(a.value, 1); if (z.value <= a.value) z.value = addDay(a.value, b.nights); });
+            move.addEventListener('submit', async event => {
+                event.preventDefault();
+                showError('actionError', '');
+                if (!a.value || !z.value) return showError('actionError', 'Choose the check-in and check-out dates.');
+                if (z.value <= a.value) return showError('actionError', 'Check-out must be after check-in.');
+                const button = document.getElementById('moveBtn');
+                button.disabled = true;
+                try {
+                    const result = await call('/manage/move', { checkIn: a.value, checkOut: z.value });
+                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
+                } catch (error) {
+                    showError('actionError', error.message);
+                    button.disabled = false;
+                }
+            });
+        }
+        wireActions({});
     }
 
     function showError(id, message) {

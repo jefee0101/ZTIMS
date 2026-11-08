@@ -30,8 +30,23 @@ reason, Adjust price, Record payment, Check in / Check out / No-show, and a
 month view of rooms free and taken). The System User Interface section gains
 these two screens (screenshots from the manager portal, desktop and phone);
 the use cases above can now point to them. The email's Review request button
-opens the request after signing in. Still to build: the visitor's request form
-and the officer's overview.
+opens the request after signing in.
+
+**The visitor's pages are built** (9 November 2026): on a place to stay's page,
+Book a room opens a four-step window (Dates and guests, Rooms — only the rooms
+free for those dates, with the price per night and the total — Your details,
+Sent with the booking code); no payment step, and the resort's payment
+instructions appear only after it confirms. "My ticket" is now **"My ticket or
+booking"** everywhere (the header, the footer, Home): the same code + email
+finds a ticket or a booking, and a booking can be moved or cancelled until the
+resort's deadline. Home's card says Book a room for resorts taking bookings.
+FAQ (a Room bookings section), Terms (section 4 is now "Entrance tickets and
+room bookings") and Privacy (what a room request collects, that the resort
+sees it, erased a year after check-out) are updated, dated 9 November 2026.
+In the manuscript: the visitor use case "Request a room" and "Manage a
+booking", the System User Interface screenshots of the window's four steps and
+of My ticket or booking, and every "Manage my ticket" in the text becomes "My
+ticket or booking". Still to build: the officer's overview.
 
 ## Announcements and calendar of events (November 2026)
 

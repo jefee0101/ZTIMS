@@ -2642,3 +2642,47 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
     .ev-page .an-cal__day { min-height: 3.5rem; padding: .3rem; border-radius: .6rem; }
     .ev-page .an-cal__chip { width: .55rem; height: .55rem; padding: 0; }
 }
+
+/* ==========================================================
+   BOOK A ROOM (spot.html, a private place to stay taking bookings; November
+   2026). The ticket window's form styles (.bk-*, .qty, .journey-steps) with
+   room cards; the panel on the page is an .sd-panel.
+   ========================================================== */
+.rb-times { display: flex; align-items: center; gap: .45rem; color: rgb(var(--ztims-on-surface-variant)); font-size: .95rem; }
+.rb-times .material-symbols-outlined { font-size: 1.15rem; color: rgb(var(--ztims-primary-text)); }
+.rb-list { display: grid; margin-top: .9rem; border-top: 1px solid rgb(var(--ztims-outline)); }
+.rb-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1rem; padding: .7rem 0; border-bottom: 1px solid rgb(var(--ztims-outline)); color: rgb(var(--ztims-on-surface)); }
+.rb-list li span:last-child { font-weight: 700; }
+.rb-nights { font-size: .9rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); min-height: 1.3em; }
+.rb-rooms { display: grid; gap: .75rem; }
+.rb-room { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: .9rem; align-items: center; padding: .75rem; border: 1px solid rgb(var(--ztims-outline)); border-radius: 1rem; background: rgb(var(--ztims-surface-high)); }
+.rb-room.is-picked { border-color: rgb(var(--ztims-primary)); box-shadow: 0 0 0 1px rgb(var(--ztims-primary)); }
+.rb-room__photo { width: 5.5rem; aspect-ratio: 4 / 3; border-radius: .7rem; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-secondary-container)); color: rgb(var(--ztims-on-secondary-container)); }
+.rb-room__photo img { width: 100%; height: 100%; object-fit: cover; }
+.rb-room__body { min-width: 0; display: grid; gap: .15rem; }
+.rb-room__name { font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.rb-room__facts, .rb-room__desc { font-size: .84rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rb-room__facts b { color: rgb(var(--ztims-error)); }
+.rb-room__desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rb-room__price { font-size: .88rem; color: rgb(var(--ztims-on-surface)); }
+.rb-empty { border-radius: 1rem; }
+.rb-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.rb-foot { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+.rb-foot .btn { flex: 0 0 auto; }
+.rb-sent { display: grid; justify-items: center; gap: .55rem; text-align: center; padding: .5rem 0 0; color: rgb(var(--ztims-on-surface)); }
+.rb-sent__icon { width: 3.5rem; height: 3.5rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-success) / .14); color: rgb(var(--ztims-success)); font-size: 1.8rem; }
+.rb-sent__title { font-size: 1.35rem; font-weight: 800; }
+.rb-sent__label { margin-top: .4rem; font-size: .8rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+.rb-sent__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 2rem; font-weight: 800; letter-spacing: .08em;
+    padding: .35rem 1.1rem; border-radius: .9rem; border: 1px dashed rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-low)); }
+.rb-sent__facts { font-weight: 600; }
+.rb-sent__link { display: inline-flex; align-items: center; gap: .35rem; margin-top: .25rem; font-weight: 700; color: rgb(var(--ztims-primary-text)); }
+.rb-sent__link .material-symbols-outlined { font-size: 1.05rem; }
+@media (max-width: 639px) {
+    .rb-room { grid-template-columns: 4.25rem 1fr; }
+    .rb-room__photo { width: 4.25rem; }
+    .rb-room .qty { grid-column: 1 / -1; justify-self: end; }
+    .rb-foot .btn { flex: 1 1 0; }
+}

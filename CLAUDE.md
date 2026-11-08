@@ -210,8 +210,8 @@ purpose — see the header comment in `spot-form.js`:
   share one copy. Since October 2026 it is the user's UX Pilot design: one
   rounded card (`.site-footer*` in `theme.css`) — the ZTIMS seal and
   "ZAMBOANGUITA TOURISM", a sentence, Explore (Destinations, Places to stay,
-  Heritage sites, History), Information (FAQ, Terms & Conditions, Privacy
-  Policy, Tourism Map), Contact us (Send feedback as a dark pill, then the
+  Heritage sites, History), Information (My ticket or booking, FAQ, Terms &
+  Conditions, Privacy Policy, Tourism Map), Contact us (Send feedback as a dark pill, then the
   quiet "Staff and Enterprise Manager sign in →"), and a line with the year and
   the place. It no longer shows the office's details or a tile strip. It still
   fetches `GET /api/office` and fills every page's `[data-office-field]` spots
@@ -884,7 +884,7 @@ Frontend only, no tables of their own:
   expand control); **Plan your visit** (`#plan`: three step cards — Discover,
   Book & pay in a dark card, Get there in teal — then the Tourism Office card:
   hours, address, contact and emergency from `GET /api/office`, with Contact
-  the Tourism Office and Manage my ticket on a burnt-orange panel). The tiles,
+  the Tourism Office and My ticket or booking on a burnt-orange panel). The tiles,
   the pills and the search's category are one control (`setCategory`); the
   search and category are kept for the visit in `sessionStorage.ztimsBrowse`;
   `?category=` opens a category.
@@ -893,16 +893,18 @@ Frontend only, no tables of their own:
   from `workingDays`/`workingTime`; the price (none for a place to stay) and
   its main action (`mainAction`, the destination page's rules): Buy tickets
   (office-run attraction with a fee, and `/api/payments/config` says online),
-  Book a room / Book now (its booking link, new tab), else Details. Tickets
-  open `spot.html` at `#tickets`, which `honourArrival` turns into the ticket
-  form. Grey skeleton cards while loading.
+  Book a room for a place to stay taking room requests (its id in
+  `GET /api/rooms/open`, fetched once; opens `spot.html` at `#rooms`, which
+  `honourArrival` turns into the booking window), else Book a room / Book now
+  (its own booking link, new tab), else Details. Tickets open `spot.html` at
+  `#tickets`, which `honourArrival` turns into the ticket form. Grey skeleton cards while loading.
 - **Header**: the same on all eleven visitor pages (Home, destination, History,
   My ticket, payment, Terms, Privacy, FAQ, Contact, Announcements, Events; styles `.site-header*` and
   `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
   floating, rounded glass bar — the ZTIMS seal (`public/ztims-logo.png`, the
   user's logo, November 2026; it replaced the orange sun badge) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), Announcements, Events, History, My ticket (no Staff link since November
+  (`index.html#map`), Announcements, Events, History, My ticket or booking (no Staff link since November
   2026, the user's choice: staff sign in from the footer's "Staff and
   Enterprise Manager sign in"), the
   current page a solid ink pill (`aria-current="page"`; light in dark mode;
@@ -949,9 +951,15 @@ Frontend only, no tables of their own:
   its label and the eye, Sign in, "Accounts are issued by the Municipal Tourism
   Office." The forgot-password and choose-your-own-password forms swap into the
   same card.
-- **My ticket** (and the reset-password page) follow the flat style: sentence-case labels above `.bk-field`s, flat
+- **My ticket or booking** (`manage.html`; it was "My ticket", November 2026)
+  and the reset-password page follow the flat style: sentence-case labels above `.bk-field`s, flat
   `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
-  `.tone-pill.rounded-pill`), short titles ("My ticket"). The footer's Send
+  `.tone-pill.rounded-pill`), short titles. One "Ticket or booking code" and
+  the email find either; a booking shows as "Your room booking" (status pill,
+  "answers by …" while requested, the reason when declined, code, place,
+  check-in and check-out with the resort's times, guests, rooms and rates,
+  total, the resort's payment instructions only once confirmed, Ask for new
+  dates, Cancel this booking — pressed twice — until the deadline shown). The footer's Send
   feedback is a pill too.
 - **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
   number with its label under it, joined by a line; done green with a tick,
@@ -1067,7 +1075,13 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   (`for update`) and counts again in the same transaction (`holdRooms`), so two
   requests for the last room can't both get it. Blocks are refused where rooms
   are already held.
-- **Public:** `GET /api/rooms/:spotId` (open or not, rules, active rooms),
+- **Public:** `GET /api/rooms/countries` (Form A4's residences for a
+  visitor's form, worded for visitors — "Philippines (Filipino)", … — the
+  Philippines first; cached a day), `GET /api/rooms/open` (ids of the places to
+  stay taking requests now: published, manager active, accepting, not paused,
+  with an active room; for Home's cards), `GET /api/rooms/:spotId` (open or
+  not, rules, active rooms; the enterprise named by its listing's
+  `enterpriseName`),
   `GET /api/rooms/:spotId/availability?checkIn=&checkOut=` (free per room type
   and the stay's price), `POST /api/bookings` (rate-limited 10 an hour per
   connection, honeypot `website`; checks dates against the resort's rules,
@@ -1081,7 +1095,8 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   lookup, move (new dates, same rooms at the same rates, back to Requested with
   a new expiry; both sides emailed), cancel (while requested or confirmed).
   Changes close at 11:59 PM Manila, `free_cancel_days` (at least 1) before
-  check-in. A wrong pair is answered as "nothing matches".
+  check-in. A wrong pair is answered as "nothing matches". The view carries
+  `minNights`, `maxNights` and `lastCheckIn` for the new-dates pickers.
 - **Manager** (`requireEstablishmentManager`, own listings only, else 403):
   `GET /api/rooms/manage/:spotId` (settings, rooms, blocks), `PUT …/settings`,
   `POST …/types`, `PUT /api/rooms/manage/types/:id`, `POST
@@ -1116,8 +1131,24 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 - **Privacy:** `privacy.js` erases a booking's name, email, phone and note a
   year after check-out; dates, rooms, counts, country and price stay.
 - Version 1 has blocked dates only, no seasonal rates. No SMS. ZTIMS never
-  takes the money. Still to build: the visitor's request form and the
-  officer's overview page.
+  takes the money. Still to build: the officer's overview page.
+- **The visitor's side** (November 2026): on a place to stay taking requests,
+  `spot.html` shows **Book a room** in the action bar and the phone's bottom
+  bar (it replaces the resort's own booking link, whose panel is hidden; a
+  place not taking requests keeps its link) and a "Book your stay" panel
+  (check-in and check-out times, each room type with sleeps and price a night,
+  Book a room · from ₱…). The window (`renderRoomOffer`, `#roomModal`, styles
+  `.rb-*` at the end of `theme.css`, the ticket window's `.bk-*`, `.qty` and
+  `.journey-steps`) has four steps — **Dates and guests** (check-in, check-out,
+  adults, children), **Rooms** (only what is free for every night, each with
+  its price a night and for the stay, "Last room" / "Only 2 left", − / +;
+  "No rooms are free for those dates" when none; Continue waits until the
+  rooms sleep everyone), **Your details** (name, phone, email, country of
+  residence from `/api/rooms/countries`, an optional note, the honeypot) and
+  **Sent** ("will reply by email within n hours", the booking code large, the
+  dates and total, "You pay the resort directly", a link to My ticket or
+  booking). No payment step. A request refused because rooms went meanwhile
+  (409) goes back to Rooms, counted again.
 - **The manager's pages** (November 2026), in the manager menu after
   Enterprise (My enterprises, Enterprise, Rooms, Bookings, Guest Register,
   Monthly Report, Account, on every `src/resort/` page), both working on the

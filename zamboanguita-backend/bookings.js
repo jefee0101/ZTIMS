@@ -266,6 +266,8 @@ async function describeForVisitor(b) {
         // The resort's payment instructions, once it has accepted the stay.
         paymentInstructions: ['confirmed', 'checked_in'].includes(b.status) ? settings.paymentInstructions : '',
         changeUntil: window.lastDay, today: manilaToday(),
+        // The resort's limits, for the new-dates pickers (the server checks them again).
+        minNights: settings.minNights, maxNights: settings.maxNights, lastCheckIn: addDays(manilaToday(), settings.advanceDays),
         canMove: live && window.open && settings.open, canCancel: live && window.open,
         why: why || (live && window.open && !settings.open ? 'The resort is not taking bookings right now, so the dates cannot be moved. You can still cancel.' : '')
     };
@@ -340,6 +342,48 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
 
     /* ---- public ------------------------------------------------------ */
 
+    /* The countries a guest can say they live in: Form A4's rows, which the
+       Guest Register counts by, worded for a visitor. The Philippines first. */
+    const VISITOR_COUNTRY = {
+        'ph-filipino': 'Philippines (Filipino)',
+        'ph-foreign': 'Philippines (foreign national living here)',
+        'overseas-filipino': 'Overseas Filipino (living abroad)',
+        'other-foreign': 'Another country',
+        unspecified: 'Prefer not to say'
+    };
+    router.get('/rooms/countries', async (req, res) => {
+        try {
+            const { rows } = await query('select code, name, section from residences order by sort_order');
+            const first = ['ph-filipino', 'ph-foreign', 'overseas-filipino'];
+            const last = ['other-foreign', 'unspecified'];
+            const named = rows.map(r => ({ code: r.code, name: VISITOR_COUNTRY[r.code] || r.name }));
+            const countries = named.filter(r => !first.includes(r.code) && !last.includes(r.code)).sort((a, b) => a.name.localeCompare(b.name));
+            res.set('Cache-Control', 'public, max-age=86400');
+            return res.json([
+                ...first.map(c => named.find(r => r.code === c)).filter(Boolean),
+                ...countries,
+                ...last.map(c => named.find(r => r.code === c)).filter(Boolean)
+            ]);
+        } catch (error) { return fail(res, error, '❌ Countries read failure:'); }
+    });
+
+    /* The places to stay taking bookings now (open, with a room to book), for
+       Home's cards to offer Book a room. Ids only. */
+    router.get('/rooms/open', async (req, res) => {
+        try {
+            const { rows } = await query(`
+                select s.id from spots s
+                  join establishment_managers m on m.id = s.managed_by
+                  join enterprise_booking_settings es on es.spot_id = s.id
+                 where s.type = 'accommodation' and s.status = 'published'
+                   and m.active and coalesce(m.operational_status, '') not in ('inactive', 'closed')
+                   and es.accepts_bookings and not es.paused_by_office
+                   and exists (select 1 from room_types rt where rt.spot_id = s.id and rt.active)`);
+            res.set('Cache-Control', 'public, max-age=60');
+            return res.json(rows.map(r => r.id));
+        } catch (error) { return fail(res, error, '❌ Open places read failure:'); }
+    });
+
     /* What a resort offers: whether it takes bookings, its rules and rooms. */
     router.get('/rooms/:spotId', async (req, res) => {
         try {
@@ -349,7 +393,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const { rows } = await query('select * from room_types where spot_id = $1 and active order by position, name', [spot._id]);
             res.set('Cache-Control', 'public, max-age=60');
             return res.json({
-                spot: { _id: spot._id, title: spot.title, enterpriseName: spot.managedBy.establishmentName || spot.title },
+                spot: { _id: spot._id, title: spot.title, enterpriseName: spot.enterpriseName || spot.title },
                 open: settings.open && rows.length > 0,
                 rules: {
                     checkInTime: settings.checkInTime, checkOutTime: settings.checkOutTime, minNights: settings.minNights,
