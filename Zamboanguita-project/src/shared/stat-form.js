@@ -242,7 +242,7 @@
                             : `<button id="${uid}-void" type="button" class="btn btn-danger min-h-[44px]"><span class="material-symbols-outlined !text-base">block</span>Void this report</button>`}
                     </div>
                     <p class="text-support">${locked ? 'Reopening allows the figures to be corrected. Both the reopening and the correction are recorded.' : 'A void report stays on record but no longer counts in any total. Voiding is recorded.'}</p>
-                    <ul class="space-y-1 text-sm">${(state.history || []).map(h => `<li><b>${esc(({ locked: 'finalized', unlocked: 'reopened' })[h.action] || h.action)}</b> · ${esc(h.changed_by_email || h.changed_by_role)} · ${esc(formatWhen(h.changed_at))}${h.note ? ` · ${esc(h.note)}` : ''}</li>`).join('')}</ul>
+                    <ul class="space-y-1 text-sm">${(state.history || []).map(h => `<li><b>${esc(({ locked: 'finalized', unlocked: 'reopened' })[h.action] || h.action)}</b> · ${esc(h.changed_by_name ? `${h.changed_by_name}${h.changed_by_role === 'support_staff' ? ' (Support Staff)' : ''}` : (h.changed_by_email || h.changed_by_role))} · ${esc(formatWhen(h.changed_at))}${h.note ? ` · ${esc(h.note)}` : ''}</li>`).join('')}</ul>
                 </div>
             </details>` : ''}
         </div>`;

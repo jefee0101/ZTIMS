@@ -11,7 +11,8 @@
    is up they all sign out together. The sign-in page clears it, so a new
    sign-in always starts with a full 30 minutes.
 
-   Loaded as a module on each officer page (src/admin/*.html). The server's
+   Loaded as a module on each officer page (src/admin/*.html) and each
+   Support Staff page (src/staff/*.html). The server's
    own two-hour expiry on every sign-in still applies underneath.
    ========================================================================== */
 
@@ -25,7 +26,7 @@
 
     function signedInAsOfficer() {
         try {
-            return localStorage.getItem('userRole') === 'admin' && Boolean(localStorage.getItem('authToken'));
+            return ['admin', 'support_staff'].includes(localStorage.getItem('userRole')) && Boolean(localStorage.getItem('authToken'));
         } catch (error) {
             return false;
         }

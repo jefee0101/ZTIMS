@@ -2284,6 +2284,14 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .sf-choice .material-symbols-outlined { font-size: 18px; }
 .sf-choice input { position: absolute; opacity: 0; pointer-events: none; }
 .sf-choice:hover { border-color: rgb(var(--ztims-secondary)); }
+/* Support Staff: what the Tourism Office sets shows, locked (spot-form.js lockOfficeFields). */
+.sf-locked { display: inline-flex; align-items: center; gap: .2rem; margin-left: .35rem; padding: .05rem .5rem; border-radius: 9999px;
+             font-size: .7rem; font-weight: 700; text-transform: none; letter-spacing: 0; vertical-align: middle;
+             background: rgb(var(--ztims-on-surface) / .08); color: rgb(var(--ztims-on-surface-variant)); }
+.sf-locked .material-symbols-outlined { font-size: .85rem; }
+.sf-form--locked .sf-choice:has(input:disabled) { cursor: not-allowed; opacity: .6; }
+.sf-form--locked .sf-choice:has(input:disabled:checked) { opacity: .85; }
+.sf-form--locked input:disabled { cursor: not-allowed; opacity: .7; }
 .sf-choice:has(input:checked) { background: rgb(var(--ztims-primary)); border-color: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
 .sf-choice:has(input:focus-visible) { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
 .sf-choice__main { display: none; font-size: .6875rem; font-weight: 800; padding: .05rem .45rem; border-radius: 9999px;

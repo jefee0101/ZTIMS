@@ -698,3 +698,14 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .rvo-row { grid-template-columns: 1fr; padding: .9rem 1rem; gap: .5rem; }
     .rvo-row .dest-row__actions { justify-content: flex-end; }
 }
+
+/* The officer's Destinations: who is Support Staff for a counting attraction (support-staff.js). */
+.pg-card__staff .material-symbols-outlined { color: rgb(var(--ztims-gold-text)); }
+.pg-card__staff b { color: rgb(var(--ztims-on-surface)); }
+
+/* The Support Staff portal's header: their attraction's name on a solid pill,
+   where managers have the enterprise switcher (staff-portal.js fills it). */
+.staff-place { display: inline-flex; align-items: center; max-width: min(60vw, 28rem); min-height: 40px; padding: 0 1rem;
+               border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
+               color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .9rem; }
+.staff-place:empty { visibility: hidden; }

@@ -549,6 +549,8 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base">shield_lock</span>Security</button>
                 <button role="tab" id="tab-accounts" aria-controls="officersSection" aria-selected="false" tabindex="-1" class="settings-tab">
                     <span class="material-symbols-outlined !text-base">groups</span>Tourism Office Accounts</button>
+                <button role="tab" id="tab-support" aria-controls="supportSection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">badge</span>Support Staff</button>
                 <button role="tab" id="tab-office" aria-controls="officeSection" aria-selected="false" tabindex="-1" class="settings-tab">
                     <span class="material-symbols-outlined !text-base">apartment</span>Office Information</button>
                 <button role="tab" id="tab-privacy" aria-controls="privacySection" aria-selected="false" tabindex="-1" class="settings-tab">
@@ -683,6 +685,67 @@ body { overflow-x: hidden; }
                             </tr>
                         </thead>
                         <tbody id="adminListTableBody" class="divide-y divide-outline-variant/20"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 3b. Support Staff (support-staff.js): one office-run, counting attraction each. -->
+            <section id="supportSection" role="tabpanel" aria-labelledby="tab-support" hidden class="glass-panel p-5 sm:p-7 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined">badge</span> Support Staff
+                    </h2>
+                    <button id="openAddStaffBtn" type="button" class="btn btn-primary min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">person_add</span> Add Support Staff
+                    </button>
+                </div>
+
+                <form id="addStaffForm" hidden class="ztims-card p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" novalidate>
+                    <label class="block">
+                        <span class="field-label">Full name</span>
+                        <input id="newStaffName" type="text" maxlength="120" required class="field" placeholder="e.g., Liza M. Ramos"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Position</span>
+                        <input id="newStaffPosition" type="text" maxlength="120" class="field" placeholder="e.g., Tourism Aide"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Contact number</span>
+                        <input id="newStaffContact" type="tel" maxlength="40" class="field" placeholder="e.g., 0917 123 4567"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Sign-in email</span>
+                        <input id="newStaffEmail" type="email" required class="field" placeholder="name@example.com"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Attraction</span>
+                        <select id="newStaffSpot" required class="field"></select>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Password <span class="normal-case font-normal">(optional)</span></span>
+                        <input id="newStaffPassword" type="text" minlength="10" maxlength="72" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
+                    </label>
+                    <div class="sm:col-span-2 flex flex-wrap gap-2">
+                        <button id="addStaffBtn" type="submit" class="btn btn-primary min-h-[44px]">
+                            <span class="material-symbols-outlined !text-base">check</span> Create account
+                        </button>
+                        <button id="cancelAddStaffBtn" type="button" class="btn btn-cancel min-h-[44px]">Cancel</button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="ztims-table w-full min-w-[860px] text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="text-label font-bold uppercase tracking-wider border-b border-outline-variant/30">
+                                <th class="px-3 py-2">Name</th>
+                                <th class="px-3 py-2">Attraction</th>
+                                <th class="px-3 py-2">Position</th>
+                                <th class="px-3 py-2">Last sign-in</th>
+                                <th class="px-3 py-2">Status</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffListTableBody" class="divide-y divide-outline-variant/20"></tbody>
                     </table>
                 </div>
             </section>
@@ -1011,6 +1074,143 @@ document.getElementById('adminListTableBody').addEventListener('click', async ev
     } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
 });
 
+/* ---- 3b. Support Staff --------------------------------------------------------
+   One person per office-run attraction that counts visitors (support-staff.js).
+   Add, New password and Deactivate / Reactivate each ask for the officer's own
+   password, as for Tourism Office Accounts. Nothing is deleted. */
+let staffList = [], staffSpots = [];
+
+function renderStaff() {
+    const tbody = document.getElementById('staffListTableBody');
+    if (!staffList.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-support">No Support Staff yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = staffList.map(st => {
+        const active = st.status === 'active';
+        const status = `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`;
+        const actions = `
+            <div class="flex flex-col items-end gap-2">
+                ${active ? `<button type="button" class="btn btn-ghost btn-sm min-h-[36px] whitespace-nowrap" data-staff-issue="${escapeHtml(st._id)}">
+                    <span class="material-symbols-outlined !text-base">key</span>New password</button>` : ''}
+                <button type="button" class="btn ${active ? 'btn-danger' : 'btn-secondary'} btn-sm min-h-[36px] whitespace-nowrap" data-staff-status="${escapeHtml(st._id)}" data-active="${active ? '0' : '1'}">
+                    <span class="material-symbols-outlined !text-base">${active ? 'person_off' : 'person_check'}</span>${active ? 'Deactivate' : 'Reactivate'}</button>
+            </div>`;
+        return `<tr class="${active ? '' : 'opacity-70'}">
+            <td class="px-3 py-3 min-w-[14rem]"><div class="flex items-center gap-3">
+                <span class="w-9 h-9 shrink-0 flex items-center justify-center bg-primary/15 text-primary font-black text-sm" aria-hidden="true">${escapeHtml(initialsOf(st.fullName, st.email))}</span>
+                <div class="min-w-0"><p class="font-bold text-on-surface">${escapeHtml(st.fullName)}</p>
+                <p class="text-support break-words">${escapeHtml(st.email)}</p>
+                ${st.contactNumber ? `<p class="text-support">${escapeHtml(st.contactNumber)}</p>` : ''}</div></div></td>
+            <td class="px-3 py-3">${st.spot ? `<a class="font-bold text-on-surface hover:underline" href="../spot.html?spotId=${encodeURIComponent(st.spot._id)}" target="_blank" rel="noopener">${escapeHtml(st.spot.title)}</a>` : '—'}</td>
+            <td class="px-3 py-3">${escapeHtml(st.position || '—')}</td>
+            <td class="px-3 py-3 whitespace-nowrap">${escapeHtml(when(st.lastSignInAt))}</td>
+            <td class="px-3 py-3">${status}</td>
+            <td class="px-3 py-3 text-right">${actions}</td>
+        </tr>`;
+    }).join('');
+}
+
+// Only office-run, published attractions that count visitors and have nobody active.
+function fillStaffSpots() {
+    const taken = new Set(staffList.filter(st => st.status === 'active' && st.spot).map(st => st.spot._id));
+    const open = staffSpots.filter(sp => !sp.managedBy && sp.type === 'spot' && sp.status === 'published'
+        && sp.countsVisitors !== false && !taken.has(sp._id));
+    const select = document.getElementById('newStaffSpot');
+    select.innerHTML = open.length
+        ? '<option value="">Choose the attraction</option>' + open.map(sp => `<option value="${escapeHtml(sp._id)}">${escapeHtml(sp.title)}${sp.barangay ? ` · ${escapeHtml(sp.barangay)}` : ''}</option>`).join('')
+        : '<option value="">No attraction is free</option>';
+    select.disabled = !open.length;
+}
+
+async function loadStaff() {
+    const tbody = document.getElementById('staffListTableBody');
+    if (!staffList.length) tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-support">Loading…</td></tr>';
+    try {
+        [staffList, staffSpots] = await Promise.all([api('/support-staff'), api('/spots')]);
+        renderStaff();
+        fillStaffSpots();
+    } catch (e) { if (e.message !== 'Signed out.') tbody.innerHTML = `<tr><td colspan="6" class="px-3 py-6 text-center tone-danger">${escapeHtml(e.message)}</td></tr>`; }
+}
+
+const addStaffForm = document.getElementById('addStaffForm');
+document.getElementById('openAddStaffBtn').addEventListener('click', () => {
+    addStaffForm.hidden = !addStaffForm.hidden;
+    if (!addStaffForm.hidden) { fillStaffSpots(); document.getElementById('newStaffName').focus(); }
+});
+document.getElementById('cancelAddStaffBtn').addEventListener('click', () => { addStaffForm.reset(); addStaffForm.hidden = true; });
+addStaffForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const fullName = document.getElementById('newStaffName').value.trim();
+    const email = document.getElementById('newStaffEmail').value.trim();
+    const spotId = document.getElementById('newStaffSpot').value;
+    const password = document.getElementById('newStaffPassword').value.trim();
+    if (!fullName || !email) return showToast('Enter the full name and sign-in email.', 'error');
+    if (!spotId) return showToast('Choose the attraction.', 'error');
+    if (password && password.length < 10) return showToast('A password must be at least 10 characters.', 'error');
+    const place = document.getElementById('newStaffSpot').selectedOptions[0].textContent;
+    const confirmPassword = await ztimsDialog.prompt({
+        title: `Create a Support Staff account for ${fullName}?`, message: place, label: 'Your password', type: 'password',
+        autocomplete: 'current-password', required: true, confirmLabel: 'Create account', icon: 'person_add'
+    });
+    if (!confirmPassword) return;
+    const restore = setButtonLoading(document.getElementById('addStaffBtn'), 'Creating...');
+    try {
+        const r = await api('/support-staff', 'POST', {
+            fullName, email, spotId, password, confirmPassword,
+            position: document.getElementById('newStaffPosition').value.trim(),
+            contactNumber: document.getElementById('newStaffContact').value.trim()
+        });
+        showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
+        addStaffForm.reset(); addStaffForm.hidden = true;
+        loadStaff();
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+    finally { restore(); }
+});
+
+document.getElementById('staffListTableBody').addEventListener('click', async event => {
+    const issue = event.target.closest('[data-staff-issue]');
+    const status = event.target.closest('[data-staff-status]');
+    if (!issue && !status) return;
+    const person = staffList.find(st => st._id === (issue ? issue.dataset.staffIssue : status.dataset.staffStatus));
+    if (!person) return;
+    const name = person.fullName || person.email;
+    try {
+        if (issue) {
+            const values = await ztimsDialog.form({
+                title: `Issue a new password for ${name}?`,
+                message: 'Their current password stops working immediately. They choose their own at their next sign-in.',
+                confirmLabel: 'Issue password', icon: 'key',
+                fields: [
+                    { name: 'newPassword', label: 'New password', optional: true, placeholder: 'Leave blank to generate one' },
+                    { name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }
+                ],
+                validate: v => v.newPassword.trim() && v.newPassword.trim().length < 10 ? 'A password must be at least 10 characters.'
+                    : (!v.confirmPassword ? 'Enter your password to confirm.' : '')
+            });
+            if (values === null) return;
+            const r = await api(`/support-staff/${encodeURIComponent(person._id)}/password`, 'POST', { newPassword: values.newPassword.trim(), confirmPassword: values.confirmPassword });
+            showPassword(`New password for ${name}`, r.email, r.newPassword);
+        } else {
+            const activate = status.dataset.active === '1';
+            const values = await ztimsDialog.form({
+                title: activate ? `Reactivate ${name}?` : `Deactivate ${name}?`,
+                message: activate
+                    ? `They will be able to sign in again, for ${person.spot ? person.spot.title : 'their attraction'}.`
+                    : 'They will be signed out and can no longer sign in. The account and its records are kept.',
+                confirmLabel: activate ? 'Reactivate' : 'Deactivate',
+                tone: activate ? 'default' : 'danger',
+                fields: [{ name: 'confirmPassword', label: 'Your password', type: 'password', required: true, autocomplete: 'current-password' }],
+                validate: v => (v.confirmPassword ? '' : 'Enter your password to confirm.')
+            });
+            if (values === null) return;
+            const r = await api(`/support-staff/${encodeURIComponent(person._id)}/status`, 'PATCH', { active: activate, confirmPassword: values.confirmPassword });
+            showToast(r.message, 'success');
+            loadStaff();
+        }
+    } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+});
+
 /* ---- 4. Office Information ------------------------------------------------- */
 
 function emergencyRow(entry) {
@@ -1139,7 +1339,7 @@ function mountPortalAccountMenu() {
 
 // The address names the subpage (#security …); a page opened without one, or
 // with one it doesn't know, shows My Account.
-const SUBPAGES = ['account', 'security', 'accounts', 'office', 'privacy'];
+const SUBPAGES = ['account', 'security', 'accounts', 'support', 'office', 'privacy'];
 const subpageFromAddress = () => {
     const asked = window.location.hash.slice(1);
     return SUBPAGES.includes(asked) ? asked : 'account';
@@ -1185,6 +1385,7 @@ window.addEventListener('DOMContentLoaded', () => {
     mountPortalAccountMenu();
     loadMe();
     loadOfficers();
+    loadStaff();
     loadOffice();
 });
 </script>

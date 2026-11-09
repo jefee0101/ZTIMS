@@ -574,7 +574,9 @@
      *   mount        element the form is rendered into (required)
      *   prefix       id prefix, so two forms can live on one page (default 'spot')
      *   apiBase      ZTIMS API root, for address search and reverse lookup
-     *   role         'officer' | 'manager'
+     *   role         'officer' | 'manager' | 'support_staff' (Support Staff: the
+     *                manager's form, with the name, kind, categories, fees, tagline
+     *                and booking link shown but locked — the server refuses them)
      *   cloudName / uploadPreset   Cloudinary, for photo uploads
      *   labels       { create, edit } for the submit button
      *   onSubmit(payload, { editingId, spot })  — the page does its own fetch
@@ -586,6 +588,7 @@
 
         const p = options.prefix || 'spot';
         const role = options.role === 'officer' ? 'officer' : 'manager';
+        const lockOfficeFields = options.role === 'support_staff';
         const apiBase = options.apiBase || '';
         const labels = options.labels || {};
         const createLabel = labels.create || 'Publish listing';
@@ -2332,6 +2335,23 @@
             currentSpot = null;
             editingId = '';
             el('DraftBar').hidden = true;
+        }
+
+        // Support Staff see what the Tourism Office sets, but cannot change it
+        // (the server refuses it too: SUPPORT_STAFF_WRITABLE_SPOT_FIELDS).
+        if (lockOfficeFields) {
+            ['Title', 'Label', 'TravelFee', 'EntranceFee', 'TakesBookings', 'BookingUrl'].forEach(function (id) {
+                if (el(id)) el(id).disabled = true;
+            });
+            form.querySelectorAll('#' + p + 'Kind input, #' + p + 'Cats input').forEach(function (input) { input.disabled = true; });
+            const mark = '<span class="sf-locked"><span class="material-symbols-outlined" aria-hidden="true">lock</span>Tourism Office</span>';
+            [form.querySelector('label[for="' + p + 'Title"]'), form.querySelector('#' + p + 'Kind') && form.querySelector('#' + p + 'Kind').closest('fieldset').querySelector('legend'),
+             form.querySelector('#' + p + 'Cats') && form.querySelector('#' + p + 'Cats').closest('fieldset').querySelector('legend'),
+             form.querySelector('label[for="' + p + 'Label"]'), form.querySelector('label[for="' + p + 'TravelFee"]'),
+             form.querySelector('label[for="' + p + 'EntranceFee"]')].forEach(function (label) {
+                if (label) label.insertAdjacentHTML('beforeend', ' ' + mark);
+            });
+            form.classList.add('sf-form--locked');
         }
 
         // Nothing is on screen until a page calls open(), but the preview and the

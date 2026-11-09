@@ -1485,6 +1485,9 @@ const SUPPORT_STAFF_LOCKED_LABELS = {
     bookingUrl: 'booking link', enterpriseName: 'enterprise name'
 };
 const sameListingValue = (a, b) => {
+    // A fee or count left empty reads back as 0 from the form.
+    const empty = v => v === undefined || v === null || v === '';
+    if ((empty(a) && Number(b) === 0) || (empty(b) && Number(a) === 0)) return true;
     const norm = v => (v === undefined || v === null || v === '') ? ''
         : Array.isArray(v) ? JSON.stringify(v.map(String)) : String(v);
     if (typeof a === 'number' || typeof b === 'number') {

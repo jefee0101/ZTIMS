@@ -728,6 +728,7 @@ body { overflow-x: hidden; }
 
         let allSpots = [];          // straight from the database
         let ratings = {};           // each place's average rating and number of visible reviews (reviews.js)
+        let staffOn = {};           // listing id → the active Support Staff member looking after it (support-staff.js)
         let activeCategory = "ALL";
 
         function authHeaders(extra) {
@@ -1125,6 +1126,7 @@ body { overflow-x: hidden; }
                     <div class="pg-card__facts">
                         <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(spot.barangay || spot.location || '—')}</span>
                         <span><span class="material-symbols-outlined" aria-hidden="true">${manager ? 'apartment' : 'account_balance'}</span>${manager ? `Run by <b>${escapeHtml(manager)}</b>` : '<b>Tourism Office</b>'}</span>
+                        ${staffOn[spot._id] ? `<span class="pg-card__staff" title="Support Staff"><span class="material-symbols-outlined" aria-hidden="true">badge</span>Support Staff: <b>${escapeHtml(staffOn[spot._id].fullName)}</b></span>` : ''}
                         ${ratings[spot._id] ? `<span class="pg-card__rating"><span class="material-symbols-outlined" aria-hidden="true">star</span><b>${ratings[spot._id].average.toFixed(1)}</b>&nbsp;from ${ratings[spot._id].count} ${ratings[spot._id].count === 1 ? 'review' : 'reviews'}</span>` : ''}
                     </div>
                     ${issues.length ? `<div class="pg-card__issues">${issues.map(issue => manager
@@ -1534,6 +1536,10 @@ body { overflow-x: hidden; }
                 const r = await fetch(`${API_BASE}/reviews/summary`);
                 if (r.ok) ratings = (await r.json()) || {};
             } catch (error) { /* the cards show without ratings */ }
+            try {
+                const r = await fetch(`${API_BASE}/support-staff`, { headers: authHeaders() });
+                if (r.ok) staffOn = Object.fromEntries((await r.json()).filter(st => st.status === 'active' && st.spot).map(st => [st.spot._id, st]));
+            } catch (error) { /* the cards show without the marker */ }
 
             try {
                 render();

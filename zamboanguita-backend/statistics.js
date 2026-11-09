@@ -207,12 +207,15 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                 where += ` and s.managed_by = $1`;
             }
             const { rows } = await query(
-                `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name
+                `select s.id, s.title, s.type, s.barangay, s.status, s.managed_by, case when s.managed_by is null then '' else coalesce(nullif(s.enterprise_name, ''), s.title) end as manager_name,
+                        (select ss.full_name from support_staff ss where ss.spot_id = s.id and ss.status = 'active' limit 1) as support_staff_name
                    from spots s
                  ${where} order by s.type, s.title`, params);
             return res.json(rows.map(s => ({
                 _id: s.id, title: s.title, kind: kindOf(s), barangay: s.barangay, status: s.status,
-                keptByOffice: s.managed_by === null, managerName: s.manager_name || ''
+                keptByOffice: s.managed_by === null, managerName: s.manager_name || '',
+                // Who enters an office-run attraction's reports, when the office assigned someone.
+                supportStaffName: s.support_staff_name || ''
             })));
         } catch (error) {
             return failure(res, error, '❌ Statistics places failure:');
@@ -232,8 +235,13 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             let history = [];
             if (report && isOfficer(req)) {
                 const { rows } = await query(
-                    `select action, changed_by_role, changed_by_email, note, changed_at from report_changes
-                      where report_id = $1 order by changed_at desc limit 50`, [report._id]);
+                    `select c.action, c.changed_by_role, c.changed_by_email, c.note, c.changed_at,
+                            coalesce(ss.full_name, nullif(o.full_name, ''), nullif(m.manager_name, ''), '') as changed_by_name
+                       from report_changes c
+                       left join support_staff ss on c.changed_by_role = 'support_staff' and ss.email = c.changed_by_email
+                       left join tourism_officers o on c.changed_by_role = 'admin' and o.email = c.changed_by_email
+                       left join establishment_managers m on c.changed_by_role in ('establishment_manager', 'resort_owner') and m.email = c.changed_by_email
+                      where c.report_id = $1 order by c.changed_at desc limit 50`, [report._id]);
                 history = rows;
             }
             const municipal = await query(

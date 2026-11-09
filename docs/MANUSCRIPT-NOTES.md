@@ -4,7 +4,7 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
-## Support Staff: database and API (10 November 2026; pages to come)
+## Support Staff: database, API and pages (10 November 2026)
 
 **The change.** A fourth user, **Support Staff**, under the Tourism Officer:
 a person of the Municipal Tourism Office who looks after one attraction the
@@ -13,8 +13,15 @@ monthly report and its listing details, but not its category or prices; no
 tickets, money, closing dates, taking it down, Finalize or Reopen. The officer
 adds them (one active per attraction), issues passwords and deactivates them,
 each with the officer's own password; accounts are never deleted. New table
-`support_staff` (33 tables). The full entry (use cases, access matrix, ERD,
-data dictionary, security) comes with the pages.
+`support_staff` (33 tables). Pages: their own small portal (My attraction —
+the listing's details with category and prices shown locked; Guest Register;
+Monthly Report; Account), the officer's Settings → Support Staff (add, new
+password, deactivate or reactivate), a "Support Staff: <name>" marker on
+Destinations' card, and Statistics naming who entered a report.
+Screenshots for the manuscript: the Support Staff portal's My attraction and
+its locked form, the officer's Settings → Support Staff, the Statistics banner.
+The full entry (use cases, access matrix, ERD, data dictionary, security)
+comes with the end-to-end check.
 
 ## Visitor accounts, saved places and reviews: the complete module (9 November 2026)
 

@@ -323,12 +323,14 @@ purpose — see the header comment in `spot-form.js`:
   writes ticked days back as text (`window.ZTIMS_OPEN_DAYS`); used by the
   listing form's day boxes and the officer's Visitor setup. See "Attraction
   setup" below.
-- `idle-signout.js` — signs an officer out after 30 minutes with no activity on
-  any officer tab (loaded as a module on every `src/admin/*.html` page). See
+- `idle-signout.js` — signs an officer (or Support Staff) out after 30 minutes
+  with no activity on any of their tabs (loaded as a module on every
+  `src/admin/*.html` and `src/staff/*.html` page). See
   "Sign-in safety" below.
 - `visitor-session.js` and `visitor-auth.js` — visitor accounts' header control
   and sign-in pages (see "Visitor accounts"); `saved-places.js` — the heart
-  (see "Saved places and reviews").
+  (see "Saved places and reviews"); `staff-portal.js` — the Support Staff
+  portal's header and banner (see "Support Staff").
 - `photo-upload.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -1404,7 +1406,7 @@ ratings only, never money.
   reason — "Hidden: …" or "Shown again: …" with who and when) and **Hide** (red)
   or **Unhide**, each asking for the reason in a dialog. No delete, no reply.
 
-### Support Staff (November 2026; database and API, pages to come)
+### Support Staff (November 2026)
 
 `support-staff.js`, mounted at `/api`, and the shared sign-in in `server.js`.
 The user's decisions (9 November 2026; notes repo `Design/Support Staff/`): a
@@ -1429,8 +1431,9 @@ officer deactivates the old account and adds a new one.
   the right password; the issued password is replaced first (`POST
   /api/me/password`); forgot-password works while active. `ACCOUNT_TABLES`
   names the table, so `storePassword`, `endSessions` and `changeOwnPassword`
-  work unchanged. Until the portal exists the sign-in page says "This account
-  does not have access to the staff portal" and keeps no token.
+  work unchanged. The staff sign-in page sends them to
+  `staff/staff_attraction.html` (`PORTAL_HOME.support_staff`; `?next=` only a
+  `staff/…` page).
 - **Own routes** (`requireSupportStaff`): `GET|PATCH /api/support-staff/me`
   (name, position, contact number; the response carries the attraction),
   `POST /api/support-staff/me/password`, `POST
@@ -1466,6 +1469,36 @@ officer deactivates the old account and adds a new one.
   account is on it, the officer cannot switch Count visitors off, change its
   kind, take it down (`PATCH …/status` to unpublished or archived) or delete
   it: 409 `HAS_SUPPORT_STAFF`, naming the person.
+- **Their portal** (`src/staff/`, the manager pages' shell and portal-flat
+  look; menu: My attraction, Guest Register, Monthly Report, Account only;
+  `idle-signout.js` and `src/shared/staff-portal.js` on each). `staff-portal.js`
+  reads `GET /api/support-staff/me` once (`window.ztimsStaff.me()`), puts the
+  attraction's name in the header on a solid pill (`#staffPlace`,
+  `.staff-place`, where managers have the switcher) and fills the "Entered by
+  <name>" banner (`#staffWho`, `.own-banner--office` with the Tourism Office
+  tag). Pages: **My attraction** (`staff_attraction.html`): Basics, Location,
+  Visiting, Photos and Contact as saved facts (`.est-fact`), the locked ones
+  marked with a lock pill "Tourism Office" (`.sf-locked`), each with Edit; Edit
+  opens the shared listing form on that part (`mountSpotForm({ role:
+  'support_staff' })`, `openSection`), which shows the name, kind, categories,
+  fees, tagline and booking link disabled (`lockOfficeFields`); Contact is a
+  small window (phone, public email); "See it as visitors do". **Guest
+  Register** and **Monthly Report** (`staff_register.html`,
+  `staff_statistics.html`): the manager's pages for their one place, the
+  attraction's name instead of a picker, the banner, no Remove. **Account**
+  (`staff_settings.html`): name, position, contact number, the sign-in email
+  and attraction (set by the Tourism Office), change password, sign out of all
+  devices. The pages were made from the `src/resort/` ones; change both when a
+  shared part changes.
+- **The officer's side:** Settings → **Support Staff** (`admin_profile.html#support`):
+  name, attraction, position, last sign-in, status; Add (the Attraction list
+  holds only published, office-run, counting attractions with nobody active),
+  New password, Deactivate / Reactivate, each asking "Your password"; a new or
+  issued password is shown once in a toast. Destinations' card says "Support
+  Staff: <name>" on an attraction with someone active (`.pg-card__staff`).
+  Statistics → Enter a report: "Entered by <name>, Support Staff."
+  (`/statistics/places` carries `supportStaffName`); the report's change log
+  names each person (`changed_by_name`, "(Support Staff)").
 - Tested with real API calls (first sign-in and forced change; refused on
   officer, manager, ticket, money and other-place routes and the reverse; own
   register and report only; every locked field; one active per attraction; a
@@ -1528,10 +1561,11 @@ officer deactivates the old account and adds a new one.
 
 ### Settings (the officer's `admin_profile.html`)
 
-Five subpages, one tab each, each with its own address so a link or a reload
+Six subpages, one tab each, each with its own address so a link or a reload
 opens it and Back returns to the one before: `#account` (the default),
-`#security`, `#accounts`, `#office`, `#privacy` (`SUBPAGES` / `showSubpage` in
-the page; tabs styled like Statistics').
+`#security`, `#accounts`, `#support` (Support Staff; see "Support Staff"),
+`#office`, `#privacy` (`SUBPAGES` / `showSubpage` in the page; tabs styled like
+Statistics').
 
 - **My Account**: the officer's full name, position and contact number
   (`tourism_officers.full_name|position|contact_number`; `GET`/`PATCH

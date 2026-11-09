@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Explore Zamboanguita | Account</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+    <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface-variant": "rgb(var(--ztims-surface-variant) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "primary-container": "rgb(var(--ztims-primary-container) / <alpha-value>)",
+              "secondary-container": "rgb(var(--ztims-secondary-container) / <alpha-value>)",
+              "on-secondary-container": "rgb(var(--ztims-on-secondary-container) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+          }
+        }
+      }
+    }
+    </script>
+
+    <style>
+
+    
+/* ==========================================================
+   COLLAPSIBLE SIDEBAR — identical on every portal page, and the
+   collapsed choice is shared, so it survives navigating between them.
+   The header and main are sized against the sidebar's 16rem, so all
+   three shift together or the layout tears. !important because the
+   Tailwind CDN injects its own sm: rules after this block.
+   ========================================================== */
+[hidden] { display: none !important; }
+
+@media (min-width: 640px) {
+    /* Labels collapse by width + opacity rather than display:none, because display
+       cannot be animated — it would snap the text away before the rail finishes
+       sliding. Everything animates on the same curve and duration so the rail, the
+       header, the content and the labels move as one piece. */
+    aside, header, main {
+        transition: width var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), margin-left var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside .sidebar-label,
+    aside .sidebar-brand-full {
+        opacity: 1; max-width: 13rem; white-space: nowrap; overflow: hidden;
+        transition: opacity var(--dur-fast) var(--ease-standard) 60ms, max-width var(--dur-moderate) var(--ease-standard) !important;
+    }
+    aside a, aside button:not(#sidebarToggleBtn) {
+        transition: gap var(--dur-moderate) var(--ease-standard), padding var(--dur-moderate) var(--ease-standard), color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard) !important;
+    }
+    body.sidebar-collapsed aside { width: 5rem !important; padding-left: .75rem !important; padding-right: .75rem !important; }
+    body.sidebar-collapsed header { width: calc(100% - 5rem) !important; }
+    body.sidebar-collapsed main { width: calc(100% - 5rem) !important; margin-left: 5rem !important; }
+    body.sidebar-collapsed aside .sidebar-label,
+    body.sidebar-collapsed aside .sidebar-brand-full { opacity: 0 !important; max-width: 0 !important; transition-delay: 0s !important; }
+    body.sidebar-collapsed .sidebar-brand-short { display: block !important; animation: railBrandIn .3s ease both; }
+    body.sidebar-collapsed aside a,
+    body.sidebar-collapsed aside button:not(#sidebarToggleBtn) {
+        justify-content: center !important;
+        gap: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.sidebar-brand-short { display: none; }
+
+/* ==========================================================
+   MOBILE NAVIGATION (below 640px)
+   The rail is fixed and 16rem wide at every size, so on a phone it simply sat
+   on top of the page: the content began underneath it and could not be read.
+   Below 640px it becomes a drawer that slides in from the left, opened by the
+   button in the header and closed by the scrim, the Escape key, or choosing a
+   destination. The collapse rules above are desktop-only, so the two never meet.
+   ========================================================== */
+@media (max-width: 639px) {
+    aside {
+        width: 17rem !important;
+        max-width: 86vw !important;
+        transform: translateX(-100%);
+        transition: transform var(--dur-moderate) var(--ease-decelerate) !important;
+    }
+    body.nav-open aside {
+        transform: none;
+        box-shadow: var(--ztims-shadow-overlay);
+    }
+    header, main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    #navScrim {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        background: rgb(var(--ztims-background) / .6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--dur-moderate) var(--ease-standard);
+    }
+    body.nav-open #navScrim { opacity: 1; pointer-events: auto; }
+    body.nav-open { overflow: hidden; }
+}
+@media (min-width: 640px) {
+    #navScrim, #navOpenBtn { display: none !important; }
+}
+
+@keyframes railBrandIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
+    <link rel="stylesheet" href="../shared/portal-flat.css"/>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+<script>
+/* ==========================================================
+   ACCOUNT AVATAR + MENU (upper right)
+   One button showing who is signed in, and a small menu under it. Built in
+   JavaScript rather than markup so every page mounts the same thing with its
+   own links, the way the toast module is shared.
+
+   mountAccountMenu({ container, name, email, imageUrl, items, signedOutLabel,
+                      signedOutHref })
+     name / email : shown in the menu's header; the initial becomes the avatar
+     imageUrl     : optional photo (Google accounts have one)
+     items        : [{ label, icon, href }] or [{ label, icon, onSelect }]
+     signedOut*   : when name and email are both empty, the avatar is replaced
+                    by this link, so a guest gets a way in rather than a
+                    meaningless blank circle
+   ========================================================== */
+(function () {
+    function initialFrom(name, email) {
+        var source = (name || email || '').trim();
+        return source ? source.charAt(0).toUpperCase() : '?';
+    }
+
+    window.mountAccountMenu = function (options) {
+        var container = options.container;
+        if (!container) return;
+        container.innerHTML = '';
+
+        var signedIn = Boolean((options.name || '').trim() || (options.email || '').trim());
+
+        if (!signedIn) {
+            var signIn = document.createElement('a');
+            signIn.href = options.signedOutHref || '#';
+            signIn.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-full border border-current/30 text-sm font-bold hover:opacity-80 transition-opacity';
+            signIn.innerHTML = '<span class="material-symbols-outlined !text-lg">account_circle</span>' +
+                               '<span>' + (options.signedOutLabel || 'Sign in') + '</span>';
+            container.appendChild(signIn);
+            return;
+        }
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative';
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-haspopup', 'menu');
+        button.setAttribute('aria-expanded', 'false');
+        button.title = options.name || options.email || 'Account';
+        button.style.cssText = [
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'width:2.5rem', 'height:2.5rem', 'border-radius:0',
+            'border:2px solid rgb(var(--ztims-secondary) / .55)', 'background:rgb(var(--ztims-surface-variant))',
+            'color:rgb(var(--ztims-accent))',
+            'font-weight:800', 'font-size:.95rem', 'cursor:pointer', 'overflow:hidden',
+            'transition:transform var(--dur-fast) var(--ease-standard)'
+        ].join(';');
+
+        if (options.imageUrl) {
+            var photo = document.createElement('img');
+            photo.src = options.imageUrl;
+            photo.alt = '';
+            photo.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            // A broken photo link would otherwise leave an empty circle.
+            photo.addEventListener('error', function () {
+                photo.remove();
+                button.textContent = initialFrom(options.name, options.email);
+            });
+            button.appendChild(photo);
+        } else {
+            button.textContent = initialFrom(options.name, options.email);
+        }
+        button.addEventListener('mouseenter', function () { button.style.transform = 'scale(1.06)'; });
+        button.addEventListener('mouseleave', function () { button.style.transform = 'none'; });
+
+        var menu = document.createElement('div');
+        menu.setAttribute('role', 'menu');
+        menu.hidden = true;
+        menu.style.cssText = [
+            'position:absolute', 'top:calc(100% + .6rem)', 'right:0', 'z-index:1500',
+            'min-width:15rem', 'padding:.4rem',
+            'border-radius:var(--radius-lg, 1rem)',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'border:1px solid var(--glass-hairline)',
+            'color:rgb(var(--ztims-on-surface))',
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'transform-origin:top right',
+            'animation:ztimsMenuIn var(--dur-base, 220ms) var(--ease-decelerate, ease-out)',
+            'font-size:.85rem'
+        ].join(';');
+
+        var header = document.createElement('div');
+        header.style.cssText = 'padding:.65rem .75rem;border-bottom:1px solid rgb(var(--ztims-outline));margin-bottom:.3rem';
+        var nameLine = document.createElement('div');
+        nameLine.textContent = options.name || options.email;
+        nameLine.style.cssText = 'font-weight:800;word-break:break-word';
+        header.appendChild(nameLine);
+        if (options.email && options.name) {
+            var emailLine = document.createElement('div');
+            emailLine.textContent = options.email;
+            emailLine.style.cssText = 'font-size:.75rem;color:rgb(var(--ztims-on-surface-variant));word-break:break-all;margin-top:.1rem';
+            header.appendChild(emailLine);
+        }
+        menu.appendChild(header);
+
+        function close() {
+            menu.hidden = true;
+            button.setAttribute('aria-expanded', 'false');
+        }
+
+        (options.items || []).forEach(function (item) {
+            var entry = document.createElement(item.href ? 'a' : 'button');
+            entry.setAttribute('role', 'menuitem');
+            if (item.href) entry.href = item.href; else entry.type = 'button';
+            entry.style.cssText = [
+                'display:flex', 'align-items:center', 'gap:.6rem', 'width:100%',
+                'padding:.6rem .75rem', 'border:0', 'border-radius:0',
+                'background:none', 'color:' + (item.danger ? 'rgb(var(--ztims-error))' : 'inherit'),
+                'font:inherit', 'text-align:left', 'text-decoration:none', 'cursor:pointer'
+            ].join(';');
+            entry.innerHTML = '<span class="material-symbols-outlined !text-lg">' + (item.icon || 'chevron_right') + '</span>';
+            var label = document.createElement('span');
+            label.textContent = item.label;   // text, never markup
+            entry.appendChild(label);
+
+            entry.addEventListener('mouseenter', function () { entry.style.background = 'rgb(var(--ztims-on-surface) / .06)'; });
+            entry.addEventListener('mouseleave', function () { entry.style.background = 'none'; });
+            entry.addEventListener('click', function () {
+                close();
+                if (item.onSelect) item.onSelect();
+            });
+            menu.appendChild(entry);
+        });
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var opening = menu.hidden;
+            menu.hidden = !opening;
+            button.setAttribute('aria-expanded', String(opening));
+        });
+        document.addEventListener('click', function (event) {
+            if (!menu.hidden && !wrap.contains(event.target)) close();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') close();
+        });
+
+        wrap.appendChild(button);
+        wrap.appendChild(menu);
+        container.appendChild(wrap);
+    };
+})();
+</script>
+    <div id="navScrim" aria-hidden="true"></div>
+
+    <aside class="fixed left-0 top-0 h-full w-64 glass-nav border-r border-outline-variant/30 z-[100] flex flex-col p-5 sm:p-6 transition-colors duration-300">
+        <div class="mb-10 px-2 flex items-start justify-between gap-2"><div>
+            <h1 class="sidebar-brand-full text-xl font-extrabold tracking-tight font-headline text-primary">EXPLORE<br><span class="text-accent">ZAMBOANGUITA</span></h1>
+            <p class="sidebar-label text-label uppercase tracking-widest mt-2">Support Staff Portal</p>
+            <span class="sidebar-brand-short text-2xl font-extrabold font-headline text-primary">EZ</span></div>
+            <button id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar"
+                    class="shrink-0 p-2.5 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-accent hover:bg-on-surface/5 transition-all">
+                <span id="sidebarToggleIcon" class="material-symbols-outlined !text-xl">left_panel_close</span>
+            </button>
+        </div>
+        <nav class="flex-1 space-y-2 font-body">
+            <a title="My attraction" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_attraction.html">
+                <span class="material-symbols-outlined text-accent">storefront</span>
+                <span class="sidebar-label">My attraction</span>
+            </a>
+            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_register.html">
+                <span class="material-symbols-outlined text-accent">menu_book</span>
+                <span class="sidebar-label">Guest Register</span>
+            </a>
+            <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_statistics.html">
+                <span class="material-symbols-outlined text-accent">bar_chart</span>
+                <span class="sidebar-label">Monthly Report</span>
+            </a>
+            <a title="Account" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_settings.html">
+                <span class="material-symbols-outlined text-accent">manage_accounts</span>
+                <span class="sidebar-label">Account</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-outline-variant/30">
+            <a title="Log Out" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-error transition-all duration-300 hover:translate-x-1" id="logoutLink" href="../../index.html">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="sidebar-label">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <header class="fixed top-0 right-0 w-full sm:w-[calc(100%-16rem)] flex justify-between items-center gap-3 px-4 sm:px-8 py-3 sm:py-4 z-50 glass-nav border-b border-outline-variant/20 transition-colors duration-300">
+        <button id="navOpenBtn" type="button" aria-label="Open navigation" aria-expanded="false"
+                class="sm:hidden p-2.5 -ml-1 rounded-xl text-on-surface hover:bg-on-surface/5 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <p id="staffPlace" class="staff-place min-w-0 mr-auto truncate"></p>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-full bg-surface-variant border border-outline-variant/30 hover:scale-110 transition-all flex items-center justify-center">
+                <span id="themeIcon" class="material-symbols-outlined text-accent">dark_mode</span>
+            </button>
+            <div id="accountMenuSlot"></div>
+        </div>
+    </header>
+
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+        <div class="max-w-[1000px] mx-auto space-y-8">
+
+            <header class="space-y-1">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Account</h1>
+            </header>
+
+            <div id="settingsLoading"></div>
+
+            <div id="settingsContent" hidden class="space-y-8">
+            <!-- One subpage per part, as on the officer's Settings. Each has its
+                 own address (staff_settings.html#security), so a link can open
+                 one, and Back goes to the previous one. -->
+            <div role="tablist" aria-label="Account" class="flex overflow-x-auto gap-x-1 sm:gap-x-2 border-b border-outline-variant/30">
+                <button role="tab" id="tab-account" aria-controls="accountSection" aria-selected="true" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">badge</span>My Account</button>
+                <button role="tab" id="tab-security" aria-controls="securitySection" aria-selected="false" tabindex="-1" class="settings-tab">
+                    <span class="material-symbols-outlined !text-base">shield_lock</span>Security</button>
+            </div>
+
+            <!-- 1. My Account: the person behind the account. -->
+            <section id="accountSection" role="tabpanel" aria-labelledby="tab-account" class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
+                <h2 class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined">badge</span> My Account
+                </h2>
+                <div class="flex items-center gap-4">
+                    <div id="myInitials" aria-hidden="true"
+                         class="w-16 h-16 shrink-0 flex items-center justify-center bg-primary text-on-primary text-2xl font-black font-headline">—</div>
+                    <div class="min-w-0">
+                        <p id="myNameLine" class="text-lg font-bold text-on-surface truncate">—</p>
+                        <p id="myEstablishmentLine" class="text-support truncate"></p>
+                    </div>
+                </div>
+                <form id="accountForm" class="space-y-4" novalidate>
+                    <label class="block">
+                        <span class="field-label">Full name</span>
+                        <input id="myFullName" type="text" maxlength="120" autocomplete="name" class="field w-full" placeholder="e.g., Rosa L. Villanueva"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Position</span>
+                        <input id="myPosition" type="text" maxlength="120" class="field w-full" placeholder="e.g., Tourism Aide"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Contact number</span>
+                        <input id="myContact" type="tel" maxlength="40" autocomplete="tel" class="field w-full" placeholder="e.g., 0917 123 4567"/>
+                    </label>
+                    <dl class="text-sm border-t border-outline-variant/30 pt-2">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Sign-in email <span class="tone-pill tone-neutral ml-1 whitespace-nowrap">Set by the Tourism Office</span></dt>
+                            <dd id="signInEmail" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Attraction <span class="tone-pill tone-neutral ml-1 whitespace-nowrap">Set by the Tourism Office</span></dt>
+                            <dd id="myAttraction" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Account issued</dt>
+                            <dd id="accountCreated" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                    </dl>
+                    <p id="accountMessage" hidden class="text-sm px-4 py-3"></p>
+                    <button id="saveAccountBtn" type="submit" class="btn btn-primary w-full min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">save</span> Save changes
+                    </button>
+                </form>
+            </section>
+
+            <!-- 2. Security: the same as the officer's. -->
+            <section id="securitySection" role="tabpanel" aria-labelledby="tab-security" hidden class="glass-panel p-5 sm:p-7 space-y-6 max-w-3xl">
+                <h2 class="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined">shield_lock</span> Security
+                </h2>
+                <dl class="text-sm">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
+                            <dt class="text-on-surface-variant">Signed in since</dt>
+                            <dd id="signedInSince" class="font-bold text-on-surface text-right break-all">—</dd>
+                        </div>
+                </dl>
+                <form id="passwordForm" class="space-y-4">
+                    <h3 class="font-bold text-on-surface">Change password</h3>
+                    <label class="block">
+                        <span class="field-label">Current password</span>
+                        <input id="currentPasswordInput" type="password" required autocomplete="current-password" class="field w-full"/>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">New password</span>
+                        <input id="newPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="field w-full"/>
+                        <span class="text-support mt-1 block">At least 10 characters.</span>
+                    </label>
+                    <label class="block">
+                        <span class="field-label">Confirm new password</span>
+                        <input id="confirmPasswordInput" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="field w-full"/>
+                    </label>
+                    <p id="passwordMessage" hidden class="text-sm px-4 py-3"></p>
+                    <button type="submit" id="savePasswordBtn" class="btn btn-secondary w-full min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">key</span> Change password
+                    </button>
+                </form>
+                <div class="border-t border-outline-variant/30 pt-5 space-y-3">
+                    <h3 class="font-bold text-on-surface">Signed-in devices</h3>
+                    <button type="button" id="signOutEverywhereBtn" class="btn btn-ghost w-full min-h-[44px]">
+                        <span class="material-symbols-outlined !text-base">devices_off</span> Sign out of all devices
+                    </button>
+                </div>
+            </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "/api";
+
+        function authHeaders(extra) {
+            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+            ));
+        }
+
+        // The API sleeps on Render's free tier, so a cold start can take most of a
+        // minute — after 5s the spinner says so rather than looking frozen.
+        function showLoading(target, message) {
+            target.innerHTML =
+                '<div class="flex flex-col items-center justify-center gap-3 py-16 w-full text-center">' +
+                    '<div class="w-10 h-10 rounded-full border-4 border-current border-t-transparent animate-spin opacity-80"></div>' +
+                    '<p class="text-sm opacity-80">' + message + '</p>' +
+                '</div>';
+            const timer = setTimeout(() => {
+                const note = target.querySelector('[data-slow]');
+                if (note) note.classList.remove('hidden');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+
+        function setButtonLoading(btn, label) {
+            if (!btn) return () => {};
+            const originalHTML = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-2px] mr-2"></span>' + label;
+            return () => { btn.innerHTML = originalHTML; btn.disabled = wasDisabled; };
+        }
+
+        // Shared with the sidebar's Log Out, so both doors behave identically.
+        function signOutStaff() {
+            try {
+                window.ztimsTheme.clearStorage();
+                sessionStorage.clear();
+            } catch (e) { /* private browsing */ }
+            if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+            setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+        }
+
+        // Who is signed in, in the corner, with the way out of the portal.
+        function mountPortalAccountMenu() {
+            mountAccountMenu({
+                container: document.getElementById('accountMenuSlot'),
+                name: localStorage.getItem('userName') || 'Support Staff',
+                email: localStorage.getItem('userEmail') || '',
+                items: [
+                    { label: 'Account', icon: 'manage_accounts', href: 'staff_settings.html' },
+                    { label: 'Sign out', icon: 'logout', danger: true, onSelect: signOutStaff }
+                ]
+            });
+        }
+
+
+        function guardEstablishmentManagerSession() {
+            // The Support Staff portal (support-staff.js): their own pages only.
+            if (localStorage.getItem('userRole') !== 'support_staff' || !localStorage.getItem('authToken')) {
+                window.location.href = '../staff_login.html?next=' + encodeURIComponent('staff/' + location.pathname.split('/').pop());
+                return false;
+            }
+            return true;
+        }
+
+        // A sign-in lasts two hours. When it runs out the server answers 401, and
+        // treating that as an ordinary failure would look like the account was
+        // emptied — so say what happened and send them back to sign in.
+        function handleExpiredSession() {
+            localStorage.removeItem('authToken');
+            showToast('Your sign-in has expired. Signing you back in — nothing has been lost.', 'info');
+            window.location.href = '../staff_login.html?expired=1';
+        }
+
+        function showMessage(id, message, tone) {
+            const box = document.getElementById(id);
+            box.textContent = message || '';
+            box.className = 'text-sm rounded-xl px-4 py-3 ' + (tone === 'error'
+                ? 'text-error bg-error/10 border border-error/20'
+                : 'text-primary bg-primary/10 border border-primary/20');
+            box.hidden = !message;
+        }
+
+        function formatDate(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? '—'
+                : date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function initials(name) {
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            return parts.length ? (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() : '—';
+        }
+
+        let staffMe = {};
+        function fillForm(me) {
+            staffMe = Object.assign(staffMe, me);
+            me = staffMe;
+            document.getElementById('myFullName').value = me.fullName || '';
+            document.getElementById('myPosition').value = me.position || '';
+            document.getElementById('myContact').value = me.contactNumber || '';
+            document.getElementById('myInitials').textContent = initials(me.fullName);
+            document.getElementById('myNameLine').textContent = me.fullName || 'Name not added yet';
+            document.getElementById('myEstablishmentLine').textContent = me.position || '';
+            document.getElementById('signInEmail').textContent = me.email || '';
+            document.getElementById('myAttraction').textContent = me.spot ? me.spot.title : '—';
+            document.getElementById('accountCreated').textContent = formatDate(me.createdAt);
+            if (me.fullName) localStorage.setItem('userName', me.fullName);
+            mountPortalAccountMenu();
+        }
+
+        // The manager's own name and number (the same two the Enterprise's
+        // Contact shows visitors). The sign-in email is the office's to change.
+        async function saveAccount(event) {
+            event.preventDefault();
+            showMessage('accountMessage', '');
+            const restore = setButtonLoading(document.getElementById('saveAccountBtn'), 'Saving...');
+            try {
+                const response = await fetch(`${API_BASE}/support-staff/me`, {
+                    method: 'PATCH',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        fullName: document.getElementById('myFullName').value.trim(),
+                        position: document.getElementById('myPosition').value.trim(),
+                        contactNumber: document.getElementById('myContact').value.trim()
+                    })
+                });
+                if (response.status === 401) return handleExpiredSession();
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) throw new Error(result.message || `The server refused (status ${response.status}).`);
+                fillForm(result);
+                showMessage('accountMessage', result.message || 'Your details have been saved.');
+            } catch (error) {
+                showMessage('accountMessage', error.message, 'error');
+            } finally {
+                restore();
+            }
+        }
+
+        /* ---- the subpages, as on the officer's Settings ---- */
+        const SUBPAGES = ['account', 'security'];
+        const subpageFromAddress = () => {
+            const asked = window.location.hash.slice(1);
+            return SUBPAGES.includes(asked) ? asked : 'account';
+        };
+        function showSubpage(name, { focusTab = false } = {}) {
+            for (const page of SUBPAGES) {
+                const tab = document.getElementById('tab-' + page);
+                const on = page === name;
+                tab.setAttribute('aria-selected', String(on));
+                tab.tabIndex = on ? 0 : -1;
+                document.getElementById(tab.getAttribute('aria-controls')).hidden = !on;
+            }
+            if (focusTab) document.getElementById('tab-' + name).focus();
+        }
+        function wireSubpages() {
+            const list = document.querySelector('[role="tablist"]');
+            list.addEventListener('click', event => {
+                const tab = event.target.closest('[role="tab"]');
+                if (!tab) return;
+                const name = tab.id.slice(4);
+                if (name !== subpageFromAddress()) history.pushState(null, '', '#' + name);
+                showSubpage(name);
+            });
+            list.addEventListener('keydown', event => {
+                const step = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity }[event.key];
+                if (step === undefined) return;
+                event.preventDefault();
+                const at = SUBPAGES.indexOf(subpageFromAddress());
+                const next = SUBPAGES[Number.isFinite(step) ? (at + step + SUBPAGES.length) % SUBPAGES.length : (step < 0 ? 0 : SUBPAGES.length - 1)];
+                history.pushState(null, '', '#' + next);
+                showSubpage(next, { focusTab: true });
+            });
+            window.addEventListener('popstate', () => showSubpage(subpageFromAddress()));
+            showSubpage(subpageFromAddress());
+        }
+
+        async function loadProfile() {
+            const doneLoading = showLoading(document.getElementById('settingsLoading'), 'Loading your account...');
+            try {
+                const response = await fetch(`${API_BASE}/support-staff/me`, { headers: authHeaders() });
+                if (response.status === 401) return handleExpiredSession();
+                if (!response.ok) throw new Error(`The server returned status ${response.status}.`);
+
+                const result = await response.json();
+                doneLoading();
+                document.getElementById('settingsLoading').innerHTML = '';
+                document.getElementById('settingsContent').hidden = false;
+                fillForm(result);
+            } catch (error) {
+                console.error('❌ Could not load your details:', error);
+                doneLoading();
+                document.getElementById('settingsLoading').innerHTML = `
+                    <div class="glass-panel rounded-2xl p-5 sm:p-8 text-center">
+                        <span class="material-symbols-outlined text-4xl block mb-2 text-error/70">cloud_off</span>
+                        <p class="text-on-surface font-bold mb-1">Could not load your details</p>
+                        <p class="text-on-surface-variant text-sm">${escapeHtml(error.message)} Nothing has been changed — refresh to try again.</p>
+                    </div>`;
+            }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            showMessage('passwordMessage', '');
+
+            const currentPassword = document.getElementById('currentPasswordInput').value;
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmation = document.getElementById('confirmPasswordInput').value;
+
+            if (newPassword.length < 10) {
+                showMessage('passwordMessage', 'Your new password must be at least 10 characters.', 'error');
+                return;
+            }
+            if (newPassword !== confirmation) {
+                showMessage('passwordMessage', 'Those two passwords do not match.', 'error');
+                return;
+            }
+
+            const restoreButton = setButtonLoading(document.getElementById('savePasswordBtn'), 'Changing...');
+            try {
+                const response = await fetch(`${API_BASE}/support-staff/me/password`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                // 401 here means the current password was wrong, not an expired
+                // session, so it is reported rather than signing them out.
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `The server refused (status ${response.status}).`);
+                }
+
+                // Other devices were signed out with the old password; this one carries on.
+                if (result.token) localStorage.setItem('authToken', result.token);
+                document.getElementById('passwordForm').reset();
+                showMessage('passwordMessage', result.message || 'Your password has been changed.');
+            } catch (error) {
+                showMessage('passwordMessage', error.message, 'error');
+            } finally {
+                restoreButton();
+            }
+        }
+
+        async function signOutEverywhere() {
+            const yes = await ztimsDialog.confirm({
+                title: 'Sign out of all devices?',
+                message: 'Every computer and phone signed in to your account is signed out, this one too.',
+                confirmLabel: 'Sign out everywhere', tone: 'danger'
+            });
+            if (!yes) return;
+            try {
+                const response = await fetch(`${API_BASE}/support-staff/me/sign-out-everywhere`, { method: 'POST', headers: authHeaders() });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok && response.status !== 401) throw new Error(result.message || `The server refused (status ${response.status}).`);
+                window.ztimsTheme.clearStorage();
+                window.location.replace('../staff_login.html');
+            } catch (error) {
+                showMessage('passwordMessage', error.message, 'error');
+            }
+        }
+
+        // When this sign-in began: the token's own issue time (iat).
+        function signedInSince() {
+            try {
+                const part = (localStorage.getItem('authToken') || '').split('.')[1];
+                const { iat } = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')));
+                return iat ? new Date(iat * 1000).toLocaleString('en-PH', { dateStyle: 'long', timeStyle: 'short' }) : '—';
+            } catch { return '—'; }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            wireSubpages();
+            document.getElementById('accountForm').addEventListener('submit', saveAccount);
+            document.getElementById('signedInSince').textContent = signedInSince();
+            document.getElementById('signOutEverywhereBtn').addEventListener('click', signOutEverywhere);
+            mountPortalAccountMenu();
+
+            if (!guardEstablishmentManagerSession()) return;
+
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+
+            loadProfile();
+        });
+    </script>
+<script>
+/* Collapsed sidebar state, shared across every portal page via one key. */
+(function () {
+    var btn = document.getElementById('sidebarToggleBtn');
+    var icon = document.getElementById('sidebarToggleIcon');
+    if (!btn || !icon) return;
+
+    function apply(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        icon.textContent = collapsed ? 'left_panel_open' : 'left_panel_close';
+        var label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+
+    btn.addEventListener('click', function () {
+        var collapsed = !document.body.classList.contains('sidebar-collapsed');
+        apply(collapsed);
+        try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) { /* private browsing */ }
+    });
+
+    try { apply(localStorage.getItem('sidebarCollapsed') === '1'); }
+    catch (e) { apply(false); }
+})();
+</script>
+
+<script>
+/* Signing out goes straight back to the public site: the session is cleared here
+   and the person lands on the main page, instead of stopping at a page whose only
+   purpose was to say they had left. */
+(function () {
+    var link = document.getElementById('logoutLink');
+    if (!link) return;
+
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        try {
+            window.ztimsTheme.clearStorage();
+            sessionStorage.clear();
+        } catch (e) { /* private browsing */ }
+
+        if (typeof showToast === 'function') showToast('Signed out.', 'success', { duration: 2000 });
+        // replace(), not href: the portal must not come back with the back button.
+        setTimeout(function () { window.location.replace('../../index.html'); }, 600);
+    });
+})();
+</script>
+
+<script>
+/* The drawer's open state. Only ever active below 640px, where the CSS above
+   turns the rail into one; above that the button and scrim are hidden and this
+   does nothing. */
+(function () {
+    var openBtn = document.getElementById('navOpenBtn');
+    var scrim = document.getElementById('navScrim');
+    var aside = document.querySelector('aside');
+    if (!openBtn || !scrim || !aside) return;
+
+    function setOpen(open) {
+        document.body.classList.toggle('nav-open', open);
+        openBtn.setAttribute('aria-expanded', String(open));
+    }
+
+    openBtn.addEventListener('click', function () {
+        setOpen(!document.body.classList.contains('nav-open'));
+    });
+    scrim.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+
+    // Choosing a destination should take you there, not leave the drawer over it.
+    aside.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+
+    // Rotating to landscape or resizing past the breakpoint must not leave the
+    // body locked by a drawer that is no longer on screen.
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 640) setOpen(false);
+    });
+})();
+</script>
+<script type="module" src="../shared/idle-signout.js"></script>
+<script type="module" src="../shared/staff-portal.js"></script>
+<script type="module" src="../shared/ztims-dialog.js"></script>
+</body>
+</html>

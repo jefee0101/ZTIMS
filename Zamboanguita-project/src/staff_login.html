@@ -327,7 +327,8 @@ body { overflow-x: hidden; }
     admin: 'admin/admin_analystic.html',
     establishment_manager: 'resort/resort_spots.html',
     // Sessions issued before the rename still carry the old role name.
-    resort_owner: 'resort/resort_spots.html'   // the same account, as older tokens spell it
+    resort_owner: 'resort/resort_spots.html',  // the same account, as older tokens spell it
+    support_staff: 'staff/staff_attraction.html'
   };
 
   /* ?next= brings someone back to the portal page they were sent from (the
@@ -336,7 +337,7 @@ body { overflow-x: hidden; }
      else, another site above all, is ignored and they land on their home. */
   function returnTo(role) {
     const next = new URLSearchParams(location.search).get('next') || '';
-    const folder = role === 'admin' ? 'admin' : 'resort';
+    const folder = role === 'admin' ? 'admin' : role === 'support_staff' ? 'staff' : 'resort';
     return new RegExp('^' + folder + '/[a-z_]+\\.html(\\?[A-Za-z0-9=&%._-]*)?(#[a-z]+)?$').test(next) ? next : '';
   }
 
