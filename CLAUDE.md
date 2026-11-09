@@ -210,7 +210,7 @@ purpose — see the header comment in `spot-form.js`:
   share one copy. Since October 2026 it is the user's UX Pilot design: one
   rounded card (`.site-footer*` in `theme.css`) — the ZTIMS seal and
   "ZAMBOANGUITA TOURISM", a sentence, Explore (Destinations, Places to stay,
-  Heritage sites, History), Information (My ticket or booking, FAQ, Terms &
+  Heritage sites, History), Information (My account, FAQ, Terms &
   Conditions, Privacy Policy, Tourism Map), Contact us (Send feedback as a dark pill, then the
   quiet "Staff and Enterprise Manager sign in →"), and a line with the year and
   the place. It no longer shows the office's details or a tile strip. It still
@@ -889,7 +889,7 @@ Frontend only, no tables of their own:
   expand control); **Plan your visit** (`#plan`: three step cards — Discover,
   Book & pay in a dark card, Get there in teal — then the Tourism Office card:
   hours, address, contact and emergency from `GET /api/office`, with Contact
-  the Tourism Office and My ticket or booking on a burnt-orange panel). The tiles,
+  the Tourism Office and My account on a burnt-orange panel). The tiles,
   the pills and the search's category are one control (`setCategory`); the
   search and category are kept for the visit in `sessionStorage.ztimsBrowse`;
   `?category=` opens a category.
@@ -909,7 +909,7 @@ Frontend only, no tables of their own:
   floating, rounded glass bar — the ZTIMS seal (`public/ztims-logo.png`, the
   user's logo, November 2026; it replaced the orange sun badge) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), Announcements, Events, History, My ticket or booking (no Staff link since November
+  (`index.html#map`), Announcements, Events, History, My account (`user/account.html`; it was My ticket or booking until 9 November) (no Staff link since November
   2026, the user's choice: staff sign in from the footer's "Staff and
   Enterprise Manager sign in"), the
   current page a solid ink pill, the visitor's **Sign in** or account menu
@@ -960,11 +960,14 @@ Frontend only, no tables of their own:
   its label and the eye, Sign in, "Accounts are issued by the Municipal Tourism
   Office." The forgot-password and choose-your-own-password forms swap into the
   same card.
-- **My ticket or booking** (`manage.html`; it was "My ticket", November 2026)
-  and the reset-password page follow the flat style: sentence-case labels above `.bk-field`s, flat
+- **Move or cancel** (`manage.html`; it was "My ticket or booking", with a
+  public code-and-email search, until 9 November 2026) and the reset-password
+  page follow the flat style: sentence-case labels above `.bk-field`s, flat
   `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
-  `.tone-pill.rounded-pill`), short titles. One "Ticket or booking code" and
-  the email find either; a booking shows as "Your room booking" (status pill,
+  `.tone-pill.rounded-pill`), short titles. It opens one ticket or booking of
+  the signed-in account (`?code=`, from My account or an email; signed out it
+  goes to Sign in and comes back; no code goes to My account); there is no
+  search form. A booking shows as "Your room booking" (status pill,
   "answers by …" while requested, the reason when declined, code, place,
   check-in and check-out with the resort's times, guests, rooms and rates,
   total, the resort's payment instructions only once confirmed, Ask for new
@@ -1003,8 +1006,14 @@ Frontend only, no tables of their own:
   An online payment's receipt is sent only by the call that recorded it
   (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
   send two. Links carry the code, never the email address.
-- **`manage.js`** (`/api/manage/lookup|move|cancel`, rate-limited) and
-  `src/manage.html`: the ticket code AND the email, together. Its buttons are pills: Cancel solid red
+- **`manage.js`** (`/api/manage/lookup|move|cancel|refund-closure`, each
+  `requireVisitor` then rate-limited per account) and `src/manage.html`: the
+  code, for the signed-in account only — a ticket or booking opens only when
+  its `visitor_id` is that account's; any other code is "not in your account".
+  **No public search** (the user's decision, 9 November 2026): nothing opens by
+  code and email any more. Email links (`manageUrl`, "Move or cancel (sign
+  in)", "See my booking (sign in)") carry the code and pass through Sign in.
+  Its buttons are pills: Cancel solid red
   (`.btn-danger-solid`, the same deep red in both themes), Move and Refund
   outlined.
   Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
@@ -1100,11 +1109,12 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   (manager's sign-in email, a Review request link to
   `src/resort/resort_bookings.html?code=`, which opens that request, signed
   in — see the manager's pages below; it never confirms by itself).
-- **Visitor** (`manage.js`, code + email like a ticket; `kind: 'booking'`):
+- **Visitor** (`manage.js`, the signed-in account's own booking by code
+  (`findOwnBooking`); `kind: 'booking'`):
   lookup, move (new dates, same rooms at the same rates, back to Requested with
   a new expiry; both sides emailed), cancel (while requested or confirmed).
   Changes close at 11:59 PM Manila, `free_cancel_days` (at least 1) before
-  check-in. A wrong pair is answered as "nothing matches". The view carries
+  check-in. Another account's code is "not in your account". The view carries
   `minNights`, `maxNights` and `lastCheckIn` for the new-dates pickers.
 - **Manager** (`requireEstablishmentManager`, own listings only, else 403):
   `GET /api/rooms/manage/:spotId` (settings, rooms, blocks), `PUT …/settings`,
@@ -1166,8 +1176,8 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   rooms sleep everyone), **Your details** (name, phone, email, country of
   residence from `/api/rooms/countries`, an optional note, the honeypot) and
   **Sent** ("will reply by email within n hours", the booking code large, the
-  dates and total, "You pay the resort directly", a link to My ticket or
-  booking). No payment step. A request refused because rooms went meanwhile
+  dates and total, "You pay the resort directly", a link to My
+  account). No payment step. A request refused because rooms went meanwhile
   (409) goes back to Rooms, counted again.
 - **The manager's pages** (November 2026), in the manager menu after
   Enterprise (My enterprises, Enterprise, Rooms, Bookings, Guest Register,
@@ -1270,9 +1280,11 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   `requireVisitor`; the name, email and phone (and, for a room, the country)
   come from the account (`checkoutDetails`), never the page. A missing phone or
   country may be given once at checkout and is saved to the account (409
-  `PROFILE_INCOMPLETE` when neither has it). The Manage page opens a guest
-  ticket or booking by code and email only until its date has passed (a closed
-  ticket stays open to settle); one an account owns always opens.
+  `PROFILE_INCOMPLETE` when neither has it). Move or cancel opens only the
+  account's own tickets and bookings; a guest one from before accounts opens
+  once it is linked (the account with its email signs in). The payment return
+  (`GET /api/payments/checkout/:id`, `payment.html`) is `requireVisitor` too,
+  and only for the account that bought the ticket.
 - **Deleting** (`DELETE /api/visitors/me`; the password, or for Google-only a
   Google sign-in from the last ten minutes with the same Google account)
   erases the email, name, phone, country, password hash and `google_sub`,
@@ -1298,7 +1310,7 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   and on the one-row header there is no room for both).
   **My account** (`src/user/account.html`, `.ac-*`): six tabs with their own
   addresses — `#tickets`, `#bookings` (coming up, then past; "Move or cancel"
-  opens `manage.html?code=`, which fills the account's email and looks it up),
+  opens `manage.html?code=` for that one),
   `#saved`, `#reviews`, `#profile`, `#security` (change password, or "Set a
   password by email" for Google-only; Sign out of all devices; Delete account
   with the password or a fresh Google sign-in). **Checkout** (`spot.html`):
@@ -1519,7 +1531,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   tokens never open a staff route and staff tokens never a visitor route. The
   account stays until the visitor deletes it. Reviews only after a used ticket
   or completed stay; the officer may hide one with a reason; no manager
-  replies. See "Visitor accounts".
+  replies. Tickets and bookings open only in the account that holds them:
+  no public search by code and email (9 November 2026). See "Visitor accounts".
 - Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying onsite at the

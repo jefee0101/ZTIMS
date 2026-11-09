@@ -734,13 +734,16 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
         }
     });
 
-    /* PUBLIC: where the gateway sends the visitor back. The checkout id is a
-       random 24-character id, known only to whoever started the payment. */
-    router.get('/payments/checkout/:id', async (req, res) => {
+    /* Where the gateway sends the visitor back: only for the signed-in
+       account that bought the ticket (a random 24-character id alone is not
+       enough since visitor accounts). Anyone else is told it is not there. */
+    router.get('/payments/checkout/:id', requireVisitor, async (req, res) => {
         try {
             if (!/^[0-9a-f]{24}$/.test(req.params.id)) return fail(res, 404, 'That payment could not be found.');
             let checkout = await Checkout.findById(req.params.id);
             if (!checkout) return fail(res, 404, 'That payment could not be found.');
+            const owner = await Ticket.findById(checkout.ticketId);
+            if (!owner || String(owner.visitorId || '') !== String(req.visitor.id)) return fail(res, 404, 'That payment could not be found.');
             try { checkout = await settle(checkout, { origin: siteOrigin(req) }); } catch (error) { /* the page asks again */ }
             return res.json({ success: true, checkout: await checkoutView(checkout) });
         } catch (error) {

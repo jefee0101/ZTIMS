@@ -288,7 +288,7 @@ body { overflow-x: hidden; }
                 <a href="announcements.html" class="site-link">Announcements</a>
                 <a href="events.html" class="site-link">Events</a>
                 <a href="history.html" class="site-link">History</a>
-                <a href="manage.html" class="site-link">My ticket or booking</a>
+                <a href="user/account.html" class="site-link">My account</a>
             </nav>
 
             <div class="site-header__tools">
@@ -487,7 +487,12 @@ body { overflow-x: hidden; }
             return;
         }
         try {
-            const response = await fetch(`${API_BASE}/payments/checkout/${id}`);
+            // Only the account that bought the ticket sees it (visitor accounts).
+            let token = '';
+            try { token = localStorage.getItem('ztimsVisitorToken') || ''; } catch (e) { /* private browsing */ }
+            if (!token) { location.replace('user/sign_in.html?next=' + encodeURIComponent(location.pathname + location.search)); return; }
+            const response = await fetch(`${API_BASE}/payments/checkout/${id}`, { headers: { Authorization: 'Bearer ' + token } });
+            if (response.status === 401) { location.replace('user/sign_in.html?next=' + encodeURIComponent(location.pathname + location.search)); return; }
             const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.message || 'This payment could not be found.');
             render(data.checkout);

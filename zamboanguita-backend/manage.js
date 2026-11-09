@@ -1,8 +1,10 @@
-/* "Manage my ticket" — a visitor moves the date or cancels, with no
- * account: the ticket code AND the email it was bought
- * with, together. Either alone opens nothing, and a wrong pair is answered
- * exactly like one that does not exist. The routes are rate-limited like the
- * sign-in, so codes cannot be tried in bulk.
+/* "Move or cancel" — a signed-in visitor moves the date of, or cancels, a
+ * ticket or room booking their own account holds (visitors.js'
+ * requireVisitor). There is no public search: since 9 November 2026 nothing
+ * opens by code and email. A ticket or booking opens only for the account
+ * whose visitor_id it carries; any other code is answered exactly like one
+ * that does not exist. Ones bought as a guest before accounts join the
+ * account that signs in with their email (linkOldRecords) and open then.
  *
  * The rules (the office's decisions):
  *   - a change is possible until 11:59 PM, Manila time, the day before the
@@ -25,6 +27,7 @@ const { tickets: Ticket, payments: Payment, spots: Spot } = require('./models');
 const attractions = require('./attractions');
 const notices = require('./notices');
 const bookings = require('./bookings');
+const { requireVisitor } = require('./visitors');
 
 const MANILA_OFFSET_HOURS = 8;
 const TICKET_DAYS_AHEAD = 60;
@@ -43,24 +46,17 @@ const normaliseCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9
 function problem(status, message) {
     return Object.assign(new Error(message), { status });
 }
-const NOT_FOUND = 'Nothing matches that code and email address. Check both, exactly as in your email.';
+const NOT_FOUND = 'This ticket or booking is not in your account.';
 
-/* The ticket for a code and an email, or null. */
-async function findRecord(code, email) {
+/* The signed-in visitor's own ticket or booking with this code, or null. */
+async function findRecord(code, visitorId) {
     const wanted = normaliseCode(code);
-    const address = String(email || '').trim().toLowerCase();
-    if (wanted.length < 5 || !address) return null;
-    // Since visitor accounts (visitors.js), a ticket or booking bought as a
-    // guest opens here only until its date has passed (a closed one, which the
-    // visitor still has to settle, stays open); one an account owns always opens.
-    const today = manilaToday();
+    if (wanted.length < 5 || !visitorId) return null;
     const { rows } = await query(
-        `select id from tickets where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and email = $2
-            and (visitor_id is not null or visit_date >= $3 or status = 'closed')`, [wanted, address, today]);
+        `select id from tickets where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and visitor_id = $2`, [wanted, visitorId]);
     if (rows[0]) return { kind: 'ticket', record: await Ticket.findById(rows[0].id) };
-    // A room booking (bookings.js) is managed the same way: its code and email.
-    const booking = await bookings.findBooking(code, email);
-    if (booking && (booking.visitor_id || String(booking.check_out).slice(0, 10) >= today)) return { kind: 'booking', record: booking };
+    const booking = await bookings.findOwnBooking(code, visitorId);
+    if (booking) return { kind: 'booking', record: booking };
     return null;
 }
 
@@ -130,7 +126,9 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     const limit = sharedRateLimit('manage', {
         windowMs: 60 * 60 * 1000,
         limit: 40,
-        message: { success: false, message: 'Too many tries from this connection. Please wait a while, or contact the Municipal Tourism Office.' }
+        // Per account: the routes need a signed-in visitor.
+        keyGenerator: req => `visitor:${req.visitor.id}`,
+        message: { success: false, message: 'Too many tries. Please wait a while, or contact the Municipal Tourism Office.' }
     });
 
     const fail = (res, error, label) => {
@@ -139,30 +137,30 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
         return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     };
 
-    async function load(body) {
-        const found = await findRecord(body && body.code, body && body.email);
+    async function load(req) {
+        const found = await findRecord(req.body && req.body.code, req.visitor.id);
         if (!found || !found.record) throw problem(404, NOT_FOUND);
         return found;
     }
 
-    router.post('/manage/lookup', limit, async (req, res) => {
+    router.post('/manage/lookup', requireVisitor, limit, async (req, res) => {
         try {
-            const found = await load(req.body);
+            const found = await load(req);
             if (found.kind === 'booking') {
                 await bookings.sweepBookings(siteOrigin(req)).catch(error => console.error('❌ Booking sweep failure:', error));
-                const fresh = await load(req.body);
+                const fresh = await load(req);
                 return res.json({ success: true, item: await bookings.describeForVisitor(fresh.record) });
             }
             res.json({ success: true, item: await describe(found) });
         } catch (error) { fail(res, error, '❌ Manage lookup failure:'); }
     });
 
-    router.post('/manage/move', limit, async (req, res) => {
+    router.post('/manage/move', requireVisitor, limit, async (req, res) => {
         try {
-            const found = await load(req.body);
+            const found = await load(req);
             if (found.kind === 'booking') {
                 const done = await bookings.visitorMove(found.record, req.body, siteOrigin(req));
-                const fresh = await load(req.body);
+                const fresh = await load(req);
                 return res.json({ success: true, emailed: done.emailed,
                     message: 'New dates sent to the resort. It will confirm or decline them by email.',
                     item: await bookings.describeForVisitor(fresh.record) });
@@ -187,16 +185,16 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
                   where id = $1 and status in ('valid', 'closed') and visit_date = $3`, [found.record._id, date, from]);
             if (!rowCount) throw problem(409, 'This ticket changed just now. Look it up again.');
             const told = await notices.ticketMoved(found.record._id, from, origin);
-            return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)}. The same ticket code works on the new date.`, item: await describe(await load(req.body)) });
+            return res.json({ success: true, emailed: told.sent, message: `Moved to ${attractions.niceDate(date)}. The same ticket code works on the new date.`, item: await describe(await load(req)) });
         } catch (error) { fail(res, error, '❌ Manage move failure:'); }
     });
 
-    router.post('/manage/cancel', limit, async (req, res) => {
+    router.post('/manage/cancel', requireVisitor, limit, async (req, res) => {
         try {
-            const found = await load(req.body);
+            const found = await load(req);
             if (found.kind === 'booking') {
                 const done = await bookings.visitorCancel(found.record, siteOrigin(req));
-                const fresh = await load(req.body);
+                const fresh = await load(req);
                 return res.json({ success: true, emailed: done.emailed, message: 'Cancelled. The resort has been told.',
                     item: await bookings.describeForVisitor(fresh.record) });
             }
@@ -212,7 +210,7 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
                 const told = await notices.ticketCancelled(found.record._id, { refundAmount: done.refundAmount, keptAmount: kept, byVisitor: true }, origin);
                 return res.json({ success: true, emailed: told.sent, message: done.refundAmount > 0
                     ? `Cancelled. ${'₱' + done.refundAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} is being refunded to the way you paid.`
-                    : 'Cancelled. Nothing is refunded.', item: await describe(await load(req.body)) });
+                    : 'Cancelled. Nothing is refunded.', item: await describe(await load(req)) });
             }
 
             throw problem(409, 'This ticket was never paid for.');
@@ -220,9 +218,9 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
     });
 
     /* Closed by the office: the visitor takes the full refund. */
-    router.post('/manage/refund-closure', limit, async (req, res) => {
+    router.post('/manage/refund-closure', requireVisitor, limit, async (req, res) => {
         try {
-            const found = await load(req.body);
+            const found = await load(req);
             if (found.kind === 'booking') throw problem(409, 'There is no closure refund to take here.');
             const view = await describe(found);
             if (!view.canRefundClosure) throw problem(409, view.why || 'There is no closure refund to take here.');
@@ -233,7 +231,7 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             const told = await notices.ticketCancelled(found.record._id, { refundAmount: done.refundAmount, byVisitor: false, reason: 'closed that day' }, origin);
             res.json({ success: true, emailed: told.sent,
                 message: `Refunded in full: ₱${done.refundAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })} is on its way back to the way you paid.`,
-                item: await describe(await load(req.body)) });
+                item: await describe(await load(req)) });
         } catch (error) { fail(res, error, '❌ Closure refund failure:'); }
     });
 

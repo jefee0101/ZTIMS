@@ -228,12 +228,12 @@ async function sweepIfDue(origin) {
 
 /* --------------------------------------------------------- visitor (manage) */
 
-async function findBooking(code, email) {
+/* A booking with this code that the visitor's own account holds. */
+async function findOwnBooking(code, visitorId) {
     const wanted = normaliseCode(code);
-    const address = String(email || '').trim().toLowerCase();
-    if (wanted.length < 5 || !address) return null;
+    if (wanted.length < 5 || !visitorId) return null;
     const { rows } = await query(
-        `select * from bookings where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and email = $2`, [wanted, address]);
+        `select * from bookings where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and visitor_id = $2`, [wanted, visitorId]);
     return rows[0] || null;
 }
 
@@ -966,7 +966,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
 };
 
 module.exports.sweepBookings = sweepBookings;
-module.exports.findBooking = findBooking;
+module.exports.findOwnBooking = findOwnBooking;
 module.exports.describeForVisitor = describeForVisitor;
 module.exports.visitorMove = visitorMove;
 module.exports.visitorCancel = visitorCancel;

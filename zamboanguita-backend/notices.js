@@ -6,8 +6,9 @@
  * stored. All of them go through mailer.js, which never throws: a notice that
  * cannot be sent is logged, and the change it reports stands regardless.
  *
- * Links go to the Manage page with the code only — never the email address,
- * which the visitor types there themselves.
+ * Links go to Move or cancel (manage.html) with the code only — never the
+ * email address. That page opens only for the signed-in account holding the
+ * ticket or booking; signed out, it asks the visitor to sign in first.
  */
 const { query } = require('./db');
 const { sendMail, compose, niceDate, pesos } = require('./mailer');
@@ -49,7 +50,7 @@ async function ticketReceipt(ticketId, origin) {
             'Valid on this date only. Students: bring your school ID for the student price.',
             'You can move the date or cancel until 11:59 PM the day before your visit. A used ticket cannot be refunded.'
         ],
-        link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
+        link: { label: 'Move or cancel (sign in)', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Your ticket ${t.code} — ${t.spot_title}, ${niceDate(t.visit_date)}`, ...body });
 }
@@ -61,7 +62,7 @@ async function ticketMoved(ticketId, fromDate, origin) {
         heading: 'Your ticket has a new date',
         intro: `Your ticket for ${t.spot_title} is now for ${niceDate(t.visit_date)} (it was for ${niceDate(fromDate)}). The ticket code is the same.`,
         rows: [['Ticket code', t.code], ['New date', niceDate(t.visit_date)], ['People', `${t.people}: ${describeKinds(t)}`]],
-        link: { label: 'Manage my ticket', url: manageUrl(origin, t.code) }
+        link: { label: 'Move or cancel (sign in)', url: manageUrl(origin, t.code) }
     });
     return sendMail({ to: t.email, subject: `Ticket ${t.code} moved to ${niceDate(t.visit_date)}`, ...body });
 }
@@ -162,7 +163,7 @@ async function bookingReceived(bookingId, origin) {
         intro: `${b.resort_name} will confirm or decline by ${manilaTime(b.expires_at)}. Nothing is booked until it confirms, and nothing is paid through ZTIMS.`,
         rows: stayRows(b),
         paragraphs: ['If the resort confirms, we will email you how to pay it.'],
-        link: { label: 'See or change my booking', url: manageUrl(origin, b.code) }
+        link: { label: 'See my booking (sign in)', url: manageUrl(origin, b.code) }
     });
 }
 
@@ -202,7 +203,7 @@ async function bookingConfirmed(bookingId, origin) {
             ...(resortContact(b) ? [`The resort: ${resortContact(b)}`] : []),
             `You can move or cancel here until ${b.free_cancel_days > 1 ? `${b.free_cancel_days} days` : 'the day'} before check-in, 11:59 PM. A move goes back to the resort to confirm.`
         ],
-        link: { label: 'See or change my booking', url: manageUrl(origin, b.code) }
+        link: { label: 'See my booking (sign in)', url: manageUrl(origin, b.code) }
     });
 }
 
@@ -238,7 +239,7 @@ async function bookingMoved(bookingId, { from, to }, origin) {
         heading: 'Your new dates are with the resort',
         intro: `You moved your stay (it was ${niceDate(from)} to ${niceDate(to)}). ${b.resort_name} will confirm or decline the new dates by ${manilaTime(b.expires_at)}.`,
         rows: stayRows(b),
-        link: { label: 'See or change my booking', url: manageUrl(origin, b.code) }
+        link: { label: 'See my booking (sign in)', url: manageUrl(origin, b.code) }
     });
 }
 

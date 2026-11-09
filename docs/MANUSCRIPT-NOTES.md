@@ -4,6 +4,20 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## No public ticket and booking search (9 November 2026)
+
+**The change.** "My ticket or booking", where anyone with a code and its
+email could open a ticket or booking, is gone. A visitor signs in and opens
+their own from My account ("Move or cancel"); the server opens a ticket or
+booking only for the account that holds it. Emails link there through Sign in.
+Tickets and bookings made as a guest before accounts join the account that
+signs in with their email.
+
+**Change in the manuscript:** wherever the Manage / "My ticket" page is
+described as opened with the code and email, say it is opened from My account
+after signing in; the header and footer say "My account". Security: no public
+lookup of tickets or bookings. Screenshot: Move or cancel.
+
 ## Visitor accounts (November 2026)
 
 **The change.** Visitors now have accounts (the panelist's request), with

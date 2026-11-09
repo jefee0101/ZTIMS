@@ -137,7 +137,7 @@
                     '<nav aria-labelledby="footerInfoHeading">' +
                         '<h2 id="footerInfoHeading" class="site-footer__h">Information</h2>' +
                         '<ul class="site-footer__list">' +
-                            link(src + 'manage.html', 'My ticket or booking') +
+                            link(src + 'user/account.html', 'My account') +
                             link(src + 'faq.html', 'FAQ') +
                             link(src + 'terms.html', 'Terms &amp; Conditions') +
                             link(src + 'privacy.html', 'Privacy Policy') +
