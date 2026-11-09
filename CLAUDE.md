@@ -1351,6 +1351,12 @@ the page; tabs styled like Statistics').
 
 ## Open notes
 
+`docs/skills/` (November 2026): seven skills for writing the capstone manuscript (draw.io
+diagrams, RRL research, manuscript writing and alignment, citation check,
+system-to-manuscript sync, survey results, docx revision), usable in Claude Code
+or typed as prompts in Codex (`docs/skills/PROMPTS.md`). They repeat some
+decisions from this file; update them when those decisions change.
+
 `docs/QUALITY-AND-TOOLS.md` (October 2026): how ZTIMS meets each ISO/IEC
 25010:2023 characteristic, the gaps and the tools that would close them, and
 which outside tools to switch (now: serve Leaflet and the fonts from the
