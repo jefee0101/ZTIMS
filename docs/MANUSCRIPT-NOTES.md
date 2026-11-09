@@ -4,6 +4,106 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Support Staff: the complete module (10 November 2026)
+
+Everything below is built and on `main`, and was checked end to end (the
+officer adds an account, the first sign-in and password change, a listing
+detail edited, Guest Register entries, the monthly report filled and saved,
+the officer finalizes the month, the officer deactivates the account).
+
+**New role.** **Support Staff**: a person of the Municipal Tourism Office,
+under the Tourism Officer, who looks after **one attraction the office runs**
+(no enterprise manager) whose "Count visitors here" is on. Users are now
+four: Tourism Officer, Enterprise Manager, Support Staff (staff, sign in on
+the staff sign-in page) and Tourist (visitor account). One active Support
+Staff account per attraction; accounts are deactivated, never deleted.
+
+**Use cases** (actor: use case).
+- Tourism Officer: Add a Support Staff account (choose the attraction; a
+  password is generated and shown once; the officer's own password is asked);
+  Issue a new password; Deactivate or reactivate an account; View who is
+  assigned (Destinations); Finalize or Reopen the month's reports (unchanged).
+- Support Staff: Sign in and replace the issued password; View and edit the
+  attraction's details (description, photos, opening days and hours, contact,
+  map pin; category and prices shown, locked); Keep the Guest Register (add
+  and edit groups by country and sex); Fill and save the monthly report (from
+  the Guest Register); Edit own account (name, position, contact number);
+  Change password; Sign out of all devices.
+- System: Refuse anything outside the person's one attraction; refuse locked
+  fields; stop a deactivated account's session at once; keep the attraction
+  counting and published while someone is assigned.
+
+**Access matrix.**
+
+| | Tourism Officer | Enterprise Manager | Support Staff |
+|---|---|---|---|
+| Places covered | All | Their own enterprises | One office-run attraction |
+| Listing details | All | Own | Own, except name, category and prices |
+| Category, entrance and other fees | Yes | Own | No |
+| Guest Register | Office places (views private) | Own | Own (no removing entries) |
+| Monthly report (enter) | Office places | Own | Own |
+| Finalize, Reopen, void | Yes | No | No |
+| Closed dates, take down, Visitor setup | Yes | – | No |
+| Tickets (check, Mark used), Collections, refunds | Yes | No | No |
+| Accounts, settings, feedback, reviews, other places | Yes | No | No |
+| Delete anything | Never | Never | Never |
+
+**ERD.** SPOT 1 — 0..n SUPPORT_STAFF (`spot_id`; at most one active per
+spot). The person's email is written on what they save:
+`monthly_reports.submitted_by_email` / `submitted_by_role`,
+`report_changes.changed_by_email` / `changed_by_role`,
+`register_entries.created_by_email` (the existing columns; no new links).
+
+**Data dictionary** (new table, 33 in all).
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| support_staff | id | text PK | |
+| | email | text, unique (any case) | Sign-in email; no other staff account may use it |
+| | password_hash | text (bcrypt) | |
+| | reset_token_hash, reset_token_expires | text, timestamptz | Forgot-password link (hash only) |
+| | full_name | text 1–120 | |
+| | position | text ≤ 120 | e.g. Tourism Aide |
+| | contact_number | text ≤ 40 | |
+| | spot_id | text FK spots | The attraction looked after |
+| | status | text | active or inactive (never deleted) |
+| | must_change_password | boolean | True when issued; cleared at the first own password |
+| | session_version | integer | Raised to end every sign-in |
+| | last_sign_in_at | timestamptz | |
+| | created_by_email | text | The officer who added it |
+| | created_at, updated_at | timestamptz | |
+
+Index `support_staff_one_active_per_spot`: unique `spot_id` where status is
+active.
+
+**Security (for the Security section).**
+- A new staff role, `support_staff`, in the same signed sign-in tokens as the
+  other staff, carrying the account's session version. Every route checks the
+  role on the server: Support Staff are refused on every officer, manager,
+  ticket, money, feedback and settings route, and the officer's and managers'
+  tokens are refused on Support Staff's own routes.
+- Same password rules as the other staff (at least 10 characters, not easily
+  guessed, bcrypt); the officer's issued password must be replaced at the first
+  sign-in; 30-minute idle sign-out on their pages; deactivating ends every open
+  session at once.
+- The officer's own password is asked again to add an account, issue a
+  password, or deactivate or reactivate one.
+- Listing edits from Support Staff are checked field by field: a change to
+  the name, category, any fee, kind, status, publishing or manager is refused.
+
+**Data Privacy.** The account holds a staff member's own name, position,
+contact number and email, kept while the account exists (deactivated, not
+deleted, so their records still say who entered them). Support Staff see
+counts only (numbers by country and sex, never visitors' names), and never
+tickets, payments, bookings or feedback. The Privacy page says so.
+
+**Limitations.** One person per attraction (no team or shifts); only office-run
+attractions that count visitors; they cannot remove a register entry (the
+officer can); they work online only, like the rest of ZTIMS.
+
+**Wording.** "Support Staff" (never "Site Officer"); "My attraction";
+"Entered by <name>"; "Deactivate" (never "delete") for an account.
+
 ## Support Staff: database, API and pages (10 November 2026)
 
 **The change.** A fourth user, **Support Staff**, under the Tourism Officer:

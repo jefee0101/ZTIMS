@@ -95,8 +95,9 @@ collides. The user's chat is in plain, simple language.
 
 **Wording on every page** (decided): professional and brief. No page intros
 or help lines under fields; keep only what appears at the moment of an action,
-a warning, an error, or a confirmation before something risky. The roles are
-Tourism Officer and Enterprise Manager; a place a manager runs is an
+a warning, an error, or a confirmation before something risky. The staff roles
+are Tourism Officer, Enterprise Manager and Support Staff (visitors are
+Tourists with their own accounts); a place a manager runs is an
 **enterprise**, never an "establishment" (the panel's wording, October 2026;
 code and database names such as `establishment_managers` keep the old word);
 visitors pay
@@ -1503,7 +1504,14 @@ officer deactivates the old account and adds a new one.
   officer, manager, ticket, money and other-place routes and the reverse; own
   register and report only; every locked field; one active per attraction; a
   deactivated session stops at once; the officer's password for add, issue and
-  deactivate). The officer-password limit (10 refusals per 15 minutes) counts
+  deactivate),
+  and end to end in a browser (the officer adds an account → first sign-in and
+  password change → a contact detail edited → two Guest Register entries → the
+  monthly report filled from the register and saved → the officer finalizes the
+  month → the officer deactivates the account; the records stay). The Privacy
+  page (§8) says what Support Staff can see: their attraction and its counts,
+  never names, tickets, payments, bookings or feedback. The full manuscript
+  entry is "Support Staff: the complete module" in `docs/MANUSCRIPT-NOTES.md`. The officer-password limit (10 refusals per 15 minutes) counts
   every refused confirmation, a validation error included.
 
 ### Listings and the visitor's day out
