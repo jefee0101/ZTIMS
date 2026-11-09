@@ -500,12 +500,19 @@ the old collection names (`admins`, `resortOwners`) did not.
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
    tokens issued before a rename don't get rejected mid-session; nothing
    issues it anymore. `requireStaff` (officer or manager) guards listing writes
-   and upload signing. Visitors have their own accounts, role `tourist`, in
+   and upload signing. **Support Staff** (role `support_staff`, table
+   `support_staff`; see "Support Staff") are a third staff account, under the
+   officer: `requireSupportStaff` guards their own routes, and only
+   `requireReporter` (statistics entry) and `requireListingEditor` (`PUT
+   /api/spots/:id`, upload signing) let them in beside the officer and
+   managers; every other staff chain refuses them, and their routes refuse
+   officer and manager tokens. `requireAuth` refuses an inactive Support Staff
+   account on every route. Visitors have their own accounts, role `tourist`, in
    `visitors.js` with their own table, routes and token audience — none of
    these staff chains accepts them (see "Visitor accounts"). Staff both sign
    in on the one staff page; the login
-   route searches officers, then managers, so `emailTakenBy`
-   refuses any sign-in email another account already uses.
+   route searches officers, then managers, then Support Staff, so `emailTakenBy`
+   refuses any sign-in email another staff account already uses.
 4. Routes, grouped by resource: admin, establishment-managers, login/forgot/
    reset-password, spots (listings), payments and tickets (`payments.js`),
    feedback (public `POST /api/feedback`, rate-limited with a honeypot;
@@ -658,13 +665,13 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 32 tables in all, with `announcements`,
+  `gateway_ref`, refund fields and `is_demo`. 33 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
   `emergency_numbers`, the Guest Register's `register_entries` /
   `register_entry_guests`, room booking's seven (see "Room booking") and
   visitor accounts' four (`visitors`, `visitor_tokens`, `saved_places`,
-  `reviews`; see "Visitor accounts") and `review_changes` (see "Saved places
-  and reviews").
+  `reviews`; see "Visitor accounts"), `review_changes` (see "Saved places
+  and reviews") and `support_staff` (see "Support Staff").
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
   the ticket code — tickets have no QR, by the user's decision: most places
@@ -1397,6 +1404,75 @@ ratings only, never money.
   reason — "Hidden: …" or "Shown again: …" with who and when) and **Hide** (red)
   or **Unhide**, each asking for the reason in a dialog. No delete, no reply.
 
+### Support Staff (November 2026; database and API, pages to come)
+
+`support-staff.js`, mounted at `/api`, and the shared sign-in in `server.js`.
+The user's decisions (9 November 2026; notes repo `Design/Support Staff/`): a
+person of the Municipal Tourism Office, under the Tourism Officer, who looks
+after **one office-run attraction** (no manager, `type` `spot`, published,
+Count visitors here on). They keep its Guest Register, its monthly report (a
+saved report counts at once, like a manager's) and its listing details except
+category and prices. They never check or mark tickets, see Collections or
+refunds, set closed dates, take a place down, Finalize or Reopen, touch other
+places, accounts, settings or feedback, or delete anything. One active account
+per attraction; accounts are deactivated, never deleted; to replace someone the
+officer deactivates the old account and adds a new one.
+- **Table** `support_staff` (`schema.sql`, block "Support Staff"): `email`
+  (unique, any case), `password_hash`, `reset_token_hash|expires` (password
+  reset, as for the other staff), `full_name`, `position`, `contact_number`,
+  `spot_id` → spots, `status` active | inactive, `must_change_password`
+  (true when added), `session_version`, `last_sign_in_at`, `created_by_email`;
+  unique index `support_staff_one_active_per_spot` on `spot_id` where active.
+- **Sign-in** is the staff one: `/api/login` finds officers, then managers,
+  then Support Staff (`role: 'support_staff'` too), the password checked first;
+  the token has role `support_staff` and `sv`; "deactivated" is told only after
+  the right password; the issued password is replaced first (`POST
+  /api/me/password`); forgot-password works while active. `ACCOUNT_TABLES`
+  names the table, so `storePassword`, `endSessions` and `changeOwnPassword`
+  work unchanged. Until the portal exists the sign-in page says "This account
+  does not have access to the staff portal" and keeps no token.
+- **Own routes** (`requireSupportStaff`): `GET|PATCH /api/support-staff/me`
+  (name, position, contact number; the response carries the attraction),
+  `POST /api/support-staff/me/password`, `POST
+  /api/support-staff/me/sign-out-everywhere`.
+- **Officer routes** (`requireAdmin`; add, password and status also
+  `requirePasswordConfirmation`): `GET /api/support-staff`, `POST
+  /api/support-staff` {fullName, email, position?, contactNumber?, spotId,
+  password?} (a blank password is generated and returned once; refused for a
+  private place, a place to stay, an unpublished one or one with Count visitors
+  off (400), an email another staff account uses or a second active account on
+  the attraction (409)), `POST /api/support-staff/:id/password`, `PATCH
+  /api/support-staff/:id/status` {active} (deactivating ends every session;
+  reactivating checks the attraction again). The person is emailed when added
+  or issued a password (`alertAccountOwner`). No delete route.
+- **Entry** (`statistics.js`): `requireReporter` on residences, places, report
+  read and save, register read, add and change; `mayViewFor` / `mayEnterFor`
+  allow Support Staff their own `spot_id` only, office-run and counting
+  (`ownsAsSupportStaff`); `/statistics/places` lists that one place. Register
+  entries (`created_by_email`), reports (`submitted_by_email`,
+  `submitted_by_role`) and `report_changes` name the person. Removing a
+  register entry stays `requireStaff` (Support Staff never delete); void,
+  Finalize and Reopen stay `requireAdmin`.
+- **Listing** (`PUT /api/spots/:id`, `authorizeSpotWrite(auth, spot, account)`
+  scope `support_staff`): own attraction only. `SUPPORT_STAFF_WRITABLE_SPOT_FIELDS`
+  — description, photos, opening days and hours, phone, contact email,
+  address, barangay, map pin — are written; any other field (category, other
+  categories, every fee, child age limit, cancellation share, kind, status,
+  publishing, manager, Count visitors here, name, label, booking link) is
+  refused with 403 `LOCKED_FIELD` naming it **when its value would change**
+  (`supportStaffSpotProblem`): the shared form sends the whole listing. Upload
+  signing is `requireListingEditor`.
+- **Protecting the attraction** (`activeSupportStaffOn`): while an active
+  account is on it, the officer cannot switch Count visitors off, change its
+  kind, take it down (`PATCH …/status` to unpublished or archived) or delete
+  it: 409 `HAS_SUPPORT_STAFF`, naming the person.
+- Tested with real API calls (first sign-in and forced change; refused on
+  officer, manager, ticket, money and other-place routes and the reverse; own
+  register and report only; every locked field; one active per attraction; a
+  deactivated session stops at once; the officer's password for add, issue and
+  deactivate). The officer-password limit (10 refusals per 15 minutes) counts
+  every refused confirmation, a validation error included.
+
 ### Listings and the visitor's day out
 
 - **Categories, by the visitor's purpose** (October 2026, the user's choice):
@@ -1606,6 +1682,12 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   or completed stay, one per place; the officer may hide or unhide one, always
   with a reason; no manager replies; ratings and counts only. Tickets and bookings open only in the account that holds them:
   no public search by code and email (9 November 2026). See "Visitor accounts".
+- Support Staff (9 November 2026, the user's decisions): one office-run,
+  counting attraction each, one active account per attraction; Guest
+  Register, monthly report and listing details except category and prices;
+  no tickets, money, closed dates, taking down, Finalize / Reopen, other
+  places, accounts, settings, feedback or deletes; created and deactivated by
+  the officer with the officer's password, never deleted. See "Support Staff".
 - Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying onsite at the

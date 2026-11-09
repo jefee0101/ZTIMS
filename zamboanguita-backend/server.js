@@ -16,6 +16,7 @@ const db = require('./db');
 const {
     officers: TourismOfficer,
     managers: EstablishmentManager,
+    supportStaff: SupportStaff,
     spots: Spot,
     payments: Payment,
     feedback: Feedback,
@@ -213,7 +214,8 @@ const TOKEN_CHECK = { algorithms: ['HS256'], issuer: 'ztims-api', audience: 'zti
 const ACCOUNT_TABLES = {
     admin: 'tourism_officers',
     establishment_manager: 'establishment_managers',
-    resort_owner: 'establishment_managers'
+    resort_owner: 'establishment_managers',
+    support_staff: 'support_staff'
 };
 
 const bearerToken = req => {
@@ -262,6 +264,10 @@ const checkSignIn = ({ allowPasswordChangeOnly = false } = {}) => async (req, re
         if (!account) return res.status(401).json({ success: false, message: 'Invalid or expired session.' });
         if (sessionVersionOf(account) !== Number(claims.sv || 0)) {
             return res.status(401).json({ success: false, code: 'SESSION_ENDED', message: 'You have been signed out. Please sign in again.' });
+        }
+        // A deactivated Support Staff account stops at once, on every route.
+        if (claims.role === 'support_staff' && account.status !== 'active') {
+            return res.status(401).json({ success: false, code: 'DEACTIVATED', message: 'This account has been deactivated by the Municipal Tourism Office.' });
         }
         if (account.must_change_password && !allowPasswordChangeOnly) {
             return res.status(401).json({ success: false, code: 'PASSWORD_CHANGE_REQUIRED', message: 'Set your own password first. Please sign in again.' });
@@ -331,10 +337,45 @@ const requireEstablishmentManager = [requireAuth, (req, res, next) => {
 
 
 // Tourist Officer or Tourist Enterprise Manager — used on routes both manage,
-// each scoped to their own data.
+// each scoped to their own data. Support Staff never pass it.
 const requireStaff = [requireAuth, (req, res, next) => {
     if (req.auth.role !== 'admin' && !isEstablishmentManager(req.auth.role)) {
         return res.status(403).json({ success: false, message: 'Staff access required.' });
+    }
+    return next();
+}];
+
+/* Support Staff (9 November 2026): one office-run attraction each, its
+   register, monthly report and listing details (support-staff.js). Their
+   token opens only their own routes and the few shared ones below that name
+   them; requireAuth has already refused a deactivated account. */
+const requireSupportStaff = [requireAuth, (req, res, next) => {
+    if (req.auth.role !== 'support_staff') {
+        return res.status(403).json({ success: false, message: 'Support Staff access required.' });
+    }
+    return next();
+}];
+
+/* Whoever may edit some listing: the officer, a manager, or Support Staff
+   (their own attraction). Used for PUT /api/spots/:id and photo uploads. */
+const requireListingEditor = [requireAuth, (req, res, next) => {
+    const role = req.auth.role;
+    if (role !== 'admin' && role !== 'support_staff' && !isEstablishmentManager(role)) {
+        return res.status(403).json({ success: false, message: 'Staff access required.' });
+    }
+    return next();
+}];
+
+/* Whoever keeps visitor counts for some place: the officer, a manager, or
+   Support Staff. Each route then checks the place itself (statistics.js'
+   mayEnterFor / mayViewFor). */
+const requireReporter = [requireAuth, (req, res, next) => {
+    const role = req.auth.role;
+    if (role !== 'admin' && role !== 'support_staff' && !isEstablishmentManager(role)) {
+        return res.status(403).json({ success: false, message: 'Staff access required.' });
+    }
+    if (role === 'admin' && req.account.active === false) {
+        return res.status(401).json({ success: false, message: 'This account has been deactivated by the Municipal Tourism Office.' });
     }
     return next();
 }];
@@ -348,7 +389,8 @@ const optionalAuth = async (req, res, next) => {
             const claims = jwt.verify(token, process.env.JWT_SECRET, TOKEN_CHECK);
             const account = await accountBehind(claims);
             if (account && sessionVersionOf(account) === Number(claims.sv || 0) && !account.must_change_password
-                && !(claims.role === 'admin' && account.active === false)) {
+                && !(claims.role === 'admin' && account.active === false)
+                && !(claims.role === 'support_staff' && account.status !== 'active')) {
                 req.auth = claims;
             }
         } catch { /* Public access remains available. */ }
@@ -378,6 +420,9 @@ async function emailTakenBy(email, except = {}) {
     if (officer && String(officer._id) !== String(except.officerId)) return 'a Tourism Officer';
     const manager = await EstablishmentManager.findOne({ email });
     if (manager && String(manager._id) !== String(except.managerId)) return 'an enterprise manager';
+    // Support Staff, active or not: a deactivated account keeps its email.
+    const staff = await SupportStaff.findOne({ email });
+    if (staff && String(staff._id) !== String(except.supportStaffId)) return 'Support Staff';
     return null;
 }
 
@@ -1028,7 +1073,7 @@ app.post('/api/login', sharedRateLimit('login', {
         // person choose, since picking the wrong portal would reject a correct password.
         // ZTIMS has exactly two kinds of account. Anything else is refused here
         // rather than quietly searched for in a collection that no longer exists.
-        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'staff'].includes(role) ? role : null;
+        const requestedRole = ['admin', 'establishment_manager', 'resort_owner', 'support_staff', 'staff'].includes(role) ? role : null;
         if (!requestedRole) {
             return res.status(400).json({ success: false, message: 'Unknown sign-in type.' });
         }
@@ -1043,8 +1088,14 @@ app.post('/api/login', sharedRateLimit('login', {
                 account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
                 resolvedRole = 'establishment_manager';
             }
+            if (!account) {
+                account = await SupportStaff.findOne({ email: normalizedEmail }, { secrets: true });
+                resolvedRole = 'support_staff';
+            }
         } else if (requestedRole === 'admin') {
             account = await TourismOfficer.findOne({ email: normalizedEmail }, { secrets: true });
+        } else if (requestedRole === 'support_staff') {
+            account = await SupportStaff.findOne({ email: normalizedEmail }, { secrets: true });
         } else {
             account = await EstablishmentManager.findOne({ email: normalizedEmail }, { secrets: true });
             resolvedRole = 'establishment_manager';
@@ -1059,6 +1110,7 @@ app.post('/api/login', sharedRateLimit('login', {
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
                 : resolvedRole === 'admin' ? 'Tourist Officer'
+                : resolvedRole === 'support_staff' ? 'Support Staff'
                 : 'Tourist Enterprise Manager';
             return res.status(401).json({
                 success: false,
@@ -1074,7 +1126,8 @@ app.post('/api/login', sharedRateLimit('login', {
                 message: 'This account has been suspended by the Municipal Tourism Office. Please contact them to have it restored.'
             });
         }
-        if (resolvedRole === 'admin' && account.active === false) {
+        if ((resolvedRole === 'admin' && account.active === false)
+            || (resolvedRole === 'support_staff' && account.status !== 'active')) {
             return res.status(403).json({
                 success: false,
                 message: 'This account has been deactivated by the Municipal Tourism Office.'
@@ -1084,10 +1137,10 @@ app.post('/api/login', sharedRateLimit('login', {
         const stored = await accountBehind({ role: resolvedRole, sub: account._id });
         const mustChangePassword = Boolean(stored && stored.must_change_password);
 
-        if (resolvedRole === 'admin') {
+        if (resolvedRole === 'admin' || resolvedRole === 'support_staff') {
             try {
                 account.lastSignInAt = new Date();
-                await TourismOfficer.save(account);
+                await (resolvedRole === 'admin' ? TourismOfficer : SupportStaff).save(account);
             } catch (error) {
                 console.error('❌ Could not record the sign-in time:', error && error.message);
             }
@@ -1155,6 +1208,9 @@ async function findResettableAccount(email, withResetFields) {
 
     const officer = await TourismOfficer.findOne({ email }, options);
     if (officer) return officer.active === false ? null : { account: officer, table: TourismOfficer, role: 'admin' };
+
+    const staff = await SupportStaff.findOne({ email }, options);
+    if (staff) return staff.status !== 'active' ? null : { account: staff, table: SupportStaff, role: 'support_staff' };
 
     return null;
 }
@@ -1409,6 +1465,58 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
 // Note what is absent: status and managedBy. Publication is the municipality's
 // decision, not an enterprise's.
 
+/* Support Staff (9 November 2026) keep their attraction's details: its
+   description, photos, opening days and hours, contact details and map pin.
+   Anything else — above all the category and every price — stays the
+   officer's. The shared listing form sends the whole listing on every save,
+   so a field outside this list is refused only when its value would change
+   (supportStaffSpotProblem); an unchanged one is simply not written. */
+const SUPPORT_STAFF_WRITABLE_SPOT_FIELDS = [
+    'description', 'imageUrl', 'images', 'workingDays', 'workingTime',
+    'phone', 'contactEmail', 'address', 'location', 'barangay', 'latitude', 'longitude'
+];
+// Named in the refusal, so the person knows what they tried to change.
+const SUPPORT_STAFF_LOCKED_LABELS = {
+    category: 'category', moreCategories: 'other categories', entranceFee: 'entrance fee',
+    studentFee: 'student fee', childFee: 'child fee', childAgeMax: 'child age limit',
+    cancelKeepPercent: 'cancellation share', travelFee: 'travel fee', type: 'kind of place',
+    status: 'status', published: 'publishing', managedBy: 'manager', ownerId: 'manager',
+    countsVisitors: 'Count visitors here', title: 'name', label: 'label',
+    bookingUrl: 'booking link', enterpriseName: 'enterprise name'
+};
+const sameListingValue = (a, b) => {
+    const norm = v => (v === undefined || v === null || v === '') ? ''
+        : Array.isArray(v) ? JSON.stringify(v.map(String)) : String(v);
+    if (typeof a === 'number' || typeof b === 'number') {
+        const na = Number(a), nb = Number(b);
+        if (!Number.isNaN(na) && !Number.isNaN(nb) && norm(a) !== '' && norm(b) !== '') return na === nb;
+    }
+    return norm(a) === norm(b);
+};
+function supportStaffSpotProblem(body, spot) {
+    const changed = [];
+    for (const [field, value] of Object.entries(body || {})) {
+        if (SUPPORT_STAFF_WRITABLE_SPOT_FIELDS.includes(field)) continue;
+        if (['_id', 'createdAt', 'updatedAt', 'statusUpdatedAt', 'municipality', 'province'].includes(field)) continue;
+        const current = field === 'managedBy' || field === 'ownerId'
+            ? (spot.managedBy ? String(spot.managedBy._id || spot.managedBy) : '')
+            : field === 'published' ? (spot.status === 'published') : spot[field];
+        if (!sameListingValue(value, current)) changed.push(SUPPORT_STAFF_LOCKED_LABELS[field] || field);
+    }
+    return changed.length ? `Support Staff cannot change the ${[...new Set(changed)].join(', ')}. Ask the Tourism Officer.` : '';
+}
+
+/* The active Support Staff account on an attraction, or null: such a place
+   cannot stop counting visitors, change kind, or be taken down until the
+   officer deactivates that account (it says who). */
+async function activeSupportStaffOn(spotId) {
+    const { rows } = await db.query(
+        `select full_name, email from support_staff where spot_id = $1 and status = 'active' limit 1`, [String(spotId)]);
+    return rows[0] || null;
+}
+const supportStaffBlock = (staff, action) =>
+    `${staff.full_name} (${staff.email}) is Support Staff for this attraction. Deactivate that account in Settings → Support Staff before you ${action}.`;
+
 /**
  * Decides whether this caller may write to this listing.
  *
@@ -1416,10 +1524,18 @@ const MANAGER_WRITABLE_SPOT_FIELDS = [
  * enterprise maintains. That is the point of municipal oversight, and it does
  * not lapse because a manager has been assigned to the day-to-day upkeep.
  */
-function authorizeSpotWrite(auth, spot) {
+function authorizeSpotWrite(auth, spot, account) {
     if (!auth) return { allowed: false, status: 401, message: 'Authentication required.' };
 
     if (auth.role === 'admin') return { allowed: true, scope: 'officer' };
+
+    // Support Staff: their own attraction only, while it is still the office's.
+    if (auth.role === 'support_staff') {
+        if (!account || String(account.spot_id) !== String(spot._id) || spot.managedBy) {
+            return { allowed: false, status: 403, message: 'You can only edit the attraction you look after.' };
+        }
+        return { allowed: true, scope: 'support_staff' };
+    }
 
     if (isEstablishmentManager(auth.role)) {
         // Assigned to this exact listing, or not at all. An unassigned listing is
@@ -1480,7 +1596,8 @@ function scopeSpotPayload(payload, scope) {
     if (scope === 'officer') return payload;
 
     const scoped = {};
-    for (const field of MANAGER_WRITABLE_SPOT_FIELDS) {
+    const allowed = scope === 'support_staff' ? SUPPORT_STAFF_WRITABLE_SPOT_FIELDS : MANAGER_WRITABLE_SPOT_FIELDS;
+    for (const field of allowed) {
         if (field in payload) scoped[field] = payload[field];
     }
     return scoped;
@@ -1673,7 +1790,7 @@ function signCloudinaryParams(params) {
     return crypto.createHash('sha1').update(toSign + CLOUDINARY_API_SECRET).digest('hex');
 }
 
-app.get('/api/uploads/signature', requireStaff, (req, res) => {
+app.get('/api/uploads/signature', requireListingEditor, (req, res) => {
     if (!cloudinarySigningReady) {
         // Not an error: the browser reads this and uses the unsigned preset, so
         // uploads keep working until the two variables are set.
@@ -1761,6 +1878,10 @@ app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
 
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ success: false, message: 'Listing not found.' });
+        if (status !== 'published') {
+            const staff = await activeSupportStaffOn(spot._id);
+            if (staff) return res.status(409).json({ success: false, code: 'HAS_SUPPORT_STAFF', message: supportStaffBlock(staff, 'take it down') });
+        }
 
         spot.status = status;
         spot.statusUpdatedAt = new Date();
@@ -1785,13 +1906,27 @@ app.patch('/api/spots/:id/status', requireAdmin, async (req, res) => {
  * PUT/DELETE: Enterprise Managers manage only their own spot; the Tourist Officer manages any.
  * Target URL: http://localhost:5000/api/spots/:id
  */
-app.put('/api/spots/:id', requireStaff, async (req, res) => {
+app.put('/api/spots/:id', requireListingEditor, async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
 
-        const verdict = authorizeSpotWrite(req.auth, spot);
+        const verdict = authorizeSpotWrite(req.auth, spot, req.account);
         if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
+        if (verdict.scope === 'support_staff') {
+            const locked = supportStaffSpotProblem(req.body, spot);
+            if (locked) return res.status(403).json({ success: false, code: 'LOCKED_FIELD', message: locked });
+        }
+        // An attraction with Support Staff keeps counting visitors and stays an attraction.
+        if (verdict.scope === 'officer'
+            && ((req.body.countsVisitors === false && spot.countsVisitors !== false)
+                || (req.body.type !== undefined && req.body.type !== spot.type))) {
+            const staff = await activeSupportStaffOn(spot._id);
+            if (staff) {
+                return res.status(409).json({ success: false, code: 'HAS_SUPPORT_STAFF',
+                    message: supportStaffBlock(staff, req.body.countsVisitors === false ? 'switch off Count visitors here' : 'change the kind of place') });
+            }
+        }
 
         // Which enterprise maintains a listing is never reassigned from here,
         // and a listing's id and history are never the request's to change: the
@@ -1822,8 +1957,10 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ message: 'Spot not found.' });
 
-        const verdict = authorizeSpotWrite(req.auth, spot);
+        const verdict = authorizeSpotWrite(req.auth, spot, req.account);
         if (!verdict.allowed) return res.status(verdict.status).json({ success: false, message: verdict.message });
+        const staff = await activeSupportStaffOn(spot._id);
+        if (staff) return res.status(409).json({ success: false, code: 'HAS_SUPPORT_STAFF', message: supportStaffBlock(staff, 'take it down') });
 
         await Spot.deleteById(spot._id);
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
@@ -2488,7 +2625,14 @@ app.get('/api/directions/reverse', directionsRateLimit, async (req, res) => {
 /* ==========================================
    TOURISM STATISTICS — Form A4 and attraction visitors (statistics.js)
 ========================================== */
-app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff }));
+app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff, requireReporter }));
+
+/* Support Staff accounts (support-staff.js): the officer adds, issues a
+   password, deactivates or reactivates; the person keeps their own details. */
+app.use('/api', require('./support-staff')({
+    requireAdmin, requirePasswordConfirmation, requireSupportStaff, ownPasswordRateLimit, changeOwnPassword,
+    emailTakenBy, storePassword, endSessions, alertAccountOwner, reportWriteFailure
+}));
 
 /* ==========================================
    ONLINE PAYMENTS — a demonstration in the gateway's test mode (payments.js)

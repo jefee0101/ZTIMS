@@ -1224,6 +1224,40 @@ create index if not exists bookings_visitor_idx on public.bookings (visitor_id) 
 
 
 -- ---------------------------------------------------------------------------
+-- Support Staff (9 November 2026): a person of the Municipal Tourism Office
+-- who looks after one attraction the office runs (no manager) whose "Count
+-- visitors here" is on: its Guest Register, its monthly report and its
+-- listing details except category and prices. Created by the Tourism Officer;
+-- deactivated, never deleted. One active account per attraction. Signs in on
+-- the staff sign-in page like the officer (role 'support_staff' in tokens).
+-- ---------------------------------------------------------------------------
+create table if not exists public.support_staff (
+    id                   text primary key default public.ztims_new_id(),
+    email                text not null
+                         constraint support_staff_email_normalised
+                         check (email <> '' and email = lower(btrim(email))),
+    password_hash        text not null,
+    -- Password reset: only the token's SHA-256 is ever stored.
+    reset_token_hash     text,
+    reset_token_expires  timestamptz,
+    full_name            text not null constraint support_staff_full_name_length check (char_length(btrim(full_name)) between 1 and 120),
+    position             text not null default '' constraint support_staff_position_length check (char_length(position) <= 120),
+    contact_number       text not null default '' constraint support_staff_contact_length check (char_length(contact_number) <= 40),
+    spot_id              text not null references public.spots (id),
+    status               text not null default 'active' constraint support_staff_status_known check (status in ('active', 'inactive')),
+    must_change_password boolean not null default true,
+    session_version      integer not null default 0,
+    last_sign_in_at      timestamptz,
+    created_by_email     text not null default '',
+    created_at           timestamptz not null default now(),
+    updated_at           timestamptz not null default now()
+);
+create unique index if not exists support_staff_email_unique on public.support_staff (lower(email));
+-- One active account per attraction; a replaced person's account stays, inactive.
+create unique index if not exists support_staff_one_active_per_spot on public.support_staff (spot_id) where status = 'active';
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -1235,7 +1269,7 @@ begin
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
         'emergency_numbers', 'register_entries', 'announcements',
         'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings',
-        'visitors', 'reviews'
+        'visitors', 'reviews', 'support_staff'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -1250,7 +1284,7 @@ begin
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
         'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements',
         'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings', 'booking_rooms',
-        'booking_changes', 'booking_payments', 'visitors', 'visitor_tokens', 'saved_places', 'reviews', 'review_changes'
+        'booking_changes', 'booking_payments', 'visitors', 'visitor_tokens', 'saved_places', 'reviews', 'review_changes', 'support_staff'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

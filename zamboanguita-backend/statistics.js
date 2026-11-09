@@ -38,6 +38,10 @@ function manilaNow() {
 }
 
 const isOfficer = req => req.auth && req.auth.role === 'admin';
+// Support Staff (support-staff.js): one office-run attraction, req.account.spot_id.
+const isSupportStaff = req => req.auth && req.auth.role === 'support_staff';
+const ownsAsSupportStaff = (req, spot) => isSupportStaff(req) && req.account
+    && spot.managed_by === null && String(req.account.spot_id) === String(spot.id);
 
 function badRequest(res, message, extra = {}) {
     return res.status(400).json({ success: false, message, ...extra });
@@ -77,9 +81,10 @@ async function spotById(id, client) {
 const NOT_COUNTED = 'Visitors are not counted at this place. Switch on "Count visitors here" in its details first.';
 
 /* Whether the signed-in account may see this place's reports: the officer
-   any place's, a manager their own. */
+   any place's, a manager their own, Support Staff their one attraction. */
 function mayViewFor(req, spot) {
     if (isOfficer(req)) return true;
+    if (isSupportStaff(req)) return ownsAsSupportStaff(req, spot);
     return spot.managed_by !== null && String(spot.managed_by) === String(req.auth.sub);
 }
 
@@ -88,11 +93,16 @@ function mayViewFor(req, spot) {
    are its manager's alone, and the officer only views them. */
 function mayEnterFor(req, spot) {
     if (isOfficer(req)) return spot.managed_by === null;
+    // Support Staff: their own attraction, and only while it counts visitors.
+    if (isSupportStaff(req)) return ownsAsSupportStaff(req, spot) && spot.counts_visitors !== false;
     return spot.managed_by !== null && String(spot.managed_by) === String(req.auth.sub);
 }
 
+/* Who is saving: their email goes into submitted_by_email, created_by_email
+   and report_changes, so each record names its person. */
 async function whoIsSigningIn(req) {
-    const table = isOfficer(req) ? 'tourism_officers' : 'establishment_managers';
+    if (req.account && req.account.email) return { role: req.auth.role, id: String(req.auth.sub), email: req.account.email };
+    const table = isOfficer(req) ? 'tourism_officers' : isSupportStaff(req) ? 'support_staff' : 'establishment_managers';
     const { rows } = await query(`select email from ${table} where id = $1`, [String(req.auth.sub)]);
     return { role: req.auth.role, id: String(req.auth.sub), email: rows[0] ? rows[0].email : '' };
 }
@@ -168,11 +178,14 @@ function wholeNumber(value, label, { required = true } = {}) {
     return { value: n };
 }
 
-module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
+/* requireReporter lets Support Staff in as well as the officer and managers;
+   every route then checks the place (mayViewFor / mayEnterFor). Removing a
+   register entry stays requireStaff: Support Staff never delete anything. */
+module.exports = function statisticsRouter({ requireAdmin, requireStaff, requireReporter }) {
     const router = express.Router();
 
     /* The rows of Form A4, in the form's order. */
-    router.get('/residences', requireStaff, async (req, res) => {
+    router.get('/residences', requireReporter, async (req, res) => {
         try {
             const { rows } = await query('select code, name, section, continent, region from residences order by sort_order');
             return res.json(rows);
@@ -182,11 +195,14 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
     });
 
     /* The places the signed-in account reports for. */
-    router.get('/places', requireStaff, async (req, res) => {
+    router.get('/places', requireReporter, async (req, res) => {
         try {
             const params = [];
             let where = `where s.status <> 'archived' and s.counts_visitors`;
-            if (!isOfficer(req)) {
+            if (isSupportStaff(req)) {
+                params.push(String(req.account.spot_id));
+                where += ` and s.id = $1 and s.managed_by is null`;
+            } else if (!isOfficer(req)) {
                 params.push(String(req.auth.sub));
                 where += ` and s.managed_by = $1`;
             }
@@ -204,7 +220,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
     });
 
     /* One place's report for one month, if there is one. */
-    router.get('/reports/:spotId/:year/:month', requireStaff, async (req, res) => {
+    router.get('/reports/:spotId/:year/:month', requireReporter, async (req, res) => {
         try {
             const period = periodFrom(req.params);
             if (period.error) return badRequest(res, period.error);
@@ -244,7 +260,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
     });
 
     /* Save a place's month: creates the report, or replaces its figures. */
-    router.put('/reports/:spotId/:year/:month', requireStaff, async (req, res) => {
+    router.put('/reports/:spotId/:year/:month', requireReporter, async (req, res) => {
         try {
             const period = periodFrom(req.params);
             if (period.error) return badRequest(res, period.error);
@@ -478,7 +494,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
     }
 
     /* The entries a month touches, and its totals. */
-    router.get('/register/:spotId/:year/:month', requireStaff, async (req, res) => {
+    router.get('/register/:spotId/:year/:month', requireReporter, async (req, res) => {
         try {
             const period = periodFrom(req.params);
             if (period.error) return badRequest(res, period.error);
@@ -540,7 +556,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         }
     }
 
-    router.post('/register/:spotId', requireStaff, async (req, res) => {
+    router.post('/register/:spotId', requireReporter, async (req, res) => {
         try {
             const spot = await spotById(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
@@ -583,7 +599,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff }) {
         return { id, spot };
     }
 
-    router.put('/register/entries/:id', requireStaff, async (req, res) => {
+    router.put('/register/entries/:id', requireReporter, async (req, res) => {
         try {
             const found = await entryAndSpot(req, res);
             if (!found) return;

@@ -61,6 +61,22 @@ const managers = new Table('establishment_managers', {
     ...resetFields
 }, { secret: SECRET });
 
+/* Support Staff (9 November 2026): one office-run attraction each. Their
+   session_version and must_change_password are read and written by SQL in
+   server.js, as for the other staff accounts. */
+const supportStaff = new Table('support_staff', {
+    email: email(),
+    password: passwordHash(),
+    fullName: required({ trim: true }),
+    position: text({ trim: true }),
+    contactNumber: text({ trim: true }),
+    spotId: { type: 'id', required: true },
+    status: text({ default: 'active', enum: ['active', 'inactive'] }),
+    lastSignInAt: when(),
+    createdByEmail: text(),
+    ...resetFields
+}, { secret: SECRET });
+
 /* Every listing is in one municipality, so neither is stored; a listing still
    reads with both, for the pages that print an address. */
 const MUNICIPALITY = 'Zamboanguita';
@@ -395,6 +411,7 @@ module.exports = {
     roomTypes, roomBlocks, bookings, bookingPayments, BOOKING_STATUSES, BOOKING_PAYMENT_METHODS,
     officers,
     managers,
+    supportStaff,
     spots,
     payments,
     tickets,
