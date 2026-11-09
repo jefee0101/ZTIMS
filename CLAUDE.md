@@ -917,8 +917,11 @@ Frontend only, no tables of their own:
   the destination page counts as Destinations), then the round theme toggle
   and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
   top as the page scrolls; on Home it floats over the hero
-  (`.site-header--over`). On a phone it is two rows: the name and the buttons,
-  then the links, scrolling sideways.
+  (`.site-header--over`). Up to 1259px it is two rows: the name and the
+  buttons, then the links (scrolling sideways on a phone); one row from 1260px
+  (the header stops growing at 77rem, and below that the links did not fit).
+  Links that overflow scroll from the first one (auto margins, never
+  `justify-content: center`, which cut both ends).
 - **Destination** (`spot.html`), the user's UX Pilot design (November 2026;
   styles `.sd-*` at the end of `theme.css`), as wide as the floating header
   (`.sd-wrap`), read top to bottom in the order a visitor asks — the photo as a
@@ -1291,7 +1294,8 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   `localStorage.ztimsVisitorToken` (never the staff `authToken`) and draws the
   header's **Sign in** pill, or the initials and first name with a menu (My
   account, Sign out) — `.site-header__signin`, `.site-acct*`; with it present,
-  Buy tickets hides on a phone and from 900 to 1439px so the links fit.
+  Buy tickets shows only on the two-row header from 560 to 1259px (on a phone
+  and on the one-row header there is no room for both).
   **My account** (`src/user/account.html`, `.ac-*`): six tabs with their own
   addresses — `#tickets`, `#bookings` (coming up, then past; "Move or cancel"
   opens `manage.html?code=`, which fills the account's email and looks it up),

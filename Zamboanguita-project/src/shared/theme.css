@@ -1426,8 +1426,8 @@ div.leaflet-container {
    orange badge and the name, the links (the current page a solid ink pill),
    the round theme toggle and Buy tickets. On Home it floats over the hero
    film (.site-header--over); elsewhere it stays at the top as the page
-   scrolls. Two rows on a phone (name and buttons, then the links), one row
-   from 900px.
+   scrolls. Two rows (name and buttons, then the links) up to 1259px, one row
+   from 1260px.
    ========================================================================== */
 .site-header {
     position: sticky; top: .75rem; z-index: 40;
@@ -1450,7 +1450,7 @@ div.leaflet-container {
     gap: .35rem .75rem;
     padding: .5rem .5rem .4rem .75rem;
 }
-@media (min-width: 900px) {
+@media (min-width: 1260px) {
     .site-header__row {
         grid-template-columns: auto minmax(0, 1fr) auto;
         grid-template-areas: "brand nav tools";
@@ -1480,7 +1480,12 @@ div.leaflet-container {
     overflow-x: auto; scrollbar-width: none;
 }
 .site-header__nav::-webkit-scrollbar { display: none; }
-@media (min-width: 900px) { .site-header__nav { justify-content: center; } }
+/* Centred while the links fit; when they do not, they scroll from the first
+   link (auto margins, not justify-content: center, which cuts both ends). */
+@media (min-width: 1260px) {
+    .site-header__nav > :first-child { margin-left: auto; }
+    .site-header__nav > :last-child { margin-right: auto; }
+}
 .site-link {
     display: inline-flex; align-items: center; flex-shrink: 0;
     min-height: 2.5rem; padding: 0 .85rem; border-radius: 9999px;
@@ -1561,7 +1566,9 @@ html.dark .site-acct__initials { background: #F5F1EA; color: #1C1917; }
 .site-acct__menu .material-symbols-outlined { font-size: 1.15rem; }
 .site-acct__menu [data-sign-out] { color: rgb(var(--ztims-error)); }
 /* With Sign in beside it, Buy tickets waits for a wider screen. */
-@media (max-width: 559px), (min-width: 900px) and (max-width: 1439px) {
+/* The header stops growing at 77rem: with Sign in there, Buy tickets fits
+   only on the two-row header (560 to 1259px). */
+@media (max-width: 559px), (min-width: 1260px) {
     .site-header__tools:has(.site-header__visitor) .site-header__cta { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .site-header__signin, .site-acct__btn { transition: none; } }
