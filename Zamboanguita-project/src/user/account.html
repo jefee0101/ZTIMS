@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="../shared/theme.js"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>My account | Zamboanguita Tourism</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    // Sharp edges: every rounded-* utility draws a square corner.
+                    borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+                    transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+                    transitionDuration: { DEFAULT: '220ms' },
+                    colors: {
+                        "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+                        "primary-dim": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+                        "surface-bright": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "secondary": "rgb(var(--ztims-secondary) / <alpha-value>)",
+                        "background": "rgb(var(--ztims-background) / <alpha-value>)",
+                        "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--ztims-surface-low) / <alpha-value>)",
+                        "surface-container-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+                        "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+                        "outline-variant": "rgb(var(--ztims-outline) / <alpha-value>)",
+                        "on-primary": "rgb(var(--ztims-on-primary) / <alpha-value>)",
+                        "error": "rgb(var(--ztims-error) / <alpha-value>)",
+                        "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+                        "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+                        "success": "rgb(var(--ztims-success) / <alpha-value>)"
+                    },
+                    fontFamily: {
+                        headline: ["Poppins", "sans-serif"],
+                        display: ["Poppins", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Plus Jakarta Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Both themes are defined as tokens so every component follows automatically,
+           rather than each one carrying its own light-mode override. */
+        :root {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+        html.dark {
+            --bg: rgb(var(--ztims-background));
+            --surface: rgb(var(--ztims-surface));
+            --surface-low: rgb(var(--ztims-surface-low));
+            --surface-high: rgb(var(--ztims-surface-high));
+            --on-surface: rgb(var(--ztims-on-surface));
+            --on-surface-variant: rgb(var(--ztims-on-surface-variant));
+            --outline: rgb(var(--ztims-outline));
+        }
+
+        body { background: var(--bg); color: var(--on-surface); }
+
+        /* The hidden attribute only gets display:none from the browser default,
+           which any Tailwind display class (.flex here) outranks. Without this,
+           elements toggled via el.hidden stay on screen. */
+        [hidden] { display: none !important; }
+
+        /* The identity gradient. It was gold into orange, which on the sand
+           ground was both unreadable and the loudest thing on the page — the
+           one element most responsible for the site reading as an orange
+           template. Ocean into teal carries the same emphasis and is legible
+           in both themes. */
+        .text-gradient {
+            background: linear-gradient(to right, rgb(var(--ztims-primary)), rgb(var(--ztims-accent)));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Likewise: a primary button is ocean into coastal blue. Gold is for the
+           occasional highlight, not for every call to action. */
+        .btn-primary-gradient { background: linear-gradient(135deg, rgb(var(--ztims-primary)) 0%, rgb(var(--ztims-secondary)) 100%); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .star-input { cursor: pointer; transition: transform var(--dur-instant) var(--ease-spring); }
+        .star-input.filled { font-variation-settings: 'FILL' 1; }
+
+        /* .rise, its easing and the reduced-motion rule all live in
+           src/shared/motion.css now, so every page animates the same way and
+           there is one place that turns motion off. */
+    
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
+</head>
+<body class="font-body selection:bg-primary selection:text-on-primary transition-colors duration-300">
+
+
+<script>
+/* ==========================================================
+   TOAST NOTIFICATIONS
+   Replaces window.alert for anything the person doesn't have to answer —
+   signing in and out, and every create, update or delete. A browser alert
+   freezes the page and has to be dismissed before anything else can happen;
+   a toast says the same thing at the top of the page and gets out of the way.
+
+   showToast(message, tone, { duration })
+     tone     : 'success' | 'error' | 'info'   (default 'info')
+     duration : milliseconds, or 0 to stay until closed — used when the
+                message contains something that has to be read and copied,
+                like a newly issued password.
+   ========================================================== */
+(function () {
+    var TONES = {
+        success: { icon: 'check_circle', accent: 'rgb(var(--ztims-success))' },
+        error:   { icon: 'error',        accent: 'rgb(var(--ztims-error))' },
+        info:    { icon: 'info',         accent: 'rgb(var(--ztims-secondary))' }
+    };
+
+    function host() {
+        var existing = document.getElementById('toastHost');
+        if (existing) return existing;
+
+        var el = document.createElement('div');
+        el.id = 'toastHost';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        // Inline styles so a toast looks the same on every page, whichever
+        // Tailwind palette that page happens to define.
+        el.style.cssText = [
+            // Centred at the top: the avatar and theme button live in the right
+            // corner, and a notification that matters belongs where the eye
+            // already is rather than tucked beside them.
+            'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+            'z-index:2147483000',
+            'display:flex', 'flex-direction:column', 'align-items:center', 'gap:.6rem',
+            'width:min(26rem, calc(100vw - 2rem))',
+            'pointer-events:none'
+        ].join(';');
+        document.body.appendChild(el);
+        return el;
+    }
+
+    if (!document.getElementById('toastKeyframes')) {
+        var style = document.createElement('style');
+        style.id = 'toastKeyframes';
+        style.textContent =
+            '@keyframes toastIn{from{opacity:0;transform:translateY(-.9rem)}to{opacity:1;transform:none}}' +
+            '@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-.9rem)}}' +
+            '@media (prefers-reduced-motion: reduce){#toastHost > *{animation:none !important}}';
+        document.head.appendChild(style);
+    }
+
+    window.showToast = function (message, tone, options) {
+        var settings = TONES[tone] || TONES.info;
+        var duration = options && typeof options.duration === 'number'
+            ? options.duration
+            : (tone === 'error' ? 6000 : 4000);
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+            'pointer-events:auto', 'width:100%', 'box-sizing:border-box',
+            'display:flex', 'align-items:flex-start', 'gap:.65rem',
+            'padding:.85rem 1rem',
+            'border-radius:0',
+            'background:rgb(var(--glass-fill) / var(--glass-alpha-overlay))',
+            '-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate))',
+            'color:rgb(var(--ztims-on-surface))',
+            'border:1px solid var(--glass-hairline)',
+            'border-left:4px solid ' + settings.accent,
+            'box-shadow:inset 0 1px 0 var(--glass-edge), var(--ztims-shadow-overlay)',
+            'font-family:inherit', 'font-size:.85rem', 'line-height:1.45',
+            'animation:toastIn var(--dur-moderate, 300ms) var(--ease-decelerate, ease-out)'
+        ].join(';');
+
+        var icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined';
+        icon.textContent = settings.icon;
+        icon.style.cssText = 'color:' + settings.accent + ';font-size:1.25rem;flex-shrink:0;line-height:1.2';
+
+        var text = document.createElement('div');
+        // textContent, never innerHTML: these messages carry server text and
+        // names people typed, which must never be able to become markup.
+        text.textContent = message;
+        text.style.cssText = 'flex:1;white-space:pre-line;word-break:break-word';
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Dismiss');
+        close.textContent = '×';
+        close.style.cssText = 'background:none;border:0;color:rgb(var(--ztims-on-surface-variant));font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .15rem;flex-shrink:0';
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        host().appendChild(toast);
+
+        var timer = null;
+        function dismiss() {
+            if (timer) clearTimeout(timer);
+            toast.style.animation = 'toastOut 200ms var(--ease-accelerate, ease-in) forwards';
+            setTimeout(function () { toast.remove(); }, 200);
+        }
+        close.addEventListener('click', dismiss);
+        if (duration > 0) timer = setTimeout(dismiss, duration);
+
+        return dismiss;
+    };
+})();
+</script>
+
+
+<div class="content-shell min-h-screen flex flex-col">
+
+    <!-- The site's navigation. It was a rail down the side when this page had
+         several views to switch between; with browsing and history as ordinary
+         pages, a header says the same thing and gives the destinations the
+         whole width. -->
+    <!-- The visitor pages' header, the same on every one (styles: .site-header
+         and .site-link in src/shared/theme.css). Words only; the round theme
+         toggle is the one icon and comes last. On a phone it is two rows: the
+         name and the toggle, then the links across the full width. -->
+    <!-- The visitor pages' header, the same on every one (styles: .site-header
+         and .site-link in src/shared/theme.css). -->
+    <header class="site-header">
+        <div class="site-header__row">
+            <a href="../../index.html" class="site-header__brand">
+                <img class="site-header__logo" src="/ztims-logo.png" alt="" width="44" height="44" decoding="async">
+                <span class="site-header__name">
+                    <span class="site-header__title">ZAMBOANGUITA</span>
+                    <span class="site-header__sub">Tourism · Information System</span>
+                </span>
+            </a>
+
+            <nav class="site-header__nav" aria-label="Main">
+                <a href="../../index.html" class="site-link">Destinations</a>
+                <a href="../../index.html#map" class="site-link">Map</a>
+                <a href="../announcements.html" class="site-link">Announcements</a>
+                <a href="../events.html" class="site-link">Events</a>
+                <a href="../history.html" class="site-link">History</a>
+                <a href="../manage.html" class="site-link">My ticket or booking</a>
+            </nav>
+
+            <div class="site-header__tools">
+                <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
+                    <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
+                </button>
+                <a href="../../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
+            </div>
+        </div>
+    </header>
+
+    <!-- My account (visitor accounts, November 2026). Six tabs, each with its
+         own address like the officer's Settings: #tickets, #bookings, #saved,
+         #reviews, #profile, #security. Styles: .ac-* in theme.css. The API is
+         visitors.js; moving and cancelling stay on manage.html. -->
+    <main class="flex-1 ac-page">
+      <div class="ac-wrap">
+        <div class="ac-head">
+          <span id="acInitials" class="ac-initials" aria-hidden="true">·</span>
+          <div class="min-w-0">
+            <h1 id="acName" class="ac-title">My account</h1>
+            <p id="acEmail" class="ac-email"></p>
+          </div>
+        </div>
+
+        <div class="ac-tabs" role="tablist" aria-label="My account">
+          <button type="button" role="tab" class="ac-tab" data-tab="tickets" id="tab-tickets" aria-controls="panel-tickets"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span>My tickets</button>
+          <button type="button" role="tab" class="ac-tab" data-tab="bookings" id="tab-bookings" aria-controls="panel-bookings"><span class="material-symbols-outlined" aria-hidden="true">bed</span>My bookings</button>
+          <button type="button" role="tab" class="ac-tab" data-tab="saved" id="tab-saved" aria-controls="panel-saved"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>Saved places</button>
+          <button type="button" role="tab" class="ac-tab" data-tab="reviews" id="tab-reviews" aria-controls="panel-reviews"><span class="material-symbols-outlined" aria-hidden="true">reviews</span>My reviews</button>
+          <button type="button" role="tab" class="ac-tab" data-tab="profile" id="tab-profile" aria-controls="panel-profile"><span class="material-symbols-outlined" aria-hidden="true">person</span>Profile</button>
+          <button type="button" role="tab" class="ac-tab" data-tab="security" id="tab-security" aria-controls="panel-security"><span class="material-symbols-outlined" aria-hidden="true">lock</span>Security</button>
+        </div>
+
+        <section id="panel-tickets" role="tabpanel" aria-labelledby="tab-tickets" class="ac-panel" hidden>
+          <div id="ticketList" class="ac-list"><div class="ac-skeleton"></div></div>
+        </section>
+        <section id="panel-bookings" role="tabpanel" aria-labelledby="tab-bookings" class="ac-panel" hidden>
+          <div id="bookingList" class="ac-list"><div class="ac-skeleton"></div></div>
+        </section>
+        <section id="panel-saved" role="tabpanel" aria-labelledby="tab-saved" class="ac-panel" hidden>
+          <div id="savedList" class="ac-grid"><div class="ac-skeleton"></div></div>
+        </section>
+        <section id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews" class="ac-panel" hidden>
+          <div id="reviewList" class="ac-list"><div class="ac-skeleton"></div></div>
+        </section>
+
+        <section id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" class="ac-panel" hidden>
+          <form id="profileForm" class="ac-card ac-form" novalidate>
+            <h2 class="ac-h2">Profile</h2>
+            <div class="bk-row bk-row--2">
+              <div><label for="pfName" class="bk-label">Full name</label><input id="pfName" type="text" required maxlength="120" autocomplete="name" class="bk-field"/></div>
+              <div><label for="pfEmail" class="bk-label">Email address</label><input id="pfEmail" type="email" readonly class="bk-field ac-readonly"/></div>
+            </div>
+            <div class="bk-row bk-row--2">
+              <div><label for="pfPhone" class="bk-label">Phone</label><input id="pfPhone" type="tel" maxlength="40" autocomplete="tel" class="bk-field" placeholder="0917 123 4567"/></div>
+              <div><label for="pfCountry" class="bk-label">Country where you live</label><select id="pfCountry" class="bk-field"><option value="">Loading…</option></select></div>
+            </div>
+            <p id="profileMessage" hidden></p>
+            <div><button type="submit" id="profileSave" class="btn btn-pill btn-primary min-h-[48px]">Save changes</button></div>
+          </form>
+        </section>
+
+        <section id="panel-security" role="tabpanel" aria-labelledby="tab-security" class="ac-panel" hidden>
+          <form id="passwordForm" class="ac-card ac-form" novalidate>
+            <h2 class="ac-h2">Password</h2>
+            <div id="pwFields" class="space-y-4">
+              <div><label for="pwCurrent" class="bk-label">Current password</label><input id="pwCurrent" type="password" autocomplete="current-password" class="bk-field"/></div>
+              <div class="bk-row bk-row--2">
+                <div><label for="pwNew" class="bk-label">New password</label><input id="pwNew" type="password" minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="bk-field"/></div>
+                <div><label for="pwAgain" class="bk-label">Repeat the new password</label><input id="pwAgain" type="password" minlength="10" maxlength="72" autocomplete="new-password" class="bk-field"/></div>
+              </div>
+              <p id="passwordMessage" hidden></p>
+              <div><button type="submit" id="passwordSave" class="btn btn-pill btn-primary min-h-[48px]">Change password</button></div>
+            </div>
+            <div id="pwGoogleOnly" hidden class="space-y-3">
+              <p class="ac-muted">This account signs in with Google.</p>
+              <a href="forgot_password.html" class="btn btn-pill btn-secondary min-h-[44px]">Set a password by email</a>
+            </div>
+          </form>
+
+          <div class="ac-card ac-form">
+            <h2 class="ac-h2">Sessions</h2>
+            <p id="acSince" class="ac-muted"></p>
+            <div><button type="button" id="signOutEverywhereBtn" class="btn btn-pill btn-cancel min-h-[44px]">Sign out of all devices</button></div>
+          </div>
+
+          <div class="ac-card ac-form ac-danger-zone">
+            <h2 class="ac-h2">Delete account</h2>
+            <p class="ac-muted">Your name, email, phone and password are erased. Tickets and bookings keep their dates and amounts for one year. Reviews stay as "Former visitor".</p>
+            <div><button type="button" id="deleteOpen" class="btn btn-pill btn-danger min-h-[44px]">Delete account</button></div>
+            <form id="deleteForm" hidden class="space-y-4 ac-confirm" novalidate>
+              <div id="delPasswordRow"><label for="delPassword" class="bk-label">Your password</label><input id="delPassword" type="password" autocomplete="current-password" class="bk-field"/></div>
+              <div id="delGoogleRow" hidden><p class="bk-label">Sign in with Google again to confirm</p><div id="delGoogle"></div></div>
+              <p id="deleteMessage" hidden></p>
+              <div class="flex flex-wrap gap-3">
+                <button type="submit" id="deleteConfirm" class="btn btn-pill btn-danger min-h-[44px]">Delete my account</button>
+                <button type="button" id="deleteCancel" class="btn btn-pill btn-cancel min-h-[44px]">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+
+    <!-- Drawn by shared/site-footer.js, the same on every visitor page.
+         data-root is the way back to the project root from here. -->
+    <footer data-site-footer data-root="../../"></footer>
+</div>
+<script type="module" src="../shared/site-footer.js"></script>
+<script type="module" src="../shared/visitor-session.js"></script>
+<script type="module">
+/* My account. visitor-session.js (loaded just before) gives window.ztimsVisitor. */
+const V = window.ztimsVisitor;
+const $ = id => document.getElementById(id);
+const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: Number(n) % 1 ? 2 : 0 });
+const day = key => new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(String(key).slice(0, 10) + 'T00:00:00Z'));
+const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+
+if (!V.token()) location.replace(V.signInUrl(location.pathname + location.hash));
+
+function say(id, message, tone = 'error') {
+    const el = $(id);
+    el.textContent = message || '';
+    el.hidden = !message;
+    el.className = `va-msg va-msg--${tone}`;
+}
+function signedOut() { location.replace(V.signInUrl(location.pathname + location.hash)); }
+async function call(path, options) {
+    const r = await V.api(path, options);
+    if (r.status === 401) signedOut();
+    return r;
+}
+const empty = (icon, text, link) => `<div class="ac-empty"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span><p>${esc(text)}</p>${link || ''}</div>`;
+
+/* ---- tabs ------------------------------------------------------------- */
+const TABS = ['tickets', 'bookings', 'saved', 'reviews', 'profile', 'security'];
+const loaded = {};
+function show(tab) {
+    if (!TABS.includes(tab)) tab = 'tickets';
+    TABS.forEach(t => {
+        $('panel-' + t).hidden = t !== tab;
+        $('tab-' + t).setAttribute('aria-selected', String(t === tab));
+        $('tab-' + t).tabIndex = t === tab ? 0 : -1;
+    });
+    $('tab-' + tab).scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (!loaded[tab]) { loaded[tab] = true; LOAD[tab](); }
+}
+document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => {
+    if (location.hash !== '#' + b.dataset.tab) location.hash = b.dataset.tab; else show(b.dataset.tab);
+}));
+// Before the account has loaded, loadMe opens the tab in the address itself.
+window.addEventListener('hashchange', () => { if (me) show(location.hash.slice(1)); });
+
+/* ---- the person ------------------------------------------------------- */
+let me = null;
+async function loadMe() {
+    me = await V.me(true);
+    if (!me) return signedOut();
+    $('acName').textContent = me.fullName || 'My account';
+    $('acEmail').textContent = me.email;
+    $('acInitials').textContent = (me.fullName || me.email).trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    $('acSince').textContent = me.lastSignInAt ? `Signed in since ${new Date(me.lastSignInAt).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })}.` : '';
+}
+
+/* ---- tickets and bookings --------------------------------------------- */
+const TICKET = { valid: ['Valid', 'success'], used: ['Used', 'neutral'], cancelled: ['Cancelled', 'danger'], expired: ['Expired', 'neutral'], closed: ['Closed that day', 'warning'] };
+const BOOKING = {
+    requested: ['Waiting for the resort', 'warning'], confirmed: ['Confirmed', 'success'], checked_in: ['Checked in', 'success'],
+    completed: ['Completed', 'neutral'], declined: ['Declined', 'danger'], expired: ['Expired', 'neutral'],
+    cancelled: ['Cancelled', 'danger'], no_show: ['No-show', 'neutral']
+};
+const pill = ([label, tone]) => `<span class="tone-pill tone-${tone} ac-pill">${esc(label)}</span>`;
+const section = (title, rows) => rows.length ? `<h2 class="ac-h3">${title}</h2>${rows.join('')}` : '';
+
+async function loadTickets() {
+    const r = await call('/visitors/me/tickets');
+    if (!r.ok) return ($('ticketList').innerHTML = empty('error', r.data.message || 'Could not load your tickets.'));
+    if (!r.data.length) return ($('ticketList').innerHTML = empty('confirmation_number', 'No tickets yet.', '<a href="../../index.html#featured" class="btn btn-pill btn-primary min-h-[44px]">Find a place to visit</a>'));
+    const row = t => `
+        <article class="ac-row">
+            <div class="ac-row__main">
+                <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(t.spot._id)}">${esc(t.spot.title)}</a></p>
+                <p class="ac-row__facts">${day(t.visitDate)} · ${plural(t.people, 'person', 'people')} · ${peso(t.amount)}</p>
+                <p class="ac-row__code">${esc(t.code)}</p>
+            </div>
+            <div class="ac-row__side">${pill(TICKET[t.status] || [t.status, 'neutral'])}
+                ${['valid', 'closed'].includes(t.status) ? `<a class="ac-link" href="../manage.html?code=${encodeURIComponent(t.code)}">Move or cancel</a>` : ''}</div>
+        </article>`;
+    const next = r.data.filter(t => t.visitDate >= today).reverse(), past = r.data.filter(t => t.visitDate < today);
+    $('ticketList').innerHTML = section('Coming up', next.map(row)) + section('Past', past.map(row));
+}
+
+async function loadBookings() {
+    const r = await call('/visitors/me/bookings');
+    if (!r.ok) return ($('bookingList').innerHTML = empty('error', r.data.message || 'Could not load your bookings.'));
+    if (!r.data.length) return ($('bookingList').innerHTML = empty('bed', 'No room bookings yet.', '<a href="../../index.html?category=STAY#featured" class="btn btn-pill btn-primary min-h-[44px]">Places to stay</a>'));
+    const row = b => `
+        <article class="ac-row">
+            <div class="ac-row__main">
+                <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(b.spot._id)}">${esc(b.enterpriseName || b.spot.title)}</a></p>
+                <p class="ac-row__facts">${day(b.checkIn)} to ${day(b.checkOut)} · ${plural(b.nights, 'night')} · ${plural(b.adults + b.children, 'guest')} · ${peso(b.totalAmount)}</p>
+                <p class="ac-row__code">${esc(b.code)}</p>
+            </div>
+            <div class="ac-row__side">${pill(BOOKING[b.status] || [b.status, 'neutral'])}
+                ${['requested', 'confirmed'].includes(b.status) ? `<a class="ac-link" href="../manage.html?code=${encodeURIComponent(b.code)}">Move or cancel</a>` : ''}</div>
+        </article>`;
+    const next = r.data.filter(b => b.checkOut >= today).reverse(), past = r.data.filter(b => b.checkOut < today);
+    $('bookingList').innerHTML = section('Coming up', next.map(row)) + section('Past', past.map(row));
+}
+
+/* ---- saved places and reviews ----------------------------------------- */
+async function loadSaved() {
+    const r = await call('/visitors/me/saved');
+    if (!r.ok) return ($('savedList').innerHTML = empty('error', r.data.message || 'Could not load your saved places.'));
+    if (!r.data.length) return ($('savedList').innerHTML = empty('favorite', 'No saved places yet.', '<a href="../../index.html#featured" class="btn btn-pill btn-primary min-h-[44px]">Browse destinations</a>'));
+    $('savedList').innerHTML = r.data.map(s => `
+        <article class="ac-saved">
+            <a class="ac-saved__photo" href="../spot.html?spotId=${encodeURIComponent(s._id)}" tabindex="-1" aria-hidden="true">${s.photo ? `<img src="${esc(s.photo)}" alt="" loading="lazy"/>` : '<span class="material-symbols-outlined">image</span>'}</a>
+            <div class="ac-saved__body">
+                <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(s._id)}">${esc(s.title)}</a></p>
+                <p class="ac-row__facts">${esc(s.barangay || 'Zamboanguita')}</p>
+                <button type="button" class="ac-remove" data-unsave="${esc(s._id)}"><span class="material-symbols-outlined" aria-hidden="true">heart_minus</span>Remove</button>
+            </div>
+        </article>`).join('');
+}
+$('savedList').addEventListener('click', async event => {
+    const btn = event.target.closest('[data-unsave]');
+    if (!btn) return;
+    btn.disabled = true;
+    const r = await call('/visitors/me/saved/' + encodeURIComponent(btn.dataset.unsave), { method: 'DELETE' });
+    if (r.ok) { showToast('Removed from saved places.', 'success'); loadSaved(); } else { btn.disabled = false; showToast(r.data.message || 'Could not remove it.', 'error'); }
+});
+
+async function loadReviews() {
+    const r = await call('/visitors/me/reviews');
+    if (!r.ok) return ($('reviewList').innerHTML = empty('error', r.data.message || 'Could not load your reviews.'));
+    if (!r.data.length) return ($('reviewList').innerHTML = empty('reviews', 'No reviews yet. You can review a place after a used ticket or a completed stay.'));
+    $('reviewList').innerHTML = r.data.map(v => `
+        <article class="ac-row">
+            <div class="ac-row__main">
+                <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(v.spot._id)}">${esc(v.spot.title)}</a></p>
+                <p class="ac-stars" aria-label="${v.rating} out of 5">${'★'.repeat(v.rating)}<span>${'★'.repeat(5 - v.rating)}</span></p>
+                ${v.body ? `<p class="ac-review">${esc(v.body)}</p>` : ''}
+            </div>
+            <div class="ac-row__side">${v.status === 'hidden' ? pill(['Hidden by the Tourism Office', 'warning']) : ''}</div>
+        </article>`).join('');
+}
+
+/* ---- profile ---------------------------------------------------------- */
+async function loadProfile() {
+    $('pfName').value = me.fullName || '';
+    $('pfEmail').value = me.email || '';
+    $('pfPhone').value = me.phone || '';
+    try {
+        const list = await (await fetch('/api/rooms/countries')).json();
+        $('pfCountry').innerHTML = '<option value="">Choose…</option>' + list.map(c => `<option value="${esc(c.code)}">${esc(c.name)}</option>`).join('');
+        $('pfCountry').value = me.countryCode || '';
+    } catch { $('pfCountry').innerHTML = '<option value="">Could not load the list</option>'; }
+}
+$('profileForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    say('profileMessage', '');
+    $('profileSave').disabled = true;
+    const r = await call('/visitors/me', { method: 'PATCH', body: { fullName: $('pfName').value.trim(), phone: $('pfPhone').value.trim(), countryCode: $('pfCountry').value } });
+    $('profileSave').disabled = false;
+    if (!r.ok) return say('profileMessage', r.data.message || 'Could not save just now.');
+    showToast('Saved.', 'success');
+    await loadMe();
+});
+
+/* ---- security --------------------------------------------------------- */
+function loadSecurity() {
+    $('pwFields').hidden = !me.hasPassword;
+    $('pwGoogleOnly').hidden = me.hasPassword;
+    $('delPasswordRow').hidden = !me.hasPassword;
+    $('delGoogleRow').hidden = me.hasPassword;
+}
+$('passwordForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    say('passwordMessage', '');
+    if ($('pwNew').value !== $('pwAgain').value) return say('passwordMessage', 'The two new passwords are not the same.');
+    $('passwordSave').disabled = true;
+    const r = await call('/visitors/me/password', { method: 'POST', body: { currentPassword: $('pwCurrent').value, newPassword: $('pwNew').value } });
+    $('passwordSave').disabled = false;
+    if (!r.ok) return say('passwordMessage', r.data.message || 'Could not change it just now.');
+    V.save(r.data.token, me);
+    $('passwordForm').reset();
+    showToast(r.data.message || 'Password changed.', 'success');
+});
+$('signOutEverywhereBtn').addEventListener('click', async () => {
+    const r = await call('/visitors/me/sign-out-everywhere', { method: 'POST' });
+    if (!r.ok) return showToast(r.data.message || 'Could not sign out just now.', 'error');
+    V.clear();
+    location.assign('../../index.html');
+});
+
+let deleteCredential = '';
+$('deleteOpen').addEventListener('click', async () => {
+    $('deleteForm').hidden = false;
+    $('deleteOpen').hidden = true;
+    if (me.hasPassword) return $('delPassword').focus();
+    // Google-only: a fresh Google sign-in confirms it.
+    const id = (await (await fetch('/api/visitors/config')).json().catch(() => ({}))).googleClientId;
+    if (!id) return say('deleteMessage', 'Google sign-in is not available right now. Set a password by email first.');
+    await new Promise(resolve => {
+        if (window.google && window.google.accounts) return resolve();
+        const s = Object.assign(document.createElement('script'), { src: 'https://accounts.google.com/gsi/client', async: true, onload: resolve, onerror: resolve });
+        document.head.appendChild(s);
+    });
+    if (!window.google || !window.google.accounts) return say('deleteMessage', 'Google sign-in could not load. Try again.');
+    window.google.accounts.id.initialize({ client_id: id, callback: r => { deleteCredential = r.credential; say('deleteMessage', 'Confirmed with Google. Press Delete my account.', 'success'); } });
+    window.google.accounts.id.renderButton($('delGoogle'), { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with' });
+});
+$('deleteCancel').addEventListener('click', () => { $('deleteForm').hidden = true; $('deleteOpen').hidden = false; say('deleteMessage', ''); });
+$('deleteForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const body = me.hasPassword ? { password: $('delPassword').value } : { credential: deleteCredential };
+    if (me.hasPassword && !body.password) return say('deleteMessage', 'Enter your password.');
+    if (!me.hasPassword && !body.credential) return say('deleteMessage', 'Sign in with Google again first.');
+    $('deleteConfirm').disabled = true;
+    const r = await V.api('/visitors/me', { method: 'DELETE', body });
+    $('deleteConfirm').disabled = false;
+    if (!r.ok) return say('deleteMessage', r.data.message || 'Could not delete the account just now.');
+    V.clear();
+    location.assign('../../index.html');
+});
+
+const LOAD = { tickets: loadTickets, bookings: loadBookings, saved: loadSaved, reviews: loadReviews, profile: loadProfile, security: loadSecurity };
+if (V.token()) loadMe().then(() => { if (me) show(location.hash.slice(1)); });
+</script>
+
+
+</body>
+</html>

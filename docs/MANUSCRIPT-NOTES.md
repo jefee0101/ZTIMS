@@ -4,7 +4,7 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
-## Visitor accounts (November 2026; database and API)
+## Visitor accounts (November 2026)
 
 **The change.** Visitors now have accounts (the panelist's request), with
 the role Tourist. They sign up with email and password (the email confirmed by
@@ -24,7 +24,11 @@ case and context diagrams; add `visitors`, `visitor_tokens`, `saved_places` and
 dictionary; security (a separate visitor sign-in, Google sign-in checked on the
 server, email confirmation); Limitations (signing in is required to buy or
 book, which is harder on weak signal or in a hurry); Data Privacy (accounts kept
-until the visitor deletes them).
+until the visitor deletes them). Screenshots: Sign in (with Continue with
+Google), Create an account, Check your email, My account (its six tabs: My
+tickets, My bookings, Saved places, My reviews, Profile, Security), the header's
+Sign in and account menu, and the room form's "Your details" filled from the
+account.
 
 ## Room booking: the complete module (9 November 2026)
 

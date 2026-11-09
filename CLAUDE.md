@@ -326,6 +326,8 @@ purpose — see the header comment in `spot-form.js`:
 - `idle-signout.js` — signs an officer out after 30 minutes with no activity on
   any officer tab (loaded as a module on every `src/admin/*.html` page). See
   "Sign-in safety" below.
+- `visitor-session.js` and `visitor-auth.js` — visitor accounts' header control
+  and sign-in pages (see "Visitor accounts").
 - `photo-upload.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -910,7 +912,8 @@ Frontend only, no tables of their own:
   (`index.html#map`), Announcements, Events, History, My ticket or booking (no Staff link since November
   2026, the user's choice: staff sign in from the footer's "Staff and
   Enterprise Manager sign in"), the
-  current page a solid ink pill (`aria-current="page"`; light in dark mode;
+  current page a solid ink pill, the visitor's **Sign in** or account menu
+  (`visitor-session.js`, see "Visitor accounts") (`aria-current="page"`; light in dark mode;
   the destination page counts as Destinations), then the round theme toggle
   and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
   top as the page scrolls; on Home it floats over the hero
@@ -1211,7 +1214,7 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
     only as a page in the signer's own portal (`resort/…` for a manager,
     `admin/…` for an officer; `returnTo`), never another site.
 
-### Visitor accounts (November 2026; database and API)
+### Visitor accounts (November 2026)
 
 `visitors.js`, mounted at `/api`. Decided 9 November 2026 (the panelist's
 request; notes repo `Design/Visitor accounts/`): visitors get accounts, role
@@ -1276,6 +1279,30 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   Tickets and bookings keep counts and amounts and their own guest details
   until `privacy.js`'s one-year rule. The email can sign up again; the new
   account does not inherit the old one's records.
+- **Pages.** `src/user/sign_in.html`, `sign_up.html` (consent line linking
+  Terms and Privacy), `verify_email.html`, `forgot_password.html`,
+  `new_password.html`: the Staff sign in card (`.ss-*`, plus `.va-*` in
+  `theme.css`), all run by `src/shared/visitor-auth.js` (`<body
+  data-auth-page>`). "Continue with Google" is Google Identity Services' own
+  button, shown only when `GET /api/visitors/config` gives a client id. After
+  signing in the visitor returns to `?next=` (an address on this site only;
+  kept in `sessionStorage.ztimsNext` across the emailed link).
+  `src/shared/visitor-session.js` (every visitor page) keeps the token in
+  `localStorage.ztimsVisitorToken` (never the staff `authToken`) and draws the
+  header's **Sign in** pill, or the initials and first name with a menu (My
+  account, Sign out) — `.site-header__signin`, `.site-acct*`; with it present,
+  Buy tickets hides on a phone and from 900 to 1439px so the links fit.
+  **My account** (`src/user/account.html`, `.ac-*`): six tabs with their own
+  addresses — `#tickets`, `#bookings` (coming up, then past; "Move or cancel"
+  opens `manage.html?code=`, which fills the account's email and looks it up),
+  `#saved`, `#reviews`, `#profile`, `#security` (change password, or "Set a
+  password by email" for Google-only; Sign out of all devices; Delete account
+  with the password or a fresh Google sign-in). **Checkout** (`spot.html`):
+  signed out, Buy tickets and Book a room go to Sign in with `next` back to
+  `#tickets` / `#rooms`, which reopens the form; signed in, "Your details" shows
+  the account's name and email, and asks only a missing phone (and, for a
+  room, country). A failed account check (no signal) says so instead of
+  sending the visitor to Sign in.
 - Emails (`mailer.js`): confirm your email (`src/user/verify_email.html?token=`,
   48 hours), choose a new password (`src/user/new_password.html?token=`, 30
   minutes), and a notice when the password changes. Links carry a token, never
@@ -1418,7 +1445,11 @@ the page; tabs styled like Statistics').
   (`?idle=1`).
 - **Page security headers** (`vercel.json` `headers`, every path but `/api/`):
   Content-Security-Policy, no framing, nosniff, a referrer policy, a
-  permissions policy (location for this site only, no camera) and HSTS. The
+  permissions policy (location for this site only, no camera) and HSTS.
+  Google sign-in needs `https://accounts.google.com/gsi/client` (script),
+  `/gsi/style` (style), `/gsi/` (connect and frame — `frame-src` is otherwise
+  none), and `Cross-Origin-Opener-Policy: same-origin-allow-popups` on
+  `src/user/*` only (everything else keeps `same-origin`). The
   CSP lists every outside host the pages use: a new CDN, image host, font or
   API called from a page must be added there, or the browser blocks it.
 

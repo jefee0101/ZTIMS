@@ -304,6 +304,7 @@ body { overflow-x: hidden; }
      data-root is the way back to the project root from here. -->
 <footer data-site-footer data-root="../" class="mt-16"></footer>
 <script type="module" src="./shared/site-footer.js"></script>
+<script type="module" src="./shared/visitor-session.js"></script>
 
 <!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
      the category markers. Loaded before the page script, which uses it. -->
@@ -312,6 +313,48 @@ body { overflow-x: hidden; }
 <script type="module" src="./shared/notices.js"></script>
 <script type="module">
     const API_BASE = "/api";
+
+    /* Buying a ticket or booking a room needs a signed-in visitor account
+       (visitor accounts, November 2026; visitors.js). Signed out, Buy tickets
+       and Book a room go to Sign in and come back here (#tickets / #rooms
+       opens the form again). Signed in, the name, email and phone come from
+       the account; only a missing phone (or, for a room, country) is asked. */
+    const VISITOR_TOKEN = 'ztimsVisitorToken';
+    const visitorToken = () => { try { return localStorage.getItem(VISITOR_TOKEN) || ''; } catch (e) { return ''; } };
+    const visitorHeaders = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + visitorToken() });
+    const signInFor = act => '/src/user/sign_in.html?next=' + encodeURIComponent(location.pathname + location.search.replace(/([?&])ticketDate=[^&]*&?/, '$1').replace(/[?&]$/, '') + '#' + act);
+    let accountPromise = null;
+    /* The signed-in visitor, null when signed out (or the session ended), or
+       'unknown' when the check itself failed (no signal, a busy server). */
+    function visitorAccount() {
+        if (!visitorToken()) return Promise.resolve(null);
+        if (!accountPromise) {
+            accountPromise = fetch(`${API_BASE}/visitors/me`, { headers: visitorHeaders() })
+                .then(async r => {
+                    if (r.ok) return ((await r.json()) || {}).visitor || null;
+                    if (r.status === 401) { try { localStorage.removeItem(VISITOR_TOKEN); } catch (e) { /* private browsing */ } return null; }
+                    return 'unknown';
+                })
+                .catch(() => 'unknown')
+                .then(result => { if (result === 'unknown') accountPromise = null; return result; });
+        }
+        return accountPromise;
+    }
+    async function needAccount(act) {
+        const visitor = await visitorAccount();
+        if (visitor === 'unknown') { showToast('Could not reach your account just now. Check your signal and try again.', 'error'); return null; }
+        if (!visitor) { location.assign(signInFor(act)); return null; }
+        return visitor;
+    }
+    /* "Booked under …", and the fields only for what the account lacks. */
+    function fillWho(visitor, prefix) {
+        const who = document.getElementById(prefix + 'Who');
+        if (who) who.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">account_circle</span><span><b>${escapeHtml(visitor.fullName)}</b><br>${escapeHtml(visitor.email)}${visitor.phone ? ' · ' + escapeHtml(visitor.phone) : ''}</span>`;
+        const phone = document.getElementById(prefix + 'PhoneRow');
+        if (phone) phone.hidden = Boolean(visitor.phone);
+        const country = document.getElementById(prefix + 'CountryRow');
+        if (country) country.hidden = Boolean(visitor.countryCode);
+    }
     const content = document.getElementById('spotContent');
 
     // The API sleeps on Render's free tier, so a cold start can take most of a
@@ -777,16 +820,10 @@ body { overflow-x: hidden; }
 
                     <div class="bk-group">
                         <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h3>
-                        <div class="bk-row bk-row--2">
-                            <div>
-                                <label for="tkName" class="bk-label">Full name</label>
-                                <input id="tkName" type="text" required autocomplete="name" class="bk-field"/>
-                            </div>
-                            <div>
-                                <label for="tkEmail" class="bk-label">Email</label>
-                                <input id="tkEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>
-                                <p class="bk-hint">For your ticket and receipt.</p>
-                            </div>
+                        <p id="tkWho" class="bk-who"></p>
+                        <div id="tkPhoneRow" hidden>
+                            <label for="tkPhone" class="bk-label">Phone</label>
+                            <input id="tkPhone" type="tel" autocomplete="tel" maxlength="40" placeholder="0917 123 4567" class="bk-field sm:!w-64"/>
                         </div>
                     </div>
 
@@ -800,7 +837,7 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined !text-lg" aria-hidden="true">payments</span><span id="tkBuyLabel">Buy tickets</span>
                     </button>
                     <p class="text-support mt-3">
-                        Your name and email are used only for these tickets. See the
+                        Your name, email and phone are used only for these tickets. See the
                         <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
                     </p>
                 </form>
@@ -815,7 +852,7 @@ body { overflow-x: hidden; }
         const dateInput = document.getElementById('tkDate');
         if (/^\d{4}-\d{2}-\d{2}$/.test(wanted) && wanted >= today && wanted <= last) {
             dateInput.value = wanted;
-            modal.hidden = false;
+            openTickets();
         }
 
         const kindInputs = [...document.querySelectorAll('#ticketForm [data-kind]')];
@@ -862,16 +899,17 @@ body { overflow-x: hidden; }
             try {
                 const response = await fetch(`${API_BASE}/tickets`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: visitorHeaders(),
                     body: JSON.stringify({
                         spotId,
                         visitDate: document.getElementById('tkDate').value,
                         counts: counts(),
-                        fullName: document.getElementById('tkName').value.trim(),
-                        email: document.getElementById('tkEmail').value.trim()
+                        phone: document.getElementById('tkPhone').value.trim()
                     })
                 });
                 const result = await response.json().catch(() => ({}));
+                if (response.status === 401) { location.assign(signInFor('tickets')); return; }
+                if (result.code === 'PROFILE_INCOMPLETE') document.getElementById('tkPhoneRow').hidden = false;
                 if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The tickets could not be bought just now.');
                 window.location.assign(result.checkoutUrl);
             } catch (e) {
@@ -981,12 +1019,11 @@ body { overflow-x: hidden; }
 
                     <div data-rb-step="2" hidden class="bk-group">
                         <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h3>
+                        <p id="rbWho" class="bk-who"></p>
                         <div class="bk-row bk-row--2">
-                            ${field('rbName', 'Full name', '<input id="rbName" type="text" required autocomplete="name" maxlength="120" class="bk-field"/>')}
-                            ${field('rbPhone', 'Phone', '<input id="rbPhone" type="tel" required autocomplete="tel" maxlength="40" class="bk-field" placeholder="0917 123 4567"/>')}
+                            <div id="rbPhoneRow" hidden>${field('rbPhone', 'Phone', '<input id="rbPhone" type="tel" autocomplete="tel" maxlength="40" class="bk-field" placeholder="0917 123 4567"/>')}</div>
+                            <div id="rbCountryRow" hidden>${field('rbCountry', 'Country where you live', '<select id="rbCountry" class="bk-field"><option value="">Loading…</option></select>')}</div>
                         </div>
-                        ${field('rbEmail', 'Email', '<input id="rbEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="bk-field"/>')}
-                        ${field('rbCountry', 'Country where you live', '<select id="rbCountry" required class="bk-field"><option value="">Loading…</option></select>')}
                         ${field('rbNote', 'Note for the resort (optional)', '<textarea id="rbNote" rows="2" maxlength="1000" class="bk-field"></textarea>')}
                         <div class="rb-trap" aria-hidden="true"><label>Website <input id="rbWebsite" type="text" tabindex="-1" autocomplete="off"/></label></div>
                     </div>
@@ -1003,7 +1040,7 @@ body { overflow-x: hidden; }
                         <button type="submit" id="rbNext" class="btn btn-primary btn-pill min-h-[48px]"><span id="rbNextLabel">See free rooms</span></button>
                     </div>
                     <p id="rbPrivacy" class="text-support mt-3" hidden>
-                        Your details go to the resort for this booking only. See the
+                        Your name, email, phone and country go to the resort for this booking only. See the
                         <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
                     </p>
                 </form>
@@ -1132,25 +1169,25 @@ body { overflow-x: hidden; }
 
         /* Step 2 → Sent. */
         async function send() {
-            const name = $('rbName').value.trim(), email = $('rbEmail').value.trim(), phone = $('rbPhone').value.trim();
-            if (name.length < 2) return say('Give your full name.');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say('Give an email address the resort can answer.');
-            if (phone.replace(/[^0-9]/g, '').length < 7) return say('Give a phone number the resort can call.');
-            if (!$('rbCountry').value) return say('Choose the country where you live.');
+            const phone = $('rbPhone').value.trim();
+            if (!$('rbPhoneRow').hidden && phone.replace(/[^0-9]/g, '').length < 7) return say('Give a phone number the resort can call.');
+            if (!$('rbCountryRow').hidden && !$('rbCountry').value) return say('Choose the country where you live.');
             const button = $('rbNext');
             button.disabled = true;
             $('rbNextLabel').textContent = 'Sending…';
             try {
                 const response = await fetch(`${API_BASE}/bookings`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: visitorHeaders(),
                     body: JSON.stringify({
-                        spotId: spot._id, guestName: name, email, phone, countryCode: $('rbCountry').value,
+                        spotId: spot._id, phone, countryCode: $('rbCountry').value,
                         adults: Number($('rb-adults').value) || 0, children: Number($('rb-children').value) || 0,
                         checkIn: $('rbIn').value, checkOut: $('rbOut').value, note: $('rbNote').value.trim(),
                         rooms: chosen().map(l => ({ roomTypeId: l.room._id, units: l.units })), website: $('rbWebsite').value
                     })
                 });
                 const result = await response.json().catch(() => ({}));
+                if (response.status === 401) { location.assign(signInFor('rooms')); return; }
+                if (result.code === 'PROFILE_INCOMPLETE') { $('rbPhoneRow').hidden = false; $('rbCountryRow').hidden = false; }
                 if (!response.ok) {
                     // Rooms taken meanwhile: back to the rooms, counted again.
                     if (response.status === 409) { await findRooms(); say(result.message); return; }
@@ -1165,7 +1202,7 @@ body { overflow-x: hidden; }
                     <p class="rb-sent__code">${escapeHtml(result.code || '')}</p>
                     <p class="rb-sent__facts">${longDay($('rbIn').value)} to ${longDay($('rbOut').value)} · ${plural(result.nights || state.nights, 'night')} · ${escapeHtml(peso(result.totalAmount))}</p>
                     <p>You pay the resort directly. How to pay comes with its confirmation.</p>
-                    <a href="manage.html?code=${encodeURIComponent(result.code || '')}" class="rb-sent__link">See it under My ticket or booking<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>`;
+                    <a href="user/account.html#bookings" class="rb-sent__link">See it in My account<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>`;
                 show(3);
             } catch (e) { say(e.message); }
             finally {
@@ -1192,9 +1229,13 @@ body { overflow-x: hidden; }
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeRooms(); });
         show(0);
     }
-    function openRooms() {
+    async function openRooms() {
         const modal = document.getElementById('roomModal');
-        if (modal) modal.hidden = false;
+        if (!modal) return;
+        const visitor = await needAccount('rooms');
+        if (!visitor) return;
+        fillWho(visitor, 'rb');
+        modal.hidden = false;
     }
 
     /* − / + steppers ([data-qty]): change the number between the input's own
@@ -1662,9 +1703,13 @@ body { overflow-x: hidden; }
             if (arrivalAct === 'directions') goTo('directionsSection');
         }, 150);
     }
-    function openTickets() {
+    async function openTickets() {
         const modal = document.getElementById('ticketModal');
-        if (modal) modal.hidden = false;
+        if (!modal) return;
+        const visitor = await needAccount('tickets');
+        if (!visitor) return;
+        fillWho(visitor, 'tk');
+        modal.hidden = false;
     }
     function goTo(id) {
         const el = document.getElementById(id);

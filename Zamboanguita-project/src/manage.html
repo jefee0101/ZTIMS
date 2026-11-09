@@ -341,6 +341,7 @@ body { overflow-x: hidden; }
     <footer data-site-footer data-root="../"></footer>
 </div>
 <script type="module" src="./shared/site-footer.js"></script>
+<script type="module" src="./shared/visitor-session.js"></script>
 <script>
 /* My ticket or booking. Everything is decided by the server, which needs
    both the code and the email each time; this page only shows what it says and
@@ -634,6 +635,20 @@ body { overflow-x: hidden; }
     if (fromLink) {
         document.getElementById('findCode').value = fromLink;
         document.getElementById('findEmail').focus();
+    }
+    // Signed in to a visitor account (My account's "Move or cancel"): the
+    // account's email is filled in, and a code from the link is looked up.
+    const visitorToken = (() => { try { return localStorage.getItem('ztimsVisitorToken') || ''; } catch (e) { return ''; } })();
+    if (visitorToken) {
+        fetch('/api/visitors/me', { headers: { Authorization: 'Bearer ' + visitorToken } })
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (!data || !data.visitor || document.getElementById('findEmail').value) return;
+                document.getElementById('findEmail').value = data.visitor.email;
+                const form = document.getElementById('findEmail').form;
+                if (fromLink && form) form.requestSubmit();
+            })
+            .catch(() => { /* typed by hand as before */ });
     }
 })();
 </script>

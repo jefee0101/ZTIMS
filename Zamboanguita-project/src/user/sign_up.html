@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <script src="../shared/theme.js"></script>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Create an account | Zamboanguita Tourism</title>
+    <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          // Sharp edges: every rounded-* utility draws a square corner.
+          borderRadius: { none: "0", sm: "0", DEFAULT: "0", md: "0", lg: "0", xl: "0", "2xl": "0", "3xl": "0", full: "0" },
+          transitionTimingFunction: { DEFAULT: 'cubic-bezier(.2, 0, 0, 1)', standard: 'cubic-bezier(.2, 0, 0, 1)', decelerate: 'cubic-bezier(.05, .7, .1, 1)', accelerate: 'cubic-bezier(.3, 0, .8, .15)', spring: 'cubic-bezier(.34, 1.56, .64, 1)' },
+          transitionDuration: { DEFAULT: '220ms' },
+          colors: {
+              "primary": "rgb(var(--ztims-primary) / <alpha-value>)",
+              "primaryHover": "rgb(var(--ztims-primary-dim) / <alpha-value>)",
+              "accent": "rgb(var(--ztims-accent) / <alpha-value>)",
+              "background": "rgb(var(--ztims-background) / <alpha-value>)",
+              "surface": "rgb(var(--ztims-surface) / <alpha-value>)",
+              "surface-high": "rgb(var(--ztims-surface-high) / <alpha-value>)",
+              "on-surface": "rgb(var(--ztims-on-surface) / <alpha-value>)",
+              "on-surface-variant": "rgb(var(--ztims-on-surface-variant) / <alpha-value>)",
+              "outline": "rgb(var(--ztims-outline) / <alpha-value>)",
+              "gold": "rgb(var(--ztims-gold) / <alpha-value>)",
+              "orange": "rgb(var(--ztims-orange) / <alpha-value>)",
+              "success": "rgb(var(--ztims-success) / <alpha-value>)"
+          },
+          fontFamily: {
+            headline: ["Poppins", "sans-serif"],
+            body: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+        --bg: rgb(var(--ztims-background)); --surface: rgb(var(--ztims-surface)); --surface-high: rgb(var(--ztims-surface-high));
+        --on-surface: rgb(var(--ztims-on-surface)); --on-surface-variant: rgb(var(--ztims-on-surface-variant)); --outline: rgb(var(--ztims-outline));
+    }
+    html.dark {
+        --bg: rgb(var(--ztims-background)); --surface: rgb(var(--ztims-surface)); --surface-high: rgb(var(--ztims-surface-high));
+        --on-surface: rgb(var(--ztims-on-surface)); --on-surface-variant: rgb(var(--ztims-on-surface-variant)); --outline: rgb(var(--ztims-outline));
+    }
+    body { background: var(--bg); color: var(--on-surface); font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    [hidden] { display: none !important; }
+  
+/* An uploaded photo with its own dimensions must not decide the page's width,
+   and a long unbroken word — a URL in a review, an enterprise name — must
+   wrap rather than push the layout sideways. */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+body { overflow-x: hidden; }
+
+/* ==========================================================
+   SCROLLBARS ON DESKTOP
+   Hidden on pointer devices from 768px up, where the page still scrolls
+   exactly as before — only the bar itself is gone. Touch screens are left
+   alone: their scrollbars are already overlays that fade away, and hiding
+   them there would remove the only hint that a list continues.
+   ========================================================== */
+@media (min-width: 768px) and (pointer: fine) {
+    html, body, * {
+        scrollbar-width: none;          /* Firefox */
+        -ms-overflow-style: none;       /* old Edge */
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {              /* Chrome, Safari */
+        width: 0;
+        height: 0;
+        display: none;
+    }
+}
+</style>
+    <!-- Zamboanguita Coastal Tourism palette. Linked after the page's own
+         styles so the tokens win over anything left hardcoded. -->
+    <link rel="stylesheet" href="../shared/theme.css"/>
+    <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
+    <link rel="stylesheet" href="../shared/motion.css"/>
+</head>
+<body class="min-h-screen" data-auth-page="sign-up">
+<!-- A visitor sign-in page (visitor accounts, November 2026), in the style of
+     Staff sign in: the coast on the left from 1024px, one card on the right.
+     Styles: .ss-* and .va-* in theme.css; script: shared/visitor-auth.js. -->
+<div class="ss-split">
+<aside class="ss-photo" aria-hidden="true">
+  <img src="https://res.cloudinary.com/xeo3pvpw/video/upload/so_0,q_auto,w_1200,c_limit/v1793436461/zambo-10_31_2026_4_46_PM.jpg" alt="" loading="eager" decoding="async"/>
+  <div class="ss-photo__words">
+    <p class="ss-photo__kicker">Zamboanguita, Negros Oriental</p>
+    <p class="ss-photo__title">Your tickets, stays and saved places in one account.</p>
+  </div>
+</aside>
+<div class="ss-side">
+  <div class="ss-top">
+    <a href="../../index.html" class="ss-back">
+      <span class="material-symbols-outlined !text-base" aria-hidden="true">arrow_back</span>Back to the site
+    </a>
+    <button id="themeToggleBtn" type="button" title="Toggle theme" aria-label="Toggle theme" class="ss-theme">
+      <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+    </button>
+  </div>
+<main class="page-enter ss-main">
+  <div class="ss-card">
+    <div class="ss-head">
+      <h1 class="ss-title">Create an account</h1>
+      <p class="ss-lede">For tickets, room bookings, saved places and reviews.</p>
+    </div>
+    <div id="googleBox" class="va-google" hidden>
+      <div id="googleButton" class="va-google__btn"></div>
+      <p class="va-or"><span>or</span></p>
+    </div>
+    <form id="signUpForm" class="space-y-5" novalidate>
+      <div>
+        <label for="fullName" class="bk-label">Full name</label>
+        <input id="fullName" type="text" required maxlength="120" autocomplete="name" class="bk-field ss-field"/>
+      </div>
+      <div>
+        <label for="email" class="bk-label">Email address</label>
+        <input id="email" type="email" required autocomplete="email" class="bk-field ss-field"/>
+      </div>
+      <div>
+        <label for="password" class="bk-label">Password</label>
+        <div class="relative">
+          <input id="password" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="bk-field ss-field !pr-12"/>
+          <button type="button" data-eye="password" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
+        </div>
+      </div>
+      <div>
+        <label for="passwordAgain" class="bk-label">Repeat the password</label>
+        <div class="relative">
+          <input id="passwordAgain" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="bk-field ss-field !pr-12"/>
+          <button type="button" data-eye="passwordAgain" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
+        </div>
+      </div>
+      <label class="va-consent"><input id="consent" type="checkbox" required/><span>I agree to the <a href="../terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and the <a href="../privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+      <p id="formMessage" hidden></p>
+      <button type="submit" id="signUpBtn" class="btn btn-pill btn-primary ss-submit w-full min-h-[48px]">Create account</button>
+    </form>
+    <div id="sentBox" hidden class="va-sent">
+      <span class="material-symbols-outlined va-sent__icon" aria-hidden="true">mark_email_read</span>
+      <h2 class="va-sent__title">Check your email</h2>
+      <p>We sent a link to <b id="sentEmail"></b>. Open it to confirm your account.</p>
+      <p id="resendMessage" hidden></p>
+      <button type="button" id="resendBtn" class="btn btn-pill btn-secondary w-full min-h-[48px]">Send it again</button>
+    </div>
+    <p class="ss-note">Have an account? <a href="sign_in.html" data-keep-next class="ss-link">Sign in</a></p>
+  </div>
+</main>
+</div>
+</div>
+<script type="module" src="../shared/visitor-auth.js"></script>
+</body>
+</html>
