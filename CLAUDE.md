@@ -1321,6 +1321,19 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   the account's name and email, and asks only a missing phone (and, for a
   room, country). A failed account check (no signal) says so instead of
   sending the visitor to Sign in.
+- **What visitors are told** (9 November 2026): Privacy (§3 "Your account":
+  what an account keeps, email confirmation, what Google shares, kept until
+  deleted, what deleting erases and what stays; reviews public as "Maria S.";
+  the browser keeps the sign-in token 30 days), Terms (§3 Your account, §7
+  Reviews: who may review, the rules, the office hides with a reason,
+  enterprises cannot reply) and FAQ ("Your account & reviews") say the same as
+  the code. Change them with it. No page or route suspends a visitor yet
+  (`visitors.status` 'suspended' exists in the database only), so the pages do
+  not promise it.
+- **Testing a purchase locally**: Xendit cannot be reached from a test machine;
+  `XENDIT_API_BASE` (see `.env.example`) points `payments.js` at a local
+  stand-in that creates invoices, shows a pay button and reports PAID, with
+  `PUBLIC_SITE_URL` set to the page server so the return lands there.
 - Emails (`mailer.js`): confirm your email (`src/user/verify_email.html?token=`,
   48 hours), choose a new password (`src/user/new_password.html?token=`, 30
   minutes), and a notice when the password changes. Links carry a token, never

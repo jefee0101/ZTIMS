@@ -4,6 +4,152 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Visitor accounts, saved places and reviews: the complete module (9 November 2026)
+
+Everything below is built and on `main` (visitor accounts, no public ticket
+search, saved places and reviews; the entries below give each step). Privacy,
+Terms and FAQ say the same, dated 9 November 2026.
+
+**New module for the manuscript.** *Visitor Accounts and Reviews*: a visitor
+(the new user **Tourist**) creates an account with email and password,
+confirmed by an emailed link, or with Google; signs in to buy entrance tickets
+and request rooms (the name, email and phone come from the account); finds
+their tickets and bookings in My account, and moves or cancels them there;
+saves places with a heart; and, after a used ticket or a completed stay,
+rates and reviews the place. The Tourism Officer can hide or unhide a review,
+always with a reason. The visitor can delete the account.
+
+**Users.** Three now: Tourism Officer, Enterprise Manager, and **Tourist**
+(visitor with an account). Browsing, the map and directions still need no
+account.
+
+**Use cases** (actor: use case).
+- Tourist: Create an account (email and password, then Confirm email; or
+  Continue with Google); Sign in / Sign out; Reset a forgotten password; Edit
+  profile (name, phone, country); Change password; Sign out of all devices;
+  Buy an entrance ticket; Request a room; View my tickets and bookings; Move or
+  cancel a ticket or booking; Save or unsave a place; View saved places;
+  Write, edit or delete a review; Delete my account.
+- Tourism Officer: View all reviews (filter Shown / 1 or 2 stars / Hidden /
+  All, search); Hide a review with a reason; Unhide a review with a reason.
+- Enterprise Manager: none new (cannot reply to or hide reviews).
+- System: Link earlier guest tickets and bookings to an account by its
+  confirmed email; check the visit before accepting a review; erase a deleted
+  account's details at once.
+
+**ERD** (new entities and links; one-to-many unless said).
+- VISITOR 1 — n VISITOR_TOKEN (emailed links)
+- VISITOR n — n SPOT through SAVED_PLACE
+- VISITOR 1 — n REVIEW; SPOT 1 — n REVIEW; one REVIEW per (VISITOR, SPOT)
+- REVIEW n — 0..1 TICKET and n — 0..1 BOOKING (the visit that proves it; one
+  of the two always set)
+- REVIEW 1 — n REVIEW_CHANGE (each hide or unhide)
+- VISITOR 1 — n TICKET and VISITOR 1 — n BOOKING (`visitor_id`, nullable for
+  guest records from before accounts)
+
+**Data dictionary** (PK primary key, FK foreign key).
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| visitors | id | text PK | |
+| | email | text, unique (any case), null only once deleted | Sign-in email |
+| | email_verified_at | timestamptz | When the email was confirmed (link or Google) |
+| | password_hash | text (bcrypt) | Null for a Google-only account |
+| | google_sub | text, unique | The Google account's id for ZTIMS |
+| | full_name | text ≤ 120 | |
+| | phone | text ≤ 40 | Asked once at the first checkout that needs it |
+| | country_code | text FK residences | Country of residence (Form A4 row), for rooms |
+| | session_version | integer | Raised to end every sign-in |
+| | status | text | active, suspended, deleted |
+| | last_sign_in_at, deleted_at, created_at, updated_at | timestamptz | |
+| visitor_tokens | id | text PK | |
+| | visitor_id | text FK visitors | |
+| | purpose | text | verify (48 hours) or reset (30 minutes) |
+| | token_hash | text | SHA-256 of the emailed code; the code itself is never stored |
+| | expires_at, used_at, created_at | timestamptz | Single use |
+| saved_places | visitor_id, spot_id | text, PK together, FK visitors / spots | |
+| | created_at | timestamptz | |
+| reviews | id | text PK | |
+| | visitor_id | text FK visitors | |
+| | spot_id | text FK spots | Unique with visitor_id: one per place |
+| | rating | integer 1–5 | |
+| | body | text ≤ 600 | Optional |
+| | status | text | visible or hidden |
+| | hidden_reason | text ≤ 300 | |
+| | hidden_by_email, hidden_at | text, timestamptz | Who hid it, when |
+| | ticket_id | text FK tickets | The used ticket that proves the visit, or |
+| | booking_id | text FK bookings | the completed stay (one of the two always set) |
+| | created_at, updated_at | timestamptz | |
+| review_changes | id | text PK | |
+| | review_id | text FK reviews (removed with the review) | |
+| | action | text | hidden or shown |
+| | reason | text, 3–300 | Required both ways |
+| | by_email, at | text, timestamptz | The officer and when |
+| tickets, bookings (changed) | visitor_id | text FK visitors, nullable | The account that holds it |
+
+32 tables in all.
+
+**Security (for the Security section).**
+- A new role, **tourist**, for visitors only. Visitor sign-in tokens are
+  signed with a different audience (`ztims-visitor`) from staff tokens
+  (`ztims-web`): a visitor token never opens a staff route, and a staff token
+  never opens a visitor's account. Each token carries the account's session
+  version, so a password change, a reset or "Sign out of all devices" ends
+  every earlier sign-in at once. Tokens last 30 days.
+- Passwords: at least 10 characters, not common or guessable
+  (`passwords.js`), stored with bcrypt; failed sign-ins limited to 10 per 15
+  minutes; sign-ups 5 an hour per connection. An email link carries a
+  single-use code (only its hash is stored), never the email or password.
+  Forgot-password answers the same for any email, so it cannot reveal who has
+  an account.
+- **Google sign-in** (Google Identity Services): the server itself checks the
+  Google ID token — signature against Google's public keys, issued by Google,
+  for ZTIMS's client id, and a Google-verified email. ZTIMS never receives
+  the Google password. A Google sign-in joins an existing ZTIMS account only
+  when that account's email was never confirmed, or with that account's
+  password. The pages' security headers allow only Google's sign-in script and
+  frame.
+- Tickets and bookings open only for the account that holds them (no public
+  search by code). The server, not the page, checks the visit before a review
+  and that only the officer hides one.
+
+**Limitations to state.**
+- **Signing in is required** to buy a ticket or book a room; there is no
+  guest checkout. A visitor without an email address, or in a hurry at the
+  entrance, must create an account first (paying onsite at the Municipal
+  Tourism Office stays available).
+- **Weak signal**: creating an account needs the emailed link to arrive and
+  open, and every page needs a connection (no offline use), which is harder at
+  the upland and coastal sites with weak mobile signal. Google sign-in needs
+  Google to be reachable.
+- Reviews come only from visitors whose ticket was marked used or whose stay
+  was completed in ZTIMS; places without tickets or ZTIMS bookings get no
+  reviews. Managers cannot reply. Visitors cannot be suspended from a page
+  yet (the status exists in the database only).
+
+**Data Privacy (for the Data Privacy section).**
+- An account is kept **until the visitor deletes it**; it is not erased for
+  being unused. Saved places and reviews belong to it.
+- **Deleting** (My account → Security; the password, or a Google sign-in from
+  the last ten minutes) erases at once the name, email, phone, country,
+  password hash and Google id, ends every sign-in and removes saved places.
+  The row stays, marked deleted, so tickets, bookings and reviews still point
+  somewhere. **Reviews stay, shown as "Former visitor"**, so ratings stay
+  honest; the visitor can delete them first. Tickets and bookings keep their
+  own guest details until the one-year rule (a year after the visit or
+  check-out). The email can sign up again as a new account.
+- Public reviews show the first name and last initial only, never the email.
+  The officer's Reviews page shows the author's name, never the email.
+- Rights: the visitor sees and corrects their own data in My account and
+  deletes the account themselves; other requests go to the Data Protection
+  Officer named on the Privacy page.
+
+**Wording to use.** "Tourist" as the user; "visitor account"; "Sign in" /
+"Create an account" / "Continue with Google"; "My account"; "Saved places";
+"Reviews" (a rating of 1 to 5 stars); "Hide" / "Unhide" with a reason (never
+"delete" for the officer); "Former visitor"; "enterprise", never
+"establishment"; pay "onsite".
+
 ## Saved places and reviews (9 November 2026)
 
 **The change.** A signed-in visitor saves places with a heart (on Home's
