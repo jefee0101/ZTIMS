@@ -4,6 +4,28 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Visitor accounts (November 2026; database and API)
+
+**The change.** Visitors now have accounts (the panelist's request), with
+the role Tourist. They sign up with email and password (the email confirmed by
+an emailed link) or with Google. Signing in is required to buy a ticket or book
+a room; the name, email and phone come from the account. Tickets and bookings
+made earlier with the same email are joined to the account. The account keeps
+saved places and, later, reviews. A visitor may delete the account: the name,
+email, phone and password are erased; past tickets and bookings stay under the
+one-year rule, and reviews stay as "Former visitor". Four new tables (31 in
+all).
+
+**Change in the manuscript:** reverse every sentence saying visitors have no
+accounts or browse without signing in only (Scope, Definition of Terms, users:
+Tourism Officer, Enterprise Manager and Tourist); add the Tourist to the use
+case and context diagrams; add `visitors`, `visitor_tokens`, `saved_places` and
+`reviews` (and `visitor_id` on tickets and bookings) to the ERD and data
+dictionary; security (a separate visitor sign-in, Google sign-in checked on the
+server, email confirmation); Limitations (signing in is required to buy or
+book, which is harder on weak signal or in a hurry); Data Privacy (accounts kept
+until the visitor deletes them).
+
 ## Room booking: the complete module (9 November 2026)
 
 Everything below is built and on `main`: the database and API (8 November),

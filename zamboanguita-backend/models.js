@@ -255,6 +255,9 @@ const tickets = new Table('tickets', {
     fullName: required({ trim: true }),
     email: required({ trim: true, lowercase: true }),
     contactNumber: text({ trim: true }),
+    // The visitor account that bought it (visitors.js); null for a ticket
+    // bought as a guest before accounts, until linked by its email.
+    visitorId: ref(),
     status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired', 'closed'] }),
     usedAt: when(),
     usedByEmail: text(),

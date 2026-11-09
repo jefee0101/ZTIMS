@@ -2513,6 +2513,11 @@ app.use('/api', require('./office')({ requireAdmin }));
    reads, the officer posts. Photos pass the same source check as listings. */
 app.use('/api', require('./announcements')({ requireAdmin, checkPhotoSources }));
 
+/* Visitor accounts (visitors.js): sign up, sign in (password or Google), the
+   account, saved places. Their tokens never open a staff route, nor staff
+   tokens a visitor route (another audience). */
+app.use('/api', require('./visitors')({ sharedRateLimit, emailTakenBy, siteOrigin: paymentsModule.siteOrigin }));
+
 /* Room booking at private places to stay (bookings.js): visitors ask, the
    resort's manager confirms by hand, the officer sees counts and can pause. */
 const bookingsModule = require('./bookings');

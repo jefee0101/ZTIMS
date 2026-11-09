@@ -1128,6 +1128,90 @@ create unique index if not exists register_entries_booking_idx on public.registe
 
 
 -- ---------------------------------------------------------------------------
+-- Visitor accounts (decided 9 November 2026, the panelist's request;
+-- visitors.js). A visitor signs in with email and password or Google to buy
+-- tickets and book rooms, keep saved places and write reviews. The role in
+-- their tokens is 'tourist'. The account stays until the visitor deletes it;
+-- deleting erases the name, phone, email, password and Google id, and keeps
+-- the row so their old tickets, bookings and reviews still point somewhere.
+-- ---------------------------------------------------------------------------
+create table if not exists public.visitors (
+    id                  text primary key default public.ztims_new_id(),
+    -- Null only once the account is deleted.
+    email               text
+                        constraint visitors_email_normalised
+                        check (email is null or (email <> '' and email = lower(btrim(email)) and char_length(email) <= 254)),
+    email_verified_at   timestamptz,
+    -- Null for an account that signs in with Google only.
+    password_hash       text,
+    google_sub          text,
+    full_name           text not null default ''
+                        constraint visitors_full_name_length check (char_length(full_name) <= 120),
+    phone               text not null default ''
+                        constraint visitors_phone_length check (char_length(phone) <= 40),
+    country_code        text references public.residences (code),
+    session_version     integer not null default 0,
+    status              text not null default 'active'
+                        constraint visitors_status_known check (status in ('active', 'suspended', 'deleted')),
+    last_sign_in_at     timestamptz,
+    deleted_at          timestamptz,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+create unique index if not exists visitors_email_unique on public.visitors (lower(email)) where email is not null;
+create unique index if not exists visitors_google_sub_unique on public.visitors (google_sub) where google_sub is not null;
+
+-- Email links: only a hash is kept; each is used once and runs out.
+create table if not exists public.visitor_tokens (
+    id                  text primary key default public.ztims_new_id(),
+    visitor_id          text not null references public.visitors (id),
+    purpose             text not null constraint visitor_tokens_purpose_known check (purpose in ('verify', 'reset')),
+    token_hash          text not null unique,
+    expires_at          timestamptz not null,
+    used_at             timestamptz,
+    created_at          timestamptz not null default now()
+);
+create index if not exists visitor_tokens_visitor_idx on public.visitor_tokens (visitor_id, purpose);
+
+create table if not exists public.saved_places (
+    visitor_id          text not null references public.visitors (id),
+    spot_id             text not null references public.spots (id),
+    created_at          timestamptz not null default now(),
+    primary key (visitor_id, spot_id)
+);
+create index if not exists saved_places_spot_idx on public.saved_places (spot_id);
+
+-- One review per visitor per place, only after a used ticket or a completed
+-- stay there (the ticket or booking is kept as the proof). The Tourism
+-- Officer may hide one, with a reason. A deleted account's reviews stay,
+-- shown as "Former visitor".
+create table if not exists public.reviews (
+    id                  text primary key default public.ztims_new_id(),
+    visitor_id          text not null references public.visitors (id),
+    spot_id             text not null references public.spots (id),
+    rating              integer not null constraint reviews_rating_range check (rating between 1 and 5),
+    body                text not null default '' constraint reviews_body_length check (char_length(body) <= 600),
+    status              text not null default 'visible' constraint reviews_status_known check (status in ('visible', 'hidden')),
+    hidden_reason       text not null default '' constraint reviews_hidden_reason_length check (char_length(hidden_reason) <= 300),
+    hidden_by_email     text not null default '',
+    hidden_at           timestamptz,
+    ticket_id           text references public.tickets (id),
+    booking_id          text references public.bookings (id),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint reviews_one_per_place unique (visitor_id, spot_id),
+    constraint reviews_has_proof check (ticket_id is not null or booking_id is not null)
+);
+create index if not exists reviews_spot_idx on public.reviews (spot_id, status);
+
+-- Whose ticket or booking it is, once bought signed in or linked by email.
+alter table public.tickets add column if not exists visitor_id text references public.visitors (id);
+alter table public.bookings add column if not exists visitor_id text references public.visitors (id);
+create index if not exists tickets_visitor_idx on public.tickets (visitor_id) where visitor_id is not null;
+create index if not exists bookings_visitor_idx on public.bookings (visitor_id) where visitor_id is not null;
+
+
+-- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
 do $$
@@ -1138,7 +1222,8 @@ begin
         'tourism_officers', 'establishment_managers', 'spots', 'payments', 'feedback',
         'monthly_reports', 'tickets', 'online_checkouts', 'spot_closed_dates',
         'emergency_numbers', 'register_entries', 'announcements',
-        'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings'
+        'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings',
+        'visitors', 'reviews'
     ] loop
         execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
         execute format(
@@ -1153,7 +1238,7 @@ begin
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
         'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements',
         'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings', 'booking_rooms',
-        'booking_changes', 'booking_payments'
+        'booking_changes', 'booking_payments', 'visitors', 'visitor_tokens', 'saved_places', 'reviews'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

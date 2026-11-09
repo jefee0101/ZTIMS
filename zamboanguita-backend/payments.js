@@ -33,6 +33,7 @@ const ExcelJS = require('exceljs');
 const { query, transaction } = require('./db');
 const attractions = require('./attractions');
 const notices = require('./notices');
+const { requireVisitor, checkoutDetails } = require('./visitors');
 const {
     payments: Payment, tickets: Ticket, checkouts: Checkout,
     officers: TourismOfficer, spots: Spot
@@ -676,20 +677,22 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
 
     /* PUBLIC: buy entrance tickets. The ticket exists unpaid until the gateway
        says it is paid; only then does it get anybody in. */
-    router.post('/tickets', checkoutLimit, async (req, res) => {
+    /* A signed-in visitor with a verified email (visitors.js). The name, email
+       and phone come from the account, never from the page. */
+    router.post('/tickets', checkoutLimit, requireVisitor, async (req, res) => {
         try {
             if (!gatewayState().online) return fail(res, 409, 'Online tickets are not available right now. Entrance fees are paid onsite.');
             const body = req.body || {};
             const offer = await ticketOffer(body.spotId);
             if (!offer.available) return fail(res, 404, 'This attraction does not sell tickets online.');
-            const fullName = String(body.fullName || '').trim();
-            const email = String(body.email || '').trim().toLowerCase();
-            const contactNumber = String(body.contactNumber || '').trim();
+            let who;
+            try { who = await checkoutDetails(req.visitor, { phone: body.contactNumber || body.phone }); } catch (error) {
+                return res.status(error.status || 500).json({ success: false, code: error.code, message: error.message });
+            }
+            const { fullName, email, phone: contactNumber, visitorId } = who;
             const visitDate = String(body.visitDate || '').trim();
             const today = manilaToday();
 
-            if (!fullName) return fail(res, 400, 'Please give the name the tickets are under.');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(res, 400, 'Please give a valid email address.');
             if (!/^\d{4}-\d{2}-\d{2}$/.test(visitDate)) return fail(res, 400, 'Please choose the date of your visit.');
             if (visitDate < today) return fail(res, 400, 'That date has already passed.');
             if (visitDate > addDays(today, TICKET_DAYS_AHEAD)) return fail(res, 400, `Tickets can be bought up to ${TICKET_DAYS_AHEAD} days ahead.`);
@@ -707,7 +710,7 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
                 try {
                     ticket = await Ticket.create({
                         code: newTicketCode(offer.spot.title), spotId: offer.spot._id, visitDate,
-                        fullName, email, contactNumber, isDemo: true,
+                        fullName, email, contactNumber, visitorId, isDemo: true,
                         countRegular: priced.counts.regular,
                         countStudent: priced.counts.student, countChild: priced.counts.child,
                         // The regular price is kept even when no regular visitor came.

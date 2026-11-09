@@ -31,6 +31,7 @@ const crypto = require('crypto');
 const { query, transaction } = require('./db');
 const { spots: Spot, BOOKING_PAYMENT_METHODS } = require('./models');
 const notices = require('./notices');
+const { requireVisitor, checkoutDetails } = require('./visitors');
 
 const MANILA_OFFSET_HOURS = 8;
 const MAX_ROOM_LINES = 10;
@@ -326,7 +327,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
     });
 
     const fail = (res, error, label) => {
-        if (error && error.status) return res.status(error.status).json({ success: false, message: error.message });
+        if (error && error.status) return res.status(error.status).json({ success: false, code: error.code, message: error.message });
         if (error && error.name === 'ValidationError') return res.status(400).json({ success: false, message: error.message });
         console.error(label, error);
         return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
@@ -428,7 +429,9 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
     });
 
     /* A booking request: checked, priced by the server, rooms held. */
-    router.post('/bookings', requestLimit, async (req, res) => {
+    /* A signed-in visitor with a verified email (visitors.js). The guest's
+       name, email, phone and country come from the account, never the page. */
+    router.post('/bookings', requestLimit, requireVisitor, async (req, res) => {
         try {
             const body = req.body || {};
             // The form's hidden field: a bot that fills it is answered like a
@@ -441,15 +444,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const settings = await settingsFor(spot._id);
             if (!settings.open) throw problem(409, 'This place is not taking bookings right now.');
 
-            const guestName = String(body.guestName || '').trim().replace(/\s+/g, ' ');
-            if (guestName.length < 2 || guestName.length > 120) throw problem(400, 'Give the guest\'s full name.');
-            const email = String(body.email || '').trim().toLowerCase();
-            if (!looksLikeEmail(email) || email.length > 254) throw problem(400, 'Give an email address the resort can answer.');
-            const phone = String(body.phone || '').trim();
-            if (phone.replace(/[^0-9]/g, '').length < 7 || phone.length > 40) throw problem(400, 'Give a phone number the resort can call.');
-            const countryCode = String(body.countryCode || '').trim();
-            const { rows: country } = await query('select code from residences where code = $1', [countryCode]);
-            if (!country.length) throw problem(400, 'Choose the country where the guest lives.');
+            const who = await checkoutDetails(req.visitor, body, { needCountry: true });
+            const { fullName: guestName, email, phone, countryCode, visitorId } = who;
             const adults = wholeNumber(body.adults, 1, 100);
             const children = wholeNumber(body.children ?? 0, 0, 100);
             if (adults === null) throw problem(400, 'At least one adult.');
@@ -489,11 +485,11 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                         await query('savepoint booking_code', [], client);
                         ({ rows: [row] } = await query(`
                             insert into bookings (code, spot_id, guest_name, email, phone, country_code, adults, children,
-                                                  check_in, check_out, total_amount, note, expires_at)
-                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now() + make_interval(hours => $13))
+                                                  check_in, check_out, total_amount, note, expires_at, visitor_id)
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now() + make_interval(hours => $13), $14)
                             returning *`,
                             [newBookingCode(spot.title), spot._id, guestName, email, phone, countryCode, adults, children,
-                                checkIn, checkOut, total, note, settings.responseHours], client));
+                                checkIn, checkOut, total, note, settings.responseHours, visitorId], client));
                     } catch (error) {
                         if (error.code !== '23505' && error.code !== 11000) throw error;   // a code already used: draw again
                         await query('rollback to savepoint booking_code', [], client);

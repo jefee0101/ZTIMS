@@ -497,9 +497,10 @@ the old collection names (`admins`, `resortOwners`) did not.
    `'resort_owner'` is a legacy spelling of the manager role, kept only so
    tokens issued before a rename don't get rejected mid-session; nothing
    issues it anymore. `requireStaff` (officer or manager) guards listing writes
-   and upload signing. There is
-   deliberately no `tourist` role or tourist account at all — visitors browse
-   without logging in. Both sign in on the one staff page; the login
+   and upload signing. Visitors have their own accounts, role `tourist`, in
+   `visitors.js` with their own table, routes and token audience — none of
+   these staff chains accepts them (see "Visitor accounts"). Staff both sign
+   in on the one staff page; the login
    route searches officers, then managers, so `emailTakenBy`
    refuses any sign-in email another account already uses.
 4. Routes, grouped by resource: admin, establishment-managers, login/forgot/
@@ -654,10 +655,12 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 27 tables in all, with `announcements`,
+  `gateway_ref`, refund fields and `is_demo`. 31 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
   `emergency_numbers`, the Guest Register's `register_entries` /
-  `register_entry_guests`, and room booking's seven (see "Room booking").
+  `register_entry_guests`, room booking's seven (see "Room booking") and
+  visitor accounts' four (`visitors`, `visitor_tokens`, `saved_places`,
+  `reviews`; see "Visitor accounts").
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
   the ticket code — tickets have no QR, by the user's decision: most places
@@ -1208,6 +1211,76 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
     only as a page in the signer's own portal (`resort/…` for a manager,
     `admin/…` for an officer; `returnTo`), never another site.
 
+### Visitor accounts (November 2026; database and API)
+
+`visitors.js`, mounted at `/api`. Decided 9 November 2026 (the panelist's
+request; notes repo `Design/Visitor accounts/`): visitors get accounts, role
+`tourist`, for My tickets and bookings, Saved places, Reviews and a faster
+checkout, and **signing in is required** to buy a ticket or book a room.
+- **Tables** (`schema.sql`, block "Visitor accounts"): `visitors` (`email`
+  unique case-insensitive and null only once deleted, `email_verified_at`,
+  `password_hash` null for Google-only, `google_sub` unique, `full_name`,
+  `phone`, `country_code`, `session_version`, `status` active | suspended |
+  deleted, `last_sign_in_at`, `deleted_at`); `visitor_tokens` (emailed links:
+  sha-256 hash only, purpose `verify` | `reset`, single-use, `expires_at`);
+  `saved_places` (visitor, spot; the pair is the key); `reviews` (rating 1–5,
+  body ≤ 600, `visible` | `hidden` with reason, by and when, the ticket or
+  booking that proves the visit, one per visitor per place — routes come with
+  the reviews pages). `tickets.visitor_id` and `bookings.visitor_id` (nullable).
+- **Tokens.** Signed like staff tokens but with audience `ztims-visitor`
+  (staff: `ztims-web`), role `tourist`, `sv` (the account's
+  `session_version`), 30 days. A staff check (`requireAuth`, `optionalAuth`)
+  refuses a visitor token at the signature check, and `requireVisitor` refuses
+  a staff token the same way. `requireVisitor` also needs the account to exist,
+  be active and verified, and `sv` to match.
+- **Routes:** `POST /api/visitors/sign-up` {fullName, email, password,
+  consent: true} (passwords.js; an email any staff account uses is refused via
+  `emailTakenBy`; emails a verify link), `POST /api/visitors/verify` {token}
+  (signs in), `POST /api/visitors/verify/resend`, `POST /api/visitors/sign-in`
+  (an unverified account gets a new link instead of a token), `POST
+  /api/visitors/google` {credential, password?}, `GET /api/visitors/config`
+  (the public Google client id, for the page), `POST /api/visitors/forgot` and
+  `POST /api/visitors/reset` {token, password} (also verifies the email; ends
+  every session), `GET|PATCH /api/visitors/me`, `POST
+  /api/visitors/me/password`, `POST /api/visitors/me/sign-out-everywhere`,
+  `DELETE /api/visitors/me` {password} or {credential}, and `GET
+  /api/visitors/me/tickets|bookings|saved|reviews`, `PUT|DELETE
+  /api/visitors/me/saved/:spotId`. Rate limits (`sharedRateLimit`): sign-up 5
+  an hour, failed sign-ins 10 per 15 minutes, emails 5 per 15 minutes, links
+  and Google 20 per 15 minutes, wrong own passwords 10 per 15 minutes per
+  account. Forgot and resend answer the same for any email.
+- **Google.** The server checks the ID token itself: RS256 against Google's
+  keys (`https://www.googleapis.com/oauth2/v3/certs`, cached as Google says),
+  audience `GOOGLE_CLIENT_ID`, issuer Google, and only a verified email.
+  `GOOGLE_CERTS_URL` overrides the keys' address for local tests only. A
+  Google sign-in joins an existing account with that email only when its email
+  was never verified (Google proves the mailbox; the unproven password is
+  dropped and its sessions end) or when the visitor also gives its password
+  (`LINK_NEEDS_PASSWORD`). Without `GOOGLE_CLIENT_ID` Google sign-in is off.
+- **Linking.** Once an account's email is verified (verify, reset, Google)
+  and at each sign-in, guest tickets and bookings with that email and no owner
+  get its `visitor_id` (`linkOldRecords`).
+- **Purchases.** `POST /api/tickets` and `POST /api/bookings` take
+  `requireVisitor`; the name, email and phone (and, for a room, the country)
+  come from the account (`checkoutDetails`), never the page. A missing phone or
+  country may be given once at checkout and is saved to the account (409
+  `PROFILE_INCOMPLETE` when neither has it). The Manage page opens a guest
+  ticket or booking by code and email only until its date has passed (a closed
+  ticket stays open to settle); one an account owns always opens.
+- **Deleting** (`DELETE /api/visitors/me`; the password, or for Google-only a
+  Google sign-in from the last ten minutes with the same Google account)
+  erases the email, name, phone, country, password hash and `google_sub`,
+  marks the row `deleted`, ends every session and removes saved places. The row
+  stays so old tickets, bookings and reviews still point somewhere. **Reviews
+  stay and show as "Former visitor"** (chosen so places' ratings stay honest).
+  Tickets and bookings keep counts and amounts and their own guest details
+  until `privacy.js`'s one-year rule. The email can sign up again; the new
+  account does not inherit the old one's records.
+- Emails (`mailer.js`): confirm your email (`src/user/verify_email.html?token=`,
+  48 hours), choose a new password (`src/user/new_password.html?token=`, 30
+  minutes), and a notice when the password changes. Links carry a token, never
+  the email.
+
 ### Listings and the visitor's day out
 
 - **Categories, by the visitor's purpose** (October 2026, the user's choice):
@@ -1404,7 +1477,15 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - Online only. The site needs a connection: nothing works offline (no service
   worker, no offline gate check, no sealed or offline-checkable QR codes, no
   saved routes), as the manuscript's Limitations say. Don't add offline features.
-- No `tourist` role, no tourist accounts. Online payment exists only as a
+- Visitor accounts (9 November 2026, the panelist's request; this reverses
+  the old "no `tourist` role, no tourist accounts" rule): visitors sign in
+  (email and password, or Google) with role `tourist`, and signing in is
+  required to buy tickets and book rooms — there is no guest buying. Their
+  tokens never open a staff route and staff tokens never a visitor route. The
+  account stays until the visitor deletes it. Reviews only after a used ticket
+  or completed stay; the officer may hide one with a reason; no manager
+  replies. See "Visitor accounts".
+- Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying onsite at the
   Municipal Tourism Office always stays available. Collecting real fees would need a
@@ -1431,8 +1512,9 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   expire after the resort's response hours, with a reminder halfway; payment
   stays outside ZTIMS; the server computes every price and a booking keeps its
   rates; the officer sees counts and can pause, never money; a booking is not
-  a count (only the Guest Register entry saved at check-in is); no visitor
-  accounts, no SMS, no seasonal rates in version 1; nothing deleted.
+  a count (only the Guest Register entry saved at check-in is); the guest signs
+  in to a visitor account to book (since 9 November); no SMS, no seasonal rates
+  in version 1; nothing deleted.
 - `docs/MANUSCRIPT-NOTES.md` lists what the manuscript must say after each
   system change; add to it in the same commit as a change the manuscript
   describes.

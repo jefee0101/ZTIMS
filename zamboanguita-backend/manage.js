@@ -50,12 +50,17 @@ async function findRecord(code, email) {
     const wanted = normaliseCode(code);
     const address = String(email || '').trim().toLowerCase();
     if (wanted.length < 5 || !address) return null;
+    // Since visitor accounts (visitors.js), a ticket or booking bought as a
+    // guest opens here only until its date has passed (a closed one, which the
+    // visitor still has to settle, stays open); one an account owns always opens.
+    const today = manilaToday();
     const { rows } = await query(
-        `select id from tickets where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and email = $2`, [wanted, address]);
+        `select id from tickets where regexp_replace(upper(code), '[^A-Z0-9]', '', 'g') = $1 and email = $2
+            and (visitor_id is not null or visit_date >= $3 or status = 'closed')`, [wanted, address, today]);
     if (rows[0]) return { kind: 'ticket', record: await Ticket.findById(rows[0].id) };
     // A room booking (bookings.js) is managed the same way: its code and email.
     const booking = await bookings.findBooking(code, email);
-    if (booking) return { kind: 'booking', record: booking };
+    if (booking && (booking.visitor_id || String(booking.check_out).slice(0, 10) >= today)) return { kind: 'booking', record: booking };
     return null;
 }
 
