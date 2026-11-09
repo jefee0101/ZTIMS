@@ -533,7 +533,8 @@ async function loadReviews() {
                 <p class="ac-stars" aria-label="${v.rating} out of 5">${'★'.repeat(v.rating)}<span>${'★'.repeat(5 - v.rating)}</span></p>
                 ${v.body ? `<p class="ac-review">${esc(v.body)}</p>` : ''}
             </div>
-            <div class="ac-row__side">${v.status === 'hidden' ? pill(['Hidden by the Tourism Office', 'warning']) : ''}</div>
+            <div class="ac-row__side">${v.status === 'hidden' ? pill(['Hidden by the Tourism Office', 'warning']) : ''}
+                <a class="btn btn-pill btn-secondary min-h-[44px]" href="../spot.html?spotId=${encodeURIComponent(v.spot._id)}#reviews">Edit or delete</a></div>
         </article>`).join('');
 }
 

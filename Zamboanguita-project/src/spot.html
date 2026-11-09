@@ -305,6 +305,7 @@ body { overflow-x: hidden; }
 <footer data-site-footer data-root="../" class="mt-16"></footer>
 <script type="module" src="./shared/site-footer.js"></script>
 <script type="module" src="./shared/visitor-session.js"></script>
+<script type="module" src="./shared/saved-places.js"></script>
 
 <!-- Shared map layer: the Leaflet loader, the OpenStreetMap tile settings and
      the category markers. Loaded before the page script, which uses it. -->
@@ -1832,6 +1833,7 @@ body { overflow-x: hidden; }
             <div class="sd-wrap sd-page">
                 <figure class="sd-hero">
                     <img src="${escapeHtml(photos[0] || 'https://placehold.co/1600x900?text=Zamboanguita')}" alt="${escapeHtml(spot.title)}"/>
+                    <button type="button" class="sv-heart sv-heart--hero" data-save-spot="${escapeHtml(spot._id)}" aria-pressed="false" aria-label="Save this place"><span class="material-symbols-outlined" aria-hidden="true">favorite</span></button>
                 </figure>
 
                 <div class="sd-titlebar">
@@ -1870,6 +1872,8 @@ body { overflow-x: hidden; }
                     <h2 class="sd-h2">Contact</h2>
                     ${contact}
                 </section>` : ''}
+
+                <section id="reviews" class="sd-panel scroll-mt-24" aria-labelledby="reviewsHeading"></section>
 
                 <section id="relatedPlaces" hidden aria-labelledby="relatedHeading"></section>
             </div>
@@ -1939,6 +1943,178 @@ body { overflow-x: hidden; }
         } catch (error) { /* a missing notice line is no reason to fail the page */ }
     }
 
+    /* Reviews (reviews.js): the average, the count, how many gave each number
+       of stars, and the list, newest first. The form shows only to a signed-in
+       visitor with a used ticket or a completed stay here — the server checks
+       it again — and their own review can be edited or deleted. Hidden reviews
+       never come back from the public list. Counts and ratings only. */
+    const RV_MAX = 600;
+    const starsText = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+    const rvDate = iso => new Date(iso).toLocaleDateString('en-PH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' });
+    let rvState = { spotId: '', page: 1, pages: 1, mine: null, canReview: false, editing: false };
+
+    function rvItem(r) {
+        return `<li class="rv-item">
+            <div class="rv-item__head">
+                <span class="rv-avatar" aria-hidden="true">${escapeHtml((r.author || 'V')[0])}</span>
+                <div class="min-w-0">
+                    <p class="rv-item__who">${escapeHtml(r.author)}</p>
+                    <p class="rv-item__meta"><span class="rv-stars" aria-label="${r.rating} out of 5">${starsText(r.rating)}</span> · ${escapeHtml(rvDate(r.createdAt))} · ${r.visit === 'stay' ? 'Stayed here' : 'Visited'}</p>
+                </div>
+            </div>
+            ${r.body ? `<p class="rv-item__body">${escapeHtml(r.body)}</p>` : ''}
+        </li>`;
+    }
+
+    function rvForm(review) {
+        const rating = review ? review.rating : 0;
+        return `<form id="rvForm" class="rv-form" novalidate>
+            <fieldset class="rv-pick">
+                <legend class="rv-label">Your rating</legend>
+                <div class="rv-pick__stars">
+                    ${[5, 4, 3, 2, 1].map(n => `<input type="radio" name="rvRating" id="rvStar${n}" value="${n}" ${n === rating ? 'checked' : ''}/>
+                    <label for="rvStar${n}" title="${n} ${n === 1 ? 'star' : 'stars'}"><span class="sr-only">${n} ${n === 1 ? 'star' : 'stars'}</span><span aria-hidden="true">★</span></label>`).join('')}
+                </div>
+            </fieldset>
+            <label class="rv-label" for="rvBody">Your review <span class="rv-optional">(optional)</span></label>
+            <textarea id="rvBody" class="bk-field rv-body" rows="4" maxlength="${RV_MAX}">${escapeHtml(review ? review.body : '')}</textarea>
+            <p class="rv-count"><span id="rvCount">${review ? review.body.length : 0}</span> / ${RV_MAX}</p>
+            <p id="rvError" class="rv-error" role="alert" hidden></p>
+            <div class="rv-form__actions">
+                ${review ? '<button type="button" class="hm-btn hm-btn--ghost" data-rv="cancel">Cancel</button>' : ''}
+                <button type="submit" class="hm-btn">${review ? 'Save changes' : 'Post review'}</button>
+            </div>
+        </form>`;
+    }
+
+    function rvMine() {
+        const box = document.getElementById('rvMine');
+        if (!box) return;
+        const s = rvState;
+        if (!visitorToken()) {
+            box.innerHTML = `<a class="rv-signin" href="${escapeHtml(signInFor('reviews'))}"><span class="material-symbols-outlined" aria-hidden="true">rate_review</span>Sign in to write a review</a>`;
+            return;
+        }
+        if (s.mine && !s.editing) {
+            box.innerHTML = `<div class="rv-own">
+                <p class="rv-label">Your review${s.mine.status === 'hidden' ? ' <span class="tone-pill tone-warning rounded-pill">Hidden by the Tourism Office</span>' : ''}</p>
+                <p class="rv-stars rv-stars--lg" aria-label="${s.mine.rating} out of 5">${starsText(s.mine.rating)}</p>
+                ${s.mine.body ? `<p class="rv-item__body">${escapeHtml(s.mine.body)}</p>` : ''}
+                <div class="rv-form__actions">
+                    <button type="button" class="hm-btn hm-btn--ghost" data-rv="edit"><span class="material-symbols-outlined" aria-hidden="true">edit</span>Edit</button>
+                    <button type="button" class="hm-btn rv-delete" data-rv="delete"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
+                </div>
+            </div>`;
+            return;
+        }
+        if (s.mine && s.editing) { box.innerHTML = `<h3 class="rv-h3">Edit your review</h3>${rvForm(s.mine)}`; return; }
+        box.innerHTML = s.canReview ? `<h3 class="rv-h3">Write a review</h3>${rvForm(null)}` : '';
+    }
+
+    // fresh: after the visitor's own change, past the browser's 30-second copy.
+    async function renderReviews(spotId, append, fresh) {
+        const section = document.getElementById('reviews');
+        if (!section) return;
+        rvState.spotId = spotId;
+        let data;
+        try {
+            const response = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/reviews?page=${rvState.page}`, fresh ? { cache: 'reload' } : {});
+            if (!response.ok) throw new Error();
+            data = await response.json();
+        } catch (e) {
+            if (!append) section.innerHTML = '<h2 id="reviewsHeading" class="sd-h2">Reviews</h2><p class="text-on-surface-variant">Reviews could not be loaded.</p>';
+            return;
+        }
+        rvState.pages = data.pages;
+        if (append) {
+            document.getElementById('rvList').insertAdjacentHTML('beforeend', data.items.map(rvItem).join(''));
+        } else {
+            const most = Math.max(1, ...Object.values(data.byStars));
+            section.innerHTML = `
+                <h2 id="reviewsHeading" class="sd-h2">Reviews</h2>
+                <div class="rv-top">
+                    <div class="rv-summary">
+                        ${data.count ? `<p class="rv-average">${data.average.toFixed(1)}</p>
+                        <p class="rv-stars rv-stars--lg" aria-label="${data.average} out of 5">${starsText(Math.round(data.average))}</p>
+                        <p class="rv-total">${data.count} ${data.count === 1 ? 'review' : 'reviews'}</p>
+                        <ul class="rv-bars" aria-label="Reviews by stars">${[5, 4, 3, 2, 1].map(n => `
+                            <li><span>${n} ★</span><span class="rv-bar"><span style="width:${(data.byStars[n] / most) * 100}%"></span></span><span>${data.byStars[n]}</span></li>`).join('')}
+                        </ul>` : '<p class="rv-total">No reviews yet.</p>'}
+                    </div>
+                    <div id="rvMine" class="rv-mine empty:hidden"></div>
+                </div>
+                <ul id="rvList" class="rv-list">${data.items.map(rvItem).join('')}</ul>
+                <div class="rv-more"><button type="button" id="rvMore" class="hm-btn hm-btn--ghost" hidden>Show more reviews</button></div>`;
+            if (visitorToken()) {
+                try {
+                    const r = await fetch(`${API_BASE}/spots/${encodeURIComponent(spotId)}/reviews/mine`, { headers: visitorHeaders() });
+                    if (r.ok) { const mine = await r.json(); rvState.mine = mine.review; rvState.canReview = mine.canReview; }
+                } catch (e) { /* the list still shows */ }
+            }
+            rvMine();
+        }
+        document.getElementById('rvMore').hidden = rvState.page >= rvState.pages;
+    }
+
+    async function rvSave(form) {
+        const picked = form.querySelector('input[name="rvRating"]:checked');
+        const error = document.getElementById('rvError');
+        error.hidden = true;
+        if (!picked) { error.textContent = 'Choose a rating from 1 to 5 stars.'; error.hidden = false; return; }
+        const button = form.querySelector('button[type="submit"]');
+        button.disabled = true;
+        const editing = Boolean(rvState.mine);
+        try {
+            const response = await fetch(editing ? `${API_BASE}/reviews/${encodeURIComponent(rvState.mine._id)}` : `${API_BASE}/spots/${encodeURIComponent(rvState.spotId)}/reviews`, {
+                method: editing ? 'PUT' : 'POST', headers: visitorHeaders(),
+                body: JSON.stringify({ rating: Number(picked.value), body: document.getElementById('rvBody').value })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) { error.textContent = data.message || 'Could not save your review.'; error.hidden = false; button.disabled = false; return; }
+            showToast(data.message, 'success');
+            rvState = Object.assign(rvState, { page: 1, mine: data.review, editing: false, canReview: false });
+            renderReviews(rvState.spotId, false, true);
+        } catch (e) {
+            error.textContent = 'No connection. Check your signal and try again.'; error.hidden = false; button.disabled = false;
+        }
+    }
+
+    async function rvDelete(button) {
+        if (!button.dataset.armed) {
+            button.dataset.armed = '1';
+            button.lastChild.textContent = 'Press again to delete';
+            return;
+        }
+        button.disabled = true;
+        try {
+            const response = await fetch(`${API_BASE}/reviews/${encodeURIComponent(rvState.mine._id)}`, { method: 'DELETE', headers: visitorHeaders() });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) { showToast(data.message || 'Could not delete it.', 'error'); button.disabled = false; return; }
+            showToast(data.message, 'success');
+            rvState = Object.assign(rvState, { page: 1, mine: null, editing: false });
+            renderReviews(rvState.spotId, false, true);
+        } catch (e) { showToast('No connection. Check your signal and try again.', 'error'); button.disabled = false; }
+    }
+
+    document.addEventListener('click', event => {
+        const act = event.target.closest('[data-rv]');
+        if (act) {
+            const what = act.dataset.rv;
+            if (what === 'edit') { rvState.editing = true; rvMine(); }
+            if (what === 'cancel') { rvState.editing = false; rvMine(); }
+            if (what === 'delete') rvDelete(act);
+            return;
+        }
+        if (event.target.closest('#rvMore')) { rvState.page += 1; renderReviews(rvState.spotId, true); }
+    });
+    document.addEventListener('submit', event => {
+        if (event.target.id === 'rvForm') { event.preventDefault(); rvSave(event.target); }
+    });
+    document.addEventListener('input', event => {
+        if (event.target.id === 'rvBody') document.getElementById('rvCount').textContent = event.target.value.length;
+        if (event.target.name === 'rvRating') document.getElementById('rvError').hidden = true;
+    });
+
     async function loadSpot() {
         const spotId = new URLSearchParams(window.location.search).get('spotId');
 
@@ -1970,6 +2146,11 @@ body { overflow-x: hidden; }
             renderTicketOffer(spotId);
             renderRoomOffer(spot);
             renderNotices(spotId);
+            if (window.ztimsSaved) window.ztimsSaved.refresh();
+            renderReviews(spotId).then(() => {
+                // Back from signing in to review: open on the reviews.
+                if (location.hash === '#reviews') document.getElementById('reviews').scrollIntoView();
+            });
         } catch (error) {
             console.error('❌ Failed to load destination:', error);
             doneLoading();

@@ -681,3 +681,20 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .bko-counts b { color: rgb(var(--ztims-on-surface)); font-weight: 800; }
 .bko-pause { flex: none; }
 @media (min-width: 768px) { .stat-tiles#bkoTiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* The officer's Destinations: a place's rating, when it has reviews (reviews.js). */
+.pg-card__rating .material-symbols-outlined { color: rgb(var(--ztims-gold-text)); font-variation-settings: 'FILL' 1; }
+.pg-card__rating b { color: rgb(var(--ztims-on-surface)); }
+
+/* The officer's Reviews (admin_reviews.html): a row per review — its stars,
+   the place, Shown or Hidden, the whole text, who and when, the reason given,
+   and Hide (red) or Unhide. */
+.rvo-row { display: grid; grid-template-columns: 6.5rem 1fr auto; gap: 1rem; align-items: start; padding: 1rem 1.25rem; }
+.rvo-row.is-hidden { box-shadow: inset 4px 0 0 rgb(var(--ztims-error)); background: rgb(var(--ztims-on-surface) / .025); }
+.rvo-row__stars { color: rgb(var(--ztims-gold-text)); letter-spacing: .06em; font-size: 1.05rem; white-space: nowrap; }
+.rvo-row__head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.rvo-reason { margin-top: .35rem; font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
+@media (max-width: 639px) {
+    .rvo-row { grid-template-columns: 1fr; padding: .9rem 1rem; gap: .5rem; }
+    .rvo-row .dest-row__actions { justify-content: flex-end; }
+}

@@ -4,6 +4,30 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Saved places and reviews (9 November 2026)
+
+**The change.** A signed-in visitor saves places with a heart (on Home's
+cards and a destination's photo; signed out, the heart asks them to sign in)
+and finds them in My account → Saved places. A visitor with a used ticket or a
+completed stay at a place may review it once (1 to 5 stars and optional text,
+up to 600 characters), and edit or delete their own review. A destination page
+shows the average, the number of reviews, how many gave each number of stars,
+and the list; Home's and the officer's Destinations cards show the rating. The
+Tourism Officer's new Reviews page hides or unhides a review, always with a
+reason, kept in a new table `review_changes` (32 tables in all). Hidden reviews
+leave the public page and the rating. Managers cannot reply. Ratings and counts
+only, never money.
+
+**Change in the manuscript:** use cases — Tourist: Save a place, Write a
+review, Edit or delete own review; Tourism Officer: Hide or unhide a review;
+ERD and data dictionary: `saved_places`, `reviews` (rating 1–5, body ≤ 600,
+status visible | hidden, hidden reason, by and when, the ticket or booking that
+proves the visit, one per visitor per place) and `review_changes` (review,
+action hidden | shown, reason, by, at). Security: the server checks the visit
+on every review; only the officer can hide. Screenshots: a destination's
+Reviews panel, the review form, Home's card with its rating and heart, the
+officer's Reviews page with the reason dialog.
+
 ## No public ticket and booking search (9 November 2026)
 
 **The change.** "My ticket or booking", where anyone with a code and its

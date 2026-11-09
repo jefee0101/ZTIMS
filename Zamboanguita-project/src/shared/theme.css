@@ -2856,3 +2856,96 @@ html.dark .ac-tab[aria-selected="true"], html.dark .ac-tab[aria-selected="true"]
 .bk-who { display: flex; gap: .65rem; align-items: flex-start; padding: .75rem .9rem; border-radius: 12px;
     background: rgb(var(--ztims-on-surface) / .05); color: rgb(var(--ztims-on-surface)); font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere; }
 .bk-who .material-symbols-outlined { color: rgb(var(--ztims-on-surface-variant)); font-size: 1.5rem; }
+
+/* ==========================================================================
+   SAVED PLACES AND REVIEWS (visitor pages, November 2026)
+   The heart (saved-places.js) on Home's cards and a destination's photo, the
+   window asking a signed-out visitor to sign in, a card's rating line, and
+   the destination page's Reviews panel (#reviews). Rounded like the other
+   visitor pages. Counts and ratings only.
+   ========================================================================== */
+.sv-heart {
+    position: absolute; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
+    width: 2.75rem; height: 2.75rem; border-radius: 9999px; border: 0; cursor: pointer;
+    background: rgb(255 253 250 / .95); color: #1C1917; box-shadow: 0 6px 18px -8px rgb(28 25 23 / .55);
+    transition: transform var(--dur-fast, 160ms) var(--ease-spring, ease);
+}
+.sv-heart:hover { transform: scale(1.08); }
+.sv-heart:active { transform: scale(.94); }
+.sv-heart:focus-visible { outline: 3px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.sv-heart .material-symbols-outlined { font-size: 1.35rem; }
+.sv-heart[aria-pressed="true"] { color: #B42318; }
+.sv-heart[aria-pressed="true"] .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+.sv-heart:disabled { opacity: .6; cursor: progress; }
+.sv-heart--card { right: .85rem; bottom: .85rem; }
+.sv-heart--hero { top: 1rem; right: 1rem; width: 3rem; height: 3rem; }
+.sd-hero { position: relative; }
+
+.sv-ask {
+    position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center;
+    padding: 1rem; background: rgb(18 17 16 / .5);
+}
+.sv-ask[hidden] { display: none; }
+.sv-ask__card {
+    width: min(100%, 22rem); padding: 1.75rem 1.5rem 1.5rem; border-radius: 1.25rem; text-align: center;
+    background: rgb(var(--ztims-surface-high)); border: 1px solid rgb(var(--ztims-outline));
+    box-shadow: var(--ztims-shadow-overlay); animation: ztimsDialogIn var(--dur-standard, 240ms) var(--ease-decelerate, ease) both;
+}
+.sv-ask__icon { font-size: 2rem; color: #B42318; font-variation-settings: 'FILL' 1; }
+.sv-ask__title { margin: .4rem 0 1.25rem; font-size: 1.2rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.sv-ask__actions { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+
+.hm-card__rating { display: flex; align-items: center; gap: .3rem; margin-top: .35rem; font-size: .9rem; color: rgb(var(--ztims-on-surface-variant)); }
+.hm-card__rating b { color: rgb(var(--ztims-on-surface)); }
+.hm-card__rating .material-symbols-outlined { font-size: 1.05rem; color: rgb(var(--ztims-gold-text)); font-variation-settings: 'FILL' 1; }
+
+/* The Reviews panel. */
+.rv-top { display: grid; gap: 1.5rem; }
+@media (min-width: 900px) { .rv-top { grid-template-columns: minmax(14rem, 18rem) 1fr; align-items: start; } }
+.rv-summary { display: grid; gap: .25rem; }
+.rv-average { font-size: 3rem; font-weight: 800; line-height: 1; letter-spacing: -.03em; color: rgb(var(--ztims-on-surface)); }
+.rv-stars { color: rgb(var(--ztims-gold-text)); letter-spacing: .08em; }
+.rv-stars--lg { font-size: 1.25rem; }
+.rv-total { color: rgb(var(--ztims-on-surface-variant)); font-weight: 600; }
+.rv-bars { display: grid; gap: .35rem; margin-top: .75rem; font-size: .85rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rv-bars li { display: grid; grid-template-columns: 2.4rem 1fr 2rem; align-items: center; gap: .5rem; }
+.rv-bars li > span:last-child { text-align: right; }
+.rv-bar { height: .5rem; border-radius: 9999px; background: rgb(var(--ztims-on-surface) / .08); overflow: hidden; }
+.rv-bar > span { display: block; height: 100%; border-radius: inherit; background: rgb(var(--brand-tangerine, 242 133 0)); }
+.rv-mine { padding: 1.25rem; border-radius: 1rem; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface)); }
+.rv-h3 { margin-bottom: .75rem; font-size: 1.1rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.rv-label { display: block; margin-bottom: .4rem; font-size: .875rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.rv-optional { font-weight: 500; color: rgb(var(--ztims-on-surface-variant)); }
+.rv-form { display: grid; gap: .35rem; }
+.rv-pick { border: 0; padding: 0; margin: 0 0 .5rem; }
+.rv-pick__stars { display: inline-flex; flex-direction: row-reverse; gap: .15rem; }
+.rv-pick__stars input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rv-pick__stars label {
+    display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; cursor: pointer;
+    font-size: 2rem; line-height: 1; color: rgb(var(--ztims-on-surface) / .25); border-radius: .75rem;
+}
+.rv-pick__stars label:hover, .rv-pick__stars label:hover ~ label,
+.rv-pick__stars input:checked ~ label { color: rgb(var(--ztims-gold-text)); }
+.rv-pick__stars input:focus-visible + label { outline: 3px solid rgb(var(--ztims-secondary)); outline-offset: 1px; }
+.rv-body { width: 100%; resize: vertical; min-height: 6rem; }
+.rv-count { justify-self: end; font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rv-error { color: rgb(var(--ztims-error)); font-weight: 600; font-size: .9rem; }
+.rv-error[hidden] { display: none; }
+.rv-form__actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: flex-end; margin-top: .5rem; }
+.rv-own .rv-form__actions { justify-content: flex-start; }
+.rv-delete { background: #B42318; }
+.rv-delete:hover { background: #912018; }
+.rv-signin { display: inline-flex; align-items: center; gap: .4rem; font-weight: 700; color: rgb(var(--ztims-primary-text)); }
+.rv-list { display: grid; margin-top: 1.5rem; }
+.rv-item { padding: 1.1rem 0; border-top: 1px solid rgb(var(--ztims-outline)); }
+.rv-item__head { display: flex; align-items: center; gap: .75rem; }
+.rv-avatar {
+    flex: none; width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center;
+    background: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-surface)); font-weight: 800; text-transform: uppercase;
+}
+.rv-item__who { font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.rv-item__meta { font-size: .85rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rv-item__body { margin-top: .6rem; white-space: pre-line; overflow-wrap: anywhere; color: rgb(var(--ztims-on-surface)); }
+.rv-more { display: flex; justify-content: center; margin-top: 1rem; }
+.rv-more:has(> [hidden]) { display: none; }
+@media (prefers-reduced-motion: reduce) { .sv-heart, .sv-ask__card { transition: none; animation: none; } }

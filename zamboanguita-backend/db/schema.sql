@@ -1204,6 +1204,18 @@ create table if not exists public.reviews (
 );
 create index if not exists reviews_spot_idx on public.reviews (spot_id, status);
 
+-- Every hide and show of a review by the Tourism Officer, with the reason
+-- (required both ways). Goes with the review if its author deletes it.
+create table if not exists public.review_changes (
+    id                  text primary key default public.ztims_new_id(),
+    review_id           text not null references public.reviews (id) on delete cascade,
+    action              text not null constraint review_changes_action_known check (action in ('hidden', 'shown')),
+    reason              text not null constraint review_changes_reason_length check (char_length(reason) between 3 and 300),
+    by_email            text not null default '',
+    at                  timestamptz not null default now()
+);
+create index if not exists review_changes_review_idx on public.review_changes (review_id, at);
+
 -- Whose ticket or booking it is, once bought signed in or linked by email.
 alter table public.tickets add column if not exists visitor_id text references public.visitors (id);
 alter table public.bookings add column if not exists visitor_id text references public.visitors (id);
@@ -1238,7 +1250,7 @@ begin
         'tickets', 'online_checkouts', 'spot_closed_dates', 'spot_photos', 'spot_more_categories',
         'office_info', 'emergency_numbers', 'register_entries', 'register_entry_guests', 'announcements',
         'enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings', 'booking_rooms',
-        'booking_changes', 'booking_payments', 'visitors', 'visitor_tokens', 'saved_places', 'reviews'
+        'booking_changes', 'booking_payments', 'visitors', 'visitor_tokens', 'saved_places', 'reviews', 'review_changes'
     ] loop
         execute format('alter table public.%I enable row level security', t);
     end loop;

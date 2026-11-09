@@ -533,6 +533,7 @@ body { overflow-x: hidden; }
 </div>
 <script type="module" src="./src/shared/site-footer.js"></script>
 <script type="module" src="./src/shared/visitor-session.js"></script>
+<script type="module" src="./src/shared/saved-places.js"></script>
 <script type="module" src="./src/shared/notices.js"></script>
 <script>
 /* "What is happening in Zamboanguita": the newest notice (not an event) and
@@ -702,6 +703,20 @@ body { overflow-x: hidden; }
         .then(ids => { takingBookings = new Set(Array.isArray(ids) ? ids : []); if (takingBookings.size && allSpots.length) applyFilters(); })
         .catch(() => {});
 
+    // Each place's average rating and number of reviews (visible ones only),
+    // shown on its card when it has any. Counts and ratings only.
+    let ratings = {};
+    fetch(`${API_BASE}/reviews/summary`).then(r => r.ok ? r.json() : {})
+        .then(data => { ratings = data && typeof data === 'object' ? data : {}; if (Object.keys(ratings).length && allSpots.length) applyFilters(); })
+        .catch(() => {});
+    // saved-places.js (a module) can arrive after the first cards: draw them again with hearts.
+    document.addEventListener('ztims-saved-ready', () => { if (allSpots.length) applyFilters(); });
+    function ratingLine(spot) {
+        const r = ratings[spot._id];
+        if (!r || !r.count) return '';
+        return `<p class="hm-card__rating" aria-label="Rated ${r.average} out of 5 from ${r.count} ${r.count === 1 ? 'review' : 'reviews'}"><span class="material-symbols-outlined" aria-hidden="true">star</span><b>${r.average.toFixed(1)}</b><span>(${r.count})</span></p>`;
+    }
+
     // The one thing a visitor can do next at this place, the same rules the
     // destination page uses: tickets for an office-run attraction with a fee,
     // Book a room for a place to stay taking bookings, else the place's own
@@ -747,9 +762,11 @@ body { overflow-x: hidden; }
                      ${index > 2 ? 'loading="lazy"' : ''} decoding="async"/>
                 <span class="hm-pill hm-pill--cat">${escapeHtml(label)}</span>
                 ${free ? '<span class="hm-pill hm-pill--free">Free entrance</span>' : ''}
+                ${window.ztimsSaved ? window.ztimsSaved.heart(spot._id, 'sv-heart--card') : ''}
             </div>
             <div class="hm-card__body">
                 <h3 class="hm-card__title"><a href="${page}" class="hm-card__link">${escapeHtml(spot.title)}</a></h3>
+                ${ratingLine(spot)}
                 <p class="hm-card__where"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>${escapeHtml(where)}</p>
                 <p class="hm-card__hours"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${escapeHtml(hoursLine(spot))}</p>
                 <div class="hm-card__foot">
@@ -810,6 +827,7 @@ body { overflow-x: hidden; }
 
         const shown = narrowed || showEverything ? matches : matches.slice(0, FIRST_CARDS);
         shown.forEach((spot, index) => spotsContainer.appendChild(renderSpotCard(spot, index)));
+        if (window.ztimsSaved) window.ztimsSaved.refresh();
         document.getElementById('viewAllWrap').hidden = shown.length >= matches.length;
     }
 

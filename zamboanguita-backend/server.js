@@ -2518,6 +2518,10 @@ app.use('/api', require('./announcements')({ requireAdmin, checkPhotoSources }))
    tokens a visitor route (another audience). */
 app.use('/api', require('./visitors')({ sharedRateLimit, emailTakenBy, siteOrigin: paymentsModule.siteOrigin }));
 
+/* Reviews (reviews.js): visitors who have been to a place rate it; the
+   officer may hide one, with a reason. Counts and ratings only. */
+app.use('/api', require('./reviews')({ requireAdmin, sharedRateLimit }));
+
 /* Room booking at private places to stay (bookings.js): visitors ask, the
    resort's manager confirms by hand, the officer sees counts and can pause. */
 const bookingsModule = require('./bookings');

@@ -327,7 +327,8 @@ purpose — see the header comment in `spot-form.js`:
   any officer tab (loaded as a module on every `src/admin/*.html` page). See
   "Sign-in safety" below.
 - `visitor-session.js` and `visitor-auth.js` — visitor accounts' header control
-  and sign-in pages (see "Visitor accounts").
+  and sign-in pages (see "Visitor accounts"); `saved-places.js` — the heart
+  (see "Saved places and reviews").
 - `photo-upload.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 
@@ -657,12 +658,13 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 31 tables in all, with `announcements`,
+  `gateway_ref`, refund fields and `is_demo`. 32 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
   `emergency_numbers`, the Guest Register's `register_entries` /
   `register_entry_guests`, room booking's seven (see "Room booking") and
   visitor accounts' four (`visitors`, `visitor_tokens`, `saved_places`,
-  `reviews`; see "Visitor accounts").
+  `reviews`; see "Visitor accounts") and `review_changes` (see "Saved places
+  and reviews").
 - **The office:** `admin_collections.html` (money per month and day, OR numbers,
   refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
   the ticket code — tickets have no QR, by the user's decision: most places
@@ -1241,8 +1243,8 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   sha-256 hash only, purpose `verify` | `reset`, single-use, `expires_at`);
   `saved_places` (visitor, spot; the pair is the key); `reviews` (rating 1–5,
   body ≤ 600, `visible` | `hidden` with reason, by and when, the ticket or
-  booking that proves the visit, one per visitor per place — routes come with
-  the reviews pages). `tickets.visitor_id` and `bookings.visitor_id` (nullable).
+  booking that proves the visit, one per visitor per place; see "Saved places
+  and reviews"). `tickets.visitor_id` and `bookings.visitor_id` (nullable).
 - **Tokens.** Signed like staff tokens but with audience `ztims-visitor`
   (staff: `ztims-web`), role `tourist`, `sv` (the account's
   `session_version`), 30 days. A staff check (`requireAuth`, `optionalAuth`)
@@ -1323,6 +1325,64 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   48 hours), choose a new password (`src/user/new_password.html?token=`, 30
   minutes), and a notice when the password changes. Links carry a token, never
   the email.
+
+### Saved places and reviews (November 2026)
+
+`reviews.js`, mounted at `/api`, and `src/shared/saved-places.js`. The user's
+decisions (9 November 2026): only a visitor who has been there reviews; one
+review per visitor per place, edited or deleted by its author; the Tourism
+Officer hides or unhides with a reason; managers cannot reply; counts and
+ratings only, never money.
+- **Saved places.** A heart (`.sv-heart`, any `[data-save-spot="<id>"]`
+  button) on Home's cards (`.sv-heart--card`, on the photo) and on a
+  destination's photo (`.sv-heart--hero`). `saved-places.js` marks the saved
+  ones (`aria-pressed`) from `GET /api/visitors/me/saved` and toggles with
+  `PUT|DELETE /api/visitors/me/saved/:spotId`; signed out, a click opens a
+  small window (`#svAsk`, `.sv-ask`: "Sign in to save places", Not now / Sign
+  in, which comes back to the page). Home redraws its cards when the module
+  arrives (`ztims-saved-ready`). The list is My account → Saved places.
+- **Who may review** (`proofOfVisit`, checked by the server on every post): a
+  ticket of the account's for that place with status `used`, else a booking of
+  the account's there with status `completed`; the review keeps which one
+  (`ticket_id` / `booking_id`). No visit: 403 `NO_VISIT`. A second review of
+  the same place: 409 `ALREADY_REVIEWED` (and `reviews_one_per_place`). Rating
+  a whole number 1–5 (400 `BAD_RATING`), text ≤ 600.
+- **Routes.** Public: `GET /api/reviews/summary` (each published place with
+  visible reviews: `{ average, count }`, cached 60 s; Home's cards and the
+  officer's Destinations cards) and `GET /api/spots/:spotId/reviews?page=`
+  (visible only: average, count, `byStars`, 10 a page newest first; the author
+  as "Maria S." or "Former visitor", never an email; cached 30 s). Visitor
+  (`requireVisitor`, 30 writes an hour per account): `GET
+  /api/spots/:spotId/reviews/mine` (`review`, `canReview`), `POST
+  /api/spots/:spotId/reviews`, `PUT|DELETE /api/reviews/:id` (own only, else
+  404; editing a hidden review keeps it hidden). Officer (`requireAdmin`): `GET
+  /api/reviews/admin` (every review with place, author's name, reasons and
+  history; no email, no money) and `PATCH /api/reviews/:id/visibility`
+  {hidden, reason} — a reason of 3–300 characters both ways, each a
+  `review_changes` row (action `hidden` | `shown`, reason, by, at; goes with
+  the review if its author deletes it). Hidden reviews leave the public list,
+  its average and the card ratings; their author still sees them, marked
+  "Hidden by the Tourism Office".
+- **The destination page** (`spot.html`, `#reviews`, an `.sd-panel` before
+  Nearby places; `.rv-*` at the end of `theme.css`): the average, its stars,
+  the count and a bar per number of stars with its count; then, signed out,
+  "Sign in to write a review" (back to `#reviews`); signed in with a visit,
+  Write a review (five stars to pick, optional text with a counter, Post
+  review); with a review, Your review with Edit and Delete (pressed twice). The
+  list: initial, name, stars, date, Visited / Stayed here, text; Show more
+  reviews. After the visitor's own change the list is fetched past the
+  browser's cache. My account → My reviews links each to `#reviews` ("Edit or
+  delete").
+- **Cards.** Home's card shows "★ 4.6 (12)" under the name
+  (`.hm-card__rating`) and the officer's Destinations card "★ 4.6 from 12
+  reviews" (`.pg-card__rating`), only when the place has visible reviews.
+- **The officer's Reviews** (`admin/admin_reviews.html`, "Reviews" in the
+  officer menu after Feedback, on every officer page): counts that filter
+  (Shown, 1 or 2 stars in red, Hidden, All), search, a row per review
+  (`.rvo-row` in `portal-flat.css`: stars, the place linked to its page,
+  Shown / Hidden pill, the whole text, name · Visited or Stayed · when, the
+  reason — "Hidden: …" or "Shown again: …" with who and when) and **Hide** (red)
+  or **Unhide**, each asking for the reason in a dialog. No delete, no reply.
 
 ### Listings and the visitor's day out
 
@@ -1530,8 +1590,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   required to buy tickets and book rooms — there is no guest buying. Their
   tokens never open a staff route and staff tokens never a visitor route. The
   account stays until the visitor deletes it. Reviews only after a used ticket
-  or completed stay; the officer may hide one with a reason; no manager
-  replies. Tickets and bookings open only in the account that holds them:
+  or completed stay, one per place; the officer may hide or unhide one, always
+  with a reason; no manager replies; ratings and counts only. Tickets and bookings open only in the account that holds them:
   no public search by code and email (9 November 2026). See "Visitor accounts".
 - Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
