@@ -4,6 +4,27 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## No Guest Register for the Tourism Officer (10 November 2026)
+
+**The change.** The Tourism Officer no longer keeps a Guest Register. Each
+office attraction that counts visitors has Support Staff, who keep its Guest
+Register and send its monthly report; a private enterprise's manager does the
+same for it. The officer reads the registers' totals through the reports,
+can still enter or correct a monthly report as a backup, and Finalizes or
+Reopens the month. An office place counts visitors only through its Support
+Staff: adding someone switches "Count visitors here" on; a new office listing
+starts off; office places to stay are not counted; places that need no
+counting (a marker, a statue) stay off. When someone leaves, the place waits,
+still counting, for the replacement.
+
+**Change in the manuscript:** remove the Tourism Officer's "Keep the Guest
+Register" use case and the officer's Guest Register screen; the Tourism
+Officer's reporting use case becomes "Review reports; enter or correct one as
+a backup; Finalize / Reopen". In the access matrix, Guest Register: Tourism
+Officer "No (reads totals via reports)". In the process description, the data
+flow for an office attraction is Support Staff → Guest Register → monthly
+report → Tourism Officer (review, Finalize) → Form A4.
+
 ## Support Staff: the complete module (10 November 2026)
 
 Everything below is built and on `main`, and was checked end to end (the
@@ -40,8 +61,8 @@ Staff account per attraction; accounts are deactivated, never deleted.
 | Places covered | All | Their own enterprises | One office-run attraction |
 | Listing details | All | Own | Own, except name, category and prices |
 | Category, entrance and other fees | Yes | Own | No |
-| Guest Register | Office places (views private) | Own | Own (no removing entries) |
-| Monthly report (enter) | Office places | Own | Own |
+| Guest Register | No (10 Nov 2026: reads totals through reports) | Own | Own (no removing entries) |
+| Monthly report (enter) | Office places, as a backup | Own | Own |
 | Finalize, Reopen, void | Yes | No | No |
 | Closed dates, take down, Visitor setup | Yes | – | No |
 | Tickets (check, Mark used), Collections, refunds | Yes | No | No |

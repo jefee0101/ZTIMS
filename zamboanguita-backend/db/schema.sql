@@ -1257,6 +1257,7 @@ create unique index if not exists support_staff_email_unique on public.support_s
 create unique index if not exists support_staff_one_active_per_spot on public.support_staff (spot_id) where status = 'active';
 
 
+
 -- ---------------------------------------------------------------------------
 -- updated_at triggers, and Row Level Security on, with no policies, for all.
 -- ---------------------------------------------------------------------------
@@ -1366,3 +1367,23 @@ alter table public.establishment_managers alter column establishment_name drop n
 -- enterprise always counts. Every existing place keeps counting.
 -- ---------------------------------------------------------------------------
 alter table public.spots add column if not exists counts_visitors boolean not null default true;
+
+
+-- ---------------------------------------------------------------------------
+-- Support Staff and counting (after counts_visitors above).
+-- ---------------------------------------------------------------------------
+-- 10 November 2026 (the user's decision): an office place counts visitors
+-- only through its Support Staff; adding someone switches counting on. Once,
+-- before any Support Staff account exists, office places (attractions and
+-- places to stay) with nobody assigned and no records are switched off.
+-- Places with a report or register entry stay on. Nothing is deleted, and
+-- later runs (Support Staff exist by then) change nothing.
+do $$
+begin
+    if not exists (select 1 from public.support_staff) then
+        update public.spots s set counts_visitors = false
+         where s.managed_by is null and s.counts_visitors
+           and not exists (select 1 from public.monthly_reports r where r.spot_id = s.id and r.status <> 'void')
+           and not exists (select 1 from public.register_entries e where e.spot_id = s.id);
+    end if;
+end $$;

@@ -470,10 +470,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
                 <span class="sidebar-label">Statistics</span>
             </a>
-            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_register.html">
-                <span class="material-symbols-outlined text-accent">menu_book</span>
-                <span class="sidebar-label">Guest Register</span>
-            </a>
             <a title="Destinations" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all" href="admin_dashboard_manage.html">
                 <span class="material-symbols-outlined text-accent">location_on</span>
                 <span class="sidebar-label">Destinations</span>
@@ -1111,11 +1107,12 @@ function renderStaff() {
     }).join('');
 }
 
-// Only office-run, published attractions that count visitors and have nobody active.
+// Office-run, published attractions with nobody active. Adding someone
+// switches the attraction's "Count visitors here" on (support-staff.js).
 function fillStaffSpots() {
     const taken = new Set(staffList.filter(st => st.status === 'active' && st.spot).map(st => st.spot._id));
     const open = staffSpots.filter(sp => !sp.managedBy && sp.type === 'spot' && sp.status === 'published'
-        && sp.countsVisitors !== false && !taken.has(sp._id));
+        && !taken.has(sp._id));
     const select = document.getElementById('newStaffSpot');
     select.innerHTML = open.length
         ? '<option value="">Choose the attraction</option>' + open.map(sp => `<option value="${escapeHtml(sp._id)}">${escapeHtml(sp.title)}${sp.barangay ? ` · ${escapeHtml(sp.barangay)}` : ''}</option>`).join('')

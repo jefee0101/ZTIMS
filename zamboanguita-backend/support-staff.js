@@ -43,8 +43,9 @@ const SELECT = `
       from support_staff ss join spots s on s.id = ss.spot_id`;
 
 /* The attraction a Support Staff member may be given: the office's (no
-   manager), a place visitors come to (not a place to stay), published, and
-   counting visitors. */
+   manager), a place visitors come to (not a place to stay) and published.
+   Giving it someone switches its "Count visitors here" on (10 November
+   2026): an office attraction counts visitors only through its Support Staff. */
 async function assignableSpot(spotId, client) {
     if (!isId(spotId)) throw problem(400, 'Choose the attraction.');
     const { rows } = await query(
@@ -54,7 +55,6 @@ async function assignableSpot(spotId, client) {
     if (spot.managed_by) throw problem(400, 'That place is run by a private enterprise. Its manager keeps its records.');
     if (spot.type !== 'spot') throw problem(400, 'Support Staff look after an attraction, not a place to stay.');
     if (spot.status !== 'published') throw problem(400, 'That attraction is not published.');
-    if (!spot.counts_visitors) throw problem(400, 'Switch on "Count visitors here" for that attraction first.');
     return spot;
 }
 
@@ -151,6 +151,7 @@ module.exports = function supportStaffRouter(deps) {
                     `insert into support_staff (email, password_hash, full_name, position, contact_number, spot_id, must_change_password, created_by_email)
                      values ($1, $2, $3, $4, $5, $6, true, $7) returning *`,
                     [email, hash, fullName, position, contactNumber, spot.id, officerEmail(req)], client);
+                await query('update spots set counts_visitors = true where id = $1', [spot.id], client);
                 return { ...rows[0], spot_title: spot.title };
             });
             console.log(`🛡️ Support Staff account added for ${row.spot_title}: ${email}`);
@@ -196,6 +197,7 @@ module.exports = function supportStaffRouter(deps) {
                     const other = await activeOn(spot.id, row.id, client);
                     if (other) throw problem(409, `${spot.title} already has active Support Staff: ${other.full_name} (${other.email}).`);
                     await query(`update support_staff set status = 'active' where id = $1`, [row.id], client);
+                    await query('update spots set counts_visitors = true where id = $1', [spot.id], client);
                     return 'The account has been reactivated.';
                 }
                 await query(`update support_staff set status = 'inactive' where id = $1`, [row.id], client);

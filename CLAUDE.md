@@ -308,14 +308,15 @@ purpose — see the header comment in `spot-form.js`:
   manager checks and saves. A new accommodation report starts from the rooms
   in the place's last report (`lastRooms` on the report read; "From your last
   report").
-  The officer has the same page (`admin/admin_register.html`, in the menu after
-  Statistics) with a Place picker, the office's own places first: it keeps the
-  register for those, and sees a private place's register view only (Tourism
-  Office / Private banner, Add and Edit hidden). Its "Open the monthly report"
-  opens Statistics → Enter a report at that place and month
-  (`admin_statistics.html?place=&month=#enter`). A manager sees the current
-  enterprise's name (from the header switcher), not a picker, on the Guest
-  Register and Monthly Report.
+  **The officer has no Guest Register** (10 November 2026, the user's
+  decision): an office attraction's register is kept by its Support Staff (see
+  "Support Staff"), a private enterprise's by its manager. The officer's page
+  (`admin/admin_register.html`) and its menu item are gone, view included; the
+  server refuses the officer's register writes (`mayKeepRegister` in
+  `statistics.js`), while the officer may still read a register (the report
+  form's "Fill from the Guest Register") and still enter or correct a monthly
+  report as a backup. A manager sees the current enterprise's name (from the
+  header switcher), not a picker, on the Guest Register and Monthly Report.
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
@@ -561,11 +562,13 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   room-nights available/occupied/not occupied, guest nights), not as rates.
 - **Nothing from tickets.** Enterprises report their own already-totalled
   month; ZTIMS never derives these figures from tickets sold.
-- **Who reports.** A manager, for the listing they manage. The officer, for
-  the places the office keeps (listings with no manager) only: a privately
-  managed enterprise's reports are its manager's to enter, and the officer
-  views them (`mayViewFor` / `mayEnterFor` in `statistics.js`; the officer's
-  "Enter a report" tab shows them read-only). `kind` comes from the listing: an accommodation reports arrivals,
+- **Who reports.** A manager, for the listing they manage. Support Staff, for
+  the office attraction they look after; the officer may also enter or correct
+  an office place's report as a backup (10 November 2026), and keeps Finalize,
+  Reopen and Void. A privately managed enterprise's reports are its manager's
+  to enter, and the officer views them (`mayViewFor` / `mayEnterFor` in
+  `statistics.js`; the officer's "Enter a report" tab shows them read-only).
+  The Guest Register is never the officer's (`mayKeepRegister`). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports its arrivals only (no rooms or
   nights).
 - **Arrivals are arrivals at places** (the user's decision, October 2026):
@@ -625,6 +628,15 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   listing form shows the switch (`.sf-switch`, "Count visitors here") to the
   officer only and hides it for a privately managed listing; Destinations'
   card shows a "Not counted" pill.
+  **An office place counts only through its Support Staff** (10 November 2026,
+  the user's decision): a new office-run listing starts Off (`POST /api/spots`);
+  switching it On is refused (409) unless an active Support Staff account is on
+  it; adding (or reactivating) Support Staff switches it On
+  (`support-staff.js`); office places to stay never count (they cannot have
+  Support Staff). Deactivating someone leaves the place On, waiting for the
+  replacement. `schema.sql`'s last block switched off, once (only while no
+  Support Staff account existed), every office place with nobody assigned and
+  no records.
 - **Rules the API enforces**, whatever the page does: one live report per
   place per month; male + female = total; room-nights occupied ≤ rooms × days
   in the month; guest nights ≥ arrivals; no month that hasn't started. Due on
@@ -1412,8 +1424,10 @@ ratings only, never money.
 `support-staff.js`, mounted at `/api`, and the shared sign-in in `server.js`.
 The user's decisions (9 November 2026; notes repo `Design/Support Staff/`): a
 person of the Municipal Tourism Office, under the Tourism Officer, who looks
-after **one office-run attraction** (no manager, `type` `spot`, published,
-Count visitors here on). They keep its Guest Register, its monthly report (a
+after **one office-run attraction** (no manager, `type` `spot`, published;
+adding them switches its Count visitors here on — an office place counts
+visitors only through its Support Staff, and the officer has no Guest
+Register, 10 November 2026). They keep its Guest Register, its monthly report (a
 saved report counts at once, like a manager's) and its listing details except
 category and prices. They never check or mark tickets, see Collections or
 refunds, set closed dates, take a place down, Finalize or Reopen, touch other
@@ -1443,11 +1457,12 @@ officer deactivates the old account and adds a new one.
   `requirePasswordConfirmation`): `GET /api/support-staff`, `POST
   /api/support-staff` {fullName, email, position?, contactNumber?, spotId,
   password?} (a blank password is generated and returned once; refused for a
-  private place, a place to stay, an unpublished one or one with Count visitors
-  off (400), an email another staff account uses or a second active account on
-  the attraction (409)), `POST /api/support-staff/:id/password`, `PATCH
-  /api/support-staff/:id/status` {active} (deactivating ends every session;
-  reactivating checks the attraction again). The person is emailed when added
+  private place, a place to stay or an unpublished one (400), an email another
+  staff account uses or a second active account on the attraction (409); the
+  attraction's counting is switched on), `POST /api/support-staff/:id/password`,
+  `PATCH /api/support-staff/:id/status` {active} (deactivating ends every
+  session and leaves the attraction counting, waiting for a replacement;
+  reactivating checks the attraction again and switches counting on). The person is emailed when added
   or issued a password (`alertAccountOwner`). No delete route.
 - **Entry** (`statistics.js`): `requireReporter` on residences, places, report
   read and save, register read, add and change; `mayViewFor` / `mayEnterFor`
@@ -1455,8 +1470,10 @@ officer deactivates the old account and adds a new one.
   (`ownsAsSupportStaff`); `/statistics/places` lists that one place. Register
   entries (`created_by_email`), reports (`submitted_by_email`,
   `submitted_by_role`) and `report_changes` name the person. Removing a
-  register entry stays `requireStaff` (Support Staff never delete); void,
-  Finalize and Reopen stay `requireAdmin`.
+  register entry stays `requireStaff` (Support Staff never delete; they fix a
+  mistake with Edit); void, Finalize and Reopen stay `requireAdmin`. The officer
+  never writes a Guest Register (`mayKeepRegister`), but may enter or correct
+  the monthly report as a backup.
 - **Listing** (`PUT /api/spots/:id`, `authorizeSpotWrite(auth, spot, account)`
   scope `support_staff`): own attraction only. `SUPPORT_STAFF_WRITABLE_SPOT_FIELDS`
   — description, photos, opening days and hours, phone, contact email,
@@ -1493,7 +1510,8 @@ officer deactivates the old account and adds a new one.
   shared part changes.
 - **The officer's side:** Settings → **Support Staff** (`admin_profile.html#support`):
   name, attraction, position, last sign-in, status; Add (the Attraction list
-  holds only published, office-run, counting attractions with nobody active),
+  holds every published office attraction with nobody active, counting or not;
+  adding switches its counting on),
   New password, Deactivate / Reactivate, each asking "Your password"; a new or
   issued password is shown once in a toast. Destinations' card says "Support
   Staff: <name>" on an attraction with someone active (`.pg-card__staff`).
@@ -1730,6 +1748,12 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no tickets, money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
+- No Guest Register for the officer (10 November 2026, the user's decision):
+  Support Staff keep office attractions' registers and send their monthly
+  reports; the officer only reads, may enter or correct a report as a backup,
+  and Finalizes / Reopens. An office place counts visitors only while it has
+  (or waits for) Support Staff; office places to stay never count; places that
+  need no counting have Count visitors here off.
 - Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
   live key is refused, every online record is `is_demo`, and paying onsite at the

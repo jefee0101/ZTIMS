@@ -1565,7 +1565,13 @@ function authorizeSpotWrite(auth, spot, account) {
 async function visitorCountingProblem(prepared, { managedBy, spotId, counted }) {
     if (!('countsVisitors' in prepared)) return '';
     if (typeof prepared.countsVisitors !== 'boolean') return 'Count visitors here must be on or off.';
-    if (prepared.countsVisitors) return '';
+    if (prepared.countsVisitors) {
+        // An office place counts visitors only through its Support Staff (10
+        // November 2026): adding one switches counting on (support-staff.js).
+        if (managedBy || counted) return '';
+        if (spotId && await activeSupportStaffOn(spotId)) return '';
+        return 'Visitors are counted at an office place through its Support Staff. Add Support Staff for this attraction in Settings → Support Staff; that switches counting on.';
+    }
     if (managedBy) return 'A private enterprise always counts its visitors.';
     if (spotId && counted) {
         const { rows } = await db.query(
@@ -1831,6 +1837,9 @@ app.post('/api/spots', requireStaff, async (req, res) => {
         checkPhotoSources([prepared.imageUrl, ...(prepared.images || [])]);
         const contactProblem = enterpriseContactProblem(prepared);
         if (contactProblem) return res.status(400).json({ success: false, message: contactProblem });
+        // A new office-run listing has nobody to count its visitors yet; adding
+        // Support Staff switches counting on. A private enterprise always counts.
+        if (!managedBy) prepared.countsVisitors = false;
         const countingProblem = await visitorCountingProblem(prepared, { managedBy });
         if (countingProblem) return res.status(400).json({ success: false, message: countingProblem });
         // An enterprise's name defaults to its listing's title.
@@ -1945,7 +1954,7 @@ app.put('/api/spots/:id', requireListingEditor, async (req, res) => {
         const countingProblem = await visitorCountingProblem(prepared,
             { managedBy: spot.managedBy, spotId: spot._id, counted: spot.countsVisitors !== false });
         if (countingProblem) {
-            return res.status(/stay counted/.test(countingProblem) ? 409 : 400).json({ success: false, message: countingProblem });
+            return res.status(/stay counted|Support Staff/.test(countingProblem) ? 409 : 400).json({ success: false, message: countingProblem });
         }
         Object.assign(spot, normaliseSpotCategories(deriveSpotLocation(prepared, spot.location)));
         const savedSpot = await Spot.save(spot);

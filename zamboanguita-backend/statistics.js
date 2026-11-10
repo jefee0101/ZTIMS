@@ -100,6 +100,16 @@ function mayEnterFor(req, spot) {
 
 /* Who is saving: their email goes into submitted_by_email, created_by_email
    and report_changes, so each record names its person. */
+/* Who keeps a place's Guest Register (10 November 2026, the user's decision):
+   the manager for their enterprise, Support Staff for their attraction —
+   never the officer, who reads it and may still enter the monthly report as
+   a backup (mayEnterFor). */
+function mayKeepRegister(req, spot) {
+    if (isOfficer(req)) return false;
+    return mayEnterFor(req, spot);
+}
+const OFFICER_NO_REGISTER = 'The Guest Register is kept by the Support Staff or the enterprise manager of this place.';
+
 async function whoIsSigningIn(req) {
     if (req.account && req.account.email) return { role: req.auth.role, id: String(req.auth.sub), email: req.account.email };
     const table = isOfficer(req) ? 'tourism_officers' : isSupportStaff(req) ? 'support_staff' : 'establishment_managers';
@@ -515,7 +525,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             return res.json({
                 place: { _id: spot.id, title: spot.title, kind: kindOf(spot) },
                 year: period.year, month: period.month,
-                mayEdit: mayEnterFor(req, spot),
+                mayEdit: mayKeepRegister(req, spot),
                 entries, totals: registerTotals(entries, period.year, period.month)
             });
         } catch (error) {
@@ -568,7 +578,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         try {
             const spot = await spotById(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
-            if (!mayEnterFor(req, spot)) return res.status(403).json({ success: false, message: 'Only whoever runs this place keeps its register.' });
+            if (!mayKeepRegister(req, spot)) return res.status(403).json({ success: false, message: isOfficer(req) ? OFFICER_NO_REGISTER : 'Only whoever runs this place keeps its register.' });
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             const entry = await readEntry(req.body, spot);
             if (entry.error) return badRequest(res, entry.error);
@@ -603,7 +613,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         const { rows } = await query('select id, spot_id from register_entries where id = $1', [id]);
         if (!rows.length) { res.status(404).json({ success: false, message: 'That entry could not be found.' }); return null; }
         const spot = await spotById(rows[0].spot_id);
-        if (!spot || !mayEnterFor(req, spot)) { res.status(403).json({ success: false, message: 'Only whoever runs this place keeps its register.' }); return null; }
+        if (!spot || !mayKeepRegister(req, spot)) { res.status(403).json({ success: false, message: isOfficer(req) ? OFFICER_NO_REGISTER : 'Only whoever runs this place keeps its register.' }); return null; }
         return { id, spot };
     }
 
