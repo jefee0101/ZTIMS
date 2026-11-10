@@ -4,6 +4,27 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## The theoretical framework figure follows the sample layout (10 November 2026)
+
+**The change.** Nothing in the system. Figure 1 was redrawn in the layout of the
+sample the user gave: the three framework boxes (Buhalis 2000; Sheehan et al.
+2016; d'Angella & Go 2009 with Sautter & Leisen 1999) point into the Agile
+cycle (Planning, Design, Development, Testing, Review, Deployment), which leads
+to the Developed System (ZTIMS, with its users: Visitor, Tourism Officer,
+Enterprise Manager) and then to the two evaluations (ISO/IEC 25010:2023 by IT
+experts; TAM, Davis 1989, by end users). Editable file
+`docs/diagrams/ztims-theoretical-framework.drawio`; the PNG beside it is a
+preview made from the same geometry (the draw.io app was not available), so
+export the final PNG from draw.io.
+
+**Change in the manuscript:** replace Figure 1 with the new picture; keep the
+caption `Figure 1. Theoretical Framework of the Study`. Add one sentence under
+the framework's first paragraph that describes the figure in the order of its
+arrows. The conceptual framework's Process paragraph (and Figure 2) still say
+"guided by the destination management and marketing framework (Buhalis,
+2000)" only; make them name the same three sources as Figure 1, or keep Figure 1
+to Buhalis alone.
+
 ## Room booking: the complete module (9 November 2026)
 
 Everything below is built and on `main`: the database and API (8 November),
