@@ -1,0 +1,570 @@
+<title>ZTIMS Analytics Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one working page, a role dashboard on top of three reference views. Flat square panels and pill controls like the staff portals; one hue per chart. */
+:root{
+  --bg:#FAF7F2; --surface:#FDFBF7; --surface2:#F3EEE6; --fg:#1C1917; --fg2:#5B5149; --line:#DDD5CA;
+  --main:#BF5700; --main-ink:#A34A00; --on-main:#FDFBF7; --cmp:#4A423C; --tang:#F28500; --ember:#7A2E00;
+  --ok:#2E7D32; --bad:#B3261E; --ok-bg:#E6F1E7; --bad-bg:#F8E4E2; --note-bg:#F6EBDD;
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121110; --surface:#1C1A18; --surface2:#262321; --fg:#F4EFE8; --fg2:#B5ADA5; --line:#3A3531;
+  --main:#F28500; --main-ink:#F28500; --on-main:#1C1917; --cmp:#C9C2BA; --ember:#E08A4A;
+  --ok:#7CC480; --bad:#FF8A80; --ok-bg:#1E2F20; --bad-bg:#3A201E; --note-bg:#2A2118; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121110; --surface:#1C1A18; --surface2:#262321; --fg:#F4EFE8; --fg2:#B5ADA5; --line:#3A3531;
+  --main:#F28500; --main-ink:#F28500; --on-main:#1C1917; --cmp:#C9C2BA; --ember:#E08A4A;
+  --ok:#7CC480; --bad:#FF8A80; --ok-bg:#1E2F20; --bad-bg:#3A201E; --note-bg:#2A2118; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2,h3,h4{margin:0;line-height:1.2;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:22px;font-weight:800} h2{font-size:20px;font-weight:800} h3{font-size:15px;font-weight:700} h4{font-size:13px;font-weight:700}
+p{margin:0} .muted{color:var(--fg2)} .small{font-size:12px} .num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--main);outline-offset:2px}
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 0;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.top .wrap{display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.brand small{color:var(--fg2);font-weight:600}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin}
+.tab{border:0;background:none;padding:10px 14px;font-weight:700;font-size:13px;color:var(--fg2);border-bottom:2px solid transparent;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:var(--main-ink);border-bottom-color:var(--main)}
+/* legend of content kinds */
+.kinds{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 0;font-size:12px;color:var(--fg2)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+.k-ver{color:var(--ok);border-color:var(--ok)} .k-prop{color:var(--main-ink);border-color:var(--main)}
+.k-gap{color:var(--bad);border-color:var(--bad)} .k-smp{color:var(--fg2);border-style:dashed}
+.k-ver::before{content:"✓"} .k-gap::before{content:"!"} .k-prop::before{content:"◇"} .k-smp::before{content:"≈"}
+.proto{background:var(--note-bg);border:1px solid var(--line);padding:10px 14px;font-size:12.5px}
+/* layout */
+section.view{padding-top:20px;display:flex;flex-direction:column;gap:20px}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-end;justify-content:space-between}
+.head p{max-width:70ch}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card>header{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:flex-start;justify-content:space-between}
+.card>header .ttl{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 200px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:none;padding:6px 12px;font-size:12px;font-weight:700;color:var(--fg2);min-height:32px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:700;font-size:12.5px;min-height:36px}
+.pill[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:var(--surface);border:1px solid var(--line);padding:10px 14px}
+.controls label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+select{font:inherit;background:var(--surface);color:var(--fg);border:1px solid var(--line);padding:6px 10px;min-height:36px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.tile{border:1px solid var(--line);background:var(--surface2);padding:10px 12px;min-width:0}
+.tile .k{font-size:11.5px;color:var(--fg2);font-weight:600}
+.tile .v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.tile .s{font-size:11.5px;color:var(--fg2)}
+.empty{border:1px dashed var(--line);padding:22px 16px;text-align:center;color:var(--fg2);display:flex;flex-direction:column;gap:6px;align-items:center}
+.empty b{color:var(--fg)}
+details.about{border-top:1px solid var(--line);padding-top:8px;font-size:12.5px}
+details.about summary{cursor:pointer;font-weight:700;color:var(--fg2);min-height:32px;display:flex;align-items:center}
+details.about dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:8px 0 0}
+details.about dt{font-weight:700;color:var(--fg2)} details.about dd{margin:0}
+@media (max-width:560px){details.about dl{grid-template-columns:minmax(0,1fr)} details.about dd{margin-bottom:6px}}
+/* charts */
+figure.chart{margin:0;display:flex;flex-direction:column;gap:8px}
+svg.c{width:100%;height:auto;display:block;overflow:visible}
+svg.c text{fill:var(--fg2);font-family:var(--font);font-size:11px}
+svg.c .grid{stroke:var(--line);stroke-width:1}
+svg.c .axis{stroke:var(--fg2);stroke-width:1}
+svg.c .bar rect.m{fill:var(--main)} svg.c .bar:hover rect.m,svg.c .bar:focus rect.m{fill:var(--ember)}
+svg.c .lab{fill:var(--fg);font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+svg.c .cmpl{stroke:var(--cmp);stroke-width:2;stroke-dasharray:5 4;fill:none} svg.c .cmpd{fill:var(--cmp);stroke:var(--surface);stroke-width:2}
+svg.c .ln{stroke:var(--main);stroke-width:1.5;fill:none;opacity:.55} svg.c .avg{stroke:var(--main);stroke-width:2.5;fill:none}
+svg.c .pt{fill:var(--main)} svg.c .ev{fill:var(--tang);opacity:.2}
+svg.c .nodata{stroke:var(--line);stroke-width:2;stroke-dasharray:3 3}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--fg2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:10px;border:1px solid var(--line)}
+.sw.main{background:var(--main);border-color:var(--main)} .sw.cmp{background:none;border-top:2px dashed var(--cmp);height:0;width:18px;border-color:var(--cmp)}
+.sw.fin{background:var(--cmp);border-color:var(--cmp)} .sw.sub{background:var(--main);border-color:var(--main)}
+.sw.drf{background:repeating-linear-gradient(135deg,var(--fg2) 0 2px,transparent 2px 5px)} .sw.mis{border:1px dashed var(--bad);background:none}
+.sw.hatch{background:repeating-linear-gradient(135deg,var(--fg2) 0 2px,var(--surface) 2px 5px)}
+.sw.part{background:repeating-linear-gradient(135deg,var(--bg) 0 2px,var(--main) 2px 5px);border-color:var(--main)}
+/* horizontal bars */
+.hb{display:grid;grid-template-columns:minmax(80px,170px) minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-size:12.5px}
+.hb .l{min-width:0;overflow-wrap:anywhere} .hb .t{height:14px;background:var(--surface2);position:relative}
+.hb .t i{position:absolute;inset:0 auto 0 0;background:var(--main)} .hb .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.hb .na{grid-column:2/4;color:var(--fg2);font-size:12px;font-style:italic}
+.stack{display:flex;height:22px;gap:2px;width:100%}
+.stack i{display:block;height:100%;min-width:2px}
+.stack .s1{background:var(--main)} .stack .s2{background:var(--ember)} .stack .s3{background:var(--tang)} .stack .s4{background:var(--cmp)}
+.stack .sh{background:repeating-linear-gradient(135deg,var(--fg2) 0 2px,var(--surface) 2px 5px);border:1px solid var(--fg2)}
+.stk-leg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 14px;font-size:12px}
+.stk-leg span{display:flex;align-items:center;gap:6px;min-width:0}
+.stk-leg b{font-variant-numeric:tabular-nums;margin-left:auto}
+/* heat grids */
+.scroll{overflow-x:auto;max-width:100%}
+table.heat,table.tbl{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+table.heat th,table.heat td{border:1px solid var(--surface);padding:6px 2px;text-align:center;min-width:36px;font-size:11px}
+table.heat th{font-weight:700;color:var(--fg2);background:none} table.heat th.y{text-align:left;padding-right:10px;white-space:nowrap}
+table.heat td{background:color-mix(in srgb,var(--main) calc(var(--h) * 1%),var(--surface2))}
+table.heat td.hi{color:var(--on-main);font-weight:700} table.heat td.none{background:none;color:var(--fg2);border:1px dashed var(--line)}
+table.tbl th,table.tbl td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.tbl th{font-weight:700;color:var(--fg2);font-size:11.5px;background:var(--surface2);position:sticky;top:0}
+table.tbl td.r,table.tbl th.r{text-align:right}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.cal .dw{font-size:11px;font-weight:700;color:var(--fg2);text-align:center}
+.cal .d{min-height:46px;padding:3px 5px;border:1px solid var(--line);background:color-mix(in srgb,var(--main) calc(var(--h) * 1%),var(--surface2));font-size:11px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.cal .d b{font-size:13px;font-variant-numeric:tabular-nums} .cal .d.hi{color:var(--on-main)}
+.cal .d.miss{background:none;border:1px dashed var(--bad)} .cal .d.zero{background:repeating-linear-gradient(135deg,var(--surface2) 0 3px,var(--surface) 3px 7px)}
+.cal .d.clo{background:var(--surface2);text-decoration:line-through;color:var(--fg2)} .cal .pad{min-height:0;border:0;background:none}
+/* coverage / tracker */
+.trk td{padding:3px} .trk .st{display:inline-block;min-width:44px;padding:3px 6px;border-radius:999px;font-size:10.5px;font-weight:700;text-align:center;border:1px solid var(--line)}
+.st.fin{background:var(--fg);color:var(--bg);border-color:var(--fg)} .st.sub{border-color:var(--main);color:var(--main-ink)}
+.st.mis{border-color:var(--bad);color:var(--bad);border-style:dashed} .st.nos{color:var(--fg2);border-style:dotted} .st.fut{border:0;color:var(--fg2)}
+.list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
+.list li{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border:0}
+.fact{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);background:var(--surface)}
+.fact b{font-size:18px;font-variant-numeric:tabular-nums}
+.fact span.k{font-size:11.5px;color:var(--fg2);font-weight:600}
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:26px 30px;align-items:stretch}
+.flow .box{border:1px solid var(--line);background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
+.flow .box h4{display:flex;justify-content:space-between;gap:8px}
+.flow .box ul{margin:0;padding-left:16px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.flow .box.dash{border-style:dashed}
+.flow .arrow::after{content:"→";position:absolute;right:-24px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--fg2)}
+@media (max-width:1100px){.flow .arrow::after{content:"↓";right:50%;top:auto;bottom:-24px;transform:translateX(50%)}}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:10px}
+.rule{border-left:3px solid var(--main);padding:4px 12px;background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+/* inventory filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.filters .grp{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.filters .grp>span{font-size:12px;font-weight:700;color:var(--fg2)}
+input[type=search]{font:inherit;background:var(--surface);color:var(--fg);border:1px solid var(--line);padding:7px 12px;border-radius:999px;min-height:36px;min-width:min(100%,220px)}
+.inv{display:flex;flex-direction:column;gap:8px}
+.inv details{background:var(--surface);border:1px solid var(--line)}
+.inv summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:10px 14px;min-height:48px}
+.inv summary::-webkit-details-marker{display:none}
+.inv .id{font-weight:800;color:var(--main-ink)}
+.inv .body{padding:4px 14px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px 24px;font-size:12.5px}
+.inv .body h4{color:var(--fg2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+@media (max-width:640px){.inv summary{grid-template-columns:36px minmax(0,1fr)} .inv summary .chips{grid-column:1/-1}}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--fg);color:var(--bg);padding:6px 10px;font-size:12px;font-weight:600;max-width:260px;opacity:0;transition:opacity .08s}
+@media (prefers-reduced-motion:reduce){#tip{transition:none}}
+</style>
+
+<div class="top"><div class="wrap">
+  <div class="brand"><h1>ZTIMS Analytics</h1><small>Proposal prototype for review · 12 November 2026</small></div>
+  <nav class="tabs" role="tablist" aria-label="Views" id="tabs"></nav>
+</div></div>
+
+<main class="wrap">
+  <div class="kinds" aria-label="What the labels mean">
+    <span class="chip k-ver">Verified data</span><span class="muted">read from the repository or the live database</span>
+    <span class="chip k-prop">Proposed analytic</span><span class="muted">designed here, not built</span>
+    <span class="chip k-gap">Data gap</span><span class="muted">cannot be shown honestly yet</span>
+    <span class="chip k-smp">Sample data</span><span class="muted">made up for this prototype</span>
+  </div>
+  <p class="proto"><b>Nothing here is built or deployed.</b> Charts marked Verified use a read-only copy of the live 2025 municipal totals and live place counts. Every other number is made-up sample data to show how a chart would behave. Accommodation and attraction are never added together.</p>
+  <div id="view"></div>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const INV = {"statuses": {"now": "Computable now: every input exists in the code and on live.", "after": "Computable once reporting runs: the inputs exist in the schema, but have no rows yet.", "decision": "Needs a decision first: it conflicts with a standing rule or its scope is unconfirmed.", "data": "Needs new data: it is not collected.", "parked": "Not proposed: it cannot be done honestly with what exists."}, "domains": {"A": "Accommodation", "T": "Attraction", "X": "Cross-cutting", "N": "Not proposed"}, "analytics": [{"id": "A1", "domain": "A", "name": "Guest arrivals per month", "audience": ["officer", "manager"], "priority": 1, "status": "after", "source": "accommodation_report_versions.arrivals (finalized versions; submitted and draft only in the labeled operational view). 2025: monthly_reports kind municipal_total (12 months on live).", "calc": "Sum of arrivals of each place's official version in the month. A guest counts once at each place they arrive at.", "value": "Shows how arrivals move through the year and whether a month is above or below the others.", "viz": "Column chart by month; the same month last year as a dashed line; coverage band under the axis.", "limits": "Arrivals at places, not people. A month with places missing is partial and says so. 2025 is a paper municipal total with no place detail, so it is a separate series until its scope is confirmed (G3)."}, {"id": "A2", "domain": "A", "name": "Guest nights per month", "audience": ["officer", "manager"], "priority": 1, "status": "after", "source": "accommodation_report_versions.guest_nights; 2025 monthly_reports.guest_nights.", "calc": "Sum of official guest nights. A stay's nights fall in the month they are spent in.", "value": "Shows how much stay time the municipality hosts, which arrivals alone hide.", "viz": "Column chart by month, aligned to A1 on its own scale.", "limits": "Counts only (no revenue). Not comparable with attraction visits."}, {"id": "A3", "domain": "A", "name": "Average length of stay", "audience": ["officer", "manager"], "priority": 1, "status": "now", "source": "accommodation-engine.js averageLengthOfStay = guest nights ÷ arrivals (already in the DAE-1B). 2025 has both inputs.", "calc": "Guest nights ÷ arrivals for the month or year, from the same versions.", "value": "Tells a manager whether guests stay longer or shorter, and the officer where stays are short.", "viz": "Line by month with the year average as a reference line.", "limits": "A ratio the DAE-1B already requires, so it is allowed for private places to stay. It is an average: it hides a few long stays."}, {"id": "A4", "domain": "A", "name": "Occupancy (room-nights occupied of available)", "audience": ["officer", "manager"], "priority": 1, "status": "after", "source": "accommodation_report_versions.room_nights_occupied and room_nights_available. 2025 stores rooms and room-nights occupied, not room-nights available.", "calc": "Room-nights occupied ÷ room-nights available (accommodation-engine.js occupancyRate). Counts of both are shown beside the rate.", "value": "The standard measure of how full places are; the manager sees their own, the officer the municipal total.", "viz": "Line by month plus a month × year heat grid once there are two years.", "limits": "Needs each place's rooms set up (live: 0 rooms today). The DAE templates define this rate, so it is allowed for private places to stay. For 2025 only occupied room-nights are known, so no rate can be stated (G8)."}, {"id": "A5", "domain": "A", "name": "Peak and low months", "audience": ["officer", "manager"], "priority": 1, "status": "now", "source": "The same monthly series as A1 and A2. On live today: 2025, 12 months.", "calc": "Rank the months of a year by arrivals (and by guest nights). Peak = the highest, low = the lowest. Seasonality (a typical month) needs at least two full years.", "value": "Plan staffing, promotions and closures around the busy and quiet months.", "viz": "Column chart with the peak and low labeled, then a month × year heat grid (sequential, one hue).", "limits": "One year shows the order of months, not a season. No cause is claimed for a peak. Months with places missing are excluded from the ranking and marked."}, {"id": "A6", "domain": "A", "name": "Month and year comparison", "audience": ["officer", "manager"], "priority": 2, "status": "decision", "source": "Versions for the month and the same month a year earlier (FORM A's comparable-month rule in accommodation.js).", "calc": "Difference in counts for months with complete coverage in both years. A percentage difference only after the policy decision (G4).", "value": "Answers 'are we up or down on last year?' fairly.", "viz": "Grouped columns (this year solid, last year muted) with the difference as a number; no dual axis.", "limits": "Counts-only policy: percentage change is already built for FORM A (private places to stay) but is not approved elsewhere. First possible comparison is 2027 against 2026 for enterprise data."}, {"id": "A7", "domain": "A", "name": "Where guests live (residence)", "audience": ["officer", "manager"], "priority": 2, "status": "after", "source": "accommodation_report_version_counts (residence_code × male/female; 72 Form A4 rows). 2025 municipal totals have the same rows without sex.", "calc": "Sum arrivals by residence group (Philippine residents, non-Philippine residents, overseas Filipinos, unspecified) and by country. 'Unspecified' is shown, never dropped.", "value": "Shows which markets the places serve and how many guests are not classified.", "viz": "Horizontal bars for the top countries, one stacked bar for the groups with 'unspecified' hatched.", "limits": "Shares and percentages need the decision (G4); counts are always shown. Philippine residents are not split by province for places to stay (G7). Rare countries at one small place could identify a guest: manager-only at enterprise level (G15)."}, {"id": "A8", "domain": "A", "name": "Sex of guests", "audience": ["officer", "manager"], "priority": 2, "status": "after", "source": "accommodation_report_version_counts.male and .female. 2025 has none (total_unsplit).", "calc": "Male and female arrivals for months where the split exists; months without a split are excluded and listed.", "value": "Describes the guest mix where it is recorded.", "viz": "Two-segment bar by month with a coverage note; or a single number pair.", "limits": "Not collected for 2025. Only male and female exist; nothing else is recorded, so nothing else is shown."}, {"id": "A9", "domain": "A", "name": "Arrivals by weekday and day", "audience": ["manager"], "priority": 3, "status": "after", "source": "accommodation_stays.check_in and accommodation_stay_guests (the manager's own stay register).", "calc": "Count arrivals by check-in weekday and by day of the month from the stays of the enterprise (active stays only; voided ones excluded).", "value": "Helps a manager set staffing for check-ins.", "viz": "Seven-bar weekday chart; a calendar heat grid for the month.", "limits": "From the live stay register, so a figure can change until the month is submitted. Stay-level detail stays with the manager; the officer sees monthly versions only (to be confirmed)."}, {"id": "A10", "domain": "A", "name": "Length-of-stay distribution", "audience": ["manager"], "priority": 3, "status": "after", "source": "accommodation_stays.check_in and check_out (nights per stay).", "calc": "Number of stays with 1, 2, 3, 4–6, 7+ nights.", "value": "Shows whether business is short breaks or long stays, which the average hides.", "viz": "Column histogram.", "limits": "Counts stays, not guests. Shared rooms and transfers follow the stay register's rules."}, {"id": "A11", "domain": "A", "name": "Room request funnel (ZTIMS bookings)", "audience": ["manager", "officer"], "priority": 3, "status": "after", "source": "bookings.status (requested, confirmed, checked_in, completed, declined, expired, cancelled, no_show) and the enterprise's own settings. Live: 0 bookings.", "calc": "Count of requests by outcome in a month. The officer sees counts only, no guest data and no money (as on the Bookings page).", "value": "Shows how many requests turn into stays, and how many expire unanswered.", "viz": "A horizontal funnel of counts (requested → confirmed → checked in).", "limits": "Only requests made through ZTIMS, not all reservations. A booking is never an arrival (only the stay register counts arrivals). Total price exists but is excluded by the no-revenue rule."}, {"id": "A12", "domain": "A", "name": "Booking lead time and response time", "audience": ["manager"], "priority": 3, "status": "after", "source": "bookings.requested_at, check_in, decided_at.", "calc": "Median days from request to check-in; median hours from request to the manager's answer.", "value": "Tells a manager how far ahead guests book and how fast they are answered.", "viz": "Two number tiles with a small dot-plot of the last 12 requests.", "limits": "Needs enough requests to be meaningful (suppress below a minimum count, to decide)."}, {"id": "A13", "domain": "A", "name": "Where room requests come from", "audience": ["manager"], "priority": 3, "status": "after", "source": "bookings.country_code (the booker's country of residence).", "calc": "Count of requests by country.", "value": "An early signal of markets before stays are reported.", "viz": "Horizontal bars.", "limits": "Requests, not arrivals or guests. Only ZTIMS requests."}, {"id": "A14", "domain": "A", "name": "Accommodation by barangay, type and location", "audience": ["officer"], "priority": 2, "status": "after", "source": "spots.barangay, spots.type, spots.latitude and longitude joined to the places' official versions; accommodation_profiles.accommodation_type.", "calc": "Sum arrivals and guest nights of the places in each barangay, by place type, and on the map.", "value": "Shows where stays concentrate and which barangays have no reporting place.", "viz": "Sorted horizontal bars by barangay; map bubbles (the map already exists in tourism-map.js).", "limits": "The barangay is where the place is, not where guests live. On live, 10 places to stay are in 3 barangays (Poblacion 7, Maluay 2, Mayabon 1); a barangay with one place shows that place's figures (small-number disclosure, G15)."}, {"id": "T1", "domain": "T", "name": "Attraction visits per month", "audience": ["officer", "staff"], "priority": 1, "status": "after", "source": "attraction_report_versions.total (finalized versions); the labeled operational view also takes submitted and draft.", "calc": "Sum of the official monthly totals per attraction and across attractions. A month with no usable version is 'not submitted', never 0.", "value": "Shows how busy attractions are through the year.", "viz": "Column chart by month; the same month last year as a dashed line; coverage band under the axis.", "limits": "Visits to attractions, not unique tourists; added across attractions they are still visits. Only office-run, counting attractions exist (2 of 8 on live) (G2). No 2025 attraction data exists."}, {"id": "T2", "domain": "T", "name": "Daily visits and 7-day average", "audience": ["officer", "staff"], "priority": 1, "status": "after", "source": "attraction_daily_counts.total by count_date (operational; locked by the month's submission).", "calc": "Daily total with a trailing 7-day mean over recorded days only. Missing days are gaps, confirmed zeros are zeros, closures are marked.", "value": "Shows the day-to-day pattern and the busiest days, early, without waiting for the month to be finalized.", "viz": "Line with a smoothed average; gaps drawn as gaps; closures as markers.", "limits": "Operational until submitted. Counting depends on Support Staff entering every date."}, {"id": "T3", "domain": "T", "name": "Visits by weekday", "audience": ["officer", "staff"], "priority": 1, "status": "after", "source": "attraction_daily_counts grouped by weekday (the date's weekday in Manila).", "calc": "Mean visits per recorded open day for each weekday; only dates with a count (zero included) enter, missing and closed dates do not.", "value": "Tells staff and the office which days to prepare for.", "viz": "Seven columns with the overall mean as a reference line.", "limits": "Needs several weeks of data; the number of days behind each bar is shown. Holidays and events are not separated unless overlaid (T10)."}, {"id": "T4", "domain": "T", "name": "Peak and low days and months", "audience": ["officer", "staff"], "priority": 1, "status": "after", "source": "The series of T1 and T2.", "calc": "Rank recorded days and months by visits.", "value": "Identifies pressure points and quiet periods for planning.", "viz": "Calendar heat map (one hue, light to dark) for days; labeled columns for months.", "limits": "A closure is not a low day. No cause is claimed."}, {"id": "T5", "domain": "T", "name": "Month and year comparison", "audience": ["officer"], "priority": 2, "status": "decision", "source": "Finalized versions for the month and the same month a year earlier.", "calc": "Difference in counts over months finalized in both years. Percentage change after the decision (G4).", "value": "Shows growth or decline fairly.", "viz": "Grouped columns, this year solid and last year muted, with the difference as a number.", "limits": "There is no 2025 attraction data, so the first like-for-like year is 2027 (G5). The 2025 municipal totals are not attraction visits and are never used as a baseline."}, {"id": "T6", "domain": "T", "name": "Visits by attraction", "audience": ["officer"], "priority": 1, "status": "after", "source": "attraction_report_versions joined to spots (title, category, barangay).", "calc": "Official visits per attraction for a period, ranked; coverage (months finalized) shown with each.", "value": "Shows which attractions carry the load and which are not reporting.", "viz": "Ranked horizontal bars; small multiples of the monthly trend per attraction.", "limits": "Rankings compare unlike places (a pool and a falls); show the counts without a score. An attraction that is not counted is listed as 'not counted', not as 0."}, {"id": "T7", "domain": "T", "name": "Visits by barangay and category", "audience": ["officer"], "priority": 2, "status": "after", "source": "spots.barangay, spots.category and spot_more_categories joined to T1.", "calc": "Sum visits of the attractions in each barangay and in each category. An attraction with several categories counts under each (stated on the chart).", "value": "Shows where visits happen and which kinds of attraction draw them.", "viz": "Sorted horizontal bars; map bubbles.", "limits": "Barangay is where the attraction is, not where visitors live. Category totals overlap, so they are never added up. Few attractions per barangay: figures are close to a single place's (G15)."}, {"id": "T8", "domain": "T", "name": "Where visitors live (four classes)", "audience": ["officer", "staff"], "priority": 2, "status": "after", "source": "attraction_daily_counts residence classes: Zamboanguita, rest of Negros Oriental, other Philippine provinces, foreign; with the completeness flag.", "calc": "Sum each class over the period; 'residence not recorded' = total − classified. Never assigned to a class.", "value": "Shows local versus outside visitors and how much of the record is classified.", "viz": "One stacked horizontal bar with 'not recorded' hatched, and the counts beside it.", "limits": "Optional field: the unclassified share can be large (shown). Shares need the decision (G4). Only four classes: no countries for foreign visitors (G7)."}, {"id": "T9", "domain": "T", "name": "Sex of visitors", "audience": ["officer", "staff"], "priority": 2, "status": "after", "source": "attraction_daily_counts.male and .female with the completeness flag.", "calc": "Sum male and female; 'not recorded' = total − male − female.", "value": "Describes the visitor mix where recorded.", "viz": "Two-segment bar with a hatched 'not recorded' segment.", "limits": "Sex by residence is never stored, so a cross-tabulation is never shown."}, {"id": "T10", "domain": "T", "name": "Visits around announced events and closures", "audience": ["officer"], "priority": 3, "status": "after", "source": "announcements (category event or closure, starts_at, ends_at, optional spot_id) and spot_closed_dates, over T2.", "calc": "Mark event and closure dates on the daily series; compare the mean of event days with other days of the same weekday.", "value": "Lets the office see whether an event moves visits, without guessing.", "viz": "Daily line with shaded event bands and closure markers.", "limits": "Only events the office posted; there is no holiday or fiesta calendar (G13). Association, never cause."}, {"id": "T11", "domain": "T", "name": "Interest signals: saves and ratings", "audience": ["officer"], "priority": 3, "status": "after", "source": "saved_places (visitor × place), reviews.rating for visible reviews; visitor accounts. Live: 1 account, 0 saves, 0 reviews.", "calc": "Count of saves per place; average rating and number of visible reviews (a review requires a used ticket or completed stay).", "value": "Shows interest and satisfaction beside the counted visits.", "viz": "Bars of saves; a rating with its count.", "limits": "A save is not a visit. Reviews need a visit proof that exists only for ticket or booking visits, so they cover a small part of the visitors. Not added to any visit count."}, {"id": "T12", "domain": "T", "name": "Visits per open day", "audience": ["officer", "staff"], "priority": 2, "status": "after", "source": "attraction_daily_counts and spot_closed_dates, spots.working_days.", "calc": "Total visits ÷ dates counted (zero days included, closed and missing excluded).", "value": "Compares months of different length and attractions with different opening days.", "viz": "Number tile and line by month.", "limits": "A mean of daily counts; not a capacity measure (no capacity data exists, G17)."}, {"id": "X1", "domain": "X", "name": "Reporting completeness", "audience": ["officer", "manager", "staff"], "priority": 1, "status": "now", "source": "accommodation tracker states and attraction tracker states (already built), accommodation_periods, attraction_periods, spots.counts_visitors, support_staff.", "calc": "For each month and domain: places expected, submitted, finalized, missing, with no staff or not counted. Shown under every chart as a coverage band.", "value": "Tells every reader how much of the picture is in before they trust a number.", "viz": "A coverage band (segmented bar) per month; the existing tracker grid for detail.", "limits": "'Expected' is the places that count visitors or have set up reporting; places that never started are not expected (shown separately). The 5th-of-the-month deadline is a ZTIMS target."}, {"id": "X2", "domain": "X", "name": "Unclassified share of the record", "audience": ["officer"], "priority": 2, "status": "after", "source": "Residence and sex 'not recorded' counts from A7, A8, T8 and T9.", "calc": "Count of arrivals or visits with no residence (or no sex) recorded, per month.", "value": "Shows whether residence and sex charts can be trusted for a month.", "viz": "A small hatched segment on each breakdown chart, plus a line of counts.", "limits": "A count, not a percentage, unless G4 is decided."}, {"id": "X3", "domain": "X", "name": "Timeliness of reports", "audience": ["officer"], "priority": 3, "status": "after", "source": "accommodation_report_versions.late and submitted_at; attraction_period_events (submitted).", "calc": "Days between month end and submission; count submitted after the 5th.", "value": "Shows which places need a reminder.", "viz": "A dot per place and month (on time or late); the existing tracker colors.", "limits": "The 5th is a ZTIMS target, not an official deadline."}, {"id": "X4", "domain": "X", "name": "Municipal overview: two panels on one month axis", "audience": ["officer"], "priority": 1, "status": "after", "source": "A1 and T1.", "calc": "Accommodation arrivals and attraction visits shown in separate panels that share the month axis. Never summed, never indexed together.", "value": "Lets the officer read both without mistaking one for the other.", "viz": "Two aligned small-multiple charts, each with its own scale and its own coverage band.", "limits": "No verified deduplication exists (G9), so the two can never be combined into 'unique tourists' or 'total tourists'."}, {"id": "X5", "domain": "X", "name": "Data gaps panel", "audience": ["officer"], "priority": 2, "status": "now", "source": "spots (counts_visitors, status, managed_by), support_staff, accommodation_profiles, accommodation_rooms.", "calc": "List attractions not counted, counting attractions with no Support Staff, places to stay with no rooms or no reporting start, private attractions with no reporting path.", "value": "Turns 'missing data' into a to-do list for the office.", "viz": "A checklist with counts, each linking to the page that fixes it.", "limits": "Describes setup, not the quality of what was entered."}, {"id": "N1", "domain": "N", "name": "Unique tourists / total tourists", "audience": [], "priority": 0, "status": "parked", "source": "None.", "calc": "Would need one identifier across places, which does not exist. Arrivals and visits repeat across places by design.", "value": "A headline number many readers expect.", "viz": "Not shown.", "limits": "No verified deduplication (G9). Do not combine arrivals and visits."}, {"id": "N2", "domain": "N", "name": "Revenue, average spend, RevPAR, ADR", "audience": [], "priority": 0, "status": "parked", "source": "bookings.total_amount and payments exist but are excluded.", "calc": "Not computed.", "value": "Economic impact.", "viz": "Not shown.", "limits": "The office asked for revenue to stay out of statistics (G16)."}, {"id": "N3", "domain": "N", "name": "Purpose of visit, age groups, same-day versus overnight", "audience": [], "priority": 0, "status": "parked", "source": "Not collected (tickets hold regular, student and child counts for demo data only).", "calc": "Not computed.", "value": "Market segmentation.", "viz": "Not shown.", "limits": "Would need new fields at the point of counting (G10); the 'Same Day Visitors' title is not claimed (decision D4)."}]};
+const GAPS = {"gaps": [{"id": "G1", "priority": "P0", "title": "Live holds no 2026 reporting data yet", "evidence": "Read-only check of live on 12 Nov 2026: 0 stays, 0 accommodation versions, 0 rooms, 0 Support Staff, 0 bookings, 0 reviews. The attraction tables are not on live (the stage 4 schema has not been run).", "closes": "Roll out the accommodation and attraction work (needs the user's approval), then onboard enterprises and Support Staff.", "owner": "User and Tourism Office", "affects": "Every analytic except the 2025 baseline."}, {"id": "G2", "priority": "P0", "title": "Manager-run attractions have no way to report visitors", "evidence": "statistics.js refuses the monthly report and Guest Register of every place that is not a place to stay (409 USE_DAILY_RECORD), and attraction-visits.js serves office-run attractions only.", "closes": "Decide whether enterprise managers get the Daily Visitor Record for their own attractions, or stay out of the statistics.", "owner": "User", "affects": "T1, T2, T3, T6, T7, T8, T9: attraction totals cover office-run places only."}, {"id": "G3", "priority": "P0", "title": "The scope of the 2025 municipal totals is not confirmed", "evidence": "12 monthly totals, loaded by import: arrivals by 72 residence rows, rooms, room-nights occupied and guest nights, no place and no sex. Rooms and nights are accommodation measures, but the arrivals' scope is not stated.", "closes": "The office confirms whether the 2025 Form A4 covers places to stay only. Until then it is shown as its own series, never added to 2026 sums and never called attraction visits.", "owner": "Tourism Office", "affects": "A1, A2, A5, A6, A7."}, {"id": "G4", "priority": "P1", "title": "Counts-only rule against shares and percentage change", "evidence": "The statistics policy allows rates and shares only where the DAE-1A, DAE-1B and FORM A templates need them (private places to stay). accommodation-engine.js already has occupancyRate, averageLengthOfStay, ratio and percentDifference.", "closes": "Decide: allow shares and percentage change in analytics (everywhere, or places to stay only), or keep counts only. The prototype shows counts and hides shares behind a switch.", "owner": "User and Tourism Office", "affects": "A6, A7, T5, T8, T9, X2."}, {"id": "G5", "priority": "P1", "title": "No attraction history, and one year of accommodation history", "evidence": "Live has 2025 totals only, and nothing for attractions. A season or a year-on-year change needs two full years.", "closes": "Time (first like-for-like attraction year is 2027), or import paper counts the office may hold.", "owner": "Tourism Office", "affects": "A5, A6, T4, T5."}, {"id": "G6", "priority": "P1", "title": "Residence and sex are optional at attractions and absent for 2025", "evidence": "attraction_daily_counts keeps completeness flags; 2025 rows have total_unsplit and no male or female.", "closes": "Show 'not recorded' on every breakdown; the office may set a target for completeness.", "owner": "Tourism Office", "affects": "A8, T8, T9, X2."}, {"id": "G7", "priority": "P1", "title": "Residence detail is coarse", "evidence": "Attractions record four classes (Zamboanguita, rest of Negros Oriental, other Philippine provinces, foreign) with no foreign country. Places to stay record one row for Filipino nationality, with no province.", "closes": "Decide whether more classes or the foreign country at attractions are worth the extra counting time.", "owner": "Tourism Office", "affects": "A7, T8."}, {"id": "G8", "priority": "P1", "title": "Occupancy needs inputs that are not there yet", "evidence": "Live has 0 accommodation rooms and 0 accommodation profiles. The 2025 totals hold rooms and room-nights occupied but not room-nights available.", "closes": "Managers set up their rooms and reporting start; for 2025 only occupied room-nights can be shown.", "owner": "Enterprise Managers", "affects": "A4."}, {"id": "G9", "priority": "P1", "title": "There is no verified way to count unique tourists", "evidence": "No identifier joins a guest to a visit. Arrivals count a guest once at each place; visits count each entry. The system stores no personal identity for these counts, by design.", "closes": "Not planned. Arrivals and visits are shown side by side and never combined.", "owner": "—", "affects": "X4, N1."}, {"id": "G10", "priority": "P2", "title": "No purpose of visit, age group, group size or same-day versus overnight", "evidence": "Not collected at attractions. Tickets hold regular, student and child counts, but online payment is a demonstration and a ticket is not a visit. The VAR 3M title says 'Same Day Visitors'; ZTIMS does not claim it (decision D4).", "closes": "New optional fields at the point of counting, if the office wants them.", "owner": "Tourism Office", "affects": "N3."}, {"id": "G11", "priority": "P2", "title": "Tickets cannot stand in for visits", "evidence": "Live has 0 tickets. The statistics rule is 'nothing from tickets': counts come from what each place records.", "closes": "None needed. Ticket counts may later appear as an advance-interest signal only, after a decision.", "owner": "User", "affects": "T11."}, {"id": "G12", "priority": "P2", "title": "The barangay is where the place is, not where the visitor lives", "evidence": "spots.barangay on all 18 published places (8 barangays used). Visitor origin is held as residence classes and countries only.", "closes": "Label every barangay chart 'by location of the place'.", "owner": "—", "affects": "A14, T7."}, {"id": "G13", "priority": "P2", "title": "There is no holiday or fiesta calendar", "evidence": "The announcements table (events, closures) exists but holds 0 rows on live.", "closes": "The office posts events as announcements; the overlay reads them. No cause is claimed.", "owner": "Tourism Office", "affects": "T10."}, {"id": "G14", "priority": "P2", "title": "Official figures arrive after the month ends", "evidence": "A month is submitted after it ends and counts in the official view only once the officer finalizes it. The 5th of the next month is a ZTIMS target, not an official deadline.", "closes": "Offer the labeled operational view beside the official one.", "owner": "—", "affects": "All monthly analytics."}, {"id": "G15", "priority": "P1", "title": "Small numbers can identify a place or a guest", "evidence": "On live, each of the 7 barangays with an attraction holds one or two, and Poblacion holds 7 of the 10 places to stay. A rare nationality at one small place can point to a guest.", "closes": "Decide a minimum group size for benchmarks and for enterprise-level nationality cells.", "owner": "User and Tourism Office", "affects": "A7, A14, T7, manager benchmark."}, {"id": "G16", "priority": "P2", "title": "Revenue is outside the statistics by the office's decision", "evidence": "bookings.total_amount and payments exist, and statistics hold counts and totals only.", "closes": "None, unless the office changes its decision.", "owner": "Tourism Office", "affects": "N2."}, {"id": "G17", "priority": "P2", "title": "Attractions have no capacity figure", "evidence": "No capacity or carrying-capacity field exists on spots or attraction_settings.", "closes": "Add an optional capacity only if the office wants utilization.", "owner": "Tourism Office", "affects": "T12 (visits per open day is a mean, not a utilization)."}, {"id": "G18", "priority": "P1", "title": "Most attractions are not counted at all", "evidence": "Live: 6 of 8 published attractions have Count visitors here off, 2 are counting, and 0 Support Staff accounts exist. Private attractions are covered by G2.", "closes": "The office decides which attractions count and adds Support Staff to each.", "owner": "Tourism Office", "affects": "Every attraction analytic: coverage is at most 2 of 8 places."}], "decisions": [{"id": "D-A1", "text": "Allow shares and percentage change in analytics, and where (G4)."}, {"id": "D-A2", "text": "Confirm what the 2025 municipal totals cover (G3)."}, {"id": "D-A3", "text": "Give enterprise managers the Daily Visitor Record for their own attractions, or leave them out (G2)."}, {"id": "D-A4", "text": "Official (finalized) figures are the default on every dashboard and the operational view is always labeled."}, {"id": "D-A5", "text": "Set a minimum group size for benchmarks and for nationality cells (G15)."}, {"id": "D-A6", "text": "Officer sees monthly versions only; stay-level detail (A9, A10) stays with the manager."}, {"id": "D-A7", "text": "Show saves and ratings (T11) beside the counted visits, never added to them."}, {"id": "D-A8", "text": "Overlay office-posted events and closures on the daily chart (T10)."}]};
+const invById = Object.fromEntries(INV.analytics.map(a => [a.id, a]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmt = n => (n == null ? '–' : Number(n).toLocaleString('en-PH'));
+const sum = a => a.reduce((x, y) => x + (y || 0), 0);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const S = { shares: false, year: '2025', mode: 'official', ent: 'beach', future: false, bar: 'acc', day: null };
+let uid = 0;
+
+/* ---------- verified data (read-only copy, 12 Nov 2026) ---------- */
+const LIVE = {
+  arrivals: [1861,1358,1558,2341,1984,1305,1194,1307,940,1607,1440,2403],
+  nights:   [4822,4517,5041,5453,4823,3319,3734,4118,2895,3780,4264,6216],
+  rooms:    [183,158,201,201,201,194,194,194,196,194,203,208],
+  rno:      [2107,2027,2171,2068,1876,1236,1496,1717,1167,1718,1670,2227],
+  groups:   [['Philippine residents', 14449], ['Non-Philippine residents', 4813], ['Overseas Filipinos', 36], ['Residence unspecified', 0]],
+  countries:[['France',1282],['USA',744],['Russia',495],['Germany',294],['Switzerland',165],['United Kingdom',161],['Australia',158],['Japan',149]],
+  places: [ // published places by barangay and type
+    ['Poblacion',7,1],['Maluay',2,1],['Mayabon',1,0],['Najandig',0,2],['Basak',0,1],['Calango',0,1],['Jumao-as',0,1],['Malongcay Diot',0,1]],
+  facts: [['Published places','18','10 places to stay, 8 attractions'],['Attractions counting visitors','2 of 8','6 have Count visitors here off'],
+          ['Support Staff accounts','0','no attraction has someone recording'],['2026 stays and reports','0','accommodation tables exist, no rows'],
+          ['Attraction tables','not on live','the stage 4 schema has not been run'],['Rooms set up','0','occupancy cannot be worked out'],
+          ['Bookings, reviews, saves','0 · 0 · 0','1 visitor account'],['2025 municipal totals','12 months','by 72 residence rows, no sex, no place']]
+};
+const dim = m => new Date(2026, m, 0).getDate();
+const DAYS_IN = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+/* ---------- sample data (made up) ---------- */
+const ACC26 = { // places to stay, 10 expected
+  exp: 10,
+  official:    [1210,1015,1180,1730,1490, 980, 905,1010, 430, null],
+  operational: [1210,1015,1180,1730,1490, 980, 905,1010, 720,1260],
+  cover: [ {f:7,s:0,d:0,m:3},{f:8,s:0,d:0,m:2},{f:10,s:0,d:0,m:0},{f:10,s:0,d:0,m:0},{f:10,s:0,d:0,m:0},{f:10,s:0,d:0,m:0},{f:10,s:0,d:0,m:0},{f:10,s:0,d:0,m:0},{f:6,s:3,d:0,m:1},{f:0,s:4,d:3,m:3} ],
+  nights: [3100,2650,3050,4300,3790,2510,2330,2640,1780,3200]
+};
+const ATT26 = { // attractions counting: 2
+  exp: [1,1,2,2,2,2,2,2,2,2],
+  official:    [820,760,2620,3860,3580,2020,1900,2130, 480, null],
+  operational: [820,760,2620,3860,3580,2020,1900,2130,1500,2870],
+  cover: [ {f:1,s:0,d:0,m:0},{f:1,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:2,s:0,d:0,m:0},{f:1,s:1,d:0,m:0},{f:0,s:2,d:0,m:0} ]
+};
+function makeDaily() {
+  const base = [64,16,21,24,27,35,58], out = [];
+  for (let d = 1; d <= 31; d++) {
+    const dow = new Date(2026, 9, d).getDay();
+    let v = Math.round(base[dow] * (1 + 0.16 * Math.sin(d * 1.7)));
+    if (d === 17 || d === 18) v = Math.round(v * 1.55);
+    let st = 'counted';
+    if (d === 5) { v = 0; st = 'zero'; }
+    if (d === 27) { v = null; st = 'closed'; }
+    if (d === 14 || d === 15) { v = null; st = 'missing'; }
+    out.push({ d, dow, v, st });
+  }
+  return out;
+}
+const DAILY = makeDaily();
+const EVENT = { from: 17, to: 18, label: 'Sample municipal event (posted by the office)' };
+const ENT = {
+  beach: { name: 'Sample Beach Resort', rooms: 24, f: 1.0 }, inn: { name: 'Sample Town Inn', rooms: 12, f: 0.55 }, home: { name: 'Sample Homestay', rooms: 5, f: 0.18 }
+};
+const BASEA = [210,188,205,310,262,171,160,178,122,224];
+
+/* ---------- small helpers ---------- */
+function nice(max) { const p = Math.pow(10, Math.floor(Math.log10(max))), n = max / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+const chip = (k, t) => `<span class="chip k-${k}">${t}</span>`;
+const KIND = { ver: chip('ver', 'Verified data'), prop: chip('prop', 'Proposed analytic'), gap: chip('gap', 'Data gap'), smp: chip('smp', 'Sample data') };
+function legend(items) { return `<div class="legend">${items.map(([c, t]) => `<span><i class="sw ${c}"></i>${t}</span>`).join('')}</div>`; }
+function tile(k, v, s) { return `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`; }
+function empty(title, text, kind) { return `<div class="empty">${kind ? KIND[kind] : ''}<b>${title}</b><span>${text}</span></div>`; }
+function table(headers, rows, num = []) {
+  return `<div class="scroll"><table class="tbl"><thead><tr>${headers.map((h, i) => `<th class="${num.includes(i) ? 'r' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${num.includes(i) ? 'r' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function about(id) {
+  const a = invById[id]; if (!a) return '';
+  return `<details class="about"><summary>About this analytic · ${a.id} · ${INV.statuses[a.status].split(':')[0]}</summary><dl>
+    <dt>Data source</dt><dd>${esc(a.source)}</dd><dt>Calculation</dt><dd>${esc(a.calc)}</dd><dt>Value</dt><dd>${esc(a.value)}</dd>
+    <dt>Best chart</dt><dd>${esc(a.viz)}</dd><dt>Limits</dt><dd>${esc(a.limits)}</dd></dl></details>`;
+}
+/* A card: a chart and its table form, kinds, and the analytic's definition. */
+function card({ id, title, kinds = [], chart, tbl, extra = '', wide = false }) {
+  const n = ++uid;
+  return `<article class="card" ${wide ? 'style="grid-column:1/-1"' : ''}><header><div class="ttl"><h3>${title}</h3><div class="chips">${kinds.map(k => KIND[k]).join('')}</div></div>
+    ${tbl ? `<div class="seg" role="group" aria-label="Chart or table"><button type="button" aria-pressed="true" data-show="c${n}">Chart</button><button type="button" aria-pressed="false" data-show="t${n}">Table</button></div>` : ''}</header>
+    <div id="c${n}">${chart}</div>${tbl ? `<div id="t${n}" hidden>${tbl}</div>` : ''}${extra}${id ? about(id) : ''}</article>`;
+}
+
+/* ---------- charts ---------- */
+function colChart({ labels = MON, vals, partial = [], cmp = null, cmpOk = [], cover = null, unit, cmpLabel, ariaLabel, mainLabel }) {
+  const g = ++uid, W = 640, H = 250, m = { l: 48, r: 8, t: 24, b: cover ? 56 : 28 };
+  const ok = vals.map((v, i) => v != null && !partial[i]);
+  const all = vals.filter(v => v != null).concat((cmp || []).filter((v, i) => v != null && cmpOk[i]));
+  const max = nice(Math.max(...all) * 1.12), iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / labels.length;
+  const y = v => m.t + ih - (v / max) * ih;
+  let s = `<svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ariaLabel)}"><defs><pattern id="h${g}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--surface)"/><rect width="2.5" height="6" fill="var(--main)"/></pattern><pattern id="d${g}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" fill="var(--fg2)"/></pattern></defs>`;
+  for (let i = 0; i <= 4; i++) { const v = max / 4 * i, yy = y(v); s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}"/><text x="${m.l - 6}" y="${yy + 4}" text-anchor="end">${fmt(Math.round(v))}</text>`; }
+  const okVals = vals.map((v, i) => ok[i] ? v : null), mx = Math.max(...okVals.filter(v => v != null)), mn = Math.min(...okVals.filter(v => v != null));
+  vals.forEach((v, i) => {
+    const x = m.l + bw * i + bw * 0.19, w = bw * 0.62, cx = m.l + bw * (i + 0.5);
+    s += `<text x="${cx}" y="${H - (cover ? 36 : 10)}" text-anchor="middle">${labels[i]}</text>`;
+    if (v == null) { s += `<g class="bar" tabindex="0" data-tip="${labels[i]}: not reported yet (not zero)" aria-label="${labels[i]}: no figure, not reported yet"><line class="nodata" x1="${x}" x2="${x + w}" y1="${m.t + ih - 1}" y2="${m.t + ih - 1}"/><rect x="${x}" y="${m.t}" width="${w}" height="${ih}" fill="transparent"/></g>`; return; }
+    const top = y(v), h = m.t + ih - top, tip = `${labels[i]}: ${fmt(v)} ${unit}${partial[i] ? ' (partial: some places not finalized)' : ''}${cmp && cmp[i] != null && cmpOk[i] ? ` · ${cmpLabel}: ${fmt(cmp[i])}` : ''}`;
+    s += `<g class="bar" tabindex="0" data-tip="${tip}" aria-label="${tip}"><rect class="m" x="${x}" y="${top}" width="${w}" height="${Math.max(h, 1)}"/>${partial[i] ? `<rect x="${x}" y="${top}" width="${w}" height="${Math.max(h, 1)}" fill="url(#h${g})" stroke="var(--main)" stroke-width="1.5"/>` : ''}</g>`;
+    if (ok[i] && v === mx) s += `<text class="lab" x="${cx}" y="${top - 6}" text-anchor="middle">Peak ${fmt(v)}</text>`;
+    else if (ok[i] && v === mn && mn !== mx) s += `<text class="lab" x="${cx}" y="${top - 6}" text-anchor="middle">Low ${fmt(v)}</text>`;
+  });
+  if (cmp) {
+    const pts = cmp.map((v, i) => (v != null && cmpOk[i] ? [m.l + bw * (i + 0.5), y(v)] : null));
+    let d = '', pen = false; pts.forEach(p => { if (p) { d += (pen ? 'L' : 'M') + p[0] + ' ' + p[1]; pen = true; } else pen = false; });
+    s += `<path class="cmpl" d="${d}"/>` + pts.filter(Boolean).map(p => `<circle class="cmpd" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join('');
+  }
+  s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/>`;
+  if (cover) cover.forEach((c, i) => {
+    const x = m.l + bw * i + bw * 0.19, w = bw * 0.62, y0 = H - 24, tot = c.f + c.s + c.d + c.m || 1; let xx = x;
+    const seg = (n, fill, extra) => { if (!n) return; const ww = w * n / tot; s += `<rect x="${xx}" y="${y0}" width="${Math.max(ww - 1, 1)}" height="9" ${extra || ''} fill="${fill}"/>`; xx += ww; };
+    seg(c.f, 'var(--cmp)'); seg(c.s, 'var(--main)'); seg(c.d, `url(#d${g})`); seg(c.m, 'none', 'stroke="var(--bad)" stroke-dasharray="2 2"');
+    s += `<rect x="${x}" y="${y0 - 2}" width="${w}" height="13" fill="transparent" data-tip="${MON[i]} coverage: ${c.f} finalized, ${c.s} submitted, ${c.d} draft, ${c.m} missing of ${tot} places" tabindex="0" aria-label="${MON[i]} coverage: ${c.f} finalized, ${c.s} submitted, ${c.d} draft, ${c.m} missing"/>`;
+  });
+  s += '</svg>';
+  const lg = [['main', mainLabel || 'Official figures']]; if (partial.some(Boolean)) lg.push(['part', 'Partial: not every place finalized']); if (cmp) lg.push(['cmp', cmpLabel]);
+  const cl = cover ? [['fin', 'Finalized'], ['sub', 'Submitted'], ['drf', 'Draft'], ['mis', 'Missing']] : [];
+  return `<figure class="chart">${s}${legend(lg)}${cover ? legend(cl) : ''}</figure>`;
+}
+function dailyChart(days, withEvent) {
+  const W = 640, H = 230, m = { l: 40, r: 8, t: 16, b: 30 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = days.length, bw = iw / n;
+  const max = nice(Math.max(...days.map(d => d.v || 0)) * 1.1), y = v => m.t + ih - v / max * ih, xc = i => m.l + bw * (i + 0.5);
+  let s = `<svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily visits in October 2026 with a seven-day average. Two days are missing, one day is closed, one day is a confirmed zero.">`;
+  for (let i = 0; i <= 4; i++) { const v = max / 4 * i; s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v)}</text>`; }
+  if (withEvent) s += `<rect class="ev" x="${m.l + bw * (EVENT.from - 1)}" y="${m.t}" width="${bw * (EVENT.to - EVENT.from + 1)}" height="${ih}"><title>${EVENT.label}</title></rect><text x="${m.l + bw * (EVENT.from - 1)}" y="${m.t + 10}" class="lab">Event</text>`;
+  let d = '', pen = false; days.forEach((o, i) => { if (o.v != null) { d += (pen ? 'L' : 'M') + xc(i) + ' ' + y(o.v); pen = true; } else pen = false; });
+  s += `<path class="ln" d="${d}"/>`;
+  const rec = days.map(o => o.v);
+  let a = '', pa = false;
+  days.forEach((o, i) => { const w = rec.slice(Math.max(0, i - 6), i + 1).filter(v => v != null); if (o.v != null && w.length >= 3) { a += (pa ? 'L' : 'M') + xc(i) + ' ' + y(sum(w) / w.length); pa = true; } else pa = false; });
+  s += `<path class="avg" d="${a}"/>`;
+  days.forEach((o, i) => {
+    const lab = `${MON[9]} ${o.d}: ${o.st === 'closed' ? 'authorized closure' : o.st === 'missing' ? 'not recorded' : o.st === 'zero' ? 'confirmed zero' : fmt(o.v) + ' visits'}`;
+    if (i % 5 === 0 || o.d === 31) s += `<text x="${xc(i)}" y="${H - 10}" text-anchor="middle">${o.d}</text>`;
+    s += `<g tabindex="0" data-tip="${lab}" aria-label="${lab}">`;
+    if (o.v != null) s += `<circle class="pt" cx="${xc(i)}" cy="${y(o.v)}" r="${o.st === 'zero' ? 4.5 : 3}" ${o.st === 'zero' ? 'fill="var(--surface)" stroke="var(--main)" stroke-width="2"' : ''}/>`;
+    else if (o.st === 'missing') s += `<circle cx="${xc(i)}" cy="${m.t + ih - 5}" r="4.5" fill="none" stroke="var(--bad)" stroke-width="2" stroke-dasharray="2 2"/>`;
+    else s += `<path d="M${xc(i) - 4} ${m.t + ih - 9}l8 8m0-8l-8 8" stroke="var(--fg2)" stroke-width="2"/>`;
+    s += `<rect x="${xc(i) - bw / 2}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent"/></g>`;
+  });
+  s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/></svg>`;
+  return `<figure class="chart">${s}<div class="legend"><span><i class="sw main"></i>Daily count</span><span><i class="sw" style="border-top:3px solid var(--main);height:0;width:18px"></i>7-day average (recorded days)</span><span>○ confirmed 0</span><span style="color:var(--bad)">◌ not recorded</span><span>✕ authorized closure</span>${withEvent ? '<span><i class="sw" style="background:var(--tang);opacity:.4"></i>Event</span>' : ''}</div></figure>`;
+}
+function weekdayChart(days) {
+  const sums = Array(7).fill(0), cnt = Array(7).fill(0);
+  days.forEach(o => { if (o.v != null) { sums[o.dow] += o.v; cnt[o.dow]++; } });
+  const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], means = sums.map((s, i) => cnt[i] ? Math.round(s / cnt[i]) : null);
+  const all = Math.round(sum(sums) / sum(cnt)), W = 640, H = 200, m = { l: 40, r: 8, t: 18, b: 40 }, iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / 7;
+  const max = nice(Math.max(...means) * 1.15), y = v => m.t + ih - v / max * ih;
+  let s = `<svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Average visits per recorded open day, by weekday">`;
+  for (let i = 0; i <= 4; i++) { const v = max / 4 * i; s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v)}</text>`; }
+  means.forEach((v, i) => { const x = m.l + bw * i + bw * 0.2, w = bw * 0.6, tip = `${names[i]}: mean ${v} visits over ${cnt[i]} recorded days`;
+    s += `<g class="bar" tabindex="0" data-tip="${tip}" aria-label="${tip}"><rect class="m" x="${x}" y="${y(v)}" width="${w}" height="${m.t + ih - y(v)}"/></g><text x="${x + w / 2}" y="${H - 22}" text-anchor="middle">${names[i]}</text><text x="${x + w / 2}" y="${H - 9}" text-anchor="middle" style="font-size:10px">n=${cnt[i]}</text>`; });
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(all)}" y2="${y(all)}" stroke="var(--cmp)" stroke-width="2" stroke-dasharray="5 4"/><text x="${W - m.r}" y="${y(all) - 5}" text-anchor="end" class="lab">All days: ${all}</text><line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/></svg>`;
+  return { html: `<figure class="chart">${s}${legend([['main', 'Mean per recorded day'], ['cmp', 'Mean of all recorded days']])}</figure>`, names, means, cnt };
+}
+function calendarHeat(days) {
+  const max = Math.max(...days.map(o => o.v || 0)), first = new Date(2026, 9, 1).getDay();
+  let s = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(n => `<span class="dw">${n}</span>`).join('') + '<span class="d pad"></span>'.repeat(first);
+  days.forEach(o => { const h = o.v != null ? Math.round(12 + 88 * o.v / max) : 0, cls = o.st === 'missing' ? 'miss' : o.st === 'closed' ? 'clo' : o.st === 'zero' ? 'zero' : (h > 55 ? 'hi' : '');
+    const txt = o.st === 'missing' ? 'not recorded' : o.st === 'closed' ? 'closed' : fmt(o.v);
+    s += `<div class="d ${cls}" style="--h:${h}" tabindex="0" data-tip="Oct ${o.d}: ${o.st === 'missing' ? 'not recorded' : o.st === 'closed' ? 'authorized closure' : o.st === 'zero' ? 'confirmed zero' : fmt(o.v) + ' visits'}" aria-label="Oct ${o.d}: ${txt}"><span>${o.d}</span><b>${o.st === 'missing' || o.st === 'closed' ? '' : fmt(o.v)}</b></div>`; });
+  return `<div class="cal">${s}</div>${legend([['main', 'Darker = more visits'], ['hatch', 'Confirmed 0'], ['mis', 'Not recorded'], ['hatch', 'Closed (struck through)']])}`;
+}
+function heatYears(rows, label) {
+  const all = rows.flatMap(r => r.vals).filter(v => v != null), max = Math.max(...all);
+  return `<div class="scroll"><table class="heat" aria-label="${label}"><thead><tr><th></th>${MON.map(m => `<th>${m}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr><th class="y">${r.name}</th>${r.vals.map((v, i) => v == null ? `<td class="none" title="not reported">–</td>` : `<td class="${v / max > 0.55 ? 'hi' : ''}" style="--h:${Math.round(10 + 90 * v / max)}" data-tip="${r.name} ${MON[i]}: ${fmt(v)}" tabindex="0">${fmt(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function hbars(items, { unit = '', total = null } = {}) {
+  const max = Math.max(...items.map(i => i.value || 0));
+  return `<div class="hb">${items.map(i => i.na ? `<div class="l">${i.label}</div><div class="na">${i.na}</div>` : `<div class="l">${i.label}</div><div class="t" tabindex="0" data-tip="${i.label}: ${fmt(i.value)} ${unit}"><i style="width:${max ? i.value / max * 100 : 0}%"></i></div><div class="v">${fmt(i.value)}${S.shares && total ? ` <span class="muted small">(${(i.value / total * 100).toFixed(1)}%)</span>` : ''}</div>`).join('')}</div>`;
+}
+function stacked(segs, total) {
+  const cls = ['s1','s2','s3','s4'];
+  const bar = segs.map((g, i) => `<i class="${g.hatch ? 'sh' : cls[i % 4]}" style="width:${total ? Math.max(g.value / total * 100, g.value ? 0.6 : 0) : 0}%" tabindex="0" data-tip="${g.label}: ${fmt(g.value)}"></i>`).join('');
+  const lg = segs.map((g, i) => `<span><i class="sw ${g.hatch ? 'hatch' : ''}" style="${g.hatch ? '' : `background:var(--${['main','ember','tang','cmp'][i % 4]});border-color:transparent`}"></i>${g.label}<b>${fmt(g.value)}${S.shares && total ? ` · ${(g.value / total * 100).toFixed(1)}%` : ''}</b></span>`).join('');
+  return `<div class="stack" role="img" aria-label="${segs.map(g => g.label + ' ' + g.value).join(', ')}">${bar}</div><div class="stk-leg">${lg}</div>`;
+}
+const sharesNote = () => (S.shares ? `<p class="small">${chip('gap', 'Needs a decision')} <span class="muted">Shares break the counts-only rule (G4). Shown here only to review the look.</span></p>` : '');
+
+/* ---------- Officer dashboard ---------- */
+function officer() {
+  const live = S.year === '2025', a = live ? null : ACC26, t = live ? null : ATT26;
+  const accVals = live ? LIVE.arrivals : (S.mode === 'official' ? a.official : a.operational);
+  const accPartial = live ? [] : accVals.map((v, i) => v != null && S.mode === 'official' && a.cover[i].f < a.exp && a.cover[i].f > 0);
+  const cmpOk = live ? [] : a.cover.map(c => c.f === a.exp && c.m === 0);
+  const accChart = colChart({ vals: accVals, partial: accPartial, cover: live ? null : a.cover, cmp: live ? null : LIVE.arrivals, cmpOk, unit: 'arrivals', cmpLabel: '2025 paper total (scope to confirm)', mainLabel: live ? '2025 municipal total (paper Form A4)' : (S.mode === 'official' ? 'Official: finalized places' : 'Operational: finalized, submitted and draft'), ariaLabel: `Guest arrivals per month, ${S.year}` });
+  const yr = live ? LIVE : null;
+  const totA = live ? sum(LIVE.arrivals) : sum(accVals), totN = live ? sum(LIVE.nights) : sum(a.nights.slice(0, 10));
+  const valsOk = accVals.map((v, i) => (v != null && !accPartial[i] ? v : null)).filter(v => v != null);
+  const accTiles = `<div class="tiles">${tile(live ? 'Arrivals, 2025' : 'Arrivals so far', fmt(totA), live ? '12 months · paper total' : 'partial coverage, see band')}
+    ${tile('Guest nights', fmt(live ? totN : null), live ? 'sum of 12 months' : 'shown once finalized')}
+    ${tile('Average stay', live ? (totN / totA).toFixed(2) + ' nights' : '–', live ? 'guest nights ÷ arrivals' : 'needs complete months')}
+    ${tile('Peak · low', live ? 'Dec · Sep' : 'see chart', live ? '2,403 · 940 arrivals' : 'complete months only')}</div>`;
+  const accTbl = table(['Month', 'Arrivals', ...(live ? ['Guest nights', 'Rooms', 'Room-nights occupied'] : ['Finalized', 'Submitted', 'Draft', 'Missing'])],
+    MON.map((m, i) => live ? [m, fmt(LIVE.arrivals[i]), fmt(LIVE.nights[i]), fmt(LIVE.rooms[i]), fmt(LIVE.rno[i])] : (i < 10 ? [m, fmt(accVals[i]), a.cover[i].f, a.cover[i].s, a.cover[i].d, a.cover[i].m] : [m, '–', '', '', '', ''])), live ? [1, 2, 3, 4] : [1, 2, 3, 4, 5]);
+  const accCard = card({ id: 'A1', title: 'Accommodation: guest arrivals per month', kinds: live ? ['ver', 'prop'] : ['smp', 'prop'], chart: accTiles + accChart, tbl: accTbl,
+    extra: live ? `<p class="small muted">${chip('gap', 'Scope')} The office has not confirmed what the 2025 paper totals cover (G3). They are not added to anything and not called attraction visits.</p>` : `<p class="small muted">The dashed 2025 line appears only for months where every place finalized, and says its scope is unconfirmed. Partial months are hatched, never drawn as complete.</p>` });
+  let attBody;
+  if (live) attBody = empty('No attraction data for 2025', 'Attraction visits start being recorded in 2026 and nothing was counted before. The 2025 municipal totals are not attraction visits.', 'gap');
+  else {
+    const v = S.mode === 'official' ? t.official : t.operational;
+    const part = v.map((x, i) => x != null && S.mode === 'official' && t.cover[i].f < t.exp[i] && t.cover[i].f > 0);
+    const cover = t.cover.map((c, i) => Object.assign({}, c, { m: Math.max(t.exp[i] - c.f - c.s - c.d, 0) }));
+    attBody = `<div class="tiles">${tile('Visits so far', fmt(sum(v)), 'visits, not people')}${tile('Counting attractions', '2 of 8', 'verified on live')}${tile('Months finalized', t.cover.filter((c, i) => c.f === t.exp[i]).length + ' of 10', 'both places')}</div>` +
+      colChart({ vals: v, partial: part, cover, unit: 'visits', mainLabel: S.mode === 'official' ? 'Official: finalized attractions' : 'Operational: finalized, submitted and draft', ariaLabel: 'Attraction visits per month, 2026' });
+  }
+  const attTbl = live ? '' : table(['Month', 'Visits (official)', 'Visits (operational)', 'Finalized of expected'], MON.slice(0, 10).map((m, i) => [m, fmt(ATT26.official[i]), fmt(ATT26.operational[i]), `${ATT26.cover[i].f} of ${ATT26.exp[i]}`]), [1, 2]);
+  const attCard = card({ id: 'T1', title: 'Attractions: visits per month', kinds: live ? ['gap'] : ['smp', 'prop'], chart: attBody, tbl: attTbl });
+  const heat = heatYears([{ name: '2025 · paper total', vals: LIVE.arrivals }, { name: '2026 · sample, finalized', vals: ACC26.official.concat([null, null]) }], 'Accommodation arrivals by month and year');
+  const peakCard = card({ id: 'A5', title: 'Peak and low months: accommodation', kinds: ['ver', 'smp', 'prop'], chart: heat + `<p class="small">${chip('gap', 'One year only')} <span class="muted">2025 shows the order of months, not a season. A season needs two full years (G5). September 2026 and later are partial or missing and are not ranked.</span></p>` });
+  const wk = weekdayChart(DAILY);
+  const dayCard = card({ id: 'T4', title: 'Attraction daily pattern: October 2026, one attraction', kinds: ['smp', 'prop'], chart: calendarHeat(DAILY), wide: false });
+  const wkCard = card({ id: 'T3', title: 'Attraction visits by weekday', kinds: ['smp', 'prop'], chart: wk.html, tbl: table(['Weekday', 'Mean visits', 'Days behind it'], wk.names.map((n, i) => [n, wk.means[i], wk.cnt[i]]), [1, 2]) });
+  // residence and sex
+  const accRes = card({ id: 'A7', title: 'Accommodation: where guests live, 2025', kinds: ['ver', 'prop'],
+    chart: stacked(LIVE.groups.map(g => ({ label: g[0], value: g[1] })), sum(LIVE.groups.map(g => g[1]))) + `<h4 style="margin-top:8px">Top non-Philippine countries</h4>` + hbars(LIVE.countries.map(c => ({ label: c[0], value: c[1] })), { unit: 'arrivals', total: 19298 }) + sharesNote(),
+    tbl: table(['Group or country', 'Arrivals 2025'], LIVE.groups.map(g => [g[0], fmt(g[1])]).concat(LIVE.countries.map(c => ['· ' + c[0], fmt(c[1])])), [1]) });
+  const sexGap = card({ id: 'A8', title: 'Accommodation: sex of guests, 2025', kinds: ['gap'], chart: empty('Not collected for 2025', 'The paper totals have no male and female split. From 2026 the stay register records it, and every month without a split is listed, never filled in.', 'gap') });
+  const attRes = card({ id: 'T8', title: 'Attractions: where visitors live', kinds: ['smp', 'prop'],
+    chart: stacked([{ label: 'Zamboanguita', value: 1210 }, { label: 'Rest of Negros Oriental', value: 980 }, { label: 'Other Philippine provinces', value: 640 }, { label: 'Foreign countries', value: 190 }, { label: 'Residence not recorded', value: 780, hatch: true }], 3800) + sharesNote() + `<p class="small muted">Hatched: visits with no residence recorded. They stay in the total and are never placed in a class.</p>`,
+    tbl: table(['Class', 'Visits'], [['Zamboanguita', 1210], ['Rest of Negros Oriental', 980], ['Other Philippine provinces', 640], ['Foreign countries', 190], ['Residence not recorded', 780]].map(r => [r[0], fmt(r[1])]), [1]) });
+  const attSex = card({ id: 'T9', title: 'Attractions: sex of visitors', kinds: ['smp', 'prop'],
+    chart: stacked([{ label: 'Male', value: 1320 }, { label: 'Female', value: 1490 }, { label: 'Sex not recorded', value: 990, hatch: true }], 3800) + `<p class="small muted">Sex by residence is never stored, so no cross-tabulation is shown.</p>` });
+  // barangay
+  const accB = LIVE.places.map(p => ({ b: p[0], n: p[1], v: { Poblacion: 640, Maluay: 380, Mayabon: 95 }[p[0]] }));
+  const attB = LIVE.places.map(p => ({ b: p[0], n: p[2], v: { Najandig: 1180, Maluay: 960 }[p[0]] }));
+  const list = (S.bar === 'acc' ? accB : attB);
+  const barItems = list.map(r => r.n === 0 ? { label: r.b, na: `no ${S.bar === 'acc' ? 'place to stay' : 'attraction'} listed` } : r.v == null ? { label: `${r.b} · ${r.n} place${r.n > 1 ? 's' : ''}`, na: 'not counted: no Support Staff yet' } : { label: `${r.b} · ${r.n} place${r.n > 1 ? 's' : ''}`, value: r.v });
+  const brgCard = card({ id: S.bar === 'acc' ? 'A14' : 'T7', title: 'By barangay, where the place is', kinds: ['ver', 'smp', 'prop'],
+    chart: `<div class="seg" role="group" aria-label="Domain" style="align-self:flex-start"><button type="button" aria-pressed="${S.bar === 'acc'}" data-bar="acc">Places to stay</button><button type="button" aria-pressed="${S.bar === 'att'}" data-bar="att">Attractions</button></div>
+      ${hbars(barItems.sort((x, y) => (y.value || -1) - (x.value || -1)), { unit: S.bar === 'acc' ? 'arrivals (October, sample)' : 'visits (October, sample)' })}
+      <p class="small muted">Place counts are verified from the live listings. Bar values are sample. A barangay with no counted place shows a reason, not 0. The barangay is where the place is, not where guests live (G12). With one or two places a bar is close to one place's own figure (G15).</p>`,
+    tbl: table(['Barangay', 'Places to stay (live)', 'Attractions (live)'], LIVE.places.map(p => [p[0], p[1], p[2]]), [1, 2]) });
+  const catCard = card({ id: 'T7', title: 'Attraction visits by category (October, sample)', kinds: ['smp', 'prop'],
+    chart: hbars([{ label: 'Nature', value: 1180 }, { label: 'Beach & Sea', value: 960 }].concat([{ label: 'Culture & Heritage', na: 'no counted attraction' }, { label: 'Diving & Snorkeling', na: 'no counted attraction' }, { label: 'Faith', na: 'no counted attraction' }, { label: 'Leisure & Recreation', na: 'no counted attraction' }]), { unit: 'visits' }) +
+      `<p class="small muted">An attraction with several categories counts under each, so the bars are never added together. Live categories (main): Beach 5, Nature 4, Culture 3, Diving 3, Leisure 2, Faith 1, but they include places to stay.</p>` });
+  // completeness
+  const trk = [['Falls A', ['fin','fin','fin','fin','fin','fin','fin','fin','sub','sub','fut','fut']], ['Beach Park B', ['nos','nos','fin','fin','fin','fin','fin','fin','fin','sub','fut','fut']], ['Six attractions not counting', ['nos','nos','nos','nos','nos','nos','nos','nos','nos','nos','fut','fut']]];
+  const trkTxt = { fin: 'Finalized', sub: 'Submitted', mis: 'Missing', nos: 'Not expected', fut: '' };
+  const tracker = `<div class="scroll"><table class="trk" aria-label="Attraction reporting by month"><thead><tr><th></th>${MON.map(m => `<th class="small muted">${m}</th>`).join('')}</tr></thead><tbody>${trk.map(r => `<tr><th class="small" style="text-align:left;padding-right:10px">${r[0]}</th>${r[1].map((s, i) => `<td><span class="st ${s}" tabindex="0" data-tip="${r[0]} · ${MON[i]}: ${trkTxt[s] || 'not yet'}">${s === 'fut' ? '' : s === 'fin' ? 'Final' : s === 'sub' ? 'Subm.' : s === 'nos' ? '–' : '!'}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div>` + legend([['fin', 'Finalized'], ['sub', 'Submitted'], ['mis', 'Missing'], ['hatch', 'Not expected: not counting or before reporting started']]);
+  const compCard = card({ id: 'X1', title: 'Reporting completeness', kinds: ['smp', 'prop'], chart: tracker + `<p class="small muted">The same coverage band sits under every monthly chart, so a reader sees how much is in before trusting a number. The existing trackers already hold these states.</p>` });
+  const gapCard = card({ id: 'X5', title: 'Data gaps to close first', kinds: ['ver', 'prop'],
+    chart: `<ul class="list">${[['6 of 8 published attractions are not counted', 'Switch counting on and add Support Staff (G18)'], ['0 Support Staff accounts on live', 'Without them no attraction can report (G1)'], ['10 places to stay have no rooms set up', 'Occupancy cannot be worked out (G8)'], ['Manager-run attractions cannot report', 'Decision needed (G2)']].map(r => `<li><span><b>${r[0]}</b><br><span class="muted small">${r[1]}</span></span><span class="chip k-gap">Gap</span></li>`).join('')}</ul>` });
+  const factGrid = `<div class="grid3">${LIVE.facts.map(f => `<div class="fact"><span class="k">${f[0]}</span><b>${f[1]}</b><span class="small muted">${f[2]}</span></div>`).join('')}</div>`;
+  return `<section class="view"><div class="head"><div><h2>Tourism Officer</h2><p class="muted">Municipal picture in two separate panels. Accommodation arrivals and attraction visits share a month axis but never a total.</p></div></div>
+    <div><h3 style="margin-bottom:8px">What live holds today ${KIND.ver}</h3><p class="small muted" style="margin-bottom:8px">Read-only check on 12 November 2026. Counts only; no names or contact details were read.</p>${factGrid}</div>
+    <div class="controls"><label>Year <select id="selYear"><option value="2025" ${live ? 'selected' : ''}>2025 · live paper totals</option><option value="2026" ${live ? '' : 'selected'}>2026 · sample enterprise reports</option></select></label>
+      <div class="seg" role="group" aria-label="Which figures"><button type="button" aria-pressed="${S.mode === 'official'}" data-mode="official" ${live ? 'disabled' : ''}>Official (finalized)</button><button type="button" aria-pressed="${S.mode === 'operational'}" data-mode="operational" ${live ? 'disabled' : ''}>Operational</button></div>
+      <label><input type="checkbox" id="chkShares" ${S.shares ? 'checked' : ''}> Show shares <span class="chip k-gap">needs decision</span></label></div>
+    <div class="grid2">${accCard}${attCard}</div>
+    <h3>Peak and low periods</h3><div class="grid2">${peakCard}${dayCard}</div><div class="grid2">${wkCard}${card({ id: 'T2', title: 'Daily visits and 7-day average, with an event', kinds: ['smp', 'prop'], chart: dailyChart(DAILY, true) })}</div>
+    <h3>Residence and sex, only where collected</h3><div class="grid2">${accRes}${attRes}${sexGap}${attSex}</div>
+    <h3>By barangay, category and location</h3><div class="grid2">${brgCard}${catCard}</div>
+    <h3>Reporting completeness and missing data</h3><div class="grid2">${compCard}${gapCard}</div></section>`;
+}
+
+/* ---------- Enterprise Manager ---------- */
+function manager() {
+  const e = ENT[S.ent], arr = BASEA.map(v => Math.round(v * e.f)), nights = arr.map(v => Math.round(v * 2.6)), rno = nights.map(v => Math.round(v / 1.9));
+  const avail = DAYS_IN.slice(0, 10).map(d => e.rooms * d), occ = rno.map((v, i) => v / avail[i]);
+  const prev = S.future ? arr.map((v, i) => Math.round(v * (0.9 + 0.05 * Math.sin(i + e.rooms)))) : null;
+  const chart = colChart({ vals: arr.concat([null, null]), cmp: prev ? prev.concat([null, null]) : null, cmpOk: prev ? Array(12).fill(true) : [], unit: 'arrivals', cmpLabel: 'Last year (sample, from 2027)', mainLabel: `${e.name}, 2026`, ariaLabel: 'Arrivals per month at this enterprise' });
+  const lineO = (() => { const W = 640, H = 200, m = { l: 40, r: 8, t: 16, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / 12, y = v => m.t + ih - v * ih; let s = `<svg class="c" viewBox="0 0 ${W} ${H}" role="img" aria-label="Occupancy by month">`;
+    [0, .25, .5, .75, 1].forEach(v => { s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`; });
+    let d = ''; occ.forEach((v, i) => { d += (i ? 'L' : 'M') + (m.l + bw * (i + .5)) + ' ' + y(v); }); s += `<path class="avg" d="${d}"/>`;
+    occ.forEach((v, i) => { const t = `${MON[i]}: ${rno[i]} of ${fmt(avail[i])} room-nights occupied (${(v * 100).toFixed(0)}%)`; s += `<g tabindex="0" data-tip="${t}" aria-label="${t}"><circle class="pt" cx="${m.l + bw * (i + .5)}" cy="${y(v)}" r="4"/><rect x="${m.l + bw * i}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent"/></g>`; });
+    MON.forEach((n, i) => { s += `<text x="${m.l + bw * (i + .5)}" y="${H - 8}" text-anchor="middle">${n}</text>`; });
+    return `<figure class="chart">${s}</svg>${legend([['main', 'Room-nights occupied ÷ available']])}</figure>`.replace('</svg></svg>', '</svg>'); })();
+  const wkv = [22, 9, 11, 13, 17, 31, 38].map(v => Math.round(v * e.f * 1.0 + 1));
+  const wkNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const stays = [18, 34, 29, 17, 6].map(v => Math.round(v * e.f + 1)), buckets = ['1 night', '2', '3', '4–6', '7 or more'];
+  const fn = { requested: Math.round(42 * e.f + 3), confirmed: Math.round(31 * e.f + 2), checked_in: Math.round(27 * e.f + 2), completed: Math.round(25 * e.f + 2) };
+  const sts = ['fin','fin','fin','fin','fin','fin','fin','fin','sub','open','fut','fut'];
+  const next = 'October is in progress. Record each stay at check-in; submit after month end.';
+  const res = [['Philippine residents', Math.round(1450 * e.f)], ['Non-Philippine residents', Math.round(380 * e.f)], ['Overseas Filipinos', Math.round(8 * e.f)], ['Residence unspecified', Math.round(30 * e.f)]];
+  const ownTrk = `<div class="scroll"><table class="trk"><tbody><tr>${MON.map((m, i) => `<td><div class="small muted" style="text-align:center">${m}</div><span class="st ${sts[i] === 'open' ? 'sub' : sts[i]}" style="border-style:${sts[i] === 'open' ? 'dashed' : 'solid'}">${{ fin: 'Final', sub: 'Subm.', open: 'Open', fut: '' }[sts[i]]}</span></td>`).join('')}</tr></tbody></table></div><p class="small muted">${next}</p>`;
+  const bench = `<p>August 2026: <b>${fmt(Math.round(178 * e.f))}</b> arrivals here, <b>1,010</b> at all 10 places that reported.</p><p class="small muted">A comparison is shown only when at least 3 places reported in the group. Example of a hidden one: <i>Homestays in Mayabon: 1 place, hidden.</i> The threshold is a decision (D-A5).</p>`;
+  return `<section class="view"><div class="head"><div><h2>Enterprise Manager</h2><p class="muted">Their own enterprise only, switched like the portal's header. Rates are shown only where the DAE forms already define them.</p></div></div>
+    <div class="controls"><label>Enterprise <select id="selEnt">${Object.entries(ENT).map(([k, v]) => `<option value="${k}" ${S.ent === k ? 'selected' : ''}>${v.name}</option>`).join('')}</select></label>
+      <label><input type="checkbox" id="chkFuture" ${S.future ? 'checked' : ''}> Preview 2027 with last year's line</label>${KIND.smp}</div>
+    <div class="tiles">${tile('Arrivals, Jan–Oct', fmt(sum(arr)), 'guests, from the stay register')}${tile('Guest nights', fmt(sum(nights)), '')}${tile('Occupancy, Oct', Math.round(occ[9] * 100) + '%', `${rno[9]} of ${fmt(avail[9])} room-nights`)}${tile('Average stay', (sum(nights) / sum(arr)).toFixed(1) + ' nights', 'guest nights ÷ arrivals')}</div>
+    <div class="grid2">
+      ${card({ id: 'A1', title: 'Arrivals per month', kinds: ['smp', 'prop'], chart: chart, tbl: table(['Month', 'Arrivals', 'Guest nights'], arr.map((v, i) => [MON[i], fmt(v), fmt(nights[i])]), [1, 2]), extra: S.future ? '' : `<p class="small muted">${chip('gap', 'First year')} Last year's line cannot exist at enterprise level before 2027: 2025 was reported as one paper total (G5).</p>` })}
+      ${card({ id: 'A4', title: 'Occupancy', kinds: ['smp', 'prop'], chart: lineO, extra: `<p class="small muted">Both counts are in the tooltip. Needs the rooms to be set up (${e.rooms} here).</p>` })}
+      ${card({ id: 'A9', title: 'Arrivals by weekday', kinds: ['smp', 'prop'], chart: hbars(wkNames.map((n, i) => ({ label: n, value: wkv[i] })), { unit: 'arrivals' }) + '<p class="small muted">From the live stay register, so it can change until the month is submitted.</p>' })}
+      ${card({ id: 'A10', title: 'Length of stay', kinds: ['smp', 'prop'], chart: hbars(buckets.map((n, i) => ({ label: n, value: stays[i] })), { unit: 'stays' }) + '<p class="small muted">Counts stays, not guests.</p>' })}
+      ${card({ id: 'A7', title: 'Where guests live', kinds: ['smp', 'prop'], chart: stacked(res.map((g, i) => ({ label: g[0], value: g[1], hatch: i === 3 })), sum(res.map(g => g[1]))) + sharesNote() })}
+      ${card({ id: 'A11', title: 'Room requests made through ZTIMS', kinds: ['smp', 'prop'], chart: hbars([{ label: 'Requested', value: fn.requested }, { label: 'Confirmed', value: fn.confirmed }, { label: 'Checked in', value: fn.checked_in }, { label: 'Completed', value: fn.completed }], { unit: 'requests' }) + `<div class="tiles" style="margin-top:8px">${tile('Lead time', '19 days', 'median, request to check-in')}${tile('Answered in', '6 hours', 'median')}</div><p class="small muted">Only requests made through ZTIMS, and a booking is never an arrival (A12).</p>` })}
+      ${card({ id: 'X1', title: 'Your reporting status', kinds: ['smp', 'prop'], chart: ownTrk })}
+      ${card({ id: null, title: 'Compared with the municipality', kinds: ['smp', 'prop'], chart: bench })}
+    </div></section>`;
+}
+
+/* ---------- Support Staff ---------- */
+function staff() {
+  const wk = weekdayChart(DAILY), rec = DAILY.filter(o => o.v != null), tot = sum(rec.map(o => o.v));
+  return `<section class="view"><div class="head"><div><h2>Support Staff</h2><p class="muted">Their one attraction. Reads are for planning the week and finishing the month; counts are entered on the Daily Visitor Record.</p></div>${KIND.smp}</div>
+    <div class="tiles">${tile('Visits, October so far', fmt(tot), 'visits, not people')}${tile('Dates recorded', rec.length + ' of 31', '2 missing · 1 closure · 1 confirmed 0')}${tile('Residence not recorded', '212', 'visits, shown on the report')}${tile('September', fmt(2480), 'finalized, for comparison')}</div>
+    <div class="grid2">${card({ id: 'T2', title: 'Daily visits, October', kinds: ['smp', 'prop'], chart: dailyChart(DAILY, true), tbl: table(['Date', 'Visits', 'State'], DAILY.map(o => [`Oct ${o.d}`, fmt(o.v), { counted: 'Counted', zero: 'Confirmed 0', closed: 'Authorized closure', missing: 'Not recorded' }[o.st]]), [1]) })}
+      ${card({ id: 'T3', title: 'Which days are busy', kinds: ['smp', 'prop'], chart: wk.html })}
+      ${card({ id: 'X1', title: 'Finish the month', kinds: ['smp', 'prop'], chart: `<ul class="list"><li><span><b>2 dates not recorded</b><br><span class="muted small">Oct 14 and 15: record the count, or 0 if nobody came</span></span><span class="chip k-gap">Missing</span></li><li><span><b>Residence not recorded for 212 visits</b><br><span class="muted small">Optional; they stay in the total</span></span><span class="chip k-prop">Optional</span></li><li><span><b>Submit from 1 November</b><br><span class="muted small">After every date is recorded or closed</span></span><span class="chip k-smp">Next</span></li></ul>` })}</div></section>`;
+}
+
+/* ---------- Inventory, data flow, gaps ---------- */
+const INVF = { dom: 'all', status: 'all', aud: 'all', pri: 'all', q: '' };
+function inventory() {
+  const cnt = Object.fromEntries(Object.keys(INV.statuses).map(k => [k, INV.analytics.filter(a => a.status === k).length]));
+  const opt = (o, g) => Object.entries(o).map(([k, v]) => `<button type="button" class="pill" aria-pressed="${INVF[g] === k}" data-f="${g}:${k}">${v}</button>`).join('');
+  return `<section class="view"><div class="head"><div><h2>Analytics inventory</h2><p class="muted">${INV.analytics.length} analytics. Each has a source, a calculation, a user value, a best chart and its limits. Nothing is invented from data that is not collected.</p></div></div>
+    <div class="tiles">${Object.entries(INV.statuses).map(([k, v]) => tile(v.split(':')[0], cnt[k], v.split(': ')[1])).join('')}</div>
+    <div class="filters"><input type="search" id="invQ" placeholder="Search analytics" value="${esc(INVF.q)}" aria-label="Search analytics">
+      <div class="grp"><span>Domain</span>${opt({ all: 'All', A: 'Accommodation', T: 'Attraction', X: 'Cross-cutting', N: 'Not proposed' }, 'dom')}</div>
+      <div class="grp"><span>Status</span>${opt({ all: 'All', now: 'Now', after: 'After reporting runs', decision: 'Decision', parked: 'Not proposed' }, 'status')}</div>
+      <div class="grp"><span>For</span>${opt({ all: 'All', officer: 'Officer', manager: 'Manager', staff: 'Support Staff' }, 'aud')}</div>
+      <div class="grp"><span>Build order</span>${opt({ all: 'All', 1: 'First', 2: 'Second', 3: 'Third' }, 'pri')}</div></div>
+    <div class="inv" id="invList"></div></section>`;
+}
+function invRows() {
+  const f = INVF, q = f.q.toLowerCase();
+  const rows = INV.analytics.filter(a => (f.dom === 'all' || a.domain === f.dom) && (f.status === 'all' || a.status === f.status) && (f.aud === 'all' || a.audience.includes(f.aud)) && (f.pri === 'all' || String(a.priority) === String(f.pri)) && (!q || (a.id + a.name + a.source + a.calc).toLowerCase().includes(q)));
+  const stc = { now: 'ver', after: 'prop', decision: 'gap', data: 'gap', parked: 'smp' };
+  $('#invList').innerHTML = rows.length ? rows.map(a => `<details><summary><span class="id">${a.id}</span><span><b>${esc(a.name)}</b><br><span class="small muted">${INV.domains[a.domain]}${a.audience.length ? ' · ' + a.audience.map(x => ({ officer: 'Officer', manager: 'Manager', staff: 'Support Staff' }[x])).join(', ') : ''}${a.priority ? ' · build order ' + a.priority : ''}</span></span><span class="chips">${chip(stc[a.status], INV.statuses[a.status].split(':')[0])}</span></summary>
+    <div class="body"><div><h4>Data source</h4>${esc(a.source)}</div><div><h4>Calculation</h4>${esc(a.calc)}</div><div><h4>User value</h4>${esc(a.value)}</div><div><h4>Best visualization</h4>${esc(a.viz)}</div><div><h4>Limitations</h4>${esc(a.limits)}</div></div></details>`).join('') : empty('No analytic matches', 'Clear a filter or the search.');
+}
+function dataflow() {
+  const box = (t, tag, items, cls = '') => `<div class="box ${cls}"><h4>${t}${tag || ''}</h4><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul></div>`;
+  return `<section class="view"><div class="head"><div><h2>Data flow</h2><p class="muted">Nothing new is collected for the first version. The analytics read what the reporting modules already keep, through one layer, so a screen, a preview and an Excel file all use the same figures.</p></div></div>
+    <div class="flow">
+      <div style="display:flex;flex-direction:column;gap:10px">${box('Accommodation sources', KIND.ver, ['Stay register: stays, guests by residence and sex', 'Monthly versions: arrivals, nights, rooms, room-nights', 'Rooms, closed periods', 'Room requests (bookings), counts only'])}
+        ${box('Attraction sources', KIND.ver, ['Daily counts: total, four residence classes, sex, with completeness', 'Authorized closures', 'Monthly versions and states'])}
+        ${box('Context', KIND.ver, ['Listings: barangay, type, category, map pin', 'Events and closures posted by the office', 'Saves and visible ratings'])}
+        ${box('2025 baseline', KIND.ver, ['Municipal totals from the paper Form A4 (12 months), kept as loaded'], 'dash')}</div>
+      <div style="display:flex;flex-direction:column;gap:10px" class="arrow">${box('Official layer', KIND.ver, ['Submitted and finalized versions (immutable)', 'Official = finalized only', 'Operational = also submitted and draft, always labeled', 'Month with nothing usable = not reported, never 0'])}
+        ${box('Existing engines', KIND.ver, ['accommodation-engine.js: ratios, differences, comparable months', 'attraction-engine.js: month figures, residence and sex', 'Reused as they are'])}</div>
+      <div style="display:flex;flex-direction:column;gap:10px" class="arrow">${box('Analytics layer', KIND.prop, ['One read-only module, computed on request (no new tables at first)', 'One function per analytic in the inventory', 'Every result carries its coverage: places expected, finalized, submitted, missing', 'Role scope applied in the query, not in the page', 'Optional monthly snapshot later if reads get slow'])}
+        ${box('Not combined', KIND.gap, ['Accommodation and attraction stay in separate results', 'No unique-tourist total (no verified deduplication)', 'No revenue'], 'dash')}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">${box('Officer dashboard', KIND.prop, ['All places, both domains, completeness, gaps'])}${box('Manager dashboard', KIND.prop, ['Own enterprises only, benchmark above the minimum group size'])}${box('Support Staff view', KIND.prop, ['Own attraction only'])}${box('Excel and print', KIND.prop, ['Same functions as the screens; no separate formulas'])}</div>
+    </div>
+    <h3>Rules the layer follows</h3>
+    <div class="rules">${['Role and assignment are checked on the server for every read, as the reporting routes already do. A hidden chart is never a control.', 'Official figures are the default. The operational view is a switch and says so on the chart.', 'A missing month is a gap, a confirmed zero is a zero, and an unrecorded breakdown is its own segment.', 'A comparison uses months finalized in both years (the FORM A rule) and names the months it left out.', 'Counts first. Shares, percentage change and rates appear only after the decision (G4), except where the DAE forms define them.', 'Bounded queries: a year at most, grouped in the database, no per-guest rows leave the module.', 'No credentials or personal details in any result, error or export. These counts hold no names.', 'The office posts events; the overlay reads them and never claims a cause.'].map(r => `<div class="rule">${r}</div>`).join('')}</div>
+    <h3>Who sees what</h3>
+    ${table(['Role', 'Scope', 'Sees', 'Does not see'], [['Tourism Officer', 'Every place', 'Official and operational, both domains, completeness, gaps', 'Stay-level detail and guest data (decision D-A6)'], ['Enterprise Manager', 'Own enterprises', 'Own stays, versions, requests, benchmark above the minimum group size', 'Other enterprises\' figures, municipal rows below the minimum'], ['Support Staff', 'Own attraction', 'Own daily counts, weekday pattern, month progress', 'Other attractions, accommodation, money'], ['Tourist, other roles', '—', 'Nothing here', 'Everything']])}
+  </section>`;
+}
+function gaps() {
+  const pc = { P0: 'gap', P1: 'prop', P2: 'smp' };
+  return `<section class="view"><div class="head"><div><h2>Prioritized gaps</h2><p class="muted">What cannot be shown honestly yet, in the order it blocks the analytics. P0 stops the core picture, P1 limits it, P2 is a known limit.</p></div></div>
+    <div class="inv">${GAPS.gaps.map(g => `<details ${g.priority === 'P0' ? 'open' : ''}><summary><span class="id">${g.id}</span><span><b>${esc(g.title)}</b><br><span class="small muted">Affects ${esc(g.affects)}</span></span><span class="chips">${chip(pc[g.priority], g.priority)}</span></summary>
+      <div class="body"><div><h4>Evidence</h4>${esc(g.evidence)}</div><div><h4>What closes it</h4>${esc(g.closes)}</div><div><h4>Owner</h4>${esc(g.owner)}</div></div></details>`).join('')}</div>
+    <h3>Decisions needed to move on</h3><ul class="list card" style="padding:8px 16px">${GAPS.decisions.map(d => `<li><span><b>${d.id}</b> ${esc(d.text)}</span></li>`).join('')}</ul></section>`;
+}
+
+/* ---------- shell ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const VIEWS = [['officer', 'Tourism Officer', officer], ['manager', 'Enterprise Manager', manager], ['staff', 'Support Staff', staff], ['inventory', 'Inventory', inventory], ['dataflow', 'Data flow', dataflow], ['gaps', 'Gaps', gaps]];
+function show() {
+  const id = (location.hash || '#officer').slice(1), v = VIEWS.find(x => x[0] === id) || VIEWS[0];
+  $('#tabs').innerHTML = VIEWS.map(x => `<button class="tab" role="tab" aria-selected="${x[0] === v[0]}" data-go="${x[0]}">${x[1]}</button>`).join('');
+  uid = 0; $('#view').innerHTML = v[2]();
+  if (v[0] === 'inventory') invRows();
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,[data-go]'); if (!t) return;
+  if (t.dataset.go) { location.hash = t.dataset.go; return; }
+  if (t.dataset.show) { const n = t.dataset.show.slice(1), card = t.closest('.card'); card.querySelector('#c' + n).hidden = t.dataset.show[0] !== 'c'; card.querySelector('#t' + n).hidden = t.dataset.show[0] !== 't'; card.querySelectorAll('[data-show]').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
+  if (t.dataset.mode) { S.mode = t.dataset.mode; show(); return; }
+  if (t.dataset.bar) { S.bar = t.dataset.bar; show(); return; }
+  if (t.dataset.f) { const [g, k] = t.dataset.f.split(':'); INVF[g] = k; show(); return; }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'selYear') { S.year = e.target.value; show(); }
+  if (e.target.id === 'chkShares') { S.shares = e.target.checked; show(); }
+  if (e.target.id === 'selEnt') { S.ent = e.target.value; show(); }
+  if (e.target.id === 'chkFuture') { S.future = e.target.checked; show(); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'invQ') { INVF.q = e.target.value; invRows(); } });
+window.addEventListener('hashchange', () => { show(); window.scrollTo(0, 0); });
+/* tooltips: hover, focus and tap */
+const tip = $('#tip');
+function place(t, x, y) { tip.textContent = t; tip.style.opacity = 1; const w = tip.offsetWidth; tip.style.left = Math.min(Math.max(8, x + 12), innerWidth - w - 8) + 'px'; tip.style.top = Math.max(8, y - 36) + 'px'; }
+document.addEventListener('mouseover', e => { const t = e.target.closest('[data-tip]'); if (t) place(t.dataset.tip, e.clientX, e.clientY); });
+document.addEventListener('mousemove', e => { const t = e.target.closest('[data-tip]'); if (t) place(t.dataset.tip, e.clientX, e.clientY); else tip.style.opacity = 0; });
+document.addEventListener('focusin', e => { const t = e.target.closest('[data-tip]'); if (t) { const r = t.getBoundingClientRect(); place(t.dataset.tip, r.left + r.width / 2, r.top); } });
+document.addEventListener('focusout', () => { tip.style.opacity = 0; });
+document.addEventListener('touchstart', e => { const t = e.target.closest('[data-tip]'); if (t) { const p = e.touches[0]; place(t.dataset.tip, p.clientX, p.clientY); } else tip.style.opacity = 0; }, { passive: true });
+show();
+</script>
