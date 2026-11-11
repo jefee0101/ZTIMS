@@ -1,0 +1,885 @@
+<title>ZTIMS Attraction Visitor Reporting</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+/* Layout: ZTIMS staff portal — fixed sidebar, glass header, flat outlined panels, pill buttons, folder-line tabs.
+   Tokens are ZTIMS's own (theme.css): burnt orange primary, tangerine highlight, ember pressed, ink and paper neutrals. */
+:root {
+  --bg: 250 247 242; --surface: 253 251 247; --surface-low: 245 241 234; --surface-var: 239 234 226;
+  --ink: 28 25 23; --ink2: 87 81 74; --line: 227 220 209;
+  --primary: 191 87 0; --primary-text: 163 74 0; --ember: 122 46 0; --tangerine: 242 133 0; --gold-text: 150 66 0;
+  --on-primary: 250 247 242; --primary-soft: 252 237 222;
+  --red: 179 38 30; --green: 46 125 50; --red-soft: 252 231 229; --green-soft: 228 242 229; --tan-soft: 253 238 214;
+  --proto: 28 25 23; --on-proto: 245 241 234;
+  --font-display: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: 18 17 16; --surface: 28 26 24; --surface-low: 22 20 19; --surface-var: 42 39 36;
+  --ink: 245 241 234; --ink2: 181 173 163; --line: 58 53 50;
+  --primary-text: 242 133 0; --gold-text: 255 166 77; --primary-soft: 51 26 8;
+  --red: 242 139 130; --green: 123 198 126; --red-soft: 58 28 26; --green-soft: 27 44 29; --tan-soft: 58 38 14;
+  --proto: 10 9 8; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: 18 17 16; --surface: 28 26 24; --surface-low: 22 20 19; --surface-var: 42 39 36;
+  --ink: 245 241 234; --ink2: 181 173 163; --line: 58 53 50;
+  --primary-text: 242 133 0; --gold-text: 255 166 77; --primary-soft: 51 26 8;
+  --red: 242 139 130; --green: 123 198 126; --red-soft: 58 28 26; --green-soft: 27 44 29; --tan-soft: 58 38 14;
+  --proto: 10 9 8; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: rgb(var(--bg)); color: rgb(var(--ink)); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: rgb(var(--primary-text)); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: 400; font-style: normal; font-size: 20px; line-height: 1; display: inline-block; width: 1em; overflow: hidden; white-space: nowrap; letter-spacing: normal; text-transform: none; font-feature-settings: 'liga'; -webkit-font-feature-settings: 'liga'; vertical-align: middle; flex: none; }
+.ms { visibility: hidden; } html.ms-ok .ms { visibility: visible; }
+.ms.sm { font-size: 16px; } .ms.fill { font-variation-settings: 'FILL' 1; }
+:focus-visible { outline: 2px solid rgb(var(--tangerine)); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- Prototype strip (not part of ZTIMS) ---- */
+.proto { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; background: rgb(var(--proto)); color: rgb(var(--on-proto)); display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding: .5rem max(16px, env(safe-area-inset-right, 0px)) .5rem max(16px, env(safe-area-inset-left, 0px)); font-size: 12px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 70; background: rgb(var(--proto)); }
+.proto b { font-family: var(--font-display); font-weight: 600; letter-spacing: .02em; margin-right: .25rem; }
+.proto .grp { display: inline-flex; align-items: center; gap: .35rem; }
+.proto .seg { display: inline-flex; border: 1px solid rgb(var(--on-proto) / .35); border-radius: 999px; overflow: hidden; }
+.proto .seg button { background: none; border: 0; padding: .3rem .75rem; cursor: pointer; font-weight: 600; font-size: 12px; color: rgb(var(--on-proto)); }
+.proto .seg button[aria-pressed="true"] { background: rgb(var(--tangerine)); color: #1C1917; }
+.proto .pbtn { background: none; border: 1px solid rgb(var(--on-proto) / .35); color: rgb(var(--on-proto)); border-radius: 999px; padding: .3rem .75rem; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; gap: .3rem; align-items: center; }
+.proto .pbtn:hover { background: rgb(var(--on-proto) / .12); }
+.proto select { background: rgb(var(--on-proto) / .1); color: rgb(var(--on-proto)); border: 1px solid rgb(var(--on-proto) / .35); border-radius: 999px; padding: .28rem .6rem; font-size: 12px; }
+.proto select option { color: #1C1917; }
+.proto .sp { flex: 1 1 0; }
+.proto label { display: inline-flex; gap: .3rem; align-items: center; cursor: pointer; }
+
+/* ---- Portal shell ---- */
+.portal { display: grid; grid-template-columns: 16rem minmax(0, 1fr); min-height: calc(100vh - 3rem); }
+.side { background: rgb(var(--surface)); border-right: 1px solid rgb(var(--line)); padding: 1rem 1rem 1.5rem max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 1.25rem; position: sticky; top: calc(3rem + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 3rem); overflow: auto; }
+.brand { display: flex; gap: .65rem; align-items: center; }
+.seal { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgb(var(--primary)); color: rgb(var(--on-primary)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: .8rem; letter-spacing: .02em; }
+.brand strong { display: block; font-family: var(--font-display); font-size: .8rem; line-height: 1.15; letter-spacing: .02em; }
+.brand span { font-size: .7rem; color: rgb(var(--ink2)); }
+.menu { display: flex; flex-direction: column; gap: .25rem; }
+.menu a { display: flex; gap: .65rem; align-items: center; padding: .6rem .9rem; border-radius: 999px; font-weight: 600; font-size: .875rem; color: rgb(var(--ink2)); text-decoration: none; min-height: 44px; }
+.menu a:hover { background: rgb(var(--surface-var)); color: rgb(var(--ink)); }
+.menu a.is-current { background: rgb(var(--primary)); color: rgb(var(--on-primary)); }
+.side .foot { margin-top: auto; font-size: .75rem; color: rgb(var(--ink2)); border-top: 1px solid rgb(var(--line)); padding-top: .75rem; }
+.head { position: sticky; top: calc(3rem + env(safe-area-inset-top, 0px)); z-index: 30; background: rgb(var(--surface) / .86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgb(var(--line)); padding: .6rem max(16px, env(safe-area-inset-right, 0px)) 0 1.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; min-height: 3.5rem; }
+.head .ttl { font-family: var(--font-display); font-weight: 600; font-size: .95rem; margin-right: auto; padding-bottom: .5rem; }
+.head .who { display: flex; align-items: center; gap: .6rem; padding-bottom: .5rem; }
+.avatar { width: 2.1rem; height: 2.1rem; border-radius: 50%; background: rgb(var(--tangerine)); color: #1C1917; display: grid; place-items: center; font-weight: 700; font-size: .75rem; }
+.who small { color: rgb(var(--ink2)); font-size: .75rem; }
+.ent-switch { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 999px; padding: 0 .4rem 0 .85rem; min-height: 40px; margin-bottom: .5rem; }
+.ent-switch select { appearance: none; background: none; border: 0; font-weight: 700; font-size: .85rem; padding: .5rem 1.4rem .5rem 0; cursor: pointer; max-width: 15rem; }
+.ent-switch .ms { margin-left: -1.4rem; pointer-events: none; }
+main { padding: 1.5rem max(16px, env(safe-area-inset-right, 0px)) 4rem 1.5rem; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+.pg-title { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
+.pg-title h1 { font-size: 1.6rem; line-height: 1.2; font-weight: 700; margin-right: auto; }
+.pg-title .acts { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tabs { display: flex; gap: .25rem; border-bottom: 1px solid rgb(var(--line)); overflow-x: auto; margin: 0 -.25rem; padding: 0 .25rem; }
+.tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem; color: rgb(var(--ink2)); text-decoration: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab:hover { color: rgb(var(--ink)); }
+.tab[aria-selected="true"] { color: rgb(var(--primary-text)); border-bottom-color: rgb(var(--primary)); }
+
+/* ---- Buttons, pills, fields ---- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: 0 1.2rem; border-radius: 999px; border: 1px solid transparent; font-weight: 700; font-size: .875rem; cursor: pointer; text-decoration: none; background: rgb(var(--surface)); }
+.btn.primary { background: rgb(var(--primary)); color: rgb(var(--on-primary)); } .btn.primary:hover { background: rgb(var(--ember)); }
+.btn.outline { border-color: rgb(var(--primary)); color: rgb(var(--primary-text)); } .btn.outline:hover { background: rgb(var(--primary) / .08); }
+.btn.plain { border-color: rgb(var(--line)); } .btn.plain:hover { background: rgb(var(--surface-var)); }
+.btn.danger { background: #B3261E; color: #FFF8F6; } .btn.danger:hover { background: #8C1D18; }
+.btn.cancel { border-color: #B3261E; color: rgb(var(--red)); } .btn.cancel:hover { background: rgb(var(--red) / .1); }
+.btn.sm { min-height: 36px; padding: 0 .9rem; font-size: .8rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.rt { display: none; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; background: rgb(var(--ink) / .12); color: inherit; }
+body.show-roles .rt { display: inline-block; }
+.btn.primary .rt { background: rgb(var(--on-primary) / .25); }
+.pill { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .15rem .65rem; font-size: .75rem; font-weight: 700; line-height: 1.5; border: 1px solid transparent; white-space: nowrap; }
+.t-ok { background: rgb(var(--green-soft)); color: rgb(var(--green)); } .t-bad { background: rgb(var(--red-soft)); color: rgb(var(--red)); }
+.t-wait { background: rgb(var(--tan-soft)); color: rgb(var(--gold-text)); } .t-info { background: rgb(var(--primary-soft)); color: rgb(var(--primary-text)); }
+.t-mute { background: rgb(var(--surface-var)); color: rgb(var(--ink2)); } .t-ink { border-color: rgb(var(--ink)); color: rgb(var(--ink)); }
+.t-lock { background: rgb(var(--ink)); color: rgb(var(--bg)); }
+.fld { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.fld > span, .lbl { font-size: .8rem; font-weight: 700; color: rgb(var(--ink2)); }
+.inp { min-height: 44px; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 0; padding: .5rem .75rem; width: 100%; min-width: 0; }
+.inp:focus { outline: 2px solid rgb(var(--tangerine)); outline-offset: 0; border-color: rgb(var(--primary)); }
+select.inp { appearance: auto; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); }
+.stepper button { width: 40px; min-height: 44px; border: 0; background: none; cursor: pointer; font-size: 1.1rem; font-weight: 700; }
+.stepper button:hover { background: rgb(var(--surface-var)); }
+.stepper output { min-width: 2rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- Panels, tiles, tables ---- */
+.panel { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); padding: 1.1rem 1.25rem; min-width: 0; }
+.panel > h2, .panel > .ph h2 { font-size: 1rem; font-weight: 600; }
+.ph { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
+.ph .sub { color: rgb(var(--ink2)); font-size: .8rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; }
+.tile { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); padding: .85rem 1rem; display: flex; flex-direction: column; gap: .15rem; }
+.tile .k { font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); }
+.tile .v { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile .n { font-size: .72rem; color: rgb(var(--ink2)); }
+.scroll { overflow-x: auto; max-width: 100%; }
+table.t { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+table.t th { text-align: left; font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); padding: .55rem .6rem; border-bottom: 2px solid rgb(var(--line)); background: rgb(var(--surface-low)); white-space: nowrap; }
+table.t td { padding: .5rem .6rem; border-bottom: 1px solid rgb(var(--line)); vertical-align: middle; }
+table.t td.n, table.t th.n { text-align: right; }
+table.t tr.grp td { background: rgb(var(--surface-low)); font-weight: 700; font-size: .78rem; color: rgb(var(--ink2)); }
+table.t tr.sum td { font-weight: 700; background: rgb(var(--surface-low)); }
+table.t tr.grand td { font-weight: 700; background: rgb(var(--primary-soft)); border-top: 2px solid rgb(var(--primary)); }
+table.t td.dim, table.t .dim { color: rgb(var(--ink2)); }
+table.t td.stk, table.t th.stk { position: sticky; left: 0; background: rgb(var(--surface)); z-index: 1; }
+table.t th.stk { background: rgb(var(--surface-low)); }
+.banner { display: flex; gap: .75rem; align-items: flex-start; padding: .8rem 1rem; border: 1px solid rgb(var(--line)); border-left-width: 4px; background: rgb(var(--surface)); }
+.banner.ok { border-left-color: rgb(var(--green)); } .banner.bad { border-left-color: rgb(var(--red)); } .banner.wait { border-left-color: rgb(var(--tangerine)); } .banner.lock { border-left-color: rgb(var(--ink)); } .banner.info { border-left-color: rgb(var(--primary)); }
+.banner .ms { margin-top: 1px; } .banner .bd { min-width: 0; flex: 1; } .banner .bd p { margin: .15rem 0 0; color: rgb(var(--ink2)); }
+.banner .bd ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+.banner .bx { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.banner .pill { white-space: normal; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 999px; padding: .3rem .85rem; font-weight: 600; font-size: .8rem; cursor: pointer; min-height: 36px; display: inline-flex; align-items: center; gap: .35rem; }
+.chip[aria-pressed="true"] { background: rgb(var(--primary)); color: rgb(var(--on-primary)); border-color: rgb(var(--primary)); }
+.mpick { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.mpick .cur { font-family: var(--font-display); font-weight: 600; min-width: 9.5rem; text-align: center; }
+.iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); cursor: pointer; display: inline-grid; place-items: center; }
+.iconbtn:hover { background: rgb(var(--surface-var)); }
+.empty { border: 1px dashed rgb(var(--line)); padding: 2rem 1rem; text-align: center; color: rgb(var(--ink2)); }
+.empty h3 { color: rgb(var(--ink)); font-size: 1rem; margin-bottom: .35rem; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0; border: 1px solid rgb(var(--line)); }
+.fact { padding: .75rem 1rem; border-right: 1px solid rgb(var(--line)); border-bottom: 1px solid rgb(var(--line)); margin: 0 -1px -1px 0; min-width: 0; }
+.fact .k { font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); } .fact .v { font-weight: 600; overflow-wrap: anywhere; } .fact .v.miss { color: rgb(var(--red)); }
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.mut { color: rgb(var(--ink2)); } .sm { font-size: .8rem; } .num { font-variant-numeric: tabular-nums; }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.rg-row { display: grid; grid-template-columns: 6.5rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: .75rem 1rem; align-items: center; padding: .85rem 1rem; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); }
+.rg-row + .rg-row { margin-top: -1px; }
+.rg-row .ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .04em; }
+.rg-row .c { min-width: 0; } .rg-row .c small { display: block; color: rgb(var(--ink2)); }
+.rg-row.carry { background: rgb(var(--surface-low)); }
+
+/* ---- Availability grid ---- */
+.av { border-collapse: separate; border-spacing: 0; font-size: .72rem; }
+.av th, .av td { width: 30px; min-width: 30px; height: 34px; text-align: center; border-right: 1px solid rgb(var(--line)); border-bottom: 1px solid rgb(var(--line)); padding: 0; }
+.av th { background: rgb(var(--surface-low)); font-weight: 700; color: rgb(var(--ink2)); height: 40px; line-height: 1.1; }
+.av th.today { background: rgb(var(--tangerine)); color: #1C1917; }
+.av .rn { position: sticky; left: 0; z-index: 2; background: rgb(var(--surface)); width: 5.5rem; min-width: 5.5rem; text-align: left; padding: 0 .5rem; font-weight: 700; }
+.av th.rn { background: rgb(var(--surface-low)); }
+.av .occ { background: rgb(var(--primary)); color: rgb(var(--on-primary)); cursor: pointer; font-weight: 700; font-size: .62rem; }
+.av .occ:hover { background: rgb(var(--ember)); }
+.av .oos { background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 4px, rgb(var(--line)) 4px, rgb(var(--line)) 8px); }
+.av .cls { background: rgb(var(--surface-var)); }
+.av .fut { color: rgb(var(--ink2) / .5); }
+.lg { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .78rem; color: rgb(var(--ink2)); }
+.lg i { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: .35rem; border: 1px solid rgb(var(--line)); }
+.sw-occ { background: rgb(var(--primary)); } .sw-oos { background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 3px, rgb(var(--line)) 3px, rgb(var(--line)) 6px); } .sw-cls { background: rgb(var(--surface-var)); } .sw-free { background: rgb(var(--surface)); }
+/* ---- DAE-1A grid ---- */
+.dae td.mk { text-align: center; padding: .3rem .25rem; } .dae td.mk .d { display: inline-block; width: 12px; height: 12px; background: rgb(var(--primary)); } .dae td.mk .o { display: inline-block; width: 12px; height: 12px; background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 2px, rgb(var(--line)) 2px, rgb(var(--line)) 4px); }
+.dae tr.fut td { color: rgb(var(--ink2) / .55); }
+.dae td.hl { background: rgb(var(--tan-soft)); font-weight: 700; }
+.dae td.today, .dae td.today.stk { box-shadow: inset 3px 0 0 rgb(var(--tangerine)); }
+/* ---- Tracker matrix ---- */
+.mx td, .mx th { text-align: center; padding: .35rem .25rem; }
+.mx td.en { text-align: left; min-width: 13rem; padding: .6rem .75rem; }
+.cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 4.2rem; min-height: 2.6rem; padding: .2rem .35rem; border: 1px solid transparent; font-size: .68rem; font-weight: 700; line-height: 1.2; cursor: pointer; background: none; border-radius: 0; }
+.cell:hover { outline: 2px solid rgb(var(--primary)); }
+.cell small { font-weight: 500; font-size: .62rem; opacity: .85; }
+.own { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .1rem .6rem; font-size: .7rem; font-weight: 700; border: 1px solid rgb(var(--ink)); }
+/* ---- Dialog ---- */
+.ovl { position: fixed; inset: 0; z-index: 90; background: rgb(0 0 0 / .5); display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px)); overflow: auto; }
+.dlg { background: rgb(var(--surface)); border: 1px solid rgb(var(--line)); width: min(46rem, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgb(0 0 0 / .35); }
+.dlg.narrow { width: min(30rem, 100%); } .dlg.wide { width: min(64rem, 100%); }
+.dlg .dh { padding: 1rem 1.25rem; border-bottom: 1px solid rgb(var(--line)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.dlg .dh h2 { font-size: 1.05rem; font-weight: 600; }
+.dlg .db { padding: 1.1rem 1.25rem; overflow: auto; display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.dlg .df { padding: .85rem 1.25rem; border-top: 1px solid rgb(var(--line)); display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; background: rgb(var(--surface)); }
+.err { border: 1px solid rgb(var(--red)); background: rgb(var(--red-soft)); color: rgb(var(--red)); padding: .65rem .85rem; font-size: .85rem; }
+.err ul { margin: .25rem 0 0; padding-left: 1.1rem; }
+.warn { border: 1px solid rgb(var(--tangerine)); background: rgb(var(--tan-soft)); color: rgb(var(--ink)); padding: .65rem .85rem; font-size: .85rem; }
+.gp { border: 1px solid rgb(var(--line)); padding: .85rem; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto auto auto; gap: .6rem .85rem; align-items: end; }
+.gp .rm { align-self: center; }
+.sg { border: 1px solid rgb(var(--line)); padding: .85rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: .6rem .85rem; align-items: end; }
+.log { display: flex; flex-direction: column; gap: 0; border: 1px solid rgb(var(--line)); }
+.log div { padding: .55rem .85rem; border-bottom: 1px solid rgb(var(--line)); display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .75rem; font-size: .85rem; }
+.log div:last-child { border-bottom: 0; }
+.toasts { position: fixed; z-index: 120; left: 50%; transform: translateX(-50%); bottom: max(1rem, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: .5rem; align-items: center; width: min(32rem, calc(100% - 2rem)); pointer-events: none; }
+.toast { background: rgb(var(--surface)); border: 1px solid rgb(var(--ink)); border-radius: 999px; padding: .6rem 1.1rem; font-weight: 600; font-size: .85rem; display: flex; gap: .5rem; align-items: center; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
+.toast.bad { border-color: rgb(var(--red)); } .toast .ms { color: rgb(var(--green)); } .toast.bad .ms { color: rgb(var(--red)); }
+/* ---- Notes drawer ---- */
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(34rem, 100%); z-index: 95; background: rgb(var(--surface)); border-left: 1px solid rgb(var(--line)); box-shadow: -16px 0 40px rgb(0 0 0 / .25); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer .dh { padding: 1rem 1.25rem; border-bottom: 1px solid rgb(var(--line)); display: flex; justify-content: space-between; align-items: center; }
+.drawer .dbd { padding: 1rem 1.25rem 2rem; overflow: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: max(1.25rem, env(safe-area-inset-right, 0px)); }
+.drawer h3 { font-size: .9rem; font-weight: 600; margin-bottom: .35rem; }
+.drawer p, .drawer li { font-size: .85rem; margin: 0 0 .35rem; } .drawer ul, .drawer ol { padding-left: 1.2rem; margin: 0; }
+.drawer .kv { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: .25rem .75rem; font-size: .82rem; }
+.drawer .kv b { color: rgb(var(--ink2)); }
+.drawer code, .tag { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; background: rgb(var(--surface-var)); padding: 0 .3rem; }
+.conv { border: 1px solid rgb(var(--line)); padding: .65rem .8rem; }
+.conv b { display: block; } .conv .d { color: rgb(var(--primary-text)); font-weight: 600; font-size: .8rem; }
+.hint { display: flex; gap: .4rem; font-size: .78rem; color: rgb(var(--ink2)); align-items: flex-start; }
+
+@media (max-width: 1100px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) {
+  .portal { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; max-height: none; flex-direction: row; align-items: center; gap: .5rem; padding: .5rem max(16px, env(safe-area-inset-right, 0px)) .5rem max(16px, env(safe-area-inset-left, 0px)); overflow-x: auto; border-right: 0; border-bottom: 1px solid rgb(var(--line)); }
+  .side .brand span, .side .foot { display: none; } .menu { flex-direction: row; } .menu a { white-space: nowrap; }
+  .head { position: static; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+}
+@media (max-width: 760px) {
+  .rg-row { grid-template-columns: minmax(0, 1fr) auto; } .rg-row .c.x { grid-column: 1 / -1; }
+  .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
+  .gp { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .sg { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pg-title h1 { font-size: 1.3rem; } .proto .hid { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .dlg, .drawer { animation: pop .2s ease-out both; } @keyframes pop { from { opacity: 0; transform: translateY(8px); } } }
+
+/* ---- Attraction reporting additions (same tokens; new form-header tokens in the three-block theme shape) ---- */
+:root { --formhd: 255 247 153; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --formhd: 74 66 12; } }
+:root[data-theme="dark"] { --formhd: 74 66 12; }
+.daywrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 1100px) { .daywrap { grid-template-columns: minmax(0, 1fr); } }
+.dl { border: 1px solid rgb(var(--line)); max-height: 40rem; overflow: auto; background: rgb(var(--surface)); }
+button.dr { display: grid; grid-template-columns: 2.4rem 2.6rem minmax(0, 1fr); gap: .5rem; align-items: center; width: 100%; text-align: left; border: 0; border-bottom: 1px solid rgb(var(--line)); background: rgb(var(--surface)); padding: .45rem .75rem; cursor: pointer; min-height: 44px; }
+button.dr:hover { background: rgb(var(--surface-var)); }
+button.dr[aria-current="true"] { background: rgb(var(--primary-soft)); box-shadow: inset 3px 0 0 rgb(var(--primary)); }
+button.dr .d { font-weight: 700; font-variant-numeric: tabular-nums; } button.dr .w { color: rgb(var(--ink2)); font-size: .8rem; }
+button.dr .inf { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; min-width: 0; }
+button.dr.fut { opacity: .55; }
+.var { font-size: .76rem; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 62rem; }
+.var th { background: rgb(var(--formhd)); color: rgb(var(--ink)); border: 1px solid rgb(var(--ink2) / .55); text-align: center; font-weight: 700; padding: .3rem .4rem; }
+.var td { border: 1px solid rgb(var(--line)); padding: .22rem .4rem; text-align: right; background: rgb(var(--surface)); }
+.var td.l { text-align: left; } .var td.x { text-align: center; color: rgb(var(--ink2)); font-style: italic; }
+.var td.na, .var th.na { color: rgb(var(--ink2)); }
+.var .nr { border-left: 2px dashed rgb(var(--ink2)); } .var th.nr { background: rgb(var(--surface-low)); font-weight: 600; }
+.var tr.tot td { font-weight: 700; background: rgb(var(--surface-var)); }
+.var td.stk, .var th.stk { position: sticky; left: 0; z-index: 1; } .var td.stk { background: rgb(var(--surface)); } .var tr.tot td.stk { background: rgb(var(--surface-var)); }
+.var td.mut { color: rgb(var(--ink2)); }
+.formcap { font-family: var(--font-display); font-weight: 600; font-size: .95rem; }
+.formmeta { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .15rem .75rem; font-size: .82rem; margin: .5rem 0 .75rem; }
+.formmeta b { color: rgb(var(--ink2)); font-weight: 600; }
+details.det { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); }
+details.det > summary { cursor: pointer; font-weight: 700; padding: .6rem .9rem; min-height: 44px; display: flex; align-items: center; gap: .5rem; list-style: none; }
+details.det > summary::-webkit-details-marker { display: none; }
+details.det > summary::after { content: "expand_more"; font-family: 'Material Symbols Outlined'; margin-left: auto; }
+details.det[open] > summary::after { content: "expand_less"; }
+details.det .dbody { padding: .25rem .9rem .9rem; display: flex; flex-direction: column; gap: .75rem; }
+.calc { font-size: .82rem; display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; }
+.calc b { font-variant-numeric: tabular-nums; }
+.chk { display: flex; gap: .55rem; align-items: flex-start; min-height: 44px; font-size: .85rem; cursor: pointer; }
+.chk input { margin-top: .25rem; width: 1.1rem; height: 1.1rem; accent-color: rgb(var(--primary)); }
+.stat { font-size: .82rem; color: rgb(var(--ink2)); min-height: 1.3rem; }
+.skel { background: linear-gradient(90deg, rgb(var(--surface-var)), rgb(var(--surface-low)), rgb(var(--surface-var))); height: 2.6rem; border-bottom: 1px solid rgb(var(--bg)); }
+@media (prefers-reduced-motion: no-preference) { .skel { background-size: 200% 100%; animation: sh 1.1s linear infinite; } @keyframes sh { to { background-position: -200% 0; } } }
+.cellb { border: 0; border-radius: 999px; min-width: 2.2rem; min-height: 30px; padding: .1rem .5rem; font-weight: 700; font-size: .72rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: .15rem; }
+.cellb:focus-visible { outline: 2px solid rgb(var(--tangerine)); outline-offset: 2px; }
+.flowsvg { width: 100%; height: auto; min-width: 46rem; } .scroll > .flowsvg { display: block; }
+.flowsvg .fb { fill: rgb(var(--surface)); stroke: rgb(var(--line)); stroke-width: 1.5; } .flowsvg .fb.pri { stroke: rgb(var(--primary)); stroke-width: 2; fill: rgb(var(--primary-soft)); }
+.flowsvg .fb.lock { fill: rgb(var(--ink)); stroke: rgb(var(--ink)); } .flowsvg .fb.no { stroke-dasharray: 5 4; fill: rgb(var(--surface-low)); }
+.flowsvg text { fill: rgb(var(--ink)); font-family: var(--font-body); font-size: 12px; } .flowsvg text.h { font-weight: 700; font-size: 12.5px; } .flowsvg text.s { fill: rgb(var(--ink2)); font-size: 11px; }
+.flowsvg .fb.lock + text, .flowsvg text.on { fill: rgb(var(--bg)); }
+.flowsvg path.ar { stroke: rgb(var(--ink2)); stroke-width: 1.6; fill: none; marker-end: url(#ah); } .flowsvg path.ar.no { stroke-dasharray: 4 4; opacity: .6; }
+.flowsvg #ah path { fill: rgb(var(--ink2)); }
+.rolestab td, .rolestab th { text-align: center; } .rolestab td:first-child, .rolestab th:first-child { text-align: left; }
+.yes { color: rgb(var(--green)); font-weight: 700; } .nox { color: rgb(var(--ink2)); }
+
+[hidden] { display: none !important; }
+</style>
+<div class="proto" role="toolbar" aria-label="Prototype controls"><b>MOCKUP</b><span class="hid">Fictional data. Not the live system.</span>
+<span class="grp seg" id="pRole" role="group" aria-label="Role"><button data-act="role" data-v="s" aria-pressed="true">Support Staff</button><button data-act="role" data-v="o" aria-pressed="false">Officer</button></span>
+<span class="grp">Today <select id="pToday" data-chg="today" aria-label="Today"><option value="2026-11-04">4 Nov 2026</option><option value="2026-11-12">12 Nov 2026</option></select></span>
+<span class="grp">Server <select id="pSim" data-chg="sim" aria-label="Simulate server behaviour"><option value="none">Works normally</option><option value="slow">Slow</option><option value="fail">Save fails</option><option value="expired">Session expired</option></select></span>
+<button class="pbtn" data-act="otherdevice" title="Another device saves the selected date, so your next save is a concurrent edit"><span class="ms sm">devices</span>Other device saves</button>
+<span class="sp"></span>
+<button class="pbtn" data-act="go" data-to="flow"><span class="ms sm">account_tree</span>Flow</button>
+<button class="pbtn" data-act="drawer" data-v="decisions"><span class="ms sm">rule</span>Decisions</button>
+<button class="pbtn" data-act="drawer" data-v="scenario"><span class="ms sm">route</span>Scenario</button>
+<button class="pbtn" data-act="reset"><span class="ms sm">restart_alt</span>Reset</button></div>
+<div id="app"></div><div id="modalHost"></div><aside id="drawer" class="drawer" hidden></aside><div id="toasts" class="toasts" aria-live="polite"></div>
+<script>
+'use strict';
+/* ================= Engine: pure functions over the state, no DOM ================= */
+const pad = n => String(n).padStart(2, '0');
+const dnum = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+const dstr = n => new Date(n * 864e5).toISOString().slice(0, 10);
+const addDays = (s, n) => dstr(dnum(s) + n);
+const dim = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const dow = d => new Date(dnum(d) * 864e5).getUTCDay();
+const WK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MON3 = MONTHS.map(m => m.slice(0, 3));
+const monthLabel = k => MONTHS[+k.slice(5) - 1] + ' ' + k.slice(0, 4);
+const shiftMonth = (k, d) => { let y = +k.slice(0, 4), m = +k.slice(5) + d; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return y + '-' + pad(m); };
+const fmtD = d => { const x = new Date(dnum(d) * 864e5); return x.getUTCDate() + ' ' + MON3[x.getUTCMonth()]; };
+const fmtLong = d => WK[dow(d)] + ', ' + fmtD(d) + ' ' + d.slice(0, 4);
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+const ATT = [
+  { id: 'bay', name: 'Bayside Boardwalk', type: 'Beach / coastal park', brgy: 'Poblacion', closedDow: [1], staff: 'Maria Santos', from: '2026-01', base: 70 },
+  { id: 'lig', name: 'Old Lighthouse Park', type: 'Heritage / landmark', brgy: 'Poblacion', closedDow: [], staff: 'Joel Ramos', from: '2026-01', base: 90 },
+  { id: 'hil', name: 'Hilltop Chapel Lookout', type: 'Faith / viewpoint', brgy: 'Upland', closedDow: [], staff: 'Ana Dela Cruz', from: '2026-01', base: 40 },
+  { id: 'riv', name: 'Riverside Eco Trail', type: 'Nature trail', brgy: 'Riverside', closedDow: [1], staff: null, from: '2026-02', base: 25, vacant: '2026-07' }
+];
+const RES = [['zam', 'Zamboanguita'], ['noe', 'Rest of Negros Oriental'], ['oth', 'Other Philippine provinces'], ['frn', 'Foreign countries']];
+const blankRec = t => ({ t, res: { zam: null, noe: null, oth: null, frn: null }, rd: false, m: null, f: null, sd: false, rev: 1, by: '', at: '' });
+const known = r => RES.reduce((a, [k]) => a + (r.res[k] || 0), 0);
+
+function dayState(a, d, today) {
+  today = today || S.today;
+  if (d > today) return { k: 'future' };
+  const rec = S.recs[a.id][d];
+  if (rec) return { k: rec.t === 0 ? 'zero' : 'rec', rec };
+  if (S.closed[a.id][d]) return { k: 'closed', why: S.closed[a.id][d] };
+  if (d === today) return { k: 'today' };
+  if (a.closedDow.includes(dow(d))) return { k: 'sched' };
+  return { k: 'miss' };
+}
+
+/* One month's figures, generated from the daily records. Unknown stays unknown: nothing is assigned to a class. */
+function monthFigs(a, ym) {
+  const [y, m] = ym.split('-').map(Number), n = dim(y, m);
+  const f = { ym, days: n, rec: 0, zero: 0, closed: 0, miss: [], sched: [], total: 0, res: { zam: 0, noe: 0, oth: 0, frn: 0 }, resUnrec: 0, resFull: 0, resNone: 0, resPart: 0,
+    male: 0, female: 0, sexUnrec: 0, sexFull: 0, sexNone: 0, sexPart: 0, daily: [] };
+  for (let i = 1; i <= n; i++) {
+    const d = ym + '-' + pad(i), st = dayState(a, d), row = { d, k: st.k, why: st.why, rec: st.rec ? JSON.parse(JSON.stringify(st.rec)) : null };
+    f.daily.push(row);
+    if (st.k === 'closed') f.closed++;
+    if (st.k === 'miss') f.miss.push(d);
+    if (st.k === 'sched') f.sched.push(d);
+    const r = st.rec; if (!r) continue;
+    f.total += r.t; if (r.t === 0) f.zero++; else f.rec++;
+    RES.forEach(([k]) => { f.res[k] += r.res[k] || 0; });
+    const kn = known(r), un = r.rd ? 0 : r.t - kn;
+    f.resUnrec += un; if (r.t > 0) { if (un === 0) f.resFull++; else if (kn === 0) f.resNone++; else f.resPart++; }
+    const sk = (r.m || 0) + (r.f || 0), su = r.sd ? 0 : r.t - sk;
+    f.male += r.m || 0; f.female += r.f || 0; f.sexUnrec += su; if (r.t > 0) { if (su === 0) f.sexFull++; else if (sk === 0) f.sexNone++; else f.sexPart++; }
+  }
+  f.domestic = f.res.zam + f.res.noe + f.res.oth; f.foreign = f.res.frn;
+  f.dated = f.rec + f.zero;                       // dates with a confirmed count (zero included)
+  return f;
+}
+const lastEv = (a, ym) => { const e = S.events[a.id][ym] || []; return e[e.length - 1]; };
+const vers = (a, ym) => S.versions[a.id][ym] || [];
+function monthState(a, ym) {
+  if (ym < a.from) return { s: 'before' };
+  const vs = vers(a, ym), v = vs.length ? vs[vs.length - 1].n : 0, last = lastEv(a, ym);
+  if (ym + '-01' > S.today) return { s: 'future', v };
+  if (last) { if (last.a === 'finalized') return { s: 'finalized', v, locked: true }; if (last.a === 'submitted') return { s: 'submitted', v, locked: true }; if (last.a === 'reopened') return { s: 'reopened', v }; }
+  const f = monthFigs(a, ym), [y, m] = ym.split('-').map(Number), end = ym + '-' + pad(dim(y, m));
+  if (a.vacant && ym >= a.vacant && f.dated + f.closed === 0) return { s: 'nostaff', v, f };
+  if (end >= S.today) return { s: 'open', v, f };
+  if (f.miss.length || f.sched.length) return { s: 'incomplete', v, f };
+  return { s: 'ready', v, f };
+}
+const STV = {
+  future: ['t-mute', 'Not yet', 'hourglass_empty'], before: ['t-mute', 'Before reporting', 'event_busy'], open: ['t-info', 'In progress', 'pending'], incomplete: ['t-bad', 'Dates missing', 'report'],
+  ready: ['t-wait', 'Ready to submit', 'task_alt'], submitted: ['t-ok', 'Submitted', 'check_circle'], finalized: ['t-lock', 'Finalized', 'lock'], reopened: ['t-wait', 'Reopened', 'lock_open'], nostaff: ['t-mute', 'No Support Staff', 'person_off']
+};
+const spill = st => { const [t, l, i] = STV[st.s]; const x = st.s === 'incomplete' && st.f ? l + ' (' + (st.f.miss.length + st.f.sched.length) + ')' : (st.s === 'submitted' || st.s === 'finalized' || st.s === 'reopened') && st.v ? l + ' · v' + st.v : l; return pill(t, x, i); };
+
+function addVersion(a, ym, by, at, reason) {
+  const vs = S.versions[a.id][ym] || (S.versions[a.id][ym] = []);
+  const v = { n: vs.length + 1, at, by, reason: reason || '', fig: monthFigs(a, ym) };
+  vs.push(v); (S.events[a.id][ym] || (S.events[a.id][ym] = [])).push({ a: 'submitted', v: v.n, by, role: 'Support Staff', at, reason: reason || '' });
+  return v;
+}
+const finalEvent = (a, ym) => { const e = S.events[a.id][ym] || []; for (let i = e.length - 1; i >= 0; i--) if (e[i].a === 'finalized') return e[i]; return null; };
+/* Source of a month for the consolidated outputs. Official = finalized versions only. */
+function srcFor(a, ym, mode) {
+  const st = monthState(a, ym);
+  if (st.s === 'before' || st.s === 'future') return { k: st.s };
+  const vs = vers(a, ym), fe = finalEvent(a, ym), last = lastEv(a, ym);
+  if (fe) return { k: 'final', v: fe.v, fig: vs.find(x => x.n === fe.v).fig, pending: last !== fe };
+  if (mode === 'official') return { k: st.s === 'nostaff' ? 'nostaff' : 'none', st };
+  if (vs.length) return { k: last.a === 'reopened' ? 'reopened' : 'submitted', v: vs[vs.length - 1].n, fig: vs[vs.length - 1].fig };
+  const f = monthFigs(a, ym); if (f.dated > 0) return { k: 'draft', fig: f };
+  return { k: st.s === 'nostaff' ? 'nostaff' : 'none', st };
+}
+function validate(d) {
+  const e = [], isN = x => Number.isInteger(x) && x >= 0 && x <= 100000;
+  if (d.t === null) e.push('Enter the total number of visitors. It is required.');
+  else if (!isN(d.t)) e.push('The total must be a whole number from 0 to 100,000.');
+  else if (d.t === 0 && !d.zc) e.push('A total of 0 must be confirmed: tick "No visitors on this date".');
+  if (d.t !== null && isN(d.t)) {
+    const kn = RES.reduce((a, [k]) => a + (d.res[k] || 0), 0);
+    for (const [k, l] of RES) if (d.res[k] !== null && !isN(d.res[k])) e.push(l + ' must be a whole number.');
+    if (kn > d.t) e.push('Known residence adds up to ' + kn + ', more than the total of ' + d.t + '.');
+    else if (d.rd && kn !== d.t) e.push('"Everyone is accounted for" is ticked, but residence adds up to ' + kn + ', not ' + d.t + '.');
+    const sk = (d.m || 0) + (d.f || 0);
+    if ((d.m !== null && !isN(d.m)) || (d.f !== null && !isN(d.f))) e.push('Male and female must be whole numbers.');
+    else if (sk > d.t) e.push('Male + female is ' + sk + ', more than the total of ' + d.t + '.');
+    else if (d.sd && sk !== d.t) e.push('"Everyone is accounted for" is ticked, but male + female is ' + sk + ', not ' + d.t + '.');
+    if (d.t === 0 && (kn > 0 || sk > 0)) e.push('With no visitors, residence and sex must be empty.');
+  }
+  return e;
+}
+
+/* ================= Seed: fictional data ================= */
+let S = null;
+function seedState() {
+  const S0 = { today: '2026-11-04', cur: 'bay', recs: {}, closed: {}, versions: {}, events: {}, sim: 'none' };
+  S = S0; const R = rng(20261104);
+  for (const a of ATT) {
+    S0.recs[a.id] = {}; S0.closed[a.id] = {}; S0.versions[a.id] = {}; S0.events[a.id] = {};
+    const last = a.id === 'riv' ? '2026-06-30' : '2026-10-31', who = a.staff || 'Former Support Staff';
+    for (let d = a.from + '-01'; d <= last; d = addDays(d, 1)) {
+      const w = dow(d);
+      if (a.closedDow.includes(w)) { S0.recs[a.id][d] = blankRec(0); }
+      else {
+        const t = Math.round(a.base * (w === 0 || w === 6 ? 1.8 : 1) * (0.6 + R() * 0.8)), r = blankRec(t), x = R(), y = R();
+        if (x > .55 && x <= .8) { let left = t; [['zam', .25], ['noe', .3], ['oth', .3]].forEach(([k, s]) => { r.res[k] = Math.round(t * s); left -= r.res[k]; }); r.res.frn = left; if (left < 0) { r.res.oth += left; r.res.frn = 0; } r.rd = true; }
+        else if (x > .8) { r.res.zam = Math.floor(t * .2); r.res.frn = Math.floor(t * .1); }
+        if (y < .15) { r.m = Math.round(t * .48); r.f = t - r.m; r.sd = true; } else if (y < .22) { r.m = Math.floor(t * .3); r.f = Math.floor(t * .3); }
+        S0.recs[a.id][d] = r;
+      }
+      const r = S0.recs[a.id][d]; r.by = who; r.at = d + 'T18:00';
+    }
+  }
+  S0.closed.lig['2026-03-12'] = 'Road repair'; delete S0.recs.lig['2026-03-12'];
+  S0.closed.bay['2026-10-27'] = 'Typhoon advisory'; delete S0.recs.bay['2026-10-27'];
+  delete S0.recs.bay['2026-10-14'];                                   // the missing date
+  const sc = blankRec(100); sc.res = { zam: 20, noe: 30, oth: 25, frn: 15 }; sc.by = 'Maria Santos'; sc.at = '2026-10-03T18:20'; S0.recs.bay['2026-10-03'] = sc;
+  const zr = S0.recs.bay['2026-10-05']; zr.by = 'Maria Santos';       // Monday: explicitly confirmed zero
+  const fin = (a, ym, final) => { const nx = shiftMonth(ym, 1) + '-03'; addVersion(a, ym, a.staff || 'Former Support Staff', nx + 'T09:00'); if (final) S0.events[a.id][ym].push({ a: 'finalized', v: 1, by: 'Tourism Officer', role: 'Tourism Officer', at: nx + 'T15:00', reason: '' }); };
+  for (const a of ATT) {
+    const lastM = a.id === 'riv' ? '2026-06' : '2026-10';
+    for (let ym = a.from; ym <= lastM; ym = shiftMonth(ym, 1)) {
+      if (a.id === 'bay' && ym === '2026-10') continue;
+      fin(a, ym, !(a.id === 'lig' && ym === '2026-10'));
+    }
+  }
+  return S0;
+}
+S = seedState();
+const ui = { role: 's', dayMonth: '2026-10', sel: null, repMonth: '2026-10', trkYear: 2026, src: 'official', dtaMonth: '2026-10', varYear: 2026, var2Att: 'bay', openRes: false, openSex: false, loading: false, busy: false, draftNote: '' };
+const ATTR = () => ATT.find(a => a.id === S.cur);
+
+/* ================= UI helpers ================= */
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ico = (n, c) => '<span class="ms ' + (c || '') + '" aria-hidden="true">' + n + '</span>';
+const nf = n => n == null ? '–' : Number(n).toLocaleString('en-US');
+const pill = (t, txt, i) => '<span class="pill ' + t + '">' + (i ? ico(i, 'sm') : '') + esc(txt) + '</span>';
+const btn = (cls, icon, label, act, data, dis) => '<button type="button" class="btn ' + cls + '" data-act="' + act + '" ' + (data || '') + (dis ? ' disabled' : '') + '>' + (icon ? ico(icon, 'sm') : '') + label + '</button>';
+const mpick = (k, v) => '<div class="mpick"><button class="iconbtn" data-act="mshift" data-k="' + k + '" data-d="-1" aria-label="Previous month">' + ico('chevron_left') + '</button><span class="cur">' + monthLabel(v) + '</span><button class="iconbtn" data-act="mshift" data-k="' + k + '" data-d="1" aria-label="Next month">' + ico('chevron_right') + '</button></div>';
+const banner = (cls, icon, html) => '<div class="banner ' + cls + '">' + ico(icon, 'fill') + '<div class="bd">' + html + '</div></div>';
+const tile = (k, v, n, tone) => '<div class="tile"><div class="k">' + k + '</div><div class="v"' + (tone ? ' style="color:rgb(var(--' + tone + '))"' : '') + '>' + v + '</div><div class="n">' + (n || '') + '</div></div>';
+const nowStamp = () => S.today + 'T' + new Date().toTimeString().slice(0, 5);
+const when = s => s ? fmtD(s.slice(0, 10)) + ' ' + s.slice(11, 16) : '';
+
+function toast(msg, bad) { const t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.innerHTML = ico(bad ? 'error' : 'check_circle', 'fill') + '<span>' + esc(msg) + '</span>'; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 4200); }
+let modalApi = null;
+function closeModal() { $('#modalHost').innerHTML = ''; modalApi = null; document.body.style.overflow = ''; }
+function modal(o) {
+  const h = $('#modalHost');
+  h.innerHTML = '<div class="ovl" data-ovl><div class="dlg ' + (o.cls || '') + '" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="dh"><h2 id="mTitle">' + esc(o.title) + '</h2><button class="iconbtn" data-m="close" aria-label="Close">' + ico('close') + '</button></div><div class="db" id="mBody">' + o.body + '</div><div class="df">' +
+    (o.buttons || [{ label: 'Close', cls: 'plain' }]).map((b, i) => '<button type="button" class="btn ' + (b.cls || 'plain') + '" data-m="btn" data-i="' + i + '"' + (b.disabled ? ' disabled' : '') + ' id="mb' + i + '">' + esc(b.label) + '</button>').join('') + '</div></div></div>';
+  document.body.style.overflow = 'hidden';
+  const el = h.firstElementChild;
+  const api = { el, body: $('#mBody'), close: closeModal, err(list) { let b = $('#mErr'); if (!b) { b = document.createElement('div'); b.id = 'mErr'; api.body.prepend(b); } list = [].concat(list || []); b.className = 'err'; b.hidden = !list.length; b.setAttribute('role', 'alert'); b.innerHTML = list.length === 1 ? esc(list[0]) : '<ul>' + list.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>'; },
+    busy(on, label) { el.querySelectorAll('.df .btn').forEach(b => { b.disabled = on; }); if (label) { const b = $('#mb' + (o.buttons.length - 1), el); if (b) b.textContent = on ? label : o.buttons[o.buttons.length - 1].label; } } };
+  modalApi = api; api.opts = o;
+  el.addEventListener('click', ev => {
+    const t = ev.target.closest('[data-m]');
+    if (ev.target === el) return closeModal();
+    if (!t) return;
+    if (t.dataset.m === 'close') return closeModal();
+    if (t.dataset.m === 'btn') { const b = o.buttons[+t.dataset.i]; if (!b.onClick) return closeModal(); const r = b.onClick(api); if (r !== false && !(r && r.then)) closeModal(); }
+  });
+  if (o.onOpen) o.onOpen(api);
+  const f = el.querySelector('input:not([type=checkbox]),select,textarea'); if (f && !o.noFocus) f.focus({ preventScroll: true });
+  return api;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (modalApi) closeModal(); else $('#drawer').hidden = true; } });
+
+/* The server. Nothing is committed, and nothing says "Saved", until this resolves. */
+function server(fn) {
+  return new Promise((res, rej) => setTimeout(() => {
+    if (S.sim === 'fail') return rej({ kind: 'fail' });
+    if (S.sim === 'expired') return rej({ kind: 'expired' });
+    try { res(fn()); } catch (e) { rej(e); }
+  }, S.sim === 'slow' ? 2200 : 450));
+}
+const failMsg = e => e.kind === 'fail' ? 'Not saved. The server did not answer. Your entries are still here. Try again.'
+  : e.kind === 'expired' ? 'Your session ended. Nothing was saved. Sign in again, then save. Your entries are kept on this page.' : e.message || 'Not saved.';
+function signInDialog() {
+  modal({ cls: 'narrow', title: 'Sign in again', body: '<p class="mut">Your session ended after a period without activity. What you typed is still on the page.</p><label class="fld"><span>Password</span><input class="inp" type="password" id="siPw" autocomplete="current-password" value="mockup-only"/></label>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Sign in', cls: 'primary', onClick: () => { S.sim = 'none'; $('#pSim').value = 'none'; toast('Signed in. Press Save to try again.'); } }] });
+}
+
+/* ================= Shell and routes ================= */
+const MENU = {
+  s: [['s-daily', 'edit_calendar', 'Daily Visitor Record', 'daily'], ['s-reports', 'summarize', 'Monthly Reports', 'reports'], ['x1', 'tune', 'My attraction (unchanged)', ''], ['x2', 'manage_accounts', 'Account (unchanged)', '']],
+  o: [['x3', 'dashboard', 'Dashboard (unchanged)', ''], ['o-tracker', 'bar_chart', 'Statistics', 'stats'], ['x4', 'location_on', 'Destinations (unchanged)', ''], ['x5', 'settings', 'Settings, Support Staff (unchanged)', '']]
+};
+const ROUTES = { 's-daily': ['s', 'daily'], 's-reports': ['s', 'reports'], 's-history': ['s', 'reports'], 'o-arrivals': ['o', 'stats'], 'o-tracker': ['o', 'stats'], 'o-forma': ['o', 'stats'], 'o-dta2m': ['o', 'stats'], 'o-var3m': ['o', 'stats'], 'o-var2': ['o', 'stats'], flow: ['f', 'flow'] };
+const curRoute = () => { const h = location.hash.slice(1); return ROUTES[h] ? h : (ui.role === 'o' ? 'o-tracker' : 's-daily'); };
+const TITLES = { daily: 'Daily Visitor Record', reports: 'Monthly Reports', stats: 'Tourism Statistics', flow: 'Flow, roles and statuses' };
+const SUBT = { reports: [['s-reports', 'summarize', 'Monthly Report'], ['s-history', 'history', 'History']],
+  stats: [['o-arrivals', 'summarize', 'Arrivals Report'], ['o-tracker', 'fact_check', 'Tracker'], ['o-forma', 'hotel', 'FORM A'], ['o-dta2m', 'groups', 'Attraction Visits']] };
+const tabGroup = r => (r.startsWith('o-d') || r === 'o-var3m' || r === 'o-var2') ? 'o-dta2m' : r === 's-history' ? 's-history' : r;
+const SCREENS = {};
+function render() {
+  const r = curRoute(), [rl, g] = ROUTES[r], a = ATTR();
+  if (rl !== 'f') ui.role = rl;
+  $('#pRole').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === ui.role)));
+  $('#pToday').value = S.today; $('#pSim').value = S.sim;
+  const menu = MENU[ui.role];
+  const head = ui.role === 's' ? '<span class="ent-switch" style="padding-right:.85rem">' + ico('place', 'sm') + '<b style="font-size:.85rem">' + esc(a.name) + '</b></span>' : '';
+  $('#app').innerHTML = '<div class="portal"><aside class="side"><div class="brand"><div class="seal">ZT</div><div><strong>ZAMBOANGUITA TOURISM</strong><span>' + (ui.role === 's' ? 'Support Staff' : 'Tourism Officer') + '</span></div></div>' +
+    '<nav class="menu" aria-label="Portal">' + menu.map(m => '<a href="#' + m[0] + '" class="' + (m[3] === g ? 'is-current' : '') + '"' + (m[3] === g ? ' aria-current="page"' : '') + (m[3] ? '' : ' style="opacity:.55" onclick="return false"') + '>' + ico(m[1], m[3] === g ? 'fill' : '') + m[2] + '</a>').join('') + '</nav>' +
+    '<div class="foot">Menu items marked "unchanged" are not part of this proposal and are not shown.</div></aside>' +
+    '<div style="min-width:0"><header class="head"><div class="ttl">' + (ui.role === 's' ? 'Support Staff portal' : 'Tourism Officer portal') + '</div>' + head + '<div class="who"><div class="avatar">' + (ui.role === 's' ? 'MS' : 'TO') + '</div><div><b>' + (ui.role === 's' ? 'Maria Santos' : 'Tourism Officer') + '</b><br><small>' + (ui.role === 's' ? 'Support Staff, ' + esc(a.name) : 'Municipal Tourism Office') + '</small></div></div></header><main id="main"></main></div></div>';
+  const body = SCREENS[r]();
+  const tabs = SUBT[g] ? '<div class="tabs" role="tablist">' + SUBT[g].map(t => '<a class="tab" role="tab" href="#' + t[0] + '" aria-selected="' + (t[0] === tabGroup(r)) + '">' + ico(t[1], 'sm') + t[2] + '</a>').join('') + '</div>' : '';
+  $('#main').innerHTML = '<div class="pg-title"><h1>' + TITLES[g] + '</h1><div class="acts">' + (body.acts || '') + '</div></div>' + tabs + body.html;
+  if (body.after) body.after();
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+
+/* ================= Support Staff: Daily Visitor Record ================= */
+const DSTATE = { future: ['t-mute', 'Not yet', 'hourglass_empty'], today: ['t-info', 'Today', 'today'], rec: ['t-ok', 'Recorded', 'check_circle'], zero: ['t-ok', 'Zero confirmed', 'exposure_zero'], closed: ['t-lock', 'Closed (authorized)', 'block'], sched: ['t-wait', 'Scheduled closure, not recorded', 'event_busy'], miss: ['t-bad', 'Not recorded', 'report'] };
+function classPills(r) {
+  if (!r || r.t === 0) return '';
+  const kn = known(r), un = r.rd ? 0 : r.t - kn, sk = (r.m || 0) + (r.f || 0), su = r.sd ? 0 : r.t - sk;
+  return pill(un === 0 ? 't-ink' : kn ? 't-wait' : 't-mute', un === 0 ? 'Residence complete' : kn ? 'Residence partial' : 'Residence not recorded') +
+    pill(su === 0 ? 't-ink' : sk ? 't-wait' : 't-mute', su === 0 ? 'Sex complete' : sk ? 'Sex partial' : 'Sex not recorded');
+}
+function defaultSel(a, ym) {
+  const f = monthFigs(a, ym); if (f.miss.length) return f.miss[0]; if (f.sched.length) return f.sched[0];
+  const t = S.today; return t.slice(0, 7) === ym ? t : ym + '-01';
+}
+SCREENS['s-daily'] = () => {
+  const a = ATTR(), ym = ui.dayMonth, st = monthState(a, ym), f = monthFigs(a, ym);
+  if (!ui.sel || ui.sel.slice(0, 7) !== ym) ui.sel = defaultSel(a, ym);
+  const due = f.daily.filter(x => x.k !== 'future' && x.k !== 'today').length;
+  const locked = !!st.locked, unresolved = f.miss.length + f.sched.length;
+  const banners = [];
+  if (st.s === 'before') banners.push(banner('info', 'event_busy', '<b>Reporting for this attraction starts ' + monthLabel(a.from) + '.</b>'));
+  if (locked) banners.push(banner('lock', 'lock', '<b>' + monthLabel(ym) + ' is ' + st.s + ' (version ' + st.v + ').</b><p>Recording is locked. Only the Tourism Officer can reopen it, with a reason. A reopened month is corrected here and submitted again as a new version.</p>'));
+  if (st.s === 'reopened') { const e = lastEv(a, ym); banners.push(banner('wait', 'lock_open', '<b>Reopened by the Tourism Office, ' + when(e.at) + '.</b><p>Reason: ' + esc(e.reason) + '. Correct the dates, then submit again under Monthly Reports. Version ' + st.v + ' is kept.</p>')); }
+  if (!locked && st.s !== 'before' && st.s !== 'future' && f.miss.length) banners.push(banner('bad', 'report', '<b>' + f.miss.length + ' date' + (f.miss.length > 1 ? 's' : '') + ' not recorded.</b><p>A missing date is not a zero. Record it, or confirm that no one came.</p><div class="bx">' + f.miss.map(d => '<button class="chip" data-act="pick" data-d="' + d + '">' + fmtD(d) + '</button>').join('') + '</div>'));
+  if (!locked && f.sched.length) banners.push(banner('wait', 'event_busy', '<b>' + f.sched.length + ' scheduled closed day' + (f.sched.length > 1 ? 's' : '') + ' not recorded (' + f.sched.map(fmtD).join(', ') + ').</b><p>A closed weekday is not assumed to be zero. Confirm each one yourself.</p><div class="bx">' + btn('outline sm', 'exposure_zero', 'Confirm no visitors…', 'bulkzero') + '</div>'));
+  if (!locked && st.s === 'ready') banners.push(banner('ok', 'task_alt', '<b>Every date is recorded or closed.</b><p>' + btn('primary sm', 'send', 'Go to Monthly Reports to submit', 'go', 'data-to="s-reports"') + '</p>'));
+  const list = ui.loading ? Array.from({ length: 10 }, () => '<div class="skel"></div>').join('') : f.daily.map(x => {
+    const [t, l, i] = DSTATE[x.k], r = x.rec;
+    return '<button class="dr' + (x.k === 'future' ? ' fut' : '') + '" data-act="pick" data-d="' + x.d + '"' + (x.d === ui.sel ? ' aria-current="true"' : '') + '><span class="d">' + x.d.slice(8) + '</span><span class="w">' + WK[dow(x.d)] + '</span><span class="inf">' + pill(t, l + (x.k === 'rec' ? ' · ' + nf(r.t) : x.k === 'closed' ? ': ' + x.why : ''), i) + (x.k === 'rec' ? classPills(r) : '') + '</span></button>';
+  }).join('');
+  const empty = !ui.loading && st.s !== 'before' && st.s !== 'future' && f.dated + f.closed === 0;
+  return { acts: mpick('dayMonth', ym) + spill(st), html:
+    '<div class="row sm mut">' + ico('badge', 'sm') + 'Entered by <b>Maria Santos</b>, Support Staff, for <b>' + esc(a.name) + '</b> only.</div>' + banners.join('') +
+    '<div class="tiles">' + tile('Visitors recorded', nf(f.total), 'Confirmed totals, ' + monthLabel(ym)) + tile('Dates recorded', f.dated + ' of ' + due, 'Dates up to yesterday') + tile('Confirmed zero', f.zero, 'Dates with no visitors') + tile('Not recorded', unresolved, 'Missing or unconfirmed', unresolved ? 'red' : '') + '</div>' +
+    (empty ? '<div class="empty"><h3>No visitor records for ' + monthLabel(ym) + ' yet</h3><p>Pick a date on the left and enter the total number of visitors.</p></div>' : '') +
+    '<div class="daywrap"><section class="panel" style="padding:0"><div class="ph" style="padding:.85rem 1rem 0"><h2>Dates</h2><span class="sub">' + f.days + ' days' + (f.days === 31 ? ', including day 31' : '') + '</span></div><div class="dl" id="dl">' + list + '</div></section><section class="panel" id="formPanel">' + formHtml(a, ui.sel, st) + '</section></div>'
+  , after() { wireForm(); const c = document.querySelector('button.dr[aria-current="true"]'); if (c) c.scrollIntoView({ block: 'nearest' }); } };
+};
+function formHtml(a, d, st) {
+  const x = dayState(a, d), r = x.rec, locked = !!st.locked;
+  const meta = '<div class="facts" style="margin-bottom:1rem"><div class="fact"><div class="k">Attraction</div><div class="v">' + esc(a.name) + '</div></div><div class="fact"><div class="k">Reporting date</div><div class="v"><input type="date" class="inp" id="fDate" data-chg="date" value="' + d + '" min="' + d.slice(0, 7) + '-01" max="' + d.slice(0, 7) + '-' + pad(dim(+d.slice(0, 4), +d.slice(5, 7))) + '" aria-label="Reporting date"/></div></div><div class="fact"><div class="k">Weekday</div><div class="v" id="fWk">' + WK[dow(d)] + 'day'.replace('Sunday', 'Sunday') + '</div></div></div>';
+  const wkFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dow(d)];
+  const head = '<div class="ph"><h2>' + fmtLong(d) + '</h2>' + (r ? '<span class="sub">Recorded by ' + esc(r.by) + ', ' + when(r.at) + ' · revision ' + r.rev + '</span>' : '<span class="sub">Not recorded yet</span>') + '</div>';
+  const metaFix = meta.replace(/<div class="v" id="fWk">.*?<\/div>/, '<div class="v" id="fWk">' + wkFull + ' <span class="mut sm">(automatic)</span></div>');
+  if (x.k === 'future') return head + metaFix + '<div class="empty"><h3>This date has not happened yet</h3><p>Dates after today cannot be recorded, and are never counted as zero.</p></div>';
+  if (x.k === 'closed') return head + metaFix + banner('lock', 'block', '<b>Authorized closure: ' + esc(x.why) + '.</b><p>Set by the Tourism Office. The date is not a count and not a zero. Nothing to record.</p>');
+  if (locked) return head + metaFix + banner('lock', 'lock', '<b>Locked.</b> ' + monthLabel(d.slice(0, 7)) + ' is ' + st.s + '.') + (r ? '<div class="facts"><div class="fact"><div class="k">Total visitors</div><div class="v">' + nf(r.t) + '</div></div><div class="fact"><div class="k">Residence</div><div class="v">' + (r.t === 0 ? '–' : RES.map(([k, l]) => l + ': ' + (r.res[k] == null ? 'not recorded' : r.res[k])).join('<br>')) + '</div></div><div class="fact"><div class="k">Sex</div><div class="v">' + (r.t === 0 ? '–' : r.m == null && r.f == null ? 'Not recorded' : 'Male ' + (r.m == null ? '?' : r.m) + ' · Female ' + (r.f == null ? '?' : r.f)) + '</div></div></div>' : '<div class="empty"><p>No record for this date.</p></div>');
+  const v = (n) => n == null ? '' : n;
+  const note = x.k === 'sched' ? banner('wait', 'event_busy', '<b>Scheduled closed day (' + wkFull + ').</b><p>Not assumed to be zero. Record visitors if any came, or confirm that no one did.</p>') : x.k === 'miss' ? banner('bad', 'report', '<b>Not recorded.</b>') : '';
+  return head + metaFix + note +
+    '<form id="dayForm" novalidate class="col" style="display:flex;flex-direction:column;gap:.9rem" data-rev="' + (r ? r.rev : 0) + '"><div id="fErr" class="err" role="alert" hidden></div>' +
+    '<label class="fld"><span>Total number of visitors <b style="color:rgb(var(--red))">*</b></span><input class="inp" id="fT" type="number" min="0" step="1" inputmode="numeric" value="' + (r ? r.t : '') + '" style="max-width:12rem" aria-describedby="fTH"/><span class="hint" id="fTH">' + ico('info', 'sm') + 'Required. One person counts once per date, however many times they enter. Staff and vendors are not counted.</span></label>' +
+    '<label class="chk" id="fZCbox" hidden><input type="checkbox" id="fZC"' + (r && r.t === 0 ? ' checked' : '') + '/><span><b>No visitors on this date.</b> Confirm that zero is the real count, not a gap.</span></label>' +
+    '<details class="det" id="dRes"' + (ui.openRes || (r && known(r)) ? ' open' : '') + '><summary>' + ico('home_pin', 'sm') + 'Where visitors live (optional)</summary><div class="dbody"><div class="hint">' + ico('info', 'sm') + 'Usual residence, not nationality or passport. Leave a box empty if unknown. Nothing is assigned automatically.</div><div class="grid2">' +
+    RES.map(([k, l]) => '<label class="fld"><span>' + l + '</span><input class="inp" type="number" min="0" step="1" inputmode="numeric" id="fR_' + k + '" value="' + v(r && r.res[k]) + '"/></label>').join('') + '</div><div class="calc" id="cRes"></div><label class="chk"><input type="checkbox" id="fRD"' + (r && r.rd ? ' checked' : '') + '/><span>Every visitor is accounted for here (residence is complete)</span></label></div></details>' +
+    '<details class="det" id="dSex"' + (ui.openSex || (r && ((r.m || 0) + (r.f || 0))) ? ' open' : '') + '><summary>' + ico('wc', 'sm') + 'Sex (optional)</summary><div class="dbody"><div class="grid2"><label class="fld"><span>Male</span><input class="inp" type="number" min="0" step="1" inputmode="numeric" id="fM" value="' + v(r && r.m) + '"/></label><label class="fld"><span>Female</span><input class="inp" type="number" min="0" step="1" inputmode="numeric" id="fF" value="' + v(r && r.f) + '"/></label></div><div class="calc" id="cSex"></div><label class="chk"><input type="checkbox" id="fSD"' + (r && r.sd ? ' checked' : '') + '/><span>Every visitor is accounted for here (male + female equals the total)</span></label></div></details>' +
+    '<div class="row"><button type="submit" class="btn primary" id="fSave">' + ico('save', 'sm') + 'Save record</button><button type="button" class="btn plain" data-act="clearform">Clear</button></div><div class="stat" id="fStat" aria-live="polite">' + esc(ui.draftNote) + '</div></form>';
+}
+const num = id => { const el = $('#' + id); if (!el || el.value.trim() === '') return null; const n = Number(el.value); return Number.isFinite(n) ? n : NaN; };
+function readDraft() { return { t: num('fT'), zc: $('#fZC').checked, res: { zam: num('fR_zam'), noe: num('fR_noe'), oth: num('fR_oth'), frn: num('fR_frn') }, rd: $('#fRD').checked, m: num('fM'), f: num('fF'), sd: $('#fSD').checked }; }
+function wireForm() {
+  const form = $('#dayForm'); if (!form) return;
+  const derive = () => {
+    const d = readDraft(), kn = RES.reduce((a, [k]) => a + (d.res[k] || 0), 0), sk = (d.m || 0) + (d.f || 0), t = d.t || 0;
+    $('#fZCbox').hidden = d.t !== 0;
+    $('#cRes').innerHTML = 'Known <b>' + kn + '</b>' + (kn ? ' · Domestic <b>' + ((d.res.zam || 0) + (d.res.noe || 0) + (d.res.oth || 0)) + '</b> · Foreign <b>' + (d.res.frn || 0) + '</b>' : '') + ' · ' + (d.rd ? 'Not recorded <b>0</b> (complete)' : 'Not recorded <b>' + Math.max(0, t - kn) + '</b>');
+    $('#cSex').innerHTML = 'Known <b>' + sk + '</b> · ' + (d.sd ? 'Not recorded <b>0</b> (complete)' : 'Not recorded <b>' + Math.max(0, t - sk) + '</b>');
+  };
+  form.addEventListener('input', () => { derive(); $('#fErr').hidden = true; });
+  form.addEventListener('submit', e => { e.preventDefault(); A.save(); });
+  $('#dRes').addEventListener('toggle', () => { ui.openRes = $('#dRes').open; }); $('#dSex').addEventListener('toggle', () => { ui.openSex = $('#dSex').open; });
+  derive();
+}
+const showErr = list => { const b = $('#fErr'); b.hidden = !list.length; b.innerHTML = list.length === 1 ? esc(list[0]) : '<ul>' + list.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>'; if (list.length) b.scrollIntoView({ block: 'nearest' }); };
+function commitRec(a, d, draft, baseRev) {
+  const st = monthState(a, d.slice(0, 7));
+  if (st.locked) throw { kind: 'locked', message: 'Not saved. ' + monthLabel(d.slice(0, 7)) + ' was ' + st.s + ' meanwhile and is locked.' };
+  const cur = S.recs[a.id][d];
+  if ((cur ? cur.rev : 0) !== baseRev) throw { kind: 'conflict', server: cur };
+  const r = { t: draft.t, res: draft.t === 0 ? { zam: null, noe: null, oth: null, frn: null } : draft.res, rd: draft.t > 0 && draft.rd, m: draft.t === 0 ? null : draft.m, f: draft.t === 0 ? null : draft.f, sd: draft.t > 0 && draft.sd, rev: (cur ? cur.rev : 0) + 1, by: 'Maria Santos', at: nowStamp() };
+  S.recs[a.id][d] = r; return r;
+}
+
+const A = {}, CH = {};
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (t && A[t.dataset.act]) { e.preventDefault(); A[t.dataset.act](t, e); } });
+document.addEventListener('change', e => { const t = e.target.closest('[data-chg]'); if (t && CH[t.dataset.chg]) CH[t.dataset.chg](t, e); });
+A.save = async () => {
+  const a = ATTR(), d = ui.sel, draft = readDraft(), errs = validate(draft);
+  if (errs.length) return showErr(errs);
+  showErr([]); const btnS = $('#fSave'), stat = $('#fStat'), baseRev = +$('#dayForm').dataset.rev;
+  btnS.disabled = true; btnS.innerHTML = ico('progress_activity', 'sm') + 'Saving…'; stat.textContent = 'Saving. Not saved until the server confirms.';
+  $('#dayForm').querySelectorAll('input').forEach(i => { i.readOnly = true; });
+  try {
+    const r = await server(() => commitRec(a, d, draft, baseRev));
+    ui.draftNote = 'Saved ' + when(r.at) + ' · revision ' + r.rev; toast('Saved ' + fmtD(d) + ': ' + nf(r.t) + ' visitors'); render();
+  } catch (e) {
+    btnS.disabled = false; btnS.innerHTML = ico('save', 'sm') + 'Save record'; stat.textContent = 'Not saved.';
+    $('#dayForm').querySelectorAll('input').forEach(i => { i.readOnly = false; });
+    if (e.kind === 'conflict') return conflictDialog(a, d, draft, e.server);
+    showErr([failMsg(e)]); if (e.kind === 'expired') { const b = $('#fErr'); b.insertAdjacentHTML('beforeend', '<div class="row" style="margin-top:.5rem">' + btn('primary sm', 'login', 'Sign in', 'signin') + '</div>'); }
+    if (e.kind === 'locked') render();
+  }
+};
+A.signin = signInDialog;
+function conflictDialog(a, d, draft, srv) {
+  modal({ title: 'This date changed while you were editing', body: '<div class="err">Someone saved ' + fmtD(d) + ' on another device. Your changes were not saved.</div><div class="grid2"><div class="conv"><b>On the server (revision ' + (srv ? srv.rev : 0) + ')</b><span class="d">' + (srv ? esc(srv.by) + ', ' + when(srv.at) : 'Nothing')+'</span>Total visitors: <b>' + (srv ? nf(srv.t) : '–') + '</b></div><div class="conv"><b>Your version</b><span class="d">Not saved</span>Total visitors: <b>' + nf(draft.t) + '</b></div></div><p class="mut sm">Overwrite only if yours is the right count. The other version stays in the change history.</p>',
+    buttons: [{ label: 'Use the server version', cls: 'plain', onClick: () => { ui.draftNote = 'Showing the server version (revision ' + (srv ? srv.rev : 0) + ').'; render(); } }, { label: 'Keep mine and save again', cls: 'primary', onClick: async api => { api.busy(true, 'Saving…'); try { await server(() => commitRec(a, d, draft, srv ? srv.rev : 0)); closeModal(); toast('Saved ' + fmtD(d) + ' over the other version'); render(); } catch (e) { api.busy(false); api.err(failMsg(e)); } return false; } }] });
+}
+A.pick = t => { ui.sel = t.dataset.d; ui.draftNote = ''; render(); };
+CH.date = t => { if (t.value && t.value.slice(0, 7) === ui.dayMonth) { ui.sel = t.value; ui.draftNote = ''; render(); } };
+A.clearform = () => { ui.draftNote = ''; render(); };
+A.mshift = t => { const k = t.dataset.k; ui[k] = shiftMonth(ui[k], +t.dataset.d); if (k === 'dayMonth') { ui.sel = null; ui.loading = true; render(); setTimeout(() => { ui.loading = false; render(); }, 500); } else render(); };
+A.bulkzero = () => {
+  const a = ATTR(), list = monthFigs(a, ui.dayMonth).sched;
+  modal({ title: 'Confirm no visitors', cls: 'narrow', body: '<p>Tick each closed day on which <b>no one</b> visited. Unticked days stay "not recorded".</p>' + list.map(d => '<label class="chk"><input type="checkbox" class="bz" value="' + d + '"/><span>' + fmtLong(d) + '</span></label>').join('') + '<div class="err" id="bzE" hidden></div>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Confirm zero', cls: 'primary', onClick: async api => { const ds = [...document.querySelectorAll('.bz:checked')].map(x => x.value); if (!ds.length) { api.err('Tick at least one day.'); return false; } api.busy(true, 'Saving…'); try { await server(() => { ds.forEach(d => { const cur = S.recs[a.id][d]; if (!cur) S.recs[a.id][d] = Object.assign(blankRec(0), { by: 'Maria Santos', at: nowStamp() }); }); }); closeModal(); toast(ds.length + ' day' + (ds.length > 1 ? 's' : '') + ' confirmed as zero'); render(); } catch (e) { api.busy(false); api.err(failMsg(e)); } return false; } }] });
+};
+A.otherdevice = () => {
+  if (ui.role !== 's') return toast('Switch to Support Staff and open a date first', true);
+  const a = ATTR(), d = ui.sel, cur = S.recs[a.id][d] || null;
+  if (monthState(a, d.slice(0, 7)).locked || dayState(a, d).k === 'future' || dayState(a, d).k === 'closed') return toast('Pick a date that can be recorded', true);
+  S.recs[a.id][d] = Object.assign(blankRec(cur ? cur.t + 7 : 57), cur ? { res: cur.res } : {}, { rev: (cur ? cur.rev : 0) + 1, by: 'Maria Santos (phone)', at: nowStamp() });
+  toast('Another device saved ' + fmtD(d) + '. Your next save will conflict.');
+};
+
+/* ================= VAR 1 preview (generated; official title kept) ================= */
+function var1(a, fig, label) {
+  const [y, m] = fig.ym.split('-').map(Number), n = fig.days;
+  const num = (v, na) => v == null ? '<td class="na">–</td>' : '<td>' + nf(v) + '</td>';
+  const rows = fig.daily.map(x => {
+    const r = x.rec, i = +x.d.slice(8), flag = i === 31 ? ' <span title="The supplied VAR 1 grid has no day 31 (decision D2)">' + ico('flag', 'sm') + '</span>' : '';
+    const head = '<td class="stk l"><b>' + i + '</b>' + flag + '</td><td class="l">' + WK[dow(x.d)] + '</td>';
+    if (x.k === 'future') return '<tr>' + head + '<td colspan="13" class="x">Not yet</td></tr>';
+    if (x.k === 'closed') return '<tr>' + head + '<td colspan="13" class="x">Closed (authorized): ' + esc(x.why) + '. Not a count, not zero.</td></tr>';
+    if (!r) return '<tr>' + head + '<td colspan="13" class="x">' + (x.k === 'sched' ? 'Scheduled closure, not recorded' : x.k === 'today' ? 'Today, not recorded yet' : 'Not recorded') + '</td></tr>';
+    const kn = known(r), un = r.rd ? 0 : r.t - kn, hasRes = r.t === 0 || kn > 0 || r.rd, hasSex = r.t === 0 || r.m != null || r.f != null;
+    const tp = hasRes ? (r.res.zam || 0) + (r.res.noe || 0) : null;
+    return '<tr>' + head + '<td class="na">–</td><td class="na">–</td>' + num(tp) + '<td class="na">–</td><td class="na">–</td>' + num(hasRes ? r.res.oth || 0 : null) + '<td class="na">–</td><td class="na">–</td>' + num(hasRes ? r.res.frn || 0 : null) + (hasSex ? num(r.m || 0) + num(r.f || 0) : '<td class="na">–</td><td class="na">–</td>') + '<td><b>' + nf(r.t) + '</b></td><td class="nr' + (un ? '' : ' mut') + '">' + (r.t === 0 ? '' : un) + '</td></tr>';
+  }).join('');
+  const sexAny = fig.male + fig.female > 0;
+  return '<div class="panel"><div class="ph"><span class="formcap">Tourism Attraction Visitor Record</span><span class="row">' + label + '</span></div><div class="sm mut">(VAR 1) · ( This recording form can be used instead of just counting the visitors )</div>' +
+    '<div class="formmeta"><b>Month/Year:</b><span>' + monthLabel(fig.ym) + '</span><b>Name of Municipality:</b><span>Zamboanguita</span><b>Name of attraction/ Spot:</b><span>' + esc(a.name) + '</span><b>Type of Tourism Attraction:</b><span>' + esc(a.type) + '</span></div>' +
+    (n === 31 ? banner('wait', 'flag', '<b>This month has 31 days. The supplied VAR 1 grid stops at day 30.</b><p>ZTIMS records every date. How day 31 appears in the Excel needs the office\'s decision (D2). The preview shows all ' + n + ' days.</p>') : '') +
+    '<div class="scroll" style="margin-top:.75rem"><table class="var"><thead><tr><th class="stk" rowspan="3">Day</th><th rowspan="3">Week Day (Mon-Sun)</th><th colspan="9">*** Place of Residence</th><th colspan="3" rowspan="3">* Grand Total Number of Visitors</th><th rowspan="3" class="nr">ZTIMS note: residence not recorded</th></tr>' +
+    '<tr><th colspan="6">Philippines</th><th colspan="3" rowspan="2">Foreign Country Residence</th></tr><tr><th colspan="3">This province</th><th colspan="3">Other Province</th></tr>' +
+    '<tr><th class="stk"></th><th></th><th>Male</th><th>Female</th><th>Total</th><th>Male</th><th>Female</th><th>Total</th><th>Male</th><th>Female</th><th>Total</th><th>Male</th><th>Female</th><th>Total</th><th class="nr"></th></tr></thead><tbody>' + rows +
+    '<tr class="tot"><td class="stk l" colspan="1">Total of this Month ****</td><td></td><td class="na">–</td><td class="na">–</td><td>' + nf(fig.res.zam + fig.res.noe) + '</td><td class="na">–</td><td class="na">–</td><td>' + nf(fig.res.oth) + '</td><td class="na">–</td><td class="na">–</td><td>' + nf(fig.res.frn) + '</td><td>' + (sexAny ? nf(fig.male) : '–') + '</td><td>' + (sexAny ? nf(fig.female) : '–') + '</td><td>' + nf(fig.total) + '</td><td class="nr">' + nf(fig.resUnrec) + '</td></tr></tbody></table></div>' +
+    '<ul class="sm mut" style="margin:.75rem 0 0;padding-left:1.1rem"><li>Note: *Total number must be recorded, ** Sex &amp; ***Residence entries are optional. Total number of this month must be reported.</li>' +
+    '<li>Residence male/female cells are left empty: ZTIMS records residence totals and overall sex totals separately, so it cannot know sex within each residence and never estimates it.</li>' +
+    '<li>"–" means not recorded. The dashed column is a ZTIMS note outside the official grid: <b>' + nf(fig.resUnrec) + '</b> of ' + nf(fig.total) + ' visitors have no residence recorded; <b>' + nf(fig.sexUnrec) + '</b> have no sex recorded. Neither is assigned to a class.</li></ul></div>';
+}
+
+/* ================= Support Staff: Monthly Reports ================= */
+function targetLine(ym) { const t = shiftMonth(ym, 1) + '-05'; return t; }
+function monthChips(a, k) {
+  const y = ui[k].slice(0, 4);
+  return '<div class="chips">' + MONTHS.map((n, i) => { const ym = y + '-' + pad(i + 1), st = monthState(a, ym), v = STV[st.s]; return '<button class="chip" data-act="pickmonth" data-k="' + k + '" data-v="' + ym + '" aria-pressed="' + (ym === ui[k]) + '" title="' + v[1] + '">' + ico(v[2], 'sm') + MON3[i] + '</button>'; }).join('') + '</div>';
+}
+A.pickmonth = t => { ui[t.dataset.k] = t.dataset.v; render(); };
+SCREENS['s-reports'] = () => {
+  const a = ATTR(), ym = ui.repMonth, st = monthState(a, ym), vs = vers(a, ym);
+  const live = monthFigs(a, ym), showV = (st.locked && vs.length) ? vs[vs.length - 1] : null, fig = showV ? showV.fig : live;
+  const target = targetLine(ym), late = S.today > target && ['open', 'incomplete', 'ready', 'reopened'].includes(st.s) && ym < S.today.slice(0, 7);
+  const b = [];
+  if (st.s === 'before') b.push(banner('info', 'event_busy', '<b>Before reporting.</b> This attraction starts reporting in ' + monthLabel(a.from) + '.'));
+  else if (st.s === 'future') b.push(banner('info', 'hourglass_empty', '<b>Not started.</b>'));
+  else if (st.s === 'open') b.push(banner('info', 'pending', '<b>' + monthLabel(ym) + ' is in progress.</b><p>The report is generated from the daily records and cannot be submitted until the month has ended and every date is recorded or closed.</p>'));
+  else if (st.s === 'incomplete') b.push(banner('bad', 'report', '<b>Cannot submit yet: ' + (live.miss.length + live.sched.length) + ' date' + (live.miss.length + live.sched.length > 1 ? 's' : '') + ' not recorded.</b><p>' + live.miss.concat(live.sched).map(fmtD).join(', ') + '. A missing date is never filled with zero.</p><div class="bx">' + btn('outline sm', 'edit_calendar', 'Go to Daily Visitor Record', 'gomonth', 'data-m="' + ym + '"') + '</div>'));
+  else if (st.s === 'ready') b.push(banner('ok', 'task_alt', '<b>Ready to submit.</b><p>Every date is recorded or closed. After you submit, recording is locked until the Tourism Office finalizes or reopens it.</p>'));
+  else if (st.s === 'submitted') b.push(banner('ok', 'check_circle', '<b>Version ' + st.v + ' submitted ' + when(vs[vs.length - 1].at) + '.</b><p>Waiting for the Tourism Office. Recording is locked.</p>'));
+  else if (st.s === 'finalized') b.push(banner('lock', 'lock', '<b>Finalized by the Tourism Office.</b><p>Version ' + finalEvent(a, ym).v + ' is the official figure. Recording is locked.</p>'));
+  else if (st.s === 'reopened') { const e = lastEv(a, ym); b.push(banner('wait', 'lock_open', '<b>Reopened ' + when(e.at) + '.</b><p>Reason: ' + esc(e.reason) + '. Correct the daily records, then submit version ' + (st.v + 1) + '. The report below is regenerated from them.</p>')); }
+  if (late) b.push(banner('info', 'event', '<b>Past the ZTIMS target date (' + fmtD(target) + ').</b><p>This is a target set in ZTIMS. It is not shown as an official obligation.</p>'));
+  const canSubmit = ['ready', 'reopened'].includes(st.s);
+  const label = showV ? pill(st.s === 'finalized' ? 't-lock' : 't-ok', (st.s === 'finalized' ? 'Finalized' : 'Submitted') + ' v' + showV.n) : pill('t-mute', 'Draft, not submitted', 'edit_note');
+  return { acts: mpick('repMonth', ym) + spill(st) + (canSubmit ? btn('primary', 'send', st.s === 'reopened' ? 'Submit version ' + (st.v + 1) : 'Submit ' + MONTHS[+ym.slice(5) - 1], 'submit') : '') + btn('plain', 'download', 'Excel', 'excel'), html:
+    '<div class="row sm mut">' + ico('badge', 'sm') + 'Entered by <b>Maria Santos</b>, Support Staff, for <b>' + esc(a.name) + '</b> only.</div>' + monthChips(a, 'repMonth') + b.join('') +
+    (st.s === 'before' || st.s === 'future' ? '' : '<div class="tiles">' + tile('Visits', nf(fig.total), 'Recorded totals') + tile('Dates', fig.dated + ' recorded', fig.closed + ' closed · ' + (fig.miss.length + fig.sched.length) + ' not recorded') + tile('Residence recorded', fig.total ? Math.round((fig.total - fig.resUnrec) / fig.total * 100) + '%' : 'n/a', nf(fig.resUnrec) + ' visits unclassified') + tile('Sex recorded', fig.total ? Math.round((fig.total - fig.sexUnrec) / fig.total * 100) + '%' : 'n/a', nf(fig.sexUnrec) + ' visits unclassified') + '</div>' + var1(a, fig, label)) };
+};
+A.gomonth = t => { ui.dayMonth = t.dataset.m; ui.sel = null; location.hash = 's-daily'; };
+A.excel = () => toast('Mockup only. The Excel file is built in the implementation stage (layout rules are in document 01).');
+A.submit = () => {
+  const a = ATTR(), ym = ui.repMonth, st = monthState(a, ym), f = monthFigs(a, ym), n = st.v + 1;
+  modal({ title: (n > 1 ? 'Submit version ' + n : 'Submit ' + monthLabel(ym)) + '?', body: '<div class="tiles">' + tile('Visits', nf(f.total)) + tile('Dates with a count', f.dated, f.zero + ' confirmed zero') + tile('Closed dates', f.closed, 'Authorized') + '</div><p>Residence is unrecorded for <b>' + nf(f.resUnrec) + '</b> visits and sex for <b>' + nf(f.sexUnrec) + '</b>. They stay unknown in the report: never zero, never assigned.</p><p class="mut sm">After this, recording is locked. Only the Tourism Officer can reopen the month.</p>' +
+    (n > 1 ? '<label class="fld"><span>What changed (reason for this version)</span><input class="inp" id="subWhy" maxlength="300" placeholder="e.g. Added 14 Oct, which was missed"/></label>' : ''),
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: n > 1 ? 'Submit version ' + n : 'Submit report', cls: 'primary', onClick: async api => {
+      const why = n > 1 ? $('#subWhy').value.trim() : ''; if (n > 1 && why.length < 3) { api.err('Give the reason for this version.'); return false; }
+      api.busy(true, 'Submitting…');
+      try { const v = await server(() => { const s2 = monthState(a, ym); if (!['ready', 'reopened'].includes(s2.s)) throw { message: 'This month can no longer be submitted (' + STV[s2.s][1] + ').' }; return addVersion(a, ym, 'Maria Santos', nowStamp(), why); }); closeModal(); toast(monthLabel(ym) + ' submitted as version ' + v.n); render(); }
+      catch (e) { api.busy(false); api.err(failMsg(e)); if (e.kind === 'expired') api.body.insertAdjacentHTML('beforeend', '<div class="row">' + btn('primary sm', 'login', 'Sign in', 'signin') + '</div>'); } return false; } }] });
+};
+function diffVersions(prev, cur) {
+  const out = [], m = new Map(prev.fig.daily.map(x => [x.d, x]));
+  for (const x of cur.fig.daily) { const p = m.get(x.d); if (!p) continue; const a = p.rec, b = x.rec; const sa = p.k, sb = x.k;
+    if (!a && b) out.push(fmtD(x.d) + ': added, ' + nf(b.t) + ' visitors'); else if (a && !b) out.push(fmtD(x.d) + ': removed'); else if (a && b && (a.t !== b.t || JSON.stringify(a.res) !== JSON.stringify(b.res) || a.m !== b.m || a.f !== b.f)) out.push(fmtD(x.d) + ': ' + nf(a.t) + ' → ' + nf(b.t) + ' visitors' + (a.t === b.t ? ' (breakdown changed)' : '')); else if (sa !== sb) out.push(fmtD(x.d) + ': ' + sa + ' → ' + sb); }
+  return out;
+}
+SCREENS['s-history'] = () => {
+  const a = ATTR(), ym = ui.repMonth, st = monthState(a, ym), vs = vers(a, ym).slice().reverse(), ev = (S.events[a.id][ym] || []).slice().reverse();
+  const rows = vs.map((v, i) => { const prev = vers(a, ym).find(x => x.n === v.n - 1), d = prev ? diffVersions(prev, v) : []; return '<tr><td><b>v' + v.n + '</b> ' + (i === 0 ? pill('t-info', 'Latest') : pill('t-mute', 'Replaced')) + '</td><td>' + when(v.at) + '</td><td>' + esc(v.by) + '</td><td>' + (v.reason ? esc(v.reason) : '<span class="mut">First submission</span>') + '</td><td class="n">' + nf(v.fig.total) + '</td><td>' + (d.length ? '<ul style="margin:0;padding-left:1rem">' + d.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : prev ? '<span class="mut">No change to the daily records</span>' : '') + '</td><td><button class="btn plain sm" data-act="viewv" data-n="' + v.n + '">View</button></td></tr>'; }).join('');
+  return { acts: mpick('repMonth', ym) + spill(st), html: monthChips(a, 'repMonth') + (vs.length ? '<section class="panel"><div class="ph"><h2>Saved versions</h2><span class="sub">A saved version never changes. A correction is a new version.</span></div><div class="scroll"><table class="t"><thead><tr><th>Version</th><th>Submitted</th><th>By</th><th>Reason</th><th class="n">Visits</th><th>Changes from the version before</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div></section>' +
+    '<section class="panel"><div class="ph"><h2>History</h2></div><div class="log">' + ev.map(e => '<div><span class="mut">' + when(e.at) + '</span><span><b>' + ({ submitted: 'Submitted v' + e.v, finalized: 'Finalized v' + e.v, reopened: 'Reopened' })[e.a] + '</b>' + (e.reason ? ' · ' + esc(e.reason) : '') + ' <span class="mut">(' + esc(e.by) + ', ' + e.role + ')</span></span></div>').join('') + '</div></section>' : '<div class="empty"><h3>Nothing submitted for ' + monthLabel(ym) + '</h3><p>The report is generated from the daily records and appears here once it is submitted.</p></div>') };
+};
+A.viewv = t => { const a = ATTR(), v = vers(a, ui.repMonth).find(x => x.n === +t.dataset.n); modal({ cls: 'wide', title: monthLabel(ui.repMonth) + ' · version ' + v.n, body: banner('lock', 'lock', 'Saved ' + when(v.at) + ' by ' + esc(v.by) + '. This is exactly what was submitted.') + var1(a, v.fig, pill('t-ok', 'v' + v.n)) }); };
+
+/* ================= Officer: Tracker and review ================= */
+const SHORT = { future: '', before: '–', open: '…', incomplete: '!', ready: 'Ready', submitted: '✓', finalized: '🔒', reopened: 'Re', nostaff: '–' };
+SCREENS['o-tracker'] = () => {
+  const y = ui.trkYear, tally = {};
+  const rows = ATT.map(a => '<tr><td class="stk" style="padding:.5rem .75rem"><b>' + esc(a.name) + '</b><div class="sm mut">' + (a.staff ? 'Support Staff: ' + esc(a.staff) : 'No Support Staff since ' + monthLabel(a.vacant)) + '</div></td>' + MONTHS.map((_, i) => { const ym = y + '-' + pad(i + 1), st = monthState(a, ym); tally[st.s] = (tally[st.s] || 0) + 1; const v = STV[st.s]; return '<td style="text-align:center;padding:.4rem .2rem">' + (st.s === 'future' ? '' : '<button class="cellb ' + v[0] + '" data-act="review" data-a="' + a.id + '" data-m="' + ym + '" title="' + esc(a.name + ' · ' + monthLabel(ym) + ': ' + v[1] + (st.v ? ' v' + st.v : '')) + '" aria-label="' + esc(a.name + ' ' + monthLabel(ym) + ' ' + v[1]) + '">' + SHORT[st.s] + '</button>') + '</td>'; }).join('') + '</tr>').join('');
+  return { acts: '<div class="mpick"><button class="iconbtn" data-act="yshift" data-k="trkYear" data-d="-1" aria-label="Previous year">' + ico('chevron_left') + '</button><span class="cur">' + y + '</span><button class="iconbtn" data-act="yshift" data-k="trkYear" data-d="1" aria-label="Next year">' + ico('chevron_right') + '</button></div>', html:
+    '<div class="row sm mut">' + ico('visibility', 'sm') + 'Places: <b>Attractions</b>. The Tourism Officer views, finalizes or reopens. There is no recording screen for the officer.</div>' +
+    '<p class="row" style="gap:.4rem" aria-label="What the cells mean">' + ['submitted', 'finalized', 'reopened', 'ready', 'incomplete', 'open', 'nostaff'].map(k => pill(STV[k][0], (SHORT[k] || '') + ' ' + STV[k][1])).join('') + '</p>' +
+    '<section class="panel" style="padding:0"><div class="scroll"><table class="t" style="min-width:60rem"><thead><tr><th class="stk">Attraction</th>' + MON3.map(m => '<th style="text-align:center">' + m + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div></section>' +
+    '<p class="sm mut">A cell that is not submitted is never shown as zero. Open a cell to see the report, its versions and its history.</p>' };
+};
+A.yshift = t => { ui[t.dataset.k] += +t.dataset.d; render(); };
+A.review = t => reviewDialog(ATT.find(x => x.id === t.dataset.a), t.dataset.m);
+function reviewDialog(a, ym) {
+  const st = monthState(a, ym), vs = vers(a, ym), v = vs[vs.length - 1], live = monthFigs(a, ym), fig = v ? v.fig : live, last = lastEv(a, ym);
+  const actions = [];
+  const body = (st.s === 'submitted' ? banner('ok', 'check_circle', '<b>Version ' + st.v + ' submitted ' + when(v.at) + ' by ' + esc(v.by) + '.</b><p>Ready to finalize, or reopen with a reason.</p>')
+    : st.s === 'finalized' ? banner('lock', 'lock', '<b>Finalized.</b> Version ' + finalEvent(a, ym).v + ' is the official figure for DTA2M and VAR 3M.')
+    : st.s === 'reopened' ? banner('wait', 'lock_open', '<b>Reopened ' + when(last.at) + '.</b><p>Reason: ' + esc(last.reason) + '. Waiting for the Support Staff to correct and submit again. Version ' + st.v + ' stays the official figure until a new version is finalized.</p>')
+    : banner('info', 'info', '<b>' + STV[st.s][1] + '.</b><p>Not submitted. The Support Staff records and submits; the officer cannot enter counts. Figures below are a draft from the daily records.</p>')) +
+    '<div class="tiles">' + tile('Visits', nf(fig.total), v ? 'Version ' + v.n : 'Draft') + tile('Dates', fig.dated, fig.zero + ' zero · ' + fig.closed + ' closed · ' + (fig.miss.length + fig.sched.length) + ' not recorded') + tile('Residence unclassified', nf(fig.resUnrec), 'Domestic ' + nf(fig.domestic) + ' · Foreign ' + nf(fig.foreign) + ' (known)') + tile('Sex unclassified', nf(fig.sexUnrec), 'Male ' + nf(fig.male) + ' · Female ' + nf(fig.female) + ' (known)') + '</div>' +
+    '<details class="det"><summary>Daily records (' + fig.daily.length + ' dates)</summary><div class="dbody"><div class="scroll"><table class="t"><thead><tr><th>Date</th><th>State</th><th class="n">Total</th><th class="n">Known residence</th><th class="n">Known sex</th></tr></thead><tbody>' + fig.daily.map(x => '<tr><td>' + fmtLong(x.d) + '</td><td>' + pill(DSTATE[x.k][0], DSTATE[x.k][1], DSTATE[x.k][2]) + '</td><td class="n">' + (x.rec ? nf(x.rec.t) : '–') + '</td><td class="n">' + (x.rec && x.rec.t ? known(x.rec) : '–') + '</td><td class="n">' + (x.rec && x.rec.t ? (x.rec.m || 0) + (x.rec.f || 0) : '–') + '</td></tr>').join('') + '</tbody></table></div></div></details>' +
+    (vs.length ? '<div class="log">' + (S.events[a.id][ym] || []).slice().reverse().map(e => '<div><span class="mut">' + when(e.at) + '</span><span><b>' + ({ submitted: 'Submitted v' + e.v, finalized: 'Finalized v' + e.v, reopened: 'Reopened' })[e.a] + '</b>' + (e.reason ? ' · ' + esc(e.reason) : '') + ' <span class="mut">(' + esc(e.by) + ')</span></span></div>').join('') + '</div>' : '');
+  const buttons = [{ label: 'Close', cls: 'plain' }];
+  if (st.s === 'submitted' || st.s === 'finalized') buttons.unshift({ label: 'Reopen…', cls: 'cancel', onClick: () => { setTimeout(() => reopenDialog(a, ym), 0); } });
+  if (st.s === 'submitted') buttons.push({ label: 'Finalize version ' + st.v, cls: 'primary', onClick: () => { setTimeout(() => finalizeDialog(a, ym), 0); } });
+  modal({ cls: 'wide', title: a.name + ' · ' + monthLabel(ym), body, buttons });
+}
+function finalizeDialog(a, ym) {
+  const st = monthState(a, ym);
+  modal({ cls: 'narrow', title: 'Finalize ' + monthLabel(ym) + '?', body: '<p>Version ' + st.v + ' of <b>' + esc(a.name) + '</b> becomes the official figure for the monthly DTA2M and the annual VAR 3M. Recording stays locked until you reopen it.</p>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Finalize', cls: 'primary', onClick: async api => { api.busy(true, 'Finalizing…'); try { await server(() => { const s2 = monthState(a, ym); if (s2.s !== 'submitted') throw { message: 'Not finalized. The month is now ' + STV[s2.s][1] + '.' }; S.events[a.id][ym].push({ a: 'finalized', v: s2.v, by: 'Tourism Officer', role: 'Tourism Officer', at: nowStamp(), reason: '' }); }); closeModal(); toast(monthLabel(ym) + ' finalized'); render(); } catch (e) { api.busy(false); api.err(failMsg(e)); } return false; } }] });
+}
+function reopenDialog(a, ym) {
+  modal({ cls: 'narrow', title: 'Reopen ' + monthLabel(ym) + '?', body: '<p>The Support Staff can then correct the daily records and submit a new version. The current version is kept.</p><label class="fld"><span>Reason (the Support Staff sees it)</span><textarea class="inp" id="roWhy" rows="3" maxlength="300"></textarea></label>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Reopen', cls: 'danger', onClick: async api => { const why = $('#roWhy').value.trim(); if (why.length < 10) { api.err('Give a reason of at least 10 characters.'); return false; } api.busy(true, 'Reopening…'); try { await server(() => { const s2 = monthState(a, ym); if (!['submitted', 'finalized'].includes(s2.s)) throw { message: 'This month is not submitted or finalized.' }; S.events[a.id][ym].push({ a: 'reopened', v: s2.v, by: 'Tourism Officer', role: 'Tourism Officer', at: nowStamp(), reason: why }); }); closeModal(); toast(monthLabel(ym) + ' reopened'); render(); } catch (e) { api.busy(false); api.err(failMsg(e)); } return false; } }] });
+}
+
+/* ================= Officer: Arrivals / FORM A (unchanged) + Attraction Visits ================= */
+SCREENS['o-arrivals'] = () => ({ html: '<section class="panel"><div class="ph"><h2>Arrivals Report (existing page)</h2></div><p>Unchanged except for one proposed rule, <b>decision D1</b>: attraction visits are not added to Part I any more. Today the page adds attraction reports and accommodation arrivals, so one tourist visiting a resort and two attractions counts three times. The new brief keeps the two apart.</p><p class="mut">The 2025 municipal totals stay exactly as loaded.</p></section>' });
+SCREENS['o-forma'] = () => ({ html: '<section class="panel"><div class="ph"><h2>FORM A (existing tab, private places to stay)</h2></div><p>Unchanged. It reports accommodation arrivals and guest-nights only.</p></section>' });
+const SUBV = [['o-dta2m', 'Monthly (DTA2M)'], ['o-var3m', 'Annual (VAR 3M)'], ['o-var2', 'Per attraction (VAR 2)']];
+const subnav = r => '<div class="row"><div class="chips">' + SUBV.map(s => '<a class="chip" href="#' + s[0] + '" aria-pressed="' + (s[0] === r) + '" style="text-decoration:none;color:inherit">' + s[1] + '</a>').join('') + '</div><span class="sp" style="flex:1"></span><div class="chips"><button class="chip" data-act="src" data-v="official" aria-pressed="' + (ui.src === 'official') + '">Official: finalized only</button><button class="chip" data-act="src" data-v="oper" aria-pressed="' + (ui.src === 'oper') + '">Operational: includes submitted and draft</button></div></div>';
+A.src = t => { ui.src = t.dataset.v; render(); };
+const srcPill = s => ({ final: s.pending ? pill('t-wait', 'Finalized v' + s.v + ' · correction pending', 'lock_open') : pill('t-lock', 'Finalized v' + s.v, 'lock'), submitted: pill('t-ok', 'Submitted v' + s.v + ' · not final', 'check_circle'), reopened: pill('t-wait', 'Reopened · last submitted v' + s.v, 'lock_open'), draft: pill('t-mute', 'Draft · not submitted', 'edit_note'), none: pill('t-bad', 'Not submitted', 'report'), nostaff: pill('t-mute', 'No Support Staff', 'person_off'), before: pill('t-mute', 'Before reporting'), future: pill('t-mute', 'Not yet') })[s.k];
+SCREENS['o-dta2m'] = () => {
+  const ym = ui.dtaMonth, atts = ATT.filter(a => ym >= a.from), srcs = atts.map(a => [a, srcFor(a, ym, ui.src)]), inc = srcs.filter(([, s]) => s.fig);
+  const sum = k => inc.reduce((t, [, s]) => t + k(s.fig), 0), sexOK = f => f.male + f.female > 0;
+  const rows = srcs.map(([a, s]) => { const f = s.fig; if (!f) return '<tr><td class="stk l">' + esc(a.name) + '</td><td class="l">Code pending</td><td class="l">' + srcPill(s) + '</td><td colspan="13" class="x">Not included. Not shown as zero.</td></tr>';
+    const c = v => '<td>' + nf(v) + '</td>', na = '<td class="na">–</td>';
+    return '<tr><td class="stk l">' + esc(a.name) + '</td><td class="l mut">Code pending</td><td class="l">' + srcPill(s) + '</td>' + na + na + c(f.res.zam) + na + na + c(f.res.noe) + na + na + c(f.res.oth) + na + na + c(f.res.frn) + (sexOK(f) ? c(f.male) + c(f.female) : na + na) + '<td><b>' + nf(f.total) + '</b></td><td class="nr">' + nf(f.resUnrec) + '</td></tr>'; }).join('');
+  const n = k => srcs.filter(([, s]) => s.k === k).length;
+  return { acts: mpick('dtaMonth', ym), html: subnav('o-dta2m') +
+    '<div class="tiles">' + tile('Attractions', atts.length, 'Reporting this month') + tile('Finalized', n('final'), 'Official') + tile('Submitted, not final', n('submitted') + n('reopened'), 'Operational only') + tile('Not submitted', n('none') + n('nostaff') + n('draft'), 'Shown as not submitted, never 0', (n('none') + n('nostaff')) ? 'red' : '') + '</div>' +
+    (ui.src === 'oper' ? banner('wait', 'warning', '<b>Operational view.</b> It includes submitted and draft figures that are not final. Do not send it as the official report.') : banner('ok', 'verified', '<b>Official view.</b> Only finalized versions are added.')) +
+    '<div class="panel"><div class="ph"><span class="formcap">Tourism Attraction Visitor Record</span><span class="sub">DTA2M · Monthly municipal consolidation</span></div><div class="formmeta"><b>Month/Year:</b><span>' + monthLabel(ym) + '</span><b>Name of Municipality:</b><span>Zamboanguita</span></div>' +
+    '<div class="scroll"><table class="var" style="min-width:74rem"><thead><tr><th class="stk" rowspan="3">Visitor Attraction: Name</th><th rowspan="3">Attraction Code</th><th rowspan="3">Status (ZTIMS)</th><th colspan="12">*** Place of Residence</th><th colspan="3" rowspan="2">* Grand Total Number of Visitors</th><th rowspan="3" class="nr">ZTIMS note: residence not recorded</th></tr><tr><th colspan="12">Philippines · Foreign</th></tr><tr><th colspan="3">This Municipality</th><th colspan="3">This Province</th><th colspan="3">Other Province</th><th colspan="3">Foreign Country Residence</th><th>Male</th><th>Female</th><th>Total</th></tr></thead><tbody>' + rows +
+    '<tr class="tot"><td class="stk l">Total of this Month ****</td><td></td><td class="l">' + inc.length + ' of ' + atts.length + ' attractions</td><td class="na">–</td><td class="na">–</td><td>' + nf(sum(f => f.res.zam)) + '</td><td class="na">–</td><td class="na">–</td><td>' + nf(sum(f => f.res.noe)) + '</td><td class="na">–</td><td class="na">–</td><td>' + nf(sum(f => f.res.oth)) + '</td><td class="na">–</td><td class="na">–</td><td>' + nf(sum(f => f.res.frn)) + '</td><td>' + (inc.some(([, s]) => sexOK(s.fig)) ? nf(sum(f => f.male)) : '–') + '</td><td>' + (inc.some(([, s]) => sexOK(s.fig)) ? nf(sum(f => f.female)) : '–') + '</td><td>' + nf(sum(f => f.total)) + '</td><td class="nr">' + nf(sum(f => f.resUnrec)) + '</td></tr></tbody></table></div>' +
+    '<ul class="sm mut" style="margin:.75rem 0 0;padding-left:1.1rem"><li>Note: *Total number must be recorded, ** Sex &amp; ***Residence entries are optional. Total number of this month must be reported.</li><li><b>This Municipality</b> is Zamboanguita. <b>This Province</b> is the rest of Negros Oriental, so the four classes never overlap. Whether DTA2M means that is decision D3.</li><li>These are visits to attractions, added across attractions. They are not a count of tourists, and are not added to accommodation arrivals.</li></ul>' +
+    '<div class="row" style="margin-top:.75rem">' + btn('plain', 'download', 'Excel', 'excel') + '</div></div>' };
+};
+A.mshift2 = null;
+function varCols(f) { return f ? { d: f.domestic, f: f.foreign, t: f.total, u: f.resUnrec } : null; }
+SCREENS['o-var3m'] = () => {
+  const y = ui.varYear;
+  const yb = '<div class="mpick"><button class="iconbtn" data-act="yshift" data-k="varYear" data-d="-1" aria-label="Previous year">' + ico('chevron_left') + '</button><span class="cur">' + y + '</span><button class="iconbtn" data-act="yshift" data-k="varYear" data-d="1" aria-label="Next year">' + ico('chevron_right') + '</button></div>';
+  if (y < 2026) return { acts: yb, html: subnav('o-var3m') + '<div class="empty"><h3>' + y + ': municipal totals only</h3><p>The ' + y + ' sheet was loaded as municipal totals from the printed Form A4 and is kept exactly as loaded. It is not allocated to attractions. There are no daily, residence or sex records to show here.</p></div>' };
+  const atts = ATT, tot = atts.map(() => ({ d: 0, f: 0, t: 0, u: 0 })), gm = [];
+  const rows = MONTHS.map((mn, i) => { const ym = y + '-' + pad(i + 1); let gd = 0, gf = 0, gt = 0, any = false;
+    const cells = atts.map((a, j) => { const s = srcFor(a, ym, ui.src), c = varCols(s.fig); if (!c) return '<td class="na" colspan="3" style="text-align:center;font-style:italic">' + (s.k === 'future' ? '' : s.k === 'before' ? 'Before reporting' : 'Not submitted') + '</td>'; any = true; ['d', 'f', 't', 'u'].forEach(k => { tot[j][k] += c[k]; }); gd += c.d; gf += c.f; gt += c.t; const mk = c.u ? '*' : '';
+      return '<td title="' + srcPill(s).replace(/<[^>]+>/g, '') + '">' + nf(c.d) + mk + '</td><td>' + nf(c.f) + mk + '</td><td><b>' + nf(c.t) + '</b></td>'; }).join('');
+    return '<tr><td class="stk l"><b>' + mn + '</b></td>' + cells + (any ? '<td>' + nf(gd) + '</td><td>' + nf(gf) + '</td><td><b>' + nf(gt) + '</b></td>' : '<td class="na">–</td><td class="na">–</td><td class="na">–</td>') + '</tr>'; }).join('');
+  const T = tot.reduce((a, x) => ({ d: a.d + x.d, f: a.f + x.f, t: a.t + x.t, u: a.u + x.u }), { d: 0, f: 0, t: 0, u: 0 });
+  return { acts: yb, html: subnav('o-var3m') + (ui.src === 'oper' ? banner('wait', 'warning', '<b>Operational view.</b> Includes submitted and draft months that are not final.') : banner('ok', 'verified', '<b>Official view.</b> Only finalized months are added. A month that is not finalized shows "Not submitted", not zero.')) +
+    '<div class="panel"><div class="ph"><span><span class="formcap">Annual Report on Same Day Visitors by Attraction</span><div class="sm mut">VAR 3M</div></span></div><div class="formmeta"><b>Municipality:</b><span>Zamboanguita</span><b>Province:</b><span>Negros Oriental</span><b>Period:</b><span>January to December ' + y + '</span></div>' +
+    '<div class="scroll"><table class="var" style="min-width:' + (12 + atts.length * 12) + 'rem"><thead><tr><th class="stk" rowspan="2">Month</th>' + atts.map(a => '<th colspan="3">' + esc(a.name) + ' - (Code pending)</th>').join('') + '<th colspan="3">Grand Total Visitors</th></tr><tr>' + atts.map(() => '<th>Domestic</th><th>Foreign</th><th>Total</th>').join('') + '<th>Domestic</th><th>Foreign</th><th>Total</th></tr></thead><tbody>' + rows +
+    '<tr class="tot"><td class="stk l">Total:</td>' + tot.map(x => '<td>' + nf(x.d) + '</td><td>' + nf(x.f) + '</td><td>' + nf(x.t) + '</td>').join('') + '<td>' + nf(T.d) + '</td><td>' + nf(T.f) + '</td><td>' + nf(T.t) + '</td></tr>' +
+    '<tr><td class="stk l nr" style="border-left:0">ZTIMS note: residence not recorded</td>' + tot.map(x => '<td colspan="3" class="nr" style="text-align:center">' + nf(x.u) + '</td>').join('') + '<td colspan="3" class="nr" style="text-align:center"><b>' + nf(T.u) + '</b></td></tr></tbody></table></div>' +
+    '<ul class="sm mut" style="margin:.75rem 0 0;padding-left:1.1rem"><li><b>*</b> Domestic and Foreign show only the residence that was recorded. Where it is incomplete, Domestic + Foreign is below Total. The difference (<b>' + nf(T.u) + '</b> for the year) is on the ZTIMS note line below the table and is never added to either column.</li><li>The title says "Same Day Visitors". ZTIMS counts visits to the attraction and cannot tell same-day visitors from overnight guests. See decision D4.</li><li>Totals add attractions. They are not unique tourists.</li></ul>' +
+    '<div class="row" style="margin-top:.75rem">' + btn('plain', 'download', 'Excel', 'excel') + '</div></div>' };
+};
+SCREENS['o-var2'] = () => {
+  const a = ATT.find(x => x.id === ui.var2Att), y = ui.varYear, tot = { z: 0, o: 0, f: 0, m: 0, w: 0, t: 0, u: 0 };
+  const yb = '<div class="mpick"><button class="iconbtn" data-act="yshift" data-k="varYear" data-d="-1" aria-label="Previous year">' + ico('chevron_left') + '</button><span class="cur">' + y + '</span><button class="iconbtn" data-act="yshift" data-k="varYear" data-d="1" aria-label="Next year">' + ico('chevron_right') + '</button></div>';
+  const rows = MONTHS.map((mn, i) => { const ym = y + '-' + pad(i + 1), s = srcFor(a, ym, ui.src), f = s.fig; if (!f) return '<tr><td class="stk l">' + mn + '</td><td colspan="8" class="x">' + (s.k === 'future' ? '' : s.k === 'before' ? 'Before reporting' : 'Not submitted') + '</td></tr>';
+    const sx = f.male + f.female > 0; tot.z += f.res.zam + f.res.noe; tot.o += f.res.oth; tot.f += f.res.frn; tot.m += f.male; tot.w += f.female; tot.t += f.total; tot.u += f.resUnrec;
+    return '<tr><td class="stk l">' + mn + '</td><td>' + nf(f.res.zam + f.res.noe) + '</td><td>' + nf(f.res.oth) + '</td><td>' + nf(f.res.frn) + '</td><td>' + (sx ? nf(f.male) : '–') + '</td><td>' + (sx ? nf(f.female) : '–') + '</td><td><b>' + nf(f.total) + '</b></td><td class="nr">' + nf(f.resUnrec) + '</td></tr>'; }).join('');
+  return { acts: yb, html: subnav('o-var2') + '<div class="row"><label class="fld" style="max-width:20rem"><span>Attraction</span><select class="inp" data-chg="var2att">' + ATT.map(x => '<option value="' + x.id + '"' + (x.id === a.id ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select></label></div>' +
+    banner('info', 'info', '<b>VAR 2 is a view, not another form to fill in.</b><p>The supplied example lists one attraction by month, January to December. ZTIMS generates it from the same monthly versions as DTA2M and VAR 3M, so there is nothing to type twice.</p>') +
+    '<div class="panel"><div class="ph"><span class="formcap">Tourism Attraction Visitor Record</span><span class="sub">VAR 2 · ' + esc(a.name) + ' · January to December ' + y + '</span></div><div class="scroll"><table class="var"><thead><tr><th class="stk" rowspan="2">Name / Month</th><th colspan="2">Philippines</th><th rowspan="2">Foreign Country Residence</th><th colspan="3">* Grand Total Number of Visitors</th><th rowspan="2" class="nr">ZTIMS note: residence not recorded</th></tr><tr><th>This province</th><th>Other Province</th><th>Male</th><th>Female</th><th>Total</th></tr></thead><tbody>' + rows +
+    '<tr class="tot"><td class="stk l">Total of this Month ****</td><td>' + nf(tot.z) + '</td><td>' + nf(tot.o) + '</td><td>' + nf(tot.f) + '</td><td>' + (tot.m + tot.w ? nf(tot.m) : '–') + '</td><td>' + (tot.m + tot.w ? nf(tot.w) : '–') + '</td><td>' + nf(tot.t) + '</td><td class="nr">' + nf(tot.u) + '</td></tr></tbody></table></div><p class="sm mut">Prepared by: ________________ &nbsp; Noted by: ________________</p></div>' };
+};
+CH.var2att = t => { ui.var2Att = t.value; render(); };
+A.mshift3 = null;
+
+/* ================= Flow view ================= */
+SCREENS.flow = () => ({ acts: btn('plain', 'arrow_back', 'Back to the portal', 'back'), html:
+  '<section class="panel"><div class="ph"><h2>Data flow: one source, generated outputs</h2></div><div class="scroll"><svg class="flowsvg" viewBox="0 0 960 250" role="img" aria-label="Daily Visitor Record, then generated Monthly Report, Submit, saved version, Finalize, then DTA2M, VAR 3M and VAR 2"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>' +
+  '<rect class="fb pri" x="10" y="40" width="170" height="86" rx="4"/><text class="h" x="22" y="64">Daily Visitor Record</text><text class="s" x="22" y="84">1 per attraction and date</text><text class="s" x="22" y="100">Total (required, 0 confirmed)</text><text class="s" x="22" y="116">Residence, sex: optional</text>' +
+  '<path class="ar" d="M180 83H222"/><rect class="fb" x="222" y="40" width="160" height="86" rx="4"/><text class="h" x="234" y="64">Monthly Report</text><text class="s" x="234" y="84">Generated, never typed</text><text class="s" x="234" y="100">VAR 1 layout</text><text class="s" x="234" y="116">Needs every date accounted for</text>' +
+  '<path class="ar" d="M382 83H424"/><rect class="fb" x="424" y="40" width="150" height="86" rx="4"/><text class="h" x="436" y="64">Submit</text><text class="s" x="436" y="84">Support Staff</text><text class="s" x="436" y="100">Saved version n, locked</text>' +
+  '<path class="ar" d="M574 83H616"/><rect class="fb lock" x="616" y="40" width="130" height="86" rx="4"/><text class="h on" x="628" y="64">Finalize</text><text class="s on" x="628" y="84" style="fill:rgb(var(--bg))">Tourism Officer</text><text class="s on" x="628" y="100" style="fill:rgb(var(--bg))">Official source</text>' +
+  '<path class="ar" d="M746 83H788"/><rect class="fb pri" x="788" y="30" width="160" height="106" rx="4"/><text class="h" x="800" y="54">Municipal outputs</text><text class="s" x="800" y="76">DTA2M monthly</text><text class="s" x="800" y="94">VAR 3M annual</text><text class="s" x="800" y="112">VAR 2 per attraction</text><text class="s" x="800" y="128">Excel</text>' +
+  '<rect class="fb no" x="10" y="164" width="560" height="64" rx="4"/><text class="h" x="22" y="188">Never a source of visitor counts</text><text class="s" x="22" y="208">Tickets · payments · bookings · reviews · accommodation stays or arrivals</text>' +
+  '<text class="s" x="600" y="196">Accommodation arrivals and attraction visits are kept apart.</text><text class="s" x="600" y="212">Neither adds up to unique tourists.</text></svg></div></section>' +
+  '<section class="panel"><div class="ph"><h2>Month status</h2></div><div class="scroll"><svg class="flowsvg" viewBox="0 0 960 250" role="img" aria-label="Status transitions: Recording, Ready to submit, Submitted, Finalized, Reopened"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>' +
+  '<rect class="fb" x="10" y="40" width="140" height="56" rx="28"/><text class="h" x="40" y="72">Recording</text><path class="ar" d="M150 68H230"/><text class="s" x="158" y="58">all dates in</text>' +
+  '<rect class="fb" x="230" y="40" width="160" height="56" rx="28"/><text class="h" x="256" y="72">Ready to submit</text><path class="ar" d="M390 68H490"/><text class="s" x="398" y="58">Submit (staff)</text>' +
+  '<rect class="fb pri" x="490" y="40" width="150" height="56" rx="28"/><text class="h" x="518" y="72">Submitted v1</text><path class="ar" d="M640 68H750"/><text class="s" x="648" y="58">Finalize (officer)</text>' +
+  '<rect class="fb lock" x="750" y="40" width="150" height="56" rx="28"/><text class="h on" x="786" y="72">Finalized</text>' +
+  '<rect class="fb" x="490" y="170" width="150" height="56" rx="28"/><text class="h" x="524" y="202">Reopened</text>' +
+  '<path class="ar" d="M530 96V170"/><text class="s" x="420" y="136">Reopen + reason</text>' +
+  '<path class="ar" d="M600 170V96"/><text class="s" x="608" y="128">Correct, resubmit</text><text class="s" x="608" y="142">(staff, v n+1)</text>' +
+  '<path class="ar" d="M810 96L640 178"/><text class="s" x="700" y="200">Reopen + reason</text>' +
+  '<text class="s" x="10" y="200">Recording is locked in Submitted and Finalized. No approval or rejection step.</text><text class="s" x="10" y="218">Versions never change. Dates change only in Recording or Reopened.</text></svg></div></section>' +
+  '<section class="panel"><div class="ph"><h2>Who can do what</h2></div><div class="scroll"><table class="t rolestab"><thead><tr><th>Action</th><th>Support Staff (own attraction)</th><th>Tourism Officer</th><th>Enterprise Manager</th><th>Tourist</th></tr></thead><tbody>' +
+  [['Record and edit daily counts', 1, 0, 0, 0], ['Submit the month', 1, 0, 0, 0], ['View reports and history', 1, 1, 0, 0], ['Finalize', 0, 1, 0, 0], ['Reopen (reason required)', 0, 1, 0, 0], ['DTA2M, VAR 3M, VAR 2 and Excel', 0, 1, 0, 0], ['Set closed dates (existing)', 0, 1, 0, 0]].map(r => '<tr><td>' + r[0] + '</td>' + r.slice(1).map(x => '<td>' + (x ? '<span class="yes">Yes</span>' : '<span class="nox">No</span>') + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></section>' });
+A.back = () => { location.hash = ui.role === 'o' ? 'o-tracker' : 's-daily'; };
+
+/* ================= Drawers, prototype controls ================= */
+const DR = {
+  decisions: () => '<div class="dh"><h2>Decisions</h2><button class="iconbtn" data-act="closedrawer" aria-label="Close">' + ico('close') + '</button></div><div class="dbd">' +
+    '<h3>Block implementation</h3><ul><li><b>D1</b> Stop adding attraction visits to Form A4 Part I (conflicts with the October 2026 rule that a guest counts once at each place)?</li><li><b>D2</b> VAR 1 stops at day 30. How should day 31 appear in the Excel?</li><li><b>D3</b> Does DTA2M "This Province" include or exclude "This Municipality"?</li><li><b>D4</b> VAR 3M says "Same Day Visitors". Count all attraction visits, or only same-day visitors? And confirm what counts as one visit.</li><li><b>D5</b> Remove the officer\'s backup entry for attraction reports and retire the attraction Guest Register?</li></ul>' +
+    '<h3>Proposed defaults, shown here</h3><ul><li>Submit needs every date recorded or an authorized closure.</li><li>A closed weekday is confirmed zero by the Support Staff, not assumed.</li><li>Incomplete residence: known Domestic and Foreign shown with a mark; the rest on a ZTIMS note line.</li><li>Official outputs use finalized versions only.</li><li>The 5th of the next month is a ZTIMS target, not an official deadline.</li></ul>' +
+    '<h3>Not verified</h3><ul><li>That the supplied forms are the current required ones, and any reporting deadline. DOT\'s guidance was not reachable from this session.</li></ul><p class="sm mut">Full list: document 03.</p></div>',
+  scenario: () => '<div class="dh"><h2>Scenario</h2><button class="iconbtn" data-act="closedrawer" aria-label="Close">' + ico('close') + '</button></div><div class="dbd"><ol><li><b>Support Staff, Daily Visitor Record, October.</b> Open 3 Oct: total 100, residence 20 / 30 / 25 / 15, 10 unrecorded, sex unrecorded. Open "Where visitors live".</li><li>5 Oct is a confirmed zero. 27 Oct is an authorized closure. <b>14 Oct is missing.</b></li><li>Try Save with "Save fails", "Session expired" or "Other device saves". "Saved" appears only after the server answers.</li><li>Record 14 Oct. <b>Monthly Reports</b>: read the VAR 1 preview, then Submit.</li><li>Switch to <b>Officer</b>, Tracker, open Bayside Boardwalk, October, Finalize. Then Attraction Visits: DTA2M and VAR 3M (note the 75 / 15 and the 10 unclassified).</li><li>Reopen October with a reason. As Support Staff correct a date and submit version 2. Finalize again: the outputs regenerate.</li><li>Old Lighthouse Park October is submitted but not final: switch Official to Operational. Riverside Eco Trail shows "Not submitted", never zero.</li></ol></div>'
+};
+A.drawer = t => { const d = $('#drawer'); d.hidden = false; d.innerHTML = DR[t.dataset.v](); };
+A.closedrawer = () => { $('#drawer').hidden = true; };
+A.go = t => { location.hash = t.dataset.to; };
+A.role = t => { ui.role = t.dataset.v; const h = t.dataset.v === 'o' ? 'o-tracker' : 's-daily'; if (location.hash.slice(1) === h) render(); else location.hash = h; };
+A.reset = () => { S = seedState(); ui.sel = null; ui.draftNote = ''; closeModal(); render(); toast('Scenario reset'); };
+CH.today = t => { S.today = t.value; ui.sel = null; render(); toast('Today is ' + fmtLong(S.today)); };
+CH.sim = t => { S.sim = t.value; toast(({ none: 'The server works normally', slow: 'The server is slow', fail: 'Saving will fail', expired: 'The session has expired' })[t.value]); };
+document.fonts && document.fonts.load('20px "Material Symbols Outlined"').then(() => document.documentElement.classList.add('ms-ok')).catch(() => document.documentElement.classList.add('ms-ok'));
+setTimeout(() => document.documentElement.classList.add('ms-ok'), 1500);
+render();
+</script>
