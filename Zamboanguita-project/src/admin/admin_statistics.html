@@ -537,7 +537,12 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
                 <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
+                <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">hotel</span>FORM A</button>
             </div>
+
+            <!-- ============ FORM A: private places to stay, from their saved versions (acc-officer.js) ============ -->
+            <section role="tabpanel" id="panel-forma" aria-labelledby="tab-forma" class="space-y-4" hidden></section>
 
             <!-- ============ Arrivals Report (Form A4) ============ -->
             <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4">
@@ -568,7 +573,7 @@ body { overflow-x: hidden; }
                         <select id="trKind" class="field w-56"><option value="accommodation">Places to stay</option><option value="attraction">Attractions</option></select></label>
                 </div>
                 <!-- The legend, always in view: one line of the same pills. -->
-                <p class="flex flex-wrap items-center gap-2 text-xs font-bold" aria-label="What the cells mean">
+                <p id="trLegend" class="flex flex-wrap items-center gap-2 text-xs font-bold" aria-label="What the cells mean">
                     <span class="tone-pill tone-success rounded-pill px-2.5 py-0.5">✓ Submitted</span>
                     <span class="tone-pill tone-warning rounded-pill px-2.5 py-0.5">Late: after the 5th</span>
                     <span class="tone-pill tone-danger rounded-pill px-2.5 py-0.5">! Missing</span>
@@ -605,6 +610,8 @@ body { overflow-x: hidden; }
     </style>
 
     <script type="module" src="../shared/stat-form.js"></script>
+    <script type="module" src="../shared/acc-common.js"></script>
+    <script type="module" src="../shared/acc-officer.js"></script>
     <script>
         const API_BASE = "/api";
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -679,7 +686,7 @@ body { overflow-x: hidden; }
         const ownRow = office => (office ? 'own-row--office' : 'own-row--private');
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['forma4', 'enter', 'tracker'];
+        const TABS = ['forma4', 'enter', 'tracker', 'forma'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
@@ -689,6 +696,15 @@ body { overflow-x: hidden; }
             if (name === 'forma4') generateForm();
             if (name === 'tracker') loadTracker();
             if (name === 'enter') loadEntry();
+            if (name === 'forma') mountFormA();
+        }
+        // Private places to stay report through their stay register (acc-officer.js).
+        const accReady = async () => { while (!window.ztimsAccOfficer || !window.ztimsAcc) await new Promise(r => setTimeout(r, 30)); return window.ztimsAccOfficer; };
+        let formAMounted = false;
+        async function mountFormA() {
+            if (formAMounted) return;
+            formAMounted = true;
+            (await accReady()).formA(document.getElementById('panel-forma'));
         }
 
         // ---------------------------------------------------------- tracker
@@ -703,6 +719,10 @@ body { overflow-x: hidden; }
         async function loadTracker() {
             const host = document.getElementById('trackerHost');
             const year = document.getElementById('trYear').value, kind = document.getElementById('trKind').value;
+            document.getElementById('trLegend').hidden = kind === 'accommodation';
+            // Places to stay: office places to stay never count, so these are the
+            // private ones and their stay-register months.
+            if (kind === 'accommodation') return (await accReady()).tracker(host, Number(year), openEntry);
             host.innerHTML = '<div class="ztims-empty m-4">Loading…</div>';
             try {
                 const data = await getJson(`/tracker?year=${year}&kind=${kind}`);
@@ -795,6 +815,7 @@ body { overflow-x: hidden; }
                     ? `<span>Entered by ${escapeHtml(place.supportStaffName)}, Support Staff.</span>`
                     : '<span>The Tourism Office enters this report.</span>')
                 : `<span>Entered by ${escapeHtml(place.managerName || 'the enterprise manager')}. View only.</span>`);
+            if (place.kind === 'accommodation' && !place.keptByOffice) return (await accReady()).month(document.getElementById('enHost'), place, year, month);
             window.ZTIMS_STATS.mount(document.getElementById('enHost'), {
                 apiBase: API_BASE, headers: authHeaders, place, year, month, officer: true, viewOnly: !place.keptByOffice,
                 toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession

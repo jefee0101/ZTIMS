@@ -715,11 +715,33 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         // A month recorded as a municipal total is that total; otherwise it is
         // the sum of the places' reports. Never both.
         const municipalMonths = new Set(reports.filter(r => r.kind === 'municipal_total').map(r => r.month));
-        const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total' : r.kind !== 'municipal_total');
+        // A private place to stay reports through its stay register: its
+        // month is the latest saved accommodation version (a hand-typed
+        // report was copied into one as legacy_manual), never a monthly_report.
+        const privateStays = new Set((await query(
+            `select id from spots where type = 'accommodation' and managed_by is not null`)).rows.map(r => r.id));
+        const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total'
+            : r.kind !== 'municipal_total' && !privateStays.has(r.spot_id));
         const ids = used.map(r => r.id);
         const counts = ids.length ? (await query(
             `select c.*, r.month, r.spot_id from monthly_report_counts c join monthly_reports r on r.id = c.report_id
               where c.report_id = any($1)`, [ids])).rows : [];
+        const versions = (await query(
+            `select distinct on (spot_id, month) id, spot_id, month, rooms, room_nights_available, room_nights_occupied, guest_nights, locked
+               from (select v.*, (p.finalized_at is not null) as locked from accommodation_report_versions v
+                       left join accommodation_periods p on p.spot_id = v.spot_id and p.year = v.year and p.month = v.month
+                      where v.year = $1 and v.month between $2 and $3) v
+              order by spot_id, month, version desc`, [year, from, to])).rows.filter(v => !municipalMonths.has(v.month));
+        if (versions.length) {
+            const vc = (await query('select version_id, residence_code, male, female from accommodation_report_version_counts where version_id = any($1)',
+                [versions.map(v => v.id)])).rows;
+            const of = new Map(versions.map(v => [v.id, v]));
+            for (const c of vc) counts.push({ residence_code: c.residence_code, male: c.male, female: c.female, total: c.male + c.female,
+                                              month: of.get(c.version_id).month, spot_id: of.get(c.version_id).spot_id });
+            for (const v of versions) used.push({ kind: 'accommodation', spot_id: v.spot_id, month: v.month, rooms: v.rooms,
+                room_nights_available: v.room_nights_available, room_nights_occupied: v.room_nights_occupied,
+                guest_nights: v.guest_nights, locked_at: v.locked ? true : null });
+        }
 
         const zero = () => Array(12).fill(0);
         const inRange = i => i + 1 >= from && i + 1 <= to;
@@ -729,7 +751,8 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         const placeRows = (await query(
             `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
               where s.counts_visitors and (s.status <> 'archived'
-                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1))
+                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
+                 or exists (select 1 from accommodation_report_versions v where v.spot_id = s.id and v.year = $1))
               order by s.type, s.title`, [year])).rows;
         const placeOf = new Map(placeRows.map(p => [p.id, {
             _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
@@ -754,7 +777,9 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             if (place) place.reported[m] = true;
             if (r.kind === 'attraction') continue;      // no rooms or nights at an attraction
             dae.rooms[m] += r.rooms || 0;
-            dae.roomNightsAvailable[m] += (r.rooms || 0) * daysIn(year, r.month);
+            // A stay register's version knows its available room-nights (rooms
+            // out of service and closed days excluded); a typed report gives rooms.
+            dae.roomNightsAvailable[m] += r.room_nights_available != null ? r.room_nights_available : (r.rooms || 0) * daysIn(year, r.month);
             dae.roomNightsOccupied[m] += r.room_nights_occupied || 0;
             dae.guestNights[m] += r.guest_nights || 0;
         }

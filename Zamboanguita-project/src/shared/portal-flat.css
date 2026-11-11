@@ -771,3 +771,10 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .acc-diff { font-size: .85rem; margin-top: .4rem; }
 .acc-diff td { padding: .2rem .5rem; }
 .acc-note { font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); }
+/* The officer's FORM A view (acc-officer.js). */
+.acc-grid .acc-subtotal td { font-weight: 700; background: rgb(var(--ztims-on-surface) / .03); }
+.acc-grid .acc-total td { font-weight: 800; background: rgb(var(--ztims-primary) / .08); }
+.acc-grid--wide { min-width: 960px; }
+.acc-coverage { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .5rem; }
+.acc-coverage > div { display: flex; flex-direction: column; gap: .2rem; align-items: flex-start; }
+.acc-coverage__m { font-size: .75rem; font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); }
