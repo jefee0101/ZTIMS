@@ -63,6 +63,55 @@ function fromDatabase(error) {
     return hit ? new Refusal(hit[0], token, hit[1], hit[2]) : null;
 }
 
+/* ---- month sources, shared with analytics.js ------------------------------
+   The same functions feed DTA2M, VAR 3M and the analytics, so they can never
+   disagree on which version or draft a month uses. Read-only. */
+async function settingsOf(spotId, client) {
+    return (await query('select * from attraction_settings where spot_id = $1', [spotId], client)).rows[0] || null;
+}
+async function loadCtx(spot, from, to, client, settings) {
+    settings = settings === undefined ? await settingsOf(spot.id, client) : settings;
+    const counts = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date between $2 and $3', [spot.id, from, to], client)).rows.map(E.rowOf);
+    const closed = (await query('select closed_date, reason from spot_closed_dates where spot_id = $1 and closed_date between $2 and $3', [spot.id, from, to], client)).rows;
+    return { counts: new Map(counts.map(r => [r.date, r])), closed: new Map(closed.map(c => [E.toDate(c.closed_date), c.reason])),
+        reportingFrom: settings ? E.toDate(settings.reporting_from) : null, today: E.manilaToday(), scheduledClosed: d => !isOpenOn(spot.working_days, d), rows: counts };
+}
+const VERSION_COLS = `id, spot_id, year, month, version, dates_counted, zero_days, closed_days, total, res_zamboanguita, res_negros_oriental, res_other_province,
+                      res_foreign, res_unrecorded, male, female, sex_unrecorded, source_digest, reason, submitted_by_role, submitted_by_email, submitted_at`;
+const hasStaff = async (spotId, client) => (await query(`select 1 from support_staff where spot_id = $1 and status = 'active'`, [spotId], client)).rows.length > 0;
+/* Every month of a year for one attraction, as a source for the consolidations. */
+async function yearSources(spot, year, mode, client, staffOn) {
+    const settings = await settingsOf(spot.id, client);
+    const ctx = await loadCtx(spot, E.firstDay(year, 1), E.lastDay(year, 12), client, settings);
+    const versions = (await query(`select ${VERSION_COLS} from attraction_report_versions where spot_id = $1 and year = $2 order by month, version`, [spot.id, year], client)).rows;
+    const periods = (await query('select * from attraction_periods where spot_id = $1 and year = $2', [spot.id, year], client)).rows;
+    const staff = staffOn === undefined ? await hasStaff(spot.id, client) : staffOn;
+    const out = [];
+    for (let month = 1; month <= 12; month++) {
+        const vs = versions.filter(v => v.month === month), p = periods.find(x => x.month === month);
+        const byId = new Map(vs.map(v => [v.id, v]));
+        const period = p ? { state: p.state, currentVersion: byId.get(p.current_version_id).version, finalizedVersion: p.finalized_version_id ? byId.get(p.finalized_version_id).version : null } : null;
+        const live = E.monthFigures(ctx, year, month);
+        const st = E.periodState({ year, month, today: ctx.today, reportingFrom: ctx.reportingFrom, period, figures: live, hasStaff: staff });
+        const fv = p && p.finalized_version_id ? byId.get(p.finalized_version_id) : null, lv = vs.length ? vs[vs.length - 1] : null;
+        const src = E.sourceFor(mode, { state: st.state, finalized: fv ? { version: fv.version, figures: E.figuresFromVersion(fv), id: fv.id } : null,
+            latest: lv ? { version: lv.version, figures: E.figuresFromVersion(lv), id: lv.id } : null, draft: mode === 'operational' ? live : null });
+        if (fv && src.kind === 'final') src.versionId = fv.id;
+        out.push({ month, state: st, source: src, missing: live.missing.length + live.scheduled.length });
+    }
+    return { settings, months: out };
+}
+async function officeAttractions(year, client) {
+    return (await query(
+        `select s.id, s.title, s.type, s.status, s.managed_by, s.counts_visitors, s.working_days, s.barangay, s.category
+           from spots s
+          where s.type = 'spot' and s.managed_by is null
+            and ((s.counts_visitors and s.status <> 'archived')
+                 or exists (select 1 from attraction_report_versions v where v.spot_id = s.id and v.year = $1))
+          order by s.title limit 200`, [year], client)).rows;
+}
+
+
 module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter, requireSupportStaff, sharedRateLimit }) {
     const router = express.Router();
     const writeLimit = sharedRateLimit
@@ -123,20 +172,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     };
 
     /* ---- loading ---------------------------------------------------------- */
-    async function settingsOf(spotId, client) {
-        return (await query('select * from attraction_settings where spot_id = $1', [spotId], client)).rows[0] || null;
-    }
-    async function loadCtx(spot, from, to, client, settings) {
-        settings = settings === undefined ? await settingsOf(spot.id, client) : settings;
-        const counts = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date between $2 and $3', [spot.id, from, to], client)).rows.map(E.rowOf);
-        const closed = (await query('select closed_date, reason from spot_closed_dates where spot_id = $1 and closed_date between $2 and $3', [spot.id, from, to], client)).rows;
-        return { counts: new Map(counts.map(r => [r.date, r])), closed: new Map(closed.map(c => [E.toDate(c.closed_date), c.reason])),
-            reportingFrom: settings ? E.toDate(settings.reporting_from) : null, today: E.manilaToday(), scheduledClosed: d => !isOpenOn(spot.working_days, d), rows: counts };
-    }
-    const VERSION_COLS = `id, spot_id, year, month, version, dates_counted, zero_days, closed_days, total, res_zamboanguita, res_negros_oriental, res_other_province,
-                          res_foreign, res_unrecorded, male, female, sex_unrecorded, source_digest, reason, submitted_by_role, submitted_by_email, submitted_at`;
     const shapeVersion = (v, figures) => ({ _id: v.id, version: v.version, reason: v.reason, submittedAt: v.submitted_at, submittedByRole: v.submitted_by_role, submittedByEmail: v.submitted_by_email, figures });
-    const hasStaff = async (spotId, client) => (await query(`select 1 from support_staff where spot_id = $1 and status = 'active'`, [spotId], client)).rows.length > 0;
 
     /* One attraction's month: live figures, state, versions, history. */
     async function monthView(spot, year, month, client) {
@@ -161,38 +197,6 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     const shapeMonth = v => ({ success: true, today: v.today, attraction: spotInfo(v.spot, v.settings), reportingFrom: v.settings ? E.toDate(v.settings.reporting_from) : null,
         state: v.state, figures: v.figures, versions: v.versions, events: v.events,
         officialFigures: v.state.finalizedVersion ? summary(E.figuresFromVersion(v.versionRows.find(x => x.version === v.state.finalizedVersion))) : null });
-
-    /* Every month of a year for one attraction, as a source for the consolidations. */
-    async function yearSources(spot, year, mode, client, staffOn) {
-        const settings = await settingsOf(spot.id, client);
-        const ctx = await loadCtx(spot, E.firstDay(year, 1), E.lastDay(year, 12), client, settings);
-        const versions = (await query(`select ${VERSION_COLS} from attraction_report_versions where spot_id = $1 and year = $2 order by month, version`, [spot.id, year], client)).rows;
-        const periods = (await query('select * from attraction_periods where spot_id = $1 and year = $2', [spot.id, year], client)).rows;
-        const staff = staffOn === undefined ? await hasStaff(spot.id, client) : staffOn;
-        const out = [];
-        for (let month = 1; month <= 12; month++) {
-            const vs = versions.filter(v => v.month === month), p = periods.find(x => x.month === month);
-            const byId = new Map(vs.map(v => [v.id, v]));
-            const period = p ? { state: p.state, currentVersion: byId.get(p.current_version_id).version, finalizedVersion: p.finalized_version_id ? byId.get(p.finalized_version_id).version : null } : null;
-            const live = E.monthFigures(ctx, year, month);
-            const st = E.periodState({ year, month, today: ctx.today, reportingFrom: ctx.reportingFrom, period, figures: live, hasStaff: staff });
-            const fv = p && p.finalized_version_id ? byId.get(p.finalized_version_id) : null, lv = vs.length ? vs[vs.length - 1] : null;
-            const src = E.sourceFor(mode, { state: st.state, finalized: fv ? { version: fv.version, figures: E.figuresFromVersion(fv), id: fv.id } : null,
-                latest: lv ? { version: lv.version, figures: E.figuresFromVersion(lv), id: lv.id } : null, draft: mode === 'operational' ? live : null });
-            if (fv && src.kind === 'final') src.versionId = fv.id;
-            out.push({ month, state: st, source: src, missing: live.missing.length + live.scheduled.length });
-        }
-        return { settings, months: out };
-    }
-    async function officeAttractions(year, client) {
-        return (await query(
-            `select s.id, s.title, s.type, s.status, s.managed_by, s.counts_visitors, s.working_days, s.barangay, s.category
-               from spots s
-              where s.type = 'spot' and s.managed_by is null
-                and ((s.counts_visitors and s.status <> 'archived')
-                     or exists (select 1 from attraction_report_versions v where v.spot_id = s.id and v.year = $1))
-              order by s.title limit 200`, [year], client)).rows;
-    }
 
     /* ---- who am I / settings ---------------------------------------------- */
     router.get('/attraction-visits/me', requireSupportStaff, handle(async (req, res) => {
@@ -540,3 +544,5 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     return router;
 };
 module.exports.fromDatabase = fromDatabase;
+
+module.exports.sources = { settingsOf, loadCtx, hasStaff, yearSources, officeAttractions };

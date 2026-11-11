@@ -2646,6 +2646,9 @@ app.use('/api', require('./accommodation')({ requireAdmin, requireStaff, require
    of an office-run attraction, its monthly report, Finalize and Reopen, and
    the municipal DTA2M, VAR 3M and VAR 2. Support Staff and the officer only. */
 app.use('/api', require('./attraction-visits')({ requireAdmin, requireReporter, requireSupportStaff, sharedRateLimit }));
+/* Analytics (analytics.js): read-only trends, coverage, peaks and breakdowns of
+   accommodation arrivals and attraction visits, role-scoped in the query. */
+app.use('/api', require('./analytics')({ requireReporter, sharedRateLimit }));
 
 /* Support Staff accounts (support-staff.js): the officer adds, issues a
    password, deactivates or reactivates; the person keeps their own details. */

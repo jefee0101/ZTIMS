@@ -4,6 +4,30 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Analytics: the calculations behind the dashboards (12 November 2026, server side on a branch; not live yet)
+
+**The change.** ZTIMS now works out trends, peak and low periods, weekday
+patterns, coverage and breakdowns by barangay, category and place. It works
+them out from the records the reports already use: the finalized monthly
+versions, the attraction daily counts and the room requests. The dashboard
+pages are not built yet.
+
+**What the manuscript must say (once the pages exist):**
+- Analytics are read only and come from the same records as the official
+  forms, so a chart and a form never disagree.
+- Accommodation arrivals, attraction visits and room reservations are
+  separate measures and are never added together. ZTIMS does not estimate
+  unique tourists.
+- A month that was not reported is shown as not reported, never as zero. Each
+  figure shows how many places reported. Incomplete periods are never called a
+  peak or a low.
+- Official figures use finalized reports. Operational figures include
+  submitted and draft ones and say so.
+- The Tourism Officer sees every place. An Enterprise Manager sees only their
+  own enterprises, plus a municipal comparison when at least three places
+  reported. Support Staff see only their attraction.
+- The 2025 paper totals are shown as a separate baseline.
+
 ## Attraction visitor reporting: the pages and the printed forms (12 November 2026, stage 5 on a branch; not live yet)
 
 What the manuscript must say once this ships (with the backend entry below):

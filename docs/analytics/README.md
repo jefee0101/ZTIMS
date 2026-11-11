@@ -1,6 +1,6 @@
-# Analytics for accommodation and attraction statistics (proposal)
+# Analytics for accommodation and attraction statistics
 
-Stage: data inspection, planning and a reviewable prototype. **Nothing is built, deployed or changed in the application or the database.** Prepared 12 November 2026.
+Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable prototype. Stage 2 (12 November 2026, on the branch): the server-side calculations and read-only API, see `05-implementation.md`. No dashboard pages yet; nothing deployed.
 
 | File | What it is |
 |---|---|
@@ -8,6 +8,8 @@ Stage: data inspection, planning and a reviewable prototype. **Nothing is built,
 | `02-analytics-inventory.md` | 34 analytics, each with source, calculation, user value, best visualization and limitations (generated from `inventory.json`) |
 | `03-role-dashboards-and-data-flow.md` | Officer, Enterprise Manager and Support Staff dashboards, the data flow, who sees what, order of work |
 | `04-prioritized-gaps.md` | 18 data gaps (P0 to P2) and the decisions needed (generated from `gaps.json`) |
+| `05-implementation.md` | What was built: data flow, calculation rules, access, files, verification, security findings, limitations |
+| `tests/api-checks.js` | 129 checks against a local API and database |
 | `mockup.html` | The interactive responsive prototype (also published as an Artifact). Open it in a browser |
 | `mockup.template.html`, `inventory.json`, `gaps.json`, `build.py` | Sources. `python3 build.py` rebuilds `mockup.html`, `02` and `04` so the mockup and the documents never differ |
 

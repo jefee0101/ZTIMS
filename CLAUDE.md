@@ -872,6 +872,33 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   attraction switched off) and `page-security.js` (14: stored markup, cross-site,
   download names, no secrets).
 
+### Analytics (stage 2 on branch: server side only; not on main or live yet)
+
+Read-only trends, coverage, peaks and breakdowns of accommodation arrivals and
+attraction visits, from the approved design in `docs/analytics/` (`05-implementation.md`
+is what was built). `analytics-engine.js` (arithmetic, no database) and
+`analytics.js` (routes at `/api/analytics/*`: `accommodation`, `accommodation/places`,
+`accommodation/benchmark` and `accommodation/stays` (manager only), `attractions`,
+`attractions/places`, `attractions/daily`, `reservations`, `coverage` (officer only),
+`:domain/export.xlsx`). No tables of its own; no schema change.
+- **Sources:** accommodation from the saved versions (official = the finalized
+  one, operational = the latest), coverage as FORM A counts it; attractions from
+  `attraction-visits.js`'s exported `sources.yearSources`, the same function DTA2M
+  and VAR 3M use; reservations from `bookings` (never arrivals); the 2025 paper
+  totals as a separate `baseline`, officer's unfiltered view only.
+- **Rules:** missing is `null`, a confirmed zero is 0; coverage on every period;
+  partial periods never ranked as peak or low; rates from summed counts; comparisons
+  are count differences between complete periods only (no percentages, G4);
+  unknown residence or sex stays `null`; accommodation, attractions and
+  reservations never added together; no unique tourists; no money.
+- **Who:** scope from the signed-in account. Officer all; manager own enterprises
+  (accommodation, reservations, stays, benchmark shown only when 3+ places
+  finalized); Support Staff own attraction; visitors nothing. `no-store`, 300 reads
+  per 15 minutes per account, unknown or repeated parameters refused.
+- **Tests (local; read-only apart from one temporary visitor):**
+  `docs/analytics/tests/api-checks.js` (129), run after the attraction and
+  accommodation suites have left their data.
+
 ### Online payments (demonstration, test mode)
 
 `payments.js`, mounted at `/api`: a visitor buys entrance tickets
@@ -2024,6 +2051,11 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   refuses every direct and indirect change. Bookings and tickets are never
   arrivals. Exports keep the DOT templates' layout with ZTIMS's own formulas,
   never a formula from typed text, and no personal details.
+- Analytics (12 November 2026, stage 2 on the branch): read only, from the
+  authoritative versions and daily counts; accommodation arrivals, attraction
+  visits and reservations always separate; missing never 0; official means
+  finalized; no percentages beyond the DAE rates, no money, no unique tourists;
+  role scope from the account. See "Analytics".
 - Tourism statistics hold counts and totals only — no revenue and no
   percentages — except the rates and shares the DAE-1A, DAE-1B and FORM A
   templates require for places to stay (see "Accommodation reporting").
