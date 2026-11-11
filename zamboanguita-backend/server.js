@@ -2642,6 +2642,10 @@ app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff,
 /* Accommodation reporting (accommodation.js): a private place to stay's stay
    register, its DAE-1A / DAE-1B, saved versions, Finalize / Reopen, FORM A. */
 app.use('/api', require('./accommodation')({ requireAdmin, requireStaff, requireEstablishmentManager, sharedRateLimit }));
+/* Attraction visitor reporting (attraction-visits.js): the Daily Visitor Record
+   of an office-run attraction, its monthly report, Finalize and Reopen, and
+   the municipal DTA2M, VAR 3M and VAR 2. Support Staff and the officer only. */
+app.use('/api', require('./attraction-visits')({ requireAdmin, requireReporter, requireSupportStaff, sharedRateLimit }));
 
 /* Support Staff accounts (support-staff.js): the officer adds, issues a
    password, deactivates or reactivates; the person keeps their own details. */

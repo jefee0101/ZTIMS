@@ -584,7 +584,9 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   nights). A private place to stay reports through its stay register instead
   (see "Accommodation reporting"); the Arrivals Report reads its saved
   versions.
-- **Arrivals are arrivals at places** (the user's decision, October 2026):
+- **Arrivals are arrivals at places** (the user's decision, October 2026; **on the
+  stage-4 branch attraction visits leave Part I and are reported only through DTA2M
+  and VAR 3M, see "Attraction visitor reporting"**):
   Form A4's Part I adds every place's report — places to stay and
   attractions, the office's and private ones — so a guest counts once at each
   place they arrive at (Mark stays two nights at a resort and visits the falls:
@@ -766,6 +768,63 @@ visitors here").
   `security-checks.js` (41: roles, cross-enterprise ids, finalized months
   through every indirect route, triggers, bounds, races, formula injection),
   `reconcile-exports.py` (36: every export against its saved version).
+
+### Attraction visitor reporting (stage 4 on branch; not on main or live yet)
+
+An office-run, counting attraction's visitors are recorded **one count per date**
+by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
+are worked out from those counts, never typed. Proposal, mockup, decisions and
+the build: `docs/attraction-reporting/` (01 sources and mapping, 02 workflow and
+model, 03 impact, gaps and security, 04 what was built, reconciliation and
+rollout, `rollback.sql`, `reconcile.sql`, `tests/`, `mockup.html`). **Only the
+backend is built; the pages are the next stage and must ship in the same
+release**, because the old attraction report and Guest Register routes now answer
+409 `USE_DAILY_RECORD`.
+- **Code:** `attraction-engine.js` (arithmetic, no database), `attraction-visits.js`
+  (routes at `/api/attraction-visits/*`), `attraction-visits-excel.js`. Tables are
+  the `attraction_*` block at the end of `schema.sql`.
+- **Who:** the Support Staff account assigned to the attraction records and
+  submits, for that attraction only (the id in the URL is compared with the
+  account's own `spot_id`). The officer reads, finalizes and reopens, and **never
+  records** (no officer recording route). Managers and visitors have no route.
+- **One source:** `attraction_daily_counts`, unique per attraction and date. No row =
+  missing; `total` 0 = a confirmed zero (breakdowns empty); a null breakdown =
+  unknown. Residence is four classes that never overlap (Zamboanguita, rest of
+  Negros Oriental, other Philippine provinces, foreign), each optional, with a
+  `residence_complete` flag; sex (male, female) is a separate observation with its
+  own flag. **Sex by residence is never stored or estimated.** Authorized
+  closures come from `spot_closed_dates`. A save names the `revision` it read and a
+  `requestKey` (a retry returns the first result).
+- **Lifecycle:** Recording → Submit (version n, needs every date counted or closed,
+  month ended) → officer Finalize or Reopen (reason of 10+) → Support Staff
+  corrects → Submit n+1 (with a reason). Submitted and finalized months lock the
+  counts in the database too (triggers). Versions, events and history are never
+  edited. While a finalized month is reopened its last finalized version stays
+  official ("correction pending"). Reopening marks issued outputs
+  `needs_regeneration`; issuing the replacement marks the old one `superseded`.
+- **Statistics:** official outputs use finalized versions; the operational view
+  also takes submitted and draft, labeled. A month with nothing usable is "not
+  submitted", never 0. Incomplete residence: known Domestic and Foreign, the rest
+  on a ZTIMS note outside the official grid, never assigned. Visits are never
+  added to accommodation arrivals or guest-nights, and totals across attractions
+  are not unique tourists. The 2025 municipal totals are not allocated to
+  attractions or relabeled.
+- **Old records:** `monthly_reports` kind `attraction`, their country rows and the
+  attraction Guest Register stay as they are, read only (database guards
+  `LEGACY_*_FROZEN`). Form A4 (the Arrivals Report) no longer adds attraction
+  visits (decision D1 built as proposed). Live has none of the old records.
+- **Assumed, not yet decided by the office (D1 to D5, doc 03):** D1 as above; VAR 1
+  has a row for every real day (28 to 31); DTA2M "This Province" excludes "This
+  Municipality"; the figure is visits to the attraction, not claimed to be a
+  same-day-visitor count; the officer's backup entry and the attraction Guest
+  Register are retired. The attraction code list was not supplied (blank in
+  exports). The 5th of the next month is a ZTIMS target, not an official deadline.
+- **RLS:** the API connects as the table owner, which bypasses Row Level Security;
+  RLS only keeps Supabase's public REST roles out. Authorization is in code and in
+  triggers.
+- **Tests (local only; they clear the `attraction_*` tables):**
+  `docs/attraction-reporting/tests/api-checks.js` (149 checks) and
+  `check-exports.py`.
 
 ### Online payments (demonstration, test mode)
 
@@ -1864,6 +1923,10 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no tickets, money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
+- Attraction visits (stage 4, branch): one count per attraction and date, kept
+  apart from accommodation arrivals everywhere; unknown is never zero; sex by
+  residence is never invented; the officer never records. See "Attraction
+  visitor reporting".
 - No Guest Register for the officer (10 November 2026, the user's decision):
   Support Staff keep office attractions' registers and send their monthly
   reports; the officer only reads, may enter or correct a report as a backup,

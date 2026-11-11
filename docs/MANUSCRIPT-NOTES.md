@@ -4,6 +4,26 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Attraction visitor reporting: daily record, monthly report, DTA2M and VAR 3M (12 November 2026, backend on a branch; not live yet)
+
+**The change.**
+- An office attraction's Support Staff records one visitor count per date: the total (required, 0 only when confirmed), and optionally where visitors live (four classes) and their sex.
+- The monthly report (VAR 1), the saved versions, the monthly DTA2M and the annual VAR 3M and VAR 2 are worked out from those counts. Nothing is typed twice.
+- Submit, then the Tourism Officer finalizes or reopens with a reason; a correction becomes a new version. A submitted or finalized month is locked.
+- Visits to attractions are kept apart from accommodation arrivals. The Arrivals Report no longer adds attraction visits.
+
+**Where it goes.**
+- Chapter I, Scope and Limitations: the counts are visits to the attraction, not unique tourists and not claimed to be same-day visitors; residence and sex are optional; where residence is not recorded the report says so and does not assign it.
+- Chapter III, ERD and data dictionary: seven tables (daily counts, change history, report versions, periods, period events, issued outputs, settings).
+- Use cases: Support Staff "Record the day's visitors; Submit the month"; Tourism Officer "Review, Finalize or Reopen; generate DTA2M and VAR 3M". Remove the officer's attraction recording and the attraction Guest Register.
+- Testing: 149 API checks, Excel checks against LibreOffice, a rollback and re-apply test on an isolated database.
+- Security: assignment-bound Support Staff, locks in the database, retry keys and revisions, no sex-by-residence data, read-only history.
+
+**For the panel.**
+- *Why can the total be larger than Domestic plus Foreign?* Because residence is optional. The remainder is shown as not recorded and never assigned.
+- *Why is a month "not submitted" instead of 0?* A missing report is not the same as no visitors.
+- *Can an attraction change a month after it is sent?* No. The database refuses it until the Tourism Office reopens the month with a reason.
+
 ## Accommodation reporting: the pages, exports and security review (12 November 2026, on a branch; not on main or live yet)
 
 **The change.**

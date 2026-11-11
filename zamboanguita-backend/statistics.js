@@ -88,6 +88,14 @@ const isPrivateStay = spot => spot.type === 'accommodation' && spot.managed_by !
 const USE_STAY_REGISTER = { success: false, code: 'USE_STAY_REGISTER',
     message: 'A place to stay records each stay in its stay register. The monthly report is worked out from it.' };
 
+/* An office-run attraction's visits are recorded day by day in the Daily
+   Visitor Record (attraction-visits.js). The earlier monthly report, with
+   country rows, and the attraction Guest Register stop taking entries; what
+   they hold stays readable, and nothing is moved or invented. */
+const USE_DAILY_RECORD = { success: false, code: 'USE_DAILY_RECORD',
+    message: 'An attraction records its visitors in the Daily Visitor Record. The monthly report is generated from it.' };
+const isAttraction = spot => spot.type !== 'accommodation';
+
 /* Whether the signed-in account may see this place's reports: the officer
    any place's, a manager their own, Support Staff their one attraction. */
 function mayViewFor(req, spot) {
@@ -299,6 +307,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             }
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             if (isPrivateStay(spot)) return res.status(409).json(USE_STAY_REGISTER);
+            if (isAttraction(spot)) return res.status(409).json(USE_DAILY_RECORD);
             const kind = kindOf(spot);
             const body = req.body || {};
 
@@ -590,6 +599,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             if (!mayKeepRegister(req, spot)) return res.status(403).json({ success: false, message: isOfficer(req) ? OFFICER_NO_REGISTER : 'Only whoever runs this place keeps its register.' });
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
             if (isPrivateStay(spot)) return res.status(409).json(USE_STAY_REGISTER);
+            if (isAttraction(spot)) return res.status(409).json(USE_DAILY_RECORD);
             const entry = await readEntry(req.body, spot);
             if (entry.error) return badRequest(res, entry.error);
             // A room booking pre-fills the entry at check-in (bookings.js'
@@ -632,6 +642,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             const found = await entryAndSpot(req, res);
             if (!found) return;
             if (isPrivateStay(found.spot)) return res.status(409).json(USE_STAY_REGISTER);
+            if (isAttraction(found.spot)) return res.status(409).json(USE_DAILY_RECORD);
             const entry = await readEntry(req.body, found.spot);
             if (entry.error) return badRequest(res, entry.error);
             await transaction(async client => {
@@ -694,7 +705,9 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                     return { month, status: now > deadlineFor(year, month) ? 'missing' : 'due' };
                 })
             }));
-            return res.json({ year, kind, places: rows });
+            // An attraction's earlier reports are shown as they were, read only.
+            // Its current reporting is /api/attraction-visits/tracker.
+            return res.json({ year, kind, places: rows, ...(kind === 'attraction' ? { legacy: true, current: '/api/attraction-visits/tracker' } : {}) });
         } catch (error) {
             return failure(res, error, '❌ Statistics tracker failure:');
         }
@@ -711,7 +724,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         const reports = (await query(
             `select id, kind, spot_id, month, rooms, room_nights_occupied, guest_nights, locked_at from monthly_reports
               where year = $1 and month between $2 and $3 and status = 'submitted'
-                and kind in ('accommodation', 'attraction', 'municipal_total')`, [year, from, to])).rows;
+                and kind in ('accommodation', 'municipal_total')`, [year, from, to])).rows;      // attraction visits are kept apart (attraction-visits.js)
         // A month recorded as a municipal total is that total; otherwise it is
         // the sum of the places' reports. Never both.
         const municipalMonths = new Set(reports.filter(r => r.kind === 'municipal_total').map(r => r.month));
@@ -753,7 +766,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         // Every place that could report this year, with what it reported.
         const placeRows = (await query(
             `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
-              where s.counts_visitors and (s.status <> 'archived'
+              where s.type = 'accommodation' and s.counts_visitors and (s.status <> 'archived'
                  or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
                  ${hasVersions ? 'or exists (select 1 from accommodation_report_versions v where v.spot_id = s.id and v.year = $1)' : ''})
               order by s.type, s.title`, [year])).rows;

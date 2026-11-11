@@ -2006,3 +2006,406 @@ begin
         end if;
     end loop;
 end $$;
+
+
+-- ===========================================================================
+-- Attraction visitor reporting (November 2026, stage 4; not on main or live).
+-- One authoritative daily count per office-run attraction and date. Monthly
+-- reports, versions, DTA2M, VAR 3M and VAR 2 are worked out from it and never
+-- typed. Visits to attractions are kept apart from accommodation arrivals.
+-- Proposal and decisions: docs/attraction-reporting/. Old attraction reports
+-- (monthly_reports kind 'attraction', the Guest Register of an attraction) and
+-- the 2025 municipal totals are left exactly as they are, read-only.
+--
+-- Missing, zero, unknown and not applicable stay different:
+--   no row                      -> the date is missing
+--   total = 0                   -> a confirmed zero (every breakdown empty)
+--   a breakdown column is null  -> that detail is unknown
+--   closed dates                -> spot_closed_dates, read only here
+-- Sex by residence is never stored: residence totals and sex totals are
+-- independent observations.
+-- ===========================================================================
+
+-- When an attraction starts reporting, and its code from the office's list.
+create table if not exists public.attraction_settings (
+    spot_id             text primary key references public.spots (id),
+    reporting_from      date not null
+                        constraint attraction_settings_first_of_month check (extract(day from reporting_from) = 1),
+    attraction_code     text not null default ''
+                        constraint attraction_settings_code_length check (char_length(attraction_code) <= 20),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create table if not exists public.attraction_daily_counts (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    count_date          date not null
+                        constraint attraction_daily_counts_date_range check (count_date between date '2000-01-01' and date '2100-12-31'),
+    -- The confirmed total. A row exists only when someone confirmed it.
+    total               integer not null
+                        constraint attraction_daily_counts_total check (total between 0 and 100000),
+    -- Usual residence, four classes that never overlap. Null = not recorded.
+    res_zamboanguita    integer,
+    res_negros_oriental integer,
+    res_other_province  integer,
+    res_foreign         integer,
+    residence_complete  boolean not null default false,
+    -- Sex, an independent observation. Null = not recorded.
+    male                integer,
+    female              integer,
+    sex_complete        boolean not null default false,
+    -- Optimistic lock and retry key: a save names the revision it read, and a
+    -- repeat of the same request (same key) answers with the first result.
+    revision            integer not null default 1 constraint attraction_daily_counts_revision check (revision >= 1),
+    last_request_key    text not null default '' constraint attraction_daily_counts_key_length check (char_length(last_request_key) <= 64),
+    created_by_email    text not null default '',
+    updated_by_email    text not null default '',
+    updated_by_role     text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint attraction_daily_counts_once unique (spot_id, count_date),
+    constraint attraction_daily_counts_residence check (
+        coalesce(res_zamboanguita, 0) >= 0 and coalesce(res_negros_oriental, 0) >= 0
+        and coalesce(res_other_province, 0) >= 0 and coalesce(res_foreign, 0) >= 0
+        and coalesce(res_zamboanguita, 0) + coalesce(res_negros_oriental, 0) + coalesce(res_other_province, 0) + coalesce(res_foreign, 0) <= total
+        and (not residence_complete
+             or coalesce(res_zamboanguita, 0) + coalesce(res_negros_oriental, 0) + coalesce(res_other_province, 0) + coalesce(res_foreign, 0) = total)),
+    constraint attraction_daily_counts_sex check (
+        coalesce(male, 0) >= 0 and coalesce(female, 0) >= 0
+        and coalesce(male, 0) + coalesce(female, 0) <= total
+        and (not sex_complete or coalesce(male, 0) + coalesce(female, 0) = total)),
+    constraint attraction_daily_counts_zero check (
+        total > 0 or (res_zamboanguita is null and res_negros_oriental is null and res_other_province is null and res_foreign is null
+                      and male is null and female is null and not residence_complete and not sex_complete))
+);
+create index if not exists attraction_daily_counts_month_idx on public.attraction_daily_counts (spot_id, count_date);
+
+-- Every create and change of a daily count: before, after, who, when. Never edited.
+create table if not exists public.attraction_count_changes (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    count_date          date not null,
+    action              text not null constraint attraction_count_changes_action check (action in ('created', 'updated')),
+    before              jsonb,
+    after               jsonb,
+    actor_role          text not null default '',
+    actor_email         text not null default '',
+    at                  timestamptz not null default now()
+);
+create index if not exists attraction_count_changes_idx on public.attraction_count_changes (spot_id, count_date, at);
+
+-- A submitted month: its figures as of then, worked out from the daily counts
+-- and checked against them when it is saved. Never changed or removed.
+create table if not exists public.attraction_report_versions (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    year                integer not null constraint attraction_report_versions_year check (year between 2000 and 2100),
+    month               integer not null constraint attraction_report_versions_month check (month between 1 and 12),
+    version             integer not null constraint attraction_report_versions_version check (version >= 1),
+    dates_counted       integer not null constraint attraction_report_versions_dates check (dates_counted >= 0),
+    zero_days           integer not null default 0 constraint attraction_report_versions_zero check (zero_days >= 0),
+    closed_days         integer not null default 0 constraint attraction_report_versions_closed check (closed_days >= 0),
+    total               integer not null constraint attraction_report_versions_total check (total >= 0),
+    res_zamboanguita    integer not null default 0 constraint attraction_report_versions_r1 check (res_zamboanguita >= 0),
+    res_negros_oriental integer not null default 0 constraint attraction_report_versions_r2 check (res_negros_oriental >= 0),
+    res_other_province  integer not null default 0 constraint attraction_report_versions_r3 check (res_other_province >= 0),
+    res_foreign         integer not null default 0 constraint attraction_report_versions_r4 check (res_foreign >= 0),
+    res_unrecorded      integer not null default 0 constraint attraction_report_versions_r5 check (res_unrecorded >= 0),
+    male                integer not null default 0 constraint attraction_report_versions_m check (male >= 0),
+    female              integer not null default 0 constraint attraction_report_versions_f check (female >= 0),
+    sex_unrecorded      integer not null default 0 constraint attraction_report_versions_s check (sex_unrecorded >= 0),
+    daily               jsonb not null,
+    source_digest       text not null default '',
+    reason              text not null default '' constraint attraction_report_versions_reason check (char_length(reason) <= 300),
+    submitted_by_role   text not null default '',
+    submitted_by_email  text not null default '',
+    submitted_at        timestamptz not null default now(),
+    constraint attraction_report_versions_once unique (spot_id, year, month, version),
+    constraint attraction_report_versions_residence_adds check
+        (res_zamboanguita + res_negros_oriental + res_other_province + res_foreign + res_unrecorded = total),
+    constraint attraction_report_versions_sex_adds check (male + female + sex_unrecorded = total)
+);
+
+-- Where each month stands. 'submitted' and 'finalized' lock the month's daily
+-- counts; 'reopened' unlocks them. finalized_version_id stays on a reopened
+-- month: the last finalized version remains the official one until a
+-- replacement is finalized, so an old and a new version are never both counted.
+create table if not exists public.attraction_periods (
+    spot_id             text not null references public.spots (id),
+    year                integer not null,
+    month               integer not null,
+    state               text not null constraint attraction_periods_state check (state in ('submitted', 'finalized', 'reopened')),
+    current_version_id  text not null references public.attraction_report_versions (id),
+    finalized_version_id text references public.attraction_report_versions (id),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    primary key (spot_id, year, month)
+);
+
+create table if not exists public.attraction_period_events (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    year                integer not null,
+    month               integer not null,
+    action              text not null constraint attraction_period_events_action check (action in ('submitted', 'finalized', 'reopened')),
+    version_id          text not null references public.attraction_report_versions (id),
+    reason              text not null default '' constraint attraction_period_events_reason check (char_length(reason) <= 300),
+    actor_role          text not null default '',
+    actor_email         text not null default '',
+    at                  timestamptz not null default now(),
+    constraint attraction_period_events_reopen_reason check (action <> 'reopened' or char_length(btrim(reason)) >= 10)
+);
+create index if not exists attraction_period_events_idx on public.attraction_period_events (spot_id, year, month, at);
+
+-- An issued DTA2M or VAR 3M: exactly which finalized versions it was built
+-- from. Reopening a month it used marks it needs_regeneration; issuing its
+-- replacement marks it superseded. The old one is kept.
+create table if not exists public.attraction_outputs (
+    id                  text primary key default public.ztims_new_id(),
+    kind                text not null constraint attraction_outputs_kind check (kind in ('DTA2M', 'VAR3M')),
+    year                integer not null constraint attraction_outputs_year check (year between 2000 and 2100),
+    month               integer constraint attraction_outputs_month check (month is null or month between 1 and 12),
+    status              text not null default 'current' constraint attraction_outputs_status check (status in ('current', 'needs_regeneration', 'superseded')),
+    composition         jsonb not null,
+    issued_by_email     text not null default '',
+    issued_at           timestamptz not null default now(),
+    status_changed_at   timestamptz,
+    constraint attraction_outputs_period check ((kind = 'DTA2M') = (month is not null))
+);
+create index if not exists attraction_outputs_idx on public.attraction_outputs (kind, year, month, status);
+
+-- ---- Rules the database holds ------------------------------------------------
+create or replace function public.attraction_assert_place(p_spot text)
+returns void language plpgsql set search_path = '' as $$
+begin
+    if not exists (select 1 from public.spots s where s.id = p_spot and s.type = 'spot' and s.managed_by is null) then
+        raise exception 'NOT_ATTRACTION %', p_spot using errcode = 'P0001';
+    end if;
+end $$;
+
+create or replace function public.attraction_immutable()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    raise exception 'IMMUTABLE %', tg_table_name using errcode = 'P0001';
+end $$;
+
+-- A daily count: only for an office-run attraction, on or after its first
+-- reporting month, not after today (Manila), never on an authorized closure,
+-- never in a submitted or finalized month, never removed, revision moves by one.
+create or replace function public.attraction_counts_guard()
+returns trigger language plpgsql set search_path = '' as $$
+declare st text; first_month date;
+begin
+    if tg_op = 'DELETE' then
+        raise exception 'IMMUTABLE_DELETE %', tg_table_name using errcode = 'P0001';
+    end if;
+    perform public.attraction_assert_place(new.spot_id);
+    if tg_op = 'UPDATE' then
+        if new.spot_id <> old.spot_id or new.count_date <> old.count_date then
+            raise exception 'KEY_FIXED' using errcode = 'P0001';
+        end if;
+        if new.revision <> old.revision + 1 then
+            raise exception 'REVISION' using errcode = 'P0001';
+        end if;
+    end if;
+    if new.count_date > (now() at time zone 'Asia/Manila')::date then
+        raise exception 'FUTURE_DATE %', new.count_date using errcode = 'P0001';
+    end if;
+    select reporting_from into first_month from public.attraction_settings where spot_id = new.spot_id;
+    if first_month is null or new.count_date < first_month then
+        raise exception 'BEFORE_REPORTING %', coalesce(to_char(first_month, 'YYYY-MM'), 'none') using errcode = 'P0001';
+    end if;
+    if exists (select 1 from public.spot_closed_dates c where c.spot_id = new.spot_id and c.closed_date = new.count_date) then
+        raise exception 'CLOSED_DATE %', new.count_date using errcode = 'P0001';
+    end if;
+    select state into st from public.attraction_periods p
+     where p.spot_id = new.spot_id and p.year = extract(year from new.count_date)::int and p.month = extract(month from new.count_date)::int;
+    if st in ('submitted', 'finalized') then
+        raise exception 'PERIOD_LOCKED %', to_char(new.count_date, 'YYYY-MM') using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+-- The month's dates all accounted for: a daily count or an authorized closure.
+create or replace function public.attraction_month_missing(p_spot text, p_year integer, p_month integer)
+returns integer language sql stable set search_path = '' as $$
+    select count(*)::integer
+      from generate_series(make_date(p_year, p_month, 1), (make_date(p_year, p_month, 1) + interval '1 month - 1 day')::date, interval '1 day') d
+     where not exists (select 1 from public.attraction_daily_counts c where c.spot_id = p_spot and c.count_date = d::date)
+       and not exists (select 1 from public.spot_closed_dates x where x.spot_id = p_spot and x.closed_date = d::date)
+$$;
+
+create or replace function public.attraction_version_guard()
+returns trigger language plpgsql set search_path = '' as $$
+declare st text; prev integer; first_month date;
+begin
+    perform public.attraction_assert_place(new.spot_id);
+    select state into st from public.attraction_periods p where p.spot_id = new.spot_id and p.year = new.year and p.month = new.month;
+    if st in ('submitted', 'finalized') then
+        raise exception 'PERIOD_LOCKED %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    select reporting_from into first_month from public.attraction_settings where spot_id = new.spot_id;
+    if first_month is null or make_date(new.year, new.month, 1) < first_month then
+        raise exception 'BEFORE_REPORTING %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    if (make_date(new.year, new.month, 1) + interval '1 month - 1 day')::date >= (now() at time zone 'Asia/Manila')::date then
+        raise exception 'MONTH_NOT_ENDED %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    if public.attraction_month_missing(new.spot_id, new.year, new.month) > 0 then
+        raise exception 'MONTH_INCOMPLETE %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    select coalesce(max(version), 0) into prev from public.attraction_report_versions v
+     where v.spot_id = new.spot_id and v.year = new.year and v.month = new.month;
+    if new.version <> prev + 1 then
+        raise exception 'VERSION_GAP' using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+-- At commit: a version's totals equal what the daily counts add up to.
+create or replace function public.attraction_version_reconcile()
+returns trigger language plpgsql set search_path = '' as $$
+declare v record; s record;
+begin
+    select * into v from public.attraction_report_versions where id = new.id;
+    select coalesce(sum(total), 0) as total, count(*) as n,
+           coalesce(sum(res_zamboanguita), 0) as r1, coalesce(sum(res_negros_oriental), 0) as r2,
+           coalesce(sum(res_other_province), 0) as r3, coalesce(sum(res_foreign), 0) as r4,
+           coalesce(sum(male), 0) as m, coalesce(sum(female), 0) as f
+      into s from public.attraction_daily_counts c
+     where c.spot_id = v.spot_id and c.count_date between make_date(v.year, v.month, 1) and (make_date(v.year, v.month, 1) + interval '1 month - 1 day')::date;
+    if s.total <> v.total or s.n <> v.dates_counted or s.r1 <> v.res_zamboanguita or s.r2 <> v.res_negros_oriental
+       or s.r3 <> v.res_other_province or s.r4 <> v.res_foreign or s.m <> v.male or s.f <> v.female then
+        raise exception 'VERSION_DRIFT %-%', v.year, lpad(v.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    return null;
+end $$;
+
+-- Month state changes: submitted -> finalized | reopened, finalized -> reopened,
+-- reopened -> submitted. Never removed, never moved to another month.
+create or replace function public.attraction_period_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    if tg_op = 'DELETE' then
+        raise exception 'IMMUTABLE_DELETE %', tg_table_name using errcode = 'P0001';
+    end if;
+    if tg_op = 'INSERT' then
+        if new.state <> 'submitted' or new.finalized_version_id is not null then
+            raise exception 'BAD_TRANSITION' using errcode = 'P0001';
+        end if;
+        return new;
+    end if;
+    if new.spot_id <> old.spot_id or new.year <> old.year or new.month <> old.month then
+        raise exception 'KEY_FIXED' using errcode = 'P0001';
+    end if;
+    if not ((old.state = 'submitted' and new.state in ('finalized', 'reopened'))
+         or (old.state = 'finalized' and new.state = 'reopened')
+         or (old.state = 'reopened' and new.state = 'submitted')) then
+        raise exception 'BAD_TRANSITION % %', old.state, new.state using errcode = 'P0001';
+    end if;
+    if new.state = 'finalized' and new.finalized_version_id is distinct from new.current_version_id then
+        raise exception 'BAD_TRANSITION' using errcode = 'P0001';
+    end if;
+    if new.state in ('submitted', 'reopened') and new.finalized_version_id is distinct from old.finalized_version_id then
+        raise exception 'BAD_TRANSITION' using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+-- An issued output: only its status may change, never removed.
+create or replace function public.attraction_output_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    if tg_op = 'DELETE' then
+        raise exception 'IMMUTABLE_DELETE %', tg_table_name using errcode = 'P0001';
+    end if;
+    if new.id <> old.id or new.kind <> old.kind or new.year <> old.year or new.month is distinct from old.month
+       or new.composition <> old.composition or new.issued_by_email <> old.issued_by_email or new.issued_at <> old.issued_at then
+        raise exception 'IMMUTABLE %', tg_table_name using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+-- The earlier attraction records stay as they were, read only: no new attraction
+-- monthly report (kind 'attraction'), no change to its counts, no new Guest
+-- Register entry for an attraction. Voiding, finalizing and reopening an old
+-- report stay possible. Private places to stay and the 2025 totals are untouched.
+create or replace function public.attraction_legacy_guard()
+returns trigger language plpgsql set search_path = '' as $$
+declare k text; rid text;
+begin
+    if tg_table_name = 'monthly_reports' then
+        if tg_op = 'INSERT' and new.kind = 'attraction' then
+            raise exception 'LEGACY_ATTRACTION_FROZEN' using errcode = 'P0001';
+        end if;
+        if tg_op = 'UPDATE' and old.kind = 'attraction' and (
+               new.kind <> old.kind or new.spot_id is distinct from old.spot_id or new.year <> old.year or new.month <> old.month
+               or new.rooms is distinct from old.rooms or new.room_nights_occupied is distinct from old.room_nights_occupied
+               or new.guest_nights is distinct from old.guest_nights or new.submitted_by_email is distinct from old.submitted_by_email
+               or new.submitted_at is distinct from old.submitted_at) then
+            raise exception 'LEGACY_ATTRACTION_FROZEN' using errcode = 'P0001';
+        end if;
+        return coalesce(new, old);
+    elsif tg_table_name = 'monthly_report_counts' then
+        rid := coalesce(new.report_id, old.report_id);
+        select kind into k from public.monthly_reports where id = rid;
+        if k = 'attraction' then raise exception 'LEGACY_ATTRACTION_FROZEN' using errcode = 'P0001'; end if;
+        return coalesce(new, old);
+    elsif tg_table_name = 'register_entries' then
+        if exists (select 1 from public.spots s where s.id = coalesce(new.spot_id, old.spot_id) and s.type = 'spot') then
+            raise exception 'LEGACY_REGISTER_FROZEN' using errcode = 'P0001';
+        end if;
+        return coalesce(new, old);
+    else
+        select e.spot_id into rid from public.register_entries e where e.id = coalesce(new.entry_id, old.entry_id);
+        if exists (select 1 from public.spots s where s.id = rid and s.type = 'spot') then
+            raise exception 'LEGACY_REGISTER_FROZEN' using errcode = 'P0001';
+        end if;
+        return coalesce(new, old);
+    end if;
+end $$;
+
+do $$
+declare t text;
+begin
+    foreach t in array array['attraction_settings', 'attraction_daily_counts', 'attraction_count_changes', 'attraction_report_versions',
+                             'attraction_periods', 'attraction_period_events', 'attraction_outputs'] loop
+        execute format('alter table public.%I enable row level security', t);
+    end loop;
+    foreach t in array array['attraction_settings', 'attraction_daily_counts', 'attraction_periods'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
+        execute format('create trigger %I before update on public.%I for each row execute function public.ztims_touch_updated_at()', t || '_touch_updated_at', t);
+    end loop;
+    foreach t in array array['attraction_count_changes', 'attraction_report_versions', 'attraction_period_events'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_immutable', t);
+        execute format('create trigger %I before update or delete on public.%I for each row execute function public.attraction_immutable()', t || '_immutable', t);
+    end loop;
+    drop trigger if exists attraction_daily_counts_guard on public.attraction_daily_counts;
+    create trigger attraction_daily_counts_guard before insert or update or delete on public.attraction_daily_counts
+        for each row execute function public.attraction_counts_guard();
+    drop trigger if exists attraction_report_versions_guard on public.attraction_report_versions;
+    create trigger attraction_report_versions_guard before insert on public.attraction_report_versions
+        for each row execute function public.attraction_version_guard();
+    drop trigger if exists attraction_report_versions_reconcile on public.attraction_report_versions;
+    create constraint trigger attraction_report_versions_reconcile after insert on public.attraction_report_versions
+        deferrable initially deferred for each row execute function public.attraction_version_reconcile();
+    drop trigger if exists attraction_periods_guard on public.attraction_periods;
+    create trigger attraction_periods_guard before insert or update or delete on public.attraction_periods
+        for each row execute function public.attraction_period_guard();
+    drop trigger if exists attraction_outputs_guard on public.attraction_outputs;
+    create trigger attraction_outputs_guard before update or delete on public.attraction_outputs
+        for each row execute function public.attraction_output_guard();
+    drop trigger if exists monthly_reports_attraction_legacy on public.monthly_reports;
+    create trigger monthly_reports_attraction_legacy before insert or update on public.monthly_reports
+        for each row execute function public.attraction_legacy_guard();
+    drop trigger if exists monthly_report_counts_attraction_legacy on public.monthly_report_counts;
+    create trigger monthly_report_counts_attraction_legacy before insert or update or delete on public.monthly_report_counts
+        for each row execute function public.attraction_legacy_guard();
+    drop trigger if exists register_entries_attraction_legacy on public.register_entries;
+    create trigger register_entries_attraction_legacy before insert or update or delete on public.register_entries
+        for each row execute function public.attraction_legacy_guard();
+    drop trigger if exists register_entry_guests_attraction_legacy on public.register_entry_guests;
+    create trigger register_entry_guests_attraction_legacy before insert or update or delete on public.register_entry_guests
+        for each row execute function public.attraction_legacy_guard();
+end $$;
