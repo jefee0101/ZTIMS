@@ -977,6 +977,38 @@ create index if not exists announcements_category_starts_idx on public.announcem
 create index if not exists announcements_spot_idx on public.announcements (spot_id);
 
 
+
+-- ---------------------------------------------------------------------------
+-- Room booking: repairing an early draft (11 November 2026). One live database
+-- received the booking tables before their final shape: bookings without
+-- requested_at, room_types.beds as text, older checks and defaults. "create
+-- table if not exists" never corrects an existing table, so: when that draft
+-- is found AND all seven booking tables are empty, they are dropped here and
+-- recreated as defined just below. With any row in any of them, nothing is
+-- dropped and a notice says so (fix by hand, with the user's yes). The foreign
+-- keys other tables had to bookings are put back at the end of this file.
+-- ---------------------------------------------------------------------------
+do $$
+declare drafted boolean; rows_found bigint := 0; t text;
+begin
+    drafted := (exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'bookings')
+                and not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'bookings' and column_name = 'requested_at'))
+            or exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'room_types' and column_name = 'beds' and data_type = 'text');
+    if not drafted then return; end if;
+    foreach t in array array['enterprise_booking_settings', 'room_types', 'room_blocks', 'bookings', 'booking_rooms', 'booking_changes', 'booking_payments'] loop
+        if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = t) then
+            execute format('select count(*) from public.%I', t) into strict rows_found;
+            if rows_found > 0 then
+                raise notice 'Booking tables are an early draft but % holds % row(s): left as they are. Repair by hand.', t, rows_found;
+                return;
+            end if;
+        end if;
+    end loop;
+    drop table if exists public.booking_payments, public.booking_changes, public.booking_rooms, public.bookings,
+                         public.room_blocks, public.room_types, public.enterprise_booking_settings cascade;
+    raise notice 'Early-draft booking tables were empty: dropped, recreated below.';
+end $$;
+
 -- ---------------------------------------------------------------------------
 -- Room booking (November 2026, decided 8 November; bookings.js). A private
 -- place to stay takes booking requests for its own rooms; its manager
@@ -1386,4 +1418,587 @@ begin
            and not exists (select 1 from public.monthly_reports r where r.spot_id = s.id and r.status <> 'void')
            and not exists (select 1 from public.register_entries e where e.spot_id = s.id);
     end if;
+end $$;
+
+
+-- ===========================================================================
+-- Accommodation reporting (November 2026, stage 2). One record of each stay
+-- at a private place to stay; the DAE-1A, DAE-1B and FORM A are worked out
+-- from it. Attractions keep monthly_reports and the Guest Register above.
+--
+--   accommodation_profiles             the DAE-1B header facts, reporting start
+--   accommodation_rooms                numbered rooms, dated availability
+--   accommodation_room_unavailability  a room out of service, inclusive dates
+--   accommodation_closed_periods       the place not operating, inclusive dates
+--   accommodation_stays                one stay: check-in, check-out
+--   accommodation_stay_rooms           which room, which nights [starts, ends)
+--   accommodation_stay_guests          guests by residence, male / female, the
+--                                      nights they are there [starts, ends):
+--                                      a guest joining later is a dated row
+--   accommodation_report_versions      a submitted month, never changed
+--   accommodation_report_version_counts  its Part I counts
+--   accommodation_periods              a month finalized by the officer
+--   accommodation_period_events        submitted / finalized / reopened, who,
+--                                      when, why
+--   accommodation_changes              every change to the records above
+--
+-- Nights: the night of date D is held when starts_on <= D < ends_on. The
+-- check-out night is never a night of the stay. A finalized month refuses any
+-- change that would alter it (accommodation_assert_open); saved versions and
+-- events refuse every update and delete. Nothing here holds a guest's name,
+-- contact or ID. 2025's municipal totals stay in monthly_reports, untouched,
+-- and a month holding one refuses enterprise versions (and the reverse).
+-- ===========================================================================
+create schema if not exists extensions;
+create extension if not exists btree_gist with schema extensions;
+
+create table if not exists public.accommodation_profiles (
+    spot_id             text primary key references public.spots (id),
+    accommodation_type  text not null default ''
+                        constraint accommodation_profiles_type
+                        check (accommodation_type in ('', 'hotel', 'resort', 'pension', 'hostel', 'apartel', 'other')),
+    accommodation_type_other text not null default ''
+                        constraint accommodation_profiles_type_other check (char_length(accommodation_type_other) <= 80),
+    dot_classification  text not null default ''
+                        constraint accommodation_profiles_dot check (char_length(dot_classification) <= 80),
+    ae_code             text not null default ''
+                        constraint accommodation_profiles_ae_code check (char_length(ae_code) <= 40),
+    -- First day of the first month this enterprise reports in ZTIMS.
+    reporting_from      date constraint accommodation_profiles_from check (reporting_from is null or extract(day from reporting_from) = 1),
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+
+create table if not exists public.accommodation_rooms (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    room_number         text not null constraint accommodation_rooms_number check (char_length(btrim(room_number)) between 1 and 20),
+    room_type_id        text references public.room_types (id),
+    label               text not null default '' constraint accommodation_rooms_label check (char_length(label) <= 80),
+    sleeps              integer not null constraint accommodation_rooms_sleeps check (sleeps between 1 and 30),
+    -- A shared room (a dormitory) may hold several stays on one night; it is
+    -- still one room-night occupied.
+    shared              boolean not null default false,
+    available_from      date not null,
+    available_until     date,               -- first day no longer available
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint accommodation_rooms_dates check (available_until is null or available_until > available_from)
+);
+create unique index if not exists accommodation_rooms_number_idx on public.accommodation_rooms (spot_id, lower(btrim(room_number)));
+
+create table if not exists public.accommodation_room_unavailability (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    room_id             text not null references public.accommodation_rooms (id),
+    starts_on           date not null,
+    ends_on             date not null,      -- inclusive
+    reason              text not null constraint accommodation_unavail_reason check (char_length(btrim(reason)) between 1 and 200),
+    voided_at           timestamptz,
+    void_reason         text not null default '' constraint accommodation_unavail_void check (char_length(void_reason) <= 300),
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint accommodation_unavail_dates check (ends_on >= starts_on)
+);
+create index if not exists accommodation_unavail_room_idx on public.accommodation_room_unavailability (room_id, starts_on);
+
+create table if not exists public.accommodation_closed_periods (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    starts_on           date not null,
+    ends_on             date not null,      -- inclusive
+    reason              text not null constraint accommodation_closed_reason check (char_length(btrim(reason)) between 1 and 200),
+    voided_at           timestamptz,
+    void_reason         text not null default '' constraint accommodation_closed_void check (char_length(void_reason) <= 300),
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint accommodation_closed_dates check (ends_on >= starts_on)
+);
+create index if not exists accommodation_closed_spot_idx on public.accommodation_closed_periods (spot_id, starts_on);
+
+create table if not exists public.accommodation_stays (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    reference           text not null constraint accommodation_stays_reference check (char_length(reference) between 1 and 20),
+    check_in            date not null,
+    check_out           date not null,
+    status              text not null default 'active' constraint accommodation_stays_status check (status in ('active', 'void')),
+    void_reason         text not null default '' constraint accommodation_stays_void check (char_length(void_reason) <= 300),
+    -- A booking may start a stay; the booking itself is never a count.
+    booking_id          text references public.bookings (id),
+    -- Raised on every change: an edit must name the revision it read.
+    revision            integer not null default 1,
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now(),
+    constraint accommodation_stays_dates check (check_out > check_in and check_out - check_in <= 366)
+);
+create unique index if not exists accommodation_stays_reference_idx on public.accommodation_stays (spot_id, reference);
+create unique index if not exists accommodation_stays_booking_idx on public.accommodation_stays (booking_id) where booking_id is not null;
+create index if not exists accommodation_stays_dates_idx on public.accommodation_stays (spot_id, check_in, check_out);
+
+create table if not exists public.accommodation_stay_rooms (
+    id                  text primary key default public.ztims_new_id(),
+    stay_id             text not null references public.accommodation_stays (id) on delete cascade,
+    room_id             text not null references public.accommodation_rooms (id),
+    starts_on           date not null,
+    ends_on             date not null,      -- the morning they leave the room
+    -- Kept in step by triggers: the stay's status and the room's sharing.
+    active              boolean not null default true,
+    shared              boolean not null default false,
+    nights              daterange generated always as (daterange(starts_on, ends_on, '[)')) stored,
+    constraint accommodation_stay_rooms_dates check (ends_on > starts_on)
+);
+create index if not exists accommodation_stay_rooms_stay_idx on public.accommodation_stay_rooms (stay_id);
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'accommodation_stay_rooms_no_double_booking') then
+        alter table public.accommodation_stay_rooms add constraint accommodation_stay_rooms_no_double_booking
+            exclude using gist (room_id with =, nights with &&) where (active and not shared);
+    end if;
+end $$;
+
+create table if not exists public.accommodation_stay_guests (
+    id                  text primary key default public.ztims_new_id(),
+    stay_id             text not null references public.accommodation_stays (id) on delete cascade,
+    residence_code      text not null references public.residences (code),
+    male                integer not null default 0 constraint accommodation_stay_guests_male check (male between 0 and 999),
+    female              integer not null default 0 constraint accommodation_stay_guests_female check (female between 0 and 999),
+    starts_on           date not null,      -- the day they arrive: counted as arrivals that day
+    ends_on             date not null,      -- the day they leave
+    constraint accommodation_stay_guests_someone check (male + female > 0),
+    constraint accommodation_stay_guests_dates check (ends_on > starts_on)
+);
+create index if not exists accommodation_stay_guests_stay_idx on public.accommodation_stay_guests (stay_id);
+
+create table if not exists public.accommodation_report_versions (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    year                integer not null constraint accommodation_versions_year check (year between 2000 and 2100),
+    month               integer not null constraint accommodation_versions_month check (month between 1 and 12),
+    version             integer not null constraint accommodation_versions_version check (version >= 1),
+    -- 'register': worked out from the stays (source_digest fingerprints them).
+    -- 'legacy_manual': a monthly report typed by hand before this model,
+    -- copied as it was; no stays stand behind it.
+    provenance          text not null constraint accommodation_versions_provenance check (provenance in ('register', 'legacy_manual')),
+    legacy_report_id    text references public.monthly_reports (id),
+    rooms               integer not null constraint accommodation_versions_rooms check (rooms >= 0),
+    room_nights_available integer not null constraint accommodation_versions_available check (room_nights_available >= 0),
+    room_nights_occupied integer not null constraint accommodation_versions_occupied check (room_nights_occupied >= 0),
+    guest_nights        integer not null constraint accommodation_versions_guest_nights check (guest_nights >= 0),
+    arrivals            integer not null constraint accommodation_versions_arrivals check (arrivals >= 0),
+    source_digest       text not null default '',
+    source_stays        integer not null default 0,
+    reason              text not null default '' constraint accommodation_versions_reason check (char_length(reason) <= 300),
+    late                boolean not null default false,
+    submitted_by_role   text not null default '',
+    submitted_by_email  text not null default '',
+    submitted_at        timestamptz not null default now(),
+    constraint accommodation_versions_fit check (room_nights_occupied <= room_nights_available),
+    constraint accommodation_versions_legacy check ((provenance = 'legacy_manual') = (legacy_report_id is not null))
+);
+create unique index if not exists accommodation_versions_number_idx on public.accommodation_report_versions (spot_id, year, month, version);
+create unique index if not exists accommodation_versions_legacy_idx on public.accommodation_report_versions (legacy_report_id) where legacy_report_id is not null;
+create index if not exists accommodation_versions_period_idx on public.accommodation_report_versions (year, month);
+
+create table if not exists public.accommodation_report_version_counts (
+    version_id          text not null references public.accommodation_report_versions (id),
+    residence_code      text not null references public.residences (code),
+    male                integer not null constraint accommodation_version_counts_male check (male >= 0),
+    female              integer not null constraint accommodation_version_counts_female check (female >= 0),
+    total               integer generated always as (male + female) stored,
+    primary key (version_id, residence_code),
+    constraint accommodation_version_counts_someone check (male + female > 0)
+);
+
+create table if not exists public.accommodation_periods (
+    spot_id             text not null references public.spots (id),
+    year                integer not null,
+    month               integer not null constraint accommodation_periods_month check (month between 1 and 12),
+    finalized_at        timestamptz,
+    finalized_by_email  text not null default '',
+    finalized_version_id text references public.accommodation_report_versions (id),
+    updated_at          timestamptz not null default now(),
+    primary key (spot_id, year, month),
+    constraint accommodation_periods_final check ((finalized_at is null) = (finalized_version_id is null))
+);
+
+create table if not exists public.accommodation_period_events (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    year                integer not null,
+    month               integer not null,
+    action              text not null constraint accommodation_events_action check (action in ('submitted', 'finalized', 'reopened')),
+    version_id          text references public.accommodation_report_versions (id),
+    reason              text not null default '' constraint accommodation_events_reason check (char_length(reason) <= 300),
+    actor_role          text not null default '',
+    actor_email         text not null default '',
+    at                  timestamptz not null default now(),
+    constraint accommodation_events_reopen_reason check (action <> 'reopened' or char_length(btrim(reason)) >= 10)
+);
+create index if not exists accommodation_events_period_idx on public.accommodation_period_events (spot_id, year, month, at);
+
+create table if not exists public.accommodation_changes (
+    id                  text primary key default public.ztims_new_id(),
+    spot_id             text not null references public.spots (id),
+    entity              text not null constraint accommodation_changes_entity
+                        check (entity in ('profile', 'room', 'unavailability', 'closed_period', 'stay')),
+    entity_id           text not null,
+    action              text not null constraint accommodation_changes_action
+                        check (action in ('created', 'edited', 'voided')),
+    reason              text not null default '' constraint accommodation_changes_reason check (char_length(reason) <= 300),
+    -- Every month whose figures the change can alter, 'YYYY-MM'.
+    affected_months     text[] not null default '{}',
+    before              jsonb,
+    after               jsonb,
+    actor_role          text not null default '',
+    actor_email         text not null default '',
+    at                  timestamptz not null default now()
+);
+create index if not exists accommodation_changes_entity_idx on public.accommodation_changes (entity, entity_id, at);
+create index if not exists accommodation_changes_spot_idx on public.accommodation_changes (spot_id, at);
+
+-- ---- Rules the database holds ------------------------------------------------
+
+-- Refuses a change touching a finalized month of this place. `to_day` is the
+-- last day the change reaches (inclusive); null means "from from_day on".
+create or replace function public.accommodation_assert_open(p_spot text, from_day date, to_day date)
+returns void language plpgsql set search_path = '' as $$
+declare hit record;
+begin
+    select year, month into hit from public.accommodation_periods p
+     where p.spot_id = p_spot and p.finalized_at is not null
+       and make_date(p.year, p.month, 1) <= coalesce(date_trunc('month', to_day)::date, 'infinity'::date)
+       and make_date(p.year, p.month, 1) >= date_trunc('month', from_day)::date
+     order by year, month limit 1;
+    if found then
+        raise exception 'PERIOD_FINALIZED %-%', hit.year, lpad(hit.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+end $$;
+
+-- Only private places to stay keep these records.
+create or replace function public.accommodation_assert_place(p_spot text)
+returns void language plpgsql set search_path = '' as $$
+begin
+    if not exists (select 1 from public.spots s where s.id = p_spot and s.type = 'accommodation' and s.managed_by is not null) then
+        raise exception 'NOT_ACCOMMODATION %', p_spot using errcode = 'P0001';
+    end if;
+end $$;
+
+create or replace function public.accommodation_guard_rows()
+returns trigger language plpgsql set search_path = '' as $$
+declare r record; s record;
+begin
+    if tg_table_name = 'accommodation_profiles' then
+        perform public.accommodation_assert_place(new.spot_id);
+        if tg_op = 'UPDATE' and new.reporting_from is distinct from old.reporting_from then
+            perform public.accommodation_assert_open(new.spot_id, least(coalesce(old.reporting_from, new.reporting_from), coalesce(new.reporting_from, old.reporting_from)), null);
+        end if;
+        return new;
+    elsif tg_table_name = 'accommodation_rooms' then
+        if tg_op = 'INSERT' then
+            perform public.accommodation_assert_place(new.spot_id);
+            perform public.accommodation_assert_open(new.spot_id, new.available_from, null);
+            if new.room_type_id is not null and not exists (select 1 from public.room_types t where t.id = new.room_type_id and t.spot_id = new.spot_id) then
+                raise exception 'ROOM_TYPE_OTHER_PLACE' using errcode = 'P0001';
+            end if;
+            return new;
+        end if;
+        if tg_op = 'DELETE' then raise exception 'NO_DELETE' using errcode = 'P0001'; end if;
+        if new.spot_id <> old.spot_id then raise exception 'ROOM_MOVED' using errcode = 'P0001'; end if;
+        if new.available_from <> old.available_from then
+            perform public.accommodation_assert_open(new.spot_id, least(new.available_from, old.available_from), greatest(new.available_from, old.available_from));
+        end if;
+        if new.available_until is distinct from old.available_until then
+            perform public.accommodation_assert_open(new.spot_id, least(coalesce(new.available_until, old.available_until), coalesce(old.available_until, new.available_until)),
+                case when new.available_until is null or old.available_until is null then null else greatest(new.available_until, old.available_until) end);
+        end if;
+        if new.shared <> old.shared and exists (select 1 from public.accommodation_stay_rooms a where a.room_id = new.id) then
+            raise exception 'ROOM_SHARING_FIXED' using errcode = 'P0001';
+        end if;
+        return new;
+    elsif tg_table_name in ('accommodation_room_unavailability', 'accommodation_closed_periods') then
+        if tg_op = 'DELETE' then raise exception 'NO_DELETE' using errcode = 'P0001'; end if;
+        if tg_op = 'INSERT' then
+            perform public.accommodation_assert_place(new.spot_id);
+            perform public.accommodation_assert_open(new.spot_id, new.starts_on, new.ends_on);
+            if tg_table_name = 'accommodation_room_unavailability' then
+                if not exists (select 1 from public.accommodation_rooms x where x.id = to_jsonb(new) ->> 'room_id' and x.spot_id = new.spot_id) then
+                    raise exception 'ROOM_OTHER_PLACE' using errcode = 'P0001';
+                end if;
+            end if;
+            return new;
+        end if;
+        -- Only voiding: dates, room and place never change.
+        if (new.starts_on, new.ends_on, new.spot_id) is distinct from (old.starts_on, old.ends_on, old.spot_id)
+           or (old.voided_at is not null) then
+            raise exception 'ONLY_VOID' using errcode = 'P0001';
+        end if;
+        perform public.accommodation_assert_open(new.spot_id, new.starts_on, new.ends_on);
+        return new;
+    elsif tg_table_name = 'accommodation_stays' then
+        if tg_op = 'DELETE' then raise exception 'NO_DELETE' using errcode = 'P0001'; end if;
+        if tg_op = 'INSERT' then
+            perform public.accommodation_assert_place(new.spot_id);
+            perform public.accommodation_assert_open(new.spot_id, new.check_in, new.check_out - 1);
+            return new;
+        end if;
+        if new.spot_id <> old.spot_id then raise exception 'STAY_MOVED' using errcode = 'P0001'; end if;
+        if old.status = 'void' then raise exception 'STAY_VOID' using errcode = 'P0001'; end if;
+        perform public.accommodation_assert_open(old.spot_id, old.check_in, old.check_out - 1);
+        perform public.accommodation_assert_open(new.spot_id, new.check_in, new.check_out - 1);
+        new.revision := old.revision + 1;
+        return new;
+    elsif tg_table_name in ('accommodation_stay_rooms', 'accommodation_stay_guests') then
+        if tg_op in ('UPDATE', 'DELETE') then
+            select * into s from public.accommodation_stays where id = old.stay_id;
+            if s.id is not null then perform public.accommodation_assert_open(s.spot_id, old.starts_on, old.ends_on - 1); end if;
+        end if;
+        if tg_op = 'DELETE' then return old; end if;
+        select * into s from public.accommodation_stays where id = new.stay_id;
+        perform public.accommodation_assert_open(s.spot_id, new.starts_on, new.ends_on - 1);
+        if tg_table_name = 'accommodation_stay_rooms' then
+            select * into r from public.accommodation_rooms where id = new.room_id;
+            if r.spot_id is distinct from s.spot_id then raise exception 'ROOM_OTHER_PLACE' using errcode = 'P0001'; end if;
+            new.shared := r.shared;
+            new.active := (s.status = 'active');
+        end if;
+        return new;
+    end if;
+    return new;
+end $$;
+
+-- After every statement that touches a stay, checked at commit: the stay's
+-- rooms and guests fit together and fit the place.
+create or replace function public.accommodation_check_stay()
+returns trigger language plpgsql set search_path = '' as $$
+declare sid text; s record; d date; bad text;
+begin
+    if tg_table_name = 'accommodation_stays' then
+        sid := case when tg_op = 'DELETE' then old.id else new.id end;
+    else
+        sid := case when tg_op = 'DELETE' then old.stay_id else new.stay_id end;
+    end if;
+    select * into s from public.accommodation_stays where id = sid;
+    if s.id is null or s.status <> 'active' then return null; end if;
+    -- Rooms: inside the stay, this place's, available, not out of service, not closed, not twice in one stay.
+    select a.id into bad from public.accommodation_stay_rooms a join public.accommodation_rooms r on r.id = a.room_id
+     where a.stay_id = sid and (a.starts_on < s.check_in or a.ends_on > s.check_out or r.spot_id <> s.spot_id
+           or a.starts_on < r.available_from or (r.available_until is not null and a.ends_on > r.available_until)) limit 1;
+    if bad is not null then raise exception 'STAY_ROOM_OUTSIDE %', s.reference using errcode = 'P0001'; end if;
+    if exists (select 1 from public.accommodation_stay_rooms a join public.accommodation_stay_rooms b
+                 on b.stay_id = a.stay_id and b.room_id = a.room_id and b.id < a.id and b.nights && a.nights
+                where a.stay_id = sid) then
+        raise exception 'STAY_ROOM_TWICE %', s.reference using errcode = 'P0001';
+    end if;
+    if exists (select 1 from public.accommodation_stay_rooms a join public.accommodation_room_unavailability u
+                 on u.room_id = a.room_id and u.voided_at is null and u.starts_on < a.ends_on and u.ends_on >= a.starts_on
+                where a.stay_id = sid) then
+        raise exception 'ROOM_OUT_OF_SERVICE %', s.reference using errcode = 'P0001';
+    end if;
+    if exists (select 1 from public.accommodation_closed_periods c
+                where c.spot_id = s.spot_id and c.voided_at is null and c.starts_on < s.check_out and c.ends_on >= s.check_in) then
+        raise exception 'PLACE_CLOSED %', s.reference using errcode = 'P0001';
+    end if;
+    -- Guests: inside the stay, someone arrives at check-in and leaves at check-out.
+    if exists (select 1 from public.accommodation_stay_guests g where g.stay_id = sid and (g.starts_on < s.check_in or g.ends_on > s.check_out))
+       or not exists (select 1 from public.accommodation_stay_guests g where g.stay_id = sid and g.starts_on = s.check_in)
+       or not exists (select 1 from public.accommodation_stay_guests g where g.stay_id = sid and g.ends_on = s.check_out) then
+        raise exception 'STAY_GUEST_DATES %', s.reference using errcode = 'P0001';
+    end if;
+    -- Every night has a room and a guest.
+    for d in select generate_series(s.check_in, s.check_out - 1, interval '1 day')::date loop
+        if not exists (select 1 from public.accommodation_stay_rooms a where a.stay_id = sid and a.starts_on <= d and d < a.ends_on) then
+            raise exception 'NIGHT_WITHOUT_ROOM % %', s.reference, d using errcode = 'P0001';
+        end if;
+        if not exists (select 1 from public.accommodation_stay_guests g where g.stay_id = sid and g.starts_on <= d and d < g.ends_on) then
+            raise exception 'NIGHT_WITHOUT_GUEST % %', s.reference, d using errcode = 'P0001';
+        end if;
+    end loop;
+    return null;
+end $$;
+
+-- Stay status follows onto its room rows, so a voided stay frees its rooms.
+create or replace function public.accommodation_stay_status_follow()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    if new.status is distinct from old.status then
+        update public.accommodation_stay_rooms set active = (new.status = 'active') where stay_id = new.id;
+    end if;
+    return null;
+end $$;
+
+-- Saved versions, their counts and events are never changed or removed.
+create or replace function public.accommodation_immutable()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    raise exception 'IMMUTABLE %', tg_table_name using errcode = 'P0001';
+end $$;
+
+-- A new version: the month is not finalized and not a municipal-total month;
+-- its numbers add up (checked at commit, after its counts are in).
+create or replace function public.accommodation_version_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    perform public.accommodation_assert_place(new.spot_id);
+    if exists (select 1 from public.accommodation_periods p where p.spot_id = new.spot_id and p.year = new.year and p.month = new.month and p.finalized_at is not null) then
+        raise exception 'PERIOD_FINALIZED %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    if exists (select 1 from public.monthly_reports m where m.kind = 'municipal_total' and m.status = 'submitted' and m.year = new.year and m.month = new.month) then
+        raise exception 'MUNICIPAL_TOTAL_MONTH %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    if new.version > 1 and not exists (select 1 from public.accommodation_report_versions v
+            where v.spot_id = new.spot_id and v.year = new.year and v.month = new.month and v.version = new.version - 1) then
+        raise exception 'VERSION_GAP' using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+create or replace function public.accommodation_version_reconcile()
+returns trigger language plpgsql set search_path = '' as $$
+declare v record; n integer;
+begin
+    if tg_table_name = 'accommodation_report_versions' then
+        select * into v from public.accommodation_report_versions where id = new.id;
+    else
+        select * into v from public.accommodation_report_versions where id = new.version_id;
+    end if;
+    select coalesce(sum(male + female), 0) into n from public.accommodation_report_version_counts where version_id = v.id;
+    if n <> v.arrivals then
+        raise exception 'COUNTS_DO_NOT_ADD_UP % %', n, v.arrivals using errcode = 'P0001';
+    end if;
+    return null;
+end $$;
+
+-- A municipal total may not be recorded for a month enterprises reported.
+create or replace function public.accommodation_municipal_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    if new.kind = 'municipal_total' and new.status = 'submitted'
+       and exists (select 1 from public.accommodation_report_versions v where v.year = new.year and v.month = new.month) then
+        raise exception 'ENTERPRISE_REPORTS_EXIST %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+-- A finalized period can only be reopened (finalized_at back to null), never moved.
+create or replace function public.accommodation_period_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+    if tg_op = 'DELETE' then raise exception 'NO_DELETE' using errcode = 'P0001'; end if;
+    perform public.accommodation_assert_place(new.spot_id);
+    if new.finalized_version_id is not null and not exists (select 1 from public.accommodation_report_versions v
+            where v.id = new.finalized_version_id and v.spot_id = new.spot_id and v.year = new.year and v.month = new.month) then
+        raise exception 'VERSION_OTHER_PERIOD' using errcode = 'P0001';
+    end if;
+    return new;
+end $$;
+
+do $$
+declare t text;
+begin
+    foreach t in array array['accommodation_profiles', 'accommodation_rooms', 'accommodation_room_unavailability',
+                              'accommodation_closed_periods', 'accommodation_stays', 'accommodation_stay_rooms', 'accommodation_stay_guests'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_guard', t);
+        execute format('create trigger %I before insert or update or delete on public.%I for each row execute function public.accommodation_guard_rows()', t || '_guard', t);
+    end loop;
+    foreach t in array array['accommodation_stays', 'accommodation_stay_rooms', 'accommodation_stay_guests'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_check', t);
+        execute format('create constraint trigger %I after insert or update or delete on public.%I deferrable initially deferred for each row execute function public.accommodation_check_stay()', t || '_check', t);
+    end loop;
+    drop trigger if exists accommodation_stays_status_follow on public.accommodation_stays;
+    create trigger accommodation_stays_status_follow after update on public.accommodation_stays
+        for each row execute function public.accommodation_stay_status_follow();
+    foreach t in array array['accommodation_report_versions', 'accommodation_report_version_counts', 'accommodation_period_events', 'accommodation_changes'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_immutable', t);
+        execute format('create trigger %I before update or delete on public.%I for each row execute function public.accommodation_immutable()', t || '_immutable', t);
+    end loop;
+    drop trigger if exists accommodation_report_versions_guard on public.accommodation_report_versions;
+    create trigger accommodation_report_versions_guard before insert on public.accommodation_report_versions
+        for each row execute function public.accommodation_version_guard();
+    drop trigger if exists accommodation_report_versions_reconcile on public.accommodation_report_versions;
+    create constraint trigger accommodation_report_versions_reconcile after insert on public.accommodation_report_versions
+        deferrable initially deferred for each row execute function public.accommodation_version_reconcile();
+    drop trigger if exists accommodation_report_version_counts_reconcile on public.accommodation_report_version_counts;
+    create constraint trigger accommodation_report_version_counts_reconcile after insert on public.accommodation_report_version_counts
+        deferrable initially deferred for each row execute function public.accommodation_version_reconcile();
+    drop trigger if exists monthly_reports_accommodation_guard on public.monthly_reports;
+    create trigger monthly_reports_accommodation_guard before insert or update on public.monthly_reports
+        for each row execute function public.accommodation_municipal_guard();
+    drop trigger if exists accommodation_periods_guard on public.accommodation_periods;
+    create trigger accommodation_periods_guard before insert or update or delete on public.accommodation_periods
+        for each row execute function public.accommodation_period_guard();
+
+    foreach t in array array['accommodation_profiles', 'accommodation_rooms', 'accommodation_room_unavailability',
+                              'accommodation_closed_periods', 'accommodation_stays', 'accommodation_periods'] loop
+        execute format('drop trigger if exists %I on public.%I', t || '_touch_updated_at', t);
+        execute format('create trigger %I before update on public.%I for each row execute function public.ztims_touch_updated_at()', t || '_touch_updated_at', t);
+    end loop;
+    foreach t in array array['accommodation_profiles', 'accommodation_rooms', 'accommodation_room_unavailability',
+                              'accommodation_closed_periods', 'accommodation_stays', 'accommodation_stay_rooms', 'accommodation_stay_guests',
+                              'accommodation_report_versions', 'accommodation_report_version_counts', 'accommodation_periods',
+                              'accommodation_period_events', 'accommodation_changes'] loop
+        execute format('alter table public.%I enable row level security', t);
+    end loop;
+end $$;
+
+-- ---- Backfill: hand-typed accommodation reports become version 1 ----------
+-- A place to stay's monthly report typed before this model is copied as it
+-- was (provenance 'legacy_manual': no stays stand behind it, nothing is
+-- invented), its counts with it; a finalized one finalizes the period. Runs
+-- once per report (legacy_report_id is unique); a void report is not copied.
+-- Office-run places to stay and 2025's municipal totals are left as they are.
+do $$
+declare r record; vid text; n integer;
+begin
+    for r in select m.* from public.monthly_reports m join public.spots s on s.id = m.spot_id
+              where m.kind = 'accommodation' and m.status = 'submitted' and s.managed_by is not null and s.type = 'accommodation'
+                and not exists (select 1 from public.accommodation_report_versions v where v.legacy_report_id = m.id)
+                and not exists (select 1 from public.accommodation_report_versions v where v.spot_id = m.spot_id and v.year = m.year and v.month = m.month)
+                and not exists (select 1 from public.monthly_reports t where t.kind = 'municipal_total' and t.status = 'submitted' and t.year = m.year and t.month = m.month)
+    loop
+        select coalesce(sum(coalesce(male + female, total_unsplit)), 0) into n from public.monthly_report_counts where report_id = r.id;
+        insert into public.accommodation_report_versions (spot_id, year, month, version, provenance, legacy_report_id, rooms,
+                    room_nights_available, room_nights_occupied, guest_nights, arrivals, reason, late, submitted_by_role, submitted_by_email, submitted_at)
+        values (r.spot_id, r.year, r.month, 1, 'legacy_manual', r.id, coalesce(r.rooms, 0),
+                coalesce(r.rooms, 0) * extract(day from (make_date(r.year, r.month, 1) + interval '1 month' - interval '1 day'))::integer,
+                coalesce(r.room_nights_occupied, 0), coalesce(r.guest_nights, 0), n, 'Copied from the hand-typed monthly report',
+                r.submitted_at > (make_date(r.year, r.month, 1) + interval '1 month' + interval '5 days' - interval '8 hours'),
+                r.submitted_by_role, r.submitted_by_email, r.submitted_at)
+        returning id into vid;
+        insert into public.accommodation_report_version_counts (version_id, residence_code, male, female)
+        select vid, c.residence_code, coalesce(c.male, c.total_unsplit, 0), coalesce(c.female, 0)
+          from public.monthly_report_counts c where c.report_id = r.id and coalesce(c.male + c.female, c.total_unsplit, 0) > 0;
+        insert into public.accommodation_period_events (spot_id, year, month, action, version_id, reason, actor_role, actor_email, at)
+        values (r.spot_id, r.year, r.month, 'submitted', vid, 'Copied from the hand-typed monthly report', r.submitted_by_role, r.submitted_by_email, r.submitted_at);
+        if r.locked_at is not null then
+            insert into public.accommodation_periods (spot_id, year, month, finalized_at, finalized_by_email, finalized_version_id)
+            values (r.spot_id, r.year, r.month, r.locked_at, r.locked_by_email, vid)
+            on conflict (spot_id, year, month) do nothing;
+            insert into public.accommodation_period_events (spot_id, year, month, action, version_id, reason, actor_role, actor_email, at)
+            values (r.spot_id, r.year, r.month, 'finalized', vid, 'Finalized before the stay register', 'admin', r.locked_by_email, r.locked_at);
+        end if;
+    end loop;
+end $$;
+
+
+-- ---------------------------------------------------------------------------
+-- Foreign keys to bookings, put back if the booking-draft repair above dropped
+-- them with the old table (its cascade removes every key pointing at it).
+-- ---------------------------------------------------------------------------
+do $$
+declare r record;
+begin
+    for r in select * from (values ('register_entries', 'register_entries_booking_id_fkey'),
+                                   ('reviews', 'reviews_booking_id_fkey'),
+                                   ('accommodation_stays', 'accommodation_stays_booking_id_fkey')) v(tbl, con)
+    loop
+        if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = r.tbl and column_name = 'booking_id')
+           and not exists (select 1 from pg_constraint c where c.conrelid = ('public.' || r.tbl)::regclass and c.contype = 'f'
+                             and c.confrelid = 'public.bookings'::regclass) then
+            execute format('alter table public.%I add constraint %I foreign key (booking_id) references public.bookings (id)', r.tbl, r.con);
+        end if;
+    end loop;
 end $$;

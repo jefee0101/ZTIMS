@@ -80,6 +80,14 @@ async function spotById(id, client) {
    or register entry, and no list in Statistics shows it. */
 const NOT_COUNTED = 'Visitors are not counted at this place. Switch on "Count visitors here" in its details first.';
 
+/* A private place to stay keeps its guests in the stay register
+   (accommodation.js), the one record its DAE-1A and DAE-1B come from. Its
+   hand-typed monthly report and old Guest Register stop taking entries, so
+   no second set of figures can start; what they already hold stays readable. */
+const isPrivateStay = spot => spot.type === 'accommodation' && spot.managed_by !== null;
+const USE_STAY_REGISTER = { success: false, code: 'USE_STAY_REGISTER',
+    message: 'A place to stay records each stay in its stay register. The monthly report is worked out from it.' };
+
 /* Whether the signed-in account may see this place's reports: the officer
    any place's, a manager their own, Support Staff their one attraction. */
 function mayViewFor(req, spot) {
@@ -290,6 +298,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                     : 'You can only report for the places you manage.' });
             }
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
+            if (isPrivateStay(spot)) return res.status(409).json(USE_STAY_REGISTER);
             const kind = kindOf(spot);
             const body = req.body || {};
 
@@ -580,6 +589,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             if (!spot) return res.status(404).json({ success: false, message: 'That place could not be found.' });
             if (!mayKeepRegister(req, spot)) return res.status(403).json({ success: false, message: isOfficer(req) ? OFFICER_NO_REGISTER : 'Only whoever runs this place keeps its register.' });
             if (!spot.counts_visitors) return res.status(409).json({ success: false, message: NOT_COUNTED });
+            if (isPrivateStay(spot)) return res.status(409).json(USE_STAY_REGISTER);
             const entry = await readEntry(req.body, spot);
             if (entry.error) return badRequest(res, entry.error);
             // A room booking pre-fills the entry at check-in (bookings.js'
@@ -621,6 +631,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         try {
             const found = await entryAndSpot(req, res);
             if (!found) return;
+            if (isPrivateStay(found.spot)) return res.status(409).json(USE_STAY_REGISTER);
             const entry = await readEntry(req.body, found.spot);
             if (entry.error) return badRequest(res, entry.error);
             await transaction(async client => {

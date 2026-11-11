@@ -560,6 +560,10 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,
   room-nights available/occupied/not occupied, guest nights), not as rates.
+  **Exception for private places to stay** (see "Accommodation reporting"):
+  the rates and shares the DAE-1A, DAE-1B and FORM A templates require
+  (occupancy rate, average length of stay, guests per room, % share, %
+  difference) are shown there. Still no revenue.
 - **Nothing from tickets.** Enterprises report their own already-totalled
   month; ZTIMS never derives these figures from tickets sold.
 - **Who reports.** A manager, for the listing they manage. Support Staff, for
@@ -652,6 +656,50 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   its guests are never counted twice; voiding it opens the month again. Those
   months have no sex split, and Form A4's "volume per sex" is left blank for
   them rather than shown as 0.
+
+### Accommodation reporting (stage 2 on branch; not on main or live yet)
+
+One record of each stay at a **private place to stay** (`spots.type =
+'accommodation'` with a manager). The DAE-1A, DAE-1B, the enterprise's year and
+the municipal FORM A are worked out from it. Approved mockup and mapping, then
+the stage-2 model: `docs/accommodation-reporting/` (01 mapping, 02 gaps and
+security, 03 data model and rollout, `rollback.sql`). Attractions keep
+`monthly_reports` and the Guest Register above, unchanged.
+- **Code:** `accommodation-engine.js` (arithmetic, no database) and
+  `accommodation.js` (routes at `/api/accommodation/*`). Tables are the
+  `accommodation_*` block at the end of `schema.sql`.
+- **Who:** the manager records stays and submits, own enterprises only. The
+  officer reads all, finalizes and reopens, and never writes a stay. Support
+  Staff and visitors have no route.
+- **Counting:** the night of D belongs to a stay when `starts_on <= D < ends_on`,
+  so the check-out night never counts.
+  - A guest row's `starts_on` is an arrival. A guest joining later is a dated row.
+  - Room-nights occupied count distinct rooms per night, so shared rooms and
+    transfers never count twice.
+  - Available = rooms available that day − out of service; 0 on a closed day.
+  - Annual figures are sums of saved versions, then ratios of the sums.
+  - Missing is never zero.
+- **Versions:** a submitted month is an immutable version (provenance
+  `register` with a source digest, or `legacy_manual` for a hand-typed report
+  copied once). A correction is version n + 1 with a reason. Events
+  (submitted / finalized / reopened) are immutable; reopening needs a reason of
+  10 or more characters.
+- **Finalized months refuse every change that would alter them**, enforced by
+  database triggers as well as the API. Writes take a per-enterprise
+  transaction lock. Stay edits name the `revision` they read; submit and
+  finalize name the latest version.
+- **2025:** the paper municipal totals stay in `monthly_reports`
+  (`municipal_total`, no sex split, no enterprise detail). A month holds either
+  them or enterprise versions, never both (triggers both ways). FORM A compares
+  with the previous year only over months with complete coverage in both
+  years; the comparison is null when no month qualifies or the baseline is 0.
+- **Old routes:** for a private place to stay, the hand-typed monthly report
+  and the old Guest Register writes answer 409 `USE_STAY_REGISTER`.
+- **Pages:** the stay-register and report pages from the approved mockup are
+  the next stage and must ship with this backend.
+- **Booking-table repair:** live received the booking tables as an early
+  draft. `schema.sql` drops and recreates them only while all seven are empty
+  (see 03 §1).
 
 ### Online payments (demonstration, test mode)
 
@@ -1789,8 +1837,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   describes.
 - Tourism records (spots/listings) are never hard-deleted, only marked
   inactive. Statistics reports likewise: voided, never deleted.
+- Accommodation reporting (11 November 2026, the user's approval of the
+  stage-1 mockup): one stay register per private place to stay. Monthly and
+  annual reports and FORM A are worked out from it, never typed. Submitted
+  versions are never changed. The officer finalizes and reopens with a reason
+  and never edits stays. Bookings and tickets are never arrivals.
 - Tourism statistics hold counts and totals only — no revenue and no
-  percentages.
+  percentages — except the rates and shares the DAE-1A, DAE-1B and FORM A
+  templates require for places to stay (see "Accommodation reporting").
 - Security decisions (October 2026): passwords follow `passwords.js` (length
   and guessability, no forced symbols, no expiry); a password someone else
   chose is always replaced at first sign-in; risky officer actions re-ask the

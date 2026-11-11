@@ -4,6 +4,35 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Accommodation reporting from a stay register (11 November 2026, stage 2 on a branch; not live yet)
+
+**The change.**
+- A private place to stay records each stay: check-in, check-out, which numbered room on which nights, and the guests by residence, male and female.
+- The DAE-1A daily register, the monthly DAE-1B, the enterprise's year and the municipal FORM A are worked out from those stays and never typed.
+- A submitted month is saved as a version that never changes. A correction is a new version with a reason.
+- The Tourism Officer finalizes a month or reopens it with a reason, and never edits stays.
+- Attractions keep their monthly report and Guest Register.
+- The 2025 paper totals stay as they are and are used as the previous year only for months where both years are complete.
+
+**Where it goes.**
+- Chapter I, Objectives: one objective becomes "to record each guest stay once and generate the DAE-1A, DAE-1B and FORM A reports from it".
+- Chapter I, Scope: the system shows the rates the forms require (occupancy rate, average length of stay, % share, % difference) for places to stay. It still holds no revenue.
+- Chapter I, Limitations:
+  - a booking is never counted as an arrival;
+  - 2025 has municipal totals only, with no enterprise or sex detail;
+  - a month counts as complete only when every listed place to stay reported or was closed.
+- Chapter II/III, Data model (ERD) and DFD:
+  - the stay register (rooms, room availability, stays, room nights, guests by residence);
+  - report versions and their events;
+  - the officer's Finalize / Reopen.
+- Chapter III, Testing:
+  - the stage-2 checks: 104 API checks, the schema run twice, and the rollback;
+  - the schema repair of the booking tables (on an empty early draft).
+
+**For the panel.**
+- *Why not type the monthly report?* Typing it twice is how the counts drifted from the register in testing. Working it out from each stay makes the daily, monthly and yearly figures agree.
+- *Why percentages now?* The DOT forms require occupancy and length of stay, and FORM A requires share and difference. They are calculated, never typed. Yearly rates use the year's totals, not an average of monthly rates.
+
 ## No Guest Register for the Tourism Officer (10 November 2026)
 
 **The change.** The Tourism Officer no longer keeps a Guest Register. Each

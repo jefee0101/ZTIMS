@@ -2639,6 +2639,10 @@ app.get('/api/directions/reverse', directionsRateLimit, async (req, res) => {
 ========================================== */
 app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff, requireReporter }));
 
+/* Accommodation reporting (accommodation.js): a private place to stay's stay
+   register, its DAE-1A / DAE-1B, saved versions, Finalize / Reopen, FORM A. */
+app.use('/api', require('./accommodation')({ requireAdmin, requireStaff, requireEstablishmentManager, sharedRateLimit }));
+
 /* Support Staff accounts (support-staff.js): the officer adds, issues a
    password, deactivates or reactivates; the person keeps their own details. */
 app.use('/api', require('./support-staff')({
