@@ -1,0 +1,1077 @@
+<title>ZTIMS Accommodation Reporting Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+/* Layout: ZTIMS staff portal — fixed sidebar, glass header, flat outlined panels, pill buttons, folder-line tabs.
+   Tokens are ZTIMS's own (theme.css): burnt orange primary, tangerine highlight, ember pressed, ink and paper neutrals. */
+:root {
+  --bg: 250 247 242; --surface: 253 251 247; --surface-low: 245 241 234; --surface-var: 239 234 226;
+  --ink: 28 25 23; --ink2: 87 81 74; --line: 227 220 209;
+  --primary: 191 87 0; --primary-text: 163 74 0; --ember: 122 46 0; --tangerine: 242 133 0; --gold-text: 150 66 0;
+  --on-primary: 250 247 242; --primary-soft: 252 237 222;
+  --red: 179 38 30; --green: 46 125 50; --red-soft: 252 231 229; --green-soft: 228 242 229; --tan-soft: 253 238 214;
+  --proto: 28 25 23; --on-proto: 245 241 234;
+  --font-display: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: 18 17 16; --surface: 28 26 24; --surface-low: 22 20 19; --surface-var: 42 39 36;
+  --ink: 245 241 234; --ink2: 181 173 163; --line: 58 53 50;
+  --primary-text: 242 133 0; --gold-text: 255 166 77; --primary-soft: 51 26 8;
+  --red: 242 139 130; --green: 123 198 126; --red-soft: 58 28 26; --green-soft: 27 44 29; --tan-soft: 58 38 14;
+  --proto: 10 9 8; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: 18 17 16; --surface: 28 26 24; --surface-low: 22 20 19; --surface-var: 42 39 36;
+  --ink: 245 241 234; --ink2: 181 173 163; --line: 58 53 50;
+  --primary-text: 242 133 0; --gold-text: 255 166 77; --primary-soft: 51 26 8;
+  --red: 242 139 130; --green: 123 198 126; --red-soft: 58 28 26; --green-soft: 27 44 29; --tan-soft: 58 38 14;
+  --proto: 10 9 8; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: rgb(var(--bg)); color: rgb(var(--ink)); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: rgb(var(--primary-text)); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: 400; font-style: normal; font-size: 20px; line-height: 1; display: inline-block; width: 1em; overflow: hidden; white-space: nowrap; letter-spacing: normal; text-transform: none; font-feature-settings: 'liga'; -webkit-font-feature-settings: 'liga'; vertical-align: middle; flex: none; }
+.ms { visibility: hidden; } html.ms-ok .ms { visibility: visible; }
+.ms.sm { font-size: 16px; } .ms.fill { font-variation-settings: 'FILL' 1; }
+:focus-visible { outline: 2px solid rgb(var(--tangerine)); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- Prototype strip (not part of ZTIMS) ---- */
+.proto { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; background: rgb(var(--proto)); color: rgb(var(--on-proto)); display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding: .5rem max(16px, env(safe-area-inset-right, 0px)) .5rem max(16px, env(safe-area-inset-left, 0px)); font-size: 12px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 70; background: rgb(var(--proto)); }
+.proto b { font-family: var(--font-display); font-weight: 600; letter-spacing: .02em; margin-right: .25rem; }
+.proto .grp { display: inline-flex; align-items: center; gap: .35rem; }
+.proto .seg { display: inline-flex; border: 1px solid rgb(var(--on-proto) / .35); border-radius: 999px; overflow: hidden; }
+.proto .seg button { background: none; border: 0; padding: .3rem .75rem; cursor: pointer; font-weight: 600; font-size: 12px; color: rgb(var(--on-proto)); }
+.proto .seg button[aria-pressed="true"] { background: rgb(var(--tangerine)); color: #1C1917; }
+.proto .pbtn { background: none; border: 1px solid rgb(var(--on-proto) / .35); color: rgb(var(--on-proto)); border-radius: 999px; padding: .3rem .75rem; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; gap: .3rem; align-items: center; }
+.proto .pbtn:hover { background: rgb(var(--on-proto) / .12); }
+.proto select { background: rgb(var(--on-proto) / .1); color: rgb(var(--on-proto)); border: 1px solid rgb(var(--on-proto) / .35); border-radius: 999px; padding: .28rem .6rem; font-size: 12px; }
+.proto select option { color: #1C1917; }
+.proto .sp { flex: 1 1 0; }
+.proto label { display: inline-flex; gap: .3rem; align-items: center; cursor: pointer; }
+
+/* ---- Portal shell ---- */
+.portal { display: grid; grid-template-columns: 16rem minmax(0, 1fr); min-height: calc(100vh - 3rem); }
+.side { background: rgb(var(--surface)); border-right: 1px solid rgb(var(--line)); padding: 1rem 1rem 1.5rem max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 1.25rem; position: sticky; top: calc(3rem + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 3rem); overflow: auto; }
+.brand { display: flex; gap: .65rem; align-items: center; }
+.seal { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgb(var(--primary)); color: rgb(var(--on-primary)); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: .8rem; letter-spacing: .02em; }
+.brand strong { display: block; font-family: var(--font-display); font-size: .8rem; line-height: 1.15; letter-spacing: .02em; }
+.brand span { font-size: .7rem; color: rgb(var(--ink2)); }
+.menu { display: flex; flex-direction: column; gap: .25rem; }
+.menu a { display: flex; gap: .65rem; align-items: center; padding: .6rem .9rem; border-radius: 999px; font-weight: 600; font-size: .875rem; color: rgb(var(--ink2)); text-decoration: none; min-height: 44px; }
+.menu a:hover { background: rgb(var(--surface-var)); color: rgb(var(--ink)); }
+.menu a.is-current { background: rgb(var(--primary)); color: rgb(var(--on-primary)); }
+.side .foot { margin-top: auto; font-size: .75rem; color: rgb(var(--ink2)); border-top: 1px solid rgb(var(--line)); padding-top: .75rem; }
+.head { position: sticky; top: calc(3rem + env(safe-area-inset-top, 0px)); z-index: 30; background: rgb(var(--surface) / .86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid rgb(var(--line)); padding: .6rem max(16px, env(safe-area-inset-right, 0px)) 0 1.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; min-height: 3.5rem; }
+.head .ttl { font-family: var(--font-display); font-weight: 600; font-size: .95rem; margin-right: auto; padding-bottom: .5rem; }
+.head .who { display: flex; align-items: center; gap: .6rem; padding-bottom: .5rem; }
+.avatar { width: 2.1rem; height: 2.1rem; border-radius: 50%; background: rgb(var(--tangerine)); color: #1C1917; display: grid; place-items: center; font-weight: 700; font-size: .75rem; }
+.who small { color: rgb(var(--ink2)); font-size: .75rem; }
+.ent-switch { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 999px; padding: 0 .4rem 0 .85rem; min-height: 40px; margin-bottom: .5rem; }
+.ent-switch select { appearance: none; background: none; border: 0; font-weight: 700; font-size: .85rem; padding: .5rem 1.4rem .5rem 0; cursor: pointer; max-width: 15rem; }
+.ent-switch .ms { margin-left: -1.4rem; pointer-events: none; }
+main { padding: 1.5rem max(16px, env(safe-area-inset-right, 0px)) 4rem 1.5rem; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+.pg-title { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
+.pg-title h1 { font-size: 1.6rem; line-height: 1.2; font-weight: 700; margin-right: auto; }
+.pg-title .acts { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tabs { display: flex; gap: .25rem; border-bottom: 1px solid rgb(var(--line)); overflow-x: auto; margin: 0 -.25rem; padding: 0 .25rem; }
+.tab { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem; font-weight: 700; font-size: .875rem; color: rgb(var(--ink2)); text-decoration: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab:hover { color: rgb(var(--ink)); }
+.tab[aria-selected="true"] { color: rgb(var(--primary-text)); border-bottom-color: rgb(var(--primary)); }
+
+/* ---- Buttons, pills, fields ---- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: 0 1.2rem; border-radius: 999px; border: 1px solid transparent; font-weight: 700; font-size: .875rem; cursor: pointer; text-decoration: none; background: rgb(var(--surface)); }
+.btn.primary { background: rgb(var(--primary)); color: rgb(var(--on-primary)); } .btn.primary:hover { background: rgb(var(--ember)); }
+.btn.outline { border-color: rgb(var(--primary)); color: rgb(var(--primary-text)); } .btn.outline:hover { background: rgb(var(--primary) / .08); }
+.btn.plain { border-color: rgb(var(--line)); } .btn.plain:hover { background: rgb(var(--surface-var)); }
+.btn.danger { background: #B3261E; color: #FFF8F6; } .btn.danger:hover { background: #8C1D18; }
+.btn.cancel { border-color: #B3261E; color: rgb(var(--red)); } .btn.cancel:hover { background: rgb(var(--red) / .1); }
+.btn.sm { min-height: 36px; padding: 0 .9rem; font-size: .8rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.rt { display: none; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; background: rgb(var(--ink) / .12); color: inherit; }
+body.show-roles .rt { display: inline-block; }
+.btn.primary .rt { background: rgb(var(--on-primary) / .25); }
+.pill { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .15rem .65rem; font-size: .75rem; font-weight: 700; line-height: 1.5; border: 1px solid transparent; white-space: nowrap; }
+.t-ok { background: rgb(var(--green-soft)); color: rgb(var(--green)); } .t-bad { background: rgb(var(--red-soft)); color: rgb(var(--red)); }
+.t-wait { background: rgb(var(--tan-soft)); color: rgb(var(--gold-text)); } .t-info { background: rgb(var(--primary-soft)); color: rgb(var(--primary-text)); }
+.t-mute { background: rgb(var(--surface-var)); color: rgb(var(--ink2)); } .t-ink { border-color: rgb(var(--ink)); color: rgb(var(--ink)); }
+.t-lock { background: rgb(var(--ink)); color: rgb(var(--bg)); }
+.fld { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.fld > span, .lbl { font-size: .8rem; font-weight: 700; color: rgb(var(--ink2)); }
+.inp { min-height: 44px; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 0; padding: .5rem .75rem; width: 100%; min-width: 0; }
+.inp:focus { outline: 2px solid rgb(var(--tangerine)); outline-offset: 0; border-color: rgb(var(--primary)); }
+select.inp { appearance: auto; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); }
+.stepper button { width: 40px; min-height: 44px; border: 0; background: none; cursor: pointer; font-size: 1.1rem; font-weight: 700; }
+.stepper button:hover { background: rgb(var(--surface-var)); }
+.stepper output { min-width: 2rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- Panels, tiles, tables ---- */
+.panel { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); padding: 1.1rem 1.25rem; min-width: 0; }
+.panel > h2, .panel > .ph h2 { font-size: 1rem; font-weight: 600; }
+.ph { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
+.ph .sub { color: rgb(var(--ink2)); font-size: .8rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; }
+.tile { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); padding: .85rem 1rem; display: flex; flex-direction: column; gap: .15rem; }
+.tile .k { font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); }
+.tile .v { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile .n { font-size: .72rem; color: rgb(var(--ink2)); }
+.scroll { overflow-x: auto; max-width: 100%; }
+table.t { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+table.t th { text-align: left; font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); padding: .55rem .6rem; border-bottom: 2px solid rgb(var(--line)); background: rgb(var(--surface-low)); white-space: nowrap; }
+table.t td { padding: .5rem .6rem; border-bottom: 1px solid rgb(var(--line)); vertical-align: middle; }
+table.t td.n, table.t th.n { text-align: right; }
+table.t tr.grp td { background: rgb(var(--surface-low)); font-weight: 700; font-size: .78rem; color: rgb(var(--ink2)); }
+table.t tr.sum td { font-weight: 700; background: rgb(var(--surface-low)); }
+table.t tr.grand td { font-weight: 700; background: rgb(var(--primary-soft)); border-top: 2px solid rgb(var(--primary)); }
+table.t td.dim, table.t .dim { color: rgb(var(--ink2)); }
+table.t td.stk, table.t th.stk { position: sticky; left: 0; background: rgb(var(--surface)); z-index: 1; }
+table.t th.stk { background: rgb(var(--surface-low)); }
+.banner { display: flex; gap: .75rem; align-items: flex-start; padding: .8rem 1rem; border: 1px solid rgb(var(--line)); border-left-width: 4px; background: rgb(var(--surface)); }
+.banner.ok { border-left-color: rgb(var(--green)); } .banner.bad { border-left-color: rgb(var(--red)); } .banner.wait { border-left-color: rgb(var(--tangerine)); } .banner.lock { border-left-color: rgb(var(--ink)); } .banner.info { border-left-color: rgb(var(--primary)); }
+.banner .ms { margin-top: 1px; } .banner .bd { min-width: 0; flex: 1; } .banner .bd p { margin: .15rem 0 0; color: rgb(var(--ink2)); }
+.banner .bd ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+.banner .bx { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.banner .pill { white-space: normal; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); border-radius: 999px; padding: .3rem .85rem; font-weight: 600; font-size: .8rem; cursor: pointer; min-height: 36px; display: inline-flex; align-items: center; gap: .35rem; }
+.chip[aria-pressed="true"] { background: rgb(var(--primary)); color: rgb(var(--on-primary)); border-color: rgb(var(--primary)); }
+.mpick { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.mpick .cur { font-family: var(--font-display); font-weight: 600; min-width: 9.5rem; text-align: center; }
+.iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); cursor: pointer; display: inline-grid; place-items: center; }
+.iconbtn:hover { background: rgb(var(--surface-var)); }
+.empty { border: 1px dashed rgb(var(--line)); padding: 2rem 1rem; text-align: center; color: rgb(var(--ink2)); }
+.empty h3 { color: rgb(var(--ink)); font-size: 1rem; margin-bottom: .35rem; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0; border: 1px solid rgb(var(--line)); }
+.fact { padding: .75rem 1rem; border-right: 1px solid rgb(var(--line)); border-bottom: 1px solid rgb(var(--line)); margin: 0 -1px -1px 0; min-width: 0; }
+.fact .k { font-size: .75rem; font-weight: 700; color: rgb(var(--ink2)); } .fact .v { font-weight: 600; overflow-wrap: anywhere; } .fact .v.miss { color: rgb(var(--red)); }
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.mut { color: rgb(var(--ink2)); } .sm { font-size: .8rem; } .num { font-variant-numeric: tabular-nums; }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.rg-row { display: grid; grid-template-columns: 6.5rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: .75rem 1rem; align-items: center; padding: .85rem 1rem; border: 1px solid rgb(var(--line)); background: rgb(var(--surface)); }
+.rg-row + .rg-row { margin-top: -1px; }
+.rg-row .ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .04em; }
+.rg-row .c { min-width: 0; } .rg-row .c small { display: block; color: rgb(var(--ink2)); }
+.rg-row.carry { background: rgb(var(--surface-low)); }
+
+/* ---- Availability grid ---- */
+.av { border-collapse: separate; border-spacing: 0; font-size: .72rem; }
+.av th, .av td { width: 30px; min-width: 30px; height: 34px; text-align: center; border-right: 1px solid rgb(var(--line)); border-bottom: 1px solid rgb(var(--line)); padding: 0; }
+.av th { background: rgb(var(--surface-low)); font-weight: 700; color: rgb(var(--ink2)); height: 40px; line-height: 1.1; }
+.av th.today { background: rgb(var(--tangerine)); color: #1C1917; }
+.av .rn { position: sticky; left: 0; z-index: 2; background: rgb(var(--surface)); width: 5.5rem; min-width: 5.5rem; text-align: left; padding: 0 .5rem; font-weight: 700; }
+.av th.rn { background: rgb(var(--surface-low)); }
+.av .occ { background: rgb(var(--primary)); color: rgb(var(--on-primary)); cursor: pointer; font-weight: 700; font-size: .62rem; }
+.av .occ:hover { background: rgb(var(--ember)); }
+.av .oos { background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 4px, rgb(var(--line)) 4px, rgb(var(--line)) 8px); }
+.av .cls { background: rgb(var(--surface-var)); }
+.av .fut { color: rgb(var(--ink2) / .5); }
+.lg { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .78rem; color: rgb(var(--ink2)); }
+.lg i { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: .35rem; border: 1px solid rgb(var(--line)); }
+.sw-occ { background: rgb(var(--primary)); } .sw-oos { background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 3px, rgb(var(--line)) 3px, rgb(var(--line)) 6px); } .sw-cls { background: rgb(var(--surface-var)); } .sw-free { background: rgb(var(--surface)); }
+/* ---- DAE-1A grid ---- */
+.dae td.mk { text-align: center; padding: .3rem .25rem; } .dae td.mk .d { display: inline-block; width: 12px; height: 12px; background: rgb(var(--primary)); } .dae td.mk .o { display: inline-block; width: 12px; height: 12px; background: repeating-linear-gradient(45deg, rgb(var(--surface-var)), rgb(var(--surface-var)) 2px, rgb(var(--line)) 2px, rgb(var(--line)) 4px); }
+.dae tr.fut td { color: rgb(var(--ink2) / .55); }
+.dae td.hl { background: rgb(var(--tan-soft)); font-weight: 700; }
+.dae td.today, .dae td.today.stk { box-shadow: inset 3px 0 0 rgb(var(--tangerine)); }
+/* ---- Tracker matrix ---- */
+.mx td, .mx th { text-align: center; padding: .35rem .25rem; }
+.mx td.en { text-align: left; min-width: 13rem; padding: .6rem .75rem; }
+.cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 4.2rem; min-height: 2.6rem; padding: .2rem .35rem; border: 1px solid transparent; font-size: .68rem; font-weight: 700; line-height: 1.2; cursor: pointer; background: none; border-radius: 0; }
+.cell:hover { outline: 2px solid rgb(var(--primary)); }
+.cell small { font-weight: 500; font-size: .62rem; opacity: .85; }
+.own { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .1rem .6rem; font-size: .7rem; font-weight: 700; border: 1px solid rgb(var(--ink)); }
+/* ---- Dialog ---- */
+.ovl { position: fixed; inset: 0; z-index: 90; background: rgb(0 0 0 / .5); display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px)); overflow: auto; }
+.dlg { background: rgb(var(--surface)); border: 1px solid rgb(var(--line)); width: min(46rem, 100%); max-height: 100%; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgb(0 0 0 / .35); }
+.dlg.narrow { width: min(30rem, 100%); } .dlg.wide { width: min(64rem, 100%); }
+.dlg .dh { padding: 1rem 1.25rem; border-bottom: 1px solid rgb(var(--line)); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.dlg .dh h2 { font-size: 1.05rem; font-weight: 600; }
+.dlg .db { padding: 1.1rem 1.25rem; overflow: auto; display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.dlg .df { padding: .85rem 1.25rem; border-top: 1px solid rgb(var(--line)); display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; background: rgb(var(--surface)); }
+.err { border: 1px solid rgb(var(--red)); background: rgb(var(--red-soft)); color: rgb(var(--red)); padding: .65rem .85rem; font-size: .85rem; }
+.err ul { margin: .25rem 0 0; padding-left: 1.1rem; }
+.warn { border: 1px solid rgb(var(--tangerine)); background: rgb(var(--tan-soft)); color: rgb(var(--ink)); padding: .65rem .85rem; font-size: .85rem; }
+.gp { border: 1px solid rgb(var(--line)); padding: .85rem; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto auto auto; gap: .6rem .85rem; align-items: end; }
+.gp .rm { align-self: center; }
+.sg { border: 1px solid rgb(var(--line)); padding: .85rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: .6rem .85rem; align-items: end; }
+.log { display: flex; flex-direction: column; gap: 0; border: 1px solid rgb(var(--line)); }
+.log div { padding: .55rem .85rem; border-bottom: 1px solid rgb(var(--line)); display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .75rem; font-size: .85rem; }
+.log div:last-child { border-bottom: 0; }
+.toasts { position: fixed; z-index: 120; left: 50%; transform: translateX(-50%); bottom: max(1rem, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: .5rem; align-items: center; width: min(32rem, calc(100% - 2rem)); pointer-events: none; }
+.toast { background: rgb(var(--surface)); border: 1px solid rgb(var(--ink)); border-radius: 999px; padding: .6rem 1.1rem; font-weight: 600; font-size: .85rem; display: flex; gap: .5rem; align-items: center; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
+.toast.bad { border-color: rgb(var(--red)); } .toast .ms { color: rgb(var(--green)); } .toast.bad .ms { color: rgb(var(--red)); }
+/* ---- Notes drawer ---- */
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(34rem, 100%); z-index: 95; background: rgb(var(--surface)); border-left: 1px solid rgb(var(--line)); box-shadow: -16px 0 40px rgb(0 0 0 / .25); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer .dh { padding: 1rem 1.25rem; border-bottom: 1px solid rgb(var(--line)); display: flex; justify-content: space-between; align-items: center; }
+.drawer .dbd { padding: 1rem 1.25rem 2rem; overflow: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: max(1.25rem, env(safe-area-inset-right, 0px)); }
+.drawer h3 { font-size: .9rem; font-weight: 600; margin-bottom: .35rem; }
+.drawer p, .drawer li { font-size: .85rem; margin: 0 0 .35rem; } .drawer ul, .drawer ol { padding-left: 1.2rem; margin: 0; }
+.drawer .kv { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: .25rem .75rem; font-size: .82rem; }
+.drawer .kv b { color: rgb(var(--ink2)); }
+.drawer code, .tag { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; background: rgb(var(--surface-var)); padding: 0 .3rem; }
+.conv { border: 1px solid rgb(var(--line)); padding: .65rem .8rem; }
+.conv b { display: block; } .conv .d { color: rgb(var(--primary-text)); font-weight: 600; font-size: .8rem; }
+.hint { display: flex; gap: .4rem; font-size: .78rem; color: rgb(var(--ink2)); align-items: flex-start; }
+
+@media (max-width: 1100px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) {
+  .portal { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; max-height: none; flex-direction: row; align-items: center; gap: .5rem; padding: .5rem max(16px, env(safe-area-inset-right, 0px)) .5rem max(16px, env(safe-area-inset-left, 0px)); overflow-x: auto; border-right: 0; border-bottom: 1px solid rgb(var(--line)); }
+  .side .brand span, .side .foot { display: none; } .menu { flex-direction: row; } .menu a { white-space: nowrap; }
+  .head { position: static; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+}
+@media (max-width: 760px) {
+  .rg-row { grid-template-columns: minmax(0, 1fr) auto; } .rg-row .c.x { grid-column: 1 / -1; }
+  .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
+  .gp { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .sg { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pg-title h1 { font-size: 1.3rem; } .proto .hid { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .dlg, .drawer { animation: pop .2s ease-out both; } @keyframes pop { from { opacity: 0; transform: translateY(8px); } } }
+</style>
+<div class="proto" role="toolbar" aria-label="Prototype controls"><b>MOCKUP</b><span class="hid">Fictional data. Not the live system.</span>
+<span class="grp seg" id="pRole" role="group" aria-label="Role"><button data-act="role" data-v="m" aria-pressed="true">Manager</button><button data-act="role" data-v="o" aria-pressed="false">Officer</button></span>
+<span class="grp">Today <select id="pToday" data-chg="today" aria-label="Today"><option value="2026-11-11">11 Nov 2026</option><option value="2026-12-01">1 Dec 2026</option></select></span><span class="sp"></span>
+<button class="pbtn" id="pRoles" data-act="roles" aria-pressed="true">Role labels</button>
+<button class="pbtn" data-act="drawer" data-v="scenario"><span class="ms sm">route</span>Scenario</button><button class="pbtn" data-act="drawer" data-v="notes"><span class="ms sm">notes</span>Notes</button><button class="pbtn" data-act="reset"><span class="ms sm">restart_alt</span>Reset</button></div>
+<div id="app"></div><div id="modalHost"></div><aside id="drawer" class="drawer" hidden></aside><div id="toasts" class="toasts" aria-live="polite"></div>
+<script>
+/* ---------- Engine: pure functions, no DOM ---------- */
+const pad = n => String(n).padStart(2, '0');
+const dnum = s => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 864e5; };
+const dstr = n => new Date(n * 864e5).toISOString().slice(0, 10);
+const addDays = (s, n) => dstr(dnum(s) + n);
+const dim = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const ymOf = s => s.slice(0, 7);
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON3 = MONTHS.map(m => m.slice(0, 3));
+const COUNTRIES = { KR:'Korea', JP:'Japan', CN:'China', US:'USA', CA:'Canada', DE:'Germany', FR:'France', GB:'United Kingdom', AU:'Australia', other:'Other countries' };
+const KINDS = { phf:'Philippine resident, Filipino nationality', phx:'Philippine resident, foreign nationality', foreign:'Non-Philippine resident (by country of residence)', ofil:'Overseas Filipino (lives abroad)', unspec:'Residence not stated' };
+const rowKey = g => g.kind === 'foreign' ? 'foreign:' + g.country : g.kind;
+const rowLabel = k => k === 'phf' ? 'Filipino nationality' : k === 'phx' ? 'Foreign nationality' : k === 'ofil' ? 'Overseas Filipinos*' : k === 'unspec' ? 'Guests with unspecified residence' : COUNTRIES[k.split(':')[1]];
+const gTotal = g => (g.m | 0) + (g.f | 0);
+const stayGuests = s => s.groups.reduce((a, g) => a + gTotal(g), 0);
+const stayNights = s => dnum(s.out) - dnum(s.in);
+const stayDates = s => { const a = []; for (let d = s.in; d < s.out; d = addDays(d, 1)) a.push(d); return a; };
+const monthOfDate = d => ymOf(d);
+const monthsTouched = s => { const set = new Set([ymOf(s.in)]); stayDates(s).forEach(d => set.add(ymOf(d))); return [...set]; };
+const roomActive = (r, d) => (!r.from || r.from <= d) && (!r.until || d < r.until);
+const inClosed = (E, d) => E.closed.find(c => c.from <= d && d <= c.to);
+const oosOn = (E, d) => E.oos.filter(o => o.from <= d && d <= o.to);
+
+/* One calendar day of the DAE-1A: guests checked in, guests staying overnight, rooms occupied, rooms available. */
+function dayFigures(E, d) {
+  let checkin = 0, nights = 0; const occ = new Set();
+  for (const s of E.stays) {
+    if (s.in === d) checkin += stayGuests(s);
+    if (s.in <= d && d < s.out) { nights += stayGuests(s); s.segs.forEach(g => { if (g.from <= d && d < g.to) occ.add(g.room); }); }
+  }
+  const closed = !!inClosed(E, d);
+  const act = E.rooms.filter(r => roomActive(r, d));
+  const oosRooms = new Set(oosOn(E, d).map(o => o.room).filter(n => act.some(r => r.no === n)));
+  const physical = act.length;
+  const available = closed ? 0 : Math.max(0, physical - oosRooms.size);
+  return { date: d, checkin, nights, occupied: occ.size, occRooms: occ, available, closed, oosRooms };
+}
+
+/* A month's figures. Nights are counted for dates up to the day before `today`; arrivals up to `today`. */
+function monthFigures(E, key, today) {
+  const [y, m] = key.split('-').map(Number); const days = dim(y, m);
+  const first = key + '-01', last = key + '-' + pad(days);
+  const lastNight = addDays(today, -1);
+  const throughNight = last < lastNight ? last : lastNight;
+  const arrivals = {}; let am = 0, af = 0;
+  const byDay = {};            // rowKey -> [1..days] arrivals
+  const daily = [];
+  let guestNights = 0, roomNights = 0, available = 0, closedDays = 0;
+  for (let i = 1; i <= days; i++) {
+    const d = key + '-' + pad(i);
+    const counted = d <= throughNight;
+    const f = dayFigures(E, d);
+    f.counted = counted;
+    daily.push(f);
+    if (counted) { guestNights += f.nights; roomNights += f.occupied; available += f.available; if (f.closed) closedDays++; }
+  }
+  for (const s of E.stays) {
+    if (ymOf(s.in) !== key || s.in > today) continue;
+    for (const g of s.groups) {
+      const k = rowKey(g); const a = arrivals[k] || (arrivals[k] = { m: 0, f: 0 });
+      a.m += g.m | 0; a.f += g.f | 0; am += g.m | 0; af += g.f | 0;
+      const arr = byDay[k] || (byDay[k] = Array(days).fill(0)); arr[+s.in.slice(8) - 1] += gTotal(g);
+    }
+  }
+  const sum = (ks) => ks.reduce((a, k) => { const r = arrivals[k]; return r ? { m: a.m + r.m, f: a.f + r.f } : a; }, { m: 0, f: 0 });
+  const keys = Object.keys(arrivals);
+  const vol = {
+    ph: sum(keys.filter(k => k === 'phf' || k === 'phx')),
+    non: sum(keys.filter(k => k.startsWith('foreign:'))),
+    ofil: sum(keys.filter(k => k === 'ofil')),
+    other: sum(keys.filter(k => k === 'unspec'))
+  };
+  const t = am + af;
+  const operating = days - closedDays;
+  const fullyClosed = [...Array(days)].every((_, i) => inClosed(E, key + '-' + pad(i + 1)));
+  return {
+    key, days, rooms: E.rooms.filter(r => roomActive(r, last)).length, arrivals, byDay, daily, am, af, arrivalsTotal: t,
+    guestNights, roomNights, available,
+    alos: t ? guestNights / t : null,
+    occ: available ? roomNights / available : null,
+    perRoom: roomNights ? guestNights / roomNights : null,
+    vol, partial: throughNight < last, through: throughNight, fullyClosed, operating
+  };
+}
+
+/* What a submitted version keeps: figures only, no guest or stay detail. */
+const snapshotOf = f => ({
+  rooms: f.rooms, arrivals: JSON.parse(JSON.stringify(f.arrivals)), am: f.am, af: f.af, arrivalsTotal: f.arrivalsTotal,
+  guestNights: f.guestNights, roomNights: f.roomNights, available: f.available,
+  alos: f.alos, occ: f.occ, vol: JSON.parse(JSON.stringify(f.vol)), days: f.days, key: f.key
+});
+
+function diffAgainst(snap, f) {
+  const out = []; const chk = (label, a, b) => { if (a !== b) out.push({ label, was: a, now: b }); };
+  chk('Guest arrivals', snap.arrivalsTotal, f.arrivalsTotal);
+  chk('Male arrivals', snap.am, f.am); chk('Female arrivals', snap.af, f.af);
+  const keys = new Set([...Object.keys(snap.arrivals), ...Object.keys(f.arrivals)]);
+  keys.forEach(k => { const a = snap.arrivals[k] || { m: 0, f: 0 }, b = f.arrivals[k] || { m: 0, f: 0 };
+    if (a.m + a.f !== b.m + b.f) out.push({ label: rowLabel(k) + ' arrivals', was: a.m + a.f, now: b.m + b.f }); });
+  chk('Guest-nights', snap.guestNights, f.guestNights);
+  chk('Rooms occupied (room-nights)', snap.roomNights, f.roomNights);
+  chk('Rooms available (room-nights)', snap.available, f.available);
+  chk('Number of rooms', snap.rooms, f.rooms);
+  return out;
+}
+
+/* Where a month stands. */
+function monthState(E, key, today) {
+  const [y, m] = key.split('-').map(Number);
+  const last = key + '-' + pad(dim(y, m));
+  const ev = E.events[key] || [];
+  const lastEv = ev[ev.length - 1];
+  const subs = E.subs[key] || [];
+  if (!E.reportingFrom) return { s: 'notset' };
+  if (key > ymOf(today)) return { s: 'future' };
+  const fig = monthFigures(E, key, today);
+  if (fig.fullyClosed) return { s: 'na', fig };
+  if (lastEv && lastEv.type === 'finalized') return { s: 'finalized', v: subs.length, fig };
+  if (lastEv && lastEv.type === 'reopened') return { s: 'reopened', v: subs.length, fig, ev: lastEv };
+  if (subs.length) { const d = diffAgainst(subs[subs.length - 1].snap, fig); return { s: d.length ? 'changed' : 'submitted', v: subs.length, diff: d, fig }; }
+  if (key < E.reportingFrom) return { s: 'missing', fig };
+  if (last >= today) return { s: 'open', fig };
+  const due = addDays(last, 5);
+  return { s: today > due ? 'overdue' : 'due', due, fig };
+}
+
+/* ---------- Validation of a stay ---------- */
+function validateStay(E, st, today, ignoreId) {
+  const errors = [], warnings = [];
+  if (!E.reportingFrom) errors.push('Set the reporting start date in the statistical profile first.');
+  if (!st.in || !st.out) { errors.push('Enter the check-in and check-out dates.'); return { errors, warnings }; }
+  if (st.in > today) errors.push('Check-in cannot be after today. A booking is not an arrival.');
+  if (st.out <= st.in) errors.push('Check-out must be at least one night after check-in.');
+  if (errors.length) return { errors, warnings };
+  const guests = stayGuests(st);
+  if (!st.groups.length || guests < 1) errors.push('Add at least one guest.');
+  st.groups.forEach((g, i) => {
+    if (g.kind === 'foreign' && !g.country) errors.push('Group ' + (i + 1) + ': choose the country of residence.');
+    if ((g.m | 0) < 0 || (g.f | 0) < 0 || !Number.isInteger(+g.m) || !Number.isInteger(+g.f)) errors.push('Group ' + (i + 1) + ': guest counts must be whole numbers.');
+  });
+  const nights = stayDates(st);
+  nights.forEach(d => {
+    const covering = st.segs.filter(g => g.from <= d && d < g.to);
+    if (!covering.length) errors.push('No room is given for the night of ' + fmtD(d) + '.');
+    covering.forEach(g => {
+      const rm = E.rooms.find(r => r.no === g.room);
+      if (!rm) errors.push('Room ' + g.room + ' is not in the room list.');
+      else if (!roomActive(rm, d)) errors.push('Room ' + g.room + ' is not available on ' + fmtD(d) + '.');
+      const o = oosOn(E, d).find(x => x.room === g.room);
+      if (o) errors.push('Room ' + g.room + ' is out of service on ' + fmtD(d) + ' (' + o.reason + ').');
+      const other = E.stays.find(s => s.id !== ignoreId && s.in <= d && d < s.out && s.segs.some(x => x.room === g.room && x.from <= d && d < x.to));
+      if (other) errors.push('Room ' + g.room + ' is taken on ' + fmtD(d) + ' by ' + other.ref + '.');
+    });
+    const c = inClosed(E, d); if (c) errors.push(fmtD(d) + ' is in a closed period (' + c.reason + ').');
+    const cap = new Set(covering.map(g => g.room)); const sleeps = [...cap].reduce((a, n) => a + ((E.rooms.find(r => r.no === n) || {}).max || 0), 0);
+    if (sleeps && guests > sleeps && !warnings.some(w => w.startsWith('Capacity'))) warnings.push('Capacity: ' + guests + ' guests in rooms that sleep ' + sleeps + ' on ' + fmtD(d) + '.');
+  });
+  st.segs.forEach(g => { if (g.from < st.in || g.to > st.out || g.from >= g.to) errors.push('Room ' + g.room + ': its dates must fall inside the stay.'); });
+  return { errors: [...new Set(errors)], warnings };
+}
+const lockedMonthsFor = (E, st) => monthsTouched(st).filter(k => E.locks[k]);
+const fmtD = d => { const [y, m, dd] = d.split('-').map(Number); return dd + ' ' + MON3[m - 1] + (y !== 2026 ? ' ' + y : ''); };
+const fmtLong = d => { const [y, m, dd] = d.split('-').map(Number); return dd + ' ' + MONTHS[m - 1] + ' ' + y; };
+
+/* ---------- Scenario data (fictional) ---------- */
+const clone = o => JSON.parse(JSON.stringify(o));
+function seedState() {
+  const S = (id, i, o, segs, groups, extra) => Object.assign({ id, ref: id, in: i, out: o, segs: segs.map(([room, from, to]) => ({ room, from: from || i, to: to || o })), groups, log: [{ at: i, by: 'Manager', action: 'Recorded', detail: 'Stay recorded at check-in', reason: '' }] }, extra || {});
+  const cm = {
+    id: 'cm', name: 'Casa Marina Beach Resort', short: 'Casa Marina', kind: 'Resort', accred: 'Not accredited', aeId: 'ZAM-AE-014',
+    reportingFrom: '2026-08',
+    rooms: [
+      { no: '101', type: 'Standard double', beds: '1 double bed', max: 2 }, { no: '102', type: 'Standard double', beds: '1 double bed', max: 2 },
+      { no: '103', type: 'Standard double', beds: '2 single beds', max: 2 }, { no: '201', type: 'Family room', beds: '2 double beds', max: 4 },
+      { no: '202', type: 'Family room', beds: '2 double beds', max: 4 }, { no: '301', type: 'Suite', beds: '1 king bed, 1 sofa bed', max: 3 }
+    ],
+    oos: [{ id: 'o1', room: '301', from: '2026-09-15', to: '2026-10-05', reason: 'Renovation' }],
+    closed: [{ id: 'c1', from: '2026-07-01', to: '2026-07-31', reason: 'Closed for repairs' }],
+    stays: [
+      S('ST-001', '2026-08-08', '2026-08-11', [['102']], [{ kind: 'phf', m: 1, f: 1 }]),
+      S('ST-002', '2026-08-15', '2026-08-18', [['201']], [{ kind: 'foreign', country: 'KR', m: 2, f: 2 }]),
+      S('ST-016', '2026-08-22', '2026-08-24', [['301']], [{ kind: 'foreign', country: 'CA', m: 1, f: 1 }]),
+      S('ST-003', '2026-08-28', '2026-09-02', [['103']], [{ kind: 'phf', m: 2, f: 1 }]),
+      S('ST-004', '2026-09-05', '2026-09-07', [['101']], [{ kind: 'ofil', m: 1, f: 1 }]),
+      S('ST-005', '2026-09-12', '2026-09-15', [['202']], [{ kind: 'foreign', country: 'DE', m: 1, f: 1 }]),
+      S('ST-006', '2026-09-20', '2026-09-24', [['102']], [{ kind: 'phf', m: 2, f: 0 }]),
+      S('ST-007', '2026-09-27', '2026-10-01', [['201']], [{ kind: 'foreign', country: 'JP', m: 1, f: 2 }]),
+      S('ST-008', '2026-10-03', '2026-10-06', [['103']], [{ kind: 'phf', m: 1, f: 2 }]),
+      S('ST-009', '2026-10-12', '2026-10-15', [['202']], [{ kind: 'foreign', country: 'US', m: 2, f: 0 }]),
+      S('ST-010', '2026-10-18', '2026-10-20', [['101']], [{ kind: 'ofil', m: 1, f: 1 }]),
+      S('ST-011', '2026-10-29', '2026-11-03', [['202', '2026-10-29', '2026-11-01'], ['201', '2026-11-01', '2026-11-03']], [{ kind: 'phf', m: 2, f: 2 }]),
+      S('ST-012', '2026-11-01', '2026-11-04', [['102']], [{ kind: 'foreign', country: 'AU', m: 1, f: 1 }]),
+      S('ST-013', '2026-11-06', '2026-11-09', [['103']], [{ kind: 'phx', m: 1, f: 1 }]),
+      S('ST-014', '2026-11-09', '2026-11-13', [['201']], [{ kind: 'foreign', country: 'US', m: 1, f: 2 }]),
+      S('ST-015', '2026-11-10', '2026-11-12', [['101']], [{ kind: 'phf', m: 2, f: 0 }])
+    ],
+    subs: {}, events: {}, locks: {}
+  };
+  cm.stays.find(s => s.id === 'ST-011').log.push({ at: '2026-11-01', by: 'Manager', action: 'Room transfer', detail: 'Room 202 to room 201 from 1 Nov', reason: 'Room problem' });
+  const submit = (key, at, today) => {
+    const f = monthFigures(cm, key, today);
+    const v = (cm.subs[key] = cm.subs[key] || []).length + 1;
+    cm.subs[key].push({ v, at, by: 'Manager', reason: v === 1 ? '' : 'Correction', snap: snapshotOf(f) });
+    (cm.events[key] = cm.events[key] || []).push({ type: 'submitted', v, at, by: 'Manager', detail: 'Version ' + v + ' submitted' });
+  };
+  submit('2026-08', '2026-09-03', '2026-09-03');
+  submit('2026-09', '2026-10-02', '2026-10-02');
+  cm.events['2026-09'].push({ type: 'finalized', at: '2026-10-08', by: 'Tourism Officer', detail: 'Sent to the province' });
+  cm.locks['2026-09'] = { at: '2026-10-08', by: 'Tourism Officer' };
+  submit('2026-10', '2026-11-02', '2026-11-02');
+  // Corrections made after Oct v1 was submitted.
+  const s9 = cm.stays.find(s => s.id === 'ST-009'); s9.groups[0].f = 1;
+  s9.log.push({ at: '2026-11-05', by: 'Manager', action: 'Guests changed', detail: 'Female guests 0 to 1 (3 guests in all)', reason: 'Correction of a mistake' });
+  const s10 = cm.stays.find(s => s.id === 'ST-010'); s10.out = '2026-10-19'; s10.segs[0].to = '2026-10-19';
+  s10.log.push({ at: '2026-11-05', by: 'Manager', action: 'Ended early', detail: 'Check-out 20 Oct to 19 Oct', reason: 'Guest left early' });
+  const lv = { id: 'lv', name: 'Lagoon View Cottages', short: 'Lagoon View', kind: 'Apartel / rented homes', accred: '', aeId: '', reportingFrom: null, rooms: [], oos: [], closed: [], stays: [], subs: {}, events: {}, locks: {} };
+  return { today: '2026-11-11', ents: { cm, lv }, cur: 'cm', seq: 17 };
+}
+
+/* ---------- UI: state, helpers, shell ---------- */
+let S = seedState();
+const Y25 = [{"ph-filipino":1283,"ph-foreign":0,"overseas-filipino":3,"KR":23,"JP":2,"CN":10,"US":134,"CA":17,"DE":30,"FR":95,"GB":9,"AU":17,"other":238,"rooms":183,"rn":2107,"gn":4822},{"ph-filipino":830,"ph-foreign":0,"overseas-filipino":0,"KR":0,"JP":14,"CN":4,"US":68,"CA":16,"DE":22,"FR":188,"GB":23,"AU":7,"other":186,"rooms":158,"rn":2027,"gn":4517},{"ph-filipino":1007,"ph-foreign":0,"overseas-filipino":0,"KR":12,"JP":15,"CN":10,"US":85,"CA":8,"DE":31,"FR":116,"GB":22,"AU":16,"other":236,"rooms":201,"rn":2171,"gn":5041},{"ph-filipino":1828,"ph-foreign":2,"overseas-filipino":23,"KR":6,"JP":18,"CN":11,"US":74,"CA":11,"DE":28,"FR":145,"GB":12,"AU":17,"other":166,"rooms":201,"rn":2068,"gn":5453},{"ph-filipino":1651,"ph-foreign":0,"overseas-filipino":8,"KR":2,"JP":6,"CN":4,"US":75,"CA":9,"DE":27,"FR":96,"GB":18,"AU":8,"other":80,"rooms":201,"rn":1876,"gn":4823},{"ph-filipino":1070,"ph-foreign":28,"overseas-filipino":2,"KR":12,"JP":0,"CN":9,"US":59,"CA":2,"DE":23,"FR":21,"GB":2,"AU":10,"other":67,"rooms":194,"rn":1236,"gn":3319},{"ph-filipino":751,"ph-foreign":165,"overseas-filipino":0,"KR":16,"JP":12,"CN":7,"US":35,"CA":6,"DE":19,"FR":47,"GB":13,"AU":9,"other":114,"rooms":194,"rn":1496,"gn":3734},{"ph-filipino":888,"ph-foreign":0,"overseas-filipino":0,"KR":2,"JP":69,"CN":8,"US":41,"CA":3,"DE":25,"FR":99,"GB":15,"AU":12,"other":145,"rooms":194,"rn":1717,"gn":4118},{"ph-filipino":758,"ph-foreign":0,"overseas-filipino":0,"KR":1,"JP":3,"CN":8,"US":32,"CA":1,"DE":9,"FR":41,"GB":5,"AU":15,"other":67,"rooms":196,"rn":1167,"gn":2895},{"ph-filipino":1054,"ph-foreign":14,"overseas-filipino":0,"KR":5,"JP":2,"CN":2,"US":46,"CA":12,"DE":11,"FR":266,"GB":9,"AU":2,"other":184,"rooms":194,"rn":1718,"gn":3780},{"ph-filipino":1112,"ph-foreign":12,"overseas-filipino":0,"KR":0,"JP":4,"CN":4,"US":30,"CA":5,"DE":27,"FR":108,"GB":10,"AU":5,"other":123,"rooms":203,"rn":1670,"gn":4264},{"ph-filipino":1980,"ph-foreign":16,"overseas-filipino":0,"KR":0,"JP":4,"CN":1,"US":65,"CA":11,"DE":42,"FR":60,"GB":23,"AU":40,"other":161,"rooms":208,"rn":2227,"gn":6216}];
+const ui = { regMonth: '2026-11', dailyMonth: '2026-10', repMonth: '2026-10', calMonth: '2026-11', filter: 'all', partI: 'summary', formaYear: 2026, compare: 'full', trackYear: 2026, roleLabels: true };
+const E = () => S.ents[S.cur];
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ico = (n, c) => '<span class="ms ' + (c || '') + '" aria-hidden="true">' + n + '</span>';
+const nf = n => n == null ? '–' : Number(n).toLocaleString('en-US');
+const pct = (n, d) => d ? (n / d * 100).toFixed(1) + '%' : 'n/a';
+const dec = n => n == null ? 'n/a' : n.toFixed(2);
+const monthLabel = k => MONTHS[+k.slice(5) - 1] + ' ' + k.slice(0, 4);
+const shiftMonth = (k, d) => { let y = +k.slice(0, 4), m = +k.slice(5) + d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } return y + '-' + pad(m); };
+const clampM = k => k < '2026-01' ? '2026-01' : k > '2026-12' ? '2026-12' : k;
+const wk = d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(dnum(d) * 864e5).getUTCDay()];
+const role = r => '<span class="rt">' + (r === 'o' ? 'Officer' : 'Manager') + '</span>';
+const btn = (cls, icon, label, act, data, r) => '<button type="button" class="btn ' + cls + '" data-act="' + act + '" ' + (data || '') + '>' + (icon ? ico(icon, 'sm') : '') + label + (r ? role(r) : '') + '</button>';
+const pill = (t, txt, i) => '<span class="pill ' + t + '">' + (i ? ico(i, 'sm') : '') + esc(txt) + '</span>';
+const mpick = (k, val) => '<div class="mpick"><button class="iconbtn" data-act="mshift" data-k="' + k + '" data-d="-1" aria-label="Previous month">' + ico('chevron_left') + '</button><span class="cur">' + monthLabel(val) + '</span><button class="iconbtn" data-act="mshift" data-k="' + k + '" data-d="1" aria-label="Next month">' + ico('chevron_right') + '</button></div>';
+
+function stateView(ms) {
+  const m = { submitted: ['t-ok', 'Submitted v' + ms.v, 'check_circle'], changed: ['t-wait', 'Changed since v' + ms.v, 'edit_note'], finalized: ['t-lock', 'Finalized', 'lock'], reopened: ['t-wait', 'Reopened', 'lock_open'],
+    open: ['t-info', 'In progress', 'pending'], due: ['t-wait', 'Due ' + fmtD(ms.due || ''), 'schedule'], overdue: ['t-bad', 'Overdue', 'error'], missing: ['t-bad', 'Not reported', 'report'],
+    na: ['t-mute', 'N/A, not operating', 'block'], future: ['t-mute', 'Not yet', 'hourglass_empty'], notset: ['t-mute', 'Not set up', 'settings'] }[ms.s];
+  return { tone: m[0], label: m[1], icon: m[2] };
+}
+const spill = ms => { const v = stateView(ms); return pill(v.tone, v.label, v.icon); };
+
+/* ---- toasts and dialogs ---- */
+function toast(msg, bad) { const h = $('#toasts'); const t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.innerHTML = ico(bad ? 'error' : 'check_circle', 'fill') + '<span>' + esc(msg) + '</span>'; h.appendChild(t); setTimeout(() => t.remove(), 4200); }
+let modalApi = null;
+function closeModal() { const h = $('#modalHost'); h.innerHTML = ''; modalApi = null; document.body.style.overflow = ''; }
+function modal(o) {
+  const h = $('#modalHost');
+  h.innerHTML = '<div class="ovl" data-ovl><div class="dlg ' + (o.cls || '') + '" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="dh"><h2 id="mTitle">' + esc(o.title) + '</h2><button class="iconbtn" data-m="close" aria-label="Close">' + ico('close') + '</button></div><div class="db" id="mBody">' + o.body + '</div><div class="df">' +
+    (o.buttons || [{ label: 'Close', cls: 'plain' }]).map((b, i) => '<button type="button" class="btn ' + (b.cls || 'plain') + '" data-m="btn" data-i="' + i + '"' + (b.disabled ? ' disabled' : '') + '>' + esc(b.label) + (b.role ? role(b.role) : '') + '</button>').join('') + '</div></div></div>';
+  document.body.style.overflow = 'hidden';
+  const el = h.firstElementChild;
+  const api = { el, body: $('#mBody'), close: closeModal, err(list, tone) { let b = $('#mErr'); if (!b) { b = document.createElement('div'); b.id = 'mErr'; api.body.prepend(b); } list = [].concat(list || []); b.className = list.length ? (tone === 'warn' ? 'warn' : 'err') : ''; b.innerHTML = list.length ? (list.length > 1 ? '<ul>' + list.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : esc(list[0])) : ''; if (list.length) b.scrollIntoView({ block: 'nearest' }); } };
+  modalApi = api; api.opts = o;
+  el.addEventListener('click', ev => {
+    const t = ev.target.closest('[data-m]');
+    if (ev.target === el) return closeModal();
+    if (!t) return;
+    if (t.dataset.m === 'close') return closeModal();
+    if (t.dataset.m === 'btn') { const b = o.buttons[+t.dataset.i]; if (!b.onClick) return closeModal(); if (b.onClick(api) !== false) closeModal(); }
+  });
+  if (o.onOpen) o.onOpen(api);
+  const f = el.querySelector('input,select,textarea,button.btn'); if (f && !o.noFocus) f.focus({ preventScroll: true });
+  return api;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (modalApi) closeModal(); else closeDrawer(); } });
+function lockedDialog(keys, what) {
+  modal({ cls: 'narrow', title: 'This month is finalized', body: '<div class="banner lock">' + ico('lock') + '<div class="bd"><b>' + keys.map(monthLabel).join(' and ') + ' ' + (keys.length > 1 ? 'are' : 'is') + ' finalized.</b><p>' + esc(what) + ' The Tourism Office finalized ' + (keys.length > 1 ? 'them' : 'it') + ' and sent the figures to the province. The Guest Register for a finalized month cannot change until the Tourism Office reopens it with a reason.</p></div></div>', buttons: [{ label: 'Close', cls: 'primary' }] });
+}
+
+/* ---- routes ---- */
+const MENU = {
+  m: [['m-enterprise-profile', 'storefront', 'Enterprise', 'm-enterprise'], ['m-rooms-numbers', 'bed', 'Rooms', 'm-rooms'], ['m-register-stays', 'menu_book', 'Guest Register', 'm-register'], ['m-report-month', 'assignment', 'Monthly Report', 'm-report']],
+  o: [['o-stats-tracker', 'monitoring', 'Statistics', 'o-stats']]
+};
+const TABS = {
+  'm-enterprise': [['m-enterprise-profile', 'query_stats', 'Statistical profile'], ['m-enterprise-listing', 'storefront', 'Listing']],
+  'm-rooms': [['m-rooms-numbers', 'meeting_room', 'Room numbers'], ['m-rooms-oos', 'construction', 'Out of service'], ['m-rooms-calendar', 'calendar_month', 'Availability']],
+  'm-register': [['m-register-stays', 'groups', 'Stays'], ['m-register-daily', 'table_view', 'Daily register (DAE-1A)']],
+  'm-report': [['m-report-month', 'assignment', 'Month (DAE-1B)'], ['m-report-versions', 'history', 'Versions'], ['m-report-year', 'calendar_view_month', 'Year (DAE-1B)']],
+  'o-stats': [['o-stats-tracker', 'fact_check', 'Tracker'], ['o-stats-forma', 'summarize', 'Arrivals Report (FORM A)']]
+};
+const TITLES = { 'm-enterprise': 'Enterprise', 'm-rooms': 'Rooms', 'm-register': 'Guest Register', 'm-report': 'Monthly Report', 'o-stats': 'Statistics' };
+const curRoute = () => { const h = location.hash.slice(1); return TABS_FLAT[h] ? h : 'm-report-month'; };
+const TABS_FLAT = {}; Object.keys(TABS).forEach(g => TABS[g].forEach(t => TABS_FLAT[t[0]] = g));
+const groupOf = r => TABS_FLAT[r];
+
+function render() {
+  const r = curRoute(), g = groupOf(r), rl = r[0];
+  document.body.classList.toggle('show-roles', ui.roleLabels);
+  $('#pRole').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === rl)));
+  $('#pToday').value = S.today;
+  const e = E();
+  const head = rl === 'm'
+    ? '<label class="ent-switch"><span class="sr">Working in</span>' + ico('storefront', 'sm') + '<select id="entSel" data-chg="ent" aria-label="Enterprise">' + Object.values(S.ents).map(x => '<option value="' + x.id + '"' + (x.id === S.cur ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>' + ico('expand_more', 'sm') + '</label>'
+    : '';
+  $('#app').innerHTML =
+    '<div class="portal"><aside class="side"><div class="brand"><div class="seal">ZT</div><div><strong>ZAMBOANGUITA TOURISM</strong><span>' + (rl === 'm' ? 'Enterprise Manager' : 'Tourism Officer') + '</span></div></div>' +
+    '<nav class="menu" aria-label="Portal">' + MENU[rl].map(m => '<a href="#' + m[0] + '" class="' + (m[3] === g ? 'is-current' : '') + '"' + (m[3] === g ? ' aria-current="page"' : '') + '>' + ico(m[1], m[3] === g ? 'fill' : '') + m[2] + '</a>').join('') + '</nav>' +
+    '<div class="foot">Other menu items are unchanged by this revision and are left out of the mockup.</div></aside>' +
+    '<div style="min-width:0"><header class="head"><div class="ttl">' + (rl === 'm' ? 'Enterprise Manager portal' : 'Tourism Officer portal') + '</div>' + head + '<div class="who"><div class="avatar">' + (rl === 'm' ? 'EM' : 'TO') + '</div><div><b>' + (rl === 'm' ? 'Sample Manager' : 'Sample Officer') + '</b><br><small>' + (rl === 'm' ? 'Enterprise Manager' : 'Tourism Officer') + '</small></div></div></header>' +
+    '<main id="main"></main></div></div>';
+  const tabs = TABS[g].map(t => '<a class="tab" role="tab" href="#' + t[0] + '" aria-selected="' + (t[0] === r) + '">' + ico(t[1], 'sm') + t[2] + '</a>').join('');
+  const body = SCREENS[r]();
+  $('#main').innerHTML = '<div class="pg-title"><h1>' + TITLES[g] + '</h1><div class="acts" id="pgActs">' + (body.acts || '') + '</div></div><div class="tabs" role="tablist">' + tabs + '</div>' + body.html;
+  if (body.after) body.after();
+  if (!$('#drawer').hidden) fillDrawer();
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+
+/* ---- delegated events ---- */
+const A = {};
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (t && A[t.dataset.act]) { e.preventDefault(); A[t.dataset.act](t, e); } });
+document.addEventListener('change', e => { const t = e.target.closest('[data-chg]'); if (t && CH[t.dataset.chg]) CH[t.dataset.chg](t, e); });
+const CH = {};
+CH.ent = t => { S.cur = t.value; render(); toast('Working in ' + E().name); };
+CH.today = t => { S.today = t.value; render(); toast('Today is now ' + fmtLong(S.today)); };
+A.mshift = t => { ui[t.dataset.k] = clampM(shiftMonth(ui[t.dataset.k], +t.dataset.d)); render(); };
+A.role = t => { location.hash = t.dataset.v === 'm' ? 'm-register-stays' : 'o-stats-tracker'; if (location.hash.slice(1) === (t.dataset.v === 'm' ? 'm-register-stays' : 'o-stats-tracker')) render(); };
+A.reset = () => { S = seedState(); closeModal(); render(); toast('Scenario reset to the start'); };
+A.roles = () => { ui.roleLabels = !ui.roleLabels; $('#pRoles').setAttribute('aria-pressed', ui.roleLabels); render(); };
+A.go = t => { location.hash = t.dataset.to; };
+A.pickMonth = t => { ui[t.dataset.k] = t.dataset.v; if (t.dataset.to) { location.hash = t.dataset.to; } else render(); };
+A.ui = t => { ui[t.dataset.k] = t.dataset.v; render(); };
+A.copy = t => { try { navigator.clipboard.writeText(t.dataset.v).then(() => toast('Copied'), () => toast('Copy is not available here', true)); } catch (x) { toast('Copy is not available here', true); } };
+
+/* ---- drawers: notes and scenario ---- */
+function closeDrawer() { $('#drawer').hidden = true; }
+let drawerKind = 'notes';
+function fillDrawer() { $('#drawer').innerHTML = drawerKind === 'notes' ? notesHtml() : scenarioHtml(); }
+A.drawer = t => { const d = $('#drawer'); if (!d.hidden && drawerKind === t.dataset.v) { d.hidden = true; return; } drawerKind = t.dataset.v; d.hidden = false; fillDrawer(); };
+A.closeDrawer = closeDrawer;
+
+/* ---------- Manager screens ---------- */
+const SCREENS = {};
+const setupEmpty = (what) => '<div class="empty"><h3>Set up ' + esc(E().name) + ' first</h3><p>' + what + '</p><div class="row" style="justify-content:center">' + btn('primary', 'query_stats', 'Open the statistical profile', 'go', 'data-to="m-enterprise-profile"', 'm') + '</div></div>';
+const ready = e => ({ kind: !!e.kind, rooms: e.rooms.length > 0, start: !!e.reportingFrom });
+const KINDS_AE = ['Hotel', 'Resort', 'Pension inn / lodge', 'Youth hostel / dormitory', 'Apartel / rented homes / apartment', 'Others'];
+
+/* ---- Enterprise ---- */
+SCREENS['m-enterprise-profile'] = () => {
+  const e = E(), r = ready(e), all = r.kind && r.rooms && r.start;
+  const fact = (k, v, miss) => '<div class="fact"><div class="k">' + k + '</div><div class="v' + (miss ? ' miss' : '') + '">' + (v || (miss ? 'Required' : 'None')) + '</div></div>';
+  return { acts: btn('primary', 'edit', 'Edit profile', 'editProfile', '', 'm'), html:
+    (all ? '<div class="banner ok">' + ico('check_circle', 'fill') + '<div class="bd"><b>Ready to report.</b><p>Reports start from ' + monthLabel(e.reportingFrom) + '. Every stay, room and report here belongs to ' + esc(e.name) + ' only.</p></div></div>'
+      : '<div class="banner wait">' + ico('pending_actions') + '<div class="bd"><b>Not ready to report yet.</b><ul>' + (!r.kind ? '<li>Choose the kind of place.</li>' : '') + (!r.rooms ? '<li>Add the room numbers under Rooms.</li>' : '') + (!r.start ? '<li>Set the month reporting starts.</li>' : '') + '</ul></div></div>') +
+    '<section class="panel"><div class="ph"><h2>Statistical profile</h2><span class="sub">Kept apart from the public listing. Sent with every DAE-1B.</span></div><div class="facts">' +
+    fact('Enterprise', esc(e.name)) + fact('Kind of place', esc(e.kind), !e.kind) + fact('DOT accreditation classification', esc(e.accred)) + fact('AE ID code (assigned by the LGU)', esc(e.aeId)) +
+    fact('City / Municipality', 'Zamboanguita') + fact('Province', 'Negros Oriental') + fact('Region', 'Negros Island Region') +
+    fact('Rooms', e.rooms.length ? e.rooms.length + ' room numbers' : '', !e.rooms.length) + fact('Reporting starts', e.reportingFrom ? monthLabel(e.reportingFrom) : '', !e.reportingFrom) + '</div></section>' +
+    '<section class="panel"><div class="ph"><h2>Closed periods</h2>' + btn('outline sm', 'add', 'Add closed period', 'addClosed', '', 'm') + '</div>' +
+    (e.closed.length ? '<div class="scroll"><table class="t"><thead><tr><th>From</th><th>To</th><th>Reason</th><th>Effect on reports</th><th></th></tr></thead><tbody>' + e.closed.map(c => {
+      const ks = []; for (let k = '2026-01'; k <= '2026-12'; k = shiftMonth(k, 1)) { const ms = monthState(e, k, S.today); if (ms.s === 'na') ks.push(MONTHS[+k.slice(5) - 1]); }
+      return '<tr><td>' + fmtLong(c.from) + '</td><td>' + fmtLong(c.to) + '</td><td>' + esc(c.reason) + '</td><td>' + (ks.length ? pill('t-mute', ks.join(', ') + ' reported as N/A') : 'Available room-nights are not counted on these days') + '</td><td class="n">' + btn('cancel sm', 'delete', 'Remove', 'rmClosed', 'data-id="' + c.id + '"', 'm') + '</td></tr>'; }).join('') + '</tbody></table></div>'
+      : '<div class="empty">No closed periods. A month with every day closed is reported as N/A, not as zero.</div>') + '</section>' };
+};
+SCREENS['m-enterprise-listing'] = () => { const e = E(); return { html: '<section class="panel"><div class="ph"><h2>Listing (unchanged by this revision)</h2><span class="sub">Name, photos and description stay where they are today.</span></div><div class="facts"><div class="fact"><div class="k">Name</div><div class="v">' + esc(e.name) + '</div></div><div class="fact"><div class="k">On the site</div><div class="v">Published</div></div><div class="fact"><div class="k">Barangay</div><div class="v">Zamboanguita</div></div></div></section>' }; };
+A.editProfile = () => {
+  const e = E();
+  modal({ cls: 'narrow', title: 'Edit statistical profile', body: '<div class="fld"><span>Kind of place</span><select class="inp" id="pf_kind"><option value="">Choose</option>' + KINDS_AE.map(k => '<option' + (e.kind === k ? ' selected' : '') + '>' + k + '</option>').join('') + '</select></div><div class="fld"><span>DOT accreditation classification</span><input class="inp" id="pf_acc" value="' + esc(e.accred) + '"></div><div class="fld"><span>AE ID code (assigned by the LGU)</span><input class="inp" id="pf_ae" value="' + esc(e.aeId) + '"></div><div class="fld"><span>Reporting starts</span><input class="inp" type="month" id="pf_from" value="' + (e.reportingFrom || '') + '"></div>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Save profile', cls: 'primary', role: 'm', onClick: api => {
+      const kind = $('#pf_kind').value, from = $('#pf_from').value;
+      if (!kind) return api.err('Choose the kind of place.'), false; if (!from) return api.err('Enter the month reporting starts.'), false;
+      const later = Object.keys(e.subs).filter(k => k < from); if (later.length) return api.err('Reports were already submitted for ' + later.map(monthLabel).join(', ') + '. Reporting cannot start after them.'), false;
+      e.kind = kind; e.accred = $('#pf_acc').value.trim(); e.aeId = $('#pf_ae').value.trim(); e.reportingFrom = from; toast('Profile saved'); render(); } }] });
+};
+A.addClosed = () => modal({ cls: 'narrow', title: 'Add closed period', body: '<div class="grid2"><div class="fld"><span>First closed day</span><input class="inp" type="date" id="cp_from"></div><div class="fld"><span>Last closed day</span><input class="inp" type="date" id="cp_to"></div></div><div class="fld"><span>Reason</span><input class="inp" id="cp_why" placeholder="Closed for repairs"></div>', buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Add closed period', cls: 'primary', role: 'm', onClick: api => {
+  const e = E(), f = $('#cp_from').value, t = $('#cp_to').value, why = $('#cp_why').value.trim();
+  if (!f || !t || t < f) return api.err('Enter a first and last closed day, the last on or after the first.'), false; if (!why) return api.err('Give a reason.'), false;
+  const hit = e.stays.find(s => s.in <= t && s.out > f); if (hit) return api.err(hit.ref + ' has nights between those dates. Closed days cannot hold a stay.'), false;
+  const lk = []; for (let k = ymOf(f); k <= ymOf(t); k = shiftMonth(k, 1)) if (e.locks[k]) lk.push(k); if (lk.length) return api.err(lk.map(monthLabel).join(', ') + ' is finalized and cannot change.'), false;
+  e.closed.push({ id: 'c' + (++S.seq), from: f, to: t, reason: why }); toast('Closed period added'); render(); } }] });
+A.rmClosed = t => { const e = E(), c = e.closed.find(x => x.id === t.dataset.id);
+  const lk = []; for (let k = ymOf(c.from); k <= ymOf(c.to); k = shiftMonth(k, 1)) if (e.locks[k]) lk.push(k);
+  if (lk.length) return lockedDialog(lk, 'Removing this closed period would add available room-nights to it.');
+  e.closed = e.closed.filter(x => x !== c); toast('Closed period removed'); render(); };
+
+/* ---- Rooms ---- */
+const occupantOn = (e, no, d) => e.stays.find(s => s.in <= d && d < s.out && s.segs.some(g => g.room === no && g.from <= d && d < g.to));
+SCREENS['m-rooms-numbers'] = () => {
+  const e = E(); const today = S.today;
+  return { acts: btn('primary', 'add', 'Add room', 'addRoom', '', 'm'), html:
+    '<div class="hint">' + ico('info', 'sm') + '<span>Room numbers are used by stays and by the DAE-1A grid. Online booking is not needed. If it is switched on later, bookings use these same rooms.</span></div>' +
+    (e.rooms.length ? '<section class="panel"><div class="scroll"><table class="t"><thead><tr><th>Room</th><th>Type</th><th>Beds</th><th class="n">Sleeps</th><th>Available since</th><th>Tonight</th><th></th></tr></thead><tbody>' +
+      e.rooms.map(r => { const o = occupantOn(e, r.no, today), os = oosOn(e, today).find(x => x.room === r.no);
+        return '<tr><td><b>' + esc(r.no) + '</b></td><td>' + esc(r.type) + '</td><td>' + esc(r.beds) + '</td><td class="n">' + r.max + '</td><td>' + (r.from ? fmtLong(r.from) : 'Before reporting') + '</td><td>' + (os ? pill('t-mute', 'Out of service', 'construction') : o ? pill('t-info', 'In use · ' + o.ref, 'bed') : pill('t-ok', 'Free', 'check')) + '</td><td class="n">' + btn('plain sm', 'edit', 'Edit', 'editRoom', 'data-no="' + esc(r.no) + '"', 'm') + '</td></tr>'; }).join('') + '</tbody></table></div></section>'
+      : setupEmpty('Add each room number you rent out. Stays, the daily register and the monthly report are built from them.')) };
+};
+function roomDialog(r) {
+  const e = E(), isNew = !r;
+  modal({ cls: 'narrow', title: isNew ? 'Add room' : 'Edit room ' + r.no, body: '<div class="grid2"><div class="fld"><span>Room number</span><input class="inp" id="rm_no" value="' + esc(r ? r.no : '') + '"' + (r ? ' disabled' : '') + '></div><div class="fld"><span>Sleeps</span><input class="inp" type="number" min="1" max="12" id="rm_max" value="' + (r ? r.max : 2) + '"></div></div><div class="fld"><span>Type</span><input class="inp" id="rm_type" list="rtypes" value="' + esc(r ? r.type : '') + '"><datalist id="rtypes"><option>Standard double</option><option>Family room</option><option>Suite</option><option>Dormitory bed</option></datalist></div><div class="fld"><span>Beds</span><input class="inp" id="rm_beds" value="' + esc(r ? r.beds : '') + '"></div>' + (isNew ? '<div class="fld"><span>Available from</span><input class="inp" type="date" id="rm_from" value="' + S.today + '"></div>' : ''),
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: isNew ? 'Add room' : 'Save room', cls: 'primary', role: 'm', onClick: api => {
+      const no = $('#rm_no').value.trim(), max = +$('#rm_max').value, type = $('#rm_type').value.trim(), beds = $('#rm_beds').value.trim();
+      if (!no) return api.err('Enter the room number.'), false; if (isNew && e.rooms.some(x => x.no === no)) return api.err('Room ' + no + ' already exists.'), false;
+      if (!(max >= 1 && max <= 12)) return api.err('Sleeps must be between 1 and 12.'), false; if (!type) return api.err('Enter the type.'), false;
+      if (isNew) { const from = $('#rm_from').value; if (!from) return api.err('Enter the date the room became available.'), false;
+        const lk = []; for (let k = ymOf(from); k <= ymOf(S.today); k = shiftMonth(k, 1)) if (e.locks[k]) lk.push(k); if (lk.length) return api.err(lk.map(monthLabel).join(', ') + ' is finalized. A room cannot be added back into it.'), false;
+        e.rooms.push({ no, type, beds, max, from }); e.rooms.sort((a, b) => a.no.localeCompare(b.no)); } else { Object.assign(r, { type, beds, max }); }
+      toast(isNew ? 'Room added' : 'Room saved'); render(); } }] });
+}
+A.addRoom = () => roomDialog(null); A.editRoom = t => roomDialog(E().rooms.find(r => r.no === t.dataset.no));
+
+SCREENS['m-rooms-oos'] = () => {
+  const e = E();
+  return { acts: btn('primary', 'add', 'Add out of service', 'addOos', '', 'm'), html:
+    '<div class="hint">' + ico('info', 'sm') + '<span>A room out of service is not counted as available that day. It cannot hold a stay, and a stay cannot be recorded in it.</span></div>' +
+    (e.oos.length ? '<section class="panel"><div class="scroll"><table class="t"><thead><tr><th>Room</th><th>First day</th><th>Last day</th><th class="n">Days</th><th>Reason</th><th></th></tr></thead><tbody>' + e.oos.map(o => '<tr><td><b>' + esc(o.room) + '</b></td><td>' + fmtLong(o.from) + '</td><td>' + fmtLong(o.to) + '</td><td class="n">' + (dnum(o.to) - dnum(o.from) + 1) + '</td><td>' + esc(o.reason) + '</td><td class="n">' + btn('cancel sm', 'delete', 'Remove', 'rmOos', 'data-id="' + o.id + '"', 'm') + '</td></tr>').join('') + '</tbody></table></div></section>'
+      : e.rooms.length ? '<div class="empty">No rooms are out of service.</div>' : setupEmpty('Add room numbers before marking any out of service.')) };
+};
+A.addOos = () => { const e = E(); if (!e.rooms.length) return toast('Add rooms first', true);
+  modal({ cls: 'narrow', title: 'Add out of service', body: '<div class="fld"><span>Room</span><select class="inp" id="os_room">' + e.rooms.map(r => '<option>' + esc(r.no) + '</option>').join('') + '</select></div><div class="grid2"><div class="fld"><span>First day</span><input class="inp" type="date" id="os_from"></div><div class="fld"><span>Last day</span><input class="inp" type="date" id="os_to"></div></div><div class="fld"><span>Reason</span><select class="inp" id="os_why"><option>Maintenance</option><option>Renovation</option><option>Owner\'s use</option><option>Other</option></select></div>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Add out of service', cls: 'primary', role: 'm', onClick: api => {
+      const room = $('#os_room').value, f = $('#os_from').value, t = $('#os_to').value;
+      if (!f || !t || t < f) return api.err('Enter a first and last day, the last on or after the first.'), false;
+      const hit = e.stays.find(s => s.segs.some(g => g.room === room && g.from <= t && g.to > f)); if (hit) return api.err('Room ' + room + ' has nights in ' + hit.ref + ' (' + fmtD(hit.in) + ' to ' + fmtD(hit.out) + '). Move that stay first.'), false;
+      const lk = []; for (let k = ymOf(f); k <= ymOf(t); k = shiftMonth(k, 1)) if (e.locks[k]) lk.push(k); if (lk.length) return api.err(lk.map(monthLabel).join(', ') + ' is finalized and cannot change.'), false;
+      e.oos.push({ id: 'o' + (++S.seq), room, from: f, to: t, reason: $('#os_why').value }); toast('Room ' + room + ' marked out of service'); render(); } }] }); };
+A.rmOos = t => { const e = E(), o = e.oos.find(x => x.id === t.dataset.id); const lk = []; for (let k = ymOf(o.from); k <= ymOf(o.to); k = shiftMonth(k, 1)) if (e.locks[k]) lk.push(k);
+  if (lk.length) return lockedDialog(lk, 'Putting room ' + o.room + ' back would add available room-nights to it.'); e.oos = e.oos.filter(x => x !== o); toast('Room ' + o.room + ' is available again'); render(); };
+
+SCREENS['m-rooms-calendar'] = () => {
+  const e = E(), key = ui.calMonth, [y, m] = key.split('-').map(Number), days = dim(y, m);
+  if (!e.rooms.length) return { html: setupEmpty('Add room numbers to see which are free on each night.') };
+  let h = '<table class="av"><thead><tr><th class="rn">Room</th>';
+  for (let i = 1; i <= days; i++) { const d = key + '-' + pad(i); h += '<th class="' + (d === S.today ? 'today' : '') + '">' + i + '<br><span style="font-weight:500">' + wk(d)[0] + '</span></th>'; }
+  h += '</tr></thead><tbody>';
+  e.rooms.forEach(r => { h += '<tr><td class="rn">' + esc(r.no) + '<br><span class="mut" style="font-weight:500;font-size:.62rem">' + esc(r.type) + '</span></td>';
+    for (let i = 1; i <= days; i++) { const d = key + '-' + pad(i), s = occupantOn(e, r.no, d);
+      if (!roomActive(r, d)) h += '<td class="cls" title="Not yet available"></td>';
+      else if (inClosed(e, d)) h += '<td class="cls" title="Closed"></td>';
+      else if (oosOn(e, d).some(o => o.room === r.no)) h += '<td class="oos" title="Out of service"></td>';
+      else if (s) h += '<td class="occ" data-act="openStay" data-id="' + s.id + '" title="' + s.ref + '" tabindex="0">' + (s.in === d ? '▸' : '') + '</td>';
+      else h += '<td class="' + (d >= S.today ? 'fut' : '') + '"></td>'; }
+    h += '</tr>'; });
+  h += '</tbody></table>';
+  return { acts: mpick('calMonth', key), html: '<section class="panel"><div class="ph"><h2>Rooms by night</h2><span class="sub">The night of a date is the night that starts that evening. Click an occupied night to open the stay.</span></div><div class="scroll">' + h + '</div><div class="lg" style="margin-top:.75rem"><span><i class="sw-occ"></i>Occupied (▸ check-in night)</span><span><i class="sw-oos"></i>Out of service</span><span><i class="sw-cls"></i>Closed or not yet available</span><span><i class="sw-free"></i>Free</span></div></section>' };
+};
+
+/* ---- Guest Register: stays ---- */
+const roomsText = s => s.segs.map((g, i) => (i ? ' → ' : '') + g.room + (i && g.from > s.in ? ' (from ' + fmtD(g.from) + ')' : '')).join('');
+const groupsText = s => s.groups.map(g => (g.kind === 'foreign' ? COUNTRIES[g.country] : rowLabel(g.kind)) + ' ' + gTotal(g)).join(', ');
+const sexText = s => { const m = s.groups.reduce((a, g) => a + (g.m | 0), 0), f = s.groups.reduce((a, g) => a + (g.f | 0), 0); return m + ' male, ' + f + ' female'; };
+function stayInMonth(s, key) { return monthsTouched(s).includes(key); }
+function stayMonthEffect(e, s) {
+  const out = {}; const g = stayGuests(s);
+  monthsTouched(s).forEach(k => out[k] = { arr: 0, gn: 0, rn: 0 });
+  out[ymOf(s.in)].arr = g;
+  stayDates(s).forEach(d => { const o = out[ymOf(d)]; o.gn += g; o.rn += new Set(s.segs.filter(x => x.from <= d && d < x.to).map(x => x.room)).size; });
+  return out;
+}
+SCREENS['m-register-stays'] = () => {
+  const e = E(), key = ui.regMonth;
+  if (!e.rooms.length || !e.reportingFrom) return { html: setupEmpty('Add room numbers and set when reporting starts, then record each stay here.') };
+  const f = monthFigures(e, key, S.today), ms = monthState(e, key, S.today);
+  let list = e.stays.filter(s => stayInMonth(s, key)).sort((a, b) => a.in.localeCompare(b.in) || a.id.localeCompare(b.id));
+  const carry = s => ymOf(s.in) < key;
+  if (ui.filter === 'arrived') list = list.filter(s => !carry(s)); if (ui.filter === 'carry') list = list.filter(carry);
+  const lockedM = e.locks[key];
+  return { acts: btn('primary', 'add', 'Record a stay', 'newStay', '', 'm'), html:
+    '<div class="row" style="justify-content:space-between">' + mpick('regMonth', key) + '<div class="row">' + spill(ms) + (lockedM ? pill('t-lock', 'Register locked', 'lock') : '') + '</div></div>' +
+    (lockedM ? '<div class="banner lock">' + ico('lock') + '<div class="bd"><b>' + monthLabel(key) + ' is finalized.</b><p>Stays with an arrival or a night in this month cannot be added or changed until the Tourism Office reopens it.</p></div></div>' : '') +
+    (f.partial ? '<div class="hint">' + ico('info', 'sm') + '<span>Month to date. Nights are counted through ' + fmtD(f.through) + '. Arrivals through ' + fmtD(S.today) + '.</span></div>' : '') +
+    '<div class="tiles"><div class="tile"><span class="k">Guests arrived</span><span class="v">' + nf(f.arrivalsTotal) + '</span><span class="n">' + f.am + ' male, ' + f.af + ' female</span></div><div class="tile"><span class="k">Guest-nights</span><span class="v">' + nf(f.guestNights) + '</span><span class="n">includes guests who arrived earlier</span></div><div class="tile"><span class="k">Room-nights occupied</span><span class="v">' + nf(f.roomNights) + '</span><span class="n">of ' + nf(f.available) + ' available</span></div><div class="tile"><span class="k">Stays</span><span class="v">' + list.length + '</span><span class="n">' + list.filter(carry).length + ' continue from before</span></div></div>' +
+    '<div class="chips" role="group" aria-label="Filter">' + [['all', 'All stays'], ['arrived', 'Arrived this month'], ['carry', 'Continuing from last month']].map(c => '<button class="chip" data-act="ui" data-k="filter" data-v="' + c[0] + '" aria-pressed="' + (ui.filter === c[0]) + '">' + c[1] + '</button>').join('') + '</div>' +
+    (list.length ? '<div>' + list.map(s => { const lk = lockedMonthsFor(e, s).length, ch = s.log.length > 1;
+      return '<div class="rg-row' + (carry(s) ? ' carry' : '') + '"><div class="ref">' + s.ref + '</div><div class="c"><b>' + fmtD(s.in) + ' → ' + fmtD(s.out) + '</b> · ' + stayNights(s) + ' night' + (stayNights(s) > 1 ? 's' : '') + '<small>Room ' + esc(roomsText(s)) + '</small></div><div class="c"><b>' + stayGuests(s) + ' guest' + (stayGuests(s) > 1 ? 's' : '') + '</b><small>' + sexText(s) + '</small></div><div class="c x"><small style="color:inherit">' + esc(groupsText(s)) + '</small>' + (carry(s) ? '<small>Arrived in ' + MONTHS[+s.in.slice(5, 7) - 1] + ', nights count here</small>' : '') + '</div><div class="row">' + (lk ? pill('t-lock', 'Locked', 'lock') : '') + (ch && s.log.length > 1 ? pill('t-mute', 'Edited ' + (s.log.length - 1) + '×') : '') + btn('plain sm', 'open_in_new', 'Open', 'openStay', 'data-id="' + s.id + '"') + '</div></div>'; }).join('') + '</div>'
+      : '<div class="empty"><h3>No stays in ' + monthLabel(key) + '</h3>Record each stay when the guests check in. The DAE-1A and DAE-1B are built from these records.</div>') };
+};
+A.openStay = t => stayDialog(t.dataset.id);
+function stayDialog(id) {
+  const e = E(), s = e.stays.find(x => x.id === id); if (!s) return;
+  const eff = stayMonthEffect(e, s), locked = lockedMonthsFor(e, s);
+  modal({ cls: 'wide', title: 'Stay ' + s.ref, body:
+    (locked.length ? '<div class="banner lock">' + ico('lock') + '<div class="bd"><b>Locked: ' + locked.map(monthLabel).join(', ') + ' finalized.</b><p>This stay cannot change until the Tourism Office reopens ' + (locked.length > 1 ? 'those months' : 'that month') + '.</p></div></div>' : '') +
+    '<div class="facts"><div class="fact"><div class="k">Check-in</div><div class="v">' + fmtLong(s.in) + '</div></div><div class="fact"><div class="k">Check-out</div><div class="v">' + fmtLong(s.out) + (s.out > S.today ? ' (expected)' : '') + '</div></div><div class="fact"><div class="k">Nights</div><div class="v">' + stayNights(s) + '</div></div><div class="fact"><div class="k">Rooms</div><div class="v">' + esc(roomsText(s)) + '</div></div><div class="fact"><div class="k">Guests</div><div class="v">' + stayGuests(s) + ' · ' + sexText(s) + '</div></div></div>' +
+    '<div><div class="lbl">Where this stay counts</div><div class="scroll"><table class="t"><thead><tr><th>Month</th><th class="n">Guests arrived</th><th class="n">Guest-nights</th><th class="n">Room-nights</th><th>Report</th></tr></thead><tbody>' + Object.keys(eff).sort().map(k => { const ms = monthState(e, k, S.today); return '<tr><td>' + monthLabel(k) + '</td><td class="n">' + eff[k].arr + '</td><td class="n">' + eff[k].gn + '</td><td class="n">' + eff[k].rn + '</td><td>' + spill(ms) + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
+    '<div><div class="lbl">Guests by residence</div><div class="scroll"><table class="t"><thead><tr><th>Residence</th><th class="n">Male</th><th class="n">Female</th><th class="n">Total</th></tr></thead><tbody>' + s.groups.map(g => '<tr><td>' + esc(KINDS[g.kind]) + (g.kind === 'foreign' ? ' · ' + COUNTRIES[g.country] : '') + '</td><td class="n">' + g.m + '</td><td class="n">' + g.f + '</td><td class="n">' + gTotal(g) + '</td></tr>').join('') + '</tbody></table></div></div>' +
+    '<div><div class="lbl">History</div><div class="log">' + s.log.slice().reverse().map(l => '<div><span class="mut">' + fmtD(l.at) + '</span><span><b>' + esc(l.action) + '</b> · ' + esc(l.detail) + (l.reason ? ' <span class="mut">(' + esc(l.reason) + ')</span>' : '') + '</span></div>').join('') + '</div></div>' +
+    '<p class="mut sm" style="margin:0">No guest names or contact details are kept in this record.</p>',
+    buttons: [{ label: 'Close', cls: 'plain' }, { label: 'Transfer room', cls: 'outline', role: 'm', onClick: () => { closeModal(); transferDialog(id); return false; } }, { label: 'Change check-out', cls: 'outline', role: 'm', onClick: () => { closeModal(); outDialog(id); return false; } }, { label: 'Change guests', cls: 'outline', role: 'm', onClick: () => { closeModal(); stayForm(id, 'groups'); return false; } }, { label: 'Edit all details', cls: 'primary', role: 'm', onClick: () => { closeModal(); stayForm(id); return false; } }] });
+}
+const REASONS = ['Correction of a mistake', 'Guest extended the stay', 'Guest left early', 'Room problem', 'Other'];
+const reasonField = () => '<div class="fld"><span>Reason for the change</span><select class="inp" id="why">' + REASONS.map(r => '<option>' + r + '</option>').join('') + '</select></div><div class="fld" id="whyNoteBox" hidden><span>Describe the reason</span><input class="inp" id="whyNote"></div>';
+const wireReason = () => { const s = $('#why'); if (s) s.addEventListener('change', () => { $('#whyNoteBox').hidden = s.value !== 'Other'; }); };
+const readReason = api => { const w = $('#why').value; if (w === 'Other' && !$('#whyNote').value.trim()) { api.err('Describe the reason.'); return null; } return w === 'Other' ? $('#whyNote').value.trim() : w; };
+function afterChange(e, keys, msg) {
+  const ch = keys.filter(k => { const m = monthState(e, k, S.today); return m.s === 'changed'; });
+  toast(msg + (ch.length ? ' ' + ch.map(monthLabel).join(', ') + ' now differs from the submitted version.' : ''));
+  render();
+}
+function commitStay(e, old, nw, action, detail, reason) {
+  nw.log = (old ? old.log : []).concat([{ at: S.today, by: 'Manager', action, detail, reason: reason || '' }]);
+  const keys = new Set(monthsTouched(nw)); if (old) { monthsTouched(old).forEach(k => keys.add(k)); Object.assign(old, nw); } else e.stays.push(nw);
+  return [...keys];
+}
+function transferDialog(id) {
+  const e = E(), s = e.stays.find(x => x.id === id); const lk = [...new Set([...lockedMonthsFor(e, s)])]; if (lk.length) return lockedDialog(lk, 'This stay has nights in it, so its rooms cannot change.');
+  const dates = stayDates(s);
+  modal({ cls: 'narrow', title: 'Transfer room · ' + s.ref, body: '<div class="grid2"><div class="fld"><span>Moves on</span><select class="inp" id="tr_d">' + dates.map(d => '<option value="' + d + '">' + fmtLong(d) + '</option>').join('') + '</select></div><div class="fld"><span>To room</span><select class="inp" id="tr_r">' + e.rooms.map(r => '<option>' + esc(r.no) + '</option>').join('') + '</select></div></div><div class="hint">' + ico('info', 'sm') + '<span>The guests keep their check-in. A transfer is not a new arrival and adds no guests. Nights from the move date are counted in the new room.</span></div>' + reasonField(),
+    onOpen: wireReason, buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Transfer', cls: 'primary', role: 'm', onClick: api => {
+      const d = $('#tr_d').value, rm = $('#tr_r').value, why = readReason(api); if (!why) return false;
+      const segs = []; s.segs.forEach(g => { if (g.to <= d) segs.push({ ...g }); else if (g.from >= d) segs.push({ room: rm, from: g.from, to: g.to }); else { segs.push({ room: g.room, from: g.from, to: d }); segs.push({ room: rm, from: d, to: g.to }); } });
+      const nw = { ...clone(s), segs }; const v = validateStay(e, nw, S.today, s.id); if (v.errors.length) return api.err(v.errors), false;
+      const keys = commitStay(e, s, nw, 'Room transfer', 'Moves to room ' + rm + ' from ' + fmtD(d), why); afterChange(e, keys, 'Room transferred. No new arrival counted.'); } }] });
+}
+function outDialog(id) {
+  const e = E(), s = e.stays.find(x => x.id === id); const lk = lockedMonthsFor(e, s); if (lk.length) return lockedDialog(lk, 'This stay has nights in it, so its check-out cannot change.');
+  modal({ cls: 'narrow', title: 'Change check-out · ' + s.ref, body: '<div class="fld"><span>New check-out date</span><input class="inp" type="date" id="co_d" value="' + s.out + '" min="' + addDays(s.in, 1) + '"></div><div class="hint">' + ico('info', 'sm') + '<span>Currently ' + fmtLong(s.out) + '. A later date extends the stay in the same room. An earlier date ends it early. The night of check-out is never counted.</span></div>' + reasonField(),
+    onOpen: wireReason, buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Save check-out', cls: 'primary', role: 'm', onClick: api => {
+      const d = $('#co_d').value, why = readReason(api); if (!why) return false; if (!d || d === s.out) return api.err('Choose a different date.'), false;
+      const segs = s.segs.map(g => ({ ...g })).filter(g => g.from < d); segs.forEach(g => { if (d > s.out) { if (g.to === s.out) g.to = d; } else if (g.to > d) g.to = d; });
+      const nw = { ...clone(s), out: d, segs }; const v = validateStay(e, nw, S.today, s.id); if (v.errors.length) return api.err(v.errors.concat(d > s.out ? ['Use Transfer room if the guests move to a free room for the extra nights.'] : [])), false;
+      const keys = commitStay(e, s, nw, d > s.out ? 'Extended' : 'Ended early', 'Check-out ' + fmtD(s.out) + ' to ' + fmtD(d), why); afterChange(e, keys, d > s.out ? 'Stay extended.' : 'Stay ended early.'); } }] });
+}
+
+/* ---------- Record / edit a stay ---------- */
+const KSHORT = { phf: 'Philippine resident · Filipino', phx: 'Philippine resident · foreign national', foreign: 'Lives abroad · by country of residence', ofil: 'Overseas Filipino (lives abroad)', unspec: 'Residence not stated' };
+function stayForm(id, focus) {
+  const e = E(), old = id ? e.stays.find(x => x.id === id) : null;
+  if (!e.rooms.length || !e.reportingFrom) return toast('Set up rooms and the reporting start first', true);
+  if (old) { const lk = lockedMonthsFor(e, old); if (lk.length) return lockedDialog(lk, 'This stay has an arrival or nights in it.'); }
+  const fs = old ? clone(old) : { in: S.today, out: addDays(S.today, 1), segs: [{ room: e.rooms[0].no, from: S.today, to: addDays(S.today, 1) }], groups: [{ kind: 'phf', country: '', m: 1, f: 0 }], log: [] };
+  const sync = () => { if (fs.segs.length === 1) { fs.segs[0].from = fs.in; fs.segs[0].to = fs.out; } };
+  const html = () => {
+    const rooms = e.rooms.map(r => '<option value="' + esc(r.no) + '">' + esc(r.no) + ' · ' + esc(r.type) + ' (sleeps ' + r.max + ')</option>').join('');
+    return '<div class="grid2"><label class="fld"><span>Check-in</span><input class="inp" type="date" data-f="in" max="' + S.today + '" value="' + fs.in + '"></label><label class="fld"><span>Check-out</span><input class="inp" type="date" data-f="out" value="' + fs.out + '"></label></div>' +
+      '<div class="hint">' + ico('info', 'sm') + '<span>' + (fs.in && fs.out && fs.out > fs.in ? stayNights(fs) + ' night' + (stayNights(fs) > 1 ? 's' : '') + '. The night of check-out is not counted.' : 'Check-out is the day the guests leave.') + '</span></div>' +
+      '<div><div class="lbl" style="margin-bottom:.4rem">Rooms</div><div style="display:flex;flex-direction:column;gap:.5rem">' + fs.segs.map((g, i) => '<div class="sg"><label class="fld"><span>Room</span><select class="inp" data-s="' + i + '.room">' + rooms.replace('value="' + g.room + '"', 'value="' + g.room + '" selected') + '</select></label><label class="fld"><span>From</span><input class="inp" type="date" data-s="' + i + '.from" value="' + g.from + '"' + (fs.segs.length === 1 ? ' disabled' : '') + '></label><label class="fld"><span>Until (leaves the room)</span><input class="inp" type="date" data-s="' + i + '.to" value="' + g.to + '"' + (fs.segs.length === 1 ? ' disabled' : '') + '></label>' + (fs.segs.length > 1 ? '<button type="button" class="btn cancel sm rm" data-m2="segdel" data-i="' + i + '">Remove</button>' : '<span></span>') + '</div>').join('') + '</div><div style="margin-top:.5rem">' + '<button type="button" class="btn plain sm" data-m2="segadd">' + ico('add', 'sm') + 'Add another room</button></div></div>' +
+      '<div id="grpSec"><div class="lbl" style="margin-bottom:.4rem">Guests who arrived</div><div style="display:flex;flex-direction:column;gap:.5rem">' + fs.groups.map((g, i) => '<div class="gp"><label class="fld"><span>Residence</span><select class="inp" data-g="' + i + '.kind">' + Object.keys(KSHORT).map(k => '<option value="' + k + '"' + (g.kind === k ? ' selected' : '') + '>' + KSHORT[k] + '</option>').join('') + '</select></label>' +
+        (g.kind === 'foreign' ? '<label class="fld"><span>Country of residence</span><select class="inp" data-g="' + i + '.country"><option value="">Choose</option>' + Object.keys(COUNTRIES).map(c => '<option value="' + c + '"' + (g.country === c ? ' selected' : '') + '>' + COUNTRIES[c] + '</option>').join('') + '</select></label>' : '<span></span>') +
+        '<div class="fld"><span>Male</span><div class="stepper"><button type="button" data-m2="dec" data-i="' + i + '" data-s="m" aria-label="Fewer male guests">−</button><output>' + g.m + '</output><button type="button" data-m2="inc" data-i="' + i + '" data-s="m" aria-label="More male guests">+</button></div></div>' +
+        '<div class="fld"><span>Female</span><div class="stepper"><button type="button" data-m2="dec" data-i="' + i + '" data-s="f" aria-label="Fewer female guests">−</button><output>' + g.f + '</output><button type="button" data-m2="inc" data-i="' + i + '" data-s="f" aria-label="More female guests">+</button></div></div>' +
+        (fs.groups.length > 1 ? '<button type="button" class="btn cancel sm rm" data-m2="grpdel" data-i="' + i + '">Remove</button>' : '<span></span>') +
+        (g.kind === 'ofil' ? '<div class="hint" style="grid-column:1/-1">' + ico('info', 'sm') + '<span>Philippine passport holders permanently living abroad. Overseas Filipino workers are not included.</span></div>' : '') + '</div>').join('') + '</div><div style="margin-top:.5rem"><button type="button" class="btn plain sm" data-m2="grpadd">' + ico('add', 'sm') + 'Add a guest group with a different residence</button></div></div>' +
+      '<div class="hint">' + ico('lock', 'sm') + '<span>Only counts are kept. No names, contact numbers or ID details go in a statistical record.</span></div>' +
+      (old ? reasonField() : '') + '<div id="chk"></div>';
+  };
+  let api;
+  const checks = () => { const v = validateStay(e, fs, S.today, id); const lk = lockedMonthsFor(e, fs).concat(old ? lockedMonthsFor(e, old) : []); const errs = v.errors.concat(lk.length ? [[...new Set(lk)].map(monthLabel).join(', ') + ' is finalized, so this stay cannot be saved there.'] : []);
+    $('#chk').innerHTML = errs.length ? '<div class="err"><b>Cannot save yet</b><ul>' + errs.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>' : (v.warnings.length ? '<div class="warn"><b>Check this</b><ul style="margin:.25rem 0 0;padding-left:1.1rem">' + v.warnings.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>It can still be saved.</div>' : '<div class="banner ok">' + ico('check_circle', 'fill') + '<div class="bd"><b>Ready to save.</b> ' + stayGuests(fs) + ' guest' + (stayGuests(fs) > 1 ? 's' : '') + ' arrive on ' + (fs.in ? fmtD(fs.in) : '…') + ', ' + (fs.in && fs.out > fs.in ? stayGuests(fs) * stayNights(fs) : 0) + ' guest-nights in all.</div></div>'); return errs; };
+  const redraw = () => { api.body.innerHTML = html(); wireReason(); checks(); };
+  api = modal({ cls: '', title: old ? 'Edit stay ' + old.ref : 'Record a stay', noFocus: true, body: html(),
+    onOpen: a => { api = a; wireReason(); checks();
+      a.el.addEventListener('input', ev => { const t = ev.target; if (t.dataset.f) { fs[t.dataset.f] = t.value; sync(); if (t.dataset.f === 'in' && fs.out <= fs.in && fs.in) { fs.out = addDays(fs.in, 1); sync(); redraw(); return; } checks(); } else if (t.dataset.s) { const [i, p] = t.dataset.s.split('.'); fs.segs[+i][p] = t.value; checks(); } });
+      a.el.addEventListener('change', ev => { const t = ev.target; if (t.dataset.g) { const [i, p] = t.dataset.g.split('.'); fs.groups[+i][p] = t.value; if (p === 'kind') { if (t.value !== 'foreign') fs.groups[+i].country = ''; redraw(); } else checks(); } else if (t.dataset.f) { redraw(); } });
+      a.el.addEventListener('click', ev => { const t = ev.target.closest('[data-m2]'); if (!t) return; const i = +t.dataset.i, k = t.dataset.m2;
+        if (k === 'inc' || k === 'dec') { const g = fs.groups[i]; g[t.dataset.s] = Math.max(0, (g[t.dataset.s] | 0) + (k === 'inc' ? 1 : -1)); t.parentNode.querySelector('output').textContent = g[t.dataset.s]; checks(); return; }
+        if (k === 'segadd') { fs.segs.push({ room: e.rooms[0].no, from: fs.in, to: fs.out }); } if (k === 'segdel') fs.segs.splice(i, 1);
+        if (k === 'grpadd') fs.groups.push({ kind: 'ofil', country: '', m: 1, f: 0 }); if (k === 'grpdel') fs.groups.splice(i, 1); redraw(); });
+      if (focus === 'groups') setTimeout(() => $('#grpSec').scrollIntoView({ block: 'start' }), 30); },
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: old ? 'Save changes' : 'Save stay', cls: 'primary', role: 'm', onClick: a => {
+      const errs = checks(); if (errs.length) { a.err(errs); return false; }
+      let why = ''; if (old) { why = readReason(a); if (!why) return false; }
+      const nw = clone(fs); nw.groups = nw.groups.filter(g => gTotal(g) > 0); nw.ref = old ? old.ref : null;
+      if (old) { const bits = []; if (old.in !== nw.in) bits.push('check-in ' + fmtD(old.in) + ' to ' + fmtD(nw.in)); if (old.out !== nw.out) bits.push('check-out ' + fmtD(old.out) + ' to ' + fmtD(nw.out)); if (roomsText(old) !== roomsText(nw)) bits.push('rooms ' + roomsText(old) + ' to ' + roomsText(nw)); if (stayGuests(old) !== stayGuests(nw) || sexText(old) !== sexText(nw)) bits.push('guests ' + stayGuests(old) + ' to ' + stayGuests(nw));
+        const keys = commitStay(e, old, nw, 'Edited', bits.join('; ') || 'Details saved', why); afterChange(e, keys, 'Stay saved.'); }
+      else { nw.id = nw.ref = 'ST-' + String(S.seq++).padStart(3, '0'); const keys = commitStay(e, null, nw, 'Recorded', 'Stay recorded', ''); ui.regMonth = ymOf(nw.in); afterChange(e, keys, 'Stay ' + nw.ref + ' recorded.'); } } }] });
+}
+A.newStay = () => stayForm(null);
+
+/* ---------- DAE-1A, daily register ---------- */
+SCREENS['m-register-daily'] = () => {
+  const e = E(), key = ui.dailyMonth;
+  if (!e.rooms.length || !e.reportingFrom) return { html: setupEmpty('Add room numbers and set when reporting starts. The daily register fills itself from the stays.') };
+  const f = monthFigures(e, key, S.today), ms = monthState(e, key, S.today), act = e.rooms.filter(r => roomActive(r, key + '-' + pad(f.days)));
+  let h = '<table class="t dae"><thead><tr><th class="stk" rowspan="2">Day</th><th colspan="' + act.length + '" style="text-align:center">Room identification</th><th class="n" rowspan="2">(5) Guests<br>checked in</th><th class="n" rowspan="2">(6) Guests staying<br>overnight<br>(guest-nights)</th><th class="n" rowspan="2">(7) Rooms<br>occupied</th><th class="n" rowspan="2" title="Not a column of the printed form">Rooms<br>available*</th></tr><tr>' + act.map(r => '<th class="n" style="text-align:center">' + esc(r.no) + '</th>').join('') + '</tr></thead><tbody>';
+  f.daily.forEach(d => { const dd = +d.date.slice(8), isToday = d.date === S.today, fut = d.date > S.today;
+    h += '<tr class="' + (fut ? 'fut' : '') + '"><td class="stk ' + (isToday ? 'today' : '') + '"><b>' + dd + '</b> <span class="mut">' + wk(d.date) + '</span></td>';
+    act.forEach(r => { const s = occupantOn(e, r.no, d.date); h += '<td class="mk' + (s && s.in === d.date ? ' hl' : '') + '">' + (s ? '<span class="d" title="' + s.ref + '"></span>' : d.oosRooms.has(r.no) ? '<span class="o" title="Out of service"></span>' : '') + '</td>'; });
+    h += '<td class="n' + (d.checkin ? ' hl' : '') + '">' + (fut ? '' : d.checkin || '') + '</td><td class="n">' + (d.counted ? d.nights : '') + '</td><td class="n">' + (d.counted ? d.occupied : '') + '</td><td class="n dim">' + (d.counted ? (d.closed ? 'closed' : d.available) : '') + '</td></tr>'; });
+  h += '<tr class="sum"><td class="stk">Total of this month</td><td colspan="' + act.length + '"></td><td class="n">' + f.arrivalsTotal + '</td><td class="n">' + f.guestNights + '</td><td class="n">' + f.roomNights + '</td><td class="n">' + f.available + '</td></tr></tbody></table>';
+  return { acts: mpick('dailyMonth', key), html:
+    '<div class="row" style="justify-content:space-between"><div class="row"><b>Form DAE-1A</b><span class="mut">Monthly recording format · (4) Total number of rooms: <b>' + f.rooms + '</b></span></div>' + spill(ms) + '</div>' +
+    '<div class="banner info">' + ico('auto_awesome') + '<div class="bd"><b>Built from the stays. Nothing to type.</b><p>A guest is highlighted on the day of check-in and counted overnight every night until the night before check-out. Edit a stay and this page and the DAE-1B follow.' + (f.partial ? ' Month to date, through ' + fmtD(f.through) + '.' : '') + '</p></div></div>' +
+    '<section class="panel"><div class="scroll">' + h + '</div><div class="lg" style="margin-top:.75rem"><span><i class="sw-occ"></i>Room occupied that night (highlighted cell: check-in day)</span><span><i class="sw-oos"></i>Out of service</span></div>' +
+    '<p class="mut sm" style="margin:.75rem 0 0">* Added for information; the printed DAE-1A has no available-rooms column. Guests per room are not recorded; (5) to (7) are exact.</p></section>' +
+    '<section class="panel"><div class="ph"><h2>Formulas on the form</h2></div><div class="tiles"><div class="tile"><span class="k">Average guest-nights<br>(length of stay)</span><span class="v">' + dec(f.alos) + '</span><span class="n">' + f.guestNights + ' guest-nights ÷ ' + f.arrivalsTotal + ' check-ins</span></div><div class="tile"><span class="k">Average room occupancy rate</span><span class="v">' + (f.occ == null ? 'n/a' : (f.occ * 100).toFixed(1) + '%') + '</span><span class="n">' + f.roomNights + ' rooms occupied ÷ ' + f.available + ' available</span></div><div class="tile"><span class="k">Average guests per room</span><span class="v">' + dec(f.perRoom) + '</span><span class="n">' + f.guestNights + ' guest-nights ÷ ' + f.roomNights + ' rooms occupied</span></div></div></section>' };
+};
+
+/* ---------- DAE-1B, one month ---------- */
+function dae1bHtml(f, o) {
+  o = o || {};
+  const keys = Object.keys(f.arrivals), foreign = Object.keys(COUNTRIES).filter(c => f.arrivals['foreign:' + c]);
+  const get = k => f.arrivals[k] || { m: 0, f: 0 };
+  const day = o.day && f.byDay;
+  const colspan = day ? f.days + 2 : 4;
+  const row = (label, k, cls) => { const a = get(k); if (day) { const arr = f.byDay[k] || Array(f.days).fill(0); return '<tr class="' + (cls || '') + '"><td class="stk">' + label + '</td>' + arr.map(n => '<td class="n ' + (n ? '' : 'dim') + '">' + (n || '') + '</td>').join('') + '<td class="n"><b>' + (a.m + a.f) + '</b></td></tr>'; }
+    return '<tr class="' + (cls || '') + '"><td>' + label + '</td><td class="n">' + a.m + '</td><td class="n">' + a.f + '</td><td class="n"><b>' + (a.m + a.f) + '</b></td></tr>'; };
+  const sumRow = (label, ks, cls) => { const a = ks.reduce((x, k) => ({ m: x.m + get(k).m, f: x.f + get(k).f }), { m: 0, f: 0 });
+    if (day) { const arr = Array(f.days).fill(0); ks.forEach(k => (f.byDay[k] || []).forEach((n, i) => arr[i] += n)); return '<tr class="' + (cls || 'sum') + '"><td class="stk">' + label + '</td>' + arr.map(n => '<td class="n">' + (n || '') + '</td>').join('') + '<td class="n">' + (a.m + a.f) + '</td></tr>'; }
+    return '<tr class="' + (cls || 'sum') + '"><td>' + label + '</td><td class="n">' + a.m + '</td><td class="n">' + a.f + '</td><td class="n">' + (a.m + a.f) + '</td></tr>'; };
+  const grp = t => '<tr class="grp"><td class="stk" colspan="' + (day ? 1 : 1) + '">' + t + '</td>' + (day ? '<td colspan="' + (f.days + 1) + '"></td>' : '<td colspan="3"></td>') + '</tr>';
+  let h = '<table class="t"><thead><tr><th class="stk">Country of residence</th>' + (day ? [...Array(f.days)].map((_, i) => '<th class="n">' + (i + 1) + '</th>').join('') + '<th class="n">Total</th>' : '<th class="n">Male</th><th class="n">Female</th><th class="n">Total</th>') + '</tr></thead><tbody>' +
+    grp('PHILIPPINE RESIDENTS') + row('Filipino nationality', 'phf') + row('Foreign nationality', 'phx') + sumRow('Total Philippine residents', ['phf', 'phx']) +
+    grp('NON-PHILIPPINE RESIDENTS') + (foreign.length ? foreign.map(c => row(COUNTRIES[c], 'foreign:' + c)).join('') : '<tr><td colspan="' + colspan + '" class="dim">No arrivals from outside the Philippines</td></tr>') + sumRow('Total non-Philippine residents', keys.filter(k => k.startsWith('foreign:'))) +
+    row('Overseas Filipinos*', 'ofil', 'sum') + row('Guests with unspecified residence', 'unspec', 'sum') + sumRow('GRAND TOTAL GUEST ARRIVALS', keys, 'grand') + '</tbody></table>';
+  const v = f.vol, vr = (l, x) => '<tr><td>' + l + '</td><td class="n">' + x.m + '</td><td class="n">' + x.f + '</td><td class="n">' + (x.m + x.f) + '</td></tr>';
+  const occ = f.occ == null ? 'n/a' : (f.occ * 100).toFixed(1) + '%';
+  return '<section class="panel"><div class="ph"><h2>Part I. Guest arrivals by nationality / country of residence</h2>' + (o.toggle ? '<div class="chips"><button class="chip" data-act="ui" data-k="partI" data-v="summary" aria-pressed="' + (ui.partI === 'summary') + '">Month summary</button><button class="chip" data-act="ui" data-k="partI" data-v="day" aria-pressed="' + (ui.partI === 'day') + '">Day by day</button></div>' : '') + '</div><div class="scroll">' + h + '</div><p class="mut sm" style="margin:.6rem 0 0">Rows with no arrivals are left out here. The exported form lists every row. * Philippine passport holders permanently residing abroad; excludes overseas Filipino workers.</p></section>' +
+    '<section class="panel"><div class="ph"><h2>Part II. Other indicators</h2></div><div class="split"><div class="scroll"><table class="t"><tbody>' +
+    '<tr><td>Number of rooms (DAE-1A item 4)</td><td class="n"><b>' + f.rooms + '</b></td></tr><tr><td>1. Rooms occupied <span class="mut">(room-nights)</span></td><td class="n"><b>' + nf(f.roomNights) + '</b></td></tr><tr><td>2. Rooms available for the month <span class="mut">(room-nights)</span></td><td class="n"><b>' + nf(f.available) + '</b></td></tr><tr><td>3. Total guest-nights</td><td class="n"><b>' + nf(f.guestNights) + '</b></td></tr>' +
+    '<tr class="sum"><td>1. Average monthly occupancy rate</td><td class="n">' + occ + '</td></tr><tr class="sum"><td>2. Average length of stay (nights)</td><td class="n">' + dec(f.alos) + '</td></tr></tbody></table></div>' +
+    '<div class="scroll"><table class="t"><thead><tr><th>B. Volume per sex</th><th class="n">Male</th><th class="n">Female</th><th class="n">Total</th></tr></thead><tbody>' + vr('a. Philippine residents', v.ph) + vr('b. Non-Philippine residents', v.non) + vr('c. Overseas Filipinos', v.ofil) + vr('d. Others / unspecified guests', v.other) + '</tbody></table></div></div>' +
+    '<details style="margin-top:.85rem"><summary style="cursor:pointer;font-weight:700">What these figures mean and where they stop</summary><ul class="sm" style="margin:.5rem 0 0;padding-left:1.1rem"><li><b>Arrivals</b> count each guest once, in the month of check-in.</li><li><b>Guest-nights</b> count every night a guest sleeps here in this month, including guests who arrived last month. The night of check-out is not counted.</li><li><b>Rooms occupied</b> on the form is a total of rooms occupied night by night (room-nights), not a number of rooms.</li><li><b>Average length of stay</b> is guest-nights ÷ arrivals for this month. It is a period measure. Guests arriving late in the month bring few nights here and carry the rest into the next month, so it can run low or high and is not the average of completed stays.</li><li><b>Occupancy</b> is room-nights occupied ÷ room-nights available. Rooms out of service and closed days are not available.</li></ul></details></section>';
+}
+const REPORT_REASONS = ['Correction of a mistake', 'A stay was missing', 'Guest numbers corrected', 'Dates corrected', 'Rooms or availability corrected', 'Other'];
+function diffHtml(d) { return d.length ? '<div class="scroll"><table class="t"><thead><tr><th>Figure</th><th class="n">Submitted</th><th class="n">Register now</th></tr></thead><tbody>' + d.map(x => '<tr><td>' + esc(x.label) + '</td><td class="n">' + x.was + '</td><td class="n"><b>' + x.now + '</b></td></tr>').join('') + '</tbody></table></div>' : '<p class="mut">No differences.</p>'; }
+SCREENS['m-report-month'] = () => {
+  const e = E(), key = ui.repMonth;
+  if (!e.rooms.length || !e.reportingFrom) return { html: setupEmpty('Add room numbers and set when reporting starts. The monthly report is built from the stays.') };
+  const ms = monthState(e, key, S.today), f = ms.fig, subs = e.subs[key] || [], last = key + '-' + pad(dim(+key.slice(0, 4), +key.slice(5)));
+  const picker = '<div class="chips" role="group" aria-label="Month">' + MON3.map((m, i) => { const k = '2026-' + pad(i + 1), s = monthState(e, k, S.today), v = stateView(s); return '<button class="chip" data-act="ui" data-k="repMonth" data-v="' + k + '" aria-pressed="' + (k === key) + '" title="' + v.label + '">' + m + '</button>'; }).join('') + '</div>';
+  let banner = '', body = '', act = '';
+  const canSubmit = ['due', 'overdue', 'changed', 'reopened'].includes(ms.s);
+  if (ms.s === 'open') banner = '<div class="banner info">' + ico('pending') + '<div class="bd"><b>' + monthLabel(key) + ' is in progress.</b><p>Figures so far, through ' + fmtD(f.through) + '. A month can be submitted from ' + fmtD(addDays(last, 1)) + '. Due on ' + fmtD(addDays(last, 5)) + '.</p></div></div>';
+  if (ms.s === 'due' || ms.s === 'overdue') banner = '<div class="banner ' + (ms.s === 'overdue' ? 'bad' : 'wait') + '">' + ico('schedule') + '<div class="bd"><b>' + (ms.s === 'overdue' ? 'Overdue since ' : 'Ready to submit. Due ') + fmtLong(ms.due) + '.</b><p>Check the figures, then submit. Late reports are accepted and marked late.</p></div></div>';
+  if (ms.s === 'submitted') banner = '<div class="banner ok">' + ico('check_circle', 'fill') + '<div class="bd"><b>Submitted as version ' + ms.v + ' on ' + fmtLong(subs[ms.v - 1].at) + '.</b><p>The Guest Register matches this version.</p></div></div>';
+  if (ms.s === 'changed') banner = '<div class="banner wait">' + ico('edit_note') + '<div class="bd"><b>The Guest Register changed after version ' + ms.v + ' was submitted.</b><p>The Tourism Office and the municipal report still use version ' + ms.v + '. Submit a correction to replace it. Version ' + ms.v + ' stays on record.</p>' + diffHtml(ms.diff) + '</div></div>';
+  if (ms.s === 'finalized') banner = '<div class="banner lock">' + ico('lock') + '<div class="bd"><b>Finalized by the Tourism Office on ' + fmtLong(e.locks[key].at) + '.</b><p>Version ' + ms.v + ' was sent to the province. The report and the Guest Register for this month cannot change until the Tourism Office reopens it.</p></div></div>';
+  if (ms.s === 'reopened') { const ev = ms.ev; banner = '<div class="banner wait">' + ico('lock_open') + '<div class="bd"><b>Reopened by the Tourism Office on ' + fmtLong(ev.at) + '.</b><p>Reason: ' + esc(ev.reason) + '. Correct the stays, then submit version ' + (ms.v + 1) + '.</p>' + (diffAgainst(subs[ms.v - 1].snap, f).length ? diffHtml(diffAgainst(subs[ms.v - 1].snap, f)) : '') + '</div></div>'; }
+  if (canSubmit) act = btn('primary', 'send', ms.s === 'changed' || ms.s === 'reopened' ? 'Submit correction as version ' + (subs.length + 1) : 'Submit ' + monthLabel(key), 'submit', 'data-key="' + key + '"', 'm');
+  else if (ms.s === 'open') act = '<button class="btn primary" disabled>' + ico('send', 'sm') + 'Submit from ' + fmtD(addDays(last, 1)) + role('m') + '</button>';
+  if (ms.s === 'na') body = '<div class="empty"><h3>Not operating in ' + monthLabel(key) + '</h3>Every day was inside a closed period (' + esc((inClosed(e, key + '-01') || {}).reason) + '). The month is reported as N/A, not as zero arrivals.</div>';
+  else if (ms.s === 'missing') body = '<div class="empty"><h3>No report for ' + monthLabel(key) + '</h3>Reporting in ZTIMS starts in ' + monthLabel(e.reportingFrom) + '. No stays were recorded for this month and none are filled in.</div>';
+  else if (ms.s === 'future') body = '<div class="empty"><h3>' + monthLabel(key) + ' has not started</h3></div>';
+  else body = '<div class="tiles"><div class="tile"><span class="k">Guest arrivals</span><span class="v">' + nf(f.arrivalsTotal) + '</span><span class="n">' + f.am + ' male, ' + f.af + ' female</span></div><div class="tile"><span class="k">Guest-nights</span><span class="v">' + nf(f.guestNights) + '</span></div><div class="tile"><span class="k">Occupancy rate</span><span class="v">' + (f.occ == null ? 'n/a' : (f.occ * 100).toFixed(1) + '%') + '</span><span class="n">' + f.roomNights + ' of ' + f.available + ' room-nights</span></div><div class="tile"><span class="k">Average length of stay</span><span class="v">' + dec(f.alos) + '</span><span class="n">nights, this month only</span></div></div>' + dae1bHtml(f, { day: ui.partI === 'day', toggle: true });
+  return { acts: act, html: picker + '<div class="row" style="justify-content:space-between"><div class="row"><b>Form DAE-1B / DAE-2</b><span class="mut">' + esc(e.name) + ' · ' + esc(e.kind) + ' · ' + monthLabel(key) + '</span></div>' + spill(ms) + '</div>' + banner + body };
+};
+A.submit = t => {
+  const e = E(), key = t.dataset.key, ms = monthState(e, key, S.today), subs = e.subs[key] || [], v = subs.length + 1;
+  const prevDiff = subs.length ? diffAgainst(subs[subs.length - 1].snap, ms.fig) : [];
+  modal({ cls: 'narrow', title: v === 1 ? 'Submit ' + monthLabel(key) : 'Submit correction · version ' + v, body:
+    '<div class="tiles"><div class="tile"><span class="k">Arrivals</span><span class="v">' + ms.fig.arrivalsTotal + '</span></div><div class="tile"><span class="k">Guest-nights</span><span class="v">' + ms.fig.guestNights + '</span></div><div class="tile"><span class="k">Room-nights</span><span class="v">' + ms.fig.roomNights + '</span></div></div>' +
+    (v > 1 ? '<div><div class="lbl">Changes from version ' + (v - 1) + '</div>' + diffHtml(prevDiff) + '</div><div class="fld"><span>Reason for the correction</span><select class="inp" id="why">' + REPORT_REASONS.map(r => '<option>' + r + '</option>').join('') + '</select></div><div class="fld" id="whyNoteBox" hidden><span>Describe the reason</span><input class="inp" id="whyNote"></div>' : '') +
+    '<div class="hint">' + ico('info', 'sm') + '<span>The figures are saved as version ' + v + '. ' + (v > 1 ? 'Version ' + (v - 1) + ' is kept and never changes.' : 'Later changes to the register never alter this version; they are shown as differences.') + '</span></div>', onOpen: wireReason,
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: v === 1 ? 'Submit report' : 'Submit version ' + v, cls: 'primary', role: 'm', onClick: api => {
+      let why = ''; if (v > 1) { why = readReason(api); if (!why) return false; }
+      (e.subs[key] = e.subs[key] || []).push({ v, at: S.today, by: 'Manager', reason: why, snap: snapshotOf(ms.fig) });
+      (e.events[key] = e.events[key] || []).push({ type: 'submitted', v, at: S.today, by: 'Manager', detail: 'Version ' + v + ' submitted' + (why ? ' · ' + why : '') });
+      toast(monthLabel(key) + ' submitted as version ' + v); render(); } }] });
+};
+
+/* ---------- Versions ---------- */
+SCREENS['m-report-versions'] = () => {
+  const e = E(), key = ui.repMonth;
+  if (!e.reportingFrom) return { html: setupEmpty('Reports and versions appear once reporting starts.') };
+  const subs = e.subs[key] || [], ev = e.events[key] || [], ms = monthState(e, key, S.today);
+  const picker = '<div class="chips" role="group" aria-label="Month">' + MON3.map((m, i) => { const k = '2026-' + pad(i + 1); return '<button class="chip" data-act="ui" data-k="repMonth" data-v="' + k + '" aria-pressed="' + (k === key) + '">' + m + '</button>'; }).join('') + '</div>';
+  const vrows = subs.map((s, i) => { const cur = i === subs.length - 1;
+    return '<tr><td><b>v' + s.v + '</b> ' + (cur ? pill('t-info', 'Latest') : pill('t-mute', 'Replaced')) + '</td><td>' + fmtLong(s.at) + '</td><td>' + (s.reason ? esc(s.reason) : '<span class="mut">First submission</span>') + '</td><td class="n">' + s.snap.arrivalsTotal + '</td><td class="n">' + s.snap.guestNights + '</td><td class="n">' + (s.snap.occ == null ? 'n/a' : (s.snap.occ * 100).toFixed(1) + '%') + '</td><td class="n"><div class="row" style="justify-content:flex-end">' + btn('plain sm', 'visibility', 'View', 'viewVer', 'data-key="' + key + '" data-v="' + s.v + '"') + btn('plain sm', 'compare_arrows', 'Compare with register', 'cmpVer', 'data-key="' + key + '" data-v="' + s.v + '"') + '</div></td></tr>'; }).join('');
+  const ov = '<div class="scroll"><table class="t"><thead><tr><th>Month</th><th>Status</th><th class="n">Versions</th><th>Latest submitted</th><th></th></tr></thead><tbody>' + [...Array(12)].map((_, i) => { const k = '2026-' + pad(i + 1), s = monthState(e, k, S.today), l = (e.subs[k] || []).slice(-1)[0]; return '<tr><td>' + monthLabel(k) + '</td><td>' + spill(s) + '</td><td class="n">' + (e.subs[k] || []).length + '</td><td>' + (l ? fmtLong(l.at) : '<span class="mut">–</span>') + '</td><td class="n">' + btn('plain sm', 'chevron_right', 'Open', 'pickMonth', 'data-k="repMonth" data-v="' + k + '"') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  return { html: picker + '<div class="row" style="justify-content:space-between"><b>' + monthLabel(key) + '</b>' + spill(ms) + '</div>' +
+    (subs.length ? '<section class="panel"><div class="ph"><h2>Saved versions</h2><span class="sub">A saved version never changes. A correction adds a new one.</span></div><div class="scroll"><table class="t"><thead><tr><th>Version</th><th>Submitted</th><th>Reason</th><th class="n">Arrivals</th><th class="n">Guest-nights</th><th class="n">Occupancy</th><th></th></tr></thead><tbody>' + vrows + '</tbody></table></div></section>' +
+      '<section class="panel"><div class="ph"><h2>Timeline</h2></div><div class="log">' + ev.slice().reverse().map(x => '<div><span class="mut">' + fmtD(x.at) + '</span><span><b>' + ({ submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' }[x.type]) + '</b> · ' + esc(x.detail || x.reason || '') + (x.type === 'reopened' ? ' · ' + esc(x.reason) : '') + ' <span class="mut">(' + esc(x.by) + ')</span></span></div>').join('') + '</div></section>'
+      : '<div class="empty"><h3>No version saved for ' + monthLabel(key) + '</h3>' + ({ open: 'The month is still in progress.', future: 'The month has not started.', na: 'Not operating, reported as N/A.', missing: 'Before reporting started.', due: 'Ready to submit from Month (DAE-1B).', overdue: 'Overdue. Submit from Month (DAE-1B).' }[ms.s] || '') + '</div>') +
+    '<section class="panel"><div class="ph"><h2>All months, ' + 2026 + '</h2></div>' + ov + '</section>' };
+};
+A.viewVer = t => { const e = E(), s = e.subs[t.dataset.key][+t.dataset.v - 1];
+  modal({ cls: 'wide', title: monthLabel(t.dataset.key) + ' · version ' + s.v + ' (read only)', body: '<div class="banner lock">' + ico('lock') + '<div class="bd"><b>Saved ' + fmtLong(s.at) + '.</b> This is exactly what was submitted.</div></div>' + dae1bHtml(s.snap) }); };
+A.cmpVer = t => { const e = E(), k = t.dataset.key, s = e.subs[k][+t.dataset.v - 1], d = diffAgainst(s.snap, monthFigures(e, k, S.today));
+  modal({ cls: 'narrow', title: 'Version ' + s.v + ' compared with the register now', body: diffHtml(d) }); };
+
+/* ---------- Year ---------- */
+function yearCols(e, year) {
+  return [...Array(12)].map((_, i) => { const k = year + '-' + pad(i + 1), ms = monthState(e, k, S.today), subs = e.subs[k] || [], snap = subs.length ? subs[subs.length - 1].snap : null; return { k, ms, snap }; });
+}
+SCREENS['m-report-year'] = () => {
+  const e = E();
+  if (!e.reportingFrom) return { html: setupEmpty('The annual summary adds up the months you have submitted.') };
+  const cols = yearCols(e, 2026), got = cols.filter(c => c.snap);
+  const cnt = s => cols.filter(c => s.includes(c.ms.s));
+  const tot = got.reduce((a, c) => ({ arr: a.arr + c.snap.arrivalsTotal, gn: a.gn + c.snap.guestNights, rn: a.rn + c.snap.roomNights, av: a.av + c.snap.available, ph: a.ph + c.snap.vol.ph.m + c.snap.vol.ph.f, non: a.non + c.snap.vol.non.m + c.snap.vol.non.f, of: a.of + c.snap.vol.ofil.m + c.snap.vol.ofil.f, un: a.un + c.snap.vol.other.m + c.snap.vol.other.f }), { arr: 0, gn: 0, rn: 0, av: 0, ph: 0, non: 0, of: 0, un: 0 });
+  const cell = (c, fn, cls) => { if (c.snap) return '<td class="n ' + (cls || '') + '">' + fn(c.snap) + (c.ms.s === 'changed' ? '<sup title="Register differs from the submitted version">*</sup>' : '') + '</td>'; return '<td class="n dim">' + (c.ms.s === 'na' ? 'N/A' : '–') + '</td>'; };
+  const line = (label, fn, total, cls) => '<tr class="' + (cls || '') + '"><td class="stk">' + label + '</td>' + cols.map(c => cell(c, fn)).join('') + '<td class="n"><b>' + total + '</b></td></tr>';
+  const parts = [['Reported', cnt(['submitted', 'changed', 'finalized', 'reopened']), 't-ok'], ['Not operating (N/A)', cnt(['na']), 't-mute'], ['Not recorded in ZTIMS', cnt(['missing']), 't-bad'], ['In progress', cnt(['open', 'due', 'overdue']), 't-info'], ['Not yet', cnt(['future']), 't-mute']].filter(p => p[1].length);
+  const range = a => a.length ? a.map(c => MON3[+c.k.slice(5) - 1]).join(', ') : '';
+  const stale = cols.filter(c => c.ms.s === 'changed');
+  return { html:
+    '<div class="row" style="justify-content:space-between"><div class="row"><b>DAE-1B annual summary</b><span class="mut">' + esc(e.name) + ' · 2026</span></div></div>' +
+    '<div class="banner wait">' + ico('event_busy') + '<div class="bd"><b>2026 is an incomplete year.</b><p>The totals add up the ' + got.length + ' submitted month' + (got.length === 1 ? '' : 's') + ' only. They are not a full-year figure.</p><div class="chips" style="margin-top:.5rem">' + parts.map(p => pill(p[2], p[0] + ': ' + p[1].length + ' (' + range(p[1]) + ')')).join('') + '</div></div></div>' +
+    (stale.length ? '<div class="banner info">' + ico('info') + '<div class="bd"><b>' + stale.map(c => monthLabel(c.k)).join(', ') + ' uses the submitted version.</b><p>The register has changed since. Submit the correction to bring this summary up to date. Marked *.</p></div></div>' : '') +
+    '<section class="panel"><div class="ph"><h2>Part I and Part II by month</h2><span class="sub">From each month\'s latest submitted version</span></div><div class="scroll"><table class="t"><thead><tr><th class="stk">2026</th>' + cols.map(c => '<th class="n">' + MON3[+c.k.slice(5) - 1] + '</th>').join('') + '<th class="n">Total</th></tr><tr><th class="stk" style="font-weight:500">Status</th>' + cols.map(c => '<th style="font-weight:500;padding:.3rem .2rem;text-align:center">' + ({ finalized: '🔒', submitted: 'v' + (c.ms.v || ''), changed: 'v' + (c.ms.v || '') + '*', reopened: 'reopened' }[c.ms.s] ? '<span class="pill ' + stateView(c.ms).tone + '" style="font-size:.62rem;padding:0 .4rem">' + ({ finalized: 'Final', submitted: 'v' + c.ms.v, changed: 'v' + c.ms.v + '*', reopened: 'Reopened' }[c.ms.s]) + '</span>' : '<span class="mut" style="font-size:.62rem">' + ({ na: 'N/A', missing: 'none', open: 'open', due: 'due', overdue: 'late', future: '' , notset: ''}[c.ms.s] || '') + '</span>') + '</th>').join('') + '<th></th></tr></thead><tbody>' +
+    '<tr class="grp"><td class="stk" colspan="14">PART I. GUEST ARRIVALS</td></tr>' +
+    line('Total Philippine residents', s => s.vol.ph.m + s.vol.ph.f, tot.ph) + line('Total non-Philippine residents', s => s.vol.non.m + s.vol.non.f, tot.non) + line('Overseas Filipinos*', s => s.vol.ofil.m + s.vol.ofil.f, tot.of) + line('Guests with unspecified residence', s => s.vol.other.m + s.vol.other.f, tot.un) + line('GRAND TOTAL GUEST ARRIVALS', s => s.arrivalsTotal, tot.arr, 'grand') +
+    '<tr class="grp"><td class="stk" colspan="14">PART II. OCCUPANCY AND LENGTH OF STAY</td></tr>' +
+    line('Rooms occupied (room-nights)', s => nf(s.roomNights), nf(tot.rn)) + line('Rooms available (room-nights)', s => nf(s.available), nf(tot.av)) + line('Total guest-nights', s => nf(s.guestNights), nf(tot.gn)) +
+    line('Average occupancy rate', s => s.occ == null ? 'n/a' : (s.occ * 100).toFixed(1) + '%', tot.av ? (tot.rn / tot.av * 100).toFixed(1) + '%' : 'n/a', 'sum') + line('Average length of stay (nights)', s => dec(s.alos), dec(tot.arr ? tot.gn / tot.arr : null), 'sum') + '</tbody></table></div>' +
+    '<p class="mut sm" style="margin:.75rem 0 0">The annual occupancy rate is total room-nights occupied ÷ total room-nights available over the reported months. The annual length of stay is total guest-nights ÷ total arrivals. Neither is an average of the monthly rates. * Philippine passport holders permanently residing abroad; excludes overseas Filipino workers.</p></section>' };
+};
+
+/* ---------- Officer: tracker, review, finalize, reopen ---------- */
+const cellText = (ms, e, k) => ({ submitted: ['Submitted', 'v' + ms.v], changed: ['Changed', 'since v' + ms.v], finalized: ['Finalized', 'v' + ms.v], reopened: ['Reopened', 'v' + ms.v], open: ['In progress', ''], due: ['Due', fmtD(ms.due || '')], overdue: ['Overdue', ''], missing: ['Not reported', ''], na: ['N/A', 'closed'], future: ['–', ''], notset: ['Not set up', ''] }[ms.s]);
+SCREENS['o-stats-tracker'] = () => {
+  const ents = Object.values(S.ents), yr = S.trackYear = S.trackYear || 2026;
+  const yearPick = '<div class="chips" role="group" aria-label="Year">' + [2026, 2025].map(y => '<button class="chip" data-act="ui" data-k="trackYear" data-v="' + y + '" aria-pressed="' + (y === +ui.trackYear) + '">' + y + '</button>').join('') + '</div>';
+  if (+ui.trackYear === 2025) {
+    return { html: yearPick + '<div class="banner info">' + ico('inventory_2') + '<div class="bd"><b>2025 is kept as municipal totals from the paper Form A4.</b><p>The sheets had no enterprise detail, no daily figures and no split by sex, and none is created. The totals are locked as imported.</p></div></div>' +
+      '<section class="panel"><div class="scroll"><table class="t mx"><thead><tr><th style="text-align:left">2025</th>' + MON3.map(m => '<th>' + m + '</th>').join('') + '</tr></thead><tbody><tr><td class="en"><b>Municipal total</b><br><span class="own">' + ico('inventory_2', 'sm') + 'Imported from paper</span></td>' + Y25.map(m => { const t = Object.keys(m).filter(k => !['rooms', 'rn', 'gn'].includes(k)).reduce((a, k) => a + m[k], 0); return '<td><span class="cell t-mute" style="cursor:default">Imported<small>' + nf(t) + ' arrivals</small></span></td>'; }).join('') + '</tr></tbody></table></div></section>' };
+  }
+  const flat = []; ents.forEach(e => { for (let i = 1; i <= 12; i++) { const k = '2026-' + pad(i); flat.push(monthState(e, k, S.today).s); } });
+  const c = s => flat.filter(x => s.includes(x)).length;
+  return { html: yearPick +
+    '<div class="chips"><span class="pill t-ok">Submitted ' + c(['submitted']) + '</span><span class="pill t-lock">Finalized ' + c(['finalized']) + '</span><span class="pill t-wait">Needs attention ' + c(['changed', 'reopened', 'due']) + '</span><span class="pill t-bad">Overdue or not reported ' + c(['overdue', 'missing']) + '</span><span class="pill t-mute">Not operating ' + c(['na']) + '</span></div>' +
+    '<section class="panel"><div class="ph"><h2>Places to stay, 2026</h2><span class="sub">Open a month to review, finalize or reopen. Finalize and Reopen work on one enterprise and one month.</span></div><div class="scroll"><table class="t mx"><thead><tr><th style="text-align:left">Enterprise</th>' + MON3.map(m => '<th>' + m + '</th>').join('') + '</tr></thead><tbody>' +
+    ents.map(e => '<tr><td class="en"><b>' + esc(e.name) + '</b><br><span class="own">' + ico('storefront', 'sm') + 'Private enterprise</span> <span class="mut sm">' + esc(e.kind) + '</span></td>' + [...Array(12)].map((_, i) => { const k = '2026-' + pad(i + 1), ms = monthState(e, k, S.today), v = stateView(ms), ct = cellText(ms, e, k); return '<td><button class="cell ' + v.tone + '" data-act="review" data-e="' + e.id + '" data-k="' + k + '" aria-label="' + esc(e.name + ' ' + monthLabel(k) + ': ' + v.label) + '">' + ct[0] + '<small>' + ct[1] + '</small></button></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>' +
+    '<p class="mut sm" style="margin:.75rem 0 0">Only Casa Marina Beach Resort and Lagoon View Cottages exist in this scenario. A real tracker lists every private place to stay.</p></section>' };
+};
+A.review = t => reviewDialog(t.dataset.e, t.dataset.k);
+function reviewDialog(eid, key) {
+  const e = S.ents[eid], ms = monthState(e, key, S.today), subs = e.subs[key] || [], last = subs[subs.length - 1], ev = e.events[key] || [];
+  const submittedNewer = last && (() => { const lastRe = ev.map(x => x.type).lastIndexOf('reopened'); const lastSub = ev.map(x => x.type).lastIndexOf('submitted'); return lastSub > lastRe; })();
+  const monthEnded = key + '-' + pad(dim(+key.slice(0, 4), +key.slice(5))) < S.today;
+  const can = last && submittedNewer && ms.s === 'submitted' && monthEnded;
+  let why = '';
+  if (ms.s === 'finalized') why = 'Already finalized on ' + fmtLong(e.locks[key].at) + '.';
+  else if (!last) why = ms.s === 'na' ? 'Reported as N/A: not operating.' : ms.s === 'notset' ? 'The enterprise has not set up its statistical profile.' : ms.s === 'future' ? 'The month has not started.' : 'No version submitted yet.';
+  else if (ms.s === 'changed') why = 'The enterprise changed its register after version ' + ms.v + '. Finalize is blocked until it submits the correction.';
+  else if (ms.s === 'reopened') why = 'Reopened. Waiting for the enterprise to submit a corrected version.';
+  else if (!monthEnded) why = 'The month has not ended.';
+  const btns = [{ label: 'Close', cls: 'plain' }];
+  if (ms.s === 'finalized') btns.push({ label: 'Reopen', cls: 'danger', role: 'o', onClick: () => { closeModal(); reopenDialog(eid, key); return false; } });
+  else btns.push({ label: 'Finalize', cls: 'primary', role: 'o', disabled: !can, onClick: () => { closeModal(); finalizeDialog(eid, key); return false; } });
+  modal({ cls: 'wide', title: e.name + ' · ' + monthLabel(key), body:
+    '<div class="row">' + spill(ms) + '<span class="own">' + ico('storefront', 'sm') + 'Private enterprise</span></div>' +
+    (why ? '<div class="banner ' + (ms.s === 'changed' ? 'wait' : ms.s === 'finalized' ? 'lock' : 'info') + '">' + ico(ms.s === 'finalized' ? 'lock' : 'info') + '<div class="bd">' + esc(why) + (ms.s === 'changed' ? diffHtml(ms.diff) : '') + '</div></div>' : '<div class="banner ok">' + ico('check_circle', 'fill') + '<div class="bd"><b>Ready to finalize.</b><p>Version ' + last.v + ' matches the enterprise\'s register. Finalizing locks the report and the register for this month.</p></div></div>') +
+    (last ? '<div class="tiles"><div class="tile"><span class="k">Version</span><span class="v">v' + last.v + '</span><span class="n">' + fmtLong(last.at) + '</span></div><div class="tile"><span class="k">Arrivals</span><span class="v">' + last.snap.arrivalsTotal + '</span></div><div class="tile"><span class="k">Guest-nights</span><span class="v">' + last.snap.guestNights + '</span></div><div class="tile"><span class="k">Occupancy</span><span class="v">' + (last.snap.occ == null ? 'n/a' : (last.snap.occ * 100).toFixed(1) + '%') + '</span></div></div>' : '') +
+    (ev.length ? '<div><div class="lbl">History</div><div class="log">' + ev.slice().reverse().map(x => '<div><span class="mut">' + fmtD(x.at) + '</span><span><b>' + ({ submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' }[x.type]) + '</b> · ' + esc(x.detail || '') + (x.type === 'reopened' ? esc(x.reason) : '') + ' <span class="mut">(' + esc(x.by) + ')</span></span></div>').join('') + '</div></div>' : '') +
+    (last ? '<details><summary style="cursor:pointer;font-weight:700">Open version ' + last.v + ' (read only)</summary><div style="margin-top:.75rem;display:flex;flex-direction:column;gap:1rem">' + dae1bHtml(last.snap) + '</div></details>' : '') +
+    '<p class="mut sm" style="margin:0">The Tourism Officer reviews, finalizes and reopens. There is no approval or rejection step and no editing of the enterprise\'s register.</p>', buttons: btns });
+}
+function finalizeDialog(eid, key) {
+  const e = S.ents[eid];
+  modal({ cls: 'narrow', title: 'Finalize ' + monthLabel(key) + '?', body: '<p style="margin:0">This marks <b>' + esc(e.name) + '</b> ' + monthLabel(key) + ' as sent to the province. The report and the Guest Register for the month will not change until you reopen it with a reason.</p>', buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Finalize ' + monthLabel(key), cls: 'primary', role: 'o', onClick: () => {
+    (e.events[key] = e.events[key] || []).push({ type: 'finalized', at: S.today, by: 'Tourism Officer', detail: 'Sent to the province' }); e.locks[key] = { at: S.today, by: 'Tourism Officer' }; toast(e.short + ' ' + monthLabel(key) + ' finalized'); render(); } }] });
+}
+function reopenDialog(eid, key) {
+  const e = S.ents[eid];
+  modal({ cls: 'narrow', title: 'Reopen ' + monthLabel(key) + '?', body: '<div class="banner wait">' + ico('lock_open') + '<div class="bd">The enterprise will be able to correct its stays and submit a new version. The current version stays on record. The municipal report keeps using it until the new one is submitted.</div></div><label class="fld"><span>Reason (required, shown to the enterprise)</span><textarea class="inp" id="ro_why" rows="3" placeholder="For example: guest numbers corrected after a check of the register"></textarea></label>',
+    buttons: [{ label: 'Cancel', cls: 'cancel' }, { label: 'Reopen month', cls: 'danger', role: 'o', onClick: api => {
+      const why = $('#ro_why').value.trim(); if (why.length < 10) return api.err('Give a reason of at least 10 characters.'), false;
+      (e.events[key] = e.events[key] || []).push({ type: 'reopened', at: S.today, by: 'Tourism Officer', detail: 'Reason: ', reason: why }); delete e.locks[key]; toast(monthLabel(key) + ' reopened for ' + e.short); render(); } }] });
+}
+
+/* ---------- Officer: FORM A ---------- */
+const FA_ROWS = [['phf', 'Filipino nationality', 'ph-filipino'], ['phx', 'Foreign nationality', 'ph-foreign'], ['foreign:KR', 'Korea', 'KR'], ['foreign:JP', 'Japan', 'JP'], ['foreign:CN', 'China', 'CN'], ['foreign:US', 'USA', 'US'], ['foreign:CA', 'Canada', 'CA'], ['foreign:DE', 'Germany', 'DE'], ['foreign:FR', 'France', 'FR'], ['foreign:GB', 'United Kingdom', 'GB'], ['foreign:AU', 'Australia', 'AU'], ['foreign:other', 'All other countries', 'other'], ['ofil', 'Overseas Filipinos*', 'overseas-filipino'], ['unspec', 'Guests with unspecified residence', null]];
+function muniMonth(year, i) {   // i: 0..11 → { rows, rn, av, gn, vol, from } or null when nothing reported
+  if (year === 2025) { const m = Y25[i], rows = {}; FA_ROWS.forEach(r => { rows[r[0]] = r[2] ? m[r[2]] : 0; }); const av = m.rooms * dim(2025, i + 1); return { rows, arr: Object.keys(rows).reduce((a, k) => a + rows[k], 0), rn: m.rn, av, gn: m.gn, src: 'imported' }; }
+  const snaps = Object.values(S.ents).map(e => (e.subs['2026-' + pad(i + 1)] || []).slice(-1)[0]).filter(Boolean).map(s => s.snap); if (!snaps.length) return null;
+  const rows = {}; FA_ROWS.forEach(r => rows[r[0]] = 0);
+  snaps.forEach(s => Object.keys(s.arrivals).forEach(k => { const key = rows[k] !== undefined ? k : (k.startsWith('foreign:') ? 'foreign:other' : null); if (key) rows[key] += s.arrivals[k].m + s.arrivals[k].f; }));
+  const vol = snaps.reduce((a, s) => ({ ph: a.ph + s.vol.ph.m + s.vol.ph.f, non: a.non + s.vol.non.m + s.vol.non.f, of: a.of + s.vol.ofil.m + s.vol.ofil.f }), { ph: 0, non: 0, of: 0 });
+  return { rows, arr: snaps.reduce((a, s) => a + s.arrivalsTotal, 0), rn: snaps.reduce((a, s) => a + s.roomNights, 0), av: snaps.reduce((a, s) => a + s.available, 0), gn: snaps.reduce((a, s) => a + s.guestNights, 0), n: snaps.length, src: 'reports', male: snaps.reduce((a, s) => a + s.am, 0), female: snaps.reduce((a, s) => a + s.af, 0) };
+}
+SCREENS['o-stats-forma'] = () => {
+  const yr = +ui.formaYear, cur = [...Array(12)].map((_, i) => muniMonth(yr, i));
+  const prevAll = yr === 2026 ? [...Array(12)].map((_, i) => muniMonth(2025, i)) : null;
+  const covered = cur.map((m, i) => m ? i : -1).filter(i => i >= 0);
+  const prev = prevAll ? (ui.compare === 'same' ? prevAll.map((m, i) => covered.includes(i) ? m : null) : prevAll) : null;
+  const sumRow = (ms, k) => ms.reduce((a, m) => a + (m ? m.rows[k] : 0), 0);
+  const totalOf = (ms, ks) => ks.reduce((a, k) => a + sumRow(ms, k), 0);
+  const grand = totalOf(cur, FA_ROWS.map(r => r[0])), pgrand = prev ? totalOf(prev, FA_ROWS.map(r => r[0])) : null;
+  const pctd = (c, p) => p == null ? '–' : p ? ((c - p) / p * 100).toFixed(1) + '%' : 'n/a';
+  const line = (label, ks, cls) => { const t = totalOf(cur, ks), p = prev ? totalOf(prev, ks) : null; return '<tr class="' + (cls || '') + '"><td class="stk">' + label + '</td>' + cur.map(m => '<td class="n ' + (m ? '' : 'dim') + '">' + (m ? ks.reduce((a, k) => a + m.rows[k], 0) : '–') + '</td>').join('') + '<td class="n"><b>' + nf(t) + '</b></td><td class="n">' + pct(t, grand) + '</td><td class="n">' + (p == null ? '–' : nf(p)) + '</td><td class="n">' + pctd(t, p) + '</td></tr>'; };
+  const sec = t => '<tr class="grp"><td class="stk" colspan="17">' + t + '</td></tr>';
+  const foreignKeys = FA_ROWS.filter(r => r[0].startsWith('foreign:')).map(r => r[0]);
+  const ind = (label, fn, fmt) => { const ms = cur.filter(Boolean), t = ms.length ? fn(ms) : null; const ps = prev ? prev.filter(Boolean) : []; const p = ps.length ? fn(ps) : null;
+    return '<tr><td class="stk">' + label + '</td>' + cur.map(m => '<td class="n ' + (m ? '' : 'dim') + '">' + (m ? fmt(fn([m])) : '–') + '</td>').join('') + '<td class="n"><b>' + (t == null ? '–' : fmt(t)) + '</b></td><td class="n">–</td><td class="n">' + (p == null ? '–' : fmt(p)) + '</td><td class="n">' + (t == null || p == null || !p ? '–' : ((t - p) / p * 100).toFixed(1) + '%') + '</td></tr>'; };
+  const sum = (ms, k) => ms.reduce((a, m) => a + m[k], 0);
+  const cover = yr === 2026 ? (() => { const reporting = Object.values(S.ents).filter(e => Object.keys(e.subs).length), all = Object.values(S.ents); return { reporting, all, months: covered.map(i => MON3[i]).join(', ') }; })() : null;
+  const head = '<thead><tr><th class="stk">Country of residence</th>' + MON3.map(m => '<th class="n">' + m + '</th>').join('') + '<th class="n">Total (' + yr + ')</th><th class="n">% share of arrivals</th><th class="n">Total (' + (yr - 1) + (prev && ui.compare === 'same' ? ', same months' : '') + ')</th><th class="n">% difference</th></tr></thead>';
+  return { html:
+    '<div class="row" style="justify-content:space-between"><div class="row"><div class="chips" role="group" aria-label="Year">' + [2026, 2025].map(y => '<button class="chip" data-act="ui" data-k="formaYear" data-v="' + y + '" aria-pressed="' + (y === yr) + '">' + y + '</button>').join('') + '</div><b>FORM A · Annual report · Zamboanguita, Negros Oriental</b></div>' + (yr === 2026 ? '<div class="chips" role="group" aria-label="Previous year basis"><button class="chip" data-act="ui" data-k="compare" data-v="full" aria-pressed="' + (ui.compare === 'full') + '">Previous year: full year (as the form)</button><button class="chip" data-act="ui" data-k="compare" data-v="same" aria-pressed="' + (ui.compare === 'same') + '">Previous year: same months only</button></div>' : '') + '</div>' +
+    (yr === 2026 ? '<div class="banner wait">' + ico('event_busy') + '<div class="bd"><b>2026 is incomplete: ' + (covered.length ? covered.length + ' month' + (covered.length > 1 ? 's' : '') + ' (' + cover.months + ')' : 'no month') + ' from ' + cover.reporting.length + ' of ' + cover.all.length + ' enterprises in this scenario.</b><p>' + (ui.compare === 'full' ? 'The form compares with the whole of 2025, so the % difference is far below zero by construction. It does not say tourism fell.' : 'Previous year is limited to the same months. Only months with a 2026 report are compared.') + ' Enterprises without a submitted version are not counted and not estimated.</p></div></div>'
+      : '<div class="banner info">' + ico('inventory_2') + '<div class="bd"><b>2025 comes from the paper Form A4, imported as municipal totals.</b><p>No enterprise detail and no split by sex exist for it, so Volume per sex is blank. Rooms available is rooms × days in each month. 2024 was not recorded, so there is no comparison. The printed sheet\'s March grand total (1,568) is 10 above its rows (1,558); ZTIMS keeps the rows.</p></div></div>') +
+    '<section class="panel"><div class="ph"><h2>Part I. Guest arrivals</h2><span class="sub">A condensed set of the form\'s rows; "All other countries" holds the rest of the list.</span></div><div class="scroll"><table class="t">' + head + '<tbody>' +
+    sec('PHILIPPINE RESIDENTS') + line('Filipino nationality', ['phf']) + line('Foreign nationality', ['phx']) + line('Total Philippine residents', ['phf', 'phx'], 'sum') +
+    sec('NON-PHILIPPINE RESIDENTS') + FA_ROWS.filter(r => r[0].startsWith('foreign:')).map(r => line(r[1], [r[0]])).join('') + line('Total non-Philippine residents', foreignKeys, 'sum') +
+    line('Overseas Filipinos*', ['ofil'], 'sum') + line('Guests with unspecified residence', ['unspec'], 'sum') + line('GRAND TOTAL GUEST ARRIVALS', FA_ROWS.map(r => r[0]), 'grand') + '</tbody></table></div></section>' +
+    '<section class="panel"><div class="ph"><h2>Part II. Occupancy rate and length of stay</h2></div><div class="scroll"><table class="t">' + head + '<tbody>' +
+    ind('Rooms occupied (room-nights)', ms => sum(ms, 'rn'), nf) + ind('Rooms available (room-nights)', ms => sum(ms, 'av'), nf) + ind('Total guest-nights', ms => sum(ms, 'gn'), nf) +
+    ind('Average occupancy rate', ms => sum(ms, 'av') ? sum(ms, 'rn') / sum(ms, 'av') * 100 : null, v => v == null ? 'n/a' : v.toFixed(1) + '%') + ind('Average length of stay (nights)', ms => sum(ms, 'arr') ? sum(ms, 'gn') / sum(ms, 'arr') : null, v => v == null ? 'n/a' : v.toFixed(2)) + '</tbody></table></div>' +
+    '<p class="mut sm" style="margin:.75rem 0 0">Totals for the year are ratios of sums over the months shown, not averages of monthly rates. Division by zero shows n/a. * Philippine passport holders permanently residing abroad; excludes overseas Filipino workers.</p></section>' +
+    '<section class="panel"><div class="ph"><h2>Volume per sex</h2></div>' + (yr === 2025 ? '<div class="empty">Not recorded. The paper Form A4 for 2025 gives totals only.</div>' : '<div class="scroll"><table class="t"><thead><tr><th>Reported months</th><th class="n">Male</th><th class="n">Female</th><th class="n">Total</th></tr></thead><tbody><tr><td>All places, ' + (cover.months || 'none') + '</td><td class="n">' + cur.filter(Boolean).reduce((a, m) => a + m.male, 0) + '</td><td class="n">' + cur.filter(Boolean).reduce((a, m) => a + m.female, 0) + '</td><td class="n">' + grand + '</td></tr></tbody></table></div>') + '</section>' };
+};
+
+/* ---------- Notes and scenario ---------- */
+const NOTES = {
+  'm-enterprise': { who: 'Manager', src: ['Listing: enterprise name, barangay (existing)', 'New: kind of place, DOT classification, AE ID code, reporting start, closed periods'], calc: ['A month with every day closed is N/A, not zero.', 'Available room-nights skip closed days.'], ref: 'DAE-1B header: type of accommodation, DOT accreditation, AE ID code, municipality, province, region.', lim: 'The profile never holds guest data. Region label needs confirming (see conventions).' },
+  'm-rooms': { who: 'Manager', src: ['Room numbers (new): number, type, beds, sleeps, available from', 'Out of service periods (new): room, first and last day, reason'], calc: ['Rooms available on a night = rooms in the list that night − rooms out of service − closed days.', 'A stay cannot use a room on a night it is out of service or taken.'], ref: 'DAE-1A item (4) Total number of rooms and the Room identification columns.', lim: 'Online booking is optional. Its room types keep working; numbered rooms are what statistics use.' },
+  'm-register': { who: 'Manager', src: ['Stay: check-in date, check-out date, room allocation by dates, guest groups', 'Guest group: residence class, country of residence (non-residents), male, female'], calc: ['Arrivals: each guest once, on the check-in date.', 'Guest-nights: guests × nights from check-in up to the night before check-out.', 'Rooms occupied (7): distinct rooms with a guest that night.', 'A room transfer moves nights between rooms. It adds no arrival.'], ref: 'DAE-1A columns (5) check-in guests, (6) guests staying overnight, (7) rooms occupied, and the formulas under the grid.', lim: 'No guest names, contacts or ID details. A booking, reservation or ticket is not an arrival; only a recorded stay counts. Guests per room are not recorded.' },
+  'm-report': { who: 'Manager (submits) · Officer (finalizes)', src: ['Stays and rooms for the month, through the latest night that has happened', 'Submitted versions: figures only, saved at submission'], calc: ['Occupancy = room-nights occupied ÷ room-nights available.', 'Average length of stay = guest-nights ÷ arrivals, same month.', 'Annual figures are ratios of sums over reported months.', 'A month can be submitted after it ends. Due on the 5th of the next month.'], ref: 'DAE-1B Part I (arrivals by nationality or country of residence, overseas Filipinos footnote) and Part II (rooms occupied, rooms available, guest-nights, occupancy rate, length of stay, volume per sex).', lim: 'The length of stay is a period measure, not a cohort measure. A saved version never changes; later register edits show as differences.' },
+  'o-stats': { who: 'Officer', src: ['Latest submitted version of each enterprise-month', '2025 municipal totals imported from the paper Form A4 (read only)'], calc: ['Municipal figures add enterprise versions, never the live register.', '% share = row total ÷ grand total. % difference = (current − previous) ÷ previous. Zero in the previous year shows n/a.', 'Finalize needs a submitted version that matches the register. Reopen needs a reason.'], ref: 'FORM A: months January to December, total, % share of arrivals, previous year total, % difference, and Part II.', lim: 'The officer does not edit stays or the register. No approval queue. Enterprises that have not reported are not estimated.' }
+};
+const CONVS = [
+  ['C1 · Night of check-out', 'Not counted. A guest is counted overnight from check-in up to the night before check-out. The DAE-1A note says guests are counted "until the day he checks out", which can be read either way.', 'Default: exclude the check-out night.'],
+  ['C2 · Guests who join or leave mid-stay', 'Record the later guests as a separate stay with their own check-in. One stay has one set of dates for all its guests.', 'Default: separate stays.'],
+  ['C3 · Day use and same-day check-out', 'Not an accommodation stay. Check-out must be at least one night after check-in.', 'Default: refuse; confirm if day-use should be counted.'],
+  ['C4 · Available room-nights', 'Rooms in the list × days of operation, minus nights a room is out of service. Closed days count nothing.', 'Default: deduct out-of-service nights.'],
+  ['C5 · Month in progress', 'Figures run through the last night that has happened. A month is submitted after it ends.', 'Default: submit after month end.'],
+  ['C6 · Overseas Filipino', 'Philippine passport holders permanently residing abroad. Overseas Filipino workers are not in this group. The country they live in is not asked.', 'Default: no country.'],
+  ['C7 · Philippine residents by nationality', 'Philippine residents are split Filipino or foreign nationality. Everyone else is counted by country of residence.', 'Default: as the form.'],
+  ['C8 · Region on exports', 'The code says Region VII. Negros Oriental is in the Negros Island Region. Exported forms keep the label the Tourism Office confirms.', 'Needs the office\'s answer.'],
+  ['C9 · Country list', 'The database has 72 rows. The 2019 templates list fewer. The database list stays; export maps to the template rows.', 'Needs the office\'s answer.']
+];
+function notesHtml() {
+  const g = groupOf(curRoute()), n = NOTES[g];
+  return '<div class="dh"><h2>Notes for this screen</h2><button class="iconbtn" data-act="closeDrawer" aria-label="Close notes">' + ico('close') + '</button></div><div class="dbd">' +
+    '<div class="kv"><b>Screen</b><span>' + TITLES[g] + '</span><b>Who uses it</b><span>' + n.who + '</span><b>Template</b><span>' + n.ref + '</span></div>' +
+    '<div><h3>Source fields</h3><ul>' + n.src.map(x => '<li>' + x + '</li>').join('') + '</ul></div><div><h3>Calculation and date rules</h3><ul>' + n.calc.map(x => '<li>' + x + '</li>').join('') + '</ul></div><div><h3>Limits</h3><p>' + n.lim + '</p></div>' +
+    '<div><h3>Counting conventions to confirm</h3><div style="display:flex;flex-direction:column;gap:.5rem">' + CONVS.map(c => '<div class="conv"><b>' + c[0] + '</b><span class="sm">' + c[1] + '</span><div class="d">' + c[2] + '</div></div>').join('') + '</div></div>' +
+    '<div><h3>What changes from today</h3><ul><li>Arrivals counted per place, now for accommodations only. Attractions stay separate and are not in this mockup.</li><li>The "no percentages" rule gives way to the rates and shares the templates require. Occupancy, length of stay, % share and % difference are shown. Revenue is not.</li><li>The monthly report is built from the stays, not typed.</li><li>A submitted report is a saved version. Edits create a new version, never overwrite.</li><li>Finalize and Reopen act on one enterprise and one month. Finalizing also locks that month\'s register.</li><li>A month with carry-over guests only is valid (the old "guest nights but no guests" rule goes).</li></ul></div></div>';
+}
+function scenarioHtml() {
+  return '<div class="dh"><h2>The scenario</h2><button class="iconbtn" data-act="closeDrawer" aria-label="Close">' + ico('close') + '</button></div><div class="dbd">' +
+    '<p>Everything here is fictional. A sample manager runs <b>Casa Marina Beach Resort</b> (six numbered rooms) and <b>Lagoon View Cottages</b> (not set up yet). Today is the date in the top bar.</p>' +
+    '<div><h3>What to look for</h3><ol><li><b>A stay across a month end.</b> ST-011 checks in 29 Oct and leaves 3 Nov. Its arrival counts in October. Its nights split between October and November. It moves from room 202 to 201 on 1 Nov with no second arrival. See Guest Register, then Daily register.</li><li><b>A different residence class.</b> ST-013 is a Philippine resident with foreign nationality; ST-004 and ST-010 are overseas Filipinos.</li><li><b>A correction after submission.</b> October was submitted as v1 on 2 Nov. Two stays were edited on 5 Nov. Open Monthly Report, Month, October: it shows the differences. Submit the correction as v2, then see Versions.</li><li><b>A finalized month.</b> September is finalized. Try editing ST-007 or ST-003. Switch to Officer, Tracker, and reopen September with a reason.</li><li><b>Officer rule.</b> The officer cannot finalize October while the register differs from v1. After v2, finalize works.</li><li><b>An incomplete year.</b> Monthly Report, Year: January to June were before reporting started, July was closed, November is in progress.</li><li><b>Preserved 2025.</b> Officer, Tracker, 2025, and Arrivals Report 2025: municipal totals only, no enterprise detail.</li><li><b>Another enterprise.</b> Switch to Lagoon View Cottages in the header to see an enterprise that is not set up.</li><li><b>November ends.</b> Set Today to 1 Dec 2026 and submit November.</li></ol></div>' +
+    '<div class="row">' + btn('plain', 'restart_alt', 'Reset scenario', 'reset') + '</div></div>';
+}
+/* ---------- Boot ---------- */
+if (!TABS_FLAT[location.hash.slice(1)]) { try { history.replaceState(null, '', '#m-report-month'); } catch (x) { location.hash = 'm-report-month'; } }
+render();
+
+try { document.fonts.load('20px "Material Symbols Outlined"').then(f => { if (f.length) document.documentElement.classList.add('ms-ok'); }); } catch (x) {}
+
+</script>
