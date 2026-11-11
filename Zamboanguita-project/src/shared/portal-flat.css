@@ -778,3 +778,59 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .acc-coverage { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .5rem; }
 .acc-coverage > div { display: flex; flex-direction: column; gap: .2rem; align-items: flex-start; }
 .acc-coverage__m { font-size: .75rem; font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); }
+
+/* ---- Attraction visitor reporting (att-*.js) --------------------------------
+   The Support Staff's Daily Visitor Record and Monthly Report, and the
+   officer's Attraction visits tab. A day's state is in words (aria-label),
+   a pattern and a colour, never colour alone: missing is dashed red, a
+   confirmed 0 is hatched, a closure is struck through. */
+.att-layout { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .att-layout { grid-template-columns: minmax(0, 24rem) minmax(0, 1fr); align-items: start; } }
+.att-form__top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.att-total { font-size: 1.6rem !important; font-weight: 900; min-height: 3.25rem; font-variant-numeric: tabular-nums; }
+.att-grid4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.att-more > summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: .35rem; }
+.att-more > summary:focus-visible, .att-day:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.att-meter { height: .4rem; background: rgb(var(--ztims-on-surface) / .08); }
+.att-meter > span { display: block; height: 100%; background: rgb(var(--ztims-primary)); transition: width var(--dur-standard, 240ms) var(--ease-standard, ease); }
+.att-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .3rem; }
+.att-cal__dow { font-size: .7rem; font-weight: 800; text-align: center; color: rgb(var(--ztims-on-surface-variant)); }
+.att-day { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; min-height: 3.4rem; padding: .3rem .4rem;
+           border: 1px solid rgb(var(--ztims-outline-variant) / .6); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); text-align: left; }
+.att-day:hover:not(:disabled) { background: rgb(var(--ztims-on-surface) / .05); }
+.att-day:disabled { cursor: default; }
+.att-day[aria-pressed="true"] { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: -2px; }
+.att-day__n { font-size: .7rem; font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+.att-day__v { font-size: .95rem; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.att-day__dot { position: absolute; top: .3rem; right: .3rem; width: .45rem; height: .45rem; border-radius: 999px; background: rgb(var(--ztims-gold)); }
+.att-day--counted { border-left: 3px solid rgb(var(--ztims-success)); }
+.att-day--zero { background: repeating-linear-gradient(135deg, rgb(var(--ztims-on-surface) / .07) 0 4px, transparent 4px 8px), rgb(var(--ztims-surface)); }
+.att-day--missing, .att-day--scheduled { border: 1px dashed rgb(var(--ztims-error)); }
+.att-day--missing .att-day__v, .att-day--scheduled .att-day__v { color: rgb(var(--ztims-error)); }
+.att-day--closed { background: rgb(var(--ztims-on-surface) / .06); }
+.att-day--closed .att-day__v { font-size: .7rem; text-decoration: line-through; color: rgb(var(--ztims-on-surface-variant)); }
+.att-day--future, .att-day--before { opacity: .45; }
+.att-day--today { border: 1px solid rgb(var(--ztims-primary)); }
+.att-legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .75rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
+.att-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.att-sw { display: inline-block; width: 1rem; height: .9rem; border: 1px solid rgb(var(--ztims-outline-variant) / .6); background: rgb(var(--ztims-surface)); }
+.att-sw.att-day--counted { border-left: 3px solid rgb(var(--ztims-success)); }
+.att-sw.att-day--missing { border: 1px dashed rgb(var(--ztims-error)); }
+.att-unrec td { color: rgb(var(--ztims-error)); font-weight: 700; }
+.att-row--missing td, .att-row--missing th { color: rgb(var(--ztims-error)); font-weight: 700; }
+.att-row--note td { font-size: .72rem; color: rgb(var(--ztims-on-surface-variant)); border-top: 0; }
+.att-var1 td:nth-child(n+2) { min-width: 4.5rem; }
+.att-zero-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .25rem .75rem; max-height: 50vh; overflow-y: auto; }
+.att-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .45rem 1rem; font-size: .9rem; }
+.att-dl dt { font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); }
+@media (max-width: 480px) { .att-dl { grid-template-columns: minmax(0, 1fr); } .att-dl dd { margin-bottom: .35rem; } .att-form__top { grid-template-columns: minmax(0, 1fr); } }
+/* The officer's tracker cells and consolidation tables. */
+.att-track td { text-align: center; }
+.att-track td:first-child { text-align: left; min-width: 14rem; }
+.att-track .acc-pill { white-space: nowrap; font-size: .7rem; padding: .15rem .5rem; }
+.att-cellbtn { display: inline-flex; border: 0; background: none; padding: 0; cursor: pointer; }
+.att-cellbtn:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+.att-subtabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+.att-mode { display: inline-flex; border: 1px solid rgb(var(--ztims-outline-variant) / .7); border-radius: 999px; overflow: hidden; }
+.att-mode button { min-height: 40px; padding: 0 1rem; font-weight: 700; font-size: .85rem; color: rgb(var(--ztims-on-surface-variant)); }
+.att-mode button[aria-pressed="true"] { background: rgb(var(--ztims-on-surface)); color: rgb(var(--ztims-background)); }

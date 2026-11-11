@@ -16,7 +16,7 @@ This builds the approved proposal (documents 01 to 03 and `mockup.html`). The fi
 | `server.js` | Mounts the new router; a request body over 1 MB answers 413 (done earlier). |
 | Tests | `docs/attraction-reporting/tests/api-checks.js` (149 checks), `check-exports.py`; `reconcile.sql`, `rollback.sql`. |
 
-**Not built in this stage:** the pages (Daily Visitor Record, Monthly Reports, the officer's Attraction Visits tab and tracker, the Dashboard tile). The existing Support Staff pages call the old routes, which now answer 409. **The pages must ship in the same release as this backend**, as with the accommodation module. See section 6.
+**Not built in this stage:** the pages (Daily Visitor Record, Monthly Reports, the officer's Attraction Visits tab and tracker, the Dashboard tile). **Built in stage 5: see document 05**, which also updates the exports' print layout and the rollout. The existing Support Staff pages call the old routes, which now answer 409. **The pages must ship in the same release as this backend**, as with the accommodation module. See section 6.
 
 ## 2. The data model as built
 
@@ -127,14 +127,14 @@ Findings and handling:
 
 ## 9. Unresolved
 
-- The pages (section 1).
+- The pages (section 1). Done in stage 5 (document 05).
 - Which database role the live API uses (section 6).
 - D1 to D5, the attraction code list and the official requirements (section 8).
 - The attraction tracker for earlier reports still exists beside the new one until the pages are replaced.
 
 ## 10. Rollout to production (later; each step needs the user's yes)
 
-Order matters: code first, then schema, with the pages in the same deploy.
+Order matters: code first, then schema, with the pages in the same deploy. **Document 05 §8 replaces this list now that the pages are built.**
 1. Review and answer D1 to D5; provide the attraction codes.
 2. Build and test the pages on this branch (browser pass, phone and dark). Do not release the backend without them.
 3. **Backup** (Supabase SQL Editor, CSV): `monthly_reports`, `monthly_report_counts`, `register_entries`, `register_entry_guests`, `report_changes`, `spot_closed_dates`, `support_staff`. Confirm the project's daily backup is recent (Dashboard → Database → Backups).

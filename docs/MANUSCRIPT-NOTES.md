@@ -4,6 +4,16 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Attraction visitor reporting: the pages and the printed forms (12 November 2026, stage 5 on a branch; not live yet)
+
+What the manuscript must say once this ships (with the backend entry below):
+- **Support Staff record visitors one date at a time** on the **Daily Visitor Record**: the month as a calendar, the date and the total first, residence (Zamboanguita, rest of Negros Oriental, other Philippine provinces, foreign) and sex optional. A date nobody counted stays missing; 0 is recorded only when nobody came. Their menu is My attraction, Daily Visitor Record, Monthly Report, Account (the attraction Guest Register is gone).
+- **The Monthly Report is generated**, never typed: Support Staff check it and **Submit**; a reopened month is corrected on the daily record and submitted again with a reason. Each submission is a saved version.
+- **The Tourism Officer** reviews in Statistics → **Attraction visits** (a fifth tab): a tracker of attractions by month, **Finalize**, **Reopen** with a reason, and the municipal **DTA2M** (monthly) and **VAR 3M** (annual) with their Excel files and issued copies. The officer never records counts. The Dashboard shows attraction reports waiting to be finalized.
+- **The Excel files follow the supplied forms** (VAR 1, DTA2M, VAR 3M, VAR 2): the same titles, headings, colours, totals, notes and page arrangement (portrait, landscape for DTA2M, continuing sideways). Adaptations: a row for day 31; one row or column group per attraction; empty cells for "not recorded"; ZTIMS notes outside the forms; residence male and female left empty because sex by residence is not recorded.
+- **Attraction visits are not tourist arrivals**: they are kept out of the Arrivals Report (Form A4) and the accommodation reports, and totals across attractions are visits, not unique tourists. **This changes the October 2026 text that Form A4 counts arrivals at attractions.**
+- Testing: a browser test of the whole cycle (record, submit, finalize, issue, reopen, correct, resubmit, reissue), API and security tests, and the printed exports compared page by page with the source PDFs (`docs/attraction-reporting/05`, `exports/`).
+
 ## Attraction visitor reporting: daily record, monthly report, DTA2M and VAR 3M (12 November 2026, backend on a branch; not live yet)
 
 **The change.**

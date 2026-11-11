@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Guest Register</title>
+    <title>Explore Zamboanguita | Daily Visitor Record</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -454,9 +454,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">My attraction</span>
             </a>
-            <a title="Guest Register" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_register.html">
-                <span class="material-symbols-outlined text-accent">menu_book</span>
-                <span class="sidebar-label">Guest Register</span>
+            <a title="Daily Visitor Record" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_register.html">
+                <span class="material-symbols-outlined text-accent">edit_calendar</span>
+                <span class="sidebar-label">Daily Visitor Record</span>
             </a>
             <a title="Monthly Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
@@ -490,83 +490,18 @@ body { overflow-x: hidden; }
     </header>
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
-        <div class="p-2 max-w-[1000px] mx-auto space-y-6">
-            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Guest Register</h1>
+        <div class="p-2 max-w-[1200px] mx-auto space-y-6">
+            <div id="attHost" class="space-y-5"></div>
             <p id="staffWho" class="own-banner own-banner--office" hidden><span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span><span>Entered by <b id="staffWhoName"></b></span></p>
-
-            <div class="flex flex-wrap items-end gap-3">
-                <label id="rgPlaceWrap" class="block flex-1 min-w-[14rem]" hidden><span class="field-label">Place</span><select id="rgPlace" class="field"></select></label>
-                <div id="rgPlaceName" class="min-w-[12rem]" hidden><span class="field-label">Attraction</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
-                <label class="block"><span class="field-label">Month</span><select id="rgPeriod" class="field w-56"></select></label>
-                <button id="rgAdd" type="button" class="btn btn-primary min-h-[44px] ml-auto" disabled>
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span><span id="rgAddLabel">Add a stay</span>
-                </button>
-            </div>
-
-            <div id="rgTiles" class="stat-tiles"></div>
-            <p id="rgByCountry" class="text-support"></p>
-
-            <section class="glass-panel" aria-labelledby="rgListTitle">
-                <h2 id="rgListTitle" class="px-5 pt-4 pb-3 text-lg font-extrabold text-on-surface border-b border-outline-variant/30">Stays</h2>
-                <div id="rgList" class="ztims-stagger divide-y divide-outline-variant/20"></div>
-            </section>
-
-            <p class="flex flex-wrap items-center gap-3">
-                <a id="rgReportLink" href="staff_statistics.html" class="btn btn-secondary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">bar_chart</span>Open the monthly report</a>
-            </p>
         </div>
     </main>
 
-    <!-- Add or change one stay (a place to stay) or one group (an attraction). -->
-    <div id="entryModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
-        <form id="entryForm" class="ztims-modal w-full max-w-2xl p-5 sm:p-7 space-y-5 overflow-y-auto" novalidate>
-            <div class="flex justify-between items-start gap-4">
-                <h2 id="entryTitle" class="text-2xl font-black tracking-tight font-headline">Add a stay</h2>
-                <button type="button" data-close aria-label="Close" class="text-on-surface-variant hover:text-on-surface flex"><span class="material-symbols-outlined">close</span></button>
-            </div>
-            <p id="entryFrom" hidden class="tone-pill tone-info rounded-pill text-sm font-bold px-3 py-1 inline-flex"></p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label class="block"><span id="entryDateLabel" class="block text-sm font-semibold text-on-surface mb-1.5">Check-in date</span>
-                    <input id="entryDate" type="date" required class="field min-h-[44px]"/></label>
-                <div data-stay>
-                    <span class="block text-sm font-semibold text-on-surface mb-1.5">Nights</span>
-                    <div class="qty" data-qty="entryNights"><button type="button" data-step="-1" aria-label="One night less">−</button><input id="entryNights" type="number" min="1" max="365" value="1" aria-label="Nights"/><button type="button" data-step="1" aria-label="One night more">+</button></div>
-                </div>
-                <div data-stay>
-                    <span class="block text-sm font-semibold text-on-surface mb-1.5">Rooms</span>
-                    <div class="qty" data-qty="entryRooms"><button type="button" data-step="-1" aria-label="One room less">−</button><input id="entryRooms" type="number" min="1" max="1000" value="1" aria-label="Rooms"/><button type="button" data-step="1" aria-label="One room more">+</button></div>
-                </div>
-            </div>
-            <div>
-                <div class="rg-guest-head"><span class="text-sm font-semibold text-on-surface">Guests</span><span>Male</span><span>Female</span><span></span></div>
-                <div id="entryGuests" class="space-y-2"></div>
-                <button type="button" id="entryAddCountry" class="btn btn-secondary btn-sm min-h-[40px] mt-3">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span>Add a country</button>
-                <p id="entryTotal" class="text-sm font-semibold text-on-surface mt-3"></p>
-            </div>
-            <p id="entryError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
-            <div class="flex justify-end gap-3 pt-1">
-                <button type="button" data-close class="btn btn-cancel min-h-[44px]">Cancel</button>
-                <button type="submit" id="entrySave" class="btn btn-primary min-h-[44px]">Save stay</button>
-            </div>
-        </form>
-    </div>
-
-    <script type="module" src="../shared/stat-form.js"></script>
+    <script type="module" src="../shared/acc-common.js"></script>
+    <script type="module" src="../shared/att-common.js"></script>
+    <script type="module" src="../shared/att-staff.js"></script>
+    <script type="module" src="../shared/idle-signout.js"></script>
+<script type="module" src="../shared/staff-portal.js"></script>
     <script>
-        const API_BASE = "/api";
-
-        function authHeaders(extra) {
-            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, ch => (
-                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-            ));
-        }
-
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
@@ -604,265 +539,14 @@ body { overflow-x: hidden; }
             setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        let myPlaces = [], residenceList = [], current = null, editing = null;
-        // A booking checked in (?booking=): its registerDraft fills the window,
-        // and the entry is saved with its bookingId, once (statistics.js).
-        let fromBooking = null;
-        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        const fmt = n => (Number(n) || 0).toLocaleString('en-US');
-        const place = () => myPlaces.find(p => p._id === document.getElementById('rgPlace').value);
-        const isStay = () => (place() || {}).kind === 'accommodation';
-        const period = () => document.getElementById('rgPeriod').value.split('-').map(Number);
-        const nameOf = code => (residenceList.find(r => r.code === code) || {}).name || code;
-        const manilaToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-        const shortDay = iso => { const [y, m, d] = iso.split('-').map(Number); return { d, mon: MONTHS[m - 1].slice(0, 3), y }; };
 
-        async function api(path, method = 'GET', body) {
-            const res = await fetch(`${API_BASE}/statistics${path}`, {
-                method, headers: authHeaders(body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined
-            });
-            if (res.status === 401) { handleExpiredSession(); throw new Error('Signed out'); }
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.message || 'That did not work. Try again.');
-            return data;
-        }
-
-        function guestsLine(guests) {
-            return guests.map(g => {
-                const parts = [g.male ? `${g.male} male` : '', g.female ? `${g.female} female` : ''].filter(Boolean).join(', ');
-                return `<span class="rg-guest">${window.ZTIMS_STATS.flag(g.code)}${escapeHtml(nameOf(g.code))} · ${parts}</span>`;
-            }).join('');
-        }
-
-        async function load() {
-            const p = place();
-            if (!p) return;
-            const [year, month] = period();
-            const stay = isStay();
-            document.getElementById('rgAddLabel').textContent = stay ? 'Add a stay' : 'Add a group';
-            document.getElementById('rgListTitle').textContent = `${stay ? 'Stays' : 'Groups'} in ${MONTHS[month - 1]} ${year}`;
-            document.getElementById('rgReportLink').href = `staff_statistics.html?month=${year}-${month}`;
-            const list = document.getElementById('rgList');
-            list.innerHTML = '<div class="p-4"><div class="ztims-empty">Loading…</div></div>';
-            try {
-                current = await api(`/register/${p._id}/${year}/${month}`);
-            } catch (e) {
-                if (e.message !== 'Signed out') list.innerHTML = `<div class="p-4"><div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div></div>`;
-                return;
-            }
-            document.getElementById('rgAdd').disabled = !current.mayEdit;
-            const t = current.totals;
-            const male = t.counts.reduce((n, c) => n + c.male, 0), female = t.counts.reduce((n, c) => n + c.female, 0);
-            const tile = (label, value) => `<div class="stat-tile"><p>${label}</p><p>${fmt(value)}</p></div>`;
-            document.getElementById('rgTiles').innerHTML = stay
-                ? tile('Guests arrived', t.arrivals) + tile('Room-nights', t.roomNights) + tile('Guest nights', t.guestNights) + tile('Stays', t.entries)
-                : tile('Visitors', t.arrivals) + tile('Male', male) + tile('Female', female) + tile('Groups', t.entries);
-            document.getElementById('rgByCountry').innerHTML = t.counts.length
-                ? `By country: ${t.counts.map(c => `${escapeHtml(nameOf(c.code))} ${c.male ? c.male + ' M' : ''}${c.male && c.female ? ', ' : ''}${c.female ? c.female + ' F' : ''}`).join(' · ')}`
-                : '';
-            if (!current.entries.length) {
-                list.innerHTML = `<div class="p-4"><div class="ztims-empty">No ${stay ? 'stays' : 'groups'} yet for this month.</div></div>`;
-                return;
-            }
-            const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
-            list.innerHTML = current.entries.map(e => {
-                const d = shortDay(e.date);
-                const people = e.guests.reduce((n, g) => n + g.male + g.female, 0);
-                const before = e.date < monthStart;
-                return `
-                <div class="rg-row" data-id="${escapeHtml(e._id)}">
-                    <div class="bk-row__date"><span class="bk-row__day">${d.d}</span><span>${d.mon}</span></div>
-                    <div class="dest-row__body">
-                        <h3 class="dest-row__name">${stay ? `${e.nights} night${e.nights === 1 ? '' : 's'} · ${e.rooms} room${e.rooms === 1 ? '' : 's'}` : `${people} visitor${people === 1 ? '' : 's'}`}</h3>
-                        <p class="rg-guests">${guestsLine(e.guests)}</p>
-                        ${before ? `<div class="dest-row__issues"><span class="tone-pill tone-neutral rounded-pill text-xs font-bold px-2.5 py-0.5">Checked in ${d.mon} ${d.d}: only its nights count here</span></div>` : ''}
-                    </div>
-                    ${current.mayEdit ? `<div class="dest-row__actions">
-                        <button type="button" data-edit class="btn btn-secondary btn-sm min-h-[40px]">Edit</button>
-                    </div>` : ''}
-                </div>`;
-            }).join('');
-        }
-
-        /* ---- the window ------------------------------------------------ */
-        function residenceOptions(selected) {
-            const groups = [];
-            for (const r of residenceList) {
-                const label = r.section === 'philippine' ? 'Philippine residents' : r.section === 'foreign' ? r.region : 'Other';
-                let g = groups.find(x => x.label === label);
-                if (!g) groups.push(g = { label, rows: [] });
-                g.rows.push(r);
-            }
-            return groups.map(g => `<optgroup label="${escapeHtml(g.label)}">${g.rows.map(r =>
-                `<option value="${escapeHtml(r.code)}"${r.code === selected ? ' selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}</optgroup>`).join('');
-        }
-        const qty = (name, value, label) => `<div class="qty"><button type="button" data-step="-1" aria-label="${label} less">−</button><input type="number" min="0" max="10000" value="${value}" data-sex="${name}" aria-label="${label}"/><button type="button" data-step="1" aria-label="${label} more">+</button></div>`;
-        function guestRow(g) {
-            const row = document.createElement('div');
-            row.className = 'rg-guest-row';
-            row.innerHTML = `<select class="field min-h-[44px]" aria-label="Country of residence">${residenceOptions(g.code)}</select>
-                <div class="rg-q"><span class="rg-sex">Male</span>${qty('male', g.male, 'Male')}</div>
-                <div class="rg-q"><span class="rg-sex">Female</span>${qty('female', g.female, 'Female')}</div>
-                <button type="button" data-remove-row class="rg-x" aria-label="Remove this country"><span class="material-symbols-outlined">close</span></button>`;
-            return row;
-        }
-        function readGuests() {
-            return [...document.querySelectorAll('#entryGuests .rg-guest-row')].map(r => ({
-                code: r.querySelector('select').value,
-                male: parseInt(r.querySelector('[data-sex="male"]').value, 10) || 0,
-                female: parseInt(r.querySelector('[data-sex="female"]').value, 10) || 0
-            }));
-        }
-        function updateTotal() {
-            const n = readGuests().reduce((a, g) => a + g.male + g.female, 0);
-            document.getElementById('entryTotal').textContent = `${n} ${isStay() ? 'guest' : 'visitor'}${n === 1 ? '' : 's'}`
-                + (fromBooking && n !== fromBooking.guests ? ` · the booking says ${fromBooking.guests}` : '');
-            const rows = document.querySelectorAll('#entryGuests .rg-guest-row');
-            rows.forEach(r => { r.querySelector('[data-remove-row]').hidden = rows.length === 1; });
-        }
-        function setError(m) { const b = document.getElementById('entryError'); b.textContent = m || ''; b.hidden = !m; }
-
-        function openEntry(entry, draft) {
-            editing = entry || null;
-            fromBooking = draft || null;
-            const from = document.getElementById('entryFrom');
-            from.textContent = draft ? `From booking ${draft.code} · ${draft.guests} guest${draft.guests === 1 ? '' : 's'}` : '';
-            from.hidden = !draft;
-            const stay = isStay();
-            const [year, month] = period();
-            document.getElementById('entryTitle').textContent = `${entry ? 'Change' : 'Add'} a ${stay ? 'stay' : 'group'}`;
-            document.getElementById('entryDateLabel').textContent = stay ? 'Check-in date' : 'Date';
-            document.getElementById('entrySave').textContent = stay ? 'Save stay' : 'Save group';
-            document.querySelectorAll('#entryForm [data-stay]').forEach(el => { el.hidden = !stay; });
-            const date = document.getElementById('entryDate');
-            date.max = manilaToday();
-            const first = `${year}-${String(month).padStart(2, '0')}-01`;
-            const base = entry || (draft ? { date: String(draft.date).slice(0, 10), nights: draft.nights, rooms: draft.rooms,
-                guests: [{ code: draft.countryCode || 'ph-filipino', male: 0, female: 0 }] } : null);
-            date.value = base ? base.date : (manilaToday().slice(0, 7) === first.slice(0, 7) ? manilaToday() : first);
-            document.getElementById('entryNights').value = base && base.nights ? base.nights : 1;
-            document.getElementById('entryRooms').value = base && base.rooms ? base.rooms : 1;
-            const host = document.getElementById('entryGuests');
-            host.innerHTML = '';
-            (base ? base.guests : [{ code: 'ph-filipino', male: 0, female: 0 }]).forEach(g => host.appendChild(guestRow(g)));
-            updateTotal();
-            setError('');
-            document.getElementById('entryModal').hidden = false;
-            date.focus();
-        }
-        function closeEntry() { document.getElementById('entryModal').hidden = true; editing = null; fromBooking = null; }
-
-        async function saveEntry(event) {
-            event.preventDefault();
-            const guests = readGuests().filter(g => g.male + g.female > 0);
-            const codes = guests.map(g => g.code);
-            if (new Set(codes).size !== codes.length) return setError('A country appears twice. Put its guests on one row.');
-            if (!guests.length) return setError('Add at least one guest.');
-            const body = { date: document.getElementById('entryDate').value, guests };
-            if (isStay()) Object.assign(body, {
-                nights: parseInt(document.getElementById('entryNights').value, 10),
-                rooms: parseInt(document.getElementById('entryRooms').value, 10)
-            });
-            if (fromBooking && !editing) body.bookingId = fromBooking.bookingId;
-            const btn = document.getElementById('entrySave');
-            btn.disabled = true;
-            try {
-                const r = editing
-                    ? await api(`/register/entries/${editing._id}`, 'PUT', body)
-                    : await api(`/register/${place()._id}`, 'POST', body);
-                closeEntry();
-                showToast(r.message, 'success');
-                // A stay entered for another month shows in that month.
-                const [y, m] = body.date.split('-').map(Number);
-                const key = `${y}-${m}`;
-                const sel = document.getElementById('rgPeriod');
-                if ([...sel.options].some(o => o.value === key)) sel.value = key;
-                await load();
-            } catch (e) {
-                if (e.message !== 'Signed out') setError(e.message);
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        async function removeEntry(entry) {
-            const ok = await ztimsDialog.confirm({
-                title: `Remove this ${isStay() ? 'stay' : 'group'}?`,
-                message: `${entry.date} · ${entry.guests.reduce((n, g) => n + g.male + g.female, 0)} people. It is taken out of the register's totals.`,
-                confirmLabel: 'Remove', cancelLabel: 'Keep it', tone: 'danger'
-            });
-            if (!ok) return;
-            try {
-                const r = await api(`/register/entries/${entry._id}`, 'DELETE');
-                showToast(r.message, 'success');
-                await load();
-            } catch (e) {
-                if (e.message !== 'Signed out') showToast(e.message, 'error');
-            }
-        }
-
-        function wire() {
-            document.getElementById('rgPlace').addEventListener('change', load);
-            document.getElementById('rgPeriod').addEventListener('change', load);
-            document.getElementById('rgAdd').addEventListener('click', () => openEntry(null));
-            document.getElementById('rgList').addEventListener('click', event => {
-                const row = event.target.closest('.rg-row');
-                if (!row || !current) return;
-                const entry = current.entries.find(e => e._id === row.dataset.id);
-                if (!entry) return;
-                if (event.target.closest('[data-edit]')) openEntry(entry);
-                else if (event.target.closest('[data-remove]')) removeEntry(entry);
-            });
-            const modal = document.getElementById('entryModal');
-            modal.addEventListener('click', event => {
-                if (event.target === modal || event.target.closest('[data-close]')) return closeEntry();
-                const step = event.target.closest('[data-step]');
-                if (step) {
-                    const input = step.parentElement.querySelector('input');
-                    const min = Number(input.min) || 0, max = Number(input.max) || 10000;
-                    input.value = Math.min(max, Math.max(min, (parseInt(input.value, 10) || 0) + Number(step.dataset.step)));
-                    updateTotal();
-                    return;
-                }
-                const x = event.target.closest('[data-remove-row]');
-                if (x) { x.closest('.rg-guest-row').remove(); updateTotal(); }
-            });
-            modal.addEventListener('input', updateTotal);
-            document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeEntry(); });
-            document.getElementById('entryAddCountry').addEventListener('click', () => {
-                const used = new Set(readGuests().map(g => g.code));
-                const next = residenceList.find(r => !used.has(r.code));
-                document.getElementById('entryGuests').appendChild(guestRow({ code: next ? next.code : 'unspecified', male: 0, female: 0 }));
-                updateTotal();
-            });
-            document.getElementById('entryForm').addEventListener('submit', saveEntry);
-        }
-
+        /* Daily Visitor Record: att-staff.js draws the page; the server checks every call. */
         async function start() {
-            if (!window.ZTIMS_STATS) return setTimeout(start, 50);
-            const list = document.getElementById('rgList');
-            try {
-                [myPlaces, residenceList] = await Promise.all([api('/places'), api('/residences')]);
-            } catch (e) {
-                if (e.message !== 'Signed out') list.innerHTML = `<div class="p-4"><div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div></div>`;
-                return;
-            }
-            if (!myPlaces.length) {
-                list.innerHTML = '<div class="p-4"><div class="ztims-empty">No attraction is assigned to this account. Contact the Tourism Office.</div></div>';
-                return;
-            }
-            const placeSelect = document.getElementById('rgPlace');
-            for (const p of myPlaces) placeSelect.add(new Option(p.title, p._id));
-            // The header switcher says which enterprise; the page shows its name.
-            document.getElementById('rgPlaceWrap').hidden = true;
-            const name = document.getElementById('rgPlaceName');
-            name.hidden = false;
-            const shown = myPlaces.find(p => p._id === placeSelect.value) || myPlaces[0];
-            name.querySelector('p').textContent = shown.managerName || shown.title;
-            const periodSelect = document.getElementById('rgPeriod');
-            for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
-            wire();
-            await load();
+            while (!window.ztimsAttStaff) await new Promise(r => setTimeout(r, 30));
+            const host = document.getElementById('attHost');
+            await window.ztimsAttStaff.record(host);
+            const who = document.getElementById('staffWho'), head = host.querySelector('.acc-head');
+            if (who && head) head.after(who);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -952,8 +636,5 @@ body { overflow-x: hidden; }
     });
 })();
 </script>
-<script type="module" src="../shared/idle-signout.js"></script>
-<script type="module" src="../shared/staff-portal.js"></script>
-<script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>

@@ -818,6 +818,12 @@ body { overflow-x: hidden; }
                   detail: due ? `Accommodations still to send their monthly counts. Due ${due.dueLong}.` : '',
                   doneText: due ? `Every accommodation has sent its ${due.monthName} report.` : '', go: 'Open the tracker',
                   href: 'admin_statistics.html#tracker' },
+                // Office attractions' visit reports (attraction-visits.js), kept apart from accommodation arrivals.
+                { icon: 'attractions', tone: 'tone-warning', pill: 'To finalize', count: d.attractions ? d.attractions.toFinalize : null,
+                  one: `${d.attractions ? d.attractions.monthName : ''} attraction report to finalize`, many: `${d.attractions ? d.attractions.monthName : ''} attraction reports to finalize`,
+                  detail: d.attractions ? `Submitted by Support Staff.${d.attractions.missing ? ` ${d.attractions.missing} attraction${d.attractions.missing === 1 ? ' has' : 's have'} not submitted yet.` : ''}` : '',
+                  doneText: d.attractions ? `No attraction report is waiting for you.${d.attractions.missing ? ` ${d.attractions.missing} not submitted yet.` : ''}` : '', go: 'Open Attraction visits',
+                  href: 'admin_statistics.html#attractions' },
                 { icon: 'forum', tone: 'tone-info', pill: 'New', count: d.feedback ? d.feedback.length : null,
                   one: 'new visitor message', many: 'new visitor messages',
                   detail: 'Sent from the Contact Us page.',
@@ -862,6 +868,13 @@ body { overflow-x: hidden; }
             };
         }
 
+        // Last month's attraction visit reports: submitted ones wait for the officer; "not submitted" are still with Support Staff.
+        function summariseAttractions(tracker, period) {
+            if (!tracker || !Array.isArray(tracker.attractions)) return null;
+            const states = tracker.attractions.map(a => (a.months[period.month - 1] || {}).state).filter(s => s && s !== 'before' && s !== 'future');
+            return { monthName: period.monthName, toFinalize: states.filter(s => s === 'submitted').length,
+                     missing: states.filter(s => ['ready', 'incomplete', 'open', 'reopened', 'nostaff'].includes(s)).length };
+        }
         function summariseReports(tracker, period) {
             if (!tracker) return null;
             const entries = tracker.places.map(p => ({ title: p.title, status: p.months[period.month - 1].status }));
@@ -1059,12 +1072,13 @@ body { overflow-x: hidden; }
                 `Here is what needs you today, ${new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}.`;
             const period = reportPeriod(today);
 
-            const [spots, managers, feedback, tracker, collections] = await Promise.all([
+            const [spots, managers, feedback, tracker, collections, attractionTracker] = await Promise.all([
                 getJson('/spots'),
                 getJson('/establishment-managers'),
                 getJson('/feedback?status=new'),
                 getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`),
-                getJson(`/payments?month=${today.key.slice(0, 7)}`)
+                getJson(`/payments?month=${today.key.slice(0, 7)}`),
+                getJson(`/attraction-visits/tracker?year=${period.year}`)
             ]);
             if (sessionExpired) { handleExpiredSession(); return; }
 
@@ -1073,7 +1087,8 @@ body { overflow-x: hidden; }
                 spots: Array.isArray(spots) ? spots : null,
                 managers: Array.isArray(managers) ? managers : null,
                 feedback: Array.isArray(feedback) ? feedback : null,
-                reports
+                reports,
+                attractions: summariseAttractions(attractionTracker, period)
             }, today);
             renderReports(reports);
             renderListings(Array.isArray(spots) ? spots : null);

@@ -21,7 +21,7 @@
 
     function signedOut() {
         const next = encodeURIComponent(location.pathname.replace(/^.*\/src\//, '') + location.search + location.hash);
-        location.href = (location.pathname.includes('/admin/') || location.pathname.includes('/resort/') ? '../' : '') + 'staff_login.html?next=' + next;
+        location.href = (/\/(admin|resort|staff)\//.test(location.pathname) ? '../' : '') + 'staff_login.html?next=' + next;
     }
 
     async function api(path, options = {}) {

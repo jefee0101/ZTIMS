@@ -420,7 +420,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
             const ys = await yearSources(spot, year, mode, client);
             attractions.push({ spot, code: ys.settings ? ys.settings.attraction_code : '', months: ys.months.map(m => ({ month: m.month, state: m.state.state, source: m.source, cell: E.var3mCell(m.source) })) });
         }
-        const zero = { domestic: 0, foreign: 0, total: 0, unrecorded: 0 };
+        const zero = { domestic: null, foreign: null, total: 0, unrecorded: 0 };
         const totals = attractions.map(a => a.months.filter(m => m.cell.included).reduce((acc, m) => E.addCells(acc, m.cell), { ...zero }));
         const byMonth = Array.from({ length: 12 }, (_, i) => { const cells = attractions.map(a => a.months[i].cell).filter(c => c.included); return cells.length ? cells.reduce((acc, c) => E.addCells(acc, c), { ...zero }) : null; });
         const grand = totals.reduce((acc, t) => E.addCells(acc, t), { ...zero });
@@ -529,7 +529,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
             X.addDta2m(wb, { year: o.year, month: o.month, mode: 'official', rows, totals: E.sumRows(rows.map(r => r.dta2m)), coverage: { attractions: rows.length, finalized: rows.length, submitted: 0, draft: 0, notSubmitted: 0 }, issued: { at: o.issued_at, status: o.status, id: o.id } });
         } else {
             const attractions = spots.map(s => ({ spot: s, code: (sets.find(x => x.spot_id === s.id) || {}).attraction_code || '', months: Array.from({ length: 12 }, (_, i) => { const src = mk(s.id, i + 1); return { month: i + 1, state: src.kind === 'final' ? 'finalized' : 'none', source: src, cell: E.var3mCell(src) }; }) }));
-            const zero = { domestic: 0, foreign: 0, total: 0, unrecorded: 0 };
+            const zero = { domestic: null, foreign: null, total: 0, unrecorded: 0 };
             const totals = attractions.map(a => a.months.filter(m => m.cell.included).reduce((acc, m) => E.addCells(acc, m.cell), { ...zero }));
             const byMonth = Array.from({ length: 12 }, (_, i) => { const cs = attractions.map(a => a.months[i].cell).filter(c => c.included); return cs.length ? cs.reduce((acc, c) => E.addCells(acc, c), { ...zero }) : null; });
             X.addVar3m(wb, { year: o.year, mode: 'official', attractions, totals, byMonth, grand: totals.reduce((acc, t) => E.addCells(acc, t), { ...zero }), legacy: { municipalTotalMonths: 0, note: '' }, issued: { at: o.issued_at, status: o.status, id: o.id } });

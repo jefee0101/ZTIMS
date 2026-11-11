@@ -539,10 +539,15 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
                 <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">hotel</span>FORM A</button>
+                <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">attractions</span>Attraction visits</button>
             </div>
 
             <!-- ============ FORM A: private places to stay, from their saved versions (acc-officer.js) ============ -->
             <section role="tabpanel" id="panel-forma" aria-labelledby="tab-forma" class="space-y-4" hidden></section>
+
+            <!-- ============ Attraction visits: office attractions' daily counts, DTA2M and VAR 3M (att-officer.js) ============ -->
+            <section role="tabpanel" id="panel-attractions" aria-labelledby="tab-attractions" class="space-y-4" hidden></section>
 
             <!-- ============ Arrivals Report (Form A4) ============ -->
             <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4">
@@ -569,11 +574,11 @@ body { overflow-x: hidden; }
             <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4" hidden>
                 <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                     <label class="block"><span class="field-label">Year</span><select id="trYear" class="field w-32"></select></label>
-                    <label class="block"><span class="field-label">Places</span>
-                        <select id="trKind" class="field w-56"><option value="accommodation">Places to stay</option><option value="attraction">Attractions</option></select></label>
+                    <input type="hidden" id="trKind" value="accommodation">
+                    <p class="text-sm min-h-[44px] flex items-center">Places to stay.&nbsp;<button type="button" class="font-bold underline" id="trToAttractions">Attractions are under Attraction visits</button></p>
                 </div>
                 <!-- The legend, always in view: one line of the same pills. -->
-                <p id="trLegend" class="flex flex-wrap items-center gap-2 text-xs font-bold" aria-label="What the cells mean">
+                <p id="trLegend" hidden class="flex flex-wrap items-center gap-2 text-xs font-bold" aria-label="What the cells mean">
                     <span class="tone-pill tone-success rounded-pill px-2.5 py-0.5">✓ Submitted</span>
                     <span class="tone-pill tone-warning rounded-pill px-2.5 py-0.5">Late: after the 5th</span>
                     <span class="tone-pill tone-danger rounded-pill px-2.5 py-0.5">! Missing</span>
@@ -612,6 +617,8 @@ body { overflow-x: hidden; }
     <script type="module" src="../shared/stat-form.js"></script>
     <script type="module" src="../shared/acc-common.js"></script>
     <script type="module" src="../shared/acc-officer.js"></script>
+    <script type="module" src="../shared/att-common.js"></script>
+    <script type="module" src="../shared/att-officer.js"></script>
     <script>
         const API_BASE = "/api";
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -686,7 +693,7 @@ body { overflow-x: hidden; }
         const ownRow = office => (office ? 'own-row--office' : 'own-row--private');
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['forma4', 'enter', 'tracker', 'forma'];
+        const TABS = ['forma4', 'enter', 'tracker', 'forma', 'attractions'];
         function showTab(name) {
             for (const t of TABS) {
                 document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
@@ -697,9 +704,18 @@ body { overflow-x: hidden; }
             if (name === 'tracker') loadTracker();
             if (name === 'enter') loadEntry();
             if (name === 'forma') mountFormA();
+            if (name === 'attractions') mountAttractions();
         }
         // Private places to stay report through their stay register (acc-officer.js).
         const accReady = async () => { while (!window.ztimsAccOfficer || !window.ztimsAcc) await new Promise(r => setTimeout(r, 30)); return window.ztimsAccOfficer; };
+        // Office attractions report through their Daily Visitor Record (att-officer.js).
+        let attractionsMounted = false;
+        async function mountAttractions() {
+            if (attractionsMounted) return;
+            attractionsMounted = true;
+            while (!window.ztimsAttOfficer) await new Promise(r => setTimeout(r, 30));
+            window.ztimsAttOfficer.mount(document.getElementById('panel-attractions'));
+        }
         let formAMounted = false;
         async function mountFormA() {
             if (formAMounted) return;
@@ -719,7 +735,6 @@ body { overflow-x: hidden; }
         async function loadTracker() {
             const host = document.getElementById('trackerHost');
             const year = document.getElementById('trYear').value, kind = document.getElementById('trKind').value;
-            document.getElementById('trLegend').hidden = kind === 'accommodation';
             // Places to stay: office places to stay never count, so these are the
             // private ones and their stay-register months.
             if (kind === 'accommodation') return (await accReady()).tracker(host, Number(year), openEntry);
@@ -773,6 +788,8 @@ body { overflow-x: hidden; }
                     const groups = [['attraction', 'Attractions'], ['accommodation', 'Places to stay']];
                     for (const [kind, label] of groups) {
                         const og = document.createElement('optgroup'); og.label = label;
+                        // An office attraction reports through its Daily Visitor Record (Attraction visits tab).
+                        if (kind === 'attraction') continue;
                         for (const p of list.filter(x => x.kind === kind)) {
                             og.appendChild(new Option(`${p.title}${p.barangay ? ' · ' + p.barangay : ''} · ${p.keptByOffice ? 'Tourism Office' : 'Private enterprise (view only)'}`, p._id));
                         }
@@ -970,6 +987,7 @@ body { overflow-x: hidden; }
             document.getElementById('faTo').value = '12';
             document.getElementById('trYear').addEventListener('change', loadTracker);
             document.getElementById('trKind').addEventListener('change', loadTracker);
+            document.getElementById('trToAttractions').addEventListener('click', () => showTab('attractions'));
             document.getElementById('enPlace').addEventListener('change', renderEntry);
             document.getElementById('enPeriod').addEventListener('change', renderEntry);
             document.getElementById('faGenerate').addEventListener('click', generateForm);

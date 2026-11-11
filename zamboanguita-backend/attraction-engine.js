@@ -229,23 +229,31 @@ function sourceFor(mode, { state, finalized, latest, draft }) {
    cells do not exist: the form's residence Male/Female are left empty. */
 function dta2mRow(src) {
     const f = src.figures; if (!f) return { included: false, kind: src.kind };
+    // A month whose residence was never recorded has unknown classes: empty, never 0.
+    const res = k => (residenceKnown(f) ? f.residence[k] : null);
     return { included: true, kind: src.kind, version: src.version, pending: !!src.pending,
-        thisMunicipality: f.residence.zamboanguita, thisProvince: f.residence.negrosOriental, otherProvince: f.residence.otherProvince, foreign: f.residence.foreign,
+        thisMunicipality: res('zamboanguita'), thisProvince: res('negrosOriental'), otherProvince: res('otherProvince'), foreign: res('foreign'),
         male: f.sexRecorded ? f.male : null, female: f.sexRecorded ? f.female : null, total: f.total, residenceUnrecorded: f.residenceUnrecorded, sexUnrecorded: f.sexUnrecorded, dates: f.dates };
 }
+/* Whether any residence was recorded in the month (or the month had no visitors, when every class is a true 0). */
+const residenceKnown = f => f.total === 0 || f.total - f.residenceUnrecorded > 0;
 /* VAR 3M cells: Domestic = Zamboanguita + rest of Negros Oriental + other provinces (as recorded),
-   Foreign (as recorded), Total (confirmed). Domestic + Foreign is below Total by `unrecorded`. */
+   Foreign (as recorded), Total (confirmed). Domestic + Foreign is below Total by `unrecorded`.
+   With no residence recorded at all, Domestic and Foreign are unknown (null), not 0. */
 function var3mCell(src) {
     const f = src.figures; if (!f) return { included: false, kind: src.kind };
-    return { included: true, kind: src.kind, version: src.version, pending: !!src.pending, domestic: f.domestic, foreign: f.foreignKnown, total: f.total, unrecorded: f.residenceUnrecorded };
+    const known = residenceKnown(f);
+    return { included: true, kind: src.kind, version: src.version, pending: !!src.pending, domestic: known ? f.domestic : null, foreign: known ? f.foreignKnown : null, total: f.total, unrecorded: f.residenceUnrecorded };
 }
-const addCells = (a, c) => ({ domestic: a.domestic + c.domestic, foreign: a.foreign + c.foreign, total: a.total + c.total, unrecorded: a.unrecorded + c.unrecorded });
+/* Adds two figures where null is unknown: unknown + unknown stays unknown; a known figure adds as itself. */
+const addN = (a, b) => (a == null ? (b == null ? null : b) : b == null ? a : a + b);
+const addCells = (a, c) => ({ domestic: addN(a.domestic, c.domestic), foreign: addN(a.foreign, c.foreign), total: a.total + c.total, unrecorded: a.unrecorded + c.unrecorded });
 const sumRows = rows => rows.filter(r => r.included).reduce((a, r) => ({
-    thisMunicipality: a.thisMunicipality + r.thisMunicipality, thisProvince: a.thisProvince + r.thisProvince, otherProvince: a.otherProvince + r.otherProvince, foreign: a.foreign + r.foreign,
+    thisMunicipality: addN(a.thisMunicipality, r.thisMunicipality), thisProvince: addN(a.thisProvince, r.thisProvince), otherProvince: addN(a.otherProvince, r.otherProvince), foreign: addN(a.foreign, r.foreign),
     male: a.male + (r.male || 0), female: a.female + (r.female || 0), sexAny: a.sexAny || r.male !== null, total: a.total + r.total, residenceUnrecorded: a.residenceUnrecorded + r.residenceUnrecorded, sexUnrecorded: a.sexUnrecorded + r.sexUnrecorded, included: a.included + 1
-}), { thisMunicipality: 0, thisProvince: 0, otherProvince: 0, foreign: 0, male: 0, female: 0, sexAny: false, total: 0, residenceUnrecorded: 0, sexUnrecorded: 0, included: 0 });
+}), { thisMunicipality: null, thisProvince: null, otherProvince: null, foreign: null, male: 0, female: 0, sexAny: false, total: 0, residenceUnrecorded: 0, sexUnrecorded: 0, included: 0 });
 
 module.exports = {
     MAX_TOTAL, CLASSES, RESIDENCE_KEYS, WRITABLE, pad, dayNum, dayStr, addDays, daysIn, monthKey, firstDay, lastDay, isDate, toDate, weekday, manilaToday, deadlineFor, shiftMonth,
-    parseCount, rowOf, dayState, monthFigures, versionColumns, figuresFromVersion, sourceDigest, diffDaily, periodState, sourceFor, dta2mRow, var3mCell, addCells, sumRows
+    parseCount, rowOf, dayState, monthFigures, versionColumns, figuresFromVersion, sourceDigest, diffDaily, periodState, sourceFor, dta2mRow, var3mCell, addCells, addN, sumRows, residenceKnown
 };

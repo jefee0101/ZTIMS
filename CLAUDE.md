@@ -328,6 +328,10 @@ purpose — see the header comment in `spot-form.js`:
   `acc-officer.js` — accommodation reporting's pages (stay register, DAE-1B
   and versions, room numbers and the reporting profile, the officer's tracker,
   month review and FORM A). See "Accommodation reporting" below.
+- `att-common.js`, `att-staff.js`, `att-officer.js` — attraction visit
+  reporting's pages (the Support Staff's Daily Visitor Record and Monthly
+  Report; the officer's Attraction visits tab). Built on `acc-common.js`. See
+  "Attraction visitor reporting" below.
 - `open-days.js` — reads a destination's "working days" text into weekdays and
   writes ticked days back as text (`window.ZTIMS_OPEN_DAYS`); used by the
   listing form's day boxes and the officer's Visitor setup. See "Attraction
@@ -435,7 +439,7 @@ The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 (the file keeps its old name so sign-in and bookmarks still land on it). It holds
 no data of its own: it reads the officer's existing endpoints (spots,
 enterprise managers, feedback, `/api/statistics/tracker` and `/form-a4`,
-`/api/payments`) and shows what is waiting on each — every card links to the
+`/api/payments`, `/api/attraction-visits/tracker`) and shows what is waiting on each — every card links to the
 page where it is dealt with, Statistics through the tab named in the link's
 address (`admin_statistics.html#tracker`) — plus the month just ended's Form A4
 reports, the month's collections, and Form A4 counts by month and by country. Counts only, like the statistics themselves. Its "Add new
@@ -574,9 +578,10 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
 - **Nothing from tickets.** Enterprises report their own already-totalled
   month; ZTIMS never derives these figures from tickets sold.
 - **Who reports.** A manager, for the listing they manage. Support Staff, for
-  the office attraction they look after; the officer may also enter or correct
-  an office place's report as a backup (10 November 2026), and keeps Finalize,
-  Reopen and Void. A privately managed enterprise's reports are its manager's
+  the office attraction they look after, now through the Daily Visitor Record
+  (see "Attraction visitor reporting"; the officer's backup entry of an
+  attraction's monthly report, allowed on 10 November 2026, is retired by D5);
+  the officer keeps Finalize, Reopen and Void. A privately managed enterprise's reports are its manager's
   to enter, and the officer views them (`mayViewFor` / `mayEnterFor` in
   `statistics.js`; the officer's "Enter a report" tab shows them read-only).
   The Guest Register is never the officer's (`mayKeepRegister`). `kind` comes from the listing: an accommodation reports arrivals,
@@ -591,11 +596,15 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   attractions, the office's and private ones — so a guest counts once at each
   place they arrive at (Mark stays two nights at a resort and visits the falls:
   2 arrivals, 2 guest nights). Part II (rooms, room-nights, guest nights) is
-  places to stay only; its volume per sex is Part I's arrivals by sex. Don't
-  split attraction arrivals back out into a separate part or page.
-- **One report page.** Statistics has four tabs: Arrivals Report, Enter a
-  report, Tracker, and FORM A (private places to stay; see "Accommodation
-  reporting") — no separate Attractions tab or route. The Arrivals Report:
+  places to stay only; its volume per sex is Part I's arrivals by sex.
+  **Superseded on the branch:** "Don't split attraction arrivals back out into a
+  separate part or page" no longer holds — attraction visits are a separate
+  measure with their own tab and forms (D1, see "Attraction visitor reporting").
+- **One report page.** Statistics has five tabs: Arrivals Report, Enter a
+  report, Tracker, FORM A (private places to stay; see "Accommodation
+  reporting") and **Attraction visits** (office attractions' daily counts,
+  DTA2M and VAR 3M; see "Attraction visitor reporting"). Enter a report and
+  Tracker list places to stay only; the old "Attractions" choice there is gone. The Arrivals Report:
   Part I arrivals by country, Part II overnight stays (places to stay), then
   **Arrivals by place** (`formA4()`'s `places`: every place, places to stay
   then attractions, each with its Tourism Office / Private tag, "–" for a
@@ -605,8 +614,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   From / To, Generate, Download Excel and **Only countries with arrivals**
   (ticked by default: a country or region with nobody in those months is left
   out, totals stay; the Excel always lists all 72 rows), four number tiles
-  (Arrivals, Guest nights, Places reported of all places, Reports), municipal-total and finalized months as pills. Tracker: Year and
-  Places (Places to stay / Attractions), a one-line legend of the cell pills,
+  (Arrivals, Guest nights, Places reported of all places, Reports), municipal-total and finalized months as pills. Tracker: Year
+  (places to stay only, with a link to Attraction visits), a one-line legend of the cell pills,
   the on-time / late / missing counts as pills. **Who runs a place** shows
   everywhere a place is listed in Statistics (the user's decision): `.own-tag`
   pills in `portal-flat.css` — Tourism Office (tangerine, `account_balance`)
@@ -769,17 +778,50 @@ visitors here").
   through every indirect route, triggers, bounds, races, formula injection),
   `reconcile-exports.py` (36: every export against its saved version).
 
-### Attraction visitor reporting (stage 4 on branch; not on main or live yet)
+### Attraction visitor reporting (stages 4 and 5 on branch; not on main or live yet)
 
 An office-run, counting attraction's visitors are recorded **one count per date**
 by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
 are worked out from those counts, never typed. Proposal, mockup, decisions and
 the build: `docs/attraction-reporting/` (01 sources and mapping, 02 workflow and
 model, 03 impact, gaps and security, 04 what was built, reconciliation and
-rollout, `rollback.sql`, `reconcile.sql`, `tests/`, `mockup.html`). **Only the
-backend is built; the pages are the next stage and must ship in the same
-release**, because the old attraction report and Guest Register routes now answer
-409 `USE_DAILY_RECORD`.
+rollout, 05 the pages, the exports compared with the PDFs and the verification,
+`exports/` (printed exports beside the source pages), `rollback.sql`,
+`reconcile.sql`, `tests/`, `mockup.html`). Backend and pages ship together: the
+old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
+- **Pages (stage 5).** Support Staff (`src/staff/`, menu My attraction, Daily
+  Visitor Record, Monthly Report, Account): **Daily Visitor Record**
+  (`staff_register.html`, `att-staff.js` `record`): the month as a calendar of
+  days (counted, confirmed 0 hatched, missing dashed red, closure struck through;
+  each day's state in its `aria-label`), Previous / Next month, the state banner
+  (a reopening shows its reason), a form with Date and Total visitors first and
+  "Add a breakdown (optional)" for the four residence classes and male / female,
+  live "n of N classified", Save (the next missing date is offered), Discard
+  changes; leaving unsaved figures always asks; a stale save says so with "Load
+  the saved figures"; "Record 0 for several dates" ticks only dates nobody came.
+  **Monthly Report** (`staff_statistics.html`, `report`): month picker, tiles,
+  incomplete breakdowns said plainly, residence and sex tables (unknown stays
+  empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
+  total, dates and incomplete breakdowns; a correction needs a reason),
+  versions with what changed and an Excel each, history. Officer: Statistics →
+  **Attraction visits** (`att-officer.js`): Tracker (attractions × months by
+  state; a cell opens the month: figures, versions, history, VAR 1 Excel,
+  Finalize asked once, Reopen with a reason of 10+; "Reporting settings" sets the
+  first month and the attraction code), Monthly (DTA2M, Official / Operational,
+  coverage pills, Excel, Issue), Annual (VAR 3M, the same) and Issued (current,
+  needs regenerating, superseded; Excel as issued). The officer's pages have no
+  field to record a count. Dashboard: "attraction reports to finalize" card.
+  Shared: `att-common.js` (pills, tiles, tables) on `acc-common.js`; styles
+  `.att-*` at the end of `portal-flat.css`.
+- **Unknown is empty.** A month with no residence recorded at all has its classes
+  `null` in DTA2M and VAR 3M (screens and Excel), never 0 (`residenceKnown`,
+  `addN` in `attraction-engine.js`).
+- **Excel print arrangement (as the PDFs):** VAR 1, VAR 2 and VAR 3M A4 portrait,
+  DTA2M A4 landscape, continuing sideways onto further pages (VAR 1 days 1–28 on
+  page 1, the rest on page 2, Foreign and Grand Total on pages 3–4). Breaks fall
+  at column-group boundaries; ExcelJS cannot write column breaks, so
+  `attraction-visits-excel.js` adds `<colBreaks>` to the sheet XML (JSZip,
+  declared in `package.json`). Signature lines only where the PDF has them (VAR 2).
 - **Code:** `attraction-engine.js` (arithmetic, no database), `attraction-visits.js`
   (routes at `/api/attraction-visits/*`), `attraction-visits-excel.js`. Tables are
   the `attraction_*` block at the end of `schema.sql`.
@@ -823,8 +865,12 @@ release**, because the old attraction report and Guest Register routes now answe
   RLS only keeps Supabase's public REST roles out. Authorization is in code and in
   triggers.
 - **Tests (local only; they clear the `attraction_*` tables):**
-  `docs/attraction-reporting/tests/api-checks.js` (149 checks) and
-  `check-exports.py`.
+  `docs/attraction-reporting/tests/api-checks.js` (149 checks), `check-exports.py`,
+  `page-flow.js` (57 browser checks: record → submit → finalize → DTA2M / VAR 3M →
+  reopen → correct → resubmit → regenerated outputs), `page-flow-extra.js` (20:
+  agreement down to the Excel cells, year boundary, a change of Support Staff, an
+  attraction switched off) and `page-security.js` (14: stored markup, cross-site,
+  download names, no secrets).
 
 ### Online payments (demonstration, test mode)
 
@@ -1602,8 +1648,9 @@ person of the Municipal Tourism Office, under the Tourism Officer, who looks
 after **one office-run attraction** (no manager, `type` `spot`, published;
 adding them switches its Count visitors here on — an office place counts
 visitors only through its Support Staff, and the officer has no Guest
-Register, 10 November 2026). They keep its Guest Register, its monthly report (a
-saved report counts at once, like a manager's) and its listing details except
+Register, 10 November 2026). They keep its Daily Visitor Record and submit its
+monthly report (see "Attraction visitor reporting"; until stage 5 this was a Guest
+Register and a typed monthly report) and its listing details except
 category and prices. They never check or mark tickets, see Collections or
 refunds, set closed dates, take a place down, Finalize or Reopen, touch other
 places, accounts, settings or feedback, or delete anything. One active account
@@ -1647,8 +1694,9 @@ officer deactivates the old account and adds a new one.
   `submitted_by_role`) and `report_changes` name the person. Removing a
   register entry stays `requireStaff` (Support Staff never delete; they fix a
   mistake with Edit); void, Finalize and Reopen stay `requireAdmin`. The officer
-  never writes a Guest Register (`mayKeepRegister`), but may enter or correct
-  the monthly report as a backup.
+  never writes a Guest Register (`mayKeepRegister`); the backup entry of an
+  attraction's monthly report is retired (D5), and the officer never records a
+  daily count.
 - **Listing** (`PUT /api/spots/:id`, `authorizeSpotWrite(auth, spot, account)`
   scope `support_staff`): own attraction only. `SUPPORT_STAFF_WRITABLE_SPOT_FIELDS`
   — description, photos, opening days and hours, phone, contact email,
@@ -1663,7 +1711,7 @@ officer deactivates the old account and adds a new one.
   kind, take it down (`PATCH …/status` to unpublished or archived) or delete
   it: 409 `HAS_SUPPORT_STAFF`, naming the person.
 - **Their portal** (`src/staff/`, the manager pages' shell and portal-flat
-  look; menu: My attraction, Guest Register, Monthly Report, Account only;
+  look; menu: My attraction, Daily Visitor Record, Monthly Report, Account only;
   `idle-signout.js` and `src/shared/staff-portal.js` on each). `staff-portal.js`
   reads `GET /api/support-staff/me` once (`window.ztimsStaff.me()`), puts the
   attraction's name in the header on a solid pill (`#staffPlace`,
@@ -1675,10 +1723,10 @@ officer deactivates the old account and adds a new one.
   opens the shared listing form on that part (`mountSpotForm({ role:
   'support_staff' })`, `openSection`), which shows the name, kind, categories,
   fees, tagline and booking link disabled (`lockOfficeFields`); Contact is a
-  small window (phone, public email); "See it as visitors do". **Guest
-  Register** and **Monthly Report** (`staff_register.html`,
-  `staff_statistics.html`): the manager's pages for their one place, the
-  attraction's name instead of a picker, the banner, no Remove. **Account**
+  small window (phone, public email); "See it as visitors do". **Daily Visitor
+  Record** and **Monthly Report** (`staff_register.html`,
+  `staff_statistics.html`): see "Attraction visitor reporting" (they no longer
+  follow the manager's Guest Register and report pages). **Account**
   (`staff_settings.html`): name, position, contact number, the sign-in email
   and attraction (set by the Tourism Office), change password, sign out of all
   devices. The pages were made from the `src/resort/` ones; change both when a
@@ -1923,14 +1971,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no tickets, money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
-- Attraction visits (stage 4, branch): one count per attraction and date, kept
+- Attraction visits (stages 4 and 5, branch): one count per attraction and date, kept
   apart from accommodation arrivals everywhere; unknown is never zero; sex by
   residence is never invented; the officer never records. See "Attraction
   visitor reporting".
 - No Guest Register for the officer (10 November 2026, the user's decision):
-  Support Staff keep office attractions' registers and send their monthly
-  reports; the officer only reads, may enter or correct a report as a backup,
-  and Finalizes / Reopens. An office place counts visitors only while it has
+  Support Staff keep office attractions' daily records and submit their monthly
+  reports; the officer only reads and Finalizes / Reopens (the backup entry is
+  retired on the branch, D5). An office place counts visitors only while it has
   (or waits for) Support Staff; office places to stay never count; places that
   need no counting have Count visitors here off.
 - Online payment exists only as a

@@ -454,9 +454,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">My attraction</span>
             </a>
-            <a title="Guest Register" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_register.html">
-                <span class="material-symbols-outlined text-accent">menu_book</span>
-                <span class="sidebar-label">Guest Register</span>
+            <a title="Daily Visitor Record" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_register.html">
+                <span class="material-symbols-outlined text-accent">edit_calendar</span>
+                <span class="sidebar-label">Daily Visitor Record</span>
             </a>
             <a title="Monthly Report" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
@@ -491,46 +491,17 @@ body { overflow-x: hidden; }
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1200px] mx-auto space-y-6">
-            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h1>
+            <div id="attHost" class="space-y-5"></div>
             <p id="staffWho" class="own-banner own-banner--office" hidden><span class="own-tag own-tag--office"><span class="material-symbols-outlined" aria-hidden="true">account_balance</span>Tourism Office</span><span>Entered by <b id="staffWhoName"></b></span></p>
-
-            <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
-                <label id="rpPlaceWrap" class="block flex-1 min-w-[14rem]"><span class="field-label">Place</span><select id="rpPlace" class="field"></select></label>
-                <div id="rpPlaceName" class="flex-1 min-w-[14rem]" hidden><span class="field-label">Attraction</span><p class="text-lg font-extrabold text-on-surface min-h-[44px] flex items-center"></p></div>
-                <label class="block"><span class="field-label">Month</span><select id="rpPeriod" class="field w-56"></select></label>
-            </div>
-
-            <details class="glass-panel p-4">
-                <summary class="cursor-pointer font-bold text-sm">What to count</summary>
-                <ul class="mt-3 space-y-1.5 text-sm text-on-surface-variant list-disc pl-5">
-                    <li><b class="text-on-surface">Guests:</b> each guest who checked in this month, once per stay, under the country where they live. Split them into male and female.</li>
-                    <li><b class="text-on-surface">Number of rooms:</b> the rooms you have for guests.</li>
-                    <li><b class="text-on-surface">Room-nights occupied:</b> each night a room was taken counts once. 1 room for 3 nights = 3.</li>
-                    <li><b class="text-on-surface">Guest nights:</b> every guest × every night. A family of 4 for 3 nights = 12.</li>
-                    <li>A guest whose residence you don't know goes under "Unspecified residence".</li>
-                </ul>
-            </details>
-
-            <div id="rpHost" class="glass-panel p-4 sm:p-6"></div>
         </div>
     </main>
 
-    <script type="module" src="../shared/stat-form.js"></script>
+    <script type="module" src="../shared/acc-common.js"></script>
+    <script type="module" src="../shared/att-common.js"></script>
+    <script type="module" src="../shared/att-staff.js"></script>
     <script type="module" src="../shared/idle-signout.js"></script>
 <script type="module" src="../shared/staff-portal.js"></script>
     <script>
-        const API_BASE = "/api";
-
-        function authHeaders(extra) {
-            return Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, ch => (
-                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-            ));
-        }
-
         // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
@@ -568,58 +539,14 @@ body { overflow-x: hidden; }
             setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        let myPlaces = [];
 
-        function render() {
-            if (!window.ZTIMS_STATS) return setTimeout(render, 50);
-            const host = document.getElementById('rpHost');
-            const place = myPlaces.find(p => p._id === document.getElementById('rpPlace').value);
-            if (!place) return;
-            const [year, month] = document.getElementById('rpPeriod').value.split('-').map(Number);
-            window.ZTIMS_STATS.mount(host, {
-                apiBase: API_BASE, headers: authHeaders, place, year, month,
-                toast: (m, t) => showToast(m, t), onExpired: handleExpiredSession
-            });
-        }
-
+        /* Monthly Report: att-staff.js draws the page; the server checks every call. */
         async function start() {
-            if (!window.ZTIMS_STATS) return setTimeout(start, 50);
-            const host = document.getElementById('rpHost');
-            host.innerHTML = '<div class="ztims-empty">Loading your places…</div>';
-            try {
-                const res = await fetch(`${API_BASE}/statistics/places`, { headers: authHeaders() });
-                if (res.status === 401) return handleExpiredSession();
-                const data = await res.json().catch(() => []);
-                if (!res.ok) throw new Error(data.message || 'Your places could not be loaded.');
-                myPlaces = data;
-            } catch (e) {
-                host.innerHTML = `<div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div>`;
-                return;
-            }
-            if (!myPlaces.length) {
-                host.innerHTML = '<div class="ztims-empty">No attraction is assigned to this account. Contact the Tourism Office.</div>';
-                document.getElementById('rpPlace').disabled = true;
-                document.getElementById('rpPeriod').disabled = true;
-                return;
-            }
-            const placeSelect = document.getElementById('rpPlace');
-            for (const p of myPlaces) placeSelect.add(new Option(p.title, p._id));
-            // The header switcher says which enterprise; the page shows its name.
-            document.getElementById('rpPlaceWrap').hidden = true;
-            const name = document.getElementById('rpPlaceName');
-            name.hidden = false;
-            const shown = myPlaces.find(p => p._id === placeSelect.value) || myPlaces[0];
-            name.querySelector('p').textContent = shown.managerName || shown.title;
-            const periodSelect = document.getElementById('rpPeriod');
-            for (const p of window.ZTIMS_STATS.periodOptions()) periodSelect.add(new Option(p.label, `${p.year}-${p.month}`));
-            // Last month is the one usually being reported; the Guest Register's
-            // link names the month it came from (?month=2026-9).
-            if (periodSelect.options.length > 1) periodSelect.selectedIndex = 1;
-            const asked = new URLSearchParams(location.search).get('month');
-            if (asked && [...periodSelect.options].some(o => o.value === asked)) periodSelect.value = asked;
-            placeSelect.addEventListener('change', render);
-            periodSelect.addEventListener('change', render);
-            render();
+            while (!window.ztimsAttStaff) await new Promise(r => setTimeout(r, 30));
+            const host = document.getElementById('attHost');
+            await window.ztimsAttStaff.report(host);
+            const who = document.getElementById('staffWho'), head = host.querySelector('.acc-head');
+            if (who && head) head.after(who);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
