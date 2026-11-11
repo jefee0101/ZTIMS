@@ -81,6 +81,14 @@ function safeText(value) {
     const s = String(value == null ? '' : value).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
     return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
 }
+
+/* A cell's number as written: a formula's cached result or a plain value,
+   null when blank. Read through cell.result: exceljs's cell.value leaves out
+   a cached result of 0 or "", which would turn a real zero into "no report". */
+function cellNumber(cell) {
+    const v = cell.type === 6 ? cell.result : cell.value;   // 6: ExcelJS.ValueType.Formula
+    return v === '' || v === undefined || v === null ? null : v;
+}
 const colName = n => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
 function style(cell, o = {}) {
@@ -131,7 +139,7 @@ function partOne(ws, startRow, cols, value, opts = {}) {
         const L = colName(firstCol + i);
         if (!rows.length) return null;
         const f = rows.map(x => `${L}${x}`).join(',');
-        const result = sumOf(rows.map(x => { const v = ws.getRow(x).getCell(firstCol + i).value; return v && typeof v === 'object' ? v.result : v; }).map(v => (v === '' ? null : v)));
+        const result = sumOf(rows.map(x => cellNumber(ws.getRow(x).getCell(firstCol + i))).map(v => (v === '' ? null : v)));
         return { formula: `IF(COUNT(${f})=0,"",SUM(${f}))`, result: result == null ? '' : result };
     });
     for (const item of TEMPLATE) {
@@ -165,12 +173,12 @@ function partOne(ws, startRow, cols, value, opts = {}) {
             const grand = cols.map((_, i) => {
                 const L = colName(firstCol + i);
                 const f = parts.map(x => `${L}${x}`).concat([`${L}${r + 4}`]).join(',');
-                const vals = parts.map(x => { const v = ws.getRow(x).getCell(firstCol + i).value; return v && typeof v === 'object' ? v.result : v; }).concat([unspec[i]]).map(v => (v === '' ? null : v));
+                const vals = parts.map(x => cellNumber(ws.getRow(x).getCell(firstCol + i))).concat([unspec[i]]).map(v => (v === '' ? null : v));
                 const s = sumOf(vals);
                 return { formula: `IF(COUNT(${f})=0,"",SUM(${f}))`, result: s == null ? '' : s };
             });
             write(item.label, 'grand', grand, { codes: allCodes.concat(['unspecified']) });
-            const ref = x => cols.map((_, i) => { const v = ws.getRow(x).getCell(firstCol + i).value; return { formula: `IF(${colName(firstCol + i)}${x}="","",${colName(firstCol + i)}${x})`, result: v && typeof v === 'object' ? v.result : v == null ? '' : v }; });
+            const ref = x => cols.map((_, i) => { const v = cellNumber(ws.getRow(x).getCell(firstCol + i)); return { formula: `IF(${colName(firstCol + i)}${x}="","",${colName(firstCol + i)}${x})`, result: v == null ? '' : v }; });
             write(' Total Philippine Residents', 'breakdown', ref(rowsOf.phTotal), { indent: 1, codes: codesAt[rowsOf.phTotal] });
             write(' Total Non-Philippine Residents', 'breakdown', ref(rowsOf.nonTotal), { indent: 1, codes: codesAt[rowsOf.nonTotal] });
             write(' Total Overseas Filipinos', 'breakdown', ref(rowsOf.ofilRow), { indent: 1, codes: codesAt[rowsOf.ofilRow] });
@@ -193,10 +201,10 @@ function signature(ws, r, withDate) {
                     [r, 12, '______________________________', {}], [r + 1, 12, 'Position/Designation', { size: 8, align: 'center' }]]);
     if (withDate) headerRows(ws, [[r - 1, 22, 'Date Submitted:', { size: 8 }], [r, 22, '______________', {}]]);
 }
-function a4(ws, landscape, titleRows) {
-    ws.pageSetup = { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+function a4(ws, landscape, titleRows, onePage) {
+    ws.pageSetup = { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: onePage ? 1 : 0,
                      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }, printTitlesRow: titleRows };
-    ws.headerFooter = { oddFooter: '&8Page &P of &N' };
+    ws.headerFooter = { oddFooter: 'Page &P of &N' };
 }
 
 /* ---- DAE-1A -------------------------------------------------------------- */
@@ -252,15 +260,16 @@ function addDae1A(wb, ctx) {
     const tr = first + rowsShown;
     ws.mergeCells(tr, 1, tr, 2 + roomCols);
     style(Object.assign(ws.getRow(tr).getCell(1), { value: 'TOTAL OF THIS MONTH' }), { bold: true, align: 'right' });
+    const totals = {};   // kept here: exceljs reads a cached result of 0 back as missing
     for (const c of [c5, c6, c7]) {
         const L = colName(c), range = `${L}${first}:${L}${tr - 1}`;
-        const result = d ? d.daily.slice(0, rowsShown).reduce((a, x, i) => a + ((c === c5 || ctx.countedDays == null || i < ctx.countedDays) ? (x[c === c5 ? 'checkIn' : c === c6 ? 'guestNights' : 'roomsOccupied'] || 0) : 0), 0) : '';
+        const result = totals[c] = d ? d.daily.slice(0, rowsShown).reduce((a, x, i) => a + ((c === c5 || ctx.countedDays == null || i < ctx.countedDays) ? (x[c === c5 ? 'checkIn' : c === c6 ? 'guestNights' : 'roomsOccupied'] || 0) : 0), 0) : '';
         style(Object.assign(ws.getRow(tr).getCell(c), { value: { formula: blankSum(range), result } }), { bold: true, align: 'right', numFmt: NUM });
     }
     const L5 = `${colName(c5)}${tr}`, L6 = `${colName(c6)}${tr}`, L7 = `${colName(c7)}${tr}`;
     const avail = ctx.roomNightsAvailable;
     const rate = (num, den) => (den ? num / den : 'n/a');
-    const tot = d ? { ci: ws.getRow(tr).getCell(c5).value.result, gn: ws.getRow(tr).getCell(c6).value.result, ro: ws.getRow(tr).getCell(c7).value.result } : null;
+    const tot = d ? { ci: totals[c5], gn: totals[c6], ro: totals[c7] } : null;
     const lines = [
         ['Average Guest-Night = Total Number of Guests nights / Total Number of Guests Check IN', `IF(OR(${L5}="",${L5}=0),"n/a",${L6}/${L5})`, tot ? rate(tot.gn, tot.ci) : '', '0.00'],
         ['Average Room Occupancy Rate = Total No. of Rooms Occupied by the Guests during the month / Total No. of Rooms Available during the month', null, tot ? rate(tot.ro, avail) : '', '0.0%'],
@@ -282,7 +291,7 @@ function addDae1A(wb, ctx) {
         'The NUMBER OF ROOMS OCCUPIED are the rooms occupied within the day.',
         '"x": the room was occupied by a party holding several rooms that night; its guests are counted in (6), not split by room.'];
     notes.forEach((t, i) => headerRows(ws, [[availRow + 2 + i, 1, t, { size: 7, bold: i === 0 }]]));
-    a4(ws, roomCols > 18, '7:8');
+    a4(ws, roomCols > 18, '7:8', true);   // the DAE-1A is a one-page form, whatever the rooms
     return ws;
 }
 
@@ -344,7 +353,7 @@ function addDae1B(wb, ctx, daily) {
         afterRow: daily ? (row, kind) => {
             const L = colName(2), R = colName(32), r = row.number;
             const cell = row.getCell(33);
-            const vals = cols.map(i => { const x = row.getCell(2 + i).value; return x && typeof x === 'object' ? x.result : x; }).map(x => (x === '' || x == null ? null : x));
+            const vals = cols.map(i => cellNumber(row.getCell(2 + i))).map(x => (x === '' || x == null ? null : x));
             if (kind !== 'spacer' && kind !== 'section' && kind !== 'region') {
                 const s = sumOf(vals);
                 cell.value = { formula: blankSum(`${L}${r}:${R}${r}`), result: s == null ? '' : s };
@@ -433,14 +442,14 @@ function addFormA(wb, ctx) {
             const fillOf = kind === 'spacer' ? C.SAGE : kind === 'section' || kind === 'region' ? C.BLUE : kind === 'subtotal' ? C.LIGHTBLUE : kind === 'total' || kind === 'breakdown' ? C.GREEN : kind === 'grand' ? C.YELLOW : null;
             for (const c of [colT, colS, colP, colD]) style(row.getCell(c), { fill: fillOf, align: 'right', size: 7, numFmt: c === colS || c === colD ? '0.00%' : NUM });
             if (['spacer', 'section', 'region'].includes(kind)) return;
-            const vals = months.map(i => { const x = row.getCell(2 + i).value; return x && typeof x === 'object' ? x.result : x; }).map(x => (x === '' || x == null ? null : x));
+            const vals = months.map(i => cellNumber(row.getCell(2 + i))).map(x => (x === '' || x == null ? null : x));
             const s = sumOf(vals);
             row.getCell(colT).value = { formula: blankSum(`B${r}:M${r}`), result: s == null ? '' : s };
             row._ztimsTotal = s;
         } });
     // % share, previous year, % difference: computed per row once the grand total is known.
     const grandRow = res.nextRow - 5;
-    const grandTotal = ws.getRow(grandRow).getCell(colT).value.result;
+    const grandTotal = cellNumber(ws.getRow(grandRow).getCell(colT));
     const T = colName(colT);
     for (let r = top + 1; r < res.nextRow; r++) {
         const row = ws.getRow(r);

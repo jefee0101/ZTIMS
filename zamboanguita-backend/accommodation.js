@@ -449,12 +449,12 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     router.put('/accommodation/stays/:id', requireEstablishmentManager, writeLimit, handle(async (req, res) => {
         const b = req.body || {};
         const reason = text(b.reason, 300);
-        if (reason.length < 3) refuse(400, 'BAD_REASON', 'Say why the stay changes.');
         const actor = who(req);
         await transaction(async client => {
             const found = (await query('select spot_id from accommodation_stays where id = $1', [String(req.params.id)], client)).rows[0];
             if (!found) refuse(404, 'NOT_FOUND', 'Stay not found.');
-            const spot = await placeFor(req, found.spot_id, { write: true }, client);
+            const spot = await placeFor(req, found.spot_id, { write: true }, client);   // ownership before anything about the body
+            if (reason.length < 3) refuse(400, 'BAD_REASON', 'Say why the stay changes.');
             await lockPlace(spot.id, client);
             const before = await stayById(req.params.id, client);
             if (before.status !== 'active') refuse(409, 'STAY_VOID', 'This stay was voided and cannot change.');

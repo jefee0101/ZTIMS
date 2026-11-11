@@ -2719,6 +2719,10 @@ app.use((err, req, res, next) => {
         });
     }
 
+    // The JSON body reader's own refusals are the sender's mistake, not ours.
+    if (err && err.type === 'entity.too.large') return res.status(413).json({ success: false, message: 'That request is too large.' });
+    if (err && err.type === 'entity.parse.failed') return res.status(400).json({ success: false, message: 'That request could not be read.' });
+
     console.error('❌ Unhandled server error:', err);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
 });
