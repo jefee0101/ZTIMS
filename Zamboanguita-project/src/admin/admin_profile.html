@@ -702,10 +702,6 @@ body { overflow-x: hidden; }
                         <input id="newStaffName" type="text" maxlength="120" required class="field" placeholder="e.g., Liza M. Ramos"/>
                     </label>
                     <label class="block">
-                        <span class="field-label">Position</span>
-                        <input id="newStaffPosition" type="text" maxlength="120" class="field" placeholder="e.g., Tourism Aide"/>
-                    </label>
-                    <label class="block">
                         <span class="field-label">Contact number</span>
                         <input id="newStaffContact" type="tel" maxlength="40" class="field" placeholder="e.g., 0917 123 4567"/>
                     </label>
@@ -1155,7 +1151,6 @@ addStaffForm.addEventListener('submit', async event => {
     try {
         const r = await api('/support-staff', 'POST', {
             fullName, email, spotId, password, confirmPassword,
-            position: document.getElementById('newStaffPosition').value.trim(),
             contactNumber: document.getElementById('newStaffContact').value.trim()
         });
         showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
