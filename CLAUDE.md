@@ -318,6 +318,8 @@ purpose — see the header comment in `spot-form.js`:
   form's "Fill from the Guest Register") and still enter or correct a monthly
   report as a backup. A manager sees the current enterprise's name (from the
   header switcher), not a picker, on the Guest Register and Monthly Report.
+- `analytics-view.js` — the officer's and the manager's Analytics pages
+  (cards, SVG charts, coverage band, tables); see "Analytics".
 - `stat-form.js` — the monthly statistics report form (Form A4 counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
@@ -872,7 +874,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   attraction switched off) and `page-security.js` (14: stored markup, cross-site,
   download names, no secrets).
 
-### Analytics (stage 2 on branch: server side only; not on main or live yet)
+### Analytics (stages 2 and 3 on branch; not on main or live yet)
 
 Read-only trends, coverage, peaks and breakdowns of accommodation arrivals and
 attraction visits, from the approved design in `docs/analytics/` (`05-implementation.md`
@@ -895,9 +897,23 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   (accommodation, reservations, stays, benchmark shown only when 3+ places
   finalized); Support Staff own attraction; visitors nothing. `no-store`, 300 reads
   per 15 minutes per account, unknown or repeated parameters refused.
+- **Pages (stage 3, `docs/analytics/06-interface.md`):** the officer's
+  `admin/admin_insights.html` ("Analytics" after Statistics in the officer menu)
+  with tabs `#accommodation`, `#attractions`, `#requests`, `#coverage`, and the
+  manager's `resort/resort_analytics.html` ("Analytics" after Monthly Report;
+  current enterprise from the switcher; tabs Arrivals and nights, Guests and
+  stays, Room requests). Both drawn by `src/shared/analytics-view.js`
+  (`window.ztimsAnalytics`, on `acc-common.js`), styles `.ax-*` at the end of
+  `portal-flat.css`; plain SVG/HTML charts, no library. Filters: months, group
+  by, Finalized / Include submitted and draft, compare, and for the officer
+  barangay, category, place. Not reported is a dashed outline and "–", never 0;
+  partial periods hatched; every chart has "Show as a table"; Excel is the
+  server's. No Support Staff analytics page yet.
 - **Tests (local; read-only apart from one temporary visitor):**
-  `docs/analytics/tests/api-checks.js` (129), run after the attraction and
-  accommodation suites have left their data.
+  `docs/analytics/tests/api-checks.js` (129) and `page-flow.js` (62, browser,
+  built site on :3000), run after the attraction and accommodation suites have
+  left their data; restart the local API between suites (the blanket per-address
+  limit).
 
 ### Online payments (demonstration, test mode)
 

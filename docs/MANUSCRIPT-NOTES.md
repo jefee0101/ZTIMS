@@ -4,6 +4,29 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Analytics pages for the Tourism Officer and the Enterprise Manager (12 November 2026, on a branch; not live yet)
+
+**The change.** A new Analytics page in each portal.
+- **The officer's** has tabs for places to stay, attractions, room requests
+  and reporting coverage.
+- **The manager's** covers their own enterprise only: arrivals and nights,
+  guests and stays, and room requests.
+- **On both:** filters by month range, month, quarter or year, and finalized
+  or all figures; for the officer also barangay, category and place. Cards,
+  trend charts, peak and low, residence and sex where recorded, breakdowns by
+  place, barangay and category, a reporting-coverage band under every chart,
+  and Excel.
+
+**What the manuscript must say:** add Analytics to the officer's and the
+manager's module lists, and use cases "View analytics" for both. In the
+interface section, use one figure of each page (screenshots in the session's
+local test run). Say that:
+- a month not reported is shown as not reported, not zero;
+- partial months are marked and never called a peak;
+- visits, arrivals and room requests are kept apart and never added together;
+- no figure counts unique visitors;
+- a manager sees only their own enterprise.
+
 ## Analytics: the calculations behind the dashboards (12 November 2026, server side on a branch; not live yet)
 
 **The change.** ZTIMS now works out trends, peak and low periods, weekday

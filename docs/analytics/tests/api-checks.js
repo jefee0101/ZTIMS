@@ -27,7 +27,7 @@ async function login(email, password) {
 }
 const SPOT = { falls: '4b0dcc1722fc4e0bacc7b752', pool: '39fbfa3a5f6041dfabca3943', lavanya: '5b623f31b0f74d0bb5630dbe', juan: 'af4ceef49b7c4782ba729cae', sea: '2f9d15101bf34b3382a3b6b4' };
 (async () => {
-    const SSPW = 'Coral-Lantern-Wave-71';
+    const SSPW = 'Coral-Ridge-Lantern-47';   // the local Support Staff password the attraction suites use
     sql(`update support_staff set password_hash = '${bcrypt.hashSync(SSPW, 10)}', must_change_password = false where email in ('falls.staff@lgu.test','pool.staff@lgu.test')`);
     sql(`delete from visitors where email = 'analytics.visitor@x.test'`);
     sql(`insert into visitors (email, email_verified_at, password_hash, full_name, status) values ('analytics.visitor@x.test', now(), '${bcrypt.hashSync('Fern-Quartz-Meadow-42', 10)}', 'Test Visitor', 'active')`);

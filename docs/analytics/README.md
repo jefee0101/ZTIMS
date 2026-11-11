@@ -1,6 +1,6 @@
 # Analytics for accommodation and attraction statistics
 
-Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable prototype. Stage 2 (12 November 2026, on the branch): the server-side calculations and read-only API, see `05-implementation.md`. No dashboard pages yet; nothing deployed.
+Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable prototype. Stage 2 (12 November 2026, on the branch): the server-side calculations and read-only API, see `05-implementation.md`. Stage 3 (12 November 2026, on the branch): the officer's and the manager's Analytics pages, see `06-interface.md`. Nothing deployed.
 
 | File | What it is |
 |---|---|
@@ -9,7 +9,9 @@ Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable
 | `03-role-dashboards-and-data-flow.md` | Officer, Enterprise Manager and Support Staff dashboards, the data flow, who sees what, order of work |
 | `04-prioritized-gaps.md` | 18 data gaps (P0 to P2) and the decisions needed (generated from `gaps.json`) |
 | `05-implementation.md` | What was built: data flow, calculation rules, access, files, verification, security findings, limitations |
+| `06-interface.md` | The pages: what each shows, how the rules show, tests, limitations |
 | `tests/api-checks.js` | 129 checks against a local API and database |
+| `tests/page-flow.js` | 62 browser checks of both pages against the API |
 | `mockup.html` | The interactive responsive prototype (also published as an Artifact). Open it in a browser |
 | `mockup.template.html`, `inventory.json`, `gaps.json`, `build.py` | Sources. `python3 build.py` rebuilds `mockup.html`, `02` and `04` so the mockup and the documents never differ |
 
