@@ -4,6 +4,26 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Accommodation reporting: the pages, exports and security review (12 November 2026, on a branch; not on main or live yet)
+
+**The change.**
+- Managers of private places to stay now have the screens: the stay register (Guest Register), the monthly DAE-1B with Submit and versions, the annual summary, room numbers and out of service (Rooms), and the reporting profile and closed periods (Enterprise → Reporting).
+- The Tourism Officer has a places-to-stay tracker, a month review with Finalize and Reopen, and a FORM A tab with coverage per month.
+- Every report downloads as Excel in the DOT layouts (DAE-1A, DAE-1B daily and monthly, FORM A, the enterprise's year), worked out from the saved versions.
+- The Arrivals Report (Form A4) now takes private places to stay from their saved versions.
+
+**Where it goes.**
+- Chapter I, Scope: list the exports (DAE-1A, DAE-1B, FORM A, annual summary) as Excel files in the DOT layouts.
+- Chapter I, Limitations: the Excel files are rebuilt from the PDF forms, not the DOT's original workbooks; their formulas are the system's own. A missing report is left blank, never 0.
+- Chapter III, Screens: add the stay register, the DAE-1B month with its versions, the officer's FORM A and month review.
+- Chapter III, Use cases: Enterprise Manager "Record stays; submit the month"; Tourism Officer "Review and finalize or reopen a month; generate FORM A".
+- Chapter III, Testing: 104 API checks, 41 security checks, 36 export reconciliation checks, a browser pass on desktop, phone and dark mode, and an end-to-end submit → finalize → reopen.
+- Chapter III, Security (ISO/IEC 25010 security): role and enterprise checks on every route, finalized months locked in the database too, parameterized queries, protection against spreadsheet formula injection, no personal details in exports.
+
+**For the panel.**
+- *How do you know the Excel is right?* Every figure in each file is compared with the saved version it came from, and every file recalculates without an error.
+- *Can an enterprise change a month after it is sent?* No. Once the Tourism Office finalizes it, the database itself refuses any change that would alter it, until the office reopens it with a reason the enterprise sees.
+
 ## Accommodation reporting from a stay register (11 November 2026, stage 2 on a branch; not live yet)
 
 **The change.**

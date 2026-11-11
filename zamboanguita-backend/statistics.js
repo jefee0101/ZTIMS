@@ -718,7 +718,10 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         // A private place to stay reports through its stay register: its
         // month is the latest saved accommodation version (a hand-typed
         // report was copied into one as legacy_manual), never a monthly_report.
-        const privateStays = new Set((await query(
+        // Between a deploy and the schema run the stay-register tables may not
+        // exist yet: then the month is read from monthly_reports as before.
+        const hasVersions = !!(await query(`select to_regclass('accommodation_report_versions') as t`)).rows[0].t;
+        const privateStays = !hasVersions ? new Set() : new Set((await query(
             `select id from spots where type = 'accommodation' and managed_by is not null`)).rows.map(r => r.id));
         const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total'
             : r.kind !== 'municipal_total' && !privateStays.has(r.spot_id));
@@ -726,7 +729,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
         const counts = ids.length ? (await query(
             `select c.*, r.month, r.spot_id from monthly_report_counts c join monthly_reports r on r.id = c.report_id
               where c.report_id = any($1)`, [ids])).rows : [];
-        const versions = (await query(
+        const versions = !hasVersions ? [] : (await query(
             `select distinct on (spot_id, month) id, spot_id, month, rooms, room_nights_available, room_nights_occupied, guest_nights, locked
                from (select v.*, (p.finalized_at is not null) as locked from accommodation_report_versions v
                        left join accommodation_periods p on p.spot_id = v.spot_id and p.year = v.year and p.month = v.month
@@ -752,7 +755,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
               where s.counts_visitors and (s.status <> 'archived'
                  or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
-                 or exists (select 1 from accommodation_report_versions v where v.spot_id = s.id and v.year = $1))
+                 ${hasVersions ? 'or exists (select 1 from accommodation_report_versions v where v.spot_id = s.id and v.year = $1)' : ''})
               order by s.type, s.title`, [year])).rows;
         const placeOf = new Map(placeRows.map(p => [p.id, {
             _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,

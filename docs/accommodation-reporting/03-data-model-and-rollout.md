@@ -130,12 +130,12 @@ The printed March total (1,568) is 10 above its rows; the rows are kept.
 | Area | Impact |
 |---|---|
 | New API, `/api/accommodation/*` | See the table below |
-| `statistics.js` | Private places to stay refused on three write routes (409). Reads, attraction routes, `/form-a4`, `/form-a4.xlsx` and `/tracker` are unchanged |
-| `server.js` | Mounts `accommodation.js` |
-| Manager pages | `resort_statistics.html` and `resort_register.html` would hit 409 on save. **The new stay-register pages from the approved mockup must ship in the same release**; they are the next stage and not built here |
-| Officer pages | `admin_statistics.html` keeps working: the old Form A4 and tracker are unchanged. The accommodation tracker and FORM A move to the new endpoints with the pages stage |
-| Exports | Unchanged in this stage. A FORM A / DAE-1B Excel from the new endpoints belongs to the pages stage |
-| Bookings | A stay may carry `booking_id` (unique); the booking itself never counts. **Changed:** at check-in, the manager's Bookings page posts the booking's `registerDraft` to the old Guest Register, which now answers 409 for a place to stay. The pages stage replaces that with "record the stay" prefilled from the booking (`POST /api/accommodation/:spotId/stays` with `bookingId`) |
+| `statistics.js` | Private places to stay refused on three write routes (409). `/form-a4` and `/form-a4.xlsx` (the Arrivals Report) read each private place to stay's latest saved version instead of `monthly_reports` (stage 3), so the stay register feeds them once. Attraction routes and `/tracker` are unchanged |
+| `server.js` | Mounts `accommodation.js`. Stage 3: the JSON body reader's refusals answer 413 (too large) and 400 (unreadable) instead of 500 |
+| Manager pages | **Built (stage 3).** For a private place to stay, `resort_register.html` mounts the stay register (`acc-register.js`) and `resort_statistics.html` the DAE-1B, versions and year (`acc-report.js`); `resort_rooms.html#numbers` and `resort_spots.html#reporting` hold room numbers, out of service, the profile and closed periods (`acc-setup.js`). Attractions keep their pages |
+| Officer pages | **Built (stage 3).** `admin_statistics.html`: Tracker → Places to stay uses `/accommodation/tracker`; a cell opens the month (Finalize, Reopen, versions, history, Excel) on Enter a report; a new FORM A tab (coverage, Part I/II, comparison, volume per sex, Excel) (`acc-officer.js`). Arrivals Report and the attraction tracker unchanged |
+| Exports | **Built (stage 3)**, `accommodation-excel.js`; see §6a |
+| Bookings | A stay may carry `booking_id` (unique); the booking itself never counts. **Changed:** at check-in, the manager's Bookings page posts the booking's `registerDraft` to the old Guest Register, which now answers 409 for a place to stay. **Done (stage 3):** Check in opens `resort_register.html?booking=<id>`, the stay form prefilled from the booking (`POST /api/accommodation/:spotId/stays` with `bookingId`) |
 | Booking tables | The early-draft repair in §1 runs with `schema.sql`; it only acts while the seven tables are empty |
 
 New routes (manager = own enterprises only; officer = read all, finalize, reopen):
@@ -152,7 +152,26 @@ GET  /api/accommodation/:spotId/months/:y/:m       POST .../submit {expectedVers
 POST .../finalize {expectedVersion}  (officer)     POST .../reopen {reason ≥ 10}            (officer)
 GET  /api/accommodation/versions/:id               GET  /api/accommodation/:spotId/year/:y
 GET  /api/accommodation/tracker?year=  (officer)   GET  /api/accommodation/form-a?year=      (officer)
+GET  /api/accommodation/:spotId/months/:y/:m/export.xlsx?version=n|latest|current
+GET  /api/accommodation/:spotId/year/:y/export.xlsx GET  /api/accommodation/form-a.xlsx?year= (officer)
+GET  /api/accommodation/templates/dae1a.xlsx|dae1b.xlsx|form-a.xlsx   (blank)
 ```
+
+### 6a. Excel exports (stage 3)
+
+Rebuilt from the four supplied PDFs (DAE-1A; DAE-1B v4a, daily; DAE-1B 2019 manual, monthly; FORM A). Kept: headings and their wording, country order and grouping, the PDFs' colours (yellow `FFFF00`, blue `0070C0`, light blue `00B0F0`, green `92D050`, sage `D8E4BC`, orange `FFC000` on FORM A's % columns), borders, merged headings, signature lines, units, A4 print set-up and the page breaks (FORM A and the monthly DAE-1B after the Middle East subtotal and after Australasia; the daily DAE-1B after South Asia and after Eastern Europe).
+
+Not reproduced: the PDFs' example records, their `#DIV/0!` cells, and any claim to their original formulas or workbook metadata. The formulas are ZTIMS's own: a total is blank when nothing in its range is reported (`IF(COUNT(r)=0,"",SUM(r))`), and a rate shows "n/a" when its divisor is blank or 0. Missing stays blank; a reported 0 is 0.
+
+Template adjustments (the forms do not fix these):
+- **Rooms.** DAE-1A has one column per numbered room the enterprise had that month (the sample has 15); it stays on one A4 page, landscape above 18 rooms. "x" marks a room held by a party with several rooms that night, whose guests are counted in (6), not split by room; check-in cells are yellow, closed days grey.
+- **Days.** 28, 29, 30 or 31 day rows, by the month (leap years included).
+- **Residences.** ZTIMS keeps Form A4's 72 rows. On the 2019 layout, Macau, Oman, Qatar, Andorra and Turkey go to "Others and unspecified non-Philippine residences", Israel to the Middle East, and the Serbia and Montenegro row stays blank.
+- **Status line.** Each month export names its version and submission date, or says "NOT SUBMITTED: worked out from the stay register on …".
+- **FORM A.** Previous-year and % difference columns use only the comparable months, named in a note; paper months give rooms, so their available room-nights are rooms × days and marked derived.
+- The DAE-1B footnote adds "and Former Filipinos" as in v4a.
+
+Checks: every export recalculates in LibreOffice with 0 errors; `tests/reconcile-exports.py` compares every figure with its saved version (36 checks); a leap February 2028 with 20 rooms was rendered (29 rows, totals 32 / 386 / 193 as built, DAE-1A on one page).
 
 ## 7. Verification (local, real API calls and SQL)
 
@@ -207,6 +226,23 @@ Rollback (`rollback.sql`) was run on the live-shaped database:
 - it is re-runnable;
 - the schema reapplied cleanly after it.
 
+## 7a. Security review (stage 3)
+
+Checked with `tests/security-checks.js` (41 checks, local API and database) and a browser pass. Findings and fixes:
+
+| Finding | Fix |
+|---|---|
+| A month with no stays exported "NaN" as its occupancy, and zero subtotals as blank: exceljs's `cell.value` drops a cached result of 0 | Totals are kept as computed and read through `cell.result` (`cellNumber`) |
+| A body over 1 MB answered 500 | The error handler answers 413 (and 400 for unreadable JSON), for every route |
+| Editing a stay checked the reason before ownership (a 400 to another enterprise, with no data) | Ownership is checked first |
+| A stay in a finalized month offered Edit, Transfer, Change check-out and Void (the server refused them) | The stay opens locked, naming the finalized months |
+
+What holds (each with a test): tourists, Support Staff and anonymous callers get 401/403 on all 21 accommodation routes; another manager gets 403/404 on every read, export and write of an enterprise not theirs, including ids taken from it (stays, rooms, versions, out-of-service, closed periods) and a stay of their own pointing at another enterprise's room; managers get 403 on the tracker, FORM A and its Excel, Finalize and Reopen; the officer cannot write rooms or stays; a finalized month refuses out of service, closed periods, a room retired or added, a stay reaching it and voiding out of service, through the API and through SQL (triggers), and saved versions refuse update and delete; odd ids are plain not-found; negative or unknown counts, over-long stays and oversized bodies are refused; six submits at once save one version, four finalizes give one event, four stays for the same room and night save one, two edits of one revision give one change and one "reload"; names starting `=`, `+`, `-` or `@` land in Excel as text; no email address appears in an export; markup typed into a room label or a reason shows as text on the pages.
+
+Not separately exploitable, noted: every query is parameterized (table names come from a fixed list). CSRF: staff sign-in is a Bearer token in the `Authorization` header, never a cookie, and exports are fetched with that header; a cross-site form or link carries no credential, so classic CSRF does not apply. CORS is not used as authorization: every route checks the token, the role and the enterprise (`placeFor`). RLS stays on with no policies; no grants or `SECURITY DEFINER` functions were added. Exports carry counts and room numbers only, no guest names or contact details.
+
+Remaining risks: the token lives in `localStorage`, so an XSS on a staff page would expose it (pages escape every stored text and the CSP limits scripts, but this is not proof against every XSS); the blanket per-request rate limit is per serverless instance; the void routes check the reason's length before ownership (a 400 that reveals nothing); the system is not claimed to be free of vulnerabilities.
+
 ## 8. Remaining semantic uncertainty
 
 1. **Check-out night** (DAE-1A says guests count "until the day he checks out"). Built as not counted.
@@ -219,8 +255,8 @@ Rollback (`rollback.sql`) was run on the live-shaped database:
 
 ## 9. Rollout (each step needs the user's yes)
 
-1. Build the stay-register and report pages from the approved mockup on this branch. The backend alone would block managers' current pages.
-2. Run on the branch: `npm run check` and `npm run build`, `node -e "require('./server')"`, the API suite, and a browser pass.
+1. ~~Build the stay-register and report pages~~ Done (stage 3).
+2. ~~Run on the branch: checks, build, server load, the API, security and export suites, a browser pass~~ Done (stage 3; see §6a and §7a).
 3. **Back up live before anything else:**
    - In the Supabase SQL Editor, export `monthly_reports`, `monthly_report_counts` and `report_changes` as CSV.
    - Confirm the project's daily backup is recent (Dashboard → Database → Backups).
