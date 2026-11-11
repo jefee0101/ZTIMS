@@ -709,3 +709,65 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
                border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-high));
                color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .9rem; }
 .staff-place:empty { visibility: hidden; }
+
+/* ---- Accommodation reporting (acc-*.js) -------------------------------------
+   The stay register, the DAE-1A / DAE-1B, versions, the year, the officer's
+   tracker and FORM A. Flat like the rest of the portal; status by pill and
+   a left edge, never colour alone. */
+.acc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
+.acc-head h1 { margin-right: auto; }
+.acc-head__actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.acc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.acc-month { display: inline-flex; align-items: center; gap: .5rem; }
+.acc-month__name { font-weight: 800; min-width: 9.5rem; text-align: center; color: rgb(var(--ztims-on-surface)); }
+.acc-iconbtn { width: 44px; height: 44px; border-radius: 999px; display: inline-grid; place-items: center; border: 1px solid rgb(var(--ztims-outline-variant) / .6); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); }
+.acc-iconbtn:hover { background: rgb(var(--ztims-on-surface) / .05); }
+.acc-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
+.acc-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .7rem; font-size: .78rem; font-weight: 700; }
+.acc-pill .material-symbols-outlined { font-size: 1rem; }
+.acc-pill--lock { background: rgb(var(--ztims-on-surface)) !important; color: rgb(var(--ztims-background)) !important; }
+.acc-of { font-size: .9rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-sub { display: block; font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-banner { display: flex; gap: .75rem; align-items: flex-start; padding: .8rem 1rem; border: 1px solid rgb(var(--ztims-outline-variant) / .6); border-left-width: 4px; background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); }
+.acc-banner a { color: rgb(var(--ztims-primary-text)); font-weight: 700; text-decoration: underline; }
+.acc-banner--lock { border-left-color: rgb(var(--ztims-on-surface)); }
+.acc-banner--warn { border-left-color: rgb(var(--ztims-gold)); }
+.acc-banner--ok { border-left-color: rgb(var(--ztims-success)); }
+.acc-banner--info { border-left-color: rgb(var(--ztims-primary)); }
+.acc-banner--bad { border-left-color: rgb(var(--ztims-error)); }
+.acc-stay { display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: .5rem 1rem; align-items: center; padding: .85rem 1.25rem; }
+.acc-stay:hover { background: rgb(var(--ztims-on-surface) / .03); }
+.acc-stay--carried { background: rgb(var(--ztims-on-surface) / .025); }
+.acc-stay__ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .03em; color: rgb(var(--ztims-on-surface)); }
+.acc-stay__where { font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
+@media (max-width: 760px) { .acc-stay { grid-template-columns: minmax(0, 1fr) auto; } .acc-stay__where { grid-column: 1 / -1; } .acc-stay__go { grid-row: 1; grid-column: 2; } }
+.acc-scroll { overflow-x: auto; max-width: 100%; }
+.acc-grid, .acc-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .8125rem; }
+.acc-grid th, .acc-grid td { border: 1px solid rgb(var(--ztims-outline-variant) / .55); padding: .3rem .45rem; white-space: nowrap; }
+.acc-grid thead th { background: rgb(var(--ztims-on-surface) / .04); font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); font-size: .75rem; text-align: center; }
+.acc-grid tbody th { text-align: left; font-weight: 700; }
+.acc-grid tfoot th, .acc-grid tfoot td { font-weight: 800; background: rgb(var(--ztims-on-surface) / .04); }
+.acc-sticky { position: sticky; left: 0; background: rgb(var(--ztims-surface)); z-index: 1; }
+.acc-mk { text-align: center; }
+.acc-mk--in { background: rgb(var(--ztims-gold) / .22); font-weight: 800; }
+.acc-dot { display: inline-block; width: .7rem; height: .7rem; background: rgb(var(--ztims-primary)); vertical-align: middle; }
+.acc-fut td, .acc-fut th { color: rgb(var(--ztims-on-surface-variant) / .7); }
+.acc-closed td { background: rgb(var(--ztims-on-surface) / .06); }
+.acc-num { max-width: 6rem; }
+.acc-formrow { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto; gap: .5rem; align-items: end; }
+.acc-formrow--guest { grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) auto; }
+@media (max-width: 640px) { .acc-formrow, .acc-formrow--guest { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .acc-formrow > :first-child { grid-column: 1 / -1; } }
+.acc-history { display: flex; flex-direction: column; gap: .35rem; font-size: .875rem; }
+.acc-loading { display: flex; align-items: center; justify-content: center; gap: .6rem; }
+.acc-spin { display: inline-block; width: 1.1rem; height: 1.1rem; }
+.acc-part { font-size: 1.05rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.acc-table th, .acc-table td { padding: .45rem .6rem; border-bottom: 1px solid rgb(var(--ztims-outline-variant) / .45); }
+.acc-table tr.acc-group td { background: rgb(var(--ztims-on-surface) / .04); font-weight: 700; font-size: .75rem; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-table tr.acc-sum td { font-weight: 800; background: rgb(var(--ztims-on-surface) / .03); }
+.acc-table tr.acc-grand td { font-weight: 900; border-top: 2px solid rgb(var(--ztims-primary)); }
+.acc-cell { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 4.4rem; min-height: 2.7rem; padding: .15rem .3rem; font-size: .7rem; font-weight: 700; line-height: 1.2; border: 1px solid transparent; }
+.acc-cell:hover, .acc-cell:focus-visible { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: 1px; }
+.acc-cell small { font-weight: 500; font-size: .65rem; }
+.acc-diff { font-size: .85rem; margin-top: .4rem; }
+.acc-diff td { padding: .2rem .5rem; }
+.acc-note { font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); }

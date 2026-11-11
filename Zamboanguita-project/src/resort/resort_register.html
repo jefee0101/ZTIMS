@@ -854,6 +854,12 @@ body { overflow-x: hidden; }
             if (!window.ZTIMS_STATS) return setTimeout(start, 50);
             const list = document.getElementById('rgList');
             if (window.ztimsEnterprise) { await ztimsEnterprise.load(); ztimsEnterprise.mount(document.getElementById('enterpriseSwitcherSlot')); }
+            // A place to stay keeps the stay register (acc-register.js); an attraction this page's own log.
+            const current = window.ztimsEnterprise && ztimsEnterprise.current();
+            if (current && current.type === 'accommodation') {
+                while (!window.ztimsAccRegister) await new Promise(r => setTimeout(r, 30));
+                return window.ztimsAccRegister.mount(document.querySelector('main > div'), current);
+            }
             try {
                 [myPlaces, residenceList] = await Promise.all([api('/places'), api('/residences')]);
             } catch (e) {
@@ -1002,6 +1008,8 @@ body { overflow-x: hidden; }
 })();
 </script>
 <script type="module" src="../shared/enterprise-switcher.js"></script>
+<script type="module" src="../shared/acc-common.js"></script>
+<script type="module" src="../shared/acc-register.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 </body>
 </html>
