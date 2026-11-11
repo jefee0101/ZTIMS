@@ -517,6 +517,8 @@ body { overflow-x: hidden; }
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">bed</span>Room types</button>
                     <button role="tab" id="tab-blocked" aria-controls="blockedPanel" aria-selected="false" tabindex="-1" class="settings-tab">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">event_busy</span>Blocked dates</button>
+                    <button role="tab" id="tab-numbers" aria-controls="numbersPanel" aria-selected="false" tabindex="-1" class="settings-tab">
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">door_front</span>Room numbers</button>
                     <button role="tab" id="tab-settings" aria-controls="settingsPanel" aria-selected="false" tabindex="-1" class="settings-tab">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">tune</span>Booking settings</button>
                 </div>
@@ -540,6 +542,9 @@ body { overflow-x: hidden; }
                     </div>
                     <div class="glass-panel"><div id="rmBlocks" class="divide-y divide-outline-variant/20"></div></div>
                 </section>
+
+                <!-- Numbered rooms for the stay register and the DAE reports (acc-setup.js). -->
+                <section id="numbersPanel" role="tabpanel" aria-labelledby="tab-numbers" class="space-y-4" hidden></section>
 
                 <!-- The rules guests book under. -->
                 <section id="settingsPanel" role="tabpanel" aria-labelledby="tab-settings" hidden>
@@ -705,7 +710,7 @@ body { overflow-x: hidden; }
         let spot = null, data = null, editing = null, photoUrl = '';
 
         /* ---- tabs, each with its own address -------------------------- */
-        const TABS = { types: 'typesPanel', blocked: 'blockedPanel', settings: 'settingsPanel' };
+        const TABS = { types: 'typesPanel', blocked: 'blockedPanel', numbers: 'numbersPanel', settings: 'settingsPanel' };
         function showTab(name) {
             if (!TABS[name]) name = 'types';
             for (const [key, panel] of Object.entries(TABS)) {
@@ -715,6 +720,13 @@ body { overflow-x: hidden; }
                 tab.setAttribute('aria-selected', String(on));
                 tab.tabIndex = on ? 0 : -1;
             }
+            if (name === 'numbers' && !numbersMounted) mountNumbers();
+        }
+        let numbersMounted = false;
+        async function mountNumbers() {
+            numbersMounted = true;
+            while (!window.ztimsAccSetup) await new Promise(r => setTimeout(r, 30));
+            window.ztimsAccSetup.rooms(document.getElementById('numbersPanel'), spot);
         }
 
         /* ---- what the page shows -------------------------------------- */
@@ -1137,5 +1149,7 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/enterprise-switcher.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 <script type="module" src="../shared/photo-upload.js"></script>
+<script type="module" src="../shared/acc-common.js"></script>
+<script type="module" src="../shared/acc-setup.js"></script>
 </body>
 </html>

@@ -528,6 +528,8 @@ body { overflow-x: hidden; }
 
     <script type="module" src="../shared/stat-form.js"></script>
     <script type="module" src="../shared/enterprise-switcher.js"></script>
+    <script type="module" src="../shared/acc-common.js"></script>
+    <script type="module" src="../shared/acc-report.js"></script>
     <script>
         const API_BASE = "/api";
 
@@ -597,6 +599,12 @@ body { overflow-x: hidden; }
             const host = document.getElementById('rpHost');
             host.innerHTML = '<div class="ztims-empty">Loading your places…</div>';
             if (window.ztimsEnterprise) { await ztimsEnterprise.load(); ztimsEnterprise.mount(document.getElementById('enterpriseSwitcherSlot')); }
+            // A place to stay: the DAE-1B worked out from its stays (acc-report.js).
+            const current = window.ztimsEnterprise && ztimsEnterprise.current();
+            if (current && current.type === 'accommodation') {
+                while (!window.ztimsAccReport) await new Promise(r => setTimeout(r, 30));
+                return window.ztimsAccReport.mount(document.querySelector('main > div'), current);
+            }
             try {
                 const res = await fetch(`${API_BASE}/statistics/places`, { headers: authHeaders() });
                 if (res.status === 401) return handleExpiredSession();

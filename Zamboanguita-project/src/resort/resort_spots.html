@@ -507,6 +507,7 @@ body { overflow-x: hidden; }
             <a href="#visiting" data-sub="visiting"><span class="material-symbols-outlined" aria-hidden="true">schedule</span><span>Visiting</span></a>
             <a href="#photos" data-sub="photos"><span class="material-symbols-outlined" aria-hidden="true">photo_library</span><span>Photos</span></a>
             <a href="#contact" data-sub="contact"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>Contact</span></a>
+            <a href="#reporting" data-sub="reporting" hidden><span class="material-symbols-outlined" aria-hidden="true">assignment</span><span>Reporting</span></a>
         </nav>
     </header>
 
@@ -574,6 +575,8 @@ body { overflow-x: hidden; }
      form above and by this page's delete and duplicate-listing questions. -->
 <script type="module" src="../shared/enterprise-switcher.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
+<script type="module" src="../shared/acc-common.js"></script>
+<script type="module" src="../shared/acc-setup.js"></script>
 
 
     <script>
@@ -813,9 +816,9 @@ body { overflow-x: hidden; }
         let manager = null;
         // The enterprise the portal is working on (the header switcher's choice).
         const curSpot = () => (window.ztimsEnterprise && ztimsEnterprise.current()) || mySpots[0];
-        const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact'];
+        const SUBS = ['basics', 'location', 'visiting', 'photos', 'contact', 'reporting'];
         const STEP_OF = { basics: 0, location: 1, visiting: 2, photos: 3 };
-        const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact' };
+        const TITLES = { basics: 'Basics', location: 'Location', visiting: 'Visiting', photos: 'Photos', contact: 'Contact', reporting: 'Reporting' };
         // The categories live in tourism-map.js (window.ZTIMS_CATEGORIES).
         function knownForPills(spot) {
             const C = window.ZTIMS_CATEGORIES;
@@ -823,7 +826,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined !text-sm" aria-hidden="true">${C.info(code).icon}</span>${escapeHtml(C.label(code))}${i === 0 ? ' <span class="text-on-surface-variant font-normal">· main</span>' : ''}</span>`).join(' ');
         }
 
-        const subFromAddress = () => { const h = location.hash.slice(1); return SUBS.includes(h) ? h : 'basics'; };
+        // Reporting (the DAE-1B profile and closed periods) is for places to stay only.
+        const isStayPlace = () => { const s = curSpot(); return !!s && s.type === 'accommodation'; };
+        const subFromAddress = () => { const h = location.hash.slice(1); return SUBS.includes(h) && (h !== 'reporting' || isStayPlace()) ? h : 'basics'; };
         const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
         const photosOf = spot => (Array.isArray(spot.images) && spot.images.length ? spot.images : (spot.imageUrl ? [spot.imageUrl] : []));
         const updatedLine = spot => spot && spot.updatedAt
@@ -951,6 +956,15 @@ body { overflow-x: hidden; }
             });
             const spot = curSpot();
             if (!spot) return;
+            if (sub === 'reporting') {
+                const box = document.getElementById('estBody');
+                box.innerHTML = '<div class="space-y-6"></div>';
+                (async () => {
+                    while (!window.ztimsAccSetup) await new Promise(r => setTimeout(r, 30));
+                    window.ztimsAccSetup.profile(box.firstElementChild, spot);
+                })();
+                return;
+            }
             document.getElementById('estBody').innerHTML = subBody(sub, spot);
             const remove = document.getElementById('removeListingBtn');
             if (remove) remove.addEventListener('click', () => deleteSpot(spot._id, remove));
@@ -977,6 +991,7 @@ body { overflow-x: hidden; }
                 return;
             }
             tabs.hidden = false;
+            tabs.querySelector('[data-sub="reporting"]').hidden = spot.type !== 'accommodation';
             const link = document.getElementById('visitorViewLink');
             link.href = `../spot.html?spotId=${encodeURIComponent(spot._id)}`;
             link.hidden = false;

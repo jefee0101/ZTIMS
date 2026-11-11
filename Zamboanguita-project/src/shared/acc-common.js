@@ -176,7 +176,46 @@
     const loading = text => `<div class="ztims-empty acc-loading" aria-busy="true"><span class="animate-spin acc-spin" aria-hidden="true"></span>${esc(text || 'Loading…')}</div>`;
     const failed = (message, retry) => `<div class="ztims-empty tone-danger" role="alert">${esc(message)}${retry ? ` <button type="button" class="btn btn-secondary btn-sm ml-2" data-acc-retry>Try again</button>` : ''}</div>`;
 
+    /* Part I (arrivals by residence) and Part II as tables. `counts` is
+       { code: { male, female } } or, for the paper months, { code: { unsplit } }.
+       Rows with no arrivals are left out; group totals always show. */
+    function partOneHtml(counts) {
+        const list = residences || [];
+        const get = code => counts[code] || null;
+        const n = c => (c ? (c.unsplit || 0) + (c.male || 0) + (c.female || 0) : 0);
+        const split = Object.values(counts).every(c => c.unsplit == null);
+        const cell = (c, k) => (c && c[k] != null ? nf(c[k]) : (split ? '0' : '–'));
+        const row = (label, c, cls = '') => `<tr class="${cls}"><td>${esc(label)}</td>${split ? `<td class="text-right">${cell(c, 'male')}</td><td class="text-right">${cell(c, 'female')}</td>` : ''}<td class="text-right"><b>${nf(n(c))}</b></td></tr>`;
+        const add = codes => codes.reduce((a, code) => { const c = get(code); if (!c) return a; return { male: a.male + (c.male || 0), female: a.female + (c.female || 0), unsplit: (a.unsplit || 0) + (c.unsplit || 0) }; }, { male: 0, female: 0, unsplit: 0 });
+        const sec = s => list.filter(r => r.section === s).map(r => r.code);
+        const foreign = list.filter(r => r.section === 'foreign');
+        const shownForeign = foreign.filter(r => n(get(r.code)) > 0);
+        const groupRow = label => `<tr class="acc-group"><td colspan="${split ? 4 : 2}">${esc(label)}</td></tr>`;
+        return `<div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Country of residence</th>${split ? '<th class="text-right">Male</th><th class="text-right">Female</th>' : ''}<th class="text-right">Total</th></tr></thead><tbody>
+            ${groupRow('PHILIPPINE RESIDENTS')}${row('Filipino nationality', get('ph-filipino'))}${row('Foreign nationality', get('ph-foreign'))}
+            ${row('Total Philippine residents', add(sec('philippine')), 'acc-sum')}
+            ${groupRow('NON-PHILIPPINE RESIDENTS')}${shownForeign.length ? shownForeign.map(r => row(r.name, get(r.code))).join('') : `<tr><td colspan="${split ? 4 : 2}" class="text-on-surface-variant">No arrivals from outside the Philippines</td></tr>`}
+            ${row('Total non-Philippine residents', add(sec('foreign')), 'acc-sum')}
+            ${row('Overseas Filipinos*', get('overseas-filipino'), 'acc-sum')}${row('Guests with unspecified residence', get('unspecified'), 'acc-sum')}
+            ${row('Grand total guest arrivals', add(list.map(r => r.code)), 'acc-grand')}</tbody></table></div>
+            <p class="acc-note mt-2">Rows with no arrivals are left out here; the Excel lists every row. * Philippine passport holders permanently residing abroad; excludes overseas Filipino workers.</p>`;
+    }
+    function partTwoHtml(f) {
+        const sexBy = section => Object.entries(f.counts || {}).filter(([code]) => residenceSection(code) === section).reduce((a, [, c]) => ({ male: a.male + (c.male || 0), female: a.female + (c.female || 0) }), { male: 0, female: 0 });
+        const v = [['a. Philippine residents', sexBy('philippine')], ['b. Non-Philippine residents', sexBy('foreign')], ['c. Overseas Filipinos', sexBy('overseas_filipino')], ['d. Others / unspecified', sexBy('unspecified')]];
+        return `<div class="grid lg:grid-cols-2 gap-4"><div class="acc-scroll"><table class="ztims-table acc-table"><tbody>
+                <tr><td>Number of rooms</td><td class="text-right"><b>${nf(f.rooms)}</b></td></tr>
+                <tr><td>1. Rooms occupied <span class="text-on-surface-variant">(room-nights)</span></td><td class="text-right"><b>${nf(f.roomNightsOccupied)}</b></td></tr>
+                <tr><td>2. Rooms available for the month <span class="text-on-surface-variant">(room-nights)</span></td><td class="text-right"><b>${nf(f.roomNightsAvailable)}</b></td></tr>
+                <tr><td>3. Total guest nights</td><td class="text-right"><b>${nf(f.guestNights)}</b></td></tr>
+                <tr class="acc-sum"><td>Average monthly occupancy rate</td><td class="text-right">${pct(f.occupancyRate)}</td></tr>
+                <tr class="acc-sum"><td>Average length of stay (nights)</td><td class="text-right">${dec(f.averageLengthOfStay)}</td></tr></tbody></table></div>
+            <div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Volume per sex</th><th class="text-right">Male</th><th class="text-right">Female</th></tr></thead><tbody>
+                ${v.map(([l, x]) => `<tr><td>${l}</td><td class="text-right">${x.male}</td><td class="text-right">${x.female}</td></tr>`).join('')}</tbody></table></div></div>`;
+    }
+
     window.ztimsAcc = {
+        partOneHtml, partTwoHtml,
         api, download, esc, MONTHS, pad, manilaToday, addDays, daysIn, monthName, monthKey, shiftMonth, fmtDate, fmtWhen, weekday,
         nf, pct, dec, STATES, statePill, loadResidences, residenceName, residenceSection, openWindow, toast, loading, failed
     };
