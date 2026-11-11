@@ -118,7 +118,11 @@
         }
         function coverage(m) {
             if (m.source === 'municipal_total') return ['tone-neutral', 'Paper total'];
-            if (m.source === 'none') return m.expected && `${year}-${A().pad(m.month)}-01` <= A().manilaToday() ? ['tone-danger', 'No reports'] : ['tone-neutral', '–'];
+            if (m.source === 'none') {
+                if (!m.expected || `${year}-${A().pad(m.month)}-01` > A().manilaToday()) return ['tone-neutral', '–'];
+                if (m.beforeReporting + m.notOperating >= m.expected) return ['tone-neutral', 'Before reporting'];
+                return ['tone-danger', 'No reports'];
+            }
             if (m.complete) return ['tone-success', `Complete ${m.reported}/${m.expected - m.notOperating}`];
             return ['tone-warning', `${m.reported} of ${m.expected - m.notOperating}, ${m.missing} missing`];
         }

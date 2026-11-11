@@ -416,7 +416,11 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         await placeFor(req, s.spot_id);
         const changes = (await query(`select action, reason, affected_months, before, after, actor_role, at from accommodation_changes
                                        where entity = 'stay' and entity_id = $1 order by at, id`, [s.id])).rows;
-        res.json({ success: true, stay: shapeStay(s), months: monthsOf(s), changes });
+        const months = monthsOf(s);
+        // Finalized months this stay counts in: the page shows it locked, the server refuses changes anyway.
+        const locked = (await query(`select year, month from accommodation_periods where spot_id = $1 and finalized_at is not null`, [s.spot_id])).rows
+            .map(p => E.monthKey(p.year, p.month)).filter(k => months.includes(k)).sort();
+        res.json({ success: true, stay: shapeStay(s), months, lockedMonths: locked, changes });
     }));
 
     router.post('/accommodation/:spotId/stays', requireEstablishmentManager, writeLimit, handle(async (req, res) => {

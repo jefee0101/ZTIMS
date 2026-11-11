@@ -175,7 +175,7 @@
         let data;
         try { data = await A().api(`/accommodation/stays/${encodeURIComponent(id)}`); }
         catch (e) { return A().toast(e.message, 'error'); }
-        const s = data.stay;
+        const s = data.stay, locked = data.lockedMonths || [];
         const hist = (data.changes || []).slice().reverse().map(c => `<li><span class="text-on-surface-variant">${A().fmtWhen(c.at)}</span> <b>${({ created: 'Recorded', edited: 'Changed', voided: 'Voided' })[c.action] || A().esc(c.action)}</b>${c.reason ? ' · ' + A().esc(c.reason) : ''}${c.affected_months && c.affected_months.length ? ` <span class="text-on-surface-variant">(${c.affected_months.map(m => A().monthName(+m.slice(0, 4), +m.slice(5))).join(', ')})</span>` : ''}</li>`).join('');
         const win = A().openWindow({
             title: 'Stay ' + s.reference, wide: true,
@@ -187,8 +187,10 @@
                 <div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Residence</th><th class="text-right">Male</th><th class="text-right">Female</th><th>Here</th></tr></thead>
                     <tbody>${s.guests.map(g => `<tr><td>${A().esc(A().residenceName(g.residence))}</td><td class="text-right">${g.male}</td><td class="text-right">${g.female}</td><td>${A().fmtDate(g.from)} → ${A().fmtDate(g.until)}</td></tr>`).join('')}</tbody></table></div>
                 <p class="text-support">Counts in: ${data.months.map(m => A().monthName(+m.slice(0, 4), +m.slice(5))).join(', ')}</p>
+                ${s.status !== 'active' ? `<div class="acc-banner acc-banner--bad"><span class="material-symbols-outlined" aria-hidden="true">block</span><div><b>Voided.</b> ${A().esc(s.voidReason || '')} It no longer counts.</div></div>` : ''}
+                ${locked.length ? `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div><b>Locked.</b> ${locked.map(m => A().monthName(+m.slice(0, 4), +m.slice(5))).join(' and ')} ${locked.length === 1 ? 'is' : 'are'} finalized. This stay cannot change until the Tourism Office reopens ${locked.length === 1 ? 'it' : 'them'}.</div></div>` : ''}
                 <div><p class="field-label">History</p><ul class="acc-history">${hist}</ul></div>`,
-            actions: [
+            actions: locked.length || s.status !== 'active' ? [{ label: 'Close' }] : [
                 { label: 'Void', kind: 'danger', run: () => { win.close(); voidStay(s); return false; } },
                 { label: 'Transfer room', run: () => { win.close(); transfer(s); return false; } },
                 { label: 'Change check-out', run: () => { win.close(); changeOut(s); return false; } },
