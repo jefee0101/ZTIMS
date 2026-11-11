@@ -1600,6 +1600,10 @@ create table if not exists public.accommodation_report_versions (
     constraint accommodation_versions_legacy check ((provenance = 'legacy_manual') = (legacy_report_id is not null))
 );
 create unique index if not exists accommodation_versions_number_idx on public.accommodation_report_versions (spot_id, year, month, version);
+-- The version's day-by-day detail (arrivals per day by residence and sex; each
+-- day's DAE-1A columns, rooms occupied by number): its exports come from it.
+-- Null for a legacy_manual version, which has no days.
+alter table public.accommodation_report_versions add column if not exists detail jsonb;
 create unique index if not exists accommodation_versions_legacy_idx on public.accommodation_report_versions (legacy_report_id) where legacy_report_id is not null;
 create index if not exists accommodation_versions_period_idx on public.accommodation_report_versions (year, month);
 

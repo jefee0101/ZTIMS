@@ -530,10 +530,10 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             const late = Date.now() > E.deadlineFor(year, month).getTime();
             const { rows } = await query(
                 `insert into accommodation_report_versions (spot_id, year, month, version, provenance, rooms, room_nights_available, room_nights_occupied,
-                     guest_nights, arrivals, source_digest, source_stays, reason, late, submitted_by_role, submitted_by_email)
-                 values ($1, $2, $3, $4, 'register', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning id`,
+                     guest_nights, arrivals, source_digest, source_stays, reason, late, submitted_by_role, submitted_by_email, detail)
+                 values ($1, $2, $3, $4, 'register', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) returning id`,
                 [spot.id, year, month, (latest ? latest.version : 0) + 1, fig.rooms, fig.roomNightsAvailable, fig.roomNightsOccupied, fig.guestNights,
-                 fig.arrivals, src.digest, src.stays, reason, late, actor.role, actor.email], client);
+                 fig.arrivals, src.digest, src.stays, reason, late, actor.role, actor.email, JSON.stringify(E.versionDetail(v.figures))], client);
             for (const [code, c] of Object.entries(fig.counts)) {
                 await query('insert into accommodation_report_version_counts (version_id, residence_code, male, female) values ($1, $2, $3, $4)', [rows[0].id, code, c.male, c.female], client);
             }
@@ -752,6 +752,135 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             comparison: { previousYear: year - 1, comparableMonths: comparable,
                           unavailableReason: comparable.length ? null : 'No month has complete coverage in both years.' }
         });
+    }));
+
+    /* ---- Excel exports (accommodation-excel.js) ----------------------------
+       Each export is read through the same checks as the page: a manager
+       their own enterprise, the officer any; FORM A the officer only. A month
+       exports a saved version (?version=n) exactly as submitted, or the
+       register now (?version=current), marked "not submitted". */
+    const XLSX = require('./accommodation-excel');
+    const sendXlsx = async (res, wb, name) => {
+        const buffer = await XLSX.toBuffer(wb);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${name.replace(/[^A-Za-z0-9_.-]/g, '_')}"`);
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(buffer);
+    };
+    const fileName = (spot, tail) => `${String(spot.name).replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40)}_${tail}.xlsx`;
+
+    router.get('/accommodation/:spotId/months/:year/:month/export.xlsx', requireStaff, handle(async (req, res) => {
+        const spot = await placeFor(req, req.params.spotId);
+        const { year, month } = periodParams(req);
+        const today = E.manilaToday();
+        const which = String(req.query.version || 'latest');
+        const view = await monthView(spot, year, month, today);
+        const sec = await sections();
+        let version, status;
+        if (which === 'current') {
+            if (E.firstDay(year, month) > today) refuse(409, 'FUTURE', 'That month has not started.');
+            const f = view.figures;
+            version = { ...E.versionFigures(f), detail: E.versionDetail(f) };
+            status = `NOT SUBMITTED: worked out from the stay register on ${today}` + (f.partial ? ` (nights through ${f.through})` : '');
+            version.countedDays = f.partial ? f.daily.filter(d => d.counted).length : null;
+        } else {
+            const n = which === 'latest' ? (view.versions.length ? view.versions[view.versions.length - 1].version : 0) : Number(which);
+            const found = (await query('select * from accommodation_report_versions where spot_id = $1 and year = $2 and month = $3 and version = $4',
+                [spot.id, year, month, n])).rows[0];
+            if (!found) refuse(404, 'NO_VERSION', 'No saved version of that month. Export the register instead (version=current).');
+            const counts = (await query('select * from accommodation_report_version_counts where version_id = $1', [found.id])).rows;
+            version = { ...shapeVersion(found, counts).figures, detail: found.detail };
+            const finalized = view.period && view.period.finalized_version_id === found.id;
+            status = `Version ${found.version}${found.provenance === 'legacy_manual' ? ' (hand-typed report, no day-by-day detail)' : ''}, submitted ${E.toDate(found.submitted_at)}${finalized ? ', finalized' : ''}`;
+        }
+        const ctx = { year, month, days: E.daysIn(year, month), enterpriseName: spot.name, profile: view.profile, sections: sec, status,
+                      rooms: version.rooms, roomNightsAvailable: version.roomNightsAvailable, detail: version.detail, countedDays: version.countedDays, version };
+        const wb = XLSX.workbook();
+        XLSX.addDae1A(wb, ctx);
+        XLSX.addDae1B(wb, ctx, true);
+        XLSX.addDae1B(wb, ctx, false);
+        return sendXlsx(res, wb, fileName(spot, `DAE-1A_DAE-1B_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
+    }));
+
+    /* FORM A layout: the months from saved versions (or municipal totals),
+       previous year only over comparable months. */
+    function formAWorkbookContext(cur, prev, comparable) {
+        const months = cur.months.map(m => (hasData(m) ? m : null));
+        const previousMonths = prev ? prev.months.map(m => (hasData(m) ? m : null)) : null;
+        const sumP = (ms, k) => ms.filter(Boolean).reduce((a, m) => a + (m[k] || 0), 0);
+        const p2 = ms => { const list = ms.filter(Boolean); if (!list.length) return null;
+            const o = { roomNightsOccupied: sumP(list, 'roomNightsOccupied'), roomNightsAvailable: sumP(list, 'roomNightsAvailable'), guestNights: sumP(list, 'guestNights'), arrivals: sumP(list, 'arrivals') };
+            o.occupancyRate = E.ratio(o.roomNightsOccupied, o.roomNightsAvailable); o.averageLengthOfStay = E.ratio(o.guestNights, o.arrivals); return o; };
+        return {
+            months, previousMonths, comparable,
+            partII: {
+                months: months.map(m => (m ? { roomNightsOccupied: m.roomNightsOccupied, roomNightsAvailable: m.roomNightsAvailable, guestNights: m.guestNights,
+                                               occupancyRate: E.ratio(m.roomNightsOccupied, m.roomNightsAvailable), averageLengthOfStay: E.ratio(m.guestNights, m.arrivals) } : null)),
+                total: p2(months),
+                current: comparable.length ? p2(months.filter((m, i) => comparable.includes(i + 1))) : null,
+                previous: comparable.length && previousMonths ? p2(previousMonths.filter((m, i) => comparable.includes(i + 1))) : null
+            }
+        };
+    }
+    const monthList = ms => (ms.length ? ms.map(m => MONTHS[m - 1].slice(0, 3)).join(', ') : 'none');
+
+    router.get('/accommodation/form-a.xlsx', requireAdmin, handle(async (req, res) => {
+        const year = Number(req.query.year);
+        if (!Number.isInteger(year) || year < 2001 || year > 2100) refuse(400, 'BAD_PERIOD', 'Give a year.');
+        const cur = await municipalYear(year), prev = await municipalYear(year - 1);
+        const comparable = cur.months.filter((m, i) => hasData(m) && m.complete && hasData(prev.months[i]) && prev.months[i].complete).map(m => m.month);
+        const ctx = formAWorkbookContext(cur, prev, comparable);
+        const reported = cur.months.filter(hasData);
+        ctx.year = year;
+        ctx.notes = [
+            `Months with figures: ${monthList(reported.map(m => m.month))}. Blank: no report for that month (not zero).`,
+            `Source: ${reported.some(m => m.source === 'municipal_total') ? 'municipal totals from the paper Form A4 (no male/female split, no enterprise detail)' : ''}${reported.some(m => m.source === 'municipal_total') && reported.some(m => m.source === 'enterprise_reports') ? '; ' : ''}${reported.some(m => m.source === 'enterprise_reports') ? 'saved enterprise reports' : ''}.`,
+            `Incomplete months (an enterprise has not reported): ${monthList(cur.months.filter(m => hasData(m) && !m.complete).map(m => m.month))}.`,
+            `Total (Previous Year) and % Difference cover months complete in both years only: ${monthList(comparable)}.`,
+            reported.some(m => m.roomNightsAvailableDerived) ? 'Rooms available for the paper months: rooms × days in the month.' : ''
+        ].filter(Boolean);
+        const wb = XLSX.workbook();
+        XLSX.addFormA(wb, ctx);
+        return sendXlsx(res, wb, `FORM_A_Zamboanguita_${year}.xlsx`);
+    }));
+
+    router.get('/accommodation/:spotId/year/:year/export.xlsx', requireStaff, handle(async (req, res) => {
+        const spot = await placeFor(req, req.params.spotId);
+        const year = Number(req.params.year);
+        if (!Number.isInteger(year) || year < 2001 || year > 2100) refuse(400, 'BAD_PERIOD', 'Give a year.');
+        const enterpriseYear = async y => {
+            const vs = (await query(`select distinct on (month) * from accommodation_report_versions where spot_id = $1 and year = $2 order by month, version desc`, [spot.id, y])).rows;
+            const counts = vs.length ? (await query('select * from accommodation_report_version_counts where version_id = any($1)', [vs.map(v => v.id)])).rows : [];
+            return { months: Array.from({ length: 12 }, (_, i) => {
+                const v = vs.find(x => x.month === i + 1);
+                if (!v) return null;
+                return { month: i + 1, source: 'enterprise_reports', complete: true, reported: 1, arrivals: v.arrivals, guestNights: v.guest_nights,
+                         roomNightsOccupied: v.room_nights_occupied, roomNightsAvailable: v.room_nights_available,
+                         counts: Object.fromEntries(counts.filter(c => c.version_id === v.id).map(c => [c.residence_code, { male: c.male, female: c.female }])) };
+            }) };
+        };
+        const cur = await enterpriseYear(year), prev = await enterpriseYear(year - 1);
+        const comparable = cur.months.filter((m, i) => m && prev.months[i]).map(m => m.month);
+        const ctx = formAWorkbookContext(cur, prev, comparable);
+        ctx.year = year; ctx.enterpriseName = spot.name; ctx.sheetName = 'Annual summary';
+        ctx.status = 'Annual summary of this enterprise\'s DAE-1B, in the FORM A layout';
+        ctx.notes = [`Months with a submitted report: ${monthList(cur.months.filter(Boolean).map(m => m.month))}. Blank: no report (not zero).`,
+                     `Total (Previous Year) and % Difference cover months reported in both years only: ${monthList(comparable)}.`];
+        const wb = XLSX.workbook();
+        XLSX.addFormA(wb, ctx);
+        return sendXlsx(res, wb, fileName(spot, `annual_${year}`));
+    }));
+
+    /* The blank templates, for anyone keeping a paper copy. Staff only. */
+    router.get('/accommodation/templates/:name', requireStaff, handle(async (req, res) => {
+        const name = String(req.params.name);
+        const wb = XLSX.workbook();
+        const blankProfile = { accommodationType: '', accommodationTypeOther: '', dotClassification: '', aeCode: '' };
+        if (name === 'dae1a.xlsx') XLSX.addDae1A(wb, { detail: null, days: 31, enterpriseName: '' });
+        else if (name === 'dae1b.xlsx') { XLSX.addDae1B(wb, { profile: blankProfile, sections: await sections(), enterpriseName: '', version: null, days: 31 }, true); XLSX.addDae1B(wb, { profile: blankProfile, sections: await sections(), enterpriseName: '', version: null }, false); }
+        else if (name === 'form-a.xlsx') XLSX.addFormA(wb, { year: '', months: Array(12).fill(null), comparable: [], partII: { months: Array(12).fill(null), total: null } });
+        else refuse(404, 'NOT_FOUND', 'No such template.');
+        return sendXlsx(res, wb, `blank_${name}`);
     }));
 
     return router;

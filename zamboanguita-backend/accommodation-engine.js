@@ -70,22 +70,33 @@ function normalise(data) {
 function dayFigures(data, d) {
     let checkIn = 0, guests = 0;
     const occupied = new Set();
+    // Guests per room that night, where the stay's guests can be placed: a
+    // stay holding one room that night puts all its guests there; a stay
+    // holding several leaves its rooms "occupied, guests not split" (null).
+    const roomGuests = {}, roomCheckIn = {};
     for (const st of data.stays) {
         if (d < st.check_in || d >= st.check_out) {
             for (const g of st.guests) if (g.starts_on === d) checkIn += g.male + g.female;
             continue;
         }
+        let here = 0, arriving = 0;
         for (const g of st.guests) {
-            if (g.starts_on === d) checkIn += g.male + g.female;
-            if (covers(g, d)) guests += g.male + g.female;
+            if (g.starts_on === d) { checkIn += g.male + g.female; arriving += g.male + g.female; }
+            if (covers(g, d)) { guests += g.male + g.female; here += g.male + g.female; }
         }
-        for (const a of st.rooms) if (covers(a, d)) occupied.add(a.room_id);
+        const rooms = st.rooms.filter(a => covers(a, d)).map(a => a.room_id);
+        for (const id of rooms) occupied.add(id);
+        for (const id of rooms) {
+            if (rooms.length === 1 && roomGuests[id] !== null) roomGuests[id] = (roomGuests[id] || 0) + here;
+            else roomGuests[id] = null;
+            if (arriving) roomCheckIn[id] = true;
+        }
     }
     const closed = data.closed.some(c => coversInclusive(c, d));
     const active = data.rooms.filter(r => roomActive(r, d));
     const out = new Set(data.unavailability.filter(u => coversInclusive(u, d)).map(u => u.room_id)
         .filter(id => active.some(r => r.id === id)));
-    return { date: d, checkIn, guestNights: guests, roomsOccupied: occupied.size, occupiedRooms: [...occupied],
+    return { date: d, checkIn, guestNights: guests, roomsOccupied: occupied.size, occupiedRooms: [...occupied], roomGuests, roomCheckIn, activeRooms: active.map(r => r.id),
              roomsActive: active.length, outOfService: out.size, available: closed ? 0 : active.length - out.size, closed };
 }
 
@@ -111,12 +122,15 @@ function monthFigures(raw, year, month, { today, sections } = {}) {
         }
         daily.push(f);
     }
-    const counts = {};
+    const counts = {}, byDay = {};
     let arrivals = 0;
     for (const st of data.stays) for (const g of st.guests) {
         if (g.starts_on < first || g.starts_on > last || (today && g.starts_on > today)) continue;
         const c = counts[g.residence_code] || (counts[g.residence_code] = { male: 0, female: 0 });
         c.male += g.male; c.female += g.female; arrivals += g.male + g.female;
+        const b = byDay[g.residence_code] || (byDay[g.residence_code] = { male: Array(days).fill(0), female: Array(days).fill(0) });
+        const i = +g.starts_on.slice(8, 10) - 1;
+        b.male[i] += g.male; b.female[i] += g.female;
     }
     const volume = { philippine: { male: 0, female: 0 }, foreign: { male: 0, female: 0 }, overseas_filipino: { male: 0, female: 0 }, unspecified: { male: 0, female: 0 } };
     for (const [code, c] of Object.entries(counts)) {
@@ -124,7 +138,8 @@ function monthFigures(raw, year, month, { today, sections } = {}) {
         v.male += c.male; v.female += c.female;
     }
     return {
-        year, month, rooms, arrivals, counts, volume, guestNights, roomNightsOccupied, roomNightsAvailable,
+        year, month, rooms, arrivals, counts, byDay, volume, guestNights, roomNightsOccupied, roomNightsAvailable,
+        roomNumbers: Object.fromEntries(data.rooms.map(r => [r.id, r.room_number])),
         occupancyRate: ratio(roomNightsOccupied, roomNightsAvailable),
         averageLengthOfStay: ratio(guestNights, arrivals),
         guestsPerRoom: ratio(guestNights, roomNightsOccupied),
@@ -140,6 +155,26 @@ function versionFigures(f) {
         rooms: f.rooms, arrivals: f.arrivals, guestNights: f.guestNights,
         roomNightsOccupied: f.roomNightsOccupied, roomNightsAvailable: f.roomNightsAvailable,
         counts: Object.fromEntries(Object.entries(f.counts).filter(([, c]) => c.male + c.female > 0))
+    };
+}
+
+/* The day-by-day detail a version keeps, so its DAE-1A and DAE-1B exports
+   come from the version itself: arrivals per day by residence and sex, and
+   each day's DAE-1A columns with the rooms occupied (by room number) and the
+   guests in each where they can be placed. No stay, no person. */
+function versionDetail(f) {
+    const used = new Set();
+    for (const d of f.daily) for (const id of [...d.activeRooms, ...d.occupiedRooms]) used.add(id);
+    const roomActiveInMonth = [...used];
+    return {
+        days: f.daily.length,
+        byDay: f.byDay,
+        rooms: roomActiveInMonth.map(id => f.roomNumbers[id]).sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true })),
+        daily: f.daily.map(d => ({
+            checkIn: d.checkIn, guestNights: d.guestNights, roomsOccupied: d.roomsOccupied, available: d.available, closed: d.closed,
+            rooms: Object.fromEntries(d.occupiedRooms.map(id => [f.roomNumbers[id] || id, d.roomGuests[id] === undefined ? null : d.roomGuests[id]])),
+            checkInRooms: Object.keys(d.roomCheckIn || {}).map(id => f.roomNumbers[id] || id)
+        }))
     };
 }
 
@@ -224,6 +259,6 @@ const percentDifference = (current, previous) => (previous == null || previous =
 
 module.exports = {
     DEADLINE_DAY, pad, addDays, daysIn, monthKey, firstDay, lastDay, isDate, toDate, manilaToday, deadlineFor,
-    monthsOfNights, monthsOfStay, monthFigures, versionFigures, differences, sourceDigest, periodState,
+    monthsOfNights, monthsOfStay, monthFigures, versionFigures, versionDetail, differences, sourceDigest, periodState,
     annualTotals, percentDifference, ratio
 };
