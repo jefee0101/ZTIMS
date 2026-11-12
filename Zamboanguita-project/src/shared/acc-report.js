@@ -80,6 +80,7 @@
         const actions = root.querySelector('[data-actions]');
         actions.innerHTML = (canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-act="submit"><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>${latest ? 'Submit correction as version ' + (latest.version + 1) : 'Submit ' + A().MONTHS[month - 1]}</button>` : '')
             + (s === 'open' ? `<button type="button" class="btn btn-primary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>Submit from ${A().fmtDate(from)}</button>` : '')
+            + (['open', 'due', 'overdue', 'submitted', 'changed', 'finalized', 'reopened'].includes(s) ? `<a class="btn btn-secondary min-h-[44px]" href="resort_register.html?month=${A().monthKey(year, month)}#daily"><span class="material-symbols-outlined !text-base" aria-hidden="true">table_view</span>DAE-1A grid</a>` : '')
             + (['open', 'due', 'overdue', 'submitted', 'changed', 'finalized', 'reopened'].includes(s) ? `<button type="button" class="btn btn-secondary min-h-[44px]" data-act="excel"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel</button>` : '');
         const showFigures = !['not_recorded', 'not_operating', 'not_set_up', 'future', 'municipal_total'].includes(s);
         body.innerHTML = banner + (showFigures ? `

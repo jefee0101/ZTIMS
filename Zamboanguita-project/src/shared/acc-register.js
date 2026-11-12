@@ -38,6 +38,7 @@
             </div>
             <div class="acc-body"></div>`;
         root.addEventListener('click', onClick);
+        root.addEventListener('keydown', onKey);
         window.addEventListener('hashchange', () => { const t2 = location.hash === '#daily' ? 'daily' : 'stays'; if (t2 !== tab) { tab = t2; draw(); } });
         load().then(openFromBooking);
     }
@@ -117,17 +118,44 @@
             </section>`;
     }
 
+    /* One room on one night, from the stays: the stays in it, its guests and
+       whether guests arrived. A stay in several rooms that night has no
+       per-room count, so its rooms show a dot and its guests count once in (6). */
+    function cellOf(date, id) {
+        const c = { ids: [], guests: 0, arrival: false, shared: false };
+        for (const s of stays) {
+            if (s.status && s.status !== 'active') continue;
+            const here = s.rooms.filter(r => r.from <= date && date < r.until);
+            if (!here.some(r => r.roomId === id)) continue;
+            c.ids.push(s._id);
+            if (here.length > 1) c.shared = true;
+            else c.guests += s.guests.filter(g => g.from <= date && date < g.until).reduce((a, g) => a + g.male + g.female, 0);
+            if (s.guests.some(g => g.from === date)) c.arrival = true;
+        }
+        return c;
+    }
+    const gridLocked = () => view.state.state === 'finalized' || !!view.finalizedAt;
+
     function dailyHtml() {
         const f = view.figures;
         const ids = [...new Set(f.daily.flatMap(d => d.occupiedRooms).concat(rooms.filter(r => r.availableFrom <= A().monthKey(year, month) + '-31' && (!r.availableUntil || r.availableUntil > A().monthKey(year, month) + '-01')).map(r => r._id)))];
         ids.sort((a, b) => String(roomNo(a)).localeCompare(String(roomNo(b)), undefined, { numeric: true }));
-        const today = A().manilaToday();
-        const arrivalsIn = (d, id) => stays.some(s => s.guests.some(g => g.from === d.date) && s.rooms.some(r => r.roomId === id && r.from <= d.date && d.date < r.until));
-        const rows = f.daily.map(d => {
+        const today = A().manilaToday(), locked = gridLocked(), over = [];
+        const rows = f.daily.map((d, di) => {
             const fut = d.date > today;
             return `<tr class="${fut ? 'acc-fut' : ''}${d.closed ? ' acc-closed' : ''}">
                 <th scope="row" class="acc-sticky">${+d.date.slice(8)} <span class="text-on-surface-variant font-normal">${A().weekday(d.date)}</span></th>
-                ${ids.map(id => `<td class="acc-mk${d.occupiedRooms.includes(id) && arrivalsIn(d, id) ? ' acc-mk--in' : ''}">${d.occupiedRooms.includes(id) ? '<span class="acc-dot" title="Occupied"></span>' : ''}</td>`).join('')}
+                ${ids.map((id, ci) => {
+                    const c = cellOf(d.date, id), occ = d.occupiedRooms.includes(id) || c.ids.length > 0;
+                    const room = rooms.find(r => r._id === id), sleeps = room ? room.sleeps : 0;
+                    const tooMany = !c.shared && sleeps > 0 && c.guests > sleeps;
+                    if (tooMany) over.push({ date: d.date, id, guests: c.guests, sleeps });
+                    const shown = c.guests ? c.guests : (occ ? '<span class="acc-dot"></span>' : '');
+                    const what = c.guests ? `${c.guests} guest${c.guests === 1 ? '' : 's'}` : (occ ? 'occupied' : 'empty');
+                    const off = !occ && (fut || locked);
+                    return `<td class="acc-mk acc-cell${occ && c.arrival ? ' acc-mk--in' : ''}${tooMany ? ' acc-cell--over' : ''}"><button type="button" class="acc-cellbtn" data-cell="${A().esc(id)}|${d.date}" data-ci="${ci}" data-di="${di}" tabindex="${di === 0 && ci === 0 ? 0 : -1}"${off ? ' aria-disabled="true"' : ''}
+                        aria-label="Room ${A().esc(roomNo(id))}, ${A().fmtDate(d.date)}: ${what}${occ && c.arrival ? ', checked in' : ''}">${shown}</button></td>`;
+                }).join('')}
                 <td class="text-right${d.checkIn ? ' acc-mk--in' : ''}">${fut ? '' : d.checkIn || ''}</td>
                 <td class="text-right">${d.counted ? d.guestNights : ''}</td>
                 <td class="text-right">${d.counted ? d.roomsOccupied : ''}</td>
@@ -138,7 +166,7 @@
                 <p class="text-support"><b class="text-on-surface">Form DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
                 <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (register now)</button>
             </div>
-            <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="acc-grid">
+            <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="acc-grid acc-grid--edit">
                 <thead><tr><th class="acc-sticky" rowspan="2">Day</th><th colspan="${ids.length}">Room identification</th>
                     <th rowspan="2" class="text-right">(5) Guests<br>checked in</th><th rowspan="2" class="text-right">(6) Guests staying<br>overnight</th>
                     <th rowspan="2" class="text-right">(7) Rooms<br>occupied</th><th rowspan="2" class="text-right">Rooms<br>available</th></tr>
@@ -146,7 +174,9 @@
                 <tbody>${rows}</tbody>
                 <tfoot><tr><th class="acc-sticky">Total of this month</th><td colspan="${ids.length}"></td><td class="text-right">${f.arrivals}</td><td class="text-right">${f.guestNights}</td><td class="text-right">${f.roomNightsOccupied}</td><td class="text-right">${f.roomNightsAvailable}</td></tr></tfoot>
             </table></div>
-            <p class="text-support mt-3"><span class="acc-dot"></span> occupied · highlighted: guests checked in that day.</p></section>
+            <p class="text-support mt-3">Number: guests that night · <span class="acc-dot"></span> occupied, several rooms · highlighted: guests checked in that day.</p></section>
+            ${over.length ? `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">warning</span><div><b>More guests than the room sleeps.</b>
+                <ul class="acc-checks">${over.map(o => `<li><button type="button" class="acc-link" data-cell="${A().esc(o.id)}|${o.date}">Room ${A().esc(roomNo(o.id))}, ${A().fmtDate(o.date)}</button>: ${o.guests} guests, sleeps ${o.sleeps}</li>`).join('')}</ul></div></div>` : ''}
             <div class="stat-tiles">
                 <div class="stat-tile"><p>Average guest-nights</p><p>${A().dec(f.averageLengthOfStay)}</p></div>
                 <div class="stat-tile"><p>Average room occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div>
@@ -154,9 +184,45 @@
             </div>`;
     }
 
+    /* A room cell: open its stay, choose among several, or record a new stay
+       that starts in that room on that day. */
+    function openCell(key) {
+        const [id, date] = key.split('|');
+        const c = cellOf(date, id);
+        if (c.ids.length === 1) return openStay(c.ids[0]);
+        if (c.ids.length > 1) {
+            const list = stays.filter(s => c.ids.includes(s._id));
+            const win = A().openWindow({
+                title: `Room ${roomNo(id)} · ${A().fmtDate(date, true)}`,
+                body: `<div class="divide-y divide-outline-variant/20">${list.map(s => `<div class="flex items-center justify-between gap-3 py-2">
+                    <div><b>${A().esc(s.reference)}</b> · ${A().fmtDate(s.checkIn)} → ${A().fmtDate(s.checkOut)}<span class="acc-sub">${guestsOf(s)} guest${guestsOf(s) === 1 ? '' : 's'}</span></div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-pick="${A().esc(s._id)}">Open</button></div>`).join('')}</div>`,
+                onOpen: w => w.el.addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { w.close(); openStay(b.dataset.pick); } }),
+                actions: gridLocked() || date > A().manilaToday() ? [{ label: 'Close' }] : [{ label: 'Close', kind: 'cancel' }, { label: 'Record another stay here', kind: 'primary', run: w => { w.close(); stayForm(null, { roomId: id, checkIn: date, checkOut: A().addDays(date, 1) }); return false; } }]
+            });
+            return win;
+        }
+        if (gridLocked()) return A().toast(`${A().monthName(year, month)} is finalized.`, 'info');
+        if (date > A().manilaToday()) return A().toast('Check-in cannot be after today.', 'info');
+        return stayForm(null, { roomId: id, checkIn: date, checkOut: A().addDays(date, 1) });
+    }
+
+    /* Arrow keys move between room cells; Enter or Space opens one. */
+    function onKey(e) {
+        const b = e.target.closest && e.target.closest('.acc-cellbtn');
+        if (!b) return;
+        const mv = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+        if (!mv) return;
+        const next = root.querySelector(`.acc-cellbtn[data-ci="${+b.dataset.ci + mv[0]}"][data-di="${+b.dataset.di + mv[1]}"]`);
+        if (!next) return;
+        e.preventDefault();
+        b.tabIndex = -1; next.tabIndex = 0; next.focus();
+    }
+
     async function onClick(e) {
-        const t = e.target.closest('[data-acc],[data-tab],[data-filter],[data-open],[data-acc-retry]');
+        const t = e.target.closest('[data-acc],[data-tab],[data-filter],[data-open],[data-cell],[data-acc-retry]');
         if (!t || !root.contains(t)) return;
+        if (t.dataset.cell) return openCell(t.dataset.cell);
         if (t.dataset.accRetry !== undefined) return load();
         if (t.dataset.tab) { tab = t.dataset.tab; history.replaceState(null, '', '#' + tab); return draw(); }
         if (t.dataset.filter) { filter = t.dataset.filter; return draw(); }
@@ -274,7 +340,7 @@
         const t = A().manilaToday();
         const fs = old ? JSON.parse(JSON.stringify(payloadOf(old))) : {
             checkIn: (prefill && prefill.checkIn) || t, checkOut: (prefill && prefill.checkOut) || A().addDays(t, 1),
-            rooms: [{ roomId: rooms[0] ? rooms[0]._id : '', from: null, until: null }],
+            rooms: [{ roomId: (prefill && prefill.roomId) || (rooms[0] ? rooms[0]._id : ''), from: null, until: null }],
             guests: [{ residence: (prefill && prefill.residence) || 'ph-filipino', male: 0, female: 0, from: null, until: null }]
         };
         if (!old) { fs.rooms.forEach(r => { r.from = fs.checkIn; r.until = fs.checkOut; }); fs.guests.forEach(g => { g.from = fs.checkIn; g.until = fs.checkOut; }); }

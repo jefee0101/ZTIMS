@@ -739,6 +739,22 @@ visitors here").
     (DAE-1A grid), Record a stay, Excel of the register now. Bookings → Check
     in opens it at `?booking=<id>` with the stay filled in
     (`accommodation_stays.booking_id`).
+  - **The DAE-1A grid is where stays are entered** (12 November 2026, the
+    adviser's request: managers with their own booking systems work from the
+    report, not from bookings). Each room cell is a button: it shows the
+    guests in that room that night (a dot when one stay spans several rooms
+    that night), highlighted on an arrival. An empty cell opens Record a stay
+    with the room and check-in filled in (check-out sets the nights, so one
+    entry fills a multi-night stay); an occupied cell opens its stay, or a
+    chooser when several share the room. Arrow keys move between cells. Not
+    for a future day or a finalized month. Cells over the room's `sleeps` are
+    flagged and listed under the grid. The cells never hold numbers of their
+    own: every entry is a stay, so the DAE-1B and FORM A keep their residence
+    and male/female figures. Monthly Report → Month links to the grid
+    (`resort_register.html?month=YYYY-MM#daily`). Bookings in ZTIMS are not
+    turned into stays automatically: a booking is by room type and has no
+    numbered room or male/female split, so Check in still opens the filled
+    form for the manager to finish.
   - **Monthly Report** (`resort_statistics.html`): Month (DAE-1B, a banner per
     state, Submit or Submit correction with what changed, Excel), Versions
     (View, Excel per version, history) and Year (the annual summary, says when
