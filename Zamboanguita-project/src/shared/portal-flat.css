@@ -151,6 +151,7 @@ main .overflow-x-auto { position: relative; }
    compact row per place: photo, name, categories, one line of facts, what is
    missing (red, "· Fix" opens the editor), then Edit and a ⋯ menu. */
 .dest-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.acc-filters { margin: 1.25rem 0 1.25rem; }
 .dest-chips button { min-height: 40px; padding: 0 .9rem; border-radius: 9999px; border: 1px solid rgb(var(--ztims-outline));
                      background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); font-weight: 700; font-size: .8125rem;
                      display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }

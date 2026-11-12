@@ -99,7 +99,7 @@
                 <div class="stat-tile"><p>Room-nights occupied</p><p>${A().nf(f.roomNightsOccupied)}<span class="acc-of"> of ${A().nf(f.roomNightsAvailable)}</span></p></div>
                 <div class="stat-tile"><p>Stays</p><p>${stays.length}</p></div>
             </div>
-            <div class="dest-chips" role="group" aria-label="Show">
+            <div class="dest-chips acc-filters" role="group" aria-label="Show">
                 ${[['all', 'All stays'], ['arrived', 'Arrived this month'], ['carried', 'Continuing from earlier']].map(([k, l]) =>
                     `<button type="button" class="dest-chip" data-filter="${k}" aria-pressed="${filter === k}">${l}</button>`).join('')}
             </div>
