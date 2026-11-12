@@ -4,6 +4,21 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Appendix E: the DOT report forms (12 November 2026)
+
+**The change.** Nothing in the system. The manuscript now has a new Appendix E,
+"DOT Tourism Statistics Report Forms": the blank DOT forms behind ZTIMS's
+reports (DAE-1A; DAE-1B v4a daily; DAE-1B / DAE-2 2019 monthly; FORM A; VAR 1;
+VAR 2; VAR 3M; DTA2M), one per page, wide ones turned sideways. VAR 1, VAR 2,
+VAR 3M and DTA2M were printed with their tables cut across pages in the source
+PDFs; they are joined into one table each (VAR 2's sample entry blanked). The
+images and how they were made: `docs/manuscript/appendix-e/`. The old Appendix
+E (Survey Documentation) is now Appendix F.
+
+**Change in the manuscript:** done in the Google Doc. Update the table of
+contents page numbers after the next export, and cite Appendix E where Chapter
+III or IV names the DOT forms.
+
 ## Theoretical framework, ERD and database schema figures redrawn (12 November 2026)
 
 **The change.** Nothing in the system. Three figure files in `docs/diagrams/`:
