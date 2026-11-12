@@ -592,7 +592,7 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   (see "Accommodation reporting"); the Arrivals Report reads its saved
   versions.
 - **Arrivals are arrivals at places** (the user's decision, October 2026; **on the
-  stage-4 branch attraction visits leave Part I and are reported only through DTA2M
+  attraction-reporting work (on main since 12 November 2026) attraction visits leave Part I and are reported only through DTA2M
   and VAR 3M, see "Attraction visitor reporting"**):
   Form A4's Part I adds every place's report — places to stay and
   attractions, the office's and private ones — so a guest counts once at each
@@ -780,7 +780,7 @@ visitors here").
   through every indirect route, triggers, bounds, races, formula injection),
   `reconcile-exports.py` (36: every export against its saved version).
 
-### Attraction visitor reporting (stages 4 and 5 on branch; not on main or live yet)
+### Attraction visitor reporting (stages 4 and 5; on main 12 November 2026, schema not yet run on live)
 
 An office-run, counting attraction's visitors are recorded **one count per date**
 by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
@@ -874,7 +874,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   attraction switched off) and `page-security.js` (14: stored markup, cross-site,
   download names, no secrets).
 
-### Analytics (stages 2 and 3 on branch; not on main or live yet)
+### Analytics (stages 2 and 3; on main 12 November 2026; needs the attraction schema on live)
 
 Read-only trends, coverage, peaks and breakdowns of accommodation arrivals and
 attraction visits, from the approved design in `docs/analytics/` (`05-implementation.md`
@@ -2014,14 +2014,14 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no tickets, money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
-- Attraction visits (stages 4 and 5, branch): one count per attraction and date, kept
+- Attraction visits (stages 4 and 5): one count per attraction and date, kept
   apart from accommodation arrivals everywhere; unknown is never zero; sex by
   residence is never invented; the officer never records. See "Attraction
   visitor reporting".
 - No Guest Register for the officer (10 November 2026, the user's decision):
   Support Staff keep office attractions' daily records and submit their monthly
   reports; the officer only reads and Finalizes / Reopens (the backup entry is
-  retired on the branch, D5). An office place counts visitors only while it has
+  retired, D5). An office place counts visitors only while it has
   (or waits for) Support Staff; office places to stay never count; places that
   need no counting have Count visitors here off.
 - Online payment exists only as a
@@ -2067,7 +2067,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   refuses every direct and indirect change. Bookings and tickets are never
   arrivals. Exports keep the DOT templates' layout with ZTIMS's own formulas,
   never a formula from typed text, and no personal details.
-- Analytics (12 November 2026, stage 2 on the branch): read only, from the
+- Analytics (12 November 2026): read only, from the
   authoritative versions and daily counts; accommodation arrivals, attraction
   visits and reservations always separate; missing never 0; official means
   finalized; no percentages beyond the DAE rates, no money, no unique tourists;

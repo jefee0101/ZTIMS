@@ -1,6 +1,6 @@
 # Analytics for accommodation and attraction statistics
 
-Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable prototype. Stage 2 (12 November 2026, on the branch): the server-side calculations and read-only API, see `05-implementation.md`. Stage 3 (12 November 2026, on the branch): the officer's and the manager's Analytics pages, see `06-interface.md`. Nothing deployed.
+Stage 1 (proposal, 12 November 2026): data inspection, planning and a reviewable prototype. Stage 2 (12 November 2026, on main since 12 November 2026): the server-side calculations and read-only API, see `05-implementation.md`. Stage 3 (12 November 2026, on main since 12 November 2026): the officer's and the manager's Analytics pages, see `06-interface.md`. Nothing deployed.
 
 | File | What it is |
 |---|---|

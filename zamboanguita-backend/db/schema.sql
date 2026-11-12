@@ -2009,7 +2009,7 @@ end $$;
 
 
 -- ===========================================================================
--- Attraction visitor reporting (November 2026, stage 4; not on main or live).
+-- Attraction visitor reporting (November 2026, stages 4 and 5; on main 12 November 2026).
 -- One authoritative daily count per office-run attraction and date. Monthly
 -- reports, versions, DTA2M, VAR 3M and VAR 2 are worked out from it and never
 -- typed. Visits to attractions are kept apart from accommodation arrivals.
