@@ -384,20 +384,14 @@
             const today = manilaToday(), end = lastDayOf(S.to) < today ? lastDayOf(S.to) : today;
             let start = S.from + '-01'; if (start < addDays(end, -365)) start = addDays(end, -365);
             if (start > end) return empty('Choose months that have started.');
-            const [st, bm] = await Promise.all([
-                A().api(`/analytics/accommodation/stays?from=${start}&to=${end}&spotId=${encodeURIComponent(spotId())}`),
-                A().api(`/analytics/accommodation/benchmark?from=${S.from}&to=${S.to}&spotId=${encodeURIComponent(spotId())}`)
-            ]);
+            const st = await A().api(`/analytics/accommodation/stays?from=${start}&to=${end}&spotId=${encodeURIComponent(spotId())}`);
             const a = st.arrivals, ls = st.lengthOfStay;
             const tiles = `<div class="stat-tiles ax-tiles">${tile('Guests arrived', nf(a.total), 'from your stay register, as recorded now')}${tile('Stays started', nf(ls.stays), '')}${tile('Typical stay', ls.median == null ? '–' : `${dec(ls.median, ls.median % 1 ? 1 : 0)} nights`, 'median of stays')}${tile('Busiest day', a.peakLow.peak ? nf(a.peakLow.peak.value) : '–', a.peakLow.peak ? esc(a.peakLow.peak.date) : '')}</div>`;
             const wk = a.weekdays.map(w => ({ label: w.weekday, sub: plural(w.days, 'day'), value: w.mean == null ? null : Math.round(w.mean * 10) / 10, na: 'No day yet' }));
-            const ben = bm.months.map(m => [esc(periodLabel(m.key)), nf(m.own), m.barangay.suppressed ? `Hidden (${m.barangay.placesReported} reported)` : nf(m.barangay.arrivals), m.municipal.suppressed ? `Hidden (${m.municipal.placesReported} reported)` : nf(m.municipal.arrivals)]);
             return (!st.reportingFrom ? `<div class="ztims-empty tone-warning ax-inline"><span class="material-symbols-outlined" aria-hidden="true">warning</span><span>Your reporting start month is not set (Enterprise → Reporting), so days are not counted yet.</span></div>` : '') + tiles + `<div class="ax-grid">` +
                 card('Arrivals day by day', daily(a.days, a.rolling7, 'Guests arriving'), { wide: true, foot: 'Live from the stay register: it can change until a month is submitted. Days before reporting started are left out.' }) +
                 card('Arrivals by weekday', hbars(wk, 'guests on average'), { foot: 'Average guests arriving on that weekday, over the days in the range.' }) +
-                card('Length of stay', hbars(ls.buckets.map(b => ({ label: `${b.nights} night${b.nights === '1' ? '' : 's'}`, value: b.stays })), 'stays'), { foot: 'Counts stays, not guests.' }) +
-                card('Compared with other places to stay', table(['Month', 'Your arrivals', 'Your barangay', 'All places to stay'], ben, 'Comparison').replace('<details class="ax-table">', '<details class="ax-table" open>'),
-                    { wide: true, foot: `Finalized reports only. A group is shown only when at least ${bm.minimumGroup} places finalized that month, so no other enterprise’s figures can be read from it.` }) + `</div>`;
+                card('Length of stay', hbars(ls.buckets.map(b => ({ label: `${b.nights} night${b.nights === '1' ? '' : 's'}`, value: b.stays })), 'stays'), { foot: 'Counts stays, not guests.' }) + `</div>`;
         }
 
         /* ---- room requests --------------------------------------------------------- */

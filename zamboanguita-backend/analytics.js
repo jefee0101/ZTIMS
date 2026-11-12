@@ -365,26 +365,6 @@ module.exports = function analyticsRouter({ requireReporter: reporterChain, shar
         const per = new Map([...m.perPlace].map(([id, list]) => [id, list.map(x => (x ? { figures: { arrivals: x.v.arrivals, guestNights: x.v.guest_nights } } : null))]));
         res.json(meta(p, { domain: 'accommodation', measure: 'arrivals', ...breakdown(places, per, keys, null, 'arrivals', isManager(req) ? MIN_GROUP : 0) }));
     }));
-    /* A manager's own enterprise against the municipality, only where enough places reported. */
-    router.get('/analytics/accommodation/benchmark', requireReporter, handle(async (req, res) => {
-        if (!isManager(req)) refuse(403, 'NOT_ALLOWED', 'The benchmark is for Enterprise Managers.');
-        const p = params(req, ['from', 'to', 'spotId']);
-        if (!p.spotId) refuse(400, 'BAD_PARAM', 'Give your enterprise (spotId).');
-        p.mode = 'official';
-        const own = await accommodationPlaces(req, p);
-        // Every private place to stay, read as the officer would (the manager never sees them one by one).
-        const all = (await query(`select ${PLACE_COLS}, pr.reporting_from from spots s left join accommodation_profiles pr on pr.spot_id = s.id where s.type = 'accommodation' and s.managed_by is not null`)).rows;
-        const keys = A.monthRange(p.from, p.to);
-        const mine = await accommodationMonths(own, keys, 'official'), every = await accommodationMonths(all, keys, 'official');
-        const sameBrgy = all.filter(s => (s.barangay || '') === (own[0].barangay || ''));
-        res.json(meta(p, { domain: 'accommodation', minimumGroup: MIN_GROUP, months: keys.map((key, i) => {
-            const reported = all.filter(s => every.perPlace.get(s.id)[i]).length, brgyReported = sameBrgy.filter(s => every.perPlace.get(s.id)[i]).length;
-            const sum = list => list.reduce((a, s) => { const x = every.perPlace.get(s.id)[i]; return x ? a + x.v.arrivals : a; }, 0);
-            return { key, own: mine.rows[i].figures ? mine.rows[i].figures.arrivals : null,
-                     municipal: reported >= MIN_GROUP ? { arrivals: sum(all), placesReported: reported } : { arrivals: null, placesReported: reported, suppressed: true },
-                     barangay: brgyReported >= MIN_GROUP ? { arrivals: sum(sameBrgy), placesReported: brgyReported } : { arrivals: null, placesReported: brgyReported, suppressed: true } };
-        }), note: `A group is shown only when at least ${MIN_GROUP} places finalized that month, so no other enterprise's figure can be read from it.` }));
-    }));
     /* The manager's own stay register: arrivals by day and weekday, length of stay. Live, so labeled operational. */
     router.get('/analytics/accommodation/stays', requireReporter, handle(async (req, res) => {
         if (!isManager(req)) refuse(403, 'NOT_ALLOWED', 'Stay-level patterns are for the enterprise\'s own manager.');

@@ -189,9 +189,7 @@ const LAV = '5b623f31b0f74d0bb5630dbe', JUAN = 'af4ceef49b7c4782ba729cae', POOL 
     ok(!(await p.textContent('#axPanel-accommodation')).includes('Juan Inn'), 'no other enterprise named');
     await shot(p, 'manager-accommodation');
     await p.click('#axTab-guests'); await ready(p);
-    ok(await p.isVisible('text=Compared with other places to stay'), 'guests tab: comparison with the group');
-    const benchCells = await p.$$eval('#axPanel-guests table tbody tr', trs => trs.map(tr => tr.textContent));
-    ok(benchCells.every(r => /Hidden/.test(r)), 'comparison hidden below 3 reporting places', benchCells);
+    ok(!(await p.isVisible('text=Compared with other places to stay')), 'guests tab: no comparison with other places');
     await shot(p, 'manager-guests');
     await p.click('#axTab-requests'); await ready(p);
     ok(await p.isVisible('text=A room request is not an arrival'), 'manager requests tab');

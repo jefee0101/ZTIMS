@@ -887,7 +887,7 @@ Read-only trends, coverage, peaks and breakdowns of accommodation arrivals and
 attraction visits, from the approved design in `docs/analytics/` (`05-implementation.md`
 is what was built). `analytics-engine.js` (arithmetic, no database) and
 `analytics.js` (routes at `/api/analytics/*`: `accommodation`, `accommodation/places`,
-`accommodation/benchmark` and `accommodation/stays` (manager only), `attractions`,
+`accommodation/stays` (manager only), `attractions`,
 `attractions/places`, `attractions/daily`, `reservations`, `coverage` (officer only),
 `:domain/export.xlsx`). No tables of its own; no schema change.
 - **Sources:** accommodation from the saved versions (official = the finalized
@@ -901,8 +901,7 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   unknown residence or sex stays `null`; accommodation, attractions and
   reservations never added together; no unique tourists; no money.
 - **Who:** scope from the signed-in account. Officer all; manager own enterprises
-  (accommodation, reservations, stays, benchmark shown only when 3+ places
-  finalized); Support Staff own attraction; visitors nothing. `no-store`, 300 reads
+  (accommodation, reservations, stays); Support Staff own attraction; visitors nothing. `no-store`, 300 reads
   per 15 minutes per account, unknown or repeated parameters refused.
 - **Pages (stage 3, `docs/analytics/06-interface.md`):** the officer's
   `admin/admin_insights.html` ("Analytics" after Statistics in the officer menu)

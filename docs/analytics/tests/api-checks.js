@@ -128,11 +128,8 @@ const SPOT = { falls: '4b0dcc1722fc4e0bacc7b752', pool: '39fbfa3a5f6041dfabca394
     ok(op2.byPlace.find(p => p.place.name === 'Sea Horizon Beach Resort').value === null, 'a place that never reported has value null, not 0');
     ok(op2.byBarangay.reduce((a, b) => a + (b.value || 0), 0) === op2.byPlace.reduce((a, b) => a + (b.value || 0), 0), 'barangay groups add up to the places (no double counting)');
 
-    console.log('\nBenchmark and stays (manager only)');
-    ok((await call('/analytics/accommodation/benchmark?spotId=' + SPOT.lavanya + '&from=2026-08&to=2026-11', officer)).status === 403, 'officer: no benchmark route');
-    const bm = (await call('/analytics/accommodation/benchmark?spotId=' + SPOT.lavanya + '&from=2026-08&to=2026-11', maria)).data;
-    ok(bm && bm.months.every(x => x.municipal.suppressed === true && x.municipal.arrivals === null), 'municipal comparison suppressed below the minimum group (3 finalized places)', bm && bm.months[1]);
-    ok((await call('/analytics/accommodation/benchmark?spotId=' + SPOT.juan + '&from=2026-08&to=2026-11', maria)).status === 403, 'benchmark of someone else\'s place: 403');
+    console.log('\nStays (manager only; the benchmark was removed 12 November 2026)');
+    ok((await call('/analytics/accommodation/benchmark?spotId=' + SPOT.lavanya + '&from=2026-08&to=2026-11', maria)).status === 404, 'the benchmark route is gone');
     const st = await call('/analytics/accommodation/stays?spotId=' + SPOT.lavanya + '&from=2026-08-01&to=2026-10-31', maria);
     ok(st.status === 200, 'stays pattern for own enterprise');
     const rawArr = +rows(`select coalesce(sum(g.male + g.female), 0) from accommodation_stay_guests g join accommodation_stays s on s.id = g.stay_id where s.spot_id = '${SPOT.lavanya}' and s.status = 'active' and g.starts_on between '2026-08-01' and '2026-10-31'`)[0][0];
