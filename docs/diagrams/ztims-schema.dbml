@@ -102,8 +102,8 @@ Table spots {
   entrance_fee numeric [not null, default: `0`]
   address text [not null, default: '']
   barangay text [not null, default: '']
-  latitude double precision
-  longitude double precision
+  latitude "double precision"
+  longitude "double precision"
   managed_by text
   status text [not null, default: 'published']
   status_updated_at timestamptz
@@ -307,8 +307,8 @@ Table enterprise_booking_settings {
   accepts_bookings boolean [not null, default: `false`]
   paused_by_office boolean [not null, default: `false`]
   response_hours integer [not null, default: `24`]
-  check_in_time time without time zone [not null, default: '14:00:00']
-  check_out_time time without time zone [not null, default: '12:00:00']
+  check_in_time time [not null, default: '14:00:00']
+  check_out_time time [not null, default: '12:00:00']
   min_nights integer [not null, default: `1`]
   max_nights integer [not null, default: `14`]
   advance_days integer [not null, default: `180`]
@@ -487,7 +487,7 @@ Table accommodation_changes {
   entity_id text [not null]
   action text [not null]
   reason text [not null, default: '']
-  affected_months _text [not null, default: '{}']
+  affected_months "text[]" [not null, default: '{}']
   before jsonb
   after jsonb
   actor_role text [not null, default: '']
