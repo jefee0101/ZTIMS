@@ -38,7 +38,9 @@
             : `<a href="staff_register.html?month=${keyOf(v.figures.year, v.figures.month)}">Open the Daily Visitor Record</a>`;
         const sub = lastOf(v.events, 'submitted'), fin = lastOf(v.events, 'finalized'), re = lastReopen(v.events);
         switch (s.state) {
-            case 'before': return `<div class="acc-banner acc-banner--info">This month is before reporting started${v.reportingFrom ? ` (${esc(A.monthName(...ym(v.reportingFrom)))})` : ''}.</div>`;
+            case 'before': return v.reportingFrom
+                ? `<div class="acc-banner acc-banner--info">This month is before reporting started (${esc(A.monthName(...ym(v.reportingFrom)))}).</div>`
+                : '<div class="acc-banner acc-banner--info">Reporting starts with the first date you save.</div>';
             case 'future': return '<div class="acc-banner acc-banner--info">This month has not started.</div>';
             case 'open': return `<div class="acc-banner acc-banner--info"><span>The month is in progress. It can be submitted from the 1st of next month.${page === 'report' ? ' ' + link : ''}</span></div>`;
             case 'incomplete': return `<div class="acc-banner acc-banner--bad"><span><b>${nf(s.missing)} date${s.missing === 1 ? ' is' : 's are'} not recorded.</b> Record each date, 0 when nobody came, before submitting. A missing date is never counted as 0. ${page === 'report' ? link : ''}</span></div>`;
@@ -159,7 +161,9 @@
                 : total == null ? `${nf(sexKnown)} recorded.` : sexKnown === total ? `All ${nf(total)} visitors recorded.` : sexKnown > total ? `Male + female is ${nf(sexKnown)}, more than the total of ${nf(total)}.` : `${nf(sexKnown)} of ${nf(total)} recorded · ${nf(total - sexKnown)} not recorded.`;
             return { total, known, anyRes, sexKnown, anySex };
         }
-        const formLocked = () => !view || isLocked(view.state) || !date || ['closed', 'future', 'before'].includes((dayRow(date) || {}).state);
+        // No reporting month set yet: the first date saved starts reporting (the server sets it), so the form stays open.
+        const notStarted = () => view && view.state.state === 'before' && !view.reportingFrom;
+        const formLocked = () => !view || (isLocked(view.state) && !notStarted()) || !date || ['closed', 'future', 'before'].includes((dayRow(date) || {}).state);
 
         function fillForm(d) {
             date = d; dateIn.value = d || '';

@@ -811,7 +811,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   "Add a breakdown (optional)" for the four residence classes and male / female,
   live "n of N classified", Save (the next missing date is offered), Discard
   changes; leaving unsaved figures always asks; a stale save says so with "Load
-  the saved figures"; "Record 0 for several dates" ticks only dates nobody came.
+  the saved figures"; "Record 0 for several dates" ticks only dates nobody came. With no reporting month set yet, the form stays open and the first date saved starts reporting from its month (the server sets `attraction_settings`); the officer can change it under Reporting settings.
   **Monthly Report** (`staff_statistics.html`, `report`): month picker, tiles,
   incomplete breakdowns said plainly, residence and sex tables (unknown stays
   empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
