@@ -771,6 +771,13 @@ visitors here").
   days, the residence rows ZTIMS keeps mapped onto the 2019 rows) are listed
   in 03. Blank templates:
   `GET /api/accommodation/templates/dae1a.xlsx|dae1b.xlsx|form-a.xlsx`.
+- **Draft constraint names (12 November 2026):** live received the
+  `accommodation_*` tables from an early draft whose checks had no names
+  (`accommodation_stays_check`, …), which clashed with the stay-integrity
+  constraint triggers. `schema.sql` renames each of the 47 draft checks to its
+  proper name (only where the old name has exactly the expected definition),
+  and the triggers are now `<table>_integrity`. A constraint trigger shares the
+  name list of a table's constraints: never name one `<table>_check`.
 - **Booking-table repair:** live received the booking tables as an early
   draft. `schema.sql` drops and recreates them only while all seven are empty
   (see 03 §1).

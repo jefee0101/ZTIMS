@@ -1900,6 +1900,72 @@ begin
     return new;
 end $$;
 
+-- Live received these tables from an early draft whose checks had no names,
+-- so Postgres named them <table>_check, <table>_check1, ... (12 November 2026).
+-- A constraint trigger takes a name in the same list, so accommodation_stays_check
+-- clashed with the trigger below. Give each draft check its name here: only
+-- when the old name exists with exactly this definition and the new name is
+-- free, so this does nothing on a database built from this file.
+do $$
+declare r record;
+begin
+    for r in select * from (values
+        ('accommodation_changes', 'accommodation_changes_action_check', 'accommodation_changes_action', 'CHECK ((action = ANY (ARRAY[''created''::text, ''edited''::text, ''voided''::text])))'),
+        ('accommodation_changes', 'accommodation_changes_entity_check', 'accommodation_changes_entity', 'CHECK ((entity = ANY (ARRAY[''profile''::text, ''room''::text, ''unavailability''::text, ''closed_period''::text, ''stay''::text])))'),
+        ('accommodation_changes', 'accommodation_changes_reason_check', 'accommodation_changes_reason', 'CHECK ((char_length(reason) <= 300))'),
+        ('accommodation_closed_periods', 'accommodation_closed_periods_check', 'accommodation_closed_dates', 'CHECK ((ends_on >= starts_on))'),
+        ('accommodation_closed_periods', 'accommodation_closed_periods_reason_check', 'accommodation_closed_reason', 'CHECK (((char_length(btrim(reason)) >= 1) AND (char_length(btrim(reason)) <= 200)))'),
+        ('accommodation_closed_periods', 'accommodation_closed_periods_void_reason_check', 'accommodation_closed_void', 'CHECK ((char_length(void_reason) <= 300))'),
+        ('accommodation_period_events', 'accommodation_period_events_action_check', 'accommodation_events_action', 'CHECK ((action = ANY (ARRAY[''submitted''::text, ''finalized''::text, ''reopened''::text])))'),
+        ('accommodation_period_events', 'accommodation_period_events_check', 'accommodation_events_reopen_reason', 'CHECK (((action <> ''reopened''::text) OR (char_length(btrim(reason)) >= 10)))'),
+        ('accommodation_period_events', 'accommodation_period_events_reason_check', 'accommodation_events_reason', 'CHECK ((char_length(reason) <= 300))'),
+        ('accommodation_periods', 'accommodation_periods_check', 'accommodation_periods_final', 'CHECK (((finalized_at IS NULL) = (finalized_version_id IS NULL)))'),
+        ('accommodation_periods', 'accommodation_periods_month_check', 'accommodation_periods_month', 'CHECK (((month >= 1) AND (month <= 12)))'),
+        ('accommodation_profiles', 'accommodation_profiles_accommodation_type_check', 'accommodation_profiles_type', 'CHECK ((accommodation_type = ANY (ARRAY[''''::text, ''hotel''::text, ''resort''::text, ''pension''::text, ''hostel''::text, ''apartel''::text, ''other''::text])))'),
+        ('accommodation_profiles', 'accommodation_profiles_accommodation_type_other_check', 'accommodation_profiles_type_other', 'CHECK ((char_length(accommodation_type_other) <= 80))'),
+        ('accommodation_profiles', 'accommodation_profiles_ae_code_check', 'accommodation_profiles_ae_code', 'CHECK ((char_length(ae_code) <= 40))'),
+        ('accommodation_profiles', 'accommodation_profiles_dot_classification_check', 'accommodation_profiles_dot', 'CHECK ((char_length(dot_classification) <= 80))'),
+        ('accommodation_profiles', 'accommodation_profiles_reporting_from_check', 'accommodation_profiles_from', 'CHECK (((reporting_from IS NULL) OR (EXTRACT(day FROM reporting_from) = (1)::numeric)))'),
+        ('accommodation_report_version_counts', 'accommodation_report_version_counts_check', 'accommodation_version_counts_someone', 'CHECK (((male + female) > 0))'),
+        ('accommodation_report_version_counts', 'accommodation_report_version_counts_female_check', 'accommodation_version_counts_female', 'CHECK ((female >= 0))'),
+        ('accommodation_report_version_counts', 'accommodation_report_version_counts_male_check', 'accommodation_version_counts_male', 'CHECK ((male >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_arrivals_check', 'accommodation_versions_arrivals', 'CHECK ((arrivals >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_check', 'accommodation_versions_fit', 'CHECK ((room_nights_occupied <= room_nights_available))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_check1', 'accommodation_versions_legacy', 'CHECK (((provenance = ''legacy_manual''::text) = (legacy_report_id IS NOT NULL)))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_guest_nights_check', 'accommodation_versions_guest_nights', 'CHECK ((guest_nights >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_month_check', 'accommodation_versions_month', 'CHECK (((month >= 1) AND (month <= 12)))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_provenance_check', 'accommodation_versions_provenance', 'CHECK ((provenance = ANY (ARRAY[''register''::text, ''legacy_manual''::text])))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_reason_check', 'accommodation_versions_reason', 'CHECK ((char_length(reason) <= 300))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_room_nights_available_check', 'accommodation_versions_available', 'CHECK ((room_nights_available >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_room_nights_occupied_check', 'accommodation_versions_occupied', 'CHECK ((room_nights_occupied >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_rooms_check', 'accommodation_versions_rooms', 'CHECK ((rooms >= 0))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_version_check', 'accommodation_versions_version', 'CHECK ((version >= 1))'),
+        ('accommodation_report_versions', 'accommodation_report_versions_year_check', 'accommodation_versions_year', 'CHECK (((year >= 2000) AND (year <= 2100)))'),
+        ('accommodation_room_unavailability', 'accommodation_room_unavailability_check', 'accommodation_unavail_dates', 'CHECK ((ends_on >= starts_on))'),
+        ('accommodation_room_unavailability', 'accommodation_room_unavailability_reason_check', 'accommodation_unavail_reason', 'CHECK (((char_length(btrim(reason)) >= 1) AND (char_length(btrim(reason)) <= 200)))'),
+        ('accommodation_room_unavailability', 'accommodation_room_unavailability_void_reason_check', 'accommodation_unavail_void', 'CHECK ((char_length(void_reason) <= 300))'),
+        ('accommodation_rooms', 'accommodation_rooms_check', 'accommodation_rooms_dates', 'CHECK (((available_until IS NULL) OR (available_until > available_from)))'),
+        ('accommodation_rooms', 'accommodation_rooms_label_check', 'accommodation_rooms_label', 'CHECK ((char_length(label) <= 80))'),
+        ('accommodation_rooms', 'accommodation_rooms_room_number_check', 'accommodation_rooms_number', 'CHECK (((char_length(btrim(room_number)) >= 1) AND (char_length(btrim(room_number)) <= 20)))'),
+        ('accommodation_rooms', 'accommodation_rooms_sleeps_check', 'accommodation_rooms_sleeps', 'CHECK (((sleeps >= 1) AND (sleeps <= 30)))'),
+        ('accommodation_stay_guests', 'accommodation_stay_guests_check', 'accommodation_stay_guests_someone', 'CHECK (((male + female) > 0))'),
+        ('accommodation_stay_guests', 'accommodation_stay_guests_check1', 'accommodation_stay_guests_dates', 'CHECK ((ends_on > starts_on))'),
+        ('accommodation_stay_guests', 'accommodation_stay_guests_female_check', 'accommodation_stay_guests_female', 'CHECK (((female >= 0) AND (female <= 999)))'),
+        ('accommodation_stay_guests', 'accommodation_stay_guests_male_check', 'accommodation_stay_guests_male', 'CHECK (((male >= 0) AND (male <= 999)))'),
+        ('accommodation_stay_rooms', 'accommodation_stay_rooms_check', 'accommodation_stay_rooms_dates', 'CHECK ((ends_on > starts_on))'),
+        ('accommodation_stays', 'accommodation_stays_check', 'accommodation_stays_dates', 'CHECK (((check_out > check_in) AND ((check_out - check_in) <= 366)))'),
+        ('accommodation_stays', 'accommodation_stays_reference_check', 'accommodation_stays_reference', 'CHECK (((char_length(reference) >= 1) AND (char_length(reference) <= 20)))'),
+        ('accommodation_stays', 'accommodation_stays_status_check', 'accommodation_stays_status', 'CHECK ((status = ANY (ARRAY[''active''::text, ''void''::text])))'),
+        ('accommodation_stays', 'accommodation_stays_void_reason_check', 'accommodation_stays_void', 'CHECK ((char_length(void_reason) <= 300))')
+    ) as v(tbl, old_name, new_name, def) loop
+        if exists (select 1 from pg_constraint c where c.conrelid = ('public.' || r.tbl)::regclass and c.conname = r.old_name
+                     and c.contype = 'c' and pg_get_constraintdef(c.oid) = r.def)
+           and not exists (select 1 from pg_constraint c where c.conrelid = ('public.' || r.tbl)::regclass and c.conname = r.new_name) then
+            execute format('alter table public.%I rename constraint %I to %I', r.tbl, r.old_name, r.new_name);
+        end if;
+    end loop;
+end $$;
+
 do $$
 declare t text;
 begin
@@ -1909,8 +1975,9 @@ begin
         execute format('create trigger %I before insert or update or delete on public.%I for each row execute function public.accommodation_guard_rows()', t || '_guard', t);
     end loop;
     foreach t in array array['accommodation_stays', 'accommodation_stay_rooms', 'accommodation_stay_guests'] loop
-        execute format('drop trigger if exists %I on public.%I', t || '_check', t);
-        execute format('create constraint trigger %I after insert or update or delete on public.%I deferrable initially deferred for each row execute function public.accommodation_check_stay()', t || '_check', t);
+        execute format('drop trigger if exists %I on public.%I', t || '_check', t);       -- its earlier name
+        execute format('drop trigger if exists %I on public.%I', t || '_integrity', t);
+        execute format('create constraint trigger %I after insert or update or delete on public.%I deferrable initially deferred for each row execute function public.accommodation_check_stay()', t || '_integrity', t);
     end loop;
     drop trigger if exists accommodation_stays_status_follow on public.accommodation_stays;
     create trigger accommodation_stays_status_follow after update on public.accommodation_stays
