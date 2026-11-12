@@ -457,6 +457,8 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 
 /* The manager's enterprise switcher (enterprise-switcher.js): one account,
    several enterprises. The button is a .pg-btn--plain, the menu a .dest-menu. */
+#enterpriseSwitcherSlot { margin-left: .75rem; }
+@media (min-width: 640px) { #enterpriseSwitcherSlot { margin-left: 1.5rem; } }
 .ent-switch { position: relative; min-width: 0; }
 .ent-switch__btn { max-width: 100%; border-radius: 9999px; font-weight: 700; padding: 0 1rem; }
 .ent-switch__btn .material-symbols-outlined:first-child { color: rgb(var(--ztims-primary-text)); }
