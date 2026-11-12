@@ -4,20 +4,24 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
-## Appendix E: the DOT report forms (12 November 2026)
+## Appendices E to L: the DOT report forms (12 November 2026)
 
-**The change.** Nothing in the system. The manuscript now has a new Appendix E,
-"DOT Tourism Statistics Report Forms": the blank DOT forms behind ZTIMS's
-reports (DAE-1A; DAE-1B v4a daily; DAE-1B / DAE-2 2019 monthly; FORM A; VAR 1;
-VAR 2; VAR 3M; DTA2M), one per page, wide ones turned sideways. VAR 1, VAR 2,
-VAR 3M and DTA2M were printed with their tables cut across pages in the source
-PDFs; they are joined into one table each (VAR 2's sample entry blanked). The
-images and how they were made: `docs/manuscript/appendix-e/`. The old Appendix
-E (Survey Documentation) is now Appendix F.
+**The change.** Nothing in the system. The manuscript now has one appendix per
+blank DOT form behind ZTIMS's reports: E DAE-1A; F DAE-1B (v4a) daily (3 pages);
+G DAE-1B / DAE-2 (2019) monthly (3 pages); H FORM A (3 pages); I VAR 1; J VAR 2;
+K VAR 3M; L DTA2M. Each page holds its "APPENDIX X" label, the form's title
+(with "page n of 3" where it runs on) and the form, sized to fit inside the
+page's body so it never reaches the footer; wide forms are turned sideways.
+VAR 1, VAR 2, VAR 3M and DTA2M were printed with their tables cut across pages
+in the source PDFs; they are joined into one table each (VAR 2's sample entry
+blanked). The images and how they were made: `docs/manuscript/appendix-e/`.
+Survey Documentation, first Appendix E, then F, is now Appendix M.
 
-**Change in the manuscript:** done in the Google Doc. Update the table of
-contents page numbers after the next export, and cite Appendix E where Chapter
-III or IV names the DOT forms.
+**Change in the manuscript:** done in the Google Doc (contents lines E to M
+added). The contents page numbers are out of date for every appendix (in the
+export of 12 November: A 119, B 120, C 125, D 136, E 140, F 141, G 144, H 147,
+I 150, J 151, K 152, L 153, M 154); refresh them before submitting. Cite
+Appendices E to L where Chapter III or IV names the DOT forms.
 
 ## Theoretical framework, ERD and database schema figures redrawn (12 November 2026)
 
