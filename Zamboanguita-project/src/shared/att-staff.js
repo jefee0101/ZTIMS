@@ -71,7 +71,7 @@
        The Daily Visitor Record
        ================================================================= */
     async function record(host) {
-        const h = await header(host, 'Daily Visitor Record', '<a href="staff_statistics.html" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">bar_chart</span>Monthly Report</a>');
+        const h = await header(host, 'Daily Visitor Record');
         if (!h) return;
         const spotId = h.me.attraction._id, today = h.me.today;
         const asked = new URLSearchParams(location.search).get('month');
