@@ -844,3 +844,12 @@ them."
   working day; the visitor is reminded the day before).
 - A seventh category, Leisure & Recreation (pools, water parks, parks).
 - Online payment is a demonstration in Xendit's test mode only.
+
+## Chapter IV diagrams revised (12 November 2026)
+
+Figures 4 to 8 were redrawn on the panel's advice (fewer outside services; users, processes and data only):
+context flow diagram (four users, no external services), top level diagram (five processes, only the four
+shared data stores), ERD (17 core entities in the panel-approved box-and-line format), use case diagram
+(four actors, shared Log In) and system architecture (portrait tiers, ten numbered connections).
+The new Table 10, Connections in the System Architecture, moves Software, Hardware and Network
+Requirements to Tables 11 to 13. Replacement text: docs/manuscript/chapter-iv-diagrams-revised.docx.
