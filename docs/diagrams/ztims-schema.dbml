@@ -1,345 +1,759 @@
-// ZTIMS database, for dbdiagram.io (paste into the editor at dbdiagram.io/d).
-// The final shape of zamboanguita-backend/db/schema.sql after every migration step:
-// 22 tables, 21 relationships. Ids are text (24 hex characters).
-// Relationship marks: ">" many-to-one, "-" one-to-one.
-
-Project ZTIMS {
-  database_type: 'PostgreSQL'
-  Note: 'Zamboanguita Tourism Information Management System, PostgreSQL on Supabase'
-}
-
-// ---------------------------------------------------------------- accounts
+// ZTIMS database (PostgreSQL on Supabase), generated from zamboanguita-backend/db/schema.sql.
+// Paste into dbdiagram.io to draw it. Every table, column, key and link; checks and triggers are in schema.sql.
+// 52 tables.
 
 Table tourism_officers {
-  id text [pk]
-  email text [not null, unique]
+  id text [pk, default: `ztims_new_id()`]
+  email text [unique, not null]
   password_hash text [not null]
-  full_name text [not null]
-  position text [not null]
-  contact_number text [not null]
-  active boolean [not null, default: true]
-  last_sign_in_at timestamptz
   reset_token_hash text
   reset_token_expires timestamptz
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  full_name text [not null, default: '']
+  position text [not null, default: '']
+  contact_number text [not null, default: '']
+  active boolean [not null, default: `true`]
+  last_sign_in_at timestamptz
+  session_version integer [not null, default: `0`]
+  must_change_password boolean [not null, default: `false`]
 }
 
 Table establishment_managers {
-  id text [pk]
-  email text [not null, unique]
+  id text [pk, default: `ztims_new_id()`]
+  email text [unique, not null]
   password_hash text [not null]
-  establishment_name text [not null]
-  manager_name text [not null]
-  contact_email text [not null]
-  phone text [not null]
-  active boolean [not null, default: true]
-  operational_status text [not null, default: 'active', note: 'active, inactive, closed']
-  status_needs_review boolean [not null, default: false]
-  status_note text [not null]
+  establishment_name text [default: '']
+  manager_name text [not null, default: '']
+  contact_email text [not null, default: '']
+  phone text [not null, default: '']
+  active boolean [not null, default: `true`]
+  operational_status text [not null, default: 'active']
+  status_needs_review boolean [not null, default: `false`]
+  status_note text [not null, default: '']
   status_updated_at timestamptz
   reset_token_hash text
   reset_token_expires timestamptz
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  session_version integer [not null, default: `0`]
+  must_change_password boolean [not null, default: `false`]
 }
 
-Table tourist_guides {
-  id text [pk]
-  full_name text [not null]
-  photo_url text [not null]
-  contact_number text [not null]
-  location text [not null]
-  bio text [not null]
-  guide_fee numeric [not null, default: 0]
-  max_group_size integer [not null, default: 1]
-  status text [not null, default: 'available', note: 'available, unavailable, inactive']
-  scope text [not null, default: 'municipal', note: 'municipal or barangay']
-  barangay text [not null]
-  works_mon boolean [not null, default: true]
-  works_tue boolean [not null, default: true]
-  works_wed boolean [not null, default: true]
-  works_thu boolean [not null, default: true]
-  works_fri boolean [not null, default: true]
-  works_sat boolean [not null, default: true]
-  works_sun boolean [not null, default: true]
-  email text [unique, note: 'null until the office issues a sign-in']
-  password_hash text
+Table support_staff {
+  id text [pk, default: `ztims_new_id()`]
+  email text [not null]
+  password_hash text [not null]
   reset_token_hash text
   reset_token_expires timestamptz
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  full_name text [not null]
+  position text [not null, default: '']
+  contact_number text [not null, default: '']
+  spot_id text [not null]
+  status text [not null, default: 'active']
+  must_change_password boolean [not null, default: `true`]
+  session_version integer [not null, default: `0`]
+  last_sign_in_at timestamptz
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
-Table languages {
-  id text [pk]
-  name text [not null, note: 'unique, ignoring case']
-  created_at timestamptz [not null]
+Table visitors {
+  id text [pk, default: `ztims_new_id()`]
+  email text
+  email_verified_at timestamptz
+  password_hash text
+  google_sub text
+  full_name text [not null, default: '']
+  phone text [not null, default: '']
+  country_code text
+  session_version integer [not null, default: `0`]
+  status text [not null, default: 'active']
+  last_sign_in_at timestamptz
+  deleted_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
-Table guide_languages {
-  guide_id text [not null]
-  language_id text [not null]
-  indexes {
-    (guide_id, language_id) [pk]
-  }
+Table visitor_tokens {
+  id text [pk, default: `ztims_new_id()`]
+  visitor_id text [not null]
+  purpose text [not null]
+  token_hash text [unique, not null]
+  expires_at timestamptz [not null]
+  used_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
 }
-
-// ---------------------------------------------------------------- destinations
 
 Table spots {
-  id text [pk]
+  id text [pk, default: `ztims_new_id()`]
   title text [not null]
   location text [not null]
   category text [not null]
   description text [not null]
-  image_url text [not null, note: 'cover photo link; the file is on Cloudinary']
-  booking_url text [not null]
-  type text [not null, default: 'spot', note: 'spot or accommodation']
-  label text [not null]
+  image_url text [not null, default: '']
+  booking_url text [not null, default: '']
+  type text [not null, default: 'spot']
+  label text [not null, default: '']
   working_days text [not null, default: 'Everyday']
   working_time text [not null, default: 'All Day']
-  travel_fee numeric [not null, default: 0]
-  entrance_fee numeric [not null, default: 0]
+  travel_fee numeric [not null, default: `0`]
+  entrance_fee numeric [not null, default: `0`]
+  address text [not null, default: '']
+  barangay text [not null, default: '']
+  latitude double precision
+  longitude double precision
+  managed_by text
+  status text [not null, default: 'published']
+  status_updated_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
   student_fee numeric
   child_fee numeric
   child_age_max integer
-  cancel_keep_percent numeric [not null, default: 0]
-  address text [not null]
-  barangay text [not null]
-  latitude "double precision"
-  longitude "double precision"
-  managed_by text [note: 'null: kept by the Tourism Office; one listing per establishment']
-  status text [not null, default: 'published', note: 'published, unpublished, archived']
-  status_updated_at timestamptz
-  requires_guide boolean [not null, default: false]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  cancel_keep_percent numeric [not null, default: `0`]
+  enterprise_name text [not null, default: '']
+  phone text [not null, default: '']
+  contact_email text [not null, default: '']
+  counts_visitors boolean [not null, default: `true`]
 }
 
 Table spot_photos {
-  spot_id text [not null]
-  position integer [not null, note: '0 to 29']
+  spot_id text
+  position integer
   url text [not null]
   indexes {
     (spot_id, position) [pk]
   }
 }
 
+Table spot_more_categories {
+  spot_id text
+  position integer
+  category text [not null]
+  indexes {
+    (spot_id, position) [pk]
+    (spot_id, category) [unique]
+  }
+}
+
 Table spot_closed_dates {
-  id text [pk]
+  id text [pk, default: `ztims_new_id()`]
   spot_id text [not null]
   closed_date date [not null]
-  reason text [not null]
-  created_by_email text [not null]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  reason text [not null, default: '']
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
   indexes {
     (spot_id, closed_date) [unique]
   }
 }
 
-Table tourist_guide_spots {
-  guide_id text [not null]
-  spot_id text [not null]
-  position integer [not null, default: 0]
+Table announcements {
+  id text [pk, default: `ztims_new_id()`]
+  category text [not null]
+  title text [not null]
+  body text [not null]
+  body_other text [not null, default: '']
+  starts_at timestamptz [not null]
+  ends_at timestamptz [not null]
+  spot_id text
+  photo_url text [not null, default: '']
+  hidden boolean [not null, default: `false`]
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table office_info {
+  id smallint [pk, default: `1`]
+  address text [not null, default: '']
+  phone text [not null, default: '']
+  email text [not null, default: '']
+  office_hours text [not null, default: '']
+  updated_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  dpo_name text [not null, default: '']
+  dpo_email text [not null, default: '']
+  privacy_checked_at timestamptz
+}
+
+Table emergency_numbers {
+  id text [pk, default: `ztims_new_id()`]
+  label text [not null]
+  number text [not null]
+  position integer [not null, default: `0`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table saved_places {
+  visitor_id text
+  spot_id text
+  created_at timestamptz [not null, default: `now()`]
   indexes {
-    (guide_id, spot_id) [pk]
+    (visitor_id, spot_id) [pk]
   }
 }
 
-// ---------------------------------------------------------------- bookings, tickets, payments
-
-Table guide_bookings {
-  id text [pk]
-  reference text [not null, unique, note: 'e.g. TG-2026-00001']
+Table reviews {
+  id text [pk, default: `ztims_new_id()`]
+  visitor_id text [not null]
   spot_id text [not null]
-  guide_id text [note: 'null until the office assigns a guide']
-  requested_guide_id text [note: 'the guide the visitor asked for; null: any']
-  full_name text [not null]
-  contact_number text [not null]
-  email text [not null]
-  nationality text [not null]
-  visitors integer [not null]
-  preferred_date date [not null]
-  preferred_time text [not null]
-  notes text [not null]
-  status text [not null, default: 'pending_payment', note: 'pending_payment, confirmed, cancelled, completed, no_show, closed']
-  status_note text [not null]
-  status_updated_at timestamptz
-  is_demo boolean [not null, default: false]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  rating integer [not null]
+  body text [not null, default: '']
+  status text [not null, default: 'visible']
+  hidden_reason text [not null, default: '']
+  hidden_by_email text [not null, default: '']
+  hidden_at timestamptz
+  ticket_id text
+  booking_id text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  indexes {
+    (visitor_id, spot_id) [unique]
+  }
 }
 
-Table guide_reports {
-  id text [pk]
-  guide_id text [not null]
-  booking_id text
-  report_type text [not null, note: 'tour_completed, headcount, incident, tourist_feedback']
-  report_date date [not null]
-  headcount integer
-  barangay text [not null]
-  details text [not null]
-  status text [not null, default: 'new', note: 'new or reviewed']
-  reviewed_by_email text [not null]
-  reviewed_at timestamptz
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+Table review_changes {
+  id text [pk, default: `ztims_new_id()`]
+  review_id text [not null]
+  action text [not null]
+  reason text [not null]
+  by_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table feedback {
+  id text [pk, default: `ztims_new_id()`]
+  topic text [not null, default: 'other']
+  message text [not null]
+  name text [not null, default: '']
+  email text [not null, default: '']
+  page text [not null, default: '']
+  status text [not null, default: 'new']
+  status_updated_at timestamptz
+  status_updated_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table tickets {
-  id text [pk]
-  code text [not null, unique]
+  id text [pk, default: `ztims_new_id()`]
+  code text [unique, not null]
   spot_id text [not null]
   visit_date date [not null]
-  count_regular integer [not null, default: 0]
-  count_student integer [not null, default: 0]
-  count_child integer [not null, default: 0]
+  count_regular integer [not null, default: `0`]
+  count_student integer [not null, default: `0`]
+  count_child integer [not null, default: `0`]
   fee_regular numeric
   fee_student numeric
   fee_child numeric
-  people integer [note: 'worked out by the database from the counts']
-  amount numeric [note: 'worked out by the database from counts and fees']
+  people integer [note: 'generated']
+  amount numeric [note: 'generated']
   full_name text [not null]
   email text [not null]
-  contact_number text [not null]
-  status text [not null, default: 'pending_payment', note: 'pending_payment, valid, used, cancelled, expired, closed']
+  contact_number text [not null, default: '']
+  status text [not null, default: 'pending_payment']
   used_at timestamptz
-  used_by_email text [not null]
-  is_demo boolean [not null, default: false]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
-}
-
-Table payments {
-  id text [pk]
-  booking_id text [unique, note: 'a payment is for one booking or one ticket, never both']
-  ticket_id text [unique]
-  amount numeric [not null]
-  method text [not null, default: 'cash']
-  channel text [not null, default: 'counter', note: 'counter or online']
-  receipt_number text [not null]
-  gateway_ref text [not null]
-  paid_at timestamptz [not null]
-  recorded_by_email text [not null]
-  remarks text [not null]
-  refunded_at timestamptz
-  refund_amount numeric
-  refund_reason text [not null]
-  refunded_by_email text [not null]
-  is_demo boolean [not null, default: false]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  used_by_email text [not null, default: '']
+  is_demo boolean [not null, default: `false`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  visitor_id text
 }
 
 Table online_checkouts {
-  id text [pk]
-  booking_id text [note: 'one of booking_id or ticket_id']
-  ticket_id text
-  kind text [note: 'worked out: guide_booking or ticket']
+  id text [pk, default: `ztims_new_id()`]
+  ticket_id text [not null]
   amount numeric [not null]
   session_id text [unique]
-  checkout_url text [not null]
-  status text [not null, default: 'pending', note: 'pending, paid, expired, duplicate']
-  method text [not null]
-  payment_ref text [not null]
+  checkout_url text [not null, default: '']
+  status text [not null, default: 'pending']
+  method text [not null, default: '']
+  payment_ref text [not null, default: '']
   expires_at timestamptz [not null]
   paid_at timestamptz
-  is_demo boolean [not null, default: true]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  is_demo boolean [not null, default: `true`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
-// ---------------------------------------------------------------- tourism statistics
+Table payments {
+  id text [pk, default: `ztims_new_id()`]
+  ticket_id text [unique, not null]
+  amount numeric [not null]
+  method text [not null, default: 'cash']
+  receipt_number text [not null, default: '']
+  paid_at timestamptz [not null, default: `now()`]
+  recorded_by_email text [not null, default: '']
+  remarks text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  channel text [not null, default: 'counter']
+  gateway_ref text [not null, default: '']
+  refunded_at timestamptz
+  refund_reason text [not null, default: '']
+  refunded_by_email text [not null, default: '']
+  is_demo boolean [not null, default: `false`]
+  refund_amount numeric
+}
+
+Table enterprise_booking_settings {
+  spot_id text [pk]
+  accepts_bookings boolean [not null, default: `false`]
+  paused_by_office boolean [not null, default: `false`]
+  response_hours integer [not null, default: `24`]
+  check_in_time time without time zone [not null, default: '14:00:00']
+  check_out_time time without time zone [not null, default: '12:00:00']
+  min_nights integer [not null, default: `1`]
+  max_nights integer [not null, default: `14`]
+  advance_days integer [not null, default: `180`]
+  free_cancel_days integer [not null, default: `2`]
+  payment_instructions text [not null, default: '']
+  updated_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table room_types {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  name text [not null]
+  description text [not null, default: '']
+  beds integer [not null, default: `1`]
+  max_guests integer [not null, default: `2`]
+  base_rate numeric [not null]
+  units integer [not null]
+  photo_url text [not null, default: '']
+  active boolean [not null, default: `true`]
+  position integer [not null, default: `0`]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table room_blocks {
+  id text [pk, default: `ztims_new_id()`]
+  room_type_id text [not null]
+  starts_on date [not null]
+  ends_on date [not null]
+  units integer [not null]
+  reason text [not null, default: '']
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table bookings {
+  id text [pk, default: `ztims_new_id()`]
+  code text [unique, not null]
+  spot_id text [not null]
+  guest_name text [not null]
+  email text [not null, default: '']
+  phone text [not null, default: '']
+  country_code text [not null]
+  adults integer [not null]
+  children integer [not null, default: `0`]
+  check_in date [not null]
+  check_out date [not null]
+  nights integer [note: 'generated']
+  status text [not null, default: 'requested']
+  total_amount numeric [not null]
+  note text [not null, default: '']
+  requested_at timestamptz [not null, default: `now()`]
+  expires_at timestamptz
+  reminder_sent_at timestamptz
+  decided_by_email text [not null, default: '']
+  decided_at timestamptz
+  decline_reason text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  visitor_id text
+}
+
+Table booking_rooms {
+  booking_id text
+  room_type_id text
+  units integer [not null]
+  rate_per_night numeric [not null]
+  indexes {
+    (booking_id, room_type_id) [pk]
+  }
+}
+
+Table booking_changes {
+  id text [pk, default: `ztims_new_id()`]
+  booking_id text [not null]
+  action text [not null]
+  before jsonb
+  after jsonb
+  by_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table booking_payments {
+  id text [pk, default: `ztims_new_id()`]
+  booking_id text [not null]
+  amount numeric [not null]
+  method text [not null]
+  received_on date [not null]
+  reference text [not null, default: '']
+  recorded_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+}
 
 Table residences {
-  code text [pk, note: 'Form A4 row: ISO country code or a word']
+  code text [pk]
   name text [not null]
-  section text [not null, note: 'philippine, foreign, overseas_filipino, unspecified']
+  section text [not null]
   continent text [not null]
   region text [not null]
   sort_order integer [not null]
 }
 
 Table monthly_reports {
-  id text [pk]
-  kind text [not null, note: 'accommodation, attraction, municipal_total']
-  spot_id text [note: 'null only for a municipal total']
+  id text [pk, default: `ztims_new_id()`]
+  kind text [not null]
+  spot_id text
   year integer [not null]
   month integer [not null]
   rooms integer
   room_nights_occupied integer
   guest_nights integer
-  status text [not null, default: 'submitted', note: 'submitted or void']
-  void_reason text [not null]
-  submitted_by_role text [not null]
-  submitted_by_email text [not null]
-  submitted_at timestamptz [not null]
+  status text [not null, default: 'submitted']
+  void_reason text [not null, default: '']
+  submitted_by_role text [not null, default: '']
+  submitted_by_email text [not null, default: '']
+  submitted_at timestamptz [not null, default: `now()`]
   locked_at timestamptz
-  locked_by_email text [not null]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+  locked_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table monthly_report_counts {
-  report_id text [not null]
-  residence_code text [not null]
+  report_id text
+  residence_code text
   male integer
   female integer
   total_unsplit integer
-  total integer [note: 'worked out: male + female, or total_unsplit']
+  total integer [note: 'generated']
   indexes {
     (report_id, residence_code) [pk]
   }
 }
 
 Table report_changes {
-  id text [pk]
+  id text [pk, default: `ztims_new_id()`]
   report_id text [not null]
-  action text [not null, note: 'created, updated, voided, locked, unlocked']
-  changed_by_role text [not null]
-  changed_by_email text [not null]
-  note text [not null]
+  action text [not null]
+  changed_by_role text [not null, default: '']
+  changed_by_email text [not null, default: '']
+  note text [not null, default: '']
   before jsonb
   after jsonb
-  changed_at timestamptz [not null]
+  changed_at timestamptz [not null, default: `now()`]
 }
 
-// ---------------------------------------------------------------- site and office
-
-Table feedback {
-  id text [pk]
-  topic text [not null, default: 'other', note: 'suggestion, listing, problem, booking, other']
-  message text [not null]
-  name text [not null]
-  email text [not null]
-  page text [not null]
-  status text [not null, default: 'new', note: 'new, read, resolved']
-  status_updated_at timestamptz
-  status_updated_by_email text [not null]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+Table register_entries {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  entry_date date [not null]
+  nights integer
+  rooms integer
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  booking_id text
 }
 
-Table office_info {
-  id smallint [pk, default: 1, note: 'one row only']
-  address text [not null]
-  phone text [not null]
-  email text [not null]
-  office_hours text [not null]
-  updated_by_email text [not null]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+Table register_entry_guests {
+  entry_id text
+  residence_code text
+  male integer [not null, default: `0`]
+  female integer [not null, default: `0`]
+  indexes {
+    (entry_id, residence_code) [pk]
+  }
 }
 
-Table emergency_numbers {
-  id text [pk]
-  label text [not null]
-  number text [not null]
-  position integer [not null, default: 0]
-  created_at timestamptz [not null]
-  updated_at timestamptz [not null]
+Table accommodation_changes {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  entity text [not null]
+  entity_id text [not null]
+  action text [not null]
+  reason text [not null, default: '']
+  affected_months _text [not null, default: '{}']
+  before jsonb
+  after jsonb
+  actor_role text [not null, default: '']
+  actor_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_closed_periods {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  starts_on date [not null]
+  ends_on date [not null]
+  reason text [not null]
+  voided_at timestamptz
+  void_reason text [not null, default: '']
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_period_events {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  year integer [not null]
+  month integer [not null]
+  action text [not null]
+  version_id text
+  reason text [not null, default: '']
+  actor_role text [not null, default: '']
+  actor_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_periods {
+  spot_id text
+  year integer
+  month integer
+  finalized_at timestamptz
+  finalized_by_email text [not null, default: '']
+  finalized_version_id text
+  updated_at timestamptz [not null, default: `now()`]
+  indexes {
+    (spot_id, year, month) [pk]
+  }
+}
+
+Table accommodation_profiles {
+  spot_id text [pk]
+  accommodation_type text [not null, default: '']
+  accommodation_type_other text [not null, default: '']
+  dot_classification text [not null, default: '']
+  ae_code text [not null, default: '']
+  reporting_from date
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_report_version_counts {
+  version_id text
+  residence_code text
+  male integer [not null]
+  female integer [not null]
+  total integer [note: 'generated']
+  indexes {
+    (version_id, residence_code) [pk]
+  }
+}
+
+Table accommodation_report_versions {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  year integer [not null]
+  month integer [not null]
+  version integer [not null]
+  provenance text [not null]
+  legacy_report_id text
+  rooms integer [not null]
+  room_nights_available integer [not null]
+  room_nights_occupied integer [not null]
+  guest_nights integer [not null]
+  arrivals integer [not null]
+  source_digest text [not null, default: '']
+  source_stays integer [not null, default: `0`]
+  reason text [not null, default: '']
+  late boolean [not null, default: `false`]
+  submitted_by_role text [not null, default: '']
+  submitted_by_email text [not null, default: '']
+  submitted_at timestamptz [not null, default: `now()`]
+  detail jsonb
+}
+
+Table accommodation_room_unavailability {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  room_id text [not null]
+  starts_on date [not null]
+  ends_on date [not null]
+  reason text [not null]
+  voided_at timestamptz
+  void_reason text [not null, default: '']
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_rooms {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  room_number text [not null]
+  room_type_id text
+  label text [not null, default: '']
+  sleeps integer [not null]
+  shared boolean [not null, default: `false`]
+  available_from date [not null]
+  available_until date
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table accommodation_stay_guests {
+  id text [pk, default: `ztims_new_id()`]
+  stay_id text [not null]
+  residence_code text [not null]
+  male integer [not null, default: `0`]
+  female integer [not null, default: `0`]
+  starts_on date [not null]
+  ends_on date [not null]
+}
+
+Table accommodation_stay_rooms {
+  id text [pk, default: `ztims_new_id()`]
+  stay_id text [not null]
+  room_id text [not null]
+  starts_on date [not null]
+  ends_on date [not null]
+  active boolean [not null, default: `true`]
+  shared boolean [not null, default: `false`]
+  nights daterange [note: 'generated']
+}
+
+Table accommodation_stays {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  reference text [not null]
+  check_in date [not null]
+  check_out date [not null]
+  status text [not null, default: 'active']
+  void_reason text [not null, default: '']
+  booking_id text
+  revision integer [not null, default: `1`]
+  created_by_email text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table attraction_count_changes {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  count_date date [not null]
+  action text [not null]
+  before jsonb
+  after jsonb
+  actor_role text [not null, default: '']
+  actor_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table attraction_daily_counts {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  count_date date [not null]
+  total integer [not null]
+  res_zamboanguita integer
+  res_negros_oriental integer
+  res_other_province integer
+  res_foreign integer
+  residence_complete boolean [not null, default: `false`]
+  male integer
+  female integer
+  sex_complete boolean [not null, default: `false`]
+  revision integer [not null, default: `1`]
+  last_request_key text [not null, default: '']
+  created_by_email text [not null, default: '']
+  updated_by_email text [not null, default: '']
+  updated_by_role text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  indexes {
+    (spot_id, count_date) [unique]
+  }
+}
+
+Table attraction_outputs {
+  id text [pk, default: `ztims_new_id()`]
+  kind text [not null]
+  year integer [not null]
+  month integer
+  status text [not null, default: 'current']
+  composition jsonb [not null]
+  issued_by_email text [not null, default: '']
+  issued_at timestamptz [not null, default: `now()`]
+  status_changed_at timestamptz
+}
+
+Table attraction_period_events {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  year integer [not null]
+  month integer [not null]
+  action text [not null]
+  version_id text [not null]
+  reason text [not null, default: '']
+  actor_role text [not null, default: '']
+  actor_email text [not null, default: '']
+  at timestamptz [not null, default: `now()`]
+}
+
+Table attraction_periods {
+  spot_id text
+  year integer
+  month integer
+  state text [not null]
+  current_version_id text [not null]
+  finalized_version_id text
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+  indexes {
+    (spot_id, year, month) [pk]
+  }
+}
+
+Table attraction_report_versions {
+  id text [pk, default: `ztims_new_id()`]
+  spot_id text [not null]
+  year integer [not null]
+  month integer [not null]
+  version integer [not null]
+  dates_counted integer [not null]
+  zero_days integer [not null, default: `0`]
+  closed_days integer [not null, default: `0`]
+  total integer [not null]
+  res_zamboanguita integer [not null, default: `0`]
+  res_negros_oriental integer [not null, default: `0`]
+  res_other_province integer [not null, default: `0`]
+  res_foreign integer [not null, default: `0`]
+  res_unrecorded integer [not null, default: `0`]
+  male integer [not null, default: `0`]
+  female integer [not null, default: `0`]
+  sex_unrecorded integer [not null, default: `0`]
+  daily jsonb [not null]
+  source_digest text [not null, default: '']
+  reason text [not null, default: '']
+  submitted_by_role text [not null, default: '']
+  submitted_by_email text [not null, default: '']
+  submitted_at timestamptz [not null, default: `now()`]
+  indexes {
+    (spot_id, year, month, version) [unique]
+  }
+}
+
+Table attraction_settings {
+  spot_id text [pk]
+  reporting_from date [not null]
+  attraction_code text [not null, default: '']
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
 }
 
 Table rate_limits {
@@ -348,26 +762,141 @@ Table rate_limits {
   expires_at timestamptz [not null]
 }
 
-// ---------------------------------------------------------------- relationships
-
-Ref: spots.managed_by - establishment_managers.id
-Ref: guide_languages.guide_id > tourist_guides.id [delete: cascade]
-Ref: guide_languages.language_id > languages.id [delete: cascade]
-Ref: tourist_guide_spots.guide_id > tourist_guides.id [delete: cascade]
-Ref: tourist_guide_spots.spot_id > spots.id [delete: cascade]
-Ref: spot_photos.spot_id > spots.id [delete: cascade]
-Ref: spot_closed_dates.spot_id > spots.id [delete: cascade]
-Ref: guide_bookings.spot_id > spots.id
-Ref: guide_bookings.guide_id > tourist_guides.id
-Ref: guide_bookings.requested_guide_id > tourist_guides.id [delete: set null]
-Ref: guide_reports.guide_id > tourist_guides.id [delete: cascade]
-Ref: guide_reports.booking_id > guide_bookings.id [delete: set null]
-Ref: tickets.spot_id > spots.id
-Ref: payments.booking_id - guide_bookings.id
-Ref: payments.ticket_id - tickets.id
-Ref: online_checkouts.booking_id > guide_bookings.id [delete: cascade]
-Ref: online_checkouts.ticket_id > tickets.id [delete: cascade]
-Ref: monthly_reports.spot_id > spots.id
+Ref: accommodation_changes.spot_id > spots.id
+Ref: accommodation_closed_periods.spot_id > spots.id
+Ref: accommodation_period_events.spot_id > spots.id
+Ref: accommodation_period_events.version_id > accommodation_report_versions.id
+Ref: accommodation_periods.finalized_version_id > accommodation_report_versions.id
+Ref: accommodation_periods.spot_id > spots.id
+Ref: accommodation_profiles.spot_id > spots.id
+Ref: accommodation_report_version_counts.residence_code > residences.code
+Ref: accommodation_report_version_counts.version_id > accommodation_report_versions.id
+Ref: accommodation_report_versions.legacy_report_id > monthly_reports.id
+Ref: accommodation_report_versions.spot_id > spots.id
+Ref: accommodation_room_unavailability.room_id > accommodation_rooms.id
+Ref: accommodation_room_unavailability.spot_id > spots.id
+Ref: accommodation_rooms.room_type_id > room_types.id
+Ref: accommodation_rooms.spot_id > spots.id
+Ref: accommodation_stay_guests.residence_code > residences.code
+Ref: accommodation_stay_guests.stay_id > accommodation_stays.id
+Ref: accommodation_stay_rooms.room_id > accommodation_rooms.id
+Ref: accommodation_stay_rooms.stay_id > accommodation_stays.id
+Ref: accommodation_stays.booking_id > bookings.id
+Ref: accommodation_stays.spot_id > spots.id
+Ref: announcements.spot_id > spots.id
+Ref: attraction_count_changes.spot_id > spots.id
+Ref: attraction_daily_counts.spot_id > spots.id
+Ref: attraction_period_events.spot_id > spots.id
+Ref: attraction_period_events.version_id > attraction_report_versions.id
+Ref: attraction_periods.current_version_id > attraction_report_versions.id
+Ref: attraction_periods.finalized_version_id > attraction_report_versions.id
+Ref: attraction_periods.spot_id > spots.id
+Ref: attraction_report_versions.spot_id > spots.id
+Ref: attraction_settings.spot_id > spots.id
+Ref: booking_changes.booking_id > bookings.id
+Ref: booking_payments.booking_id > bookings.id
+Ref: booking_rooms.booking_id > bookings.id
+Ref: booking_rooms.room_type_id > room_types.id
+Ref: bookings.country_code > residences.code
+Ref: bookings.spot_id > spots.id
+Ref: bookings.visitor_id > visitors.id
+Ref: enterprise_booking_settings.spot_id > spots.id
 Ref: monthly_report_counts.report_id > monthly_reports.id
 Ref: monthly_report_counts.residence_code > residences.code
+Ref: monthly_reports.spot_id > spots.id
+Ref: online_checkouts.ticket_id > tickets.id
+Ref: payments.ticket_id > tickets.id
+Ref: register_entries.booking_id > bookings.id
+Ref: register_entries.spot_id > spots.id
+Ref: register_entry_guests.entry_id > register_entries.id
+Ref: register_entry_guests.residence_code > residences.code
 Ref: report_changes.report_id > monthly_reports.id
+Ref: review_changes.review_id > reviews.id
+Ref: reviews.booking_id > bookings.id
+Ref: reviews.spot_id > spots.id
+Ref: reviews.ticket_id > tickets.id
+Ref: reviews.visitor_id > visitors.id
+Ref: room_blocks.room_type_id > room_types.id
+Ref: room_types.spot_id > spots.id
+Ref: saved_places.spot_id > spots.id
+Ref: saved_places.visitor_id > visitors.id
+Ref: spot_closed_dates.spot_id > spots.id
+Ref: spot_more_categories.spot_id > spots.id
+Ref: spot_photos.spot_id > spots.id
+Ref: spots.managed_by > establishment_managers.id
+Ref: support_staff.spot_id > spots.id
+Ref: tickets.spot_id > spots.id
+Ref: tickets.visitor_id > visitors.id
+Ref: visitor_tokens.visitor_id > visitors.id
+Ref: visitors.country_code > residences.code
+
+TableGroup "Accounts" {
+  tourism_officers
+  establishment_managers
+  support_staff
+  visitors
+  visitor_tokens
+}
+TableGroup "Destinations" {
+  spots
+  spot_photos
+  spot_more_categories
+  spot_closed_dates
+  announcements
+  office_info
+  emergency_numbers
+}
+TableGroup "Visitor features" {
+  saved_places
+  reviews
+  review_changes
+  feedback
+}
+TableGroup "Tickets and payments" {
+  tickets
+  online_checkouts
+  payments
+}
+TableGroup "Room booking" {
+  enterprise_booking_settings
+  room_types
+  room_blocks
+  bookings
+  booking_rooms
+  booking_changes
+  booking_payments
+}
+TableGroup "Tourism statistics" {
+  residences
+  monthly_reports
+  monthly_report_counts
+  report_changes
+  register_entries
+  register_entry_guests
+}
+TableGroup "Accommodation reporting" {
+  accommodation_changes
+  accommodation_closed_periods
+  accommodation_period_events
+  accommodation_periods
+  accommodation_profiles
+  accommodation_report_version_counts
+  accommodation_report_versions
+  accommodation_room_unavailability
+  accommodation_rooms
+  accommodation_stay_guests
+  accommodation_stay_rooms
+  accommodation_stays
+}
+TableGroup "Attraction reporting" {
+  attraction_count_changes
+  attraction_daily_counts
+  attraction_outputs
+  attraction_period_events
+  attraction_periods
+  attraction_report_versions
+  attraction_settings
+}
+TableGroup "System" {
+  rate_limits
+}

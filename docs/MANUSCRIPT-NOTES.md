@@ -4,6 +4,29 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Theoretical framework, ERD and database schema figures redrawn (12 November 2026)
+
+**The change.** Nothing in the system. Three figure files in `docs/diagrams/`:
+- `ztims-theoretical-framework.png` (and its source `.svg`): the three theories
+  (Destination Management and Marketing Framework, Buhalis 2000; Destination
+  Information and Knowledge Management, Sheehan et al. 2016; Stakeholder
+  Participation, d'Angella & Go 2009 and Sautter & Leisen 1999) lead into the
+  Agile cycle (1 Planning, 2 Design, 3 Development, 4 Testing, 5 Review,
+  6 Deployment), then to ZTIMS, then to Software Quality Evaluation
+  (ISO/IEC 25010:2023, rated by IT experts) and User Acceptance Evaluation
+  (TAM, Davis 1989, rated by end users). The "Developed System" box and the
+  four user boxes were removed, at the adviser's request.
+- `ztims-erd.png`: Destinations is now a box the same size as every other
+  entity; the relationships and cardinalities are unchanged.
+- `ztims-schema.dbml`: regenerated from `schema.sql` (52 tables, every column,
+  key and link); it had still listed the tour-guide tables. The older
+  `ztims-erd.dbml` (also with guide tables) was removed.
+
+**Change in the manuscript:** replace the theoretical framework figure and the
+ERD figure, and make the paragraph under the theoretical framework follow the
+new order (theories → Agile → ZTIMS → ISO/IEC 25010 and TAM) without naming the
+user groups there.
+
 ## Analytics pages for the Tourism Officer and the Enterprise Manager (12 November 2026, on a branch; not live yet)
 
 **The change.** A new Analytics page in each portal.
