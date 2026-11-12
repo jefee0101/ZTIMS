@@ -338,7 +338,7 @@ body { overflow-x: hidden; }
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Online banking' };
+    const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Bank transfer', otc: 'Over the counter' };
     const STATUS = {
         valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the entrance'], cancelled: ['tone-neutral', 'Cancelled'],
         pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],

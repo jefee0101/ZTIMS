@@ -929,6 +929,11 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
 comes back to `src/payment.html?c=<checkout id>`. Tickets are sold only for
 attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
 
+- **Ways to pay** (12 November 2026, the user's choice): e-wallets, QR Ph, bank
+  transfer, credit or debit card, and cash over the counter, set with
+  `XENDIT_METHODS` (Xendit's own codes, taken from the dashboard; unset shows
+  every method the account has on). Receipts name them `gcash`, `maya`, `qrph`,
+  `bank`, `card`, `otc` (`METHOD_NAMES`).
 - **Test mode only.** `XENDIT_SECRET_KEY` must start `xnd_development_`; anything
   else (a `xnd_production_` key above all) switches online payment off
   (`gatewayState`). Every online payment, the ticket it paid for, and the

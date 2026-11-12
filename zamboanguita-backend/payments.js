@@ -119,7 +119,8 @@ const METHOD_NAMES = {
     GCASH: 'gcash', PAYMAYA: 'maya', GRABPAY: 'grabpay', SHOPEEPAY: 'shopeepay',
     CREDIT_CARD: 'card', CARD: 'card', QRPH: 'qrph', QR_CODE: 'qrph',
     DD_BPI: 'bank', DD_UBP: 'bank', DD_RCBC: 'bank', DD_CHINABANK: 'bank', BPI: 'bank', UBP: 'bank',
-    RCBC: 'bank', CHINABANK: 'bank', DIRECT_DEBIT: 'bank', BANK_TRANSFER: 'bank'
+    RCBC: 'bank', CHINABANK: 'bank', DIRECT_DEBIT: 'bank', BANK_TRANSFER: 'bank',
+    OTC: 'otc', OVER_THE_COUNTER: 'otc', '7ELEVEN': 'otc', CEBUANA: 'otc', ECPAY: 'otc', PALAWAN: 'otc', MLHUILLIER: 'otc'
 };
 function methodOf(invoice) {
     const raw = String(invoice.payment_channel || invoice.payment_method || '').toUpperCase();
