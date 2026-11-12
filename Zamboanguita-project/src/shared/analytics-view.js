@@ -132,7 +132,14 @@
         let dpath = '', pen = false;
         (avg || []).forEach((v, i) => { if (v == null) { pen = false; return; } dpath += `${pen ? 'L' : 'M'}${m.l + bw * (i + 0.5)} ${y(v)}`; pen = true; });
         if (dpath) s += `<path class="ax-avg" d="${dpath}"/>`;
-        const ticks = days.map((d, i) => [d, i]).filter(([d]) => d.date.endsWith('-01') || (!narrow && d.date.endsWith('-15')));
+        /* Labels are kept at least minGap apart, so a long range shows fewer of them
+           (months only) instead of printing them over one another. */
+        const minGap = narrow ? 42 : 46, candidates = days.map((d, i) => [d, i]).filter(([d]) => d.date.endsWith('-01') || (!narrow && d.date.endsWith('-15')));
+        const ticks = []; let lastX = -Infinity;
+        candidates.forEach(([d, i]) => {
+            const x = m.l + bw * (i + 0.5);
+            if (x - lastX >= minGap && x >= m.l + 14 && x <= W - m.r - 14) { ticks.push([d, i]); lastX = x; }
+        });
         ticks.forEach(([d, i]) => { s += `<text class="ax-axis" x="${m.l + bw * (i + 0.5)}" y="${H - 8}" text-anchor="middle">${MON[+d.date.slice(5, 7) - 1]} ${+d.date.slice(8)}</text>`; });
         s += `<line class="ax-base" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/></svg>`;
         return `<figure class="ax-figure">${s}<figcaption class="ax-legend"><span><i class="ax-key ax-key--solid"></i>${esc(unit)} that day</span><span><i class="ax-key ax-key--avg"></i>7-day average (recorded days)</span><span><i class="ax-key ax-key--gap"></i>Not recorded</span></figcaption></figure>`;
