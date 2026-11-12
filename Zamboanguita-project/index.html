@@ -272,7 +272,7 @@ body { overflow-x: hidden; }
                 <a href="src/announcements.html" class="site-link">Announcements</a>
                 <a href="src/events.html" class="site-link">Events</a>
                 <a href="src/history.html" class="site-link">History</a>
-                <a href="src/user/account.html" class="site-link">My account</a>
+                <a href="src/user/account.html" class="site-link" data-visitor-link hidden>My account</a>
             </nav>
 
             <div class="site-header__tools">
@@ -333,8 +333,6 @@ body { overflow-x: hidden; }
                         class="ztims-dropdown absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden max-h-80 overflow-y-auto text-left"></div>
                 </form>
 
-                <!-- Three published places, to start from (filled once they load). -->
-                <p id="heroPopular" class="hm-popular" hidden></p>
             </div>
 
             <!-- One place to start, low on the right (wide screens; filled once loaded). -->
@@ -1065,7 +1063,6 @@ body { overflow-x: hidden; }
             doneLoading();
             drawCategoryTiles();
             applyFilters();
-            drawHeroExtras();
             showOnMap(allSpots);
         } catch (error) {
             console.error('❌ Failed to load tourist spots:', error);
@@ -1076,20 +1073,6 @@ body { overflow-x: hidden; }
             spotsContainer.classList.add('ztims-fade-in');
             spotsContainer.innerHTML = '<p class="ztims-empty tone-danger col-span-full">Unable to load tourist spots right now. Please try again later.</p>';
             setMapNote('The map could not be loaded because the destinations did not load.');
-        }
-    }
-
-    /* ---------------- the hero's places ----------------
-       "Popular": three published places with a photo, to start from, only
-       from what is published. (No featured place: taken out November 2026.) */
-    function drawHeroExtras() {
-        const withPhoto = allSpots.filter(spot => spot.imageUrl);
-        const pick = (withPhoto.length ? withPhoto : allSpots).slice(0, 3);
-        const popular = document.getElementById('heroPopular');
-        if (pick.length) {
-            popular.innerHTML = '<span>Popular:</span>' + pick.map(spot =>
-                `<a class="hm-chip" href="src/spot.html?spotId=${encodeURIComponent(spot._id)}">${escapeHtml(spot.title)}</a>`).join('');
-            popular.hidden = false;
         }
     }
 

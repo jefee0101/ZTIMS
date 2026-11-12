@@ -4,7 +4,8 @@
    Keeps the visitor's token (localStorage.ztimsVisitorToken — never the staff
    portals' authToken) and their name, and draws the header's account control
    into .site-header__tools: "Sign in" when signed out; the visitor's name with
-   a menu (My account, Sign out) when signed in. The token is checked once per
+   a menu (My account, Sign out) when signed in, and shows the header's
+   "My account" link ([data-visitor-link]) only while signed in. The token is checked once per
    page with GET /api/visitors/me; one the server refuses is forgotten.
 
    Exposes window.ztimsVisitor for the pages: token(), save(), clear(),
@@ -79,8 +80,15 @@
     document.addEventListener('click', event => { if (openMenu && !openMenu.root.contains(event.target)) closeMenu(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
 
+    /* The header's "My account" link shows only while signed in; signed out,
+       the header offers "Sign in" alone. */
+    function showAccountLinks(signedIn) {
+        document.querySelectorAll('[data-visitor-link]').forEach(link => { link.hidden = !signedIn; });
+    }
+
     function draw(slot, name) {
         closeMenu();
+        showAccountLinks(!!name);
         if (!name) {
             slot.innerHTML = `<a class="site-header__signin" href="${esc(signInUrl())}">
                 <span class="material-symbols-outlined" aria-hidden="true">person</span><span>Sign in</span></a>`;

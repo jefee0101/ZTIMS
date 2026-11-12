@@ -1494,6 +1494,7 @@ div.leaflet-container {
     transition: background-color var(--dur-fast, 160ms) var(--ease-standard, ease), color var(--dur-fast, 160ms) var(--ease-standard, ease);
 }
 @media (min-width: 1024px) { .site-link { font-size: .9375rem; padding: 0 1.05rem; } }
+.site-link[hidden] { display: none; }
 .site-link:hover { background: rgb(var(--ztims-on-surface) / .07); color: rgb(var(--ztims-on-surface)); }
 .site-link:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
 .site-link[aria-current="page"], .site-link[aria-current="page"]:hover { background: #1C1917; color: #FAF7F2; }
@@ -1750,14 +1751,6 @@ select option, select optgroup { background-color: rgb(var(--ztims-surface-high)
 @media (min-width: 480px) { .hm-search__go { flex: 0 0 auto; } }
 .hm-search__go:hover { background: rgb(var(--ztims-primary-dim)); }
 .hm-search__go .material-symbols-outlined { font-size: 1.15rem; }
-.hm-popular { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1rem; font-size: .875rem; color: rgb(255 253 250 / .85); }
-.hm-popular[hidden] { display: none; }
-.hm-chip {
-    display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .85rem; border-radius: 9999px;
-    background: rgb(255 253 250 / .14); border: 1px solid rgb(255 253 250 / .3); color: #FFFDFA;
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); text-decoration: none;
-}
-.hm-chip:hover { background: rgb(255 253 250 / .26); }
 
 /* The mouse at the foot of the hero: a way down. */
 .hm-scroll {

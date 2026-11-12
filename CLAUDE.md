@@ -1167,8 +1167,8 @@ Frontend only, no tables of their own:
   Negros Oriental, Philippines" pill, "Welcome to" and *Zamboanguita* (Fraunces
   italic, a peach-to-tangerine gradient), one line, the **search**
   (`#heroSearch`: field with name suggestions, category from 640px, Search
-  scrolls to the cards), "Popular:" three published places and a mouse to
-  scroll (no featured place: taken out November 2026, the user's choice); a moving strip of what is
+  scrolls to the cards) and a mouse to scroll (no featured place and no
+  "Popular" places: both taken out November 2026, the user's choice); a moving strip of what is
   here (`.hm-marquee`, decoration); **Browse by interest** (`#browse`: "What are
   you *in the mood* for?", four big photo tiles — Beach & Sea, Diving &
   Snorkeling, Nature, Adventure — in `#categoryTiles` and four small cards —
@@ -1202,7 +1202,7 @@ Frontend only, no tables of their own:
   floating, rounded glass bar — the ZTIMS seal (`public/ztims-logo.png`, the
   user's logo, November 2026; it replaced the orange sun badge) and "ZAMBOANGUITA /
   Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), Announcements, Events, History, My account (`user/account.html`; it was My ticket or booking until 9 November) (no Staff link since November
+  (`index.html#map`), Announcements, Events, History, My account (`user/account.html`; it was My ticket or booking until 9 November; shown only while a visitor is signed in, `data-visitor-link`, so a signed-out visitor sees Sign in alone, 12 November 2026) (no Staff link since November
   2026, the user's choice: staff sign in from the footer's "Staff and
   Enterprise Manager sign in"), the
   current page a solid ink pill, the visitor's **Sign in** or account menu
@@ -2097,8 +2097,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   portals keep their square, flat look. The hero film (Cloudinary
   `v1793436461/zambo-10_31_2026_4_46_PM`) is darkened toward its words by a
   gradient (`.hm-hero::before`), not by a brightness setting on the film. Keep
-  what the design shows only where ZTIMS has the thing: the hero's "Popular"
-  places, the categories' counts and the office's details
+  what the design shows only where ZTIMS has the thing: the categories' counts and the office's details
   come from the database, never typed into the page. The Destination, History
   and Staff sign in pages follow the user's UX Pilot designs too (November
   2026), made in UX Pilot from the Framer mock-ups; UX Pilot's own HTML needs a
