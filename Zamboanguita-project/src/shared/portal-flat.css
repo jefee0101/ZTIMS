@@ -963,3 +963,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
     .ax-hbars__track { grid-column: 1 / -1; grid-row: 2; }
 }
 @media (prefers-reduced-motion: reduce) { .ax-panel { animation: none; } .ax-spin { animation: none; } }
+
+/* The portals' sidebar: the menu scrolls when the window is too short for
+   every item, while the brand and the footer buttons stay in view. */
+aside > nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
