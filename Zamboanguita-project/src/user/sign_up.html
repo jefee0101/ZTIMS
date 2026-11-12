@@ -135,14 +135,12 @@ body { overflow-x: hidden; }
         <label for="password" class="bk-label">Password</label>
         <div class="relative">
           <input id="password" type="password" required minlength="10" maxlength="72" autocomplete="new-password" placeholder="At least 10 characters" class="bk-field ss-field !pr-12"/>
-          <button type="button" data-eye="password" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
         </div>
       </div>
       <div>
         <label for="passwordAgain" class="bk-label">Repeat the password</label>
         <div class="relative">
           <input id="passwordAgain" type="password" required minlength="10" maxlength="72" autocomplete="new-password" class="bk-field ss-field !pr-12"/>
-          <button type="button" data-eye="passwordAgain" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
         </div>
       </div>
       <label class="va-consent"><input id="consent" type="checkbox" required/><span>I agree to the <a href="../terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and the <a href="../privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
@@ -162,5 +160,6 @@ body { overflow-x: hidden; }
 </div>
 </div>
 <script type="module" src="../shared/visitor-auth.js"></script>
+<script type="module" src="../shared/password-eye.js"></script>
 </body>
 </html>

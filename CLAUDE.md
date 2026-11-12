@@ -346,6 +346,10 @@ purpose — see the header comment in `spot-form.js`:
   and sign-in pages (see "Visitor accounts"); `saved-places.js` — the heart
   (see "Saved places and reviews"); `staff-portal.js` — the Support Staff
   portal's header and banner (see "Support Staff").
+- `password-eye.js` — the one show / hide eye on every password field (`.pw-eye*` in
+  `theme.css`): it wraps each `<input type="password">`, dialogs' included, so no page
+  draws an eye of its own. A page with a password field, or that loads
+  `ztims-dialog.js`, loads it as a module.
 - `photo-upload.js`, `nav-active.js`, `ztims-dialog.js` —
   smaller per-concern shared pieces.
 

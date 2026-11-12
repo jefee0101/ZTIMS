@@ -252,10 +252,6 @@ body { overflow-x: hidden; }
         <div class="relative">
           <input id="passwordInput" type="password" name="password" required autocomplete="current-password"
             class="bk-field ss-field !pr-12"/>
-          <button type="button" id="togglePasswordBtn" aria-label="Show password"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
-            <span id="togglePasswordIcon" class="material-symbols-outlined">visibility</span>
-          </button>
         </div>
       </div>
 
@@ -367,14 +363,6 @@ body { overflow-x: hidden; }
     btn.innerHTML = '<span class="inline-block w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin align-[-3px] mr-2"></span>' + label;
     return () => { btn.innerHTML = originalHTML; btn.disabled = false; };
   }
-
-  document.getElementById('togglePasswordBtn').addEventListener('click', () => {
-    const input = document.getElementById('passwordInput');
-    const icon = document.getElementById('togglePasswordIcon');
-    const showing = input.type === 'text';
-    input.type = showing ? 'password' : 'text';
-    icon.textContent = showing ? 'visibility' : 'visibility_off';
-  });
 
   /* Forgot password: swap the sign-in form for the reset request, and back. */
   const loginForm = document.getElementById('staffLoginForm');
@@ -533,5 +521,6 @@ body { overflow-x: hidden; }
     });
   }
 </script>
+<script type="module" src="shared/password-eye.js"></script>
 </body>
 </html>

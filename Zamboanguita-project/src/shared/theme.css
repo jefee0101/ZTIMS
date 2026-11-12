@@ -2755,12 +2755,6 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .va-msg { font-size: .875rem; border-radius: 12px; padding: .75rem 1rem; border: 1px solid; }
 .va-msg--error { color: rgb(var(--ztims-error)); background: rgb(var(--ztims-error) / .08); border-color: rgb(var(--ztims-error) / .25); }
 .va-msg--success { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-success) / .1); border-color: rgb(var(--ztims-success) / .3); }
-.va-eye {
-    position: absolute; right: .35rem; top: 50%; transform: translateY(-50%);
-    min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
-    color: rgb(var(--ztims-on-surface-variant)); background: none; border: 0; cursor: pointer;
-}
-.va-eye:hover { color: rgb(var(--ztims-primary-text)); }
 .va-google { margin-bottom: 1.25rem; }
 .va-google__btn { display: flex; justify-content: center; min-height: 44px; }
 .va-or { display: flex; align-items: center; gap: .75rem; margin-top: 1.25rem; font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
@@ -2950,3 +2944,18 @@ html.dark .ac-tab[aria-selected="true"], html.dark .ac-tab[aria-selected="true"]
 .rv-more { display: flex; justify-content: center; margin-top: 1rem; }
 .rv-more:has(> [hidden]) { display: none; }
 @media (prefers-reduced-motion: reduce) { .sv-heart, .sv-ask__card { transition: none; animation: none; } }
+
+/* ==========================================================================
+   PASSWORD EYE — one show / hide button on every password field
+   (password-eye.js wraps each field; no page draws its own).
+   ========================================================================== */
+.pw-eye { position: relative; display: block; width: 100%; }
+.pw-eye__input { padding-right: 3.25rem !important; }
+.pw-eye__btn {
+    position: absolute; right: .25rem; top: 50%; transform: translateY(-50%);
+    min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+    color: rgb(var(--ztims-on-surface-variant)); background: none; border: 0; border-radius: 9999px; cursor: pointer;
+}
+.pw-eye__btn:hover { color: rgb(var(--ztims-primary-text)); }
+.pw-eye__btn:focus-visible { outline: 2px solid rgb(var(--ztims-gold)); outline-offset: -2px; }
+.pw-eye__btn .material-symbols-outlined { font-size: 1.25rem; }

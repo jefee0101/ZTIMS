@@ -131,7 +131,6 @@ body { overflow-x: hidden; }
         <div class="ss-label-row"><label for="password" class="bk-label !mb-0">Password</label><a href="forgot_password.html" data-keep-next class="ss-link">Forgot password?</a></div>
         <div class="relative">
           <input id="password" type="password" required minlength="10" maxlength="72" autocomplete="current-password" class="bk-field ss-field !pr-12"/>
-          <button type="button" data-eye="password" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
         </div>
       </div>
       <p id="formMessage" hidden></p>
@@ -143,7 +142,6 @@ body { overflow-x: hidden; }
         <label for="linkPassword" class="bk-label">Your ZTIMS password</label>
         <div class="relative">
           <input id="linkPassword" type="password" required minlength="10" maxlength="72" autocomplete="current-password" class="bk-field ss-field !pr-12"/>
-          <button type="button" data-eye="linkPassword" aria-label="Show password" class="va-eye"><span class="material-symbols-outlined">visibility</span></button>
         </div>
       </div>
         <button type="submit" class="btn btn-pill btn-secondary w-full min-h-[48px]">Join Google to my account</button>
@@ -155,5 +153,6 @@ body { overflow-x: hidden; }
 </div>
 </div>
 <script type="module" src="../shared/visitor-auth.js"></script>
+<script type="module" src="../shared/password-eye.js"></script>
 </body>
 </html>
