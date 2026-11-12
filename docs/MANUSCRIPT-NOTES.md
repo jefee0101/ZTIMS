@@ -853,3 +853,10 @@ shared data stores), ERD (17 core entities in the panel-approved box-and-line fo
 (four actors, shared Log In) and system architecture (portrait tiers, ten numbered connections).
 The new Table 10, Connections in the System Architecture, moves Software, Hardware and Network
 Requirements to Tables 11 to 13. Replacement text: docs/manuscript/chapter-iv-diagrams-revised.docx.
+
+## Executive Summary redone (12 November 2026)
+
+Rewritten in the panel-approved four-column format (Problem, Findings, Conclusions, Recommendations), one row
+per SOP with the SOP's full wording and sub-items. Study numbers unchanged from rev12; conclusions and
+recommendations follow the current system (Support Staff, generated reports and DOT forms).
+File: docs/manuscript/executive-summary-revised.docx.
