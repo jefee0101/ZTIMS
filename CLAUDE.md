@@ -606,10 +606,14 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   **Superseded on the branch:** "Don't split attraction arrivals back out into a
   separate part or page" no longer holds — attraction visits are a separate
   measure with their own tab and forms (D1, see "Attraction visitor reporting").
-- **One report page.** Statistics has five tabs: Arrivals Report, Enter a
-  report, Tracker, FORM A (private places to stay; see "Accommodation
-  reporting") and **Attraction visits** (office attractions' daily counts,
-  DTA2M and VAR 3M; see "Attraction visitor reporting"). Enter a report and
+- **One report page.** Statistics opens with a switch, **Accommodation /
+  Attraction** (`.seg-switch` in `portal-flat.css`: a rounded track, the chosen
+  side a raised pill; 13 November 2026, the user's choice). Accommodation shows
+  four tabs: Arrivals Report, Enter a report, Tracker and FORM A (private places
+  to stay; see "Accommodation reporting"). Attraction shows the **Attraction
+  visits** panel (office attractions' daily counts, DTA2M and VAR 3M, with its
+  own tabs; see "Attraction visitor reporting"). `#attractions` in the address
+  opens Attraction; switching back returns to the accommodation tab last open. Enter a report and
   Tracker list places to stay only; the old "Attractions" choice there is gone. The Arrivals Report:
   Part I arrivals by country, Part II overnight stays (places to stay), then
   **Arrivals by place** (`formA4()`'s `places`: every place, places to stay

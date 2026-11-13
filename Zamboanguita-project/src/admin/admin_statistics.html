@@ -532,8 +532,16 @@ body { overflow-x: hidden; }
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h1>
 
-            <!-- Tabs -->
-            <div role="tablist" aria-label="Statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
+            <!-- Places to stay or attractions: each has its own reports -->
+            <div class="seg-switch" role="group" aria-label="Kind of place">
+                <button type="button" id="kindAccommodation" aria-pressed="true">
+                    <span class="material-symbols-outlined" aria-hidden="true">hotel</span>Accommodation</button>
+                <button type="button" id="kindAttraction" aria-pressed="false">
+                    <span class="material-symbols-outlined" aria-hidden="true">attractions</span>Attraction</button>
+            </div>
+
+            <!-- Tabs (accommodation; attractions have their own inside their panel) -->
+            <div role="tablist" id="accTabs" aria-label="Accommodation statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
                 <!-- The report the office sends out, so it is where the page opens. -->
                 <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="true" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">summarize</span>Arrivals Report</button>
@@ -543,15 +551,13 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
                 <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">hotel</span>FORM A</button>
-                <button role="tab" id="tab-attractions" aria-controls="panel-attractions" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">attractions</span>Attraction visits</button>
             </div>
 
             <!-- ============ FORM A: private places to stay, from their saved versions (acc-officer.js) ============ -->
             <section role="tabpanel" id="panel-forma" aria-labelledby="tab-forma" class="space-y-4" hidden></section>
 
             <!-- ============ Attraction visits: office attractions' daily counts, DTA2M and VAR 3M (att-officer.js) ============ -->
-            <section role="tabpanel" id="panel-attractions" aria-labelledby="tab-attractions" class="space-y-4" hidden></section>
+            <section role="region" id="panel-attractions" aria-label="Attraction visits" class="space-y-4" hidden></section>
 
             <!-- ============ Arrivals Report (Form A4) ============ -->
             <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4">
@@ -698,9 +704,18 @@ body { overflow-x: hidden; }
 
         // ---------------------------------------------------------- tabs
         const TABS = ['forma4', 'enter', 'tracker', 'forma', 'attractions'];
+        // The switch above the tabs: Accommodation shows the four tabs, Attraction
+        // shows the attraction panel (its own tabs are inside it).
+        let lastAccTab = 'forma4';
         function showTab(name) {
+            const attraction = name === 'attractions';
+            if (!attraction) lastAccTab = name;
+            document.getElementById('kindAccommodation').setAttribute('aria-pressed', String(!attraction));
+            document.getElementById('kindAttraction').setAttribute('aria-pressed', String(attraction));
+            document.getElementById('accTabs').hidden = attraction;
             for (const t of TABS) {
-                document.getElementById('tab-' + t).setAttribute('aria-selected', String(t === name));
+                const tab = document.getElementById('tab-' + t);
+                if (tab) tab.setAttribute('aria-selected', String(t === name));
                 document.getElementById('panel-' + t).hidden = t !== name;
             }
             try { sessionStorage.setItem('statsTab', name); } catch (e) {}
@@ -985,7 +1000,9 @@ body { overflow-x: hidden; }
         }
 
         function wire() {
-            for (const t of TABS) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+            for (const t of TABS.filter(t => t !== 'attractions')) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+            document.getElementById('kindAccommodation').addEventListener('click', () => showTab(lastAccTab));
+            document.getElementById('kindAttraction').addEventListener('click', () => showTab('attractions'));
             for (const id of ['trYear', 'faYear']) fillYears(document.getElementById(id));
             for (const id of ['faFrom', 'faTo']) MONTHS.forEach((m, i) => document.getElementById(id).add(new Option(m, String(i + 1))));
             document.getElementById('faTo').value = '12';

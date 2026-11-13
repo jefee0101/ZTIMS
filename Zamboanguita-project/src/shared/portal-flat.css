@@ -968,3 +968,17 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
    every item, while the brand and the footer buttons stay in view. */
 aside > nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
 aside > nav::-webkit-scrollbar { display: none; }
+
+/* A two-way switch (Statistics: Accommodation / Attraction): a rounded track,
+   the chosen side a raised pill with bold text. */
+.seg-switch { display: inline-flex; gap: .25rem; padding: .3rem; border-radius: 9999px;
+    background: rgb(var(--ztims-on-surface) / .06); border: 1px solid rgb(var(--ztims-outline) / .5); max-width: 100%; }
+.seg-switch button { display: inline-flex; align-items: center; gap: .45rem; min-height: 40px; padding: 0 1.1rem; border-radius: 9999px;
+    font-weight: 700; font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); background: transparent; border: 0;
+    transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard); }
+.seg-switch button .material-symbols-outlined { font-size: 1.15rem; }
+.seg-switch button:hover { color: rgb(var(--ztims-on-surface)); }
+.seg-switch button[aria-pressed="true"] { background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); font-weight: 800;
+    box-shadow: 0 1px 2px rgb(var(--ztims-on-surface) / .12), 0 0 0 1px rgb(var(--ztims-outline) / .45); }
+.seg-switch button:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
+@media (max-width: 639px) { .seg-switch button { padding: 0 .8rem; } }

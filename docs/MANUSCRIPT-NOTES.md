@@ -4,6 +4,17 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Statistics page: Accommodation / Attraction switch (13 November 2026)
+
+**The change.** The Tourism Officer's Statistics page opens with a two-way
+switch, Accommodation or Attraction. Accommodation holds the Arrivals Report,
+Enter a report, Tracker and FORM A tabs; Attraction holds the attraction
+visits (Tracker, Monthly DTA2M, Annual VAR 3M, Issued). Nothing else changed.
+
+**Change in the manuscript:** where the System User Interface describes the
+Tourism Statistics page, say it is split by a switch into Accommodation and
+Attraction reports; retake its screenshot.
+
 ## Page numbering and contents (13 November 2026)
 
 **The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev13.docx` (Word,
