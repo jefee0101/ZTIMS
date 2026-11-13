@@ -11,7 +11,7 @@
     const TYPES = [['', 'Choose'], ['hotel', 'Hotel'], ['resort', 'Resort'], ['pension', 'Pension inn / lodge'], ['hostel', 'Youth hostel / dormitory'], ['apartel', 'Apartel / rented homes / apartment'], ['other', 'Others']];
 
     /* ---- Rooms → Room numbers --------------------------------------------- */
-    function rooms(el, spot) {
+    function rooms(el, spot, {operationalOnly=false}={}) {
         let data = null, stays = [], y, m;
         const t = A().manilaToday(); y = +t.slice(0, 4); m = +t.slice(5, 7);
         async function load() {
@@ -28,13 +28,13 @@
             const active = r => r.availableFrom <= today && (!r.availableUntil || today < r.availableUntil);
             const out = data.outOfService;
             el.innerHTML = `
-                <div class="bkm-bar"><h2 class="text-lg font-extrabold text-on-surface">Room numbers</h2>
+                ${operationalOnly ? '' : `<div class="bkm-bar"><h2 class="text-lg font-extrabold text-on-surface">Room numbers</h2>
                     <button type="button" class="btn btn-primary min-h-[44px]" data-x="add"><span class="material-symbols-outlined !text-base" aria-hidden="true">add</span>Add room</button></div>
                 ${data.rooms.length ? `<section class="glass-panel"><div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Room</th><th>Label</th><th class="text-right">Sleeps</th><th>Available</th><th></th></tr></thead><tbody>
                     ${data.rooms.map(r => `<tr><td><b>${A().esc(r.roomNumber)}</b>${r.shared ? ' <span class="tone-pill rounded-pill acc-pill tone-info">Shared</span>' : ''}</td><td>${A().esc(r.label)}</td><td class="text-right">${r.sleeps}</td>
                         <td>${A().fmtDate(r.availableFrom, true)}${r.availableUntil ? ` to ${A().fmtDate(A().addDays(r.availableUntil, -1), true)}` : ' on'}${active(r) ? '' : ' <span class="tone-pill rounded-pill acc-pill tone-neutral">Not available now</span>'}</td>
                         <td class="text-right"><button type="button" class="btn btn-secondary btn-sm" data-edit="${A().esc(r._id)}">Edit</button></td></tr>`).join('')}</tbody></table></div></section>`
-                : '<div class="ztims-empty">No room numbers yet. Add each room you rent out; stays and the daily register use them.</div>'}
+                : '<div class="ztims-empty">No room numbers yet. Add each room you rent out; stays and the daily register use them.</div>'}`}
                 <div class="bkm-bar"><h2 class="text-lg font-extrabold text-on-surface">Out of service</h2>
                     <button type="button" class="btn btn-secondary min-h-[44px]" data-x="oos"${data.rooms.length ? '' : ' disabled'}><span class="material-symbols-outlined !text-base" aria-hidden="true">construction</span>Add out of service</button></div>
                 ${out.length ? `<section class="glass-panel"><div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Room</th><th>First day</th><th>Last day</th><th>Reason</th><th></th></tr></thead><tbody>
@@ -51,12 +51,14 @@
                 if (d < r.availableFrom || (r.availableUntil && d >= r.availableUntil) || closed(d)) return '<td class="acc-closed" title="Not available"></td>';
                 if (data.outOfService.some(o => o.roomId === r._id && o.startsOn <= d && d <= o.endsOn)) return '<td class="acc-closed" title="Out of service">✕</td>';
                 const st = stays.find(s => s.status === 'active' && s.rooms.some(a => a.roomId === r._id && a.from <= d && d < a.until));
-                return st ? `<td class="acc-mk" title="${A().esc(st.reference)}"><span class="acc-dot"></span></td>` : '<td></td>';
+                if(st) return `<td class="acc-mk" title="${A().esc(st.reference)}"><span class="acc-dot"></span></td>`;
+                const reserved=(data.reservations || []).find(b=>(b.roomId===r._id || (!b.roomId && b.roomTypeId===r.roomTypeId)) && b.checkIn<=d && d<b.checkOut);
+                return reserved ? `<td class="acc-mk" title="Reserved: ${A().esc(reserved.code)}">R</td>` : '<td></td>';
             }).join('')}</tr>`).join('');
             return `<div class="bkm-bar"><h2 class="text-lg font-extrabold text-on-surface">Rooms by night</h2>
                 <div class="acc-month"><button type="button" class="acc-iconbtn" data-step="-1" aria-label="Previous month"><span class="material-symbols-outlined">chevron_left</span></button><span class="acc-month__name">${A().monthName(y, m)}</span><button type="button" class="acc-iconbtn" data-step="1" aria-label="Next month"><span class="material-symbols-outlined">chevron_right</span></button></div></div>
                 <section class="glass-panel p-3"><div class="acc-scroll"><table class="acc-grid"><thead><tr><th class="acc-sticky">Room</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
-                <p class="acc-note mt-2"><span class="acc-dot"></span> occupied · ✕ out of service · shaded: not available or closed.</p></section>`;
+                <p class="acc-note mt-2"><span class="acc-dot"></span> occupied · R reserved · ✕ out of service · shaded: not available or closed.</p></section>`;
         }
         function roomWindow(r) {
             A().openWindow({
@@ -116,6 +118,7 @@
             if (b.dataset.step) { [y, m] = A().shiftMonth(y, m, +b.dataset.step); return load(); }
         });
         load();
+        return { reload:load };
     }
 
     /* ---- Enterprise → Reporting ------------------------------------------- */

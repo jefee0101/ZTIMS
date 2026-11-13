@@ -1710,8 +1710,23 @@ begin
             end if;
             return new;
         end if;
-        if tg_op = 'DELETE' then raise exception 'NO_DELETE' using errcode = 'P0001'; end if;
+        if tg_op = 'DELETE' then
+            if exists(select 1 from public.accommodation_stay_rooms where room_id=old.id)
+               or exists(select 1 from public.booking_rooms br join public.bookings b on b.id=br.booking_id
+                   where br.room_id=old.id or (br.room_id is null and br.room_type_id=old.room_type_id
+                     and (b.created_at >= old.created_at or b.status in ('confirmed','checked_in') or (b.status='requested' and b.expires_at>now()))))
+               or exists(select 1 from public.accommodation_room_unavailability where room_id=old.id) then
+                raise exception 'ROOM_HISTORY' using errcode='P0001';
+            end if;
+            perform public.accommodation_assert_open(old.spot_id, old.available_from, old.available_until);
+            return old;
+        end if;
         if new.spot_id <> old.spot_id then raise exception 'ROOM_MOVED' using errcode = 'P0001'; end if;
+        if new.room_type_id is distinct from old.room_type_id then
+            if old.room_type_id is not null or not exists(select 1 from public.room_types t where t.id=new.room_type_id and t.spot_id=new.spot_id) then
+                raise exception 'ROOM_TYPE_OTHER_PLACE' using errcode='P0001';
+            end if;
+        end if;
         if new.available_from <> old.available_from then
             perform public.accommodation_assert_open(new.spot_id, least(new.available_from, old.available_from), greatest(new.available_from, old.available_from));
         end if;
@@ -2545,3 +2560,46 @@ drop trigger if exists booking_checkouts_touch_updated_at on public.booking_chec
 create trigger booking_checkouts_touch_updated_at before update on public.booking_checkouts
     for each row execute function public.ztims_touch_updated_at();
 alter table public.booking_checkouts enable row level security;
+
+-- Unified room inventory (14 November 2026). Existing booking rates and
+-- type-only reservations stay intact; room assignments are never guessed.
+alter table public.accommodation_rooms add column if not exists nightly_rate numeric(10,2);
+do $$ begin
+ if not exists(select 1 from pg_constraint where conname='accommodation_rooms_rate') then
+  alter table public.accommodation_rooms add constraint accommodation_rooms_rate check(nightly_rate is null or nightly_rate > 0 and nightly_rate <= 1000000);
+ end if;
+end $$;
+create table if not exists public.accommodation_room_photos (
+ room_id text not null references public.accommodation_rooms(id) on delete cascade,
+ position integer not null check(position between 0 and 11),
+ url text not null check(char_length(url) between 1 and 500),
+ primary key(room_id,position), unique(room_id,url)
+);
+alter table public.accommodation_room_photos enable row level security;
+revoke all on public.accommodation_room_photos from anon, authenticated;
+alter table public.room_types drop constraint if exists room_types_units;
+alter table public.room_types add constraint room_types_units check(units between 0 and 500);
+alter table public.booking_rooms add column if not exists id text default public.ztims_new_id();
+alter table public.booking_rooms add column if not exists room_id text references public.accommodation_rooms(id);
+do $$ begin
+ if exists(select 1 from pg_constraint where conrelid='public.booking_rooms'::regclass and contype='p' and pg_get_constraintdef(oid) not like 'PRIMARY KEY (id)%') then
+  alter table public.booking_rooms drop constraint booking_rooms_pkey;
+ end if;
+ if not exists(select 1 from pg_constraint where conrelid='public.booking_rooms'::regclass and contype='p') then
+  alter table public.booking_rooms add primary key(id);
+ end if;
+ if not exists(select 1 from pg_constraint where conname='booking_rooms_numbered_units') then
+  alter table public.booking_rooms add constraint booking_rooms_numbered_units check(room_id is null or units=1);
+ end if;
+end $$;
+create unique index if not exists booking_rooms_legacy_unique on public.booking_rooms(booking_id,room_type_id) where room_id is null;
+create unique index if not exists booking_rooms_numbered_unique on public.booking_rooms(booking_id,room_id) where room_id is not null;
+create index if not exists booking_rooms_room_idx on public.booking_rooms(room_id) where room_id is not null;
+create unique index if not exists accommodation_rooms_type_pair on public.accommodation_rooms(id,room_type_id);
+alter table public.accommodation_changes drop constraint if exists accommodation_changes_action;
+alter table public.accommodation_changes add constraint accommodation_changes_action check(action in ('created','edited','voided','deleted'));
+do $$ begin
+ if not exists(select 1 from pg_constraint where conname='booking_rooms_room_type') then
+  alter table public.booking_rooms add constraint booking_rooms_room_type foreign key(room_id,room_type_id) references public.accommodation_rooms(id,room_type_id);
+ end if;
+end $$;

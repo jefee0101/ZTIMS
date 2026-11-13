@@ -13,6 +13,7 @@
 const express = require('express');
 const { query, transaction } = require('./db');
 const E = require('./accommodation-engine');
+const inventory = require('./room-inventory');
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const ID = /^[0-9a-f]{24}$/i;
@@ -33,6 +34,7 @@ const refuse = (status, code, message, extra) => { throw new Refusal(status, cod
 /* The database's own refusals (db/schema.sql), in words. */
 function fromDatabase(error) {
     if (error instanceof Refusal) return error;
+    if (error.code === 'ROOM_INVENTORY') return new Refusal(error.status, error.code, error.message);
     if (error.code === '23P01') return new Refusal(409, 'ROOM_TAKEN', 'One of those rooms is already taken on one of those nights.');
     if (error.code === '23505') return new Refusal(409, 'DUPLICATE', 'That already exists. Reload and try again.');
     if (error.code !== 'P0001') return null;
@@ -236,6 +238,9 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const rec = await loadRecords(spot.id, '1900-01-01', '1900-01-02');
         res.json({
             success: true, rooms: rec.rooms.map(shapeRoom),
+            reservations:(await query(`select br.room_id as "roomId",br.room_type_id as "roomTypeId",b.check_in as "checkIn",b.check_out as "checkOut",b.code
+                from booking_rooms br join bookings b on b.id=br.booking_id where b.spot_id=$1
+                and (b.status in ('confirmed','checked_in') or (b.status='requested' and b.expires_at>now()))`,[spot.id])).rows,
             outOfService: rec.unavailability.map(u => ({ _id: u.id, roomId: u.room_id, startsOn: E.toDate(u.starts_on), endsOn: E.toDate(u.ends_on), reason: u.reason })),
             closedPeriods: rec.closed.map(c => ({ _id: c.id, startsOn: E.toDate(c.starts_on), endsOn: E.toDate(c.ends_on), reason: c.reason }))
         });
@@ -271,10 +276,12 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             const next = { label: found.label, sleeps: found.sleeps, until: E.toDate(found.available_until) };
             if (b.label !== undefined) next.label = text(b.label, 80);
             if (b.sleeps !== undefined) { const n = Number(b.sleeps); if (!Number.isInteger(n) || n < 1 || n > 30) refuse(400, 'BAD_ROOM', 'Sleeps must be a whole number, 1 to 30.'); next.sleeps = n; }
+            if(next.sleeps<found.sleeps) await inventory.assertNotReserved(spot.id,[found.id],E.manilaToday(),'9999-12-31','',client);
             if (b.availableUntil !== undefined) {
                 if (b.availableUntil !== null && !E.isDate(String(b.availableUntil))) refuse(400, 'BAD_ROOM', 'Give the first day the room is no longer available.');
                 next.until = b.availableUntil;
                 if (next.until) {
+                    await inventory.assertNotReserved(spot.id,[found.id],next.until,'9999-12-31','',client);
                     const later = (await query(`select reference from accommodation_stays s join accommodation_stay_rooms a on a.stay_id = s.id
                                                  where a.room_id = $1 and s.status = 'active' and a.ends_on > $2 limit 1`, [found.id, next.until], client)).rows[0];
                     if (later) refuse(409, 'ROOM_IN_USE', `Stay ${later.reference} uses this room after that date.`);
@@ -301,6 +308,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         await transaction(async client => {
             const spot = await placeFor(req, req.params.spotId, { write: true }, client);
             await lockPlace(spot.id, client);
+            await inventory.assertNotReserved(spot.id,[roomId],s,E.addDays(e,1),'',client);
             const used = (await query(`select s.reference from accommodation_stays s join accommodation_stay_rooms a on a.stay_id = s.id
                                         where a.room_id = $1 and s.status = 'active' and a.starts_on <= $3 and a.ends_on > $2 limit 1`, [roomId, s, e], client)).rows[0];
             if (used) refuse(409, 'ROOM_IN_USE', `Stay ${used.reference} uses that room on those dates. Move it first.`);
@@ -316,6 +324,8 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         await transaction(async client => {
             const spot = await placeFor(req, req.params.spotId, { write: true }, client);
             await lockPlace(spot.id, client);
+            const allRooms=(await query('select id from accommodation_rooms where spot_id=$1',[spot.id],client)).rows.map(r=>r.id);
+            await inventory.assertNotReserved(spot.id,allRooms,s,E.addDays(e,1),'',client);
             const used = (await query(`select reference from accommodation_stays where spot_id = $1 and status = 'active' and check_in <= $3 and check_out > $2 limit 1`, [spot.id, s, e], client)).rows[0];
             if (used) refuse(409, 'STAY_IN_PERIOD', `Stay ${used.reference} has nights in those dates.`);
             const { rows } = await query(`insert into accommodation_closed_periods (spot_id, starts_on, ends_on, reason, created_by_email)
@@ -377,6 +387,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             if (s > E.manilaToday()) refuse(400, 'FUTURE_ARRIVAL', `Group ${i + 1}: guests cannot arrive after today.`);
             return { residence: code, male: m, female: f, from: s, until: e };
         });
+        for (const r of R) await inventory.assertNotReserved(spot.id,[r.roomId],r.from,r.until,String(b.bookingId || ''),client);
         return { checkIn, checkOut, rooms: R, guests: G };
     }
     async function writeParts(client, stayId, st) {
@@ -441,8 +452,13 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             if (st.checkIn < profile.reportingFrom && st.checkOut <= profile.reportingFrom) refuse(409, 'BEFORE_REPORTING', 'That stay ends before reporting starts.');
             const bookingId = ID.test(String((req.body || {}).bookingId || '')) ? req.body.bookingId : null;
             if (bookingId) {
-                const b = (await query(`select spot_id, status from bookings where id = $1`, [bookingId], client)).rows[0];
+                const b = (await query(`select spot_id, status from bookings where id = $1 for update`, [bookingId], client)).rows[0];
                 if (!b || b.spot_id !== spot.id) refuse(400, 'BAD_BOOKING', 'That booking is not for this enterprise.');
+                if (!['confirmed','checked_in'].includes(b.status)) refuse(409,'BAD_BOOKING','Only a confirmed booking can be checked in.');
+                const reserved=(await query('select room_id from booking_rooms where booking_id=$1 and room_id is not null',[bookingId],client)).rows.map(r=>r.room_id);
+                if(reserved.length && (reserved.length!==new Set(st.rooms.map(r=>r.roomId)).size || st.rooms.some(r=>!reserved.includes(r.roomId)))) refuse(409,'BAD_BOOKING','Use the room numbers reserved by this booking.');
+                if((await query("select 1 from accommodation_stays where booking_id=$1 and status='active'",[bookingId],client)).rows.length) refuse(409,'BAD_BOOKING','This booking already has a stay.');
+
             }
             const n = (await query(`select coalesce(max(substring(reference from 4)::integer), 0) + 1 as n from accommodation_stays where spot_id = $1 and reference ~ '^ST-[0-9]+$'`, [spot.id], client)).rows[0].n;
             const reference = 'ST-' + String(n).padStart(6, '0');
@@ -470,7 +486,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             const before = await stayById(req.params.id, client);
             if (before.status !== 'active') refuse(409, 'STAY_VOID', 'This stay was voided and cannot change.');
             if (Number(b.revision) !== before.revision) refuse(409, 'STALE', 'This stay changed since you opened it. Reload it and make the change again.', { revision: before.revision });
-            const st = await parseStay(b, spot, client);
+            const st = await parseStay({...b,bookingId:before.booking_id}, spot, client);
             await query('update accommodation_stays set check_in = $2, check_out = $3 where id = $1', [before.id, st.checkIn, st.checkOut], client);
             await writeParts(client, before.id, st);
             await query('set constraints all immediate', [], client);

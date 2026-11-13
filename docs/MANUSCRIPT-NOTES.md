@@ -5,6 +5,24 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Unified Rooms with individual rates and photos (14 November 2026)
+
+The manager's Rooms page groups actual numbered rooms under room types. A type
+sets a default nightly rate; each room can set a different rate and carry up to
+12 photos with a cover photo. Quantity comes from the numbered rooms. Visitors
+select a specific room and its displayed rate; saved bookings retain their
+original prices. Reservations, registered stays, closures and room outages
+share availability. Bookings remain separate from guest arrivals and reports.
+Delete is available only for unused rooms and empty types without protected
+history; used rooms end availability or their type retires. Finalized reports
+and saved versions remain protected. Existing type-only reservations retain
+their original records and prices; no room assignment is guessed.
+
+Update manager Rooms and visitor booking descriptions/screenshots after this
+change is deployed. Treat it as a later refinement, not part of the original
+TAM/ISO evaluation unless there is evidence that it was evaluated. No manuscript
+text, survey data, spacing or existing UI figure was edited in this task.
+
 ## Conceptual framework redrawn in the IPO format (13 November 2026)
 
 **The change.** Figure (Conceptual Framework) in the school's Input–Process–Output

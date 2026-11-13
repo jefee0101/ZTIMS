@@ -305,7 +305,7 @@
         const t = A().manilaToday();
         const fs = old ? JSON.parse(JSON.stringify(payloadOf(old))) : {
             checkIn: (prefill && prefill.checkIn) || t, checkOut: (prefill && prefill.checkOut) || A().addDays(t, 1),
-            rooms: [{ roomId: rooms[0] ? rooms[0]._id : '', from: null, until: null }],
+            rooms: prefill?.roomIds?.length ? prefill.roomIds.map(roomId=>({roomId,from:null,until:null})) : [{ roomId: rooms[0] ? rooms[0]._id : '', from: null, until: null }],
             guests: [{ residence: (prefill && prefill.residence) || 'ph-filipino', male: 0, female: 0, from: null, until: null }]
         };
         if (!old) { fs.rooms.forEach(r => { r.from = fs.checkIn; r.until = fs.checkOut; }); fs.guests.forEach(g => { g.from = fs.checkIn; g.until = fs.checkOut; }); }
@@ -408,7 +408,7 @@
             const b = await A().api(`/bookings/manage/item/${encodeURIComponent(id)}`);
             if (!['checked_in', 'completed'].includes(b.status)) return A().toast('Check the guest in on Bookings first.', 'info');
             const n = (b.adults || 0) + (b.children || 0);
-            stayForm(null, { bookingId: b._id || id, checkIn: b.checkIn, checkOut: b.checkOut, residence: b.countryCode || b.country || 'ph-filipino',
+            stayForm(null, { roomIds:(b.rooms || []).map(r=>r.roomId).filter(Boolean), bookingId: b._id || id, checkIn: b.checkIn, checkOut: b.checkOut, residence: b.countryCode || b.country || 'ph-filipino',
                              note: `From booking ${b.code}: the booking says ${n} guest${n === 1 ? '' : 's'}.` });
         } catch (e) { if (e.message !== 'Signed out') A().toast(e.message, 'error'); }
     }

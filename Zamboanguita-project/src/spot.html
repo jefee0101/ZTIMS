@@ -1149,10 +1149,11 @@ body { overflow-x: hidden; }
             }
             box.innerHTML = state.rooms.map(r => `
                 <div class="rb-room${state.picks[r._id] ? ' is-picked' : ''}" data-room="${escapeHtml(r._id)}">
-                    <div class="rb-room__photo">${r.photoUrl ? `<img src="${escapeHtml(r.photoUrl)}" alt="" loading="lazy"/>` : '<span class="material-symbols-outlined" aria-hidden="true">bed</span>'}</div>
+                    <div class="rb-room__photo">${r.photoUrl ? `<img src="${escapeHtml(r.photoUrl)}" alt="${escapeHtml(r.name)}" loading="lazy"/>` : '<span class="material-symbols-outlined" aria-hidden="true">bed</span>'}</div>
                     <div class="rb-room__body">
                         <p class="rb-room__name">${escapeHtml(r.name)}</p>
-                        <p class="rb-room__facts">${plural(r.beds, 'bed')} · sleeps ${r.maxGuests}${r.free <= 2 ? ` · <b>${r.free === 1 ? 'Last room' : 'Only 2 left'}</b>` : ''}</p>
+                        ${(r.photos || []).length>1?`<details class="rb-room-gallery"><summary>View ${r.photos.length} photos</summary><div class="grid grid-cols-2 gap-2 my-3">${r.photos.map((url,i)=>`<img class="w-full" src="${escapeHtml(url)}" alt="${escapeHtml(r.name)} · photo ${i+1}" loading="lazy"/>`).join('')}</div></details>`:''}
+                        <p class="rb-room__facts">${plural(r.beds, 'bed')} · sleeps ${r.maxGuests} · This room</p>
                         ${r.description ? `<p class="rb-room__desc">${escapeHtml(r.description)}</p>` : ''}
                         <p class="rb-room__price"><b>${escapeHtml(peso(r.rate))}</b> a night · ${escapeHtml(peso(r.stayPrice))} for ${plural(state.nights, 'night')}</p>
                     </div>
@@ -1223,7 +1224,7 @@ body { overflow-x: hidden; }
                         spotId: spot._id, phone, countryCode: $('rbCountry').value, paymentChoice: choice,
                         adults: Number($('rb-adults').value) || 0, children: Number($('rb-children').value) || 0,
                         checkIn: $('rbIn').value, checkOut: $('rbOut').value, note: $('rbNote').value.trim(),
-                        rooms: chosen().map(l => ({ roomTypeId: l.room._id, units: l.units })), website: $('rbWebsite').value
+                        rooms: chosen().map(l => ({ roomId: l.room._id, units: l.units })), website: $('rbWebsite').value
                     })
                 });
                 const result = await response.json().catch(() => ({}));

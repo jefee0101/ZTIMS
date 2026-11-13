@@ -1377,6 +1377,31 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
 
 ### Room booking (November 2026; database, API and the manager's pages)
 
+**Unified Rooms (14 November 2026, approved and built):** numbered rooms now
+serve both bookings and the stay register. `room-inventory.js` owns the shared
+availability checks and manager CRUD at `GET /room-inventory/:spotId`,
+`POST /room-inventory/:spotId/rooms`, and `PUT`/`DELETE /room-inventory/rooms/:id`.
+Types provide defaults; numbered rooms may override the nightly price and hold
+up to 12 ordered photos in `accommodation_room_photos` (first is cover).
+`accommodation_rooms.nightly_rate` is nullable for the default. Quantities are
+derived from physical room rows, never independently entered. `booking_rooms`
+has its own `id` primary key and optional `room_id`, with one unit per numbered
+line, allowing differently priced rooms of the same type in a booking.
+Guests submit room IDs; the server prices and snapshots each line. Older
+type-only lines retain their identity, quantities and prices; never invent
+room assignments. Active older reservations conservatively protect the whole
+type, and date moves retain pooled lines and check remaining capacity.
+Shared rooms remain in reporting and are not offered as whole-room bookings.
+Only unused rooms and empty types without history may be deleted, with a
+confirmation. Existing bookings/stays/outages and finalized inventory remain
+protected; used rooms end availability and types retire. Ended legacy bookings
+do not prevent deletion of unused rooms added after those bookings. Booking,
+walk-in, room-outage and closure writes use the same enterprise advisory lock.
+New type-wide blocks are refused; existing ones remain visible and can be
+lifted. Use Availability for numbered out-of-service periods and reservation
+markers. `scripts/check-rooms.cjs` runs local-only migration/API checks against
+a disposable `*_rooms_test` database; never run it on the live database.
+
 `bookings.js`, mounted at `/api`, for private places to stay (`spots.type`
 `accommodation` with a manager). The user's decisions (notes repo,
 `Design/Booking system/Booking system proposal.md`, 8 November 2026):
@@ -1386,7 +1411,7 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   1–72, check-in/out times, `min_nights`/`max_nights`, `advance_days`,
   `free_cancel_days`, `payment_instructions`, required before taking bookings);
   `room_types` (name, beds, `max_guests`, `base_rate`, `units`, photo, `active`,
-  `position`; retired, never deleted); `room_blocks` (a room type's units out
+  `position`; unused empty types can be deleted, used types retire); `room_blocks` (legacy type-wide units out
   of booking, `starts_on`–`ends_on` inclusive nights); `bookings` (`code`
   like `LR-XXXXXX`, the guest's name/email/phone/country, adults, children,
   dates, `nights` generated, `status` one of `requested`, `confirmed`,
@@ -1398,11 +1423,10 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   the manager). `register_entries.booking_id` (unique) links a Guest Register
   entry to its booking.
 - **Rooms held** = confirmed, checked in, and requested while `expires_at` is
-  ahead. Free = units − held − blocked, the lowest over the stay's nights
-  (`freeRooms`). Every write that takes rooms locks the room types' rows
-  (`for update`) and counts again in the same transaction (`holdRooms`), so two
-  requests for the last room can't both get it. Blocks are refused where rooms
-  are already held.
+  ahead. `room-inventory.freeRooms` requires a physical room to be free for
+  every night, considering reservations, stays, outages, closures, availability
+  dates and legacy blocks. `holdRooms` rechecks under the shared enterprise
+  advisory lock, preventing competing bookings and walk-ins from taking it.
 - **Public:** `GET /api/rooms/countries` (Form A4's residences for a
   visitor's form, worded for visitors — "Philippines (Filipino)", … — the
   Philippines first; cached a day), `GET /api/rooms/open` (ids of the places to
@@ -1410,11 +1434,11 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   with an active room; for Home's cards), `GET /api/rooms/:spotId` (open or
   not, rules, active rooms; the enterprise named by its listing's
   `enterpriseName`),
-  `GET /api/rooms/:spotId/availability?checkIn=&checkOut=` (free per room type
+  `GET /api/rooms/:spotId/availability?checkIn=&checkOut=` (free per numbered room
   and the stay's price), `POST /api/bookings` (rate-limited 10 an hour per
   connection, honeypot `website`; checks dates against the resort's rules,
   capacity ≥ guests, the country; the **server** prices it from the room
-  types — the page's figure is never read; status Requested, `expires_at` =
+  rates/defaults — the page's figure is never read; status Requested, `expires_at` =
   now + response hours). Emails: request received (guest), new request
   (manager's sign-in email, a Review request link to
   `src/resort/resort_bookings.html?code=`, which opens that request, signed
@@ -1516,7 +1540,7 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   `.rb-*` at the end of `theme.css`, the ticket window's `.bk-*`, `.qty` and
   `.journey-steps`) has four steps — **Dates and guests** (check-in, check-out,
   adults, children), **Rooms** (only what is free for every night, each with
-  its price a night and for the stay, "Last room" / "Only 2 left", − / +;
+  its number, room photos, price a night and for the stay, selection 0 or 1;
   "No rooms are free for those dates" when none; Continue waits until the
   rooms sleep everyone), **Your details** (name, phone, email, country of
   residence from `/api/rooms/countries`, an optional note, the honeypot) and
@@ -1530,13 +1554,15 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   current enterprise from the header switcher; an attraction gets "Rooms and
   bookings are for places to stay". Styles `.bkm-*` at the end of
   `portal-flat.css`; dialogs, toasts, pills and tabs are the shared ones.
-  - **Rooms** (`resort/resort_rooms.html`), three tabs with their own
-    addresses: `#types` — a card per room type (photo through
-    `photo-upload.js`, beds, sleeps, rooms, price a night; Edit; Retire with a
-    confirm / Bring back; retired ones last), Add a room type; `#blocked` —
-    Block dates (room type, first and last night, how many rooms, a reason
-    from Maintenance / Renovation / Private event / Owner's use or typed) and
-    a row per block with Lift (asked once); `#settings` — Take bookings
+  - **Rooms** (`resort/resort_rooms.html`), four tabs with their own
+    addresses: `#types` — grouped room types with default prices and nested
+    room numbers (`unified-rooms.js/css`), per-room rate override, guest
+    capacity, details, availability dates, ordered photos through the shared
+    uploader, cover selection and guarded Delete; type Edit, Retire / Bring
+    back, Add room and guarded Delete type. `#blocked` shows legacy blocks
+    with Lift; no new pooled blocks. `#numbers` is labelled Availability:
+    numbered out-of-service dates and the Rooms by night grid, including
+    reserved rooms. `#settings` — Take bookings
     (`.sf-switch`), time to answer (hours), check-in and check-out times,
     shortest and longest stay, how far ahead, free cancellation days, how
     guests pay (required to take bookings). A pill by the title says Taking
@@ -2112,7 +2138,9 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   November 2026; Xendit test mode only, like tickets, all `is_demo`); a booking is not
   a count (only the Guest Register entry saved at check-in is); the guest signs
   in to a visitor account to book (since 9 November); no SMS, no seasonal rates
-  in version 1; nothing deleted.
+  in version 1; booking history is never deleted. Since 14 November, unused
+  numbered rooms and empty types can be deleted after confirmation; protected
+  history and finalized reporting cannot be removed.
 - `docs/MANUSCRIPT-NOTES.md` lists what the manuscript must say after each
   system change; add to it in the same commit as a change the manuscript
   describes.

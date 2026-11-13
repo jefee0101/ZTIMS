@@ -166,6 +166,7 @@ body { overflow-x: hidden; }
     <!-- Motion tokens, page transitions, and the one reduced-motion block. -->
     <link rel="stylesheet" href="../shared/motion.css"/>
     <link rel="stylesheet" href="../shared/portal-flat.css"/>
+    <link rel="stylesheet" href="../shared/unified-rooms.css"/>
 </head>
 
 <body class="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen transition-colors duration-300">
@@ -518,11 +519,11 @@ body { overflow-x: hidden; }
             <div id="rmPage" hidden class="space-y-6">
                 <div role="tablist" aria-label="Rooms" class="bkm-tabs flex gap-2 border-b border-outline-variant/30">
                     <button role="tab" id="tab-types" aria-controls="typesPanel" aria-selected="true" class="settings-tab">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">bed</span>Room types</button>
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">bed</span>Rooms</button>
                     <button role="tab" id="tab-blocked" aria-controls="blockedPanel" aria-selected="false" tabindex="-1" class="settings-tab">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">event_busy</span>Blocked dates</button>
                     <button role="tab" id="tab-numbers" aria-controls="numbersPanel" aria-selected="false" tabindex="-1" class="settings-tab">
-                        <span class="material-symbols-outlined !text-base" aria-hidden="true">door_front</span>Room numbers</button>
+                        <span class="material-symbols-outlined !text-base" aria-hidden="true">door_front</span>Availability</button>
                     <button role="tab" id="tab-settings" aria-controls="settingsPanel" aria-selected="false" tabindex="-1" class="settings-tab">
                         <span class="material-symbols-outlined !text-base" aria-hidden="true">tune</span>Booking settings</button>
                 </div>
@@ -530,7 +531,7 @@ body { overflow-x: hidden; }
                 <!-- Room types: add, change, retire. Never deleted. -->
                 <section id="typesPanel" role="tabpanel" aria-labelledby="tab-types" class="space-y-4">
                     <div class="bkm-bar">
-                        <h2 class="text-lg font-extrabold text-on-surface">Room types</h2>
+                        <h2 class="text-lg font-extrabold text-on-surface">Rooms by type</h2>
                         <button type="button" id="rmAddType" class="btn btn-primary min-h-[44px]">
                             <span class="material-symbols-outlined !text-base" aria-hidden="true">add</span>Add a room type</button>
                     </div>
@@ -541,7 +542,7 @@ body { overflow-x: hidden; }
                 <section id="blockedPanel" role="tabpanel" aria-labelledby="tab-blocked" class="space-y-4" hidden>
                     <div class="bkm-bar">
                         <h2 class="text-lg font-extrabold text-on-surface">Blocked dates</h2>
-                        <button type="button" id="rmAddBlock" class="btn btn-primary min-h-[44px]">
+                        <button hidden type="button" id="rmAddBlock" class="btn btn-primary min-h-[44px]">
                             <span class="material-symbols-outlined !text-base" aria-hidden="true">event_busy</span>Block dates</button>
                     </div>
                     <div class="glass-panel"><div id="rmBlocks" class="divide-y divide-outline-variant/20"></div></div>
@@ -612,8 +613,8 @@ body { overflow-x: hidden; }
             <label class="block"><span class="field-label">Name</span><input id="tName" type="text" maxlength="80" class="field" placeholder="Sea View Cottage" required/></label>
             <label class="block"><span class="field-label">Description</span><textarea id="tDesc" rows="3" maxlength="1000" class="field"></textarea></label>
             <div class="bkm-grid bkm-grid--2">
-                <label class="block"><span class="field-label">Price per night (₱)</span><input id="tRate" type="number" min="1" step="1" inputmode="numeric" class="field" required/></label>
-                <label class="block"><span class="field-label">Rooms of this type</span><input id="tUnits" type="number" min="1" max="500" class="field" required/></label>
+                <label class="block"><span class="field-label">Default price per night (₱)</span><input id="tRate" type="number" min="1" step="1" inputmode="numeric" class="field" required/></label>
+                <input id="tUnits" type="hidden" value="0"/>
                 <label class="block"><span class="field-label">Beds</span><input id="tBeds" type="number" min="1" max="20" class="field" required/></label>
                 <label class="block"><span class="field-label">Sleeps (guests per room)</span><input id="tGuests" type="number" min="1" max="30" class="field" required/></label>
             </div>
@@ -740,17 +741,18 @@ body { overflow-x: hidden; }
             }
             if (name === 'numbers' && !numbersMounted) mountNumbers();
         }
-        let numbersMounted = false;
+        let numbersMounted = false, numbersController = null;
         async function mountNumbers() {
             numbersMounted = true;
             while (!window.ztimsAccSetup) await new Promise(r => setTimeout(r, 30));
-            window.ztimsAccSetup.rooms(document.getElementById('numbersPanel'), spot);
+            if(numbersController) return numbersController.reload();
+            numbersController = window.ztimsAccSetup.rooms(document.getElementById('numbersPanel'), spot, {operationalOnly:true});
         }
 
         /* ---- what the page shows -------------------------------------- */
         function drawState() {
             const s = data.settings, pill = document.getElementById('rmState');
-            const active = data.rooms.filter(r => r.active).length;
+            const active = (data.numberedRooms || []).filter(r => r.active && !r.shared && (!r.availableUntil || r.availableUntil > new Date().toISOString().slice(0,10))).length;
             const [tone, text] = s.pausedByOffice ? ['tone-danger', 'Paused by the Tourism Office']
                 : !s.acceptsBookings ? ['tone-neutral', 'Not taking bookings']
                 : !active ? ['tone-warning', 'No rooms to book']
@@ -761,30 +763,7 @@ body { overflow-x: hidden; }
         }
 
         function drawTypes() {
-            const box = document.getElementById('rmTypes');
-            if (!data.rooms.length) {
-                box.innerHTML = '<div class="ztims-empty">No room types yet.</div>';
-                return;
-            }
-            // Retired room types go last.
-            const rooms = data.rooms.slice().sort((a, b) => Number(b.active) - Number(a.active));
-            box.innerHTML = rooms.map(r => `
-                <article class="bkm-room${r.active ? '' : ' is-retired'}" data-id="${escapeHtml(r._id)}">
-                    <div class="bkm-room__photo">${r.photoUrl ? `<img src="${escapeHtml(r.photoUrl)}" alt="" loading="lazy"/>` : '<span class="material-symbols-outlined" aria-hidden="true">bed</span>'}
-                        ${r.active ? '' : '<span class="tone-pill tone-neutral rounded-pill bkm-room__tag">Retired</span>'}</div>
-                    <div class="bkm-room__body">
-                        <h3>${escapeHtml(r.name)}</h3>
-                        <p class="bkm-room__facts">${plural(r.beds, 'bed')} · sleeps ${r.maxGuests} · ${plural(r.units, 'room')}</p>
-                        ${r.description ? `<p class="bkm-room__desc">${escapeHtml(r.description)}</p>` : ''}
-                        <div class="bkm-room__foot">
-                            <p><b>${peso(r.rate)}</b> a night</p>
-                            <div class="flex gap-2">
-                                <button type="button" class="pg-btn pg-btn--plain" data-edit>Edit</button>
-                                <button type="button" class="pg-btn pg-btn--plain${r.active ? ' bkm-red' : ''}" data-active>${r.active ? 'Retire' : 'Bring back'}</button>
-                            </div>
-                        </div>
-                    </div>
-                </article>`).join('');
+            window.ZTIMSRooms.mount(document.getElementById('rmTypes'),spot,data,load,openType,toggleActive,{cloudName:CLOUDINARY_CLOUD_NAME,uploadPreset:CLOUDINARY_UPLOAD_PRESET});
         }
 
         function drawBlocks() {
@@ -832,8 +811,10 @@ body { overflow-x: hidden; }
         }
 
         async function load() {
+            while (!window.ZTIMSRooms || !window.ztimsAcc) await new Promise(r=>setTimeout(r,30));
             data = await api(`/rooms/manage/${spot._id}`);
             drawState(); drawTypes(); drawBlocks(); drawSettings();
+            if(numbersMounted) mountNumbers();
         }
 
         /* ---- a room type ---------------------------------------------- */
@@ -867,7 +848,6 @@ body { overflow-x: hidden; }
                 name: document.getElementById('tName').value.trim(),
                 description: document.getElementById('tDesc').value.trim(),
                 rate: Number(document.getElementById('tRate').value),
-                units: parseInt(document.getElementById('tUnits').value, 10),
                 beds: parseInt(document.getElementById('tBeds').value, 10),
                 maxGuests: parseInt(document.getElementById('tGuests').value, 10),
                 photoUrl
@@ -1182,5 +1162,6 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/photo-upload.js"></script>
 <script type="module" src="../shared/acc-common.js"></script>
 <script type="module" src="../shared/acc-setup.js"></script>
+<script type="module" src="../shared/unified-rooms.js"></script>
 </body>
 </html>

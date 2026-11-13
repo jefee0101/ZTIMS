@@ -124,8 +124,8 @@ async function bookingRow(bookingId) {
                m.email as manager_email, m.manager_name,
                coalesce(es.check_in_time, '14:00') as check_in_time, coalesce(es.check_out_time, '12:00') as check_out_time,
                coalesce(es.payment_instructions, '') as payment_instructions, coalesce(es.free_cancel_days, 2) as free_cancel_days,
-               (select string_agg(br.units || ' × ' || rt.name, ', ' order by rt.position)
-                  from booking_rooms br join room_types rt on rt.id = br.room_type_id where br.booking_id = b.id) as rooms_text,
+               (select string_agg(br.units || ' × ' || rt.name || coalesce(' · Room ' || rn.room_number,''), ', ' order by rt.position, rn.room_number)
+                  from booking_rooms br join room_types rt on rt.id = br.room_type_id left join accommodation_rooms rn on rn.id=br.room_id where br.booking_id = b.id) as rooms_text,
                (select name from residences r where r.code = b.country_code) as country_name
           from bookings b join spots s on s.id = b.spot_id
           left join establishment_managers m on m.id = s.managed_by

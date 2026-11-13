@@ -31,6 +31,7 @@ const crypto = require('crypto');
 const { query, transaction } = require('./db');
 const { spots: Spot, BOOKING_PAYMENT_METHODS } = require('./models');
 const notices = require('./notices');
+const inventory = require('./room-inventory');
 const bookingPay = require('./booking-payments');
 const { requireVisitor, checkoutDetails } = require('./visitors');
 
@@ -121,27 +122,7 @@ function checkStay(settings, checkIn, checkOut) {
    the stay: its units, less the rooms held by bookings (requested and not yet
    expired, confirmed, checked in), less blocked rooms. `exclude` leaves one
    booking out (when it is being moved). */
-async function freeRooms(spotId, checkIn, checkOut, { client, exclude = '', activeOnly = true } = {}) {
-    const { rows } = await query(`
-        with nights as (
-            select d::date as night from generate_series($2::date, $3::date - 1, interval '1 day') d)
-        select rt.id, rt.name, rt.description, rt.beds, rt.max_guests, rt.base_rate, rt.units, rt.photo_url, rt.active, rt.position,
-               greatest(0, min(rt.units - coalesce(held.units, 0) - coalesce(blocked.units, 0)))::int as free
-          from room_types rt
-         cross join nights n
-          left join lateral (
-                select sum(br.units) as units
-                  from booking_rooms br join bookings b on b.id = br.booking_id
-                 where br.room_type_id = rt.id and b.check_in <= n.night and b.check_out > n.night
-                   and b.id <> $4 and ${HOLDING}) held on true
-          left join lateral (
-                select sum(k.units) as units from room_blocks k
-                 where k.room_type_id = rt.id and k.starts_on <= n.night and k.ends_on >= n.night) blocked on true
-         where rt.spot_id = $1 ${activeOnly ? 'and rt.active' : ''}
-         group by rt.id
-         order by rt.position, rt.name`, [spotId, checkIn, checkOut, exclude], client);
-    return rows;
-}
+const freeRooms = inventory.freeRooms;
 
 const shapeRoom = r => ({
     _id: r.id, name: r.name, description: r.description, beds: r.beds, maxGuests: r.max_guests,
@@ -152,10 +133,12 @@ const shapeRoom = r => ({
 
 async function bookingRooms(bookingId, client) {
     const { rows } = await query(`
-        select br.room_type_id, br.units, br.rate_per_night, rt.name
+        select br.room_type_id, br.room_id, br.units, br.rate_per_night,
+               rt.name || coalesce(' · Room ' || r.room_number,'') as name
           from booking_rooms br join room_types rt on rt.id = br.room_type_id
+          left join accommodation_rooms r on r.id=br.room_id
          where br.booking_id = $1 order by rt.position, rt.name`, [bookingId], client);
-    return rows.map(r => ({ roomTypeId: r.room_type_id, name: r.name, units: r.units, ratePerNight: money(r.rate_per_night) }));
+    return rows.map(r => ({ roomId:r.room_id, roomTypeId: r.room_type_id, name: r.name, units: r.units, ratePerNight: money(r.rate_per_night) }));
 }
 
 async function bookingRow(id, client, { lock = false } = {}) {
@@ -178,19 +161,29 @@ const snapshot = b => b && ({
    Every booking write that takes rooms goes through here, inside its own
    transaction, so two requests for the last room cannot both have it. */
 async function holdRooms(client, spotId, lines, checkIn, checkOut, exclude = '') {
-    const ids = [...new Set(lines.map(l => l.roomTypeId))].sort();
-    const { rows: locked } = await query(
-        'select id from room_types where id = any($1) and spot_id = $2 and active order by id for update', [ids, spotId], client);
-    if (locked.length !== ids.length) throw problem(400, 'One of those rooms is not offered here any more. Choose again.');
-    const free = new Map((await freeRooms(spotId, checkIn, checkOut, { client, exclude })).map(r => [r.id, r]));
-    for (const line of lines) {
-        const room = free.get(line.roomTypeId);
-        if (!room || room.free < line.units) {
-            const left = room ? room.free : 0;
-            throw problem(409, left
-                ? `Only ${left} ${room.name} room${left === 1 ? ' is' : 's are'} free for those dates. Choose again.`
-                : `${room ? room.name : 'That room'} is fully booked for those dates. Choose other rooms or dates.`);
+    await inventory.lockPlace(spotId,client);
+    const free = new Map((await freeRooms(spotId,checkIn,checkOut,{client,exclude})).map(r=>[r.id,r]));
+    for(const line of lines) {
+        const key=line.roomId || line.roomTypeId;
+        if(!line.roomId) {
+            // Preserve older pooled reservations and their prices without inventing
+            // room assignments. Numbered inventory, where present, is authoritative.
+            const physical=(await query('select count(*)::int as n from accommodation_rooms where spot_id=$1 and room_type_id=$2',[spotId,line.roomTypeId],client)).rows[0].n;
+            let remaining=Array.from(free.values()).filter(r=>r.room_type_id===line.roomTypeId).reduce((n,r)=>n+r.free,0);
+            if(!physical) {
+                const legacy=(await query(`select t.units-coalesce((select sum(br.units) from booking_rooms br join bookings b on b.id=br.booking_id
+                    where br.room_type_id=t.id and b.id<>$5 and b.check_in<$4 and b.check_out>$3 and ${HOLDING}),0)
+                    -coalesce((select sum(k.units) from room_blocks k where k.room_type_id=t.id and k.starts_on<$4 and k.ends_on>=$3),0) as free
+                    from room_types t where t.id=$2 and t.spot_id=$1 and t.active
+                    and not exists(select 1 from accommodation_closed_periods c where c.spot_id=t.spot_id and c.voided_at is null and c.starts_on<$4 and c.ends_on>=$3)`,
+                    [spotId,line.roomTypeId,checkIn,checkOut,exclude],client)).rows[0];
+                remaining=Number(legacy?.free || 0);
+            }
+            if(remaining<line.units) throw problem(409,'Not enough rooms of the reserved type are free for those dates. Choose other dates.');
+            continue;
         }
+        const r=free.get(key);
+        if(!r || r.free<line.units || line.units!==1) throw problem(409,'A selected room is no longer free for those dates. Choose again.');
     }
     return free;
 }
@@ -294,9 +287,10 @@ async function visitorMove(found, body, origin) {
     const settings = await settingsFor(found.spot_id);
     const nights = checkStay(settings, checkIn, checkOut);
     await transaction(async client => {
+        await inventory.lockPlace(found.spot_id,client);
         const b = await bookingRow(found.id, client, { lock: true });
         if (!b || !['requested', 'confirmed'].includes(b.status)) throw problem(409, 'This booking changed just now. Look it up again.');
-        const lines = (await bookingRooms(b.id, client)).map(r => ({ roomTypeId: r.roomTypeId, units: r.units, rate: r.ratePerNight }));
+        const lines = (await bookingRooms(b.id, client)).map(r => ({ roomId:r.roomId, roomTypeId: r.roomTypeId, units: r.units, rate: r.ratePerNight }));
         await holdRooms(client, b.spot_id, lines, checkIn, checkOut, b.id);
         const total = money(lines.reduce((sum, l) => sum + l.units * l.rate * nights, 0));
         const { rows } = await query(`
@@ -391,7 +385,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                  where s.type = 'accommodation' and s.status = 'published'
                    and m.active and coalesce(m.operational_status, '') not in ('inactive', 'closed')
                    and es.accepts_bookings and not es.paused_by_office
-                   and exists (select 1 from room_types rt where rt.spot_id = s.id and rt.active)`);
+                   and exists (select 1 from accommodation_rooms r join room_types rt on rt.id=r.room_type_id where r.spot_id=s.id and rt.active and not r.shared and (r.available_until is null or r.available_until > current_date))`);
             res.set('Cache-Control', 'public, max-age=60');
             return res.json(rows.map(r => r.id));
         } catch (error) { return fail(res, error, '❌ Open places read failure:'); }
@@ -403,7 +397,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const spot = await publicResort(req.params.spotId);
             if (!spot) return res.status(404).json({ success: false, message: 'This place does not take bookings here.' });
             const settings = await settingsFor(spot._id);
-            const { rows } = await query('select * from room_types where spot_id = $1 and active order by position, name', [spot._id]);
+            const rows = (await inventory.catalog(spot._id)).filter(r=>r.type_active && !r.shared && (!r.available_until || r.available_until > manilaToday()));
             res.set('Cache-Control', 'public, max-age=60');
             return res.json({
                 spot: { _id: spot._id, title: spot.title, enterpriseName: spot.enterpriseName || spot.title },
@@ -414,7 +408,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                     responseHours: settings.responseHours
                 },
                 payment: bookingPay.optionsFor(settings),
-                rooms: rows.map(shapeRoom).map(({ active, units, position, ...room }) => room)
+                rooms: rows.map(inventory.shape).map(({ active, ...room }) => room)
             });
         } catch (error) { return fail(res, error, '❌ Rooms read failure:'); }
     });
@@ -434,8 +428,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             return res.json({
                 checkIn, checkOut, nights,
                 rooms: rooms.map(r => ({
-                    _id: r.id, name: r.name, description: r.description, beds: r.beds, maxGuests: r.max_guests,
-                    photoUrl: r.photo_url, rate: money(r.base_rate), free: r.free, stayPrice: money(r.base_rate * nights)
+                    _id: r.id, name: r.name, description: r.label || r.description, beds: r.beds, maxGuests: r.max_guests,
+                    roomTypeId:r.room_type_id, photos:r.photos, photoUrl: r.photo_url, rate: money(r.base_rate), free: r.free, stayPrice: money(r.base_rate * nights)
                 }))
             });
         } catch (error) { return fail(res, error, '❌ Availability failure:'); }
@@ -481,23 +475,22 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             if (list.length > MAX_ROOM_LINES) throw problem(400, 'Too many kinds of room in one request.');
             const lines = [];
             for (const item of list) {
-                const roomTypeId = String((item && item.roomTypeId) || '');
-                const units = wholeNumber(item && item.units, 1, 50);
-                if (!isId(roomTypeId) || units === null) throw problem(400, 'Choose how many of each room.');
-                if (lines.some(l => l.roomTypeId === roomTypeId)) throw problem(400, 'A room appears twice. Put it on one line.');
-                lines.push({ roomTypeId, units });
+                const roomId = String((item && item.roomId) || '');
+                if (!isId(roomId) || item.units !== 1) throw problem(400, 'Select each numbered room once.');
+                if (lines.some(l => l.roomId === roomId)) throw problem(400, 'A room appears twice.');
+                lines.push({ roomId, units:1 });
             }
 
             const origin = siteOrigin(req);
             await sweepIfDue(origin);
             const created = await transaction(async client => {
                 const free = await holdRooms(client, spot._id, lines, checkIn, checkOut);
-                const sleeps = lines.reduce((sum, l) => sum + l.units * free.get(l.roomTypeId).max_guests, 0);
+                const sleeps = lines.reduce((sum, l) => sum + l.units * free.get(l.roomId).max_guests, 0);
                 if (sleeps < adults + children) {
                     throw problem(400, `Those rooms sleep ${sleeps}; you are ${adults + children}. Add a room.`);
                 }
                 // The price comes from the room types now, never from the page.
-                const priced = lines.map(l => ({ ...l, rate: money(free.get(l.roomTypeId).base_rate) }));
+                const priced = lines.map(l => ({ ...l, roomTypeId:free.get(l.roomId).room_type_id, rate: money(free.get(l.roomId).base_rate) }));
                 const total = money(priced.reduce((sum, l) => sum + l.units * l.rate * nights, 0));
                 if (paymentChoice === 'online' && total < 20) throw problem(400, 'This stay is too small to pay online. Choose Pay at the property.');
                 let row = null;
@@ -518,8 +511,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                 }
                 if (!row) throw new Error('Could not draw a free booking code.');
                 for (const l of priced) {
-                    await query('insert into booking_rooms (booking_id, room_type_id, units, rate_per_night) values ($1, $2, $3, $4)',
-                        [row.id, l.roomTypeId, l.units, l.rate], client);
+                    await query('insert into booking_rooms (booking_id, room_type_id, units, rate_per_night, room_id) values ($1, $2, $3, $4, $5)',
+                        [row.id, l.roomTypeId, l.units, l.rate, l.roomId], client);
                 }
                 await logChange(client, row.id, 'requested', null, snapshot(row), 'the guest (booking form)');
                 return row;
@@ -582,8 +575,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
         if (maxGuests === null) throw problem(400, 'Guests per room must be 1 to 30.');
         const rate = money(b.rate ?? (existing ? existing.base_rate : NaN));
         if (!(rate > 0) || rate > 1000000) throw problem(400, 'Give the price per night in pesos.');
-        const units = wholeNumber(b.units ?? (existing ? existing.units : NaN), 1, 500);
-        if (units === null) throw problem(400, 'How many rooms of this kind? 1 to 500.');
+        const units = existing ? existing.units : 0;
         const photoUrl = String(b.photoUrl ?? (existing ? existing.photo_url : '')).trim();
         if (photoUrl.length > 500) throw problem(400, 'That photo link is too long.');
         checkPhotoSources([photoUrl], existing ? [existing.photo_url] : []);
@@ -592,11 +584,13 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
         return { name, description, beds, maxGuests, rate, units, photoUrl, active, position };
     }
 
+    inventory.mount({router,requireEstablishmentManager,ownResort,checkPhotoSources,fail});
+
     /* Everything for the manager's Rooms page. */
     router.get('/rooms/manage/:spotId', requireEstablishmentManager, async (req, res) => {
         try {
             const spot = await ownResort(req, req.params.spotId);
-            const { rows: rooms } = await query('select * from room_types where spot_id = $1 order by position, name', [spot.id]);
+            const { rows: rooms } = await query('select t.*, (select count(*)::int from accommodation_rooms r where r.room_type_id=t.id) as units from room_types t where spot_id = $1 order by position, name', [spot.id]);
             const { rows: blocks } = await query(`
                 select k.* from room_blocks k join room_types rt on rt.id = k.room_type_id
                  where rt.spot_id = $1 and k.ends_on >= $2 order by k.starts_on`, [spot.id, manilaToday()]);
@@ -604,6 +598,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                 settings: await settingsFor(spot.id),
                 onlinePaymentAvailable: bookingPay.optionsFor({ allowPayOnline: true }).online,
                 rooms: rooms.map(shapeRoom),
+                numberedRooms:(await inventory.catalog(spot.id)).map(inventory.shape),
                 blocks: blocks.map(k => ({ _id: k.id, roomTypeId: k.room_type_id, startsOn: k.starts_on, endsOn: k.ends_on, units: k.units, reason: k.reason }))
             });
         } catch (error) { return fail(res, error, '❌ Rooms (manager) read failure:'); }
@@ -624,7 +619,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const { rows } = await query(`
                 with nights as (
                     select d::date as night from generate_series($2::date, $3::date, interval '1 day') d)
-                select rt.id, rt.name, rt.units, rt.active, rt.position, to_char(n.night, 'YYYY-MM-DD') as night,
+                select rt.id, rt.name, (select count(*)::int from accommodation_rooms ar where ar.room_type_id=rt.id) as units, rt.active, rt.position, to_char(n.night, 'YYYY-MM-DD') as night,
                        coalesce(held.booked, 0)::int as booked, coalesce(held.waiting, 0)::int as waiting,
                        coalesce(blocked.units, 0)::int as blocked
                   from room_types rt
@@ -640,12 +635,16 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                          where k.room_type_id = rt.id and k.starts_on <= n.night and k.ends_on >= n.night) blocked on true
                  where rt.spot_id = $1
                  order by rt.position, rt.name, n.night`, [spot.id, first, last]);
+            const available=await freeRooms(spot.id,first,addDays(last,1),{perNight:true});
+            const freeByNight=new Map();
+            for(const r of available) { const key=r.room_type_id+':'+r.night; freeByNight.set(key,(freeByNight.get(key)||0)+r.free); }
             const rooms = [];
             for (const r of rows) {
                 let room = rooms[rooms.length - 1];
                 if (!room || room._id !== r.id) rooms.push(room = { _id: r.id, name: r.name, units: r.units, active: r.active, nights: [] });
-                room.nights.push({ date: r.night, booked: r.booked, waiting: r.waiting, blocked: r.blocked,
-                    free: Math.max(0, r.units - r.booked - r.waiting - r.blocked) });
+                const free=freeByNight.get(r.id+':'+r.night)||0;
+                room.nights.push({ date: r.night, booked: r.booked, waiting: r.waiting,
+                    blocked:Math.max(0,r.units-r.booked-r.waiting-free), free });
             }
             // A retired room type shows only while something still holds it that month.
             const shown = rooms.filter(r => r.active || r.nights.some(n => n.booked || n.waiting || n.blocked));
@@ -713,45 +712,36 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
        bookings keep pointing at it. A new price applies to new requests only. */
     router.put('/rooms/manage/types/:id', requireEstablishmentManager, async (req, res) => {
         try {
-            const existing = await ownRoomType(req, req.params.id);
+            const saved = await transaction(async client=>{
+            let existing = await ownRoomType(req, req.params.id,client);
+            await inventory.lockPlace(existing.spot_id,client);
+            existing = await ownRoomType(req, req.params.id,client);
             const r = readRoomType(req.body, existing);
             const { rows } = await query(`
                 update room_types set name = $2, description = $3, beds = $4, max_guests = $5, base_rate = $6, units = $7,
                        photo_url = $8, active = $9, position = $10 where id = $1 returning *`,
-                [existing.id, r.name, r.description, r.beds, r.maxGuests, r.rate, r.units, r.photoUrl, r.active, r.position]);
-            return res.json({ success: true, message: 'Saved.', room: shapeRoom(rows[0]) });
+                [existing.id, r.name, r.description, r.beds, r.maxGuests, r.rate, r.units, r.photoUrl, r.active, r.position],client);
+            return rows[0];
+            });
+            return res.json({ success: true, message: 'Saved.', room: shapeRoom(saved) });
         } catch (error) { return fail(res, error, '❌ Room type update failure:'); }
+    });
+
+    router.delete('/rooms/manage/types/:id',requireEstablishmentManager,async(req,res)=>{
+        try { await transaction(async client=>{
+            const t=await ownRoomType(req,req.params.id,client); await inventory.lockPlace(t.spot_id,client);
+            const used=(await query(`select 1 where exists(select 1 from accommodation_rooms where room_type_id=$1)
+                or exists(select 1 from booking_rooms where room_type_id=$1) or exists(select 1 from room_blocks where room_type_id=$1)`,[t.id],client)).rows.length;
+            if(used) throw problem(409,'This type has rooms or booking history. Retire it instead.');
+            await query('delete from room_types where id=$1',[t.id],client);
+        });return res.json({success:true,message:'Room type deleted.'}); }
+        catch(e){return fail(res,e,'Room type delete:');}
     });
 
     /* Rooms taken out of booking for some nights. Refused where they are
        already held by bookings: those are the manager's to move or decline. */
     router.post('/rooms/manage/types/:id/blocks', requireEstablishmentManager, async (req, res) => {
-        try {
-            const b = req.body || {};
-            const startsOn = String(b.startsOn || ''), endsOn = String(b.endsOn || '');
-            if (!isDateKey(startsOn) || !isDateKey(endsOn)) throw problem(400, 'Give the first and last night to block.');
-            if (endsOn < startsOn) throw problem(400, 'The last night cannot be before the first.');
-            if (daysBetween(startsOn, endsOn) > 366) throw problem(400, 'Block up to a year at a time.');
-            if (endsOn < manilaToday()) throw problem(400, 'Those nights have already passed.');
-            const reason = String(b.reason || '').trim();
-            if (reason.length > 200) throw problem(400, 'Keep the reason to 200 characters.');
-            const by = await managerEmail(req);
-            const block = await transaction(async client => {
-                const room = await ownRoomType(req, req.params.id, client, { lock: true });
-                const units = wholeNumber(b.units ?? room.units, 1, room.units);
-                if (units === null) throw problem(400, `Block 1 to ${room.units} rooms.`);
-                const free = await freeRooms(room.spot_id, startsOn, addDays(endsOn, 1), { client, activeOnly: false });
-                const mine = free.find(r => r.id === room.id);
-                if (!mine || mine.free < units) {
-                    throw problem(409, `Only ${mine ? mine.free : 0} of these rooms are free on every one of those nights; the rest are booked or already blocked.`);
-                }
-                const { rows } = await query(`
-                    insert into room_blocks (room_type_id, starts_on, ends_on, units, reason, created_by_email)
-                    values ($1, $2, $3, $4, $5, $6) returning *`, [room.id, startsOn, endsOn, units, reason, by], client);
-                return rows[0];
-            });
-            return res.status(201).json({ success: true, message: 'Blocked.', block: { _id: block.id, roomTypeId: block.room_type_id, startsOn: block.starts_on, endsOn: block.ends_on, units: block.units, reason: block.reason } });
-        } catch (error) { return fail(res, error, '❌ Room block failure:'); }
+        return res.status(409).json({success:false,message:'Choose a numbered room under Rooms and mark it out of service instead.'});
     });
 
     /* Lifting a block gives the rooms back to booking. */
@@ -811,8 +801,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const { rows } = await query(`
                 select b.*, coalesce((select sum(p.amount - coalesce(p.refund_amount, 0)) from booking_payments p where p.booking_id = b.id), 0) as paid,
                        exists (select 1 from booking_payments p where p.booking_id = b.id and p.channel = 'online' and p.refunded_at is null) as paid_online,
-                       (select string_agg(br.units || ' × ' || rt.name, ', ' order by rt.position)
-                          from booking_rooms br join room_types rt on rt.id = br.room_type_id where br.booking_id = b.id) as rooms_text
+                       (select string_agg(br.units || ' × ' || rt.name || coalesce(' · Room ' || rn.room_number,''), ', ' order by rt.position, rn.room_number)
+                          from booking_rooms br join room_types rt on rt.id = br.room_type_id left join accommodation_rooms rn on rn.id=br.room_id where br.booking_id = b.id) as rooms_text
                   from bookings b ${where}
                  order by (b.status = 'requested') desc, b.check_in, b.created_at limit 500`, params);
             return res.json(rows.map(b => ({
