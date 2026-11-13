@@ -10,7 +10,7 @@ where the manuscript already has them, and the answer to give the panel.
 **The change.** Figure (Conceptual Framework) in the school's Input–Process–Output
 layout: square boxes with a header row, solid arrows, Input as justified items,
 Process with "Theoretical Foundation" and "Evaluation" sub-heads, Output in bold
-capitals. Same content as before, minus the Agile cycle picture; "Establishment
+capitals. Process lists the three theories of the theoretical framework (Buhalis, 2000; Sheehan et al., 2016; d'Angella & Go, 2009 and Sautter & Leisen, 1999) and TAM (Davis, 1989); no Agile cycle picture; "Establishment
 Managers" now reads "Enterprise Managers".
 
 **Change in the manuscript:** replace the figure with
