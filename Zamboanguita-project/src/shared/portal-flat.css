@@ -729,6 +729,10 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .acc-stay__where { font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
 @media (max-width: 760px) { .acc-stay { grid-template-columns: minmax(0, 1fr) auto; } .acc-stay__where { grid-column: 1 / -1; } .acc-stay__go { grid-row: 1; grid-column: 2; } }
 .acc-scroll { overflow-x: auto; max-width: 100%; }
+/* The register's tabs: one row that scrolls sideways on a phone, never the page. */
+.acc-tabs { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.acc-tabs::-webkit-scrollbar { display: none; }
+.acc-tabs .settings-tab { flex-shrink: 0; }
 .acc-grid, .acc-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .8125rem; }
 .acc-grid th, .acc-grid td { border: 1px solid rgb(var(--ztims-outline-variant) / .55); padding: .3rem .45rem; white-space: nowrap; }
 .acc-grid thead th { background: rgb(var(--ztims-on-surface) / .04); font-weight: 700; color: rgb(var(--ztims-on-surface-variant)); font-size: .75rem; text-align: center; }
@@ -759,6 +763,9 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .acc-diff td { padding: .2rem .5rem; }
 .acc-note { font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); }
 /* The officer's FORM A view (acc-officer.js). */
+.acc-grid tr.acc-group th { text-align: left; background: rgb(var(--ztims-on-surface) / .04); font-size: .75rem; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-grid .acc-subtotal td, .acc-grid .acc-subtotal th { font-weight: 700; background: rgb(var(--ztims-on-surface) / .03); }
+.acc-grid .acc-total th { font-weight: 800; background: rgb(var(--ztims-primary) / .08); }
 .acc-grid .acc-subtotal td { font-weight: 700; background: rgb(var(--ztims-on-surface) / .03); }
 .acc-grid .acc-total td { font-weight: 800; background: rgb(var(--ztims-primary) / .08); }
 .acc-grid--wide { min-width: 960px; }

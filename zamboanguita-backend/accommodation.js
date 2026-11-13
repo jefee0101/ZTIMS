@@ -504,7 +504,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     const shapeMonth = v => ({
         success: true, enterprise: { _id: v.spot.id, name: v.spot.name }, profile: v.profile,
         state: v.state, figures: { ...v.figures, daily: v.figures.daily.map(d => ({ date: d.date, counted: d.counted, checkIn: d.checkIn, guestNights: d.guestNights,
-            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })) },
+            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })), byDay: v.figures.byDay },
         versions: v.versions, events: v.events.map(e => ({ action: e.action, versionId: e.version_id, reason: e.reason, actorRole: e.actor_role, at: e.at })),
         finalizedAt: v.period && v.period.finalized_at
     });

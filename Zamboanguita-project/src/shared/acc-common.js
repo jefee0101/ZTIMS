@@ -118,6 +118,7 @@
         residences = Array.isArray(data) ? data : (data.residences || []);
         return residences;
     }
+    const residenceList = () => residences || [];
     const residenceName = code => { const r = (residences || []).find(x => x.code === code); return r ? r.name : code; };
     const residenceSection = code => { const r = (residences || []).find(x => x.code === code); return r ? r.section : 'unspecified'; };
 
@@ -217,6 +218,6 @@
     window.ztimsAcc = {
         partOneHtml, partTwoHtml,
         api, download, esc, MONTHS, pad, manilaToday, addDays, daysIn, monthName, monthKey, shiftMonth, fmtDate, fmtWhen, weekday,
-        nf, pct, dec, STATES, statePill, loadResidences, residenceName, residenceSection, openWindow, toast, loading, failed
+        nf, pct, dec, STATES, statePill, loadResidences, residenceList, residenceName, residenceSection, openWindow, toast, loading, failed
     };
 })();

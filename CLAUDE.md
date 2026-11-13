@@ -744,8 +744,10 @@ visitors here").
     through with their reason, never counted, opened read-only; 13 November
     2026; Open a stay: facts, guests, months it
     counts in, history; Edit, Change check-out, Transfer room, Void, each with
-    a reason; a stay in a finalized month opens locked) and Daily register
-    (DAE-1A grid), Record a stay, Excel of the register now. Bookings → Check
+    a reason; a stay in a finalized month opens locked) Daily register
+    (DAE-1A grid) and Daily arrivals (DAE-1B: countries down, days 1–31 across
+    with M / F, month totals; `#dae1b`; from `byDay` on the month read; rows
+    with no arrivals left out, the Excel lists every row; 13 November 2026), Record a stay, Excel of the register now. Bookings → Check
     in opens it at `?booking=<id>` with the stay filled in
     (`accommodation_stays.booking_id`).
   - **Monthly Report** (`resort_statistics.html`): Month (DAE-1B, a banner per

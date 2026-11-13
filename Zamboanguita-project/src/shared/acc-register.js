@@ -1,5 +1,5 @@
-/* The stay register of a private place to stay: Guest Register → Stays and
- * Daily register (DAE-1A). Mounted by resort_register.html when the current
+/* The stay register of a private place to stay: Guest Register → Stays,
+ * Daily register (DAE-1A) and Daily DAE-1B. Mounted by resort_register.html when the current
  * enterprise is a place to stay (window.ztimsAccRegister.mount(el, spot)).
  * Needs acc-common.js. Every rule is the server's; this page only asks.
  */
@@ -12,12 +12,14 @@
     const nightsOf = s => Math.round((Date.parse(s.checkOut) - Date.parse(s.checkIn)) / 864e5);
     const roomsText = s => s.rooms.map((r, i) => (i ? ' → ' : '') + roomNo(r.roomId) + (i && r.from > s.checkIn ? ` (from ${A().fmtDate(r.from)})` : '')).join('');
 
+    const tabFromHash = () => (['daily', 'dae1b'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'stays');
+
     function mount(el, current) {
         root = el; spot = current;
         const t = A().manilaToday();
         const q = new URLSearchParams(location.search).get('month');
         if (q && /^\d{4}-\d{2}$/.test(q)) { year = +q.slice(0, 4); month = +q.slice(5); } else { year = +t.slice(0, 4); month = +t.slice(5, 7); }
-        tab = location.hash === '#daily' ? 'daily' : 'stays';
+        tab = tabFromHash();
         root.innerHTML = `
             <div class="acc-head">
                 <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Guest Register</h1>
@@ -32,13 +34,14 @@
                 </div>
                 <span class="acc-state"></span>
             </div>
-            <div role="tablist" aria-label="Guest Register" class="flex gap-2 border-b border-outline-variant/30">
+            <div role="tablist" aria-label="Guest Register" class="acc-tabs flex gap-2 border-b border-outline-variant/30">
                 <button role="tab" class="settings-tab" data-tab="stays" aria-selected="true"><span class="material-symbols-outlined !text-base" aria-hidden="true">groups</span>Stays</button>
                 <button role="tab" class="settings-tab" data-tab="daily" aria-selected="false"><span class="material-symbols-outlined !text-base" aria-hidden="true">table_view</span>Daily register (DAE-1A)</button>
+                <button role="tab" class="settings-tab" data-tab="dae1b" aria-selected="false"><span class="material-symbols-outlined !text-base" aria-hidden="true">public</span>Daily arrivals (DAE-1B)</button>
             </div>
             <div class="acc-body"></div>`;
         root.addEventListener('click', onClick);
-        window.addEventListener('hashchange', () => { const t2 = location.hash === '#daily' ? 'daily' : 'stays'; if (t2 !== tab) { tab = t2; draw(); } });
+        window.addEventListener('hashchange', () => { const t2 = tabFromHash(); if (t2 !== tab) { tab = t2; draw(); } });
         load().then(openFromBooking);
     }
 
@@ -72,7 +75,7 @@
                 <div class="flex flex-wrap justify-center gap-2 mt-3">${!rooms.length ? '<a class="btn btn-secondary btn-sm" href="resort_rooms.html#numbers">Room numbers</a>' : ''}${!view.profile.reportingFrom ? '<a class="btn btn-secondary btn-sm" href="resort_spots.html#reporting">Reporting</a>' : ''}</div></div>`;
             return;
         }
-        body.innerHTML = tab === 'daily' ? dailyHtml() : staysHtml();
+        body.innerHTML = tab === 'daily' ? dailyHtml() : tab === 'dae1b' ? dae1bHtml() : staysHtml();
     }
 
     function banner() {
@@ -153,6 +156,53 @@
                 <div class="stat-tile"><p>Average room occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div>
                 <div class="stat-tile"><p>Average guests per room</p><p>${A().dec(f.guestsPerRoom)}</p></div>
             </div>`;
+    }
+
+    /* Daily arrivals (DAE-1B): the register's guests by country of residence, day by day,
+       male and female, as on the DAE-1B daily sheet. Rows with no arrivals are left out here;
+       the Excel lists every row. */
+    function dae1bHtml() {
+        const f = view.figures, by = f.byDay || {}, days = f.daily.length, today = A().manilaToday();
+        const list = A().residenceList();
+        const sum = a => (a || []).reduce((x, y) => x + y, 0);
+        const sumRows = codes => {
+            const m = Array(days).fill(0), w = Array(days).fill(0);
+            for (const c of codes) { const b = by[c]; if (!b) continue; for (let i = 0; i < days; i++) { m[i] += b.male[i] || 0; w[i] += b.female[i] || 0; } }
+            return { male: m, female: w };
+        };
+        const codesOf = s => list.filter(r => r.section === s).map(r => r.code);
+        const used = codes => codes.filter(c => by[c] && sum(by[c].male) + sum(by[c].female) > 0);
+        const dayCls = i => (f.daily[i].closed ? ' acc-closed' : f.daily[i].date > today ? ' acc-fut' : '');
+        const row = (label, b, cls = '') => {
+            const b2 = b || { male: Array(days).fill(0), female: Array(days).fill(0) };
+            const cells = f.daily.map((d, i) => { const blank = !d.counted; const m = b2.male[i], w = b2.female[i];
+                return `<td class="text-right${dayCls(i)}">${blank ? '' : (m || '')}</td><td class="text-right${dayCls(i)}">${blank ? '' : (w || '')}</td>`; }).join('');
+            const tm = sum(b2.male), tw = sum(b2.female);
+            return `<tr class="${cls}"><th scope="row" class="acc-sticky">${A().esc(label)}</th>${cells}<td class="text-right"><b>${tm}</b></td><td class="text-right"><b>${tw}</b></td><td class="text-right"><b>${tm + tw}</b></td></tr>`;
+        };
+        const group = label => `<tr class="acc-group"><th class="acc-sticky" colspan="${1 + days * 2 + 3}">${A().esc(label)}</th></tr>`;
+        const ph = codesOf('philippine'), fo = codesOf('foreign');
+        const foUsed = used(fo);
+        const all = list.map(r => r.code);
+        const body = group('PHILIPPINE RESIDENTS')
+            + ph.map(c => row(c === 'ph-filipino' ? 'Filipino nationality' : c === 'ph-foreign' ? 'Foreign nationality' : A().residenceName(c), by[c])).join('')
+            + row('Total Philippine residents', sumRows(ph), 'acc-subtotal')
+            + group('NON-PHILIPPINE RESIDENTS')
+            + (foUsed.length ? foUsed.map(c => row(A().residenceName(c), by[c])).join('') : `<tr><th class="acc-sticky text-on-surface-variant font-normal">No arrivals from outside the Philippines</th><td colspan="${days * 2 + 3}"></td></tr>`)
+            + row('Total non-Philippine residents', sumRows(fo), 'acc-subtotal')
+            + row('Overseas Filipinos*', sumRows(codesOf('overseas_filipino')), 'acc-subtotal')
+            + row('Guests with unspecified residence', sumRows(codesOf('unspecified')), 'acc-subtotal')
+            + row('Grand total guest arrivals', sumRows(all), 'acc-total');
+        return `${banner()}
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <p class="text-support"><b class="text-on-surface">Form DAE-1B</b> · Guest arrivals by country of residence, per day (M = male, F = female).</p>
+                <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (register now)</button>
+            </div>
+            <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="acc-grid acc-grid--wide">
+                <thead><tr><th class="acc-sticky" rowspan="2">Country of residence</th>${f.daily.map((d, i) => `<th colspan="2" class="${dayCls(i).trim()}">${+d.date.slice(8)}</th>`).join('')}<th colspan="3">Month</th></tr>
+                    <tr>${f.daily.map(() => '<th>M</th><th>F</th>').join('')}<th>M</th><th>F</th><th>Total</th></tr></thead>
+                <tbody>${body}</tbody></table></div>
+            <p class="text-support mt-3">Days not yet reached are left blank. * Philippine passport holders permanently residing abroad; excludes overseas Filipino workers.</p></section>`;
     }
 
     async function onClick(e) {
