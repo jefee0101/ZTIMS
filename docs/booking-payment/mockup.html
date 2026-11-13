@@ -1,0 +1,257 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Room Payment Options</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,600&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --paper: #FAF7F2; --surface: #FFFFFF; --surface-2: #F5F0E8; --ink: #1C1917; --ink-2: #57514B; --line: #E3DCD1;
+  --burnt: #BF5700; --burnt-text: #A04A00; --ember: #7A2E00; --tangerine: #F28500; --on-burnt: #FFFDFA;
+  --teal: #0F766E; --teal-bg: #E4F3F1; --ok: #2E7D32; --ok-bg: #E6F2E6; --warn-bg: #FDEBD3; --bad: #B3261E;
+  --shadow: 0 1px 2px rgba(28,25,23,.06), 0 8px 24px rgba(28,25,23,.06);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #121110; --surface: #1C1A18; --surface-2: #252220; --ink: #F5F1EA; --ink-2: #B8B0A6; --line: #38332E;
+  --burnt-text: #F28500; --teal: #5EC8BD; --teal-bg: #12302D; --ok: #7BC47F; --ok-bg: #16301A; --warn-bg: #3A2A12; --bad: #F2867F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #121110; --surface: #1C1A18; --surface-2: #252220; --ink: #F5F1EA; --ink-2: #B8B0A6; --line: #38332E;
+  --burnt-text: #F28500; --teal: #5EC8BD; --teal-bg: #12302D; --ok: #7BC47F; --ok-bg: #16301A; --warn-bg: #3A2A12; --bad: #F2867F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; margin: 0 0 6px; text-wrap: balance; }
+h1 em { font-family: Fraunces, Georgia, serif; font-style: italic; font-weight: 600; color: var(--burnt-text); }
+.lead { color: var(--ink-2); max-width: 62ch; margin: 0 0 22px; }
+.kicker { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--burnt-text); margin-bottom: 8px; }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; width: max-content; max-width: 100%; margin-bottom: 22px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex-shrink: 0; border: 0; background: none; color: var(--ink-2); font: 700 .85rem Inter, sans-serif; padding: 9px 16px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0,0,0,.1); }
+.tabs button:focus-visible, .opt:focus-within, .btn:focus-visible, .chip:focus-visible { outline: 2px solid var(--tangerine); outline-offset: 2px; }
+.screen { display: none; } .screen.on { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .screen.on { grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); align-items: start; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 22px; min-width: 0; }
+.card h2 { font-size: 1.15rem; margin: 0 0 4px; letter-spacing: -.01em; }
+.sub { color: var(--ink-2); font-size: .875rem; margin: 0 0 16px; }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-bottom: 22px; }
+.step { text-align: center; font-size: .7rem; font-weight: 600; color: var(--ink-2); position: relative; }
+.step b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 6px; background: var(--surface-2); border: 1px solid var(--line); font-size: .8rem; position: relative; z-index: 1; }
+.step::before { content: ""; position: absolute; top: 14px; left: -50%; width: 100%; height: 2px; background: var(--line); }
+.step:first-child::before { display: none; }
+.step.done b { background: var(--ok); border-color: var(--ok); color: #fff; } .step.done::before, .step.cur::before { background: var(--ok); }
+.step.cur b { background: var(--burnt); border-color: var(--burnt); color: var(--on-burnt); } .step.cur { color: var(--ink); }
+.step.new b::after { content: "NEW"; position: absolute; top: -9px; right: -22px; font-size: .55rem; background: var(--tangerine); color: #1C1917; padding: 1px 5px; border-radius: 6px; font-weight: 800; }
+.sum { display: grid; gap: 8px; background: var(--surface-2); border-radius: 16px; padding: 14px 16px; margin-bottom: 18px; font-size: .9rem; }
+.sum div { display: flex; justify-content: space-between; gap: 12px; } .sum span:first-child { color: var(--ink-2); }
+.sum .tot { border-top: 1px dashed var(--line); padding-top: 8px; font-weight: 800; font-size: 1.05rem; }
+.opts { display: grid; gap: 12px; }
+.opt { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 16px; border: 1.5px solid var(--line); border-radius: 18px; cursor: pointer; background: var(--surface); transition: border-color .16s, background-color .16s; }
+.opt:hover { border-color: var(--tangerine); }
+.opt:has(input:checked) { border-color: var(--burnt); background: color-mix(in srgb, var(--burnt) 7%, var(--surface)); box-shadow: 0 0 0 1px var(--burnt); }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; margin-top: 2px; }
+.opt:has(input:checked) .radio { border-color: var(--burnt); } .opt:has(input:checked) .radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--burnt); }
+.opt h3 { margin: 0 0 2px; font-size: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.opt p { margin: 0; color: var(--ink-2); font-size: .85rem; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--teal-bg); color: var(--teal); }
+.pill.o { background: var(--warn-bg); color: var(--burnt-text); } .pill.g { background: var(--ok-bg); color: var(--ok); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { font-size: .75rem; font-weight: 700; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.more { display: none; margin-top: 12px; font-size: .84rem; border-top: 1px dashed var(--line); padding-top: 10px; color: var(--ink-2); }
+.opt:has(input:checked) .more { display: block; }
+.note { display: flex; gap: 10px; font-size: .84rem; color: var(--ink-2); margin-top: 14px; }
+.ms { font-family: 'Material Symbols Outlined', sans-serif; }
+.ico { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; justify-content: space-between; }
+.btn { font: 700 .95rem Inter, sans-serif; border-radius: 999px; padding: 0 22px; min-height: 48px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn.p { background: var(--burnt); border-color: var(--burnt); color: var(--on-burnt); } .btn.p:hover { background: var(--ember); }
+.big { text-align: center; padding: 8px 0 4px; }
+.code { font: 800 1.9rem ui-monospace, Menlo, monospace; letter-spacing: .08em; margin: 6px 0; }
+.tick { width: 54px; height: 54px; border-radius: 50%; background: var(--ok-bg); color: var(--ok); display: grid; place-items: center; margin: 0 auto 8px; }
+.clock { background: var(--warn-bg); color: var(--burnt-text); }
+.fact { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .9rem; } .fact:last-child { border: 0; } .fact span:first-child { color: var(--ink-2); }
+.box { border-radius: 16px; padding: 14px 16px; font-size: .88rem; margin-top: 14px; background: var(--surface-2); }
+.box.t { background: var(--teal-bg); color: var(--ink); } .box.o { background: var(--warn-bg); }
+.side { display: grid; gap: 14px; }
+.side h3 { margin: 0; font-size: .95rem; } .side ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: .86rem; } .side li { margin: 4px 0; }
+.mgr { border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: var(--surface); }
+.mgr .h { background: var(--surface-2); padding: 10px 14px; font-weight: 700; font-size: .85rem; display: flex; justify-content: space-between; gap: 8px; }
+.sw { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line); } .sw:last-child { border: 0; }
+.sw b { display: block; font-size: .92rem; } .sw small { color: var(--ink-2); font-size: .8rem; }
+.tg { width: 44px; height: 26px; border-radius: 99px; background: var(--ok); position: relative; flex-shrink: 0; } .tg::after { content: ""; position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+.tg.off { background: var(--line); } .tg.off::after { right: auto; left: 3px; }
+.q { border-left: 3px solid var(--tangerine); padding: 2px 0 2px 12px; margin: 10px 0; font-size: .86rem; }
+.q b { display: block; }
+.tag-demo { font-size: .7rem; font-weight: 700; color: var(--ink-2); border: 1px dashed var(--line); border-radius: 8px; padding: 2px 8px; }
+</style>
+
+<div class="wrap">
+  <div class="kicker">Mockup · room booking</div>
+  <h1>Pay at the property, or <em>pay online</em></h1>
+  <p class="lead">A visitor booking a room picks how they will pay. The resort still confirms every request by hand. Choose a screen to see each moment, and tick the two options on the first screen.</p>
+
+  <div class="tabs" role="tablist" aria-label="Screens">
+    <button role="tab" aria-selected="true" data-s="a">1 · Choose how to pay</button>
+    <button role="tab" aria-selected="false" data-s="b">2 · Request sent</button>
+    <button role="tab" aria-selected="false" data-s="c">3 · Pay online</button>
+    <button role="tab" aria-selected="false" data-s="d">4 · The resort's side</button>
+  </div>
+
+  <!-- 1: the booking window, new Payment step -->
+  <section class="screen on" id="s-a">
+    <div class="card">
+      <div class="steps" aria-label="Booking steps">
+        <div class="step done"><b>✓</b>Dates &amp; guests</div><div class="step done"><b>✓</b>Rooms</div><div class="step done"><b>✓</b>Your details</div>
+        <div class="step cur new"><b>4</b>Payment</div><div class="step"><b>5</b>Sent</div>
+      </div>
+      <h2>How would you like to pay?</h2>
+      <p class="sub">White Chocolate Hills Resort · 2 nights · 2 guests</p>
+      <div class="sum">
+        <div><span>Family room × 1</span><span>₱3,200 × 2 nights</span></div>
+        <div class="tot"><span>Total</span><span>₱6,400</span></div>
+      </div>
+      <div class="opts" role="radiogroup" aria-label="Payment">
+        <label class="opt">
+          <input type="radio" name="pay" value="property" checked><span class="radio"></span>
+          <div>
+            <h3>Pay at the property <span class="pill">Nothing to pay now</span></h3>
+            <p>Pay the resort when you arrive.</p>
+            <div class="more"><b style="color:var(--ink)">The resort accepts:</b> cash, GCash, bank transfer on arrival.<br>Pay the full ₱6,400 at check-in.</div>
+          </div>
+        </label>
+        <label class="opt">
+          <input type="radio" name="pay" value="online"><span class="radio"></span>
+          <div>
+            <h3>Pay online <span class="pill o">Secure checkout</span></h3>
+            <p>Pay the full amount before you arrive.</p>
+            <div class="chips" aria-label="Ways to pay"><span class="chip">GCash</span><span class="chip">Maya</span><span class="chip">QR Ph</span><span class="chip">Card</span><span class="chip">Bank transfer</span></div>
+            <div class="more">You pay <b style="color:var(--ink)">after the resort confirms</b> your request. We email you the link, and it also waits in My account. Nothing is charged if the resort declines.</div>
+          </div>
+        </label>
+      </div>
+      <div class="note"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg><span>Your choice goes to the resort with your request. You can still change it later from My account until you pay.</span></div>
+      <div class="btnrow"><button class="btn" type="button">Back</button><button class="btn p" type="button" id="send">Send request</button></div>
+    </div>
+    <div class="side">
+      <div class="card"><h3>What changes in the window</h3><ul><li>One new step, <b>Payment</b>, between Your details and Sent. Five steps instead of four.</li><li>The button says what happens: <i>Send request</i> or <i>Send request and pay later</i>.</li><li>A place offers one or both options; with only one, the step shows it already chosen.</li></ul></div>
+      <div class="card"><h3>The two options</h3><ul><li><b>Pay at the property</b> is the booking as it works today.</li><li><b>Pay online</b> reuses the checkout that tickets use (GCash, Maya, QR Ph, card, bank transfer).</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 2: sent -->
+  <section class="screen" id="s-b">
+    <div class="card">
+      <div class="steps"><div class="step done"><b>✓</b>Dates &amp; guests</div><div class="step done"><b>✓</b>Rooms</div><div class="step done"><b>✓</b>Your details</div><div class="step done"><b>✓</b>Payment</div><div class="step cur"><b>5</b>Sent</div></div>
+      <div class="big">
+        <div class="tick clock" aria-hidden="true"><svg class="ico" style="width:28px;height:28px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h2>Request sent</h2>
+        <p class="sub" style="margin:0">The resort will reply by email within 24 hours.</p>
+        <div class="code">LR-7K2M9Q</div>
+      </div>
+      <div class="fact"><span>Dates</span><span>Nov 20 → Nov 22, 2026</span></div>
+      <div class="fact"><span>Total</span><span><b>₱6,400</b></span></div>
+      <div class="fact"><span>Payment</span><span id="payLine"><span class="pill">Pay at the property</span></span></div>
+      <div class="box t" id="payBox"><b>You pay the resort when you arrive: ₱6,400.</b><br>Cash, GCash or bank transfer, as the resort accepts.</div>
+      <div class="btnrow"><a class="btn" href="#">View in My account</a></div>
+    </div>
+    <div class="side">
+      <div class="card"><h3>Switch the choice here</h3>
+        <div class="chips" style="margin-top:10px"><button class="chip" data-pay="property" type="button" style="cursor:pointer">Pay at the property</button><button class="chip" data-pay="online" type="button" style="cursor:pointer">Pay online</button></div>
+        <ul><li>Pay at the property: no money moves through ZTIMS.</li><li>Pay online: the request waits for the resort first, so nobody pays for a room that was never confirmed.</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3: pay online after confirmation -->
+  <section class="screen" id="s-c">
+    <div class="card">
+      <div class="kicker">My account · Bookings</div>
+      <h2>Your room booking <span class="pill g" style="margin-left:6px">Confirmed</span></h2>
+      <p class="sub">LR-7K2M9Q · White Chocolate Hills Resort · Nov 20 → Nov 22, 2026</p>
+      <div class="box o" id="dueBox"><b>Pay ₱6,400 to keep this booking.</b> Pay online by Nov 15, 11:59 PM, or choose to pay at the property.</div>
+      <div id="payPanel">
+        <p class="field" style="font-weight:700;margin:18px 0 8px">Choose a way to pay</p>
+        <div class="chips" style="margin:0 0 14px" id="methods">
+          <button class="chip" type="button" aria-pressed="true" style="cursor:pointer;border-color:var(--burnt);color:var(--burnt-text)">GCash</button>
+          <button class="chip" type="button" style="cursor:pointer">Maya</button><button class="chip" type="button" style="cursor:pointer">QR Ph</button>
+          <button class="chip" type="button" style="cursor:pointer">Card</button><button class="chip" type="button" style="cursor:pointer">Bank transfer</button>
+        </div>
+        <div class="btnrow" style="margin-top:6px"><button class="btn" type="button">Pay at the property instead</button><button class="btn p" type="button" id="paynow">Pay ₱6,400</button></div>
+        <div class="note"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>You will pay on the secure checkout page. ZTIMS never sees your card or wallet details.</span></div>
+      </div>
+      <div id="paidPanel" style="display:none">
+        <div class="big"><div class="tick" aria-hidden="true"><svg class="ico" style="width:28px;height:28px" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>Paid online</h2></div>
+        <div class="fact"><span>Amount</span><span><b>₱6,400</b></span></div>
+        <div class="fact"><span>Paid with</span><span>GCash</span></div>
+        <div class="fact"><span>Paid on</span><span>Nov 14, 2026, 3:12 PM</span></div>
+        <div class="fact"><span>Reference</span><span>PAY-93A1C0</span></div>
+        <div class="box t">Nothing to pay at the property. Show your booking code at check-in.</div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card"><h3>When this appears</h3><ul><li>After the resort presses Confirm, the email carries a <b>Pay now</b> button that opens this screen after sign-in.</li><li>Only a booking that chose <i>Pay online</i> shows it; the visitor can still switch to paying at the property until paid.</li></ul></div>
+      <div class="card"><h3>Money rules shown</h3><ul><li>The server sets the amount from the booking's rates, never the page.</li><li>The payment is confirmed only by asking the payment service itself.</li><li>Cancelling follows the place's free-cancellation days, and a refund goes back the way it came.</li></ul></div>
+      <div class="card"><span class="tag-demo">Test mode demonstration</span><p class="sub" style="margin:8px 0 0">Like tickets today, online room payments would run in the payment service's test mode only.</p></div>
+    </div>
+  </section>
+
+  <!-- 4: manager -->
+  <section class="screen" id="s-d">
+    <div class="card">
+      <div class="kicker">Enterprise Manager · Bookings</div>
+      <h2>A booking, as the resort sees it</h2>
+      <p class="sub">Maria Santos · LR-7K2M9Q · Nov 20 → Nov 22 · Family room × 1</p>
+      <div class="mgr" style="margin-bottom:14px">
+        <div class="h"><span>Payment</span><span class="pill o" id="mgrPill">Pay online · waiting for you to confirm</span></div>
+        <div class="fact" style="padding:12px 16px"><span>Total</span><span><b>₱6,400</b></span></div>
+        <div class="fact" style="padding:12px 16px"><span>Visitor chose</span><span id="mgrChose">Pay online</span></div>
+        <div class="fact" style="padding:12px 16px"><span>Balance</span><span id="mgrBal">₱6,400 (due after you confirm)</span></div>
+      </div>
+      <div class="chips" style="margin:0 0 14px"><button class="chip" data-m="wait" type="button" style="cursor:pointer">Waiting to confirm</button><button class="chip" data-m="paid" type="button" style="cursor:pointer">Paid online</button><button class="chip" data-m="prop" type="button" style="cursor:pointer">Pay at the property</button></div>
+      <div class="box">Check-in with <b>Pay at the property</b> still shows <i>Record payment</i> (cash, GCash, bank), as today. A booking <b>paid online</b> shows <i>Paid ₱6,400 · GCash</i> and needs no action.</div>
+    </div>
+    <div class="side">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="h" style="padding:14px 18px;font-weight:800;background:var(--surface-2)">Rooms → Settings</div>
+        <div class="sw"><div><b>Pay at the property</b><small>Visitors pay you on arrival. Instructions shown to the visitor.</small></div><span class="tg" aria-label="On"></span></div>
+        <div class="sw"><div><b>Pay online</b><small>Visitors pay after you confirm: GCash, Maya, QR Ph, card or bank.</small></div><span class="tg" aria-label="On"></span></div>
+        <div class="sw" style="display:block"><b style="font-size:.85rem">Instructions for paying at the property</b><div class="box" style="margin-top:8px">Cash or GCash (0917 000 0000) at the front desk on arrival.</div></div>
+      </div>
+      <div class="card"><h3>Decisions this needs from you</h3>
+        <div class="q"><b>Whose money?</b>Today the payment account is the municipality's demonstration account. Paying real resorts online would need each resort's own merchant account (or a split-payment setup).</div>
+        <div class="q"><b>When does the visitor pay?</b>Shown here: after the resort confirms. The other way is at request, with an automatic refund if declined.</div>
+        <div class="q"><b>Full amount or a deposit?</b>Shown here: full. A deposit would be a second option.</div>
+        <div class="q"><b>Counts.</b>A payment is never a visitor count; Statistics stay counts only.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.tabs button'), screens = document.querySelectorAll('.screen');
+  function show(id) { tabs.forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.s === id)); }); screens.forEach(function (s) { s.classList.toggle('on', s.id === 's-' + id); }); try { history.replaceState(null, '', '#' + id); } catch (e) {} }
+  tabs.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.s); }); });
+  var h = (location.hash || '').slice(1); if (['a', 'b', 'c', 'd'].indexOf(h) >= 0) show(h);
+  var radios = document.querySelectorAll('input[name=pay]'), send = document.getElementById('send');
+  function sync() { var v = document.querySelector('input[name=pay]:checked').value; send.textContent = v === 'online' ? 'Send request and pay later' : 'Send request'; setPay(v); }
+  function setPay(v) {
+    var line = document.getElementById('payLine'), box = document.getElementById('payBox');
+    if (v === 'online') {
+      line.innerHTML = '<span class="pill o">Pay online</span>';
+      box.className = 'box o'; box.innerHTML = '<b>Pay ₱6,400 online after the resort confirms.</b><br>We will email you the payment link. Nothing is charged if the resort declines.';
+    } else {
+      line.innerHTML = '<span class="pill">Pay at the property</span>';
+      box.className = 'box t'; box.innerHTML = '<b>You pay the resort when you arrive: ₱6,400.</b><br>Cash, GCash or bank transfer, as the resort accepts.';
+    }
+  }
+  radios.forEach(function (r) { r.addEventListener('change', sync); });
+  document.querySelectorAll('[data-pay]').forEach(function (b) { b.addEventListener('click', function () { setPay(b.dataset.pay); }); });
+  document.querySelectorAll('#methods .chip').forEach(function (c) { c.addEventListener('click', function () { document.querySelectorAll('#methods .chip').forEach(function (x) { x.style.borderColor = ''; x.style.color = ''; x.removeAttribute('aria-pressed'); }); c.style.borderColor = 'var(--burnt)'; c.style.color = 'var(--burnt-text)'; c.setAttribute('aria-pressed', 'true'); }); });
+  document.getElementById('paynow').addEventListener('click', function () {
+    document.getElementById('payPanel').style.display = 'none'; document.getElementById('dueBox').style.display = 'none'; document.getElementById('paidPanel').style.display = 'block';
+  });
+  var M = { wait: ['Pay online · waiting for you to confirm', 'pill o', 'Pay online', '₱6,400 (due after you confirm)'], paid: ['Paid online · GCash', 'pill g', 'Pay online', '₱0, paid in full'], prop: ['Pay at the property', 'pill', 'Pay at the property', '₱6,400 (collect on arrival)'] };
+  document.querySelectorAll('[data-m]').forEach(function (b) { b.addEventListener('click', function () { var m = M[b.dataset.m], p = document.getElementById('mgrPill'); p.textContent = m[0]; p.className = m[1]; document.getElementById('mgrChose').textContent = m[2]; document.getElementById('mgrBal').textContent = m[3]; }); });
+  sync();
+})();
+</script>
