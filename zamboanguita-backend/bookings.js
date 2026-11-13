@@ -31,6 +31,7 @@ const crypto = require('crypto');
 const { query, transaction } = require('./db');
 const { spots: Spot, BOOKING_PAYMENT_METHODS } = require('./models');
 const notices = require('./notices');
+const bookingPay = require('./booking-payments');
 const { requireVisitor, checkoutDetails } = require('./visitors');
 
 const MANILA_OFFSET_HOURS = 8;
@@ -76,7 +77,8 @@ const normaliseCode = code => String(code || '').toUpperCase().replace(/[^A-Z0-9
 
 const DEFAULTS = {
     accepts_bookings: false, paused_by_office: false, response_hours: 24, check_in_time: '14:00', check_out_time: '12:00',
-    min_nights: 1, max_nights: 14, advance_days: 180, free_cancel_days: 2, payment_instructions: '', updated_at: null
+    min_nights: 1, max_nights: 14, advance_days: 180, free_cancel_days: 2, payment_instructions: '', updated_at: null,
+    allow_pay_at_property: true, allow_pay_online: false
 };
 
 function shapeSettings(row) {
@@ -86,7 +88,10 @@ function shapeSettings(row) {
         open: Boolean(r.accepts_bookings && !r.paused_by_office),
         responseHours: r.response_hours, checkInTime: hhmm(r.check_in_time), checkOutTime: hhmm(r.check_out_time),
         minNights: r.min_nights, maxNights: r.max_nights, advanceDays: r.advance_days, freeCancelDays: r.free_cancel_days,
-        paymentInstructions: r.payment_instructions, updatedAt: r.updated_at
+        paymentInstructions: r.payment_instructions, updatedAt: r.updated_at,
+        // The ways the resort takes payment (booking-payments.js): at the
+        // property, and/or online once it confirms.
+        allowPayAtProperty: r.allow_pay_at_property, allowPayOnline: r.allow_pay_online
     };
 }
 
@@ -249,6 +254,7 @@ async function describeForVisitor(b) {
     const settings = await settingsFor(b.spot_id);
     const window = changeWindow(b.check_in, settings.freeCancelDays);
     const live = ['requested', 'confirmed'].includes(b.status);
+    const payment = await bookingPay.paymentState(b, settings);
     const why = b.status === 'checked_in' || b.status === 'completed' ? 'This stay has started, so it can no longer be changed here.'
         : b.status === 'declined' ? 'The resort declined this request.'
         : b.status === 'expired' ? 'The resort did not answer in time, so this request expired.'
@@ -269,8 +275,11 @@ async function describeForVisitor(b) {
         changeUntil: window.lastDay, today: manilaToday(),
         // The resort's limits, for the new-dates pickers (the server checks them again).
         minNights: settings.minNights, maxNights: settings.maxNights, lastCheckIn: addDays(manilaToday(), settings.advanceDays),
-        canMove: live && window.open && settings.open, canCancel: live && window.open,
-        why: why || (live && window.open && !settings.open ? 'The resort is not taking bookings right now, so the dates cannot be moved. You can still cancel.' : '')
+        payment,
+        // A booking paid online keeps its dates: cancel (refunded in full) and book again.
+        canMove: live && window.open && settings.open && !payment.hasOnlinePayment, canCancel: live && window.open,
+        why: why || (live && window.open && !settings.open ? 'The resort is not taking bookings right now, so the dates cannot be moved. You can still cancel.' : ''),
+        moveWhy: live && window.open && payment.hasOnlinePayment ? 'A booking paid online cannot be moved. Cancel it for a full refund, then book the new dates.' : ''
     };
 }
 
@@ -280,7 +289,7 @@ async function visitorMove(found, body, origin) {
     const checkIn = String((body && body.checkIn) || '').trim();
     const checkOut = String((body && body.checkOut) || '').trim();
     const view = await describeForVisitor(found);
-    if (!view.canMove) throw problem(409, view.why || 'This booking can no longer be moved.');
+    if (!view.canMove) throw problem(409, view.moveWhy || view.why || 'This booking can no longer be moved.');
     if (checkIn === found.check_in && checkOut === found.check_out) throw problem(400, 'Those are already the booking\'s dates.');
     const settings = await settingsFor(found.spot_id);
     const nights = checkStay(settings, checkIn, checkOut);
@@ -305,6 +314,9 @@ async function visitorMove(found, body, origin) {
 async function visitorCancel(found, origin) {
     const view = await describeForVisitor(found);
     if (!view.canCancel) throw problem(409, view.why || 'This booking can no longer be cancelled.');
+    // Paid online: the money goes back in full first (within the free
+    // window), so a cancelled booking never keeps a payment.
+    const refunded = await bookingPay.refundOnline(found.id, 'Cancelled by the guest', 'the guest (Manage page)');
     await transaction(async client => {
         const { rows } = await query(`
             update bookings set status = 'cancelled', decided_at = now(), decided_by_email = $2
@@ -312,8 +324,8 @@ async function visitorCancel(found, origin) {
         if (!rows.length) throw problem(409, 'This booking changed just now. Look it up again.');
         await logChange(client, found.id, 'cancelled', { status: found.status }, snapshot(rows[0]), 'the guest (Manage page)');
     });
-    const told = await notices.bookingCancelled(found.id, { byGuest: true }, origin);
-    return { emailed: told.sent };
+    const told = await notices.bookingCancelled(found.id, { byGuest: true, refunded }, origin);
+    return { emailed: told.sent, refunded };
 }
 
 /* ------------------------------------------------------------------ router */
@@ -401,6 +413,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                     maxNights: settings.maxNights, advanceDays: settings.advanceDays, freeCancelDays: settings.freeCancelDays,
                     responseHours: settings.responseHours
                 },
+                payment: bookingPay.optionsFor(settings),
                 rooms: rows.map(shapeRoom).map(({ active, units, position, ...room }) => room)
             });
         } catch (error) { return fail(res, error, '❌ Rooms read failure:'); }
@@ -456,6 +469,13 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             const checkIn = String(body.checkIn || ''), checkOut = String(body.checkOut || '');
             const nights = checkStay(settings, checkIn, checkOut);
 
+            // How the guest will pay: one of the ways this resort takes now.
+            const options = bookingPay.optionsFor(settings);
+            const paymentChoice = String(body.paymentChoice || (options.atProperty ? 'property' : 'online'));
+            if (paymentChoice !== 'property' && paymentChoice !== 'online') throw problem(400, 'Choose how you will pay.');
+            if (paymentChoice === 'property' && !options.atProperty) throw problem(409, 'This place takes online payment only. Choose Pay online.');
+            if (paymentChoice === 'online' && !options.online) throw problem(409, 'Online payment is not available for this place just now. Choose Pay at the property.');
+
             const list = Array.isArray(body.rooms) ? body.rooms : [];
             if (!list.length) throw problem(400, 'Choose at least one room.');
             if (list.length > MAX_ROOM_LINES) throw problem(400, 'Too many kinds of room in one request.');
@@ -479,17 +499,18 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                 // The price comes from the room types now, never from the page.
                 const priced = lines.map(l => ({ ...l, rate: money(free.get(l.roomTypeId).base_rate) }));
                 const total = money(priced.reduce((sum, l) => sum + l.units * l.rate * nights, 0));
+                if (paymentChoice === 'online' && total < 20) throw problem(400, 'This stay is too small to pay online. Choose Pay at the property.');
                 let row = null;
                 for (let attempt = 0; attempt < 5 && !row; attempt++) {
                     try {
                         await query('savepoint booking_code', [], client);
                         ({ rows: [row] } = await query(`
                             insert into bookings (code, spot_id, guest_name, email, phone, country_code, adults, children,
-                                                  check_in, check_out, total_amount, note, expires_at, visitor_id)
-                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now() + make_interval(hours => $13), $14)
+                                                  check_in, check_out, total_amount, note, expires_at, visitor_id, payment_choice)
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now() + make_interval(hours => $13), $14, $15)
                             returning *`,
                             [newBookingCode(spot.title), spot._id, guestName, email, phone, countryCode, adults, children,
-                                checkIn, checkOut, total, note, settings.responseHours, visitorId], client));
+                                checkIn, checkOut, total, note, settings.responseHours, visitorId, paymentChoice], client));
                     } catch (error) {
                         if (error.code !== '23505' && error.code !== 11000) throw error;   // a code already used: draw again
                         await query('rollback to savepoint booking_code', [], client);
@@ -581,6 +602,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                  where rt.spot_id = $1 and k.ends_on >= $2 order by k.starts_on`, [spot.id, manilaToday()]);
             return res.json({
                 settings: await settingsFor(spot.id),
+                onlinePaymentAvailable: bookingPay.optionsFor({ allowPayOnline: true }).online,
                 rooms: rooms.map(shapeRoom),
                 blocks: blocks.map(k => ({ _id: k.id, roomTypeId: k.room_type_id, startsOn: k.starts_on, endsOn: k.ends_on, units: k.units, reason: k.reason }))
             });
@@ -654,18 +676,23 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             if (freeCancelDays === null) throw problem(400, 'Free cancellation: 0 to 60 days before check-in.');
             const paymentInstructions = String(pick('paymentInstructions', current.paymentInstructions)).trim();
             if (paymentInstructions.length > 2000) throw problem(400, 'Keep the payment instructions to 2000 characters.');
-            if (accepts && !paymentInstructions) throw problem(400, 'Write how guests pay you before taking bookings.');
+            const allowPayAtProperty = pick('allowPayAtProperty', current.allowPayAtProperty);
+            const allowPayOnline = pick('allowPayOnline', current.allowPayOnline);
+            if (typeof allowPayAtProperty !== 'boolean' || typeof allowPayOnline !== 'boolean') throw problem(400, 'Say which ways guests may pay.');
+            if (!allowPayAtProperty && !allowPayOnline) throw problem(400, 'Keep at least one way to pay switched on.');
+            if (accepts && allowPayAtProperty && !paymentInstructions) throw problem(400, 'Write how guests pay you at the property before taking bookings.');
             const by = await managerEmail(req);
             // The office's pause is not the manager's to lift: it is left as it is.
             await query(`
                 insert into enterprise_booking_settings
                     (spot_id, accepts_bookings, response_hours, check_in_time, check_out_time, min_nights, max_nights,
-                     advance_days, free_cancel_days, payment_instructions, updated_by_email)
-                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                     advance_days, free_cancel_days, payment_instructions, updated_by_email, allow_pay_at_property, allow_pay_online)
+                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                 on conflict (spot_id) do update set accepts_bookings = $2, response_hours = $3, check_in_time = $4,
                     check_out_time = $5, min_nights = $6, max_nights = $7, advance_days = $8, free_cancel_days = $9,
-                    payment_instructions = $10, updated_by_email = $11`,
-                [spot.id, accepts, responseHours, checkInTime, checkOutTime, minNights, maxNights, advanceDays, freeCancelDays, paymentInstructions, by]);
+                    payment_instructions = $10, updated_by_email = $11, allow_pay_at_property = $12, allow_pay_online = $13`,
+                [spot.id, accepts, responseHours, checkInTime, checkOutTime, minNights, maxNights, advanceDays, freeCancelDays, paymentInstructions, by,
+                    allowPayAtProperty, allowPayOnline]);
             return res.json({ success: true, message: 'Saved.', settings: await settingsFor(spot.id) });
         } catch (error) { return fail(res, error, '❌ Booking settings failure:'); }
     });
@@ -752,8 +779,11 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             rooms, totalAmount: money(b.total_amount), note: b.note,
             requestedAt: b.requested_at, expiresAt: b.expires_at, decidedAt: b.decided_at, decidedByEmail: b.decided_by_email,
             declineReason: b.decline_reason, createdAt: b.created_at,
-            payments: paid.map(p => ({ _id: p.id, amount: money(p.amount), method: p.method, receivedOn: p.received_on, reference: p.reference, recordedByEmail: p.recorded_by_email })),
-            paidTotal: money(paid.reduce((s, p) => s + Number(p.amount), 0)),
+            paymentChoice: b.payment_choice,
+            payments: paid.map(p => ({ _id: p.id, amount: money(p.amount), method: p.method, receivedOn: p.received_on, reference: p.reference,
+                recordedByEmail: p.recorded_by_email, channel: p.channel, refundedAt: p.refunded_at,
+                refundAmount: p.refund_amount == null ? null : money(p.refund_amount) })),
+            paidTotal: money(paid.reduce((s, p) => s + Number(p.amount) - Number(p.refund_amount || 0), 0)),
             changes: changes.map(c => ({ action: c.action, before: c.before, after: c.after, byEmail: c.by_email, at: c.at })),
             // At check-in the Guest Register entry is filled from the booking;
             // the manager adds male and female and saves it (statistics.js).
@@ -779,7 +809,8 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             if (req.query.when === 'upcoming') { params.push(manilaToday()); where += ` and b.check_out >= $${params.length}`; }
             if (req.query.when === 'past') { params.push(manilaToday()); where += ` and b.check_out < $${params.length}`; }
             const { rows } = await query(`
-                select b.*, coalesce((select sum(p.amount) from booking_payments p where p.booking_id = b.id), 0) as paid,
+                select b.*, coalesce((select sum(p.amount - coalesce(p.refund_amount, 0)) from booking_payments p where p.booking_id = b.id), 0) as paid,
+                       exists (select 1 from booking_payments p where p.booking_id = b.id and p.channel = 'online' and p.refunded_at is null) as paid_online,
                        (select string_agg(br.units || ' × ' || rt.name, ', ' order by rt.position)
                           from booking_rooms br join room_types rt on rt.id = br.room_type_id where br.booking_id = b.id) as rooms_text
                   from bookings b ${where}
@@ -788,6 +819,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                 _id: b.id, code: b.code, status: b.status, guestName: b.guest_name, countryCode: b.country_code,
                 adults: b.adults, children: b.children, checkIn: b.check_in, checkOut: b.check_out, nights: b.nights,
                 roomsText: b.rooms_text || '', totalAmount: money(b.total_amount), paid: money(b.paid),
+                paymentChoice: b.payment_choice, paidOnline: b.paid_online,
                 requestedAt: b.requested_at, expiresAt: b.expires_at
             })));
         } catch (error) { return fail(res, error, '❌ Bookings list failure:'); }
@@ -971,3 +1003,4 @@ module.exports.describeForVisitor = describeForVisitor;
 module.exports.visitorMove = visitorMove;
 module.exports.visitorCancel = visitorCancel;
 module.exports.manilaToday = manilaToday;
+module.exports.settingsFor = settingsFor;

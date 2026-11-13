@@ -148,6 +148,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             const found = await load(req);
             if (found.kind === 'booking') {
                 await bookings.sweepBookings(siteOrigin(req)).catch(error => console.error('❌ Booking sweep failure:', error));
+                // Back from paying online: the payment shows at once.
+                await require('./booking-payments').settlePendingFor(found.record.id, siteOrigin(req)).catch(() => {});
                 const fresh = await load(req);
                 return res.json({ success: true, item: await bookings.describeForVisitor(fresh.record) });
             }
@@ -195,7 +197,8 @@ module.exports = function manageRouter({ sharedRateLimit, refund, siteOrigin }) 
             if (found.kind === 'booking') {
                 const done = await bookings.visitorCancel(found.record, siteOrigin(req));
                 const fresh = await load(req);
-                return res.json({ success: true, emailed: done.emailed, message: 'Cancelled. The resort has been told.',
+                return res.json({ success: true, emailed: done.emailed, refunded: done.refunded,
+                    message: done.refunded ? `Cancelled. ₱${done.refunded.toLocaleString('en-PH')} is on its way back to you. The resort has been told.` : 'Cancelled. The resort has been told.',
                     item: await bookings.describeForVisitor(fresh.record) });
             }
             const view = await describe(found);

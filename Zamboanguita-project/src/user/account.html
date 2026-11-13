@@ -491,8 +491,11 @@ async function loadBookings() {
                 <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(b.spot._id)}">${esc(b.enterpriseName || b.spot.title)}</a></p>
                 <p class="ac-row__facts">${day(b.checkIn)} to ${day(b.checkOut)} · ${plural(b.nights, 'night')} · ${plural(b.adults + b.children, 'guest')} · ${peso(b.totalAmount)}</p>
                 <p class="ac-row__code">${esc(b.code)}</p>
+                <p class="ac-row__facts">${b.paidOnline ? 'Paid online' : b.paymentChoice === 'online' ? 'Pay online' : 'Pay at the property'}</p>
             </div>
             <div class="ac-row__side">${pill(BOOKING[b.status] || [b.status, 'neutral'])}
+                ${b.status === 'confirmed' && b.paymentChoice === 'online' && b.owed > 0
+                    ? `<a class="btn btn-pill btn-primary min-h-[40px]" href="../manage.html?code=${encodeURIComponent(b.code)}">Pay ${peso(b.owed)}</a>` : ''}
                 ${['requested', 'confirmed'].includes(b.status) ? `<a class="ac-link" href="../manage.html?code=${encodeURIComponent(b.code)}">Move or cancel</a>` : ''}</div>
         </article>`;
     const next = r.data.filter(b => b.checkOut >= today).reverse(), past = r.data.filter(b => b.checkOut < today);

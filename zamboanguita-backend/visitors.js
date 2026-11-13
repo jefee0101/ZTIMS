@@ -563,7 +563,9 @@ function visitorsRouter({ sharedRateLimit, emailTakenBy, siteOrigin }) {
     router.get('/visitors/me/bookings', requireVisitor, async (req, res) => {
         try {
             const { rows } = await query(`
-                select b.id, b.code, b.check_in, b.check_out, b.nights, b.adults, b.children, b.status, b.total_amount, b.created_at,
+                select b.id, b.code, b.check_in, b.check_out, b.nights, b.adults, b.children, b.status, b.total_amount, b.created_at, b.payment_choice,
+                       coalesce((select sum(p.amount - coalesce(p.refund_amount, 0)) from booking_payments p where p.booking_id = b.id), 0) as paid,
+                       exists (select 1 from booking_payments p where p.booking_id = b.id and p.channel = 'online' and p.refunded_at is null) as paid_online,
                        s.id as spot_id, s.title as spot_title, coalesce(nullif(s.enterprise_name, ''), s.title) as enterprise_name
                   from bookings b join spots s on s.id = b.spot_id
                  where b.visitor_id = $1
@@ -571,7 +573,9 @@ function visitorsRouter({ sharedRateLimit, emailTakenBy, siteOrigin }) {
             return res.json(rows.map(b => ({
                 _id: b.id, code: b.code, checkIn: b.check_in, checkOut: b.check_out, nights: b.nights, adults: b.adults, children: b.children,
                 status: b.status, totalAmount: Number(b.total_amount), spot: { _id: b.spot_id, title: b.spot_title },
-                enterpriseName: b.enterprise_name, createdAt: b.created_at
+                enterpriseName: b.enterprise_name, createdAt: b.created_at,
+                paymentChoice: b.payment_choice, paidOnline: b.paid_online,
+                owed: Math.max(0, Math.round((Number(b.total_amount) - Number(b.paid)) * 100) / 100)
             })));
         } catch (error) { return fail(res, error, '❌ Visitor bookings failure:'); }
     });

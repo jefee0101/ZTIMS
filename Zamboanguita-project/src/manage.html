@@ -468,6 +468,49 @@ body { overflow-x: hidden; }
                 <h2 class="font-bold text-on-surface">How to pay ${esc(place)}</h2>
                 <p class="text-sm text-on-surface whitespace-pre-line">${esc(b.paymentInstructions)}</p>
             </div>` : '';
+        // Pay at the property, or online once the resort confirms (booking-payments.js).
+        const p = b.payment || {};
+        const live = b.status === 'requested' || b.status === 'confirmed';
+        const switchBtn = p.canSwitchToProperty ? '<button type="button" data-pay-choice="property" class="btn btn-pill btn-secondary min-h-[44px]">Pay at the property instead</button>'
+            : p.canSwitchToOnline ? '<button type="button" data-pay-choice="online" class="btn btn-pill btn-secondary min-h-[44px]">Pay online instead</button>' : '';
+        const paidRows = (p.paidOnline || []).map(x => `
+                <div>${row('Paid online', `<b>${wholePeso(x.amount)}</b>`)}${row('Paid with', esc(METHOD[x.method] || 'Online'))}${row('Paid on', niceDate(x.paidOn))}${row('Reference', `<span class="font-mono">${esc(x.reference)}</span>`)}</div>`).join('')
+            + (p.refunded || []).map(x => row('Refunded', `${wholePeso(x.amount)}`)).join('');
+        let payBox = '';
+        if (p.hasOnlinePayment) {
+            payBox = `
+            <div class="space-y-2 border-t border-outline-variant/30 pt-4" id="payPanel">
+                <div class="flex items-center gap-2"><span class="material-symbols-outlined tone-success rounded-full p-1" aria-hidden="true">check</span>
+                    <h2 class="font-bold text-on-surface">Paid online</h2></div>
+                ${paidRows}
+                ${p.owed > 0 ? `<p class="text-sm">Still to pay: <b>${wholePeso(p.owed)}</b>.</p>` : '<p class="rb-pay__box">Nothing to pay at the property. Show your booking code at check-in.</p>'}
+                ${p.canPayOnline ? `<button type="button" id="payNowBtn" class="btn btn-pill btn-primary min-h-[44px]">Pay ${wholePeso(p.owed)}</button>` : ''}
+            </div>`;
+        } else if (p.choice === 'online' && live) {
+            payBox = `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4" id="payPanel">
+                <h2 class="font-bold text-on-surface">Payment</h2>
+                ${b.status === 'requested'
+                    ? `<p class="rb-pay__box rb-pay__box--due"><b>You pay ${wholePeso(p.owed)} online after ${esc(place)} confirms.</b> Nothing is charged if it declines.</p>`
+                    : p.canPayOnline
+                        ? `<p class="rb-pay__box rb-pay__box--due"><b>Pay ${wholePeso(p.owed)} online.</b> GCash, Maya, QR Ph, card or bank transfer, on the secure checkout page.</p>`
+                        : `<p class="text-sm tone-warning">Online payment is not available just now. You can pay at the property.</p>`}
+                <div class="flex flex-wrap gap-2">
+                    ${switchBtn}
+                    ${p.canPayOnline ? `<button type="button" id="payNowBtn" class="btn btn-pill btn-primary min-h-[44px]">Pay ${wholePeso(p.owed)}</button>` : ''}
+                </div>
+                ${p.canPayOnline ? '<p class="text-support flex gap-2"><span class="material-symbols-outlined !text-base" aria-hidden="true">lock</span>You pay on the payment service\'s secure page. ZTIMS never sees your card or wallet details.</p>' : ''}
+            </div>`;
+        } else if (live) {
+            payBox = `
+            <div class="space-y-3 border-t border-outline-variant/30 pt-4" id="payPanel">
+                <h2 class="font-bold text-on-surface">Payment</h2>
+                <p class="rb-pay__box"><b>You pay the resort when you arrive${p.owed ? `: ${wholePeso(p.owed)}` : ''}.</b>${b.status === 'requested' ? ' How to pay comes with its confirmation.' : ''}</p>
+                ${switchBtn ? `<div class="flex flex-wrap gap-2">${switchBtn}</div>` : ''}
+            </div>`;
+        } else if ((p.refunded || []).length) {
+            payBox = `<div class="border-t border-outline-variant/30 pt-4">${paidRows}</div>`;
+        }
         const nightsLimit = b.minNights === b.maxNights ? plural(b.minNights, 'night') : `${b.minNights} to ${b.maxNights} nights`;
         const moveForm = b.canMove ? `
             <form id="bookingMoveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
@@ -484,7 +527,7 @@ body { overflow-x: hidden; }
         const cancelForm = b.canCancel ? `
             <div class="space-y-3 border-t border-outline-variant/30 pt-4">
                 <h2 class="font-bold text-on-surface">Cancel</h2>
-                <p class="text-sm text-on-surface-variant">The resort is told and the rooms are freed. This cannot be undone.</p>
+                <p class="text-sm text-on-surface-variant">The resort is told and the rooms are freed.${p.hasOnlinePayment ? ` Your online payment of <b>${wholePeso(p.paidTotal)}</b> is returned in full.` : ''} This cannot be undone.</p>
                 <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this booking</button>
             </div>` : '';
         box.innerHTML = `
@@ -495,7 +538,9 @@ body { overflow-x: hidden; }
             </div>
             ${state}
             <div>${details.join('')}</div>
-            ${pay}
+            ${payBox}
+            ${p.choice === 'online' ? '' : pay}
+            ${b.moveWhy ? `<p class="text-sm tone-warning">${esc(b.moveWhy)}</p>` : ''}
             ${b.canMove || b.canCancel
                 ? `<p class="text-support">You can change this until 11:59 PM on ${niceDate(b.changeUntil)}.</p>${b.why ? `<p class="text-sm tone-warning">${esc(b.why)}</p>` : ''}`
                 : (b.why ? `<p class="text-sm tone-warning">${esc(b.why)}</p>` : '')}
@@ -524,6 +569,23 @@ body { overflow-x: hidden; }
                 }
             });
         }
+        const payNow = document.getElementById('payNowBtn');
+        if (payNow) payNow.addEventListener('click', async () => {
+            payNow.disabled = true;
+            showError('actionError', '');
+            try {
+                const result = await call('/bookings/pay');
+                location.assign(result.payUrl);
+            } catch (error) { showError('actionError', error.message); payNow.disabled = false; }
+        });
+        box.querySelectorAll('[data-pay-choice]').forEach(btn => btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            showError('actionError', '');
+            try {
+                const result = await call('/bookings/payment-choice', { choice: btn.dataset.payChoice });
+                render(result.item, result.message);
+            } catch (error) { showError('actionError', error.message); btn.disabled = false; }
+        }));
         wireActions({});
     }
 
@@ -596,12 +658,20 @@ body { overflow-x: hidden; }
     }
 
     // Signed in, with a code: open it. Without a code, the list is My account.
-    const code = new URLSearchParams(window.location.search).get('code') || '';
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code') || '';
+    // Back from the payment page: ?paid=<checkout> (and &cancelled=1 when they left it).
+    const backFromPay = params.has('paid'), payLeft = params.get('cancelled') === '1';
     if (!token) { signIn(); return; }
     if (!code) { location.replace('user/account.html#tickets'); return; }
     current = { code };
     call('/manage/lookup')
-        .then(result => render(result.item))
+        .then(result => {
+            const paidNow = backFromPay && result.item.payment && result.item.payment.hasOnlinePayment;
+            render(result.item, paidNow ? 'Payment received. Thank you.' : '');
+            if (backFromPay && !paidNow) showError('actionError', payLeft ? 'The payment was not completed. You can try again.' : 'We have not received the payment yet. If you paid, refresh in a minute.');
+            if (backFromPay) history.replaceState(null, '', location.pathname + '?code=' + encodeURIComponent(code));
+        })
         .catch(error => showError('findError', error.message));
 })();
 </script>

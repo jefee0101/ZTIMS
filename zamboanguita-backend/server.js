@@ -2691,6 +2691,8 @@ app.use('/api', require('./reviews')({ requireAdmin, sharedRateLimit }));
 
 /* Room booking at private places to stay (bookings.js): visitors ask, the
    resort's manager confirms by hand, the officer sees counts and can pause. */
+// Pay at the property or pay online (booking-payments.js), before bookings.js's routes.
+app.use('/api', require('./booking-payments')({ sharedRateLimit, siteOrigin: paymentsModule.siteOrigin }));
 const bookingsModule = require('./bookings');
 app.use('/api', bookingsModule({
     requireAdmin, requireEstablishmentManager, sharedRateLimit, isPubliclyVisible,

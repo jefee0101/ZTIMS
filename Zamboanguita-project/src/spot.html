@@ -926,7 +926,8 @@ body { overflow-x: hidden; }
        A request, not a sale: the resort confirms or declines by email, and its
        payment instructions come with the confirmation. The server prices the
        stay and checks every rule again; this only shows them first. Steps:
-       Dates and guests → Rooms (only what is free) → Your details → Sent. */
+       Dates and guests → Rooms (only what is free) → Your details → Payment
+       (at the property, or online once the resort confirms) → Sent. */
     const manilaDay = (offsetDays = 0) => new Date(Date.now() + (8 + 24 * offsetDays) * 3600 * 1000).toISOString().slice(0, 10);
     const addDay = (key, n) => { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
     const nightsFrom = (a, b) => Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000);
@@ -946,6 +947,8 @@ body { overflow-x: hidden; }
         const rules = offer.rules;
         const place = offer.spot.enterpriseName || spot.title;
         const times = `Check-in from ${clock12(rules.checkInTime)} · check-out by ${clock12(rules.checkOutTime)}`;
+        // The ways this resort takes payment now (the server checks again).
+        const pay = offer.payment || { atProperty: true, online: false };
 
         // Book a room replaces the resort's own booking link.
         actions.rooms = true;
@@ -1029,7 +1032,33 @@ body { overflow-x: hidden; }
                         <div class="rb-trap" aria-hidden="true"><label>Website <input id="rbWebsite" type="text" tabindex="-1" autocomplete="off"/></label></div>
                     </div>
 
-                    <div data-rb-step="3" hidden class="rb-sent" aria-live="polite"></div>
+                    <div data-rb-step="3" hidden class="bk-group">
+                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">payments</span>How would you like to pay?</h3>
+                        <div class="rb-pay" role="radiogroup" aria-label="Payment">
+                            ${pay.atProperty ? `
+                            <label class="rb-pay__opt">
+                                <input type="radio" name="rbPay" value="property"${pay.atProperty ? ' checked' : ''}/><span class="rb-pay__radio" aria-hidden="true"></span>
+                                <span class="rb-pay__body">
+                                    <span class="rb-pay__title">Pay at the property <span class="rb-pay__pill rb-pay__pill--teal">Nothing to pay now</span></span>
+                                    <span class="rb-pay__text">Pay the resort when you arrive.</span>
+                                    <span class="rb-pay__more">How to pay comes with the resort's confirmation.</span>
+                                </span>
+                            </label>` : ''}
+                            ${pay.online ? `
+                            <label class="rb-pay__opt">
+                                <input type="radio" name="rbPay" value="online"${pay.atProperty ? '' : ' checked'}/><span class="rb-pay__radio" aria-hidden="true"></span>
+                                <span class="rb-pay__body">
+                                    <span class="rb-pay__title">Pay online <span class="rb-pay__pill">Secure checkout</span></span>
+                                    <span class="rb-pay__text">Pay the full amount before you arrive.</span>
+                                    <span class="rb-pay__chips" aria-label="Ways to pay"><span>GCash</span><span>Maya</span><span>QR Ph</span><span>Card</span><span>Bank transfer</span></span>
+                                    <span class="rb-pay__more">You pay <b>after the resort confirms</b> your request. We email you the link, and it waits in My account. Nothing is charged if the resort declines.</span>
+                                </span>
+                            </label>` : ''}
+                        </div>
+                        <p class="rb-pay__note"><span class="material-symbols-outlined" aria-hidden="true">info</span>You can change this from My account until you pay.</p>
+                    </div>
+
+                    <div data-rb-step="4" hidden class="rb-sent" aria-live="polite"></div>
 
                     <div id="rbSummary" class="bk-summary mt-5" aria-live="polite" hidden>
                         <div id="rbLines" class="space-y-1"></div>
@@ -1056,15 +1085,15 @@ body { overflow-x: hidden; }
         function show(step) {
             state.step = step;
             modal.querySelectorAll('[data-rb-step]').forEach(p => { p.hidden = Number(p.dataset.rbStep) !== step; });
-            $('rbSteps').innerHTML = journeySteps(['Dates and guests', 'Rooms', 'Your details', 'Sent'], step);
-            $('rbBack').hidden = step === 0 || step === 3;
-            $('rbSummary').hidden = !(step === 1 || step === 2);
+            $('rbSteps').innerHTML = journeySteps(['Dates and guests', 'Rooms', 'Your details', 'Payment', 'Sent'], step);
+            $('rbBack').hidden = step === 0 || step === 4;
+            $('rbSummary').hidden = !(step >= 1 && step <= 3);
             $('rbPrivacy').hidden = step !== 2;
-            $('rbNextLabel').textContent = ['See free rooms', 'Continue', 'Send request', 'Done'][step];
+            $('rbNextLabel').textContent = ['See free rooms', 'Continue', 'Continue', sendLabel(), 'Done'][step];
             // Each step starts usable; the rooms step's own rule may hold it back.
             $('rbNext').disabled = false;
             say('');
-            if (step === 1 || step === 2) summarise();
+            if (step >= 1 && step <= 3) summarise();
             modal.firstElementChild.scrollTop = 0;
         }
 
@@ -1141,6 +1170,10 @@ body { overflow-x: hidden; }
             }));
         }
 
+        const payChoice = () => { const picked = modal.querySelector('input[name="rbPay"]:checked'); return picked ? picked.value : 'property'; };
+        const sendLabel = () => payChoice() === 'online' ? 'Send request and pay later' : 'Send request';
+        modal.querySelectorAll('input[name="rbPay"]').forEach(r => r.addEventListener('change', () => { if (state.step === 3) $('rbNextLabel').textContent = sendLabel(); }));
+
         const chosen = () => state.rooms.filter(r => state.picks[r._id] > 0).map(r => ({ room: r, units: state.picks[r._id] }));
         function summarise() {
             const lines = chosen();
@@ -1168,11 +1201,18 @@ body { overflow-x: hidden; }
             } catch (e) { $('rbCountry').innerHTML = '<option value="">Could not load the list. Close and try again.</option>'; }
         }
 
-        /* Step 2 → Sent. */
-        async function send() {
+        /* Step 2 → Payment. */
+        function checkDetails() {
             const phone = $('rbPhone').value.trim();
             if (!$('rbPhoneRow').hidden && phone.replace(/[^0-9]/g, '').length < 7) return say('Give a phone number the resort can call.');
             if (!$('rbCountryRow').hidden && !$('rbCountry').value) return say('Choose the country where you live.');
+            show(3);
+        }
+
+        /* Step 3 → Sent. */
+        async function send() {
+            const phone = $('rbPhone').value.trim();
+            const choice = payChoice();
             const button = $('rbNext');
             button.disabled = true;
             $('rbNextLabel').textContent = 'Sending…';
@@ -1180,7 +1220,7 @@ body { overflow-x: hidden; }
                 const response = await fetch(`${API_BASE}/bookings`, {
                     method: 'POST', headers: visitorHeaders(),
                     body: JSON.stringify({
-                        spotId: spot._id, phone, countryCode: $('rbCountry').value,
+                        spotId: spot._id, phone, countryCode: $('rbCountry').value, paymentChoice: choice,
                         adults: Number($('rb-adults').value) || 0, children: Number($('rb-children').value) || 0,
                         checkIn: $('rbIn').value, checkOut: $('rbOut').value, note: $('rbNote').value.trim(),
                         rooms: chosen().map(l => ({ roomTypeId: l.room._id, units: l.units })), website: $('rbWebsite').value
@@ -1188,13 +1228,13 @@ body { overflow-x: hidden; }
                 });
                 const result = await response.json().catch(() => ({}));
                 if (response.status === 401) { location.assign(signInFor('rooms')); return; }
-                if (result.code === 'PROFILE_INCOMPLETE') { $('rbPhoneRow').hidden = false; $('rbCountryRow').hidden = false; }
+                if (result.code === 'PROFILE_INCOMPLETE') { $('rbPhoneRow').hidden = false; $('rbCountryRow').hidden = false; show(2); say(result.message); return; }
                 if (!response.ok) {
                     // Rooms taken meanwhile: back to the rooms, counted again.
-                    if (response.status === 409) { await findRooms(); say(result.message); return; }
+                    if (response.status === 409 && /room|booked|free/i.test(result.message || '')) { await findRooms(); say(result.message); return; }
                     throw new Error(result.message || 'The request could not be sent just now.');
                 }
-                const sent = modal.querySelector('[data-rb-step="3"]');
+                const sent = modal.querySelector('[data-rb-step="4"]');
                 sent.innerHTML = `
                     <span class="rb-sent__icon material-symbols-outlined" aria-hidden="true">mark_email_read</span>
                     <p class="rb-sent__title">Request sent</p>
@@ -1202,13 +1242,15 @@ body { overflow-x: hidden; }
                     <p class="rb-sent__label">Your booking code</p>
                     <p class="rb-sent__code">${escapeHtml(result.code || '')}</p>
                     <p class="rb-sent__facts">${longDay($('rbIn').value)} to ${longDay($('rbOut').value)} · ${plural(result.nights || state.nights, 'night')} · ${escapeHtml(peso(result.totalAmount))}</p>
-                    <p>You pay the resort directly. How to pay comes with its confirmation.</p>
+                    ${choice === 'online'
+                        ? `<p class="rb-pay__box rb-pay__box--due"><b>Pay ${escapeHtml(peso(result.totalAmount))} online after the resort confirms.</b> We will email you the payment link. Nothing is charged if the resort declines.</p>`
+                        : `<p class="rb-pay__box"><b>You pay the resort when you arrive: ${escapeHtml(peso(result.totalAmount))}.</b> How to pay comes with its confirmation.</p>`}
                     <a href="user/account.html#bookings" class="rb-sent__link">See it in My account<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>`;
-                show(3);
+                show(4);
             } catch (e) { say(e.message); }
             finally {
                 button.disabled = false;
-                if (state.step === 2) $('rbNextLabel').textContent = 'Send request';
+                if (state.step === 3) $('rbNextLabel').textContent = sendLabel();
             }
         }
 
@@ -1216,14 +1258,15 @@ body { overflow-x: hidden; }
             event.preventDefault();
             if (state.step === 0) return findRooms();
             if (state.step === 1) { loadCountries(); return show(2); }
-            if (state.step === 2) return send();
+            if (state.step === 2) return checkDetails();
+            if (state.step === 3) return send();
             closeRooms();
         });
         $('rbBack').addEventListener('click', () => show(Math.max(0, state.step - 1)));
         const closeRooms = () => {
             modal.hidden = true;
             // After a request is sent, the window starts again next time.
-            if (state.step === 3) { $('roomForm').reset(); drawNights(); show(0); }
+            if (state.step === 4) { $('roomForm').reset(); drawNights(); show(0); }
         };
         modal.querySelector('[data-rb-close]').addEventListener('click', closeRooms);
         modal.addEventListener('click', event => { if (event.target === modal) closeRooms(); });

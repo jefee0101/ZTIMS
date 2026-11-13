@@ -2740,6 +2740,32 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .rb-sent__facts { font-weight: 600; }
 .rb-sent__link { display: inline-flex; align-items: center; gap: .35rem; margin-top: .25rem; font-weight: 700; color: rgb(var(--ztims-primary-text)); }
 .rb-sent__link .material-symbols-outlined { font-size: 1.05rem; }
+/* The Payment step: pay at the property, or online once the resort confirms. */
+.rb-pay { display: grid; gap: .75rem; }
+.rb-pay__opt { position: relative; display: grid; grid-template-columns: auto 1fr; gap: .85rem; padding: 1rem; border: 1.5px solid rgb(var(--ztims-outline)); border-radius: 1.1rem;
+    background: rgb(var(--ztims-surface-high)); cursor: pointer; transition: border-color var(--dur-standard, 200ms) var(--ease-standard, ease), background-color var(--dur-standard, 200ms) var(--ease-standard, ease); }
+.rb-pay__opt:hover { border-color: rgb(var(--brand-tangerine, 242 133 0)); }
+.rb-pay__opt:has(input:checked) { border-color: rgb(var(--ztims-primary)); box-shadow: 0 0 0 1px rgb(var(--ztims-primary)); background: rgb(var(--ztims-primary) / .06); }
+.rb-pay__opt:focus-within { outline: 2px solid rgb(var(--ztims-gold, 242 133 0)); outline-offset: 2px; }
+.rb-pay__opt input { position: absolute; opacity: 0; pointer-events: none; }
+.rb-pay__radio { width: 1.35rem; height: 1.35rem; border-radius: 50%; border: 2px solid rgb(var(--ztims-outline)); display: grid; place-items: center; margin-top: .1rem; }
+.rb-pay__opt:has(input:checked) .rb-pay__radio { border-color: rgb(var(--ztims-primary)); }
+.rb-pay__opt:has(input:checked) .rb-pay__radio::after { content: ""; width: .6rem; height: .6rem; border-radius: 50%; background: rgb(var(--ztims-primary)); }
+.rb-pay__body { display: grid; gap: .2rem; min-width: 0; }
+.rb-pay__title { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-weight: 800; color: rgb(var(--ztims-on-surface)); }
+.rb-pay__text { font-size: .88rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rb-pay__pill { font-size: .7rem; font-weight: 700; padding: .1rem .55rem; border-radius: 999px; background: rgb(var(--ztims-gold, 242 133 0) / .18); color: rgb(var(--ztims-gold-text, 122 46 0)); }
+.rb-pay__pill--teal { background: rgb(15 118 110 / .12); color: rgb(15 118 110); }
+:root.dark .rb-pay__pill--teal, [data-theme="dark"] .rb-pay__pill--teal { color: rgb(94 200 189); background: rgb(94 200 189 / .14); }
+.rb-pay__chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .35rem; }
+.rb-pay__chips span { font-size: .74rem; font-weight: 700; padding: .25rem .65rem; border-radius: 999px; border: 1px solid rgb(var(--ztims-outline)); color: rgb(var(--ztims-on-surface)); }
+.rb-pay__more { display: none; margin-top: .5rem; padding-top: .5rem; border-top: 1px dashed rgb(var(--ztims-outline)); font-size: .84rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rb-pay__more b { color: rgb(var(--ztims-on-surface)); }
+.rb-pay__opt:has(input:checked) .rb-pay__more { display: block; }
+.rb-pay__note { display: flex; gap: .5rem; align-items: flex-start; margin-top: .75rem; font-size: .84rem; color: rgb(var(--ztims-on-surface-variant)); }
+.rb-pay__note .material-symbols-outlined { font-size: 1.1rem; }
+.rb-pay__box { width: 100%; text-align: left; border-radius: 1rem; padding: .85rem 1rem; font-size: .9rem; background: rgb(15 118 110 / .1); color: rgb(var(--ztims-on-surface)); }
+.rb-pay__box--due { background: rgb(var(--ztims-gold, 242 133 0) / .16); }
 @media (max-width: 639px) {
     .rb-room { grid-template-columns: 4.25rem 1fr; }
     .rb-room__photo { width: 4.25rem; }

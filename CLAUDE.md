@@ -966,10 +966,10 @@ attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
   refund.
 - **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
   `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 33 tables in all, with `announcements`,
+  `gateway_ref`, refund fields and `is_demo`. 34 tables in all, with `announcements`,
   `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
   `emergency_numbers`, the Guest Register's `register_entries` /
-  `register_entry_guests`, room booking's seven (see "Room booking") and
+  `register_entry_guests`, room booking's seven and `booking_checkouts` (see "Room booking") and
   visitor accounts' four (`visitors`, `visitor_tokens`, `saved_places`,
   `reviews`; see "Visitor accounts"), `review_changes` (see "Saved places
   and reviews") and `support_staff` (see "Support Staff").
@@ -1461,8 +1461,41 @@ The schema keeps one fact in one place (3NF), with `schema.sql`'s
   nothing even before the sweep marks it.
 - **Privacy:** `privacy.js` erases a booking's name, email, phone and note a
   year after check-out; dates, rooms, counts, country and price stay.
-- Version 1 has blocked dates only, no seasonal rates. No SMS. ZTIMS never
-  takes the money.
+- Version 1 has blocked dates only, no seasonal rates. No SMS.
+- **Pay at the property or pay online** (13 November 2026, the user's choice
+  from `docs/booking-payment/mockup.html`; `booking-payments.js`, mounted
+  before `bookings.js`). The resort switches each way on in Rooms → Settings
+  (`enterprise_booking_settings.allow_pay_at_property` default on,
+  `allow_pay_online` default off; at least one; the instructions are required
+  only with paying at the property). `GET /api/rooms/:spotId` carries
+  `payment: { atProperty, online }` (online only while the resort allows it
+  and the gateway is in test mode). The guest picks in the room window's new
+  **Payment** step (five steps: Dates and guests, Rooms, Your details,
+  Payment, Sent; "Send request and pay later" for online), stored as
+  `bookings.payment_choice` (`property` | `online`). Online is paid **only
+  after the resort confirms, for what is still owed** (the total less what is
+  paid; a deposit recorded at the property counts), on a Xendit test-mode
+  invoice like tickets: `POST /api/bookings/pay` {code} (the visitor's own,
+  confirmed, choice online) opens or reuses one (`booking_checkouts`,
+  external_id `ztims-b-<id>`, back to `manage.html?code=&paid=`);
+  `POST /api/bookings/payment-choice` {code, choice} switches while requested
+  or confirmed and nothing was paid online. A payment is believed only by
+  asking Xendit (`settle`, from the visitor's lookup or Xendit's callback, which
+  `payments.js`'s webhook passes to `booking-payments.js` for `ztims-b-` ids);
+  recorded once in `booking_payments` (`channel` online, `gateway_ref`,
+  `is_demo`), with emails to the guest and the manager. A payment arriving for a
+  booking no longer confirmed or already paid is `duplicate` and refunded at
+  once. A booking paid online cannot be moved (cancel, then book again);
+  cancelled by the guest within the free-cancellation window, every online
+  payment goes back in full (`refundOnline`, before the booking is cancelled;
+  `booking_payments.refunded_at|refund_amount|refund_reason`). Pages: Move or
+  cancel's Payment panel (Pay ₱…, "Pay at the property instead" / "Pay online
+  instead", Paid online with method, date and reference), My account's booking
+  row ("Pay ₱…"), the manager's Bookings pills (`.bkm-paypill`: Pay at the
+  property, Pay online · after you confirm, Paid online) and payments marked
+  online or refunded. The officer still sees no money. Tests (local):
+  `pay-test.js` (53 API checks) and `pay-browser.js` (17 browser checks), in
+  the session's scratchpad, not in the repo.
 - **The officer's Bookings** (`admin/admin_bookings.html`, "Bookings" in the
   officer menu after Collections, on all eleven officer pages): one month at a
   time (Previous / Next; stays whose check-in falls in it,
@@ -2073,8 +2106,10 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - Room booking (8 November 2026, the user's decisions): the resort confirms by
   hand (the email's Review request button only opens it); unanswered requests
   expire after the resort's response hours, with a reminder halfway; payment
-  stays outside ZTIMS; the server computes every price and a booking keeps its
-  rates; the officer sees counts and can pause, never money; a booking is not
+  stays outside ZTIMS except the test-mode online option below; the server computes every price and a booking keeps its
+  rates; the officer sees counts and can pause, never money; a guest pays at
+  the property or, where the resort allows it, online after it confirms (13
+  November 2026; Xendit test mode only, like tickets, all `is_demo`); a booking is not
   a count (only the Guest Register entry saved at check-in is); the guest signs
   in to a visitor account to book (since 9 November); no SMS, no seasonal rates
   in version 1; nothing deleted.

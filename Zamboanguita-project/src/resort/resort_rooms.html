@@ -575,8 +575,22 @@ body { overflow-x: hidden; }
                             <label class="block"><span class="field-label">Free cancellation until (days before check-in)</span>
                                 <input id="setFreeCancel" type="number" min="0" max="60" class="field" required/></label>
                         </div>
-                        <label class="block"><span class="field-label">How guests pay you</span>
-                            <textarea id="setPayment" rows="4" maxlength="2000" class="field" placeholder="GCash or bank details, the deposit, and when the balance is due"></textarea></label>
+                        <fieldset class="bkm-paywith">
+                            <legend class="field-label">How guests may pay</legend>
+                            <label class="sf-switch">
+                                <input id="setPayProperty" type="checkbox"/>
+                                <span class="sf-switch__track" aria-hidden="true"></span>
+                                <span><b>Pay at the property</b><small class="bkm-paywith__hint">Guests pay you on arrival.</small></span>
+                            </label>
+                            <label class="sf-switch">
+                                <input id="setPayOnline" type="checkbox"/>
+                                <span class="sf-switch__track" aria-hidden="true"></span>
+                                <span><b>Pay online</b><small class="bkm-paywith__hint">Guests pay after you confirm: GCash, Maya, QR Ph, card or bank.</small></span>
+                            </label>
+                            <p id="setPayOnlineOff" class="text-support" hidden>Online payment is not available just now.</p>
+                        </fieldset>
+                        <label class="block" id="setPaymentRow"><span class="field-label">Instructions for paying at the property</span>
+                            <textarea id="setPayment" rows="4" maxlength="2000" class="field" placeholder="Cash or GCash at the front desk, the deposit, and when the balance is due"></textarea></label>
                         <p id="setError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
                         <div class="bkm-form__foot">
                             <span id="setUpdated" class="text-support"></span>
@@ -808,6 +822,10 @@ body { overflow-x: hidden; }
             document.getElementById('setAdvance').value = s.advanceDays;
             document.getElementById('setFreeCancel').value = s.freeCancelDays;
             document.getElementById('setPayment').value = s.paymentInstructions || '';
+            document.getElementById('setPayProperty').checked = s.allowPayAtProperty !== false;
+            document.getElementById('setPayOnline').checked = Boolean(s.allowPayOnline);
+            document.getElementById('setPayOnlineOff').hidden = data.onlinePaymentAvailable !== false;
+            syncPayRow();
             document.getElementById('setUpdated').textContent = s.updatedAt
                 ? `Last updated ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Manila' }).format(new Date(s.updatedAt))}, ${new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).format(new Date(s.updatedAt))}`
                 : 'Not saved yet';
@@ -959,6 +977,9 @@ body { overflow-x: hidden; }
         }
 
         /* ---- booking settings ----------------------------------------- */
+        // The instructions belong to paying at the property.
+        function syncPayRow() { document.getElementById('setPaymentRow').hidden = !document.getElementById('setPayProperty').checked; }
+        document.getElementById('setPayProperty').addEventListener('change', syncPayRow);
         async function saveSettings(event) {
             event.preventDefault();
             const num = id => parseInt(document.getElementById(id).value, 10);
@@ -969,10 +990,15 @@ body { overflow-x: hidden; }
                 checkOutTime: document.getElementById('setCheckOut').value,
                 minNights: num('setMin'), maxNights: num('setMax'),
                 advanceDays: num('setAdvance'), freeCancelDays: num('setFreeCancel'),
-                paymentInstructions: document.getElementById('setPayment').value.trim()
+                paymentInstructions: document.getElementById('setPayment').value.trim(),
+                allowPayAtProperty: document.getElementById('setPayProperty').checked,
+                allowPayOnline: document.getElementById('setPayOnline').checked
             };
-            if (body.acceptsBookings && !body.paymentInstructions) {
-                modalError('setError', 'Write how guests pay you before taking bookings.');
+            if (!body.allowPayAtProperty && !body.allowPayOnline) {
+                return modalError('setError', 'Keep at least one way to pay switched on.');
+            }
+            if (body.acceptsBookings && body.allowPayAtProperty && !body.paymentInstructions) {
+                modalError('setError', 'Write how guests pay you at the property before taking bookings.');
                 return document.getElementById('setPayment').focus();
             }
             const btn = document.getElementById('setSave');

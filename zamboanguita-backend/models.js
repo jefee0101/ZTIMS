@@ -337,6 +337,8 @@ const feedback = new Table('feedback', {
    plain SQL there, since it has no id of its own. */
 const BOOKING_STATUSES = ['requested', 'confirmed', 'checked_in', 'completed', 'declined', 'expired', 'cancelled', 'no_show'];
 const BOOKING_PAYMENT_METHODS = ['cash', 'gcash', 'maya', 'bank', 'card', 'other'];
+// What an online payment through the gateway may be recorded as (never chosen by hand).
+const BOOKING_ONLINE_METHODS = ['gcash', 'maya', 'bank', 'card', 'qrph', 'otc', 'other'];
 
 const roomTypes = new Table('room_types', {
     spotId: { type: 'id', required: true },
@@ -386,10 +388,30 @@ const bookings = new Table('bookings', {
 const bookingPayments = new Table('booking_payments', {
     bookingId: { type: 'id', required: true },
     amount: { type: 'number', required: true, min: 0.01, max: 10000000 },
-    method: required({ enum: BOOKING_PAYMENT_METHODS }),
+    method: required({ enum: [...new Set([...BOOKING_PAYMENT_METHODS, ...BOOKING_ONLINE_METHODS])] }),
     receivedOn: required(),  // YYYY-MM-DD
     reference: text({ trim: true }),
-    recordedByEmail: text()
+    recordedByEmail: text(),
+    channel: text({ default: 'manual', enum: ['manual', 'online'] }),
+    gatewayRef: text(),
+    isDemo: flag(false),
+    refundedAt: when(),
+    refundAmount: { type: 'number', nullable: true, min: 0 },
+    refundReason: text()
+});
+
+/* An online payment for a booking (booking-payments.js): one gateway invoice. */
+const bookingCheckouts = new Table('booking_checkouts', {
+    bookingId: { type: 'id', required: true },
+    amount: { type: 'number', required: true, min: 0.01, max: 10000000 },
+    status: text({ default: 'pending', enum: ['pending', 'paid', 'expired', 'duplicate'] }),
+    sessionId: text(),
+    checkoutUrl: text(),
+    method: text(),
+    paymentRef: text(),
+    paidAt: when(),
+    expiresAt: { type: 'date', required: true },
+    isDemo: flag(true)
 });
 
 /* Announcements and events (announcements.js). Only the officer writes them. */
@@ -408,7 +430,7 @@ const announcements = new Table('announcements', {
 
 module.exports = {
     announcements, ANNOUNCEMENT_CATEGORIES,
-    roomTypes, roomBlocks, bookings, bookingPayments, BOOKING_STATUSES, BOOKING_PAYMENT_METHODS,
+    roomTypes, roomBlocks, bookings, bookingPayments, bookingCheckouts, BOOKING_STATUSES, BOOKING_PAYMENT_METHODS, BOOKING_ONLINE_METHODS,
     officers,
     managers,
     supportStaff,

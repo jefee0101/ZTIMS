@@ -698,7 +698,17 @@ body { overflow-x: hidden; }
             return { text: `Answer by ${whenFmt(b.expiresAt)} · ${span} left`, urgent: left < 3 * 3600 * 1000 };
         }
         const METHODS = [['cash', 'Cash'], ['gcash', 'GCash'], ['maya', 'Maya'], ['bank', 'Bank transfer'], ['card', 'Card'], ['other', 'Other']];
-        const methodName = m => (METHODS.find(x => x[0] === m) || [m, m])[1];
+        const ONLINE_METHODS = { qrph: 'QR Ph', otc: 'Over the counter' };
+        const methodName = m => (METHODS.find(x => x[0] === m) || [m, ONLINE_METHODS[m] || m])[1];
+        // How the guest pays: at the property, or online once confirmed (booking-payments.js).
+        function payPill(b) {
+            const paidOnline = b.paidOnline || (b.payments || []).some(p => p.channel === 'online' && !p.refundedAt);
+            if (paidOnline) return '<span class="bkm-paypill bkm-paypill--paid"><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>Paid online</span>';
+            if (b.paymentChoice === 'online') {
+                return `<span class="bkm-paypill bkm-paypill--online"><span class="material-symbols-outlined" aria-hidden="true">credit_card</span>${b.status === 'requested' ? 'Pay online · after you confirm' : 'Pay online'}</span>`;
+            }
+            return '<span class="bkm-paypill"><span class="material-symbols-outlined" aria-hidden="true">storefront</span>Pay at the property</span>';
+        }
 
         let spot = null, list = [], residences = [], filter = 'upcoming', openId = null, calMonth = manilaToday().slice(0, 7);
         const countryName = code => (residences.find(r => r.code === code) || {}).name || code || '';
@@ -759,7 +769,7 @@ body { overflow-x: hidden; }
                     <span class="bkm-req__top"><b>${escapeHtml(b.guestName)}</b><span class="bkm-code">${escapeHtml(b.code)}</span></span>
                     <span class="bkm-req__line">${dayLong(b.checkIn)} → ${dayLong(b.checkOut)} · ${plural(b.nights, 'night')}</span>
                     <span class="bkm-req__line">${escapeHtml(b.roomsText)} · ${guests(b)}${b.countryCode ? ` · ${escapeHtml(countryShort(b.countryCode))}` : ''}</span>
-                    <span class="bkm-req__total">${peso(b.totalAmount)}</span>
+                    <span class="bkm-req__total">${peso(b.totalAmount)} ${payPill(b)}</span>
                 </button>
                 <p class="bkm-deadline${d.urgent ? ' is-urgent' : ''}"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${d.text}</p>
                 <div class="bkm-actions">${actionsFor(b, 'card').join('')}</div>
@@ -780,7 +790,7 @@ body { overflow-x: hidden; }
                     <span class="bkm-row__body">
                         <span class="bkm-row__name">${escapeHtml(b.guestName)} ${statusPill(b)} ${tag}</span>
                         <span>${plural(b.nights, 'night')} · ${escapeHtml(b.roomsText)} · ${guests(b)}</span>
-                        <span class="bkm-row__money">${money}</span>
+                        <span class="bkm-row__money">${money} ${payPill(b)}</span>
                     </span>
                 </button>
                 <div class="bkm-actions">${actionsFor(b, 'row').join('')}</div>
@@ -815,7 +825,7 @@ body { overflow-x: hidden; }
         const CHANGE = {
             requested: 'Requested', confirmed: 'Confirmed', declined: 'Declined', expired: 'Expired (not answered in time)',
             cancelled: 'Cancelled by the guest', moved: 'Moved by the guest', price_adjusted: 'Price adjusted',
-            payment_recorded: 'Payment recorded', checked_in: 'Checked in', completed: 'Checked out', no_show: 'Marked no-show'
+            payment_recorded: 'Payment recorded', paid_online: 'Paid online', refunded_online: 'Online payment refunded', payment_choice: 'Payment choice changed', checked_in: 'Checked in', completed: 'Checked out', no_show: 'Marked no-show'
         };
         function itemHtml(b, settings) {
             const fact = (label, value) => value ? `<div class="bkm-fact"><span>${label}</span><span>${value}</span></div>` : '';
@@ -838,8 +848,9 @@ body { overflow-x: hidden; }
                 </section>
                 <section class="bkm-sec"><h3>Price</h3>
                     ${fact('Total', `<b>${peso(b.totalAmount)}</b>`)}
+                    ${fact('Guest chose', payPill(b))}
                     ${money ? fact('Paid', peso(b.paidTotal)) + fact('Balance', balance ? `<b class="text-error">${peso(balance)}</b>` : 'Paid in full') : ''}
-                    ${b.payments.map(p => `<div class="bkm-fact bkm-pay"><span></span><span>${peso(p.amount)} · ${methodName(p.method)} · ${dayLong(p.receivedOn)}${p.reference ? ` · ${escapeHtml(p.reference)}` : ''}</span></div>`).join('')}
+                    ${b.payments.map(p => `<div class="bkm-fact bkm-pay"><span></span><span>${peso(p.amount)} · ${methodName(p.method)}${p.channel === 'online' ? ' · online' : ''} · ${dayLong(p.receivedOn)}${p.reference ? ` · ${escapeHtml(p.reference)}` : ''}${p.refundedAt ? ` · <b>refunded ${peso(p.refundAmount)}</b>` : ''}</span></div>`).join('')}
                 </section>
                 ${b.declineReason ? `<section class="bkm-sec"><h3>Reason given</h3><p>${escapeHtml(b.declineReason)}</p></section>` : ''}
                 ${b.registerDraft ? `<section class="bkm-sec bkm-sec--note"><h3>Guest Register</h3><p>Count these guests in the Guest Register.</p>

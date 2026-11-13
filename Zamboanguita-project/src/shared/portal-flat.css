@@ -555,6 +555,17 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .bkm-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bkm-form__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
 .bkm-form .tone-pill { justify-self: start; }
+/* Rooms → Settings: the two ways guests may pay. */
+.bkm-paywith { display: grid; gap: .75rem; border: 1px solid rgb(var(--ztims-outline)); border-radius: 1rem; padding: .9rem 1rem; margin: 0; }
+.bkm-paywith legend { padding: 0 .35rem; }
+.bkm-paywith .sf-switch > span:last-child { display: grid; gap: .1rem; }
+.bkm-paywith__hint { display: block; font-size: .8rem; color: rgb(var(--ztims-on-surface-variant)); font-weight: 400; }
+/* Bookings: how the guest pays (pills on the cards and in the booking). */
+.bkm-paypill { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; padding: .15rem .6rem; border-radius: 999px; border: 1px solid rgb(var(--ztims-outline)); color: rgb(var(--ztims-on-surface)); white-space: nowrap; }
+.bkm-paypill .material-symbols-outlined { font-size: .95rem; }
+.bkm-paypill--online { background: rgb(var(--ztims-gold) / .16); border-color: transparent; color: rgb(var(--ztims-gold-text)); }
+.bkm-paypill--paid { background: rgb(46 125 50 / .14); border-color: transparent; color: rgb(30 100 34); }
+html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 
 /* The inbox: Needs your answer */
 .bkm-needs { display: grid; gap: .9rem; }

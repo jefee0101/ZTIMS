@@ -4,6 +4,39 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Room booking: pay at the property or pay online (13 November 2026)
+
+**The change.** A visitor booking a room now chooses how to pay, in a new
+**Payment** step of the booking window: **Pay at the property** (as before: the
+resort's instructions come with its confirmation) or **Pay online**. Online is
+paid only after the resort confirms, for the full amount still owed, on the
+same payment service as tickets (GCash, Maya, QR Ph, card, bank transfer), in
+its test mode: no real money moves. Nothing is charged if the resort declines.
+The visitor can switch between the two in My account until paying. A booking
+paid online cannot be moved; cancelled within the resort's free-cancellation
+days, the online payment is returned in full. Each resort decides which ways
+it takes (Rooms → Settings). The resort sees how each guest pays and when it
+is paid. The Tourism Office still sees no money. Payments are never counts.
+
+**Change in the manuscript:**
+- Where room booking is described (Chapter III system description, scope),
+  replace "the guest pays the resort directly; ZTIMS takes no payment for
+  rooms" with: "The guest pays at the property or, where the resort allows it,
+  online after the resort confirms, through the same test-mode payment service
+  as entrance tickets."
+- Scope and limitations: online room payment is a demonstration in test mode,
+  like tickets; taking real payments for resorts would need each resort's own
+  merchant account.
+- Data dictionary / ERD: new table `booking_checkouts`; new columns
+  `bookings.payment_choice`, `enterprise_booking_settings.allow_pay_at_property`
+  and `allow_pay_online`, and `booking_payments.channel`, `gateway_ref`,
+  `is_demo`, `refunded_at`, `refund_amount`, `refund_reason` (34 tables).
+- System User Interface: add the booking window's Payment step, the Move or
+  cancel Payment panel, and Rooms → Settings with the two switches.
+
+**If the panel asks** "Does ZTIMS hold the resort's money?": No. It runs in
+test mode only; real collection would go to each resort's own account.
+
 ## Stay register: DAE-1B / DAE 2 tab (13 November 2026)
 
 **The change.** The manager's Guest Register (stay register) has a third tab

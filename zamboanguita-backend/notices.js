@@ -146,7 +146,8 @@ const stayRows = b => [
     ['Nights', String(b.nights)],
     ['Rooms', b.rooms_text || ''],
     ['Guests', `${b.adults} adult${b.adults === 1 ? '' : 's'}${b.children ? `, ${b.children} child${b.children === 1 ? '' : 'ren'}` : ''}`],
-    ['Total', pesos(b.total_amount)]
+    ['Total', pesos(b.total_amount)],
+    ['Payment', b.payment_choice === 'online' ? 'Online, after the resort confirms' : 'At the property']
 ];
 const resortContact = b => [b.resort_phone, b.resort_email].filter(Boolean).join(' · ');
 const guestMail = (b, subject, body) => sendMail({ to: b.email, subject, ...compose({ footer: BOOKING_FOOTER, ...body }) });
@@ -160,9 +161,11 @@ async function bookingReceived(bookingId, origin) {
     if (!b || !b.email) return { sent: false, reason: 'not_found' };
     return guestMail(b, `Booking request ${b.code} — ${b.resort_name}`, {
         heading: 'We have sent your request to the resort',
-        intro: `${b.resort_name} will confirm or decline by ${manilaTime(b.expires_at)}. Nothing is booked until it confirms, and nothing is paid through ZTIMS.`,
+        intro: `${b.resort_name} will confirm or decline by ${manilaTime(b.expires_at)}. Nothing is booked until it confirms, and nothing is paid yet.`,
         rows: stayRows(b),
-        paragraphs: ['If the resort confirms, we will email you how to pay it.'],
+        paragraphs: [b.payment_choice === 'online'
+            ? 'If the resort confirms, we will email you a link to pay online. Nothing is charged if it declines.'
+            : 'If the resort confirms, we will email you how to pay it at the property.'],
         link: { label: 'See my booking (sign in)', url: manageUrl(origin, b.code) }
     });
 }
@@ -194,9 +197,21 @@ async function bookingReminder(bookingId, origin) {
 async function bookingConfirmed(bookingId, origin) {
     const b = await bookingRow(bookingId);
     if (!b || !b.email) return { sent: false, reason: 'not_found' };
+    if (b.payment_choice === 'online') {
+        return guestMail(b, `Confirmed: ${b.resort_name}, ${niceDate(b.check_in)} (${b.code}) — pay online`, {
+            heading: 'Your booking is confirmed',
+            intro: `${b.resort_name} has confirmed your stay. Pay ${pesos(b.total_amount)} online from your booking page (GCash, Maya, QR Ph, card or bank).`,
+            rows: stayRows(b),
+            paragraphs: [
+                ...(resortContact(b) ? [`The resort: ${resortContact(b)}`] : []),
+                `You can cancel until ${b.free_cancel_days > 1 ? `${b.free_cancel_days} days` : 'the day'} before check-in, 11:59 PM; an online payment is then returned in full.`
+            ],
+            link: { label: 'Pay online (sign in)', url: manageUrl(origin, b.code) }
+        });
+    }
     return guestMail(b, `Confirmed: ${b.resort_name}, ${niceDate(b.check_in)} (${b.code})`, {
         heading: 'Your booking is confirmed',
-        intro: `${b.resort_name} has confirmed your stay. Pay the resort directly, as it explains below; ZTIMS takes no payment.`,
+        intro: `${b.resort_name} has confirmed your stay. Pay the resort at the property, as it explains below.`,
         rows: stayRows(b),
         paragraphs: [
             ...(b.payment_instructions ? [`How to pay ${b.resort_name}:\n${b.payment_instructions}`] : []),
@@ -244,26 +259,51 @@ async function bookingMoved(bookingId, { from, to }, origin) {
 }
 
 /* A guest's cancellation: both sides are told. */
-async function bookingCancelled(bookingId, { byGuest = true } = {}, origin) {
+async function bookingCancelled(bookingId, { byGuest = true, refunded = 0 } = {}, origin) {
     const b = await bookingRow(bookingId);
     if (!b) return { sent: false, reason: 'not_found' };
     await managerMail(b, `Cancelled by the guest: booking ${b.code}`, {
         heading: 'A guest cancelled their booking',
-        intro: 'The rooms are free again. If the guest paid you anything, settle it with them directly.',
+        intro: refunded ? `The rooms are free again. The guest's online payment of ${pesos(refunded)} was returned to them.`
+            : 'The rooms are free again. If the guest paid you anything, settle it with them directly.',
         rows: [...stayRows(b), ['Guest', b.guest_name]],
         link: { label: 'Open the booking', url: reviewUrl(origin, b.code) }
     });
     if (!b.email) return { sent: false, reason: 'not_found' };
     return guestMail(b, `Booking ${b.code} cancelled`, {
         heading: 'Your booking is cancelled',
-        intro: byGuest
+        intro: byGuest && refunded
+            ? `You cancelled your booking at ${b.resort_name}. Your online payment of ${pesos(refunded)} is on its way back to you, by the way you paid.`
+            : byGuest
             ? `You cancelled your booking at ${b.resort_name}. If you paid the resort anything, it settles that with you directly.`
             : `Your booking at ${b.resort_name} is cancelled.`,
         rows: stayRows(b)
     });
 }
 
+/* Paid online: a receipt to the guest and a line to the manager. */
+async function bookingPaidOnline(bookingId, paid, origin) {
+    const b = await bookingRow(bookingId);
+    if (!b) return { sent: false, reason: 'not_found' };
+    const methodNames = { gcash: 'GCash', maya: 'Maya', qrph: 'QR Ph', card: 'Card', bank: 'Bank', otc: 'Over the counter' };
+    const how = methodNames[paid.method] || 'Online';
+    await managerMail(b, `Paid online: booking ${b.code}`, {
+        heading: 'A guest paid their booking online',
+        intro: `${pesos(paid.amount)} paid online (${how}).`,
+        rows: [...stayRows(b), ['Guest', b.guest_name]],
+        link: { label: 'Open the booking', url: reviewUrl(origin, b.code) }
+    });
+    if (!b.email) return { sent: false, reason: 'not_found' };
+    return guestMail(b, `Paid: booking ${b.code} — ${b.resort_name}`, {
+        heading: 'Payment received',
+        intro: `We received your online payment of ${pesos(paid.amount)} (${how}) for your stay at ${b.resort_name}.`,
+        rows: [...stayRows(b), ['Paid online', `${pesos(paid.amount)}, reference ${paid.ref}`]],
+        link: { label: 'See my booking (sign in)', url: manageUrl(origin, b.code) }
+    });
+}
+
 module.exports = {
+    bookingPaidOnline,
     manageUrl, siteUrl, closureNotice,
     ticketReceipt, ticketMoved, ticketCancelled,
     bookingReceived, bookingNewRequest, bookingReminder, bookingConfirmed,

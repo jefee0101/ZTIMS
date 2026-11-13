@@ -2476,3 +2476,72 @@ begin
     create trigger register_entry_guests_attraction_legacy before insert or update or delete on public.register_entry_guests
         for each row execute function public.attraction_legacy_guard();
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Room booking: pay at the property or pay online (November 2026, the user's
+-- choice from docs/booking-payment/mockup.html). The guest chooses when asking
+-- for the rooms; an online payment is made only after the resort confirms,
+-- for what is still owed, through the same Xendit test-mode demonstration as
+-- tickets (payments.js). The money goes nowhere real: every online record is
+-- is_demo. Re-runnable.
+-- ---------------------------------------------------------------------------
+alter table public.enterprise_booking_settings add column if not exists allow_pay_at_property boolean not null default true;
+alter table public.enterprise_booking_settings add column if not exists allow_pay_online boolean not null default false;
+do $$ begin
+    if not exists (select 1 from pg_constraint where conname = 'booking_settings_some_payment') then
+        alter table public.enterprise_booking_settings add constraint booking_settings_some_payment
+            check (allow_pay_at_property or allow_pay_online);
+    end if;
+end $$;
+
+alter table public.bookings add column if not exists payment_choice text not null default 'property';
+do $$ begin
+    if not exists (select 1 from pg_constraint where conname = 'bookings_payment_choice') then
+        alter table public.bookings add constraint bookings_payment_choice check (payment_choice in ('property', 'online'));
+    end if;
+end $$;
+
+-- A payment the manager records (manual) or one an online checkout made
+-- (online, with the gateway's reference), and its refund.
+alter table public.booking_payments add column if not exists channel text not null default 'manual';
+alter table public.booking_payments add column if not exists gateway_ref text not null default '';
+alter table public.booking_payments add column if not exists is_demo boolean not null default false;
+alter table public.booking_payments add column if not exists refunded_at timestamptz;
+alter table public.booking_payments add column if not exists refund_amount numeric(12, 2);
+alter table public.booking_payments add column if not exists refund_reason text not null default '';
+alter table public.booking_payments drop constraint if exists booking_payments_method;
+alter table public.booking_payments add constraint booking_payments_method
+    check (method in ('cash', 'gcash', 'maya', 'bank', 'card', 'qrph', 'otc', 'other'));
+do $$ begin
+    if not exists (select 1 from pg_constraint where conname = 'booking_payments_channel') then
+        alter table public.booking_payments add constraint booking_payments_channel check (channel in ('manual', 'online'));
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'booking_payments_refund') then
+        alter table public.booking_payments add constraint booking_payments_refund
+            check (refund_amount is null or (refund_amount >= 0 and refund_amount <= amount));
+    end if;
+end $$;
+create unique index if not exists booking_payments_gateway_ref_idx on public.booking_payments (gateway_ref) where gateway_ref <> '';
+
+-- One invoice at the gateway per row; external_id ztims-b-<id>.
+create table if not exists public.booking_checkouts (
+    id                  text primary key default public.ztims_new_id(),
+    booking_id          text not null references public.bookings (id),
+    amount              numeric(12, 2) not null constraint booking_checkouts_amount check (amount > 0 and amount <= 10000000),
+    status              text not null default 'pending'
+                        constraint booking_checkouts_status check (status in ('pending', 'paid', 'expired', 'duplicate')),
+    session_id          text not null default '',
+    checkout_url        text not null default '',
+    method              text not null default '',
+    payment_ref         text not null default '',
+    paid_at             timestamptz,
+    expires_at          timestamptz not null,
+    is_demo             boolean not null default true,
+    created_at          timestamptz not null default now(),
+    updated_at          timestamptz not null default now()
+);
+create index if not exists booking_checkouts_booking_idx on public.booking_checkouts (booking_id, created_at);
+drop trigger if exists booking_checkouts_touch_updated_at on public.booking_checkouts;
+create trigger booking_checkouts_touch_updated_at before update on public.booking_checkouts
+    for each row execute function public.ztims_touch_updated_at();
+alter table public.booking_checkouts enable row level security;

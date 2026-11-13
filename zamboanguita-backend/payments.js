@@ -765,6 +765,13 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
             const body = req.body || {};
             const invoiceId = typeof body.id === 'string' ? body.id : '';
             const externalId = typeof body.external_id === 'string' ? body.external_id : '';
+            // A room booking's invoice (booking-payments.js) is settled there,
+            // by the same rule: ask Xendit, never believe the body.
+            const bookingMatch = /^ztims-b-([0-9a-f]{24})$/.exec(externalId);
+            if (invoiceId && bookingMatch) {
+                const settled = await require('./booking-payments').settleById(bookingMatch[1], invoiceId, siteOrigin(req));
+                return res.status(200).json(settled ? { received: true } : { ignored: true });
+            }
             const match = /^ztims-([0-9a-f]{24})$/.exec(externalId);
             if (!invoiceId || !match) return res.status(200).json({ ignored: true });
             const checkout = await Checkout.findById(match[1]);
@@ -978,3 +985,10 @@ module.exports = function paymentsRouter({ requireAdmin, requirePasswordConfirma
 module.exports.gatewayState = gatewayState;
 module.exports.refund = refund;
 module.exports.siteOrigin = siteOrigin;
+// Room bookings' online payments (booking-payments.js) use the same gateway.
+module.exports.gateway = gateway;
+module.exports.isGatewayPage = isGatewayPage;
+module.exports.methodOf = methodOf;
+module.exports.METHODS = METHODS;
+module.exports.MIN_ONLINE_AMOUNT = MIN_ONLINE_AMOUNT;
+module.exports.CHECKOUT_MINUTES = CHECKOUT_MINUTES;
