@@ -502,4 +502,44 @@ function addFormA(wb, ctx) {
 async function toBuffer(wb) { return Buffer.from(await wb.xlsx.writeBuffer()); }
 function workbook() { const wb = new ExcelJS.Workbook(); wb.creator = 'ZTIMS'; wb.created = new Date(); return wb; }
 
-module.exports = { TEMPLATE, safeText, addDae1A, addDae1B, addFormA, workbook, toBuffer };
+/* The DAE-1B / DAE 2 (2019) Part I rows with their totals, for the screen:
+   the same TEMPLATE the Excel walks, so the two never differ.
+   counts: { residence code: { male, female } } → [{ kind, label, indent, total }]. */
+function dae2Rows(counts) {
+    const n = codes => codes.reduce((a, c) => a + ((counts[c] && counts[c].male) || 0) + ((counts[c] && counts[c].female) || 0), 0);
+    const out = [], ph = [], non = [];
+    let phTotal = 0, nonTotal = 0, ofil = 0;
+    const push = (kind, label, indent, total) => out.push({ kind, label, indent: indent || 0, total: total === undefined ? null : total });
+    for (const item of TEMPLATE) {
+        if (item.t === 'spacer') { push('spacer', ''); continue; }
+        if (item.t === 'section') { push('section', item.label); continue; }
+        if (item.t === 'row') { ph.push(...item.codes); push('row', item.label, 1, n(item.codes)); continue; }
+        if (item.t === 'total') {
+            if (item.sum === 'ph') { phTotal = n(ph); push('total', item.label, 0, phTotal); }
+            else { nonTotal = n(non); push('total', item.label, 0, nonTotal); }
+            continue;
+        }
+        if (item.t === 'region') {
+            if (item.top) push('section', item.label); else push('region', item.label, 1);
+            const codes = item.rows.map(([, c]) => c).filter(Boolean);
+            for (const [label, code] of item.rows) push('row', label, 2, code ? n([code]) : null);
+            non.push(...codes);
+            push('subtotal', 'SUB-TOTAL', 4, n(codes));
+            push('spacer', '');
+            continue;
+        }
+        if (item.t === 'others') { non.push(...item.codes); push('section', item.label); push('ofil', item.label2, 0, n(item.codes)); continue; }
+        if (item.t === 'ofil') { ofil = n(item.codes); push('ofil', item.label, 0, ofil); continue; }
+        if (item.t === 'grand') {
+            const unspec = n(['unspecified']);
+            push('grand', item.label, 0, phTotal + nonTotal + ofil + unspec);
+            push('breakdown', 'Total Philippine Residents', 1, phTotal);
+            push('breakdown', 'Total Non-Philippine Residents', 1, nonTotal);
+            push('breakdown', 'Total Overseas Filipinos', 1, ofil);
+            push('breakdown', 'Total Guest with Unspecified Residence', 1, unspec);
+        }
+    }
+    return out;
+}
+
+module.exports = { TEMPLATE, safeText, addDae1A, addDae1B, addFormA, workbook, toBuffer, dae2Rows };

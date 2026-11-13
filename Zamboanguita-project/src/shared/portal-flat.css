@@ -973,3 +973,21 @@ aside > nav::-webkit-scrollbar { display: none; }
     box-shadow: 0 1px 2px rgb(var(--ztims-on-surface) / .12), 0 0 0 1px rgb(var(--ztims-outline) / .45); }
 .seg-switch button:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: 2px; }
 @media (max-width: 639px) { .seg-switch button { padding: 0 .8rem; } }
+
+/* DAE-1B / DAE 2 (2019) on screen (Guest Register): two columns, the form's
+   bands in the theme's tints — section and region bands, sub-totals, totals,
+   the grand total highlighted. */
+.dae2 { border-collapse: collapse; width: 100%; max-width: 40rem; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.dae2 th, .dae2 td { border: 1px solid rgb(var(--ztims-outline) / .35); padding: .3rem .6rem; text-align: left; }
+.dae2 td { text-align: right; width: 8rem; font-weight: 700; color: rgb(var(--ztims-on-surface)); }
+.dae2 thead th { background: rgb(var(--ztims-gold) / .35); color: rgb(var(--ztims-on-surface)); font-weight: 800; font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; }
+.dae2 thead th:last-child { text-align: right; }
+.dae2 tbody th { font-weight: 600; font-style: italic; color: rgb(var(--ztims-on-surface)); }
+.dae2-section th, .dae2-region th { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)) !important; font-style: normal !important; font-weight: 800 !important; font-size: .75rem; }
+.dae2-region th { font-style: italic !important; background: rgb(var(--ztims-primary) / .85); }
+.dae2-subtotal th, .dae2-subtotal td { background: rgb(var(--ztims-primary) / .1); font-weight: 800; }
+.dae2-total th, .dae2-total td, .dae2-breakdown th, .dae2-breakdown td { background: rgb(var(--ztims-success) / .14); font-weight: 800; font-style: normal !important; }
+.dae2-ofil th, .dae2-ofil td { background: rgb(var(--ztims-primary) / .18); font-weight: 800; }
+.dae2-grand th, .dae2-grand td { background: rgb(var(--ztims-gold) / .45); font-weight: 900; font-style: normal !important; }
+.dae2-spacer td { height: .45rem; padding: 0; background: rgb(var(--ztims-on-surface) / .03); }
+.dae2-zero td { color: rgb(var(--ztims-on-surface-variant)); font-weight: 500; }

@@ -745,9 +745,11 @@ visitors here").
     2026; Open a stay: facts, guests, months it
     counts in, history; Edit, Change check-out, Transfer room, Void, each with
     a reason; a stay in a finalized month opens locked) Daily register
-    (DAE-1A grid) and Daily arrivals (DAE-1B: countries down, days 1–31 across
-    with M / F, month totals; `#dae1b`; from `byDay` on the month read; rows
-    with no arrivals left out, the Excel lists every row; 13 November 2026), Record a stay, Excel of the register now. Bookings → Check
+    (DAE-1A grid) and DAE-1B / DAE 2 (Part I of the 2019 monthly form: country
+    of residence and total, every row of the form with its sub-totals and
+    totals, `#dae1b`; the rows are `dae2` on the month read, from
+    `accommodation-excel.js`'s `dae2Rows` over the Excel's own TEMPLATE; its
+    Excel button is `export.xlsx?form=dae2`, that one sheet; 13 November 2026), Record a stay, Excel of the register now. Bookings → Check
     in opens it at `?booking=<id>` with the stay filled in
     (`accommodation_stays.booking_id`).
   - **Monthly Report** (`resort_statistics.html`): Month (DAE-1B, a banner per

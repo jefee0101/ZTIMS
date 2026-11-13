@@ -504,7 +504,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     const shapeMonth = v => ({
         success: true, enterprise: { _id: v.spot.id, name: v.spot.name }, profile: v.profile,
         state: v.state, figures: { ...v.figures, daily: v.figures.daily.map(d => ({ date: d.date, counted: d.counted, checkIn: d.checkIn, guestNights: d.guestNights,
-            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })), byDay: v.figures.byDay },
+            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })), dae2: XLSX.dae2Rows(v.figures.counts || {}) },
         versions: v.versions, events: v.events.map(e => ({ action: e.action, versionId: e.version_id, reason: e.reason, actorRole: e.actor_role, at: e.at })),
         finalizedAt: v.period && v.period.finalized_at
     });
@@ -807,10 +807,11 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const ctx = { year, month, days: E.daysIn(year, month), enterpriseName: spot.name, profile: view.profile, sections: sec, status,
                       rooms: version.rooms, roomNightsAvailable: version.roomNightsAvailable, detail: version.detail, countedDays: version.countedDays, version };
         const wb = XLSX.workbook();
-        XLSX.addDae1A(wb, ctx);
-        XLSX.addDae1B(wb, ctx, true);
+        // ?form=dae2: the DAE-1B / DAE 2 (2019) form alone (the Guest Register's DAE 2 tab).
+        const only = String(req.query.form || '') === 'dae2';
+        if (!only) { XLSX.addDae1A(wb, ctx); XLSX.addDae1B(wb, ctx, true); }
         XLSX.addDae1B(wb, ctx, false);
-        return sendXlsx(res, wb, fileName(spot, `DAE-1A_DAE-1B_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
+        return sendXlsx(res, wb, fileName(spot, `${only ? 'DAE-1B_DAE-2' : 'DAE-1A_DAE-1B'}_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
     }));
 
     /* FORM A layout: the months from saved versions (or municipal totals),

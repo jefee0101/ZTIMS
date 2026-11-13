@@ -4,16 +4,18 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
-## Stay register: Daily arrivals (DAE-1B) tab (13 November 2026)
+## Stay register: DAE-1B / DAE 2 tab (13 November 2026)
 
 **The change.** The manager's Guest Register (stay register) has a third tab
-beside Stays and Daily register (DAE-1A): **Daily arrivals (DAE-1B)**, the
-month's guest arrivals by country of residence, day by day, male and female,
-with month totals, as on the DAE-1B daily form. It is worked out from the
-stays, like everything else in the register.
+beside Stays and Daily register (DAE-1A): **DAE-1B / DAE 2**, Part I of the
+2019 monthly form as on paper — country of residence and total, every row of
+the form in its order (Philippine residents, then each region's countries with
+a sub-total, overseas Filipinos, grand total) — worked out from the stays. Its
+Excel button downloads that form alone, in the DOT layout.
 
 **Change in the manuscript:** where the stay register is described, add the
-DAE-1B daily view; add a screenshot if the System User Interface shows it.
+DAE-1B / DAE 2 view and its export; add a screenshot if the System User
+Interface shows the register.
 
 ## Stay register: Voided filter (13 November 2026)
 
