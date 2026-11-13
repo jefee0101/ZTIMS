@@ -755,6 +755,17 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .acc-dot { display: inline-block; width: .7rem; height: .7rem; background: rgb(var(--ztims-primary)); vertical-align: middle; }
 .acc-fut td, .acc-fut th { color: rgb(var(--ztims-on-surface-variant) / .7); }
 .acc-closed td { background: rgb(var(--ztims-on-surface) / .06); }
+/* The DAE-1A legend is a column on the left of the grid and stays in view under the fixed header while the month scrolls; on a phone it is one row above the grid. */
+.acc-layout { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: .9rem; align-items: start; }
+.acc-legend { position: sticky; top: calc(var(--acc-top, 4.5rem) + .5rem); z-index: 5; display: flex; flex-direction: column; gap: .6rem; padding: .7rem .8rem; font-size: .75rem; font-weight: 600; color: rgb(var(--ztims-on-surface-variant)); background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline-variant) / .55); }
+.acc-legend span { display: inline-flex; align-items: center; gap: .5rem; }
+@media (max-width: 760px) {
+  .acc-layout { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .acc-legend { top: var(--acc-top, 4.5rem); flex-direction: row; flex-wrap: wrap; gap: .35rem 1rem; padding: .45rem .25rem; border-width: 0 0 1px; }
+}
+.acc-key { display: inline-block; width: 1.1rem; height: 1.1rem; border: 1px solid rgb(var(--ztims-outline)); }
+.acc-key--closed { background: rgb(var(--ztims-on-surface) / .06); }
+.acc-key--fut { background: rgb(var(--ztims-surface)); opacity: .55; border-style: dashed; }
 .acc-num { max-width: 6rem; }
 .acc-formrow { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto; gap: .5rem; align-items: end; }
 .acc-formrow--guest { grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) auto; }

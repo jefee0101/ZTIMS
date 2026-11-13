@@ -745,7 +745,9 @@ visitors here").
     2026; Open a stay: facts, guests, months it
     counts in, history; Edit, Change check-out, Transfer room, Void, each with
     a reason; a stay in a finalized month opens locked) Daily register
-    (DAE-1A grid) and DAE-1B / DAE 2 (Part I of the 2019 monthly form: country
+    (DAE-1A grid, with its legend — occupied, checked in, closed, not reached
+    yet — in a column on the left that stays in view under the header while the
+    month scrolls, a row above the grid on a phone; `.acc-legend`) and DAE-1B / DAE 2 (Part I of the 2019 monthly form: country
     of residence and total, every row of the form with its sub-totals and
     totals, `#dae1b`; the rows are `dae2` on the month read, from
     `accommodation-excel.js`'s `dae2Rows` over the Excel's own TEMPLATE; its

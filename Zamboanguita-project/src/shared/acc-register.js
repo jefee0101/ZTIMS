@@ -121,7 +121,15 @@
             </section>`;
     }
 
+    /* The legend sticks just under the portal's fixed header, whatever its height. */
+    function legendTop() {
+        const h = document.querySelector('body > header.fixed');
+        if (h) document.documentElement.style.setProperty('--acc-top', Math.round(h.getBoundingClientRect().height) + 'px');
+    }
+    window.addEventListener('resize', legendTop);
+
     function dailyHtml() {
+        legendTop();
         const f = view.figures;
         const ids = [...new Set(f.daily.flatMap(d => d.occupiedRooms).concat(rooms.filter(r => r.availableFrom <= A().monthKey(year, month) + '-31' && (!r.availableUntil || r.availableUntil > A().monthKey(year, month) + '-01')).map(r => r._id)))];
         ids.sort((a, b) => String(roomNo(a)).localeCompare(String(roomNo(b)), undefined, { numeric: true }));
@@ -142,15 +150,22 @@
                 <p class="text-support"><b class="text-on-surface">Form DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
                 <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (register now)</button>
             </div>
-            <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="acc-grid">
+            <section class="glass-panel p-3 sm:p-4"><div class="acc-layout">
+            <div class="acc-legend" role="group" aria-label="Legend">
+                <span><i class="acc-dot" aria-hidden="true"></i>Room occupied</span>
+                <span><i class="acc-key acc-mk--in" aria-hidden="true"></i>Guests checked in that day</span>
+                <span><i class="acc-key acc-key--closed" aria-hidden="true"></i>Closed day</span>
+                <span><i class="acc-key acc-key--fut" aria-hidden="true"></i>Day not reached yet</span>
+            </div>
+            <div class="acc-scroll"><table class="acc-grid">
                 <thead><tr><th class="acc-sticky" rowspan="2">Day</th><th colspan="${ids.length}">Room identification</th>
                     <th rowspan="2" class="text-right">(5) Guests<br>checked in</th><th rowspan="2" class="text-right">(6) Guests staying<br>overnight</th>
                     <th rowspan="2" class="text-right">(7) Rooms<br>occupied</th><th rowspan="2" class="text-right">Rooms<br>available</th></tr>
                     <tr>${ids.map(id => `<th class="text-center">${A().esc(roomNo(id))}</th>`).join('')}</tr></thead>
                 <tbody>${rows}</tbody>
                 <tfoot><tr><th class="acc-sticky">Total of this month</th><td colspan="${ids.length}"></td><td class="text-right">${f.arrivals}</td><td class="text-right">${f.guestNights}</td><td class="text-right">${f.roomNightsOccupied}</td><td class="text-right">${f.roomNightsAvailable}</td></tr></tfoot>
-            </table></div>
-            <p class="text-support mt-3"><span class="acc-dot"></span> occupied · highlighted: guests checked in that day.</p></section>
+            </table></div></div>
+            </section>
             <div class="stat-tiles">
                 <div class="stat-tile"><p>Average guest-nights</p><p>${A().dec(f.averageLengthOfStay)}</p></div>
                 <div class="stat-tile"><p>Average room occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div>
