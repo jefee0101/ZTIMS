@@ -4,6 +4,27 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Page numbering and contents (13 November 2026)
+
+**The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev13.docx` (Word,
+made from the Google Doc rev12): title page counted as i with no number shown,
+the rest of the preliminary pages in lowercase Roman (ii, iii, ...), Chapter I
+restarts at 1 in Arabic and runs to the last page with no break; all footers
+show the page at the bottom right. The Table of Contents and the Lists of
+Figures and Tables are Word TOC fields built from hidden "Mark Entry" (TC)
+fields at each heading and caption, so Word's Update Table rebuilds them; the
+file asks Word to update fields on opening. Entries for things not in the
+manuscript were dropped (Software Development Life Cycle, Figure 3, Figures
+9 to 27); "Foreign/Local Related Literature" now reads "Related Literature /
+Related Studies" as the headings do; Table 1 reads "Respondents of the Study";
+the second Table 10 (Connections in the System Architecture) was added.
+
+**Still to fix in the manuscript:** two tables numbered 10; no Figure 3 caption;
+System User Interface has no screenshots or captions (Figures 9 to 27); two
+empty pages with the old campus header and a draft copy of Tables 5 and 6 after
+Appendix M; the title page runs onto a second page ("November 2026" lands on
+the Approval Sheet page).
+
 ## Appendices E to L: the DOT report forms (12 November 2026)
 
 **The change.** Nothing in the system. The manuscript now has one appendix per
