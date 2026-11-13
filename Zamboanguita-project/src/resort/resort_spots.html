@@ -503,19 +503,9 @@ body { overflow-x: hidden; }
             </button>
             <div id="accountMenuSlot"></div>
         </div>
-        <!-- The subpages, as folder tabs hanging from the header's lower edge:
-             the open one is the header's own colour, joined to it. -->
-        <nav id="estTabs" class="est-tabs" aria-label="Enterprise" hidden>
-            <a href="#basics" data-sub="basics"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Basics</span></a>
-            <a href="#location" data-sub="location"><span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Location</span></a>
-            <a href="#visiting" data-sub="visiting"><span class="material-symbols-outlined" aria-hidden="true">schedule</span><span>Visiting</span></a>
-            <a href="#photos" data-sub="photos"><span class="material-symbols-outlined" aria-hidden="true">photo_library</span><span>Photos</span></a>
-            <a href="#contact" data-sub="contact"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>Contact</span></a>
-            <a href="#reporting" data-sub="reporting" hidden><span class="material-symbols-outlined" aria-hidden="true">assignment</span><span>Reporting</span></a>
-        </nav>
     </header>
 
-    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-36 sm:pt-40 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
+    <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="max-w-[52rem] mx-auto space-y-6">
             <div class="flex flex-wrap justify-between items-end gap-3">
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Enterprise</h1>
@@ -523,6 +513,16 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">visibility</span> See it as visitors do
                 </a>
             </div>
+
+            <!-- The subpages, as underline tabs under the title (like Statistics and Settings). -->
+            <nav id="estTabs" class="est-tabs" aria-label="Enterprise" hidden>
+                <a href="#basics" data-sub="basics"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Basics</span></a>
+                <a href="#location" data-sub="location"><span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Location</span></a>
+                <a href="#visiting" data-sub="visiting"><span class="material-symbols-outlined" aria-hidden="true">schedule</span><span>Visiting</span></a>
+                <a href="#photos" data-sub="photos"><span class="material-symbols-outlined" aria-hidden="true">photo_library</span><span>Photos</span></a>
+                <a href="#contact" data-sub="contact"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>Contact</span></a>
+                <a href="#reporting" data-sub="reporting" hidden><span class="material-symbols-outlined" aria-hidden="true">assignment</span><span>Reporting</span></a>
+            </nav>
 
             <!-- What visitors still need, each linking to its subpage. -->
             <div id="estChecklist" hidden></div>

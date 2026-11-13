@@ -4,6 +4,16 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Enterprise page tabs always shown (13 November 2026)
+
+**The change.** On the Enterprise Manager's Enterprise page, the subpage tabs
+(Basics, Location, Visiting, Photos, Contact, and Reporting for a place to stay)
+are now underline tabs under the title, always visible, like Statistics and
+Settings. They were folder tabs hidden behind the header until pointed at.
+
+**Change in the manuscript:** where the System User Interface shows the
+manager's Enterprise page, retake its screenshot.
+
 ## Statistics page: Accommodation / Attraction switch (13 November 2026)
 
 **The change.** The Tourism Officer's Statistics page opens with a two-way

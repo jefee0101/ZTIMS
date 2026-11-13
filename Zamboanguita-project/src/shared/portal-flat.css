@@ -57,40 +57,21 @@ aside .sidebar-label.uppercase { text-transform: none !important; letter-spacing
 aside a[class*="hover:translate-x"]:hover { transform: none !important; }
 
 /* ---- Enterprise (resort_spots.html) ------------------------------------
-   The subpages are folder tabs hanging from the header's lower edge, upside
-   down, hanging from the tile strip. */
-.est-tabs { position: absolute; top: 100%; left: 0; right: 0; display: flex; align-items: flex-start; gap: .3rem;
-            padding: 0 1rem; overflow-x: auto; scrollbar-width: none; margin: 0;
-            background: none !important; border: 0 !important; box-shadow: none !important; }
+   The subpages are underline tabs under the title, the same look as
+   Statistics and Settings, with an icon each. Sideways scroll on a phone. */
+.est-tabs { display: flex; align-items: flex-end; gap: .5rem; overflow-x: auto; scrollbar-width: none;
+            border-bottom: 1px solid rgb(var(--ztims-outline) / .45); }
 .est-tabs::-webkit-scrollbar { display: none; }
-@media (min-width: 640px) { .est-tabs { padding: 0 2rem; } }
-/* Curved at the bottom, like a folder's tab turned upside down (the user's
-   choice; corners elsewhere stay square). */
-.est-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
-              padding: .7rem 1.1rem .75rem; min-height: 44px; font-weight: 700; font-size: .875rem;
-              color: #1C1917; background: #F28500;
-              border-radius: 0 0 14px 14px;
-              transition: transform var(--dur-moderate, 300ms) var(--ease-decelerate, cubic-bezier(.2,0,0,1)),
-                          color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard); }
+.est-tabs[hidden], .est-tabs a[hidden] { display: none; }
+.est-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .6rem 1rem;
+              font-weight: 700; font-size: .875rem; white-space: nowrap; margin-bottom: -1px;
+              color: rgb(var(--ztims-on-surface-variant)); border-bottom: 2px solid transparent;
+              transition: color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard); }
 .est-tabs a .material-symbols-outlined { font-size: 18px; }
-/* Solid orange folders (the user's choice): tangerine with ink on it; the
-   open one burnt orange with off-white on it (both 4.5:1 or better). */
-.est-tabs a:hover { background: #FF9A1F; }
-.est-tabs a.is-open { color: #FFFDFA; background: #BF5700; }
-.est-tabs a:focus-visible { outline: 2px solid #1C1917; outline-offset: -4px; }
-@media (max-width: 639px) { .est-tabs a { padding-left: .9rem; padding-right: .9rem; } }
-
-/* Where a pointer can hover, the tabs are tucked up behind the header with
-   only their curved edge showing, and each slides down when pointed at or
-   reached with the keyboard. The open one stays down. On touch screens they
-   all stay down: there is nothing to hover with. */
-@media (hover: hover) and (pointer: fine) {
-    .est-tabs { overflow: hidden; pointer-events: none; padding-bottom: 0; }
-    .est-tabs a { pointer-events: auto; transform: translateY(calc(-100% + 12px)); }
-    .est-tabs a:hover, .est-tabs a:focus-visible, .est-tabs a.is-open { transform: none; }
-    .est-tabs a:not(.is-open) > * { opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
-    .est-tabs a:hover > *, .est-tabs a:focus-visible > * { opacity: 1; }
-}
+.est-tabs a:hover { color: rgb(var(--ztims-on-surface)); }
+.est-tabs a.is-open { color: rgb(var(--ztims-primary-text)); border-bottom-color: rgb(var(--ztims-primary)); }
+.est-tabs a:focus-visible { outline: 2px solid rgb(var(--ztims-secondary)); outline-offset: -2px; }
+@media (max-width: 639px) { .est-tabs a { padding: .6rem .7rem; gap: .3rem; } }
 
 .est-facts { display: grid; gap: 0; }
 .est-fact { display: grid; grid-template-columns: 9.5rem 1fr; gap: .25rem 1rem; padding: .8rem 0;
