@@ -738,7 +738,11 @@ visitors here").
 - **The manager's pages** (current enterprise from the header switcher; the
   attraction pages are unchanged):
   - **Guest Register** (`resort_register.html`) becomes the stay register:
-    month picker, tiles, Stays (filters; Open a stay: facts, guests, months it
+    month picker, tiles, Stays (filters: All stays, Arrived this month,
+    Carried over from previous months, Voided — voided stays touching the month
+    come as `voided` on `GET /api/accommodation/:spotId/stays`, shown struck
+    through with their reason, never counted, opened read-only; 13 November
+    2026; Open a stay: facts, guests, months it
     counts in, history; Edit, Change check-out, Transfer room, Void, each with
     a reason; a stay in a finalized month opens locked) and Daily register
     (DAE-1A grid), Record a stay, Excel of the register now. Bookings → Check

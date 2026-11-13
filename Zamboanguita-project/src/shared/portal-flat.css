@@ -722,6 +722,9 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
 .acc-stay { display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: .5rem 1rem; align-items: center; padding: .85rem 1.25rem; }
 .acc-stay:hover { background: rgb(var(--ztims-on-surface) / .03); }
 .acc-stay--carried { background: rgb(var(--ztims-on-surface) / .025); }
+.acc-stay--void { background: rgb(var(--ztims-error) / .05); }
+.acc-stay--void .acc-stay__ref, .acc-stay--void b { text-decoration: line-through; text-decoration-color: rgb(var(--ztims-error) / .6); }
+.acc-stay--void .acc-sub b { text-decoration: none; color: rgb(var(--ztims-error)); }
 .acc-stay__ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .03em; color: rgb(var(--ztims-on-surface)); }
 .acc-stay__where { font-size: .875rem; color: rgb(var(--ztims-on-surface)); }
 @media (max-width: 760px) { .acc-stay { grid-template-columns: minmax(0, 1fr) auto; } .acc-stay__where { grid-column: 1 / -1; } .acc-stay__go { grid-row: 1; grid-column: 2; } }

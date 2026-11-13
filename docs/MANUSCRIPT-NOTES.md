@@ -4,6 +4,18 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+## Stay register: Voided filter (13 November 2026)
+
+**The change.** The manager's Guest Register (stay register) lists voided stays
+under a new **Voided** filter, after "Carried over from previous months" (was
+"Continuing from earlier"). A voided stay never counts in any report; it is shown
+with its reason and opens read-only. A stay carried over from a previous month
+is one whose check-in was in an earlier month and whose nights fall in this
+month: its nights count here, its arrival counted in the check-in month.
+
+**Change in the manuscript:** where the stay register is described, say stays
+are voided with a reason, never deleted, and can be reviewed under Voided.
+
 ## Enterprise page tabs always shown (13 November 2026)
 
 **The change.** On the Enterprise Manager's Enterprise page, the subpage tabs

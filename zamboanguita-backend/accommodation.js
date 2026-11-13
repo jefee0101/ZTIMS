@@ -408,7 +408,14 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         if (!/^\d{4}-\d{2}$/.test(key)) refuse(400, 'BAD_PERIOD', 'Give month=YYYY-MM.');
         const [from, until] = monthRange(+key.slice(0, 4), +key.slice(5));
         const rec = await loadRecords(spot.id, from, until);
-        res.json({ success: true, stays: rec.stays.map(shapeStay) });
+        // Voided stays touching the month, for the register's Voided filter: they never count, only shown.
+        const voided = (await query(`select * from accommodation_stays where spot_id = $1 and status <> 'active' and check_in < $3 and check_out > $2 order by check_in, reference`,
+                                    [spot.id, from, until])).rows;
+        const vids = voided.map(v => v.id);
+        const vrooms = vids.length ? (await query('select * from accommodation_stay_rooms where stay_id = any($1) order by starts_on', [vids])).rows : [];
+        const vguests = vids.length ? (await query('select * from accommodation_stay_guests where stay_id = any($1) order by starts_on', [vids])).rows : [];
+        for (const v of voided) { v.rooms = vrooms.filter(a => a.stay_id === v.id); v.guests = vguests.filter(g => g.stay_id === v.id); }
+        res.json({ success: true, stays: rec.stays.map(shapeStay), voided: voided.map(shapeStay) });
     }));
     router.get('/accommodation/stays/:id', requireStaff, handle(async (req, res) => {
         const s = await stayById(req.params.id);

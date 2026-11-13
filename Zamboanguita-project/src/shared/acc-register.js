@@ -5,7 +5,7 @@
  */
 (function () {
     const A = () => window.ztimsAcc;
-    let root, spot, rooms = [], year, month, view = null, stays = [], filter = 'all', tab = 'stays';
+    let root, spot, rooms = [], year, month, view = null, stays = [], voided = [], filter = 'all', tab = 'stays';
 
     const roomNo = id => { const r = rooms.find(x => x._id === id); return r ? r.roomNumber : '?'; };
     const guestsOf = s => s.guests.reduce((a, g) => a + g.male + g.female, 0);
@@ -54,7 +54,7 @@
                 A().api(`/accommodation/${spot._id}/stays?month=${key}`),
                 A().loadResidences()
             ]);
-            rooms = r.rooms; view = v; stays = s.stays;
+            rooms = r.rooms; view = v; stays = s.stays; voided = s.voided || [];
             draw();
         } catch (e) {
             if (e.message === 'Signed out') return;
@@ -90,6 +90,7 @@
         const carried = s => s.checkIn.slice(0, 7) < key;
         if (filter === 'arrived') list = list.filter(s => !carried(s));
         if (filter === 'carried') list = list.filter(carried);
+        if (filter === 'voided') list = voided.slice().sort((a, b) => a.checkIn.localeCompare(b.checkIn) || a.reference.localeCompare(b.reference));
         const sex = s => { const m = s.guests.reduce((a, g) => a + g.male, 0), w = s.guests.reduce((a, g) => a + g.female, 0); return `${m} male, ${w} female`; };
         const where = s => [...new Set(s.guests.map(g => A().residenceName(g.residence)))].join(', ');
         return `${banner()}
@@ -100,20 +101,20 @@
                 <div class="stat-tile"><p>Stays</p><p>${stays.length}</p></div>
             </div>
             <div class="dest-chips acc-filters" role="group" aria-label="Show">
-                ${[['all', 'All stays'], ['arrived', 'Arrived this month'], ['carried', 'Continuing from earlier']].map(([k, l]) =>
+                ${[['all', 'All stays'], ['arrived', 'Arrived this month'], ['carried', 'Carried over from previous months'], ['voided', 'Voided']].map(([k, l]) =>
                     `<button type="button" class="dest-chip" data-filter="${k}" aria-pressed="${filter === k}">${l}</button>`).join('')}
             </div>
             <section class="glass-panel">
                 ${list.length ? `<div class="divide-y divide-outline-variant/20">${list.map(s => `
-                    <div class="acc-stay${carried(s) ? ' acc-stay--carried' : ''}">
+                    <div class="acc-stay${s.status !== 'active' ? ' acc-stay--void' : carried(s) ? ' acc-stay--carried' : ''}">
                         <div class="acc-stay__ref">${A().esc(s.reference)}</div>
                         <div class="min-w-0"><b>${A().fmtDate(s.checkIn)} → ${A().fmtDate(s.checkOut)}</b> · ${nightsOf(s)} night${nightsOf(s) === 1 ? '' : 's'}
                             <span class="acc-sub">Room ${A().esc(roomsText(s))}</span></div>
                         <div class="min-w-0"><b>${guestsOf(s)} guest${guestsOf(s) === 1 ? '' : 's'}</b><span class="acc-sub">${sex(s)}</span></div>
-                        <div class="min-w-0 acc-stay__where"><span>${A().esc(where(s))}</span>${carried(s) ? `<span class="acc-sub">Arrived ${A().fmtDate(s.checkIn)}; nights count here</span>` : ''}</div>
+                        <div class="min-w-0 acc-stay__where"><span>${A().esc(where(s))}</span>${s.status !== 'active' ? `<span class="acc-sub"><b>Voided.</b> ${A().esc(s.voidReason || '')}</span>` : carried(s) ? `<span class="acc-sub">Arrived ${A().fmtDate(s.checkIn)}; nights counted in this month</span>` : ''}</div>
                         <div class="acc-stay__go"><button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-open="${A().esc(s._id)}">Open</button></div>
                     </div>`).join('')}</div>`
-                : `<div class="p-4"><div class="ztims-empty">No stays ${filter === 'all' ? '' : 'of this kind '}in ${A().monthName(year, month)}.</div></div>`}
+                : `<div class="p-4"><div class="ztims-empty">${filter === 'voided' ? 'No voided stays' : 'No stays ' + (filter === 'all' ? '' : 'of this kind ')}in ${A().monthName(year, month)}.</div></div>`}
             </section>`;
     }
 
