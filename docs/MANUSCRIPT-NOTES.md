@@ -4,6 +4,19 @@ What the manuscript (the capstone paper) must say after each change to the
 system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
+
+## Conceptual framework redrawn in the IPO format (13 November 2026)
+
+**The change.** Figure (Conceptual Framework) in the school's Input–Process–Output
+layout: square boxes with a header row, solid arrows, Input as justified items,
+Process with "Theoretical Foundation" and "Evaluation" sub-heads, Output in bold
+capitals. Same content as before, minus the Agile cycle picture; "Establishment
+Managers" now reads "Enterprise Managers".
+
+**Change in the manuscript:** replace the figure with
+`docs/diagrams/ztims-conceptual-framework.png`; where the text names the
+respondents, use "Enterprise Managers".
+
 ## Room booking: pay at the property or pay online (13 November 2026)
 
 **The change.** A visitor booking a room now chooses how to pay, in a new
