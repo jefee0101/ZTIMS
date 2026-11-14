@@ -5,7 +5,19 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
-## Unified officer Feedback workspace (14 November 2026)
+## Reviews belong in the manager portal — owner correction (14 November 2026)
+
+This supersedes the earlier combined officer Feedback design below. Tourism
+Officer Feedback contains office-managed attraction messages and general
+enquiries only. Enterprise Managers have Reviews in their own portal, selected
+separately for each accommodation enterprise they manage. Managers read visible
+reviews, ratings and counts; they cannot read the office inbox, access another
+manager's enterprise, reply to reviews, or moderate/delete visitor reviews.
+Completed-stay eligibility and existing officer moderation APIs/audit data are
+unchanged. No schema/data migration. Correct current-system descriptions when
+authorized, preserving collected results and historical UI material.
+
+## Unified officer Feedback workspace (14 November 2026; superseded above)
 
 The Tourism Officer now has one Feedback menu: a compact private Office-managed
 inbox (individual attractions or general enquiries) and Enterprise reviews,

@@ -2729,7 +2729,7 @@ app.use('/api', require('./visitors')({ sharedRateLimit, emailTakenBy, siteOrigi
 
 /* Reviews (reviews.js): visitors who have been to a place rate it; the
    officer may hide one, with a reason. Counts and ratings only. */
-app.use('/api', require('./reviews')({ requireAdmin, sharedRateLimit }));
+app.use('/api', require('./reviews')({ requireAdmin, requireEstablishmentManager, sharedRateLimit }));
 
 /* Room booking at private places to stay (bookings.js): visitors ask, the
    resort's manager confirms by hand, the officer sees counts and can pause. */
