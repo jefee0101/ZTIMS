@@ -1081,3 +1081,23 @@ Rewritten in the panel-approved four-column format (Problem, Findings, Conclusio
 per SOP with the SOP's full wording and sub-items. Study numbers unchanged from rev12; conclusions and
 recommendations follow the current system (Support Staff, generated reports and DOT forms).
 File: docs/manuscript/executive-summary-revised.docx.
+
+## Staff accounts by invitation link (14 November 2026)
+
+When the Tourism Officer adds a Tourism Officer, Enterprise Manager or Support Staff account, they choose
+how the person signs in: **Send an invitation link** (the default) or **Set a password now** (the earlier
+method). The invitation is emailed; the person opens it and chooses their own password, so nobody else knows
+it. The link works once and runs out after 72 hours; only a scrambled (hashed) copy of it is stored. The
+officer can copy the link if the email fails or the person is at the office, and can resend it (the old link
+stops working). Until the person accepts, the account cannot sign in and shows "Waiting for the person to
+accept". Creating an account and resending ask for the officer's own password.
+
+Lines to update:
+- Chapter IV, security / account management (Scope or the system's security features): "The Tourism Officer
+  creates staff accounts and sends each person a single-use invitation link (valid 72 hours) to set their own
+  password; a temporary password, changed at first sign-in, remains an option."
+- Chapter IV use case description for the Tourism Officer: "manages staff accounts (invites or sets a temporary
+  password, resends invitations, issues new passwords, deactivates)".
+- Definition of Terms (optional): "Invitation link — a single-use, time-limited email link through which a new
+  staff member sets their own password."
+- Do not change the TAM or ISO evaluation results: this was added after the evaluated version.

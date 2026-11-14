@@ -649,7 +649,12 @@ body { overflow-x: hidden; }
                         <span class="field-label">Sign-in email</span>
                         <input id="newOfficerEmail" type="email" required class="field" placeholder="officer@zamboanguita.gov.ph"/>
                     </label>
-                    <label class="block">
+                    <fieldset class="inv-method sm:col-span-2">
+                        <legend class="field-label">How they sign in</legend>
+                        <label class="inv-option"><input type="radio" name="officerMethod" value="invite" data-invite-method checked/><span>Send an invitation link</span></label>
+                        <label class="inv-option"><input type="radio" name="officerMethod" value="password" data-invite-method/><span>Set a password now</span></label>
+                    </fieldset>
+                    <label class="block" data-invite-password hidden>
                         <span class="field-label">Password <span class="normal-case font-normal">(optional)</span></span>
                         <input id="newOfficerPassword" type="text" minlength="10" maxlength="72" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
                     </label>
@@ -705,7 +710,12 @@ body { overflow-x: hidden; }
                         <span class="field-label">Attraction</span>
                         <select id="newStaffSpot" required class="field"></select>
                     </label>
-                    <label class="block">
+                    <fieldset class="inv-method sm:col-span-2">
+                        <legend class="field-label">How they sign in</legend>
+                        <label class="inv-option"><input type="radio" name="staffMethod" value="invite" data-invite-method checked/><span>Send an invitation link</span></label>
+                        <label class="inv-option"><input type="radio" name="staffMethod" value="password" data-invite-method/><span>Set a password now</span></label>
+                    </fieldset>
+                    <label class="block" data-invite-password hidden>
                         <span class="field-label">Password <span class="normal-case font-normal">(optional)</span></span>
                         <input id="newStaffPassword" type="text" minlength="10" maxlength="72" autocomplete="off" class="field" placeholder="Leave blank to generate one"/>
                     </label>
@@ -953,9 +963,12 @@ function renderOfficers() {
         const active = o.active !== false;
         const status = o.isYou
             ? '<span class="tone-info tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">You</span>'
-            : `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`;
+            : `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`
+              + (active ? `<div class="inv-row">${ztimsInvite.pill(o)}</div>` : '');
         const actions = o.isYou ? '<span class="text-support">—</span>' : `
             <div class="flex flex-col items-end gap-2">
+                ${active && o.invitePending ? `<button type="button" class="btn btn-secondary btn-sm min-h-[36px] whitespace-nowrap" data-resend="${escapeHtml(o._id)}">
+                    <span class="material-symbols-outlined !text-base">forward_to_inbox</span>Resend invitation</button>` : ''}
                 ${active ? `<button type="button" class="btn btn-ghost btn-sm min-h-[36px] whitespace-nowrap" data-issue="${escapeHtml(o._id)}">
                     <span class="material-symbols-outlined !text-base">key</span>New password</button>` : ''}
                 <button type="button" class="btn ${active ? 'btn-danger' : 'btn-secondary'} btn-sm min-h-[36px] whitespace-nowrap" data-status="${escapeHtml(o._id)}" data-active="${active ? '0' : '1'}">
@@ -988,6 +1001,8 @@ function showPassword(title, email, password) {
 }
 
 const addForm = document.getElementById('addOfficerForm');
+// staff-invite.js is a module: it has run by DOMContentLoaded.
+document.addEventListener('DOMContentLoaded', () => ztimsInvite.wire(addForm));
 document.getElementById('openAddOfficerBtn').addEventListener('click', () => {
     addForm.hidden = !addForm.hidden;
     if (!addForm.hidden) document.getElementById('newOfficerName').focus();
@@ -997,7 +1012,8 @@ addForm.addEventListener('submit', async event => {
     event.preventDefault();
     const fullName = document.getElementById('newOfficerName').value.trim();
     const email = document.getElementById('newOfficerEmail').value.trim();
-    const password = document.getElementById('newOfficerPassword').value.trim();
+    const method = ztimsInvite.method(addForm);
+    const password = method === 'password' ? document.getElementById('newOfficerPassword').value.trim() : '';
     if (!fullName || !email) return showToast("Enter the officer's full name and sign-in email.", 'error');
     if (password && password.length < 10) return showToast('A password must be at least 10 characters.', 'error');
     const confirmPassword = await ztimsDialog.prompt({
@@ -1007,8 +1023,9 @@ addForm.addEventListener('submit', async event => {
     if (!confirmPassword) return;
     const restore = setButtonLoading(document.getElementById('addOfficerBtn'), 'Creating...');
     try {
-        const r = await api('/admin/create', 'POST', { fullName, email, password, position: document.getElementById('newOfficerPosition').value.trim(), confirmPassword });
-        showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
+        const r = await api('/admin/create', 'POST', { fullName, email, method, password, position: document.getElementById('newOfficerPosition').value.trim(), confirmPassword });
+        if (r.inviteLink) ztimsInvite.showLink({ title: `Account created for ${fullName}`, ...r });
+        else showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
         addForm.reset(); addForm.hidden = true;
         loadOfficers();
     } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
@@ -1016,6 +1033,16 @@ addForm.addEventListener('submit', async event => {
 });
 
 document.getElementById('adminListTableBody').addEventListener('click', async event => {
+    const resend = event.target.closest('[data-resend]');
+    if (resend) {
+        const o = officers.find(x => x._id === resend.dataset.resend);
+        if (!o) return;
+        try {
+            await ztimsInvite.resend({ kind: 'officer', id: o._id, name: o.fullName || o.email, send: (path, body) => api(path, 'POST', body) });
+            loadOfficers();
+        } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+        return;
+    }
     const issue = event.target.closest('[data-issue]');
     const status = event.target.closest('[data-status]');
     if (!issue && !status) return;
@@ -1072,9 +1099,12 @@ function renderStaff() {
     }
     tbody.innerHTML = staffList.map(st => {
         const active = st.status === 'active';
-        const status = `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`;
+        const status = `<span class="${active ? 'tone-success' : 'tone-neutral'} tone-pill text-[10px] font-bold uppercase tracking-wider px-2 py-1">${active ? 'Active' : 'Deactivated'}</span>`
+            + (active ? `<div class="inv-row">${ztimsInvite.pill(st)}</div>` : '');
         const actions = `
             <div class="flex flex-col items-end gap-2">
+                ${active && st.invitePending ? `<button type="button" class="btn btn-secondary btn-sm min-h-[36px] whitespace-nowrap" data-staff-resend="${escapeHtml(st._id)}">
+                    <span class="material-symbols-outlined !text-base">forward_to_inbox</span>Resend invitation</button>` : ''}
                 ${active ? `<button type="button" class="btn btn-ghost btn-sm min-h-[36px] whitespace-nowrap" data-staff-issue="${escapeHtml(st._id)}">
                     <span class="material-symbols-outlined !text-base">key</span>New password</button>` : ''}
                 <button type="button" class="btn ${active ? 'btn-danger' : 'btn-secondary'} btn-sm min-h-[36px] whitespace-nowrap" data-staff-status="${escapeHtml(st._id)}" data-active="${active ? '0' : '1'}">
@@ -1119,6 +1149,7 @@ async function loadStaff() {
 }
 
 const addStaffForm = document.getElementById('addStaffForm');
+document.addEventListener('DOMContentLoaded', () => ztimsInvite.wire(addStaffForm));
 document.getElementById('openAddStaffBtn').addEventListener('click', () => {
     addStaffForm.hidden = !addStaffForm.hidden;
     if (!addStaffForm.hidden) { fillStaffSpots(); document.getElementById('newStaffName').focus(); }
@@ -1129,7 +1160,8 @@ addStaffForm.addEventListener('submit', async event => {
     const fullName = document.getElementById('newStaffName').value.trim();
     const email = document.getElementById('newStaffEmail').value.trim();
     const spotId = document.getElementById('newStaffSpot').value;
-    const password = document.getElementById('newStaffPassword').value.trim();
+    const method = ztimsInvite.method(addStaffForm);
+    const password = method === 'password' ? document.getElementById('newStaffPassword').value.trim() : '';
     if (!fullName || !email) return showToast('Enter the full name and sign-in email.', 'error');
     if (!spotId) return showToast('Choose the attraction.', 'error');
     if (password && password.length < 10) return showToast('A password must be at least 10 characters.', 'error');
@@ -1142,10 +1174,11 @@ addStaffForm.addEventListener('submit', async event => {
     const restore = setButtonLoading(document.getElementById('addStaffBtn'), 'Creating...');
     try {
         const r = await api('/support-staff', 'POST', {
-            fullName, email, spotId, password, confirmPassword,
+            fullName, email, spotId, method, password, confirmPassword,
             contactNumber: document.getElementById('newStaffContact').value.trim()
         });
-        showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
+        if (r.inviteLink) ztimsInvite.showLink({ title: `Account created for ${fullName}`, ...r });
+        else showPassword(`Account created for ${fullName}`, r.email, r.newPassword);
         addStaffForm.reset(); addStaffForm.hidden = true;
         loadStaff();
     } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
@@ -1153,6 +1186,16 @@ addStaffForm.addEventListener('submit', async event => {
 });
 
 document.getElementById('staffListTableBody').addEventListener('click', async event => {
+    const resend = event.target.closest('[data-staff-resend]');
+    if (resend) {
+        const st = staffList.find(x => x._id === resend.dataset.staffResend);
+        if (!st) return;
+        try {
+            await ztimsInvite.resend({ kind: 'support', id: st._id, name: st.fullName || st.email, send: (path, body) => api(path, 'POST', body) });
+            loadStaff();
+        } catch (e) { if (e.message !== 'Signed out.') showToast(e.message, 'error'); }
+        return;
+    }
     const issue = event.target.closest('[data-staff-issue]');
     const status = event.target.closest('[data-staff-status]');
     if (!issue && !status) return;
@@ -1457,6 +1500,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- Marks the sidebar link for the page you are on. -->
 <script type="module" src="../shared/nav-active.js"></script>
+<script type="module" src="../shared/staff-invite.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 <script type="module" src="../shared/idle-signout.js"></script>
 <script type="module" src="../shared/password-eye.js"></script>

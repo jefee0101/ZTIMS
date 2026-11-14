@@ -2603,3 +2603,31 @@ do $$ begin
   alter table public.booking_rooms add constraint booking_rooms_room_type foreign key(room_id,room_type_id) references public.accommodation_rooms(id,room_type_id);
  end if;
 end $$;
+
+-- ============================================================================
+-- Staff invitations (14 November 2026). The Tourism Officer can invite a new
+-- Tourism Officer, Enterprise Manager or Support Staff account by email: the
+-- person chooses their own password through a single-use link that runs out
+-- after 72 hours. Only the token's sha-256 hash is kept. Until the link is
+-- used the account has no usable password. Resending replaces the earlier
+-- link (staff-invitations.js). No account is ever deleted here.
+-- ============================================================================
+create table if not exists public.staff_invitations (
+    id                  text primary key default public.ztims_new_id(),
+    account_table       text not null,
+    account_id          text not null,
+    token_hash          text not null unique,
+    expires_at          timestamptz not null,
+    used_at             timestamptz,
+    created_by_email    text not null default '',
+    created_at          timestamptz not null default now()
+);
+do $$ begin
+ if not exists (select 1 from pg_constraint where conname = 'staff_invitations_table_known') then
+  alter table public.staff_invitations add constraint staff_invitations_table_known
+    check (account_table in ('tourism_officers', 'establishment_managers', 'support_staff'));
+ end if;
+end $$;
+create index if not exists staff_invitations_account_idx on public.staff_invitations (account_table, account_id);
+alter table public.staff_invitations enable row level security;
+revoke all on public.staff_invitations from anon, authenticated;
