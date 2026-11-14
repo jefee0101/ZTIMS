@@ -2051,7 +2051,14 @@ app.post('/api/feedback', feedbackRateLimit, async (req, res) => {
         const message = String(body.message || '').trim();
         const name = String(body.name || '').trim().slice(0, 120);
         const email = String(body.email || '').trim().toLowerCase();
-        const page = String(body.page || '').trim().slice(0, 500);
+        let page = String(body.page || '').trim().slice(0, 500);
+        if(body.spotId){
+            const place=await Spot.findById(String(body.spotId));
+            if(!place || place.type!=='spot' || place.managedBy || !isPubliclyVisible(place))
+                return res.status(400).json({success:false,message:'Choose an office-managed attraction or a general enquiry.'});
+            // Existing context URL records the selected attraction; no schema change.
+            page='/src/spot.html?spotId='+place._id;
+        }
 
         if (message.length < 10) {
             return res.status(400).json({ success: false, message: 'Please write a little more, so the office knows what to look at.' });

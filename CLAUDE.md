@@ -995,14 +995,26 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
 ### The officer's Feedback (`admin_feedback.html`)
 
-Title; counts that filter (Open — new and read, the default — New in red,
-Resolved, All); topic pills (one scrolling row on a phone); search. One row per
-message (`.fb-row` in `portal-flat.css`): the topic's icon, the topic, status
-pill and when, the whole message (never cut), "From" name · email and "Sent
-from" the page; a new message has a tangerine edge. One main button — **Mark
-resolved**, or **Reopen** once resolved — and a ⋯ menu (Reply by email, a
-`mailto:` with a subject, when there is an email; Mark read for a new one). No
-Refresh.
+One officer menu item, **Feedback**, with two groups (14 November 2026):
+- **Office-managed:** one private inbox for office-run attractions and general
+  Tourism Office messages; filter by attraction, status, topic and search.
+  Open (new/read) is the default. Compact expandable rows retain the full
+  message, name/email, topic and source context; Mark read, Mark resolved and
+  Reopen use the existing officer-only feedback routes.
+- **Enterprise reviews:** accommodation enterprises selected individually;
+  shown/hidden status, rating and search filters, expandable review rows and
+  moderation history. Hide/Show always requires a reason and retains the
+  existing audit trail. No delete or enterprise reply is added.
+
+`shared/officer-feedback.js` drives the workspace; load `ztims-dialog.js` for
+moderation. The former `admin_reviews.html` redirects to
+`admin_feedback.html#enterprises`; every officer sidebar has just Feedback.
+Contact's optional office-attraction selector sends `spotId`; the server
+requires a public office-run attraction and records its canonical destination
+URL in the existing feedback `page` column. No schema change. General and
+legacy messages remain available. The context is visitor-supplied, not proof
+of a visit. Private feedback never becomes a public review, and no manager
+access is granted. Accommodation reviews still require a completed stay.
 
 ### Announcements and events (November 2026)
 
@@ -1515,13 +1527,10 @@ ratings only, never money.
 - **Cards.** Home's card shows "★ 4.6 (12)" under the name
   (`.hm-card__rating`) and the officer's Destinations card "★ 4.6 from 12
   reviews" (`.pg-card__rating`), only when the place has visible reviews.
-- **The officer's Reviews** (`admin/admin_reviews.html`, "Reviews" in the
-  officer menu after Feedback, on every officer page): counts that filter
-  (Shown, 1 or 2 stars in red, Hidden, All), search, a row per review
-  (`.rvo-row` in `portal-flat.css`: stars, the place linked to its page,
-  Shown / Hidden pill, the whole text, name · Visited or Stayed · when, the
-  reason — "Hidden: …" or "Shown again: …" with who and when) and **Hide** (red)
-  or **Unhide**, each asking for the reason in a dialog. No delete, no reply.
+- **The officer's reviews** live in Feedback → Enterprise reviews, separated
+  by accommodation enterprise (see "The officer's Feedback"). The former
+  `admin/admin_reviews.html` is a redirect for saved links. Reasons and
+  moderation history remain available; no delete or enterprise reply.
 
 ### Support Staff (November 2026)
 
@@ -1845,6 +1854,11 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   account stays until the visitor deletes it. Reviews only after a completed stay, one per place; the officer may hide or unhide one, always
   with a reason; no manager replies; ratings and counts only. Bookings open only in the account that holds them:
   no public search by code and email (9 November 2026). See "Visitor accounts".
+- Feedback workspace (14 November 2026): one officer page combines private
+  office-managed attraction/general messages and per-accommodation-enterprise
+  public reviews. Enterprises have reviews only; no private enterprise inbox,
+  manager moderation or replies. Reviews require a completed stay; moderation
+  keeps a reason and audit history. Message context does not prove a visit.
 - Support Staff (9 November 2026, the user's decisions): one office-run,
   counting attraction each, one active account per attraction; Guest
   Register, monthly report and listing details except category and prices;

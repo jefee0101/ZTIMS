@@ -5,6 +5,23 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Unified officer Feedback workspace (14 November 2026)
+
+The Tourism Officer now has one Feedback menu: a compact private Office-managed
+inbox (individual attractions or general enquiries) and Enterprise reviews,
+selected separately for each accommodation enterprise. New reviews still
+require a completed stay. Messages are private; reviews remain public unless
+hidden by the officer with a recorded reason. No manager inbox, manager
+moderation or enterprise reply was added. Contact now permits selecting a
+public office-run attraction; this is context, not verified attendance.
+
+For the next manuscript revision, update the officer's navigation/workflow
+description and current-system screenshots when authorized. Distinguish this
+later refinement from the system originally evaluated. Preserve collected
+research data, manuscript spacing and the historical System User Interface
+section until the owner authorizes changes there. No diagrams were redrawn
+and no schema update or data migration is needed for this workspace.
+
 ## Entrance sales retired — Stage 1 (14 November 2026)
 
 This entry supersedes older entrance-sale and officer-collection descriptions

@@ -338,6 +338,7 @@ body { overflow-x: hidden; }
                                 </select>
                             </div>
 
+                            <label class="block"><span class="field-label">Office-managed attraction</span><select id="fbPlace" class="field"><option value="">Tourism Office / general enquiry</option></select></label>
                             <div>
                                 <label for="fbMessage" class="field-label">Your message</label>
                                 <textarea id="fbMessage" name="message" class="field min-h-[9rem] resize-y" rows="6" maxlength="2000" required
@@ -524,6 +525,10 @@ body { overflow-x: hidden; }
         return ok;
     }
 
+    fetch(API_BASE+'/spots').then(r=>{if(!r.ok)throw Error();return r.json();}).then(spots=>{
+        const select=document.getElementById('fbPlace');
+        spots.filter(s=>s.type==='spot'&&!s.managedBy).forEach(s=>{const o=document.createElement('option');o.value=s._id;o.textContent=s.title;select.appendChild(o);});
+    }).catch(()=>{document.getElementById('fbPlace').insertAdjacentHTML('afterend','<p role="status">Attraction list unavailable. You can still send a general enquiry.</p>');});
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         setFormError('');
@@ -552,7 +557,8 @@ body { overflow-x: hidden; }
                     name: name.value.trim(),
                     email: email.value.trim(),
                     website: website.value,
-                    page: referringPage()
+                    page: referringPage(),
+                    spotId: document.getElementById('fbPlace').value
                 })
             });
             clearTimeout(slowTimer);
