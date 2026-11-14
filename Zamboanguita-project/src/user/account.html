@@ -391,6 +391,7 @@ body { overflow-x: hidden; }
 </div>
 <script type="module" src="../shared/site-footer.js"></script>
 <script type="module" src="../shared/visitor-session.js"></script>
+<script type="module" src="../shared/google-button.js"></script>
 <script type="module">
 /* My account. visitor-session.js (loaded just before) gives window.ztimsVisitor. */
 const V = window.ztimsVisitor;
@@ -579,7 +580,7 @@ $('deleteOpen').addEventListener('click', async () => {
     });
     if (!window.google || !window.google.accounts) return say('deleteMessage', 'Google sign-in could not load. Try again.');
     window.google.accounts.id.initialize({ client_id: id, callback: r => { deleteCredential = r.credential; say('deleteMessage', 'Confirmed with Google. Press Delete my account.', 'success'); } });
-    window.google.accounts.id.renderButton($('delGoogle'), { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with' });
+    window.ztimsGoogleButton.render($('delGoogle'));
 });
 $('deleteCancel').addEventListener('click', () => { $('deleteForm').hidden = true; $('deleteOpen').hidden = false; say('deleteMessage', ''); });
 $('deleteForm').addEventListener('submit', async event => {

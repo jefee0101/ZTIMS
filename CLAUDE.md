@@ -1460,6 +1460,14 @@ checkout, and **signing in is required** to book a room.
   `theme.css`), all run by `src/shared/visitor-auth.js` (`<body
   data-auth-page>`). "Continue with Google" is Google Identity Services' own
   button, shown only when `GET /api/visitors/config` gives a client id. After
+  loading GIS, `shared/google-button.js` renders it once the host is visible,
+  measures the real width (up to Google's 400px maximum), and follows theme
+  and width changes without reinitializing Google or changing the credential
+  callback. Dark uses Google's `filled_black`, light uses `outline`.
+  The scoped iframe `color-scheme: light` prevents a white canvas around its
+  transparent padding on dark pages. Sign-in, sign-up and the account-deletion
+  reconfirmation share this renderer. Google's branding and personalized
+  account label stay Google-controlled. After
   signing in the visitor returns to `?next=` (an address on this site only;
   kept in `sessionStorage.ztimsNext` across the emailed link).
   `src/shared/visitor-session.js` (every visitor page) keeps the token in

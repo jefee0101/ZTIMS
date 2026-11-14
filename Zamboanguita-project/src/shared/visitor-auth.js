@@ -92,12 +92,8 @@
         }).catch(() => null);
         if (!window.google || !window.google.accounts) return;
         window.google.accounts.id.initialize({ client_id: clientId, callback: r => onCredential(r.credential), ux_mode: 'popup' });
-        const dark = document.documentElement.classList.contains('dark');
-        window.google.accounts.id.renderButton($('googleButton'), {
-            type: 'standard', theme: dark ? 'filled_black' : 'outline', size: 'large', shape: 'pill',
-            text: 'continue_with', logo_alignment: 'center', width: Math.min(400, $('googleButton').clientWidth || 320)
-        });
         box.hidden = false;
+        window.ztimsGoogleButton.render($('googleButton'));
     }
 
     async function googleSignIn(credential, password) {

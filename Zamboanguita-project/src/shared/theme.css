@@ -2776,6 +2776,10 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 .va-msg--success { color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-success) / .1); border-color: rgb(var(--ztims-success) / .3); }
 .va-google { margin-bottom: 1.25rem; }
 .va-google__btn { display: flex; justify-content: center; min-height: 44px; }
+/* GIS paints its own light/dark button. Its transparent iframe canvas must
+   keep a light scheme; inheriting the page's dark scheme adds a white matte. */
+.ztims-google-button { display: flex; justify-content: center; width: 100%; min-height: 44px; }
+.ztims-google-button iframe { color-scheme: light; }
 .va-or { display: flex; align-items: center; gap: .75rem; margin-top: 1.25rem; font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
 .va-or::before, .va-or::after { content: ""; flex: 1; height: 1px; background: rgb(var(--ztims-outline)); }
 .va-consent { display: flex; gap: .65rem; align-items: flex-start; font-size: .875rem; color: rgb(var(--ztims-on-surface)); cursor: pointer; }
