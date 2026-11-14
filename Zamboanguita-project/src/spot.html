@@ -263,7 +263,6 @@ body { overflow-x: hidden; }
                 <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
-                <a href="../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
         </div>
     </header>
@@ -315,15 +314,14 @@ body { overflow-x: hidden; }
 <script type="module">
     const API_BASE = "/api";
 
-    /* Buying a ticket or booking a room needs a signed-in visitor account
-       (visitor accounts, November 2026; visitors.js). Signed out, Buy tickets
-       and Book a room go to Sign in and come back here (#tickets / #rooms
+    /* Booking a room needs a signed-in visitor account
+       (visitor accounts, November 2026; visitors.js). Signed out, Book a room go to Sign in and come back here (#rooms
        opens the form again). Signed in, the name, email and phone come from
        the account; only a missing phone (or, for a room, country) is asked. */
     const VISITOR_TOKEN = 'ztimsVisitorToken';
     const visitorToken = () => { try { return localStorage.getItem(VISITOR_TOKEN) || ''; } catch (e) { return ''; } };
     const visitorHeaders = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + visitorToken() });
-    const signInFor = act => '/src/user/sign_in.html?next=' + encodeURIComponent(location.pathname + location.search.replace(/([?&])ticketDate=[^&]*&?/, '$1').replace(/[?&]$/, '') + '#' + act);
+    const signInFor = act => '/src/user/sign_in.html?next=' + encodeURIComponent(location.pathname + location.search + '#' + act);
     let accountPromise = null;
     /* The signed-in visitor, null when signed out (or the session ended), or
        'unknown' when the check itself failed (no signal, a busy server). */
@@ -720,206 +718,6 @@ body { overflow-x: hidden; }
                 </div>
             </section>
         `;
-    }
-
-    /* Why a date cannot be chosen here, or '' when it can. The server sends the
-       open weekdays (null: every day) and the closed dates, and refuses the
-       same days itself; this only saves a visitor a refused payment. */
-    const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    function closedDayReason(dateKey, calendar) {
-        if (!calendar || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return '';
-        const day = new Date(dateKey + 'T00:00:00Z').getUTCDay();
-        if (Array.isArray(calendar.openDays) && !calendar.openDays.includes(WEEKDAY_KEYS[day])) {
-            return `Closed on ${WEEKDAY_NAMES[day]}s. Open: ${calendar.openDaysText}.`;
-        }
-        const closed = (calendar.closedDates || []).find(c => c.date === dateKey);
-        if (closed) return `Closed on that date${closed.reason ? ` (${closed.reason})` : ''}. Please choose another day.`;
-        return '';
-    }
-
-    /* The kinds of visitor a ticket here can count, with their price. Student
-       and child only where the office has set a price for them. */
-    function ticketKinds(offer) {
-        const f = offer.fees || { regular: offer.unitFee, student: null, child: null };
-        return [
-            { key: 'regular', label: 'Regular', price: f.regular },
-            { key: 'student', label: 'Student', price: f.student, note: 'Bring your school ID.' },
-            { key: 'child', label: 'Child', price: f.child, note: f.childAgeMax ? `Up to ${f.childAgeMax} years old.` : '' }
-        ].filter(k => k.price !== null && k.price !== undefined);
-    }
-
-    /* Entrance tickets, for attractions the Tourism Office runs and charges for.
-       Bought online; the visitor shows the ticket code. */
-    async function renderTicketOffer(spotId) {
-        const slot = document.getElementById('ticketOffer');
-        if (!slot) return;
-        let offer = null;
-        try {
-            const response = await fetch(`${API_BASE}/tickets/offer/${encodeURIComponent(spotId)}`);
-            if (response.ok) offer = await response.json();
-        } catch (e) { /* no offer: the section simply does not appear */ }
-        if (!offer || !offer.available) return;
-        actions.tickets = true;
-        drawActions();
-
-        const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-        const last = new Date(Date.now() + (8 + 24 * offer.daysAhead) * 3600 * 1000).toISOString().slice(0, 10);
-        const kinds = ticketKinds(offer);
-        const cheaper = kinds.slice(1).map(k => ({ student: 'students', child: 'children' })[k.key]).filter(Boolean);
-        // No section on the page: "Buy tickets" opens this form in a window.
-        // The Entrance tile under At a glance carries the
-        // price and, where set, the student and child prices.
-        const tileSub = document.querySelector('[data-fact="entrance"] .spot-fact__sub');
-        if (tileSub && cheaper.length) tileSub.textContent = `per person · pay online or onsite · less for ${cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1')}`;
-        const modal = document.createElement('div');
-        modal.id = 'ticketModal';
-        modal.hidden = true;
-        modal.className = 'fixed inset-0 z-[70] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-labelledby', 'ticketHeading');
-        document.body.appendChild(modal);
-        modal.innerHTML = `
-            <div class="bg-surface border border-outline-variant/40 w-full max-w-lg p-6 sm:p-7 max-h-[95vh] overflow-y-auto relative">
-                <button type="button" id="closeTicketModal" aria-label="Close"
-                        class="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-                <h3 id="ticketHeading" class="text-xl font-display font-bold text-on-surface mb-1 pr-10">Buy entrance tickets</h3>
-                <p class="text-on-surface"><b>${escapeHtml(peso(kinds[0].price))}</b> per person${cheaper.length
-                    ? ` <span class="text-on-surface-variant">· less for ${escapeHtml(cheaper.join(', ').replace(/, ([^,]*)$/, ' and $1'))}</span>` : ''}</p>
-                <p class="text-support mt-1">Pay online now, or pay onsite when you arrive.</p>
-                <ol class="journey-steps mt-4" aria-label="Ticket steps">${journeySteps(['Date & visitors', 'Payment', 'Your ticket'], 0)}</ol>
-
-                <form id="ticketForm" class="mt-5" novalidate>
-                    <div class="bk-group">
-                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">event</span>Your visit</h3>
-                        <div>
-                            <label for="tkDate" class="bk-label">Date of visit</label>
-                            <input id="tkDate" type="date" required min="${today}" max="${last}" value="${today}" class="bk-field sm:!w-64"/>
-                        </div>
-                        <fieldset>
-                            <legend class="bk-label">Who is coming</legend>
-                            <div class="bk-people">
-                                ${kinds.map(k => `
-                                <div class="bk-person">
-                                    <span class="min-w-0">
-                                        <span class="bk-person__name block">${escapeHtml(k.label)}</span>
-                                        <span class="bk-person__price block">${escapeHtml(peso(k.price))} each${k.note ? ` · ${escapeHtml(k.note)}` : ''}</span>
-                                    </span>
-                                    <span class="qty" data-qty>
-                                        <button type="button" data-step="-1" aria-label="${escapeHtml(k.label)}: one fewer">−</button>
-                                        <input type="number" data-kind="${k.key}" min="0" max="${offer.maxPeople}" step="1" inputmode="numeric"
-                                               value="${k.key === 'regular' ? 1 : 0}" aria-label="${escapeHtml(k.label)}: number of people"/>
-                                        <button type="button" data-step="1" aria-label="${escapeHtml(k.label)}: one more">+</button>
-                                    </span>
-                                </div>`).join('')}
-                            </div>
-                        </fieldset>
-                    </div>
-
-                    <div class="bk-group">
-                        <h3 class="bk-group-title"><span class="material-symbols-outlined" aria-hidden="true">person</span>Your details</h3>
-                        <p id="tkWho" class="bk-who"></p>
-                        <div id="tkPhoneRow" hidden>
-                            <label for="tkPhone" class="bk-label">Phone</label>
-                            <input id="tkPhone" type="tel" autocomplete="tel" maxlength="40" placeholder="0917 123 4567" class="bk-field sm:!w-64"/>
-                        </div>
-                    </div>
-
-                    <div class="bk-summary mt-5" aria-live="polite">
-                        <div id="tkLines" class="space-y-1"></div>
-                        <p class="bk-summary__total"><span>Total</span><span id="tkTotal"></span></p>
-                    </div>
-                    <p id="tkError" hidden class="mt-3 text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
-                    <button type="submit" id="tkBuy"
-                            class="mt-4 w-full bg-primary text-on-primary py-3.5 min-h-[48px] font-display font-bold btn-primary-gradient flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined !text-lg" aria-hidden="true">payments</span><span id="tkBuyLabel">Buy tickets</span>
-                    </button>
-                    <p class="text-support mt-3">
-                        Your name, email and phone are used only for these tickets. See the
-                        <a href="privacy.html#collect" target="_blank" rel="noopener" class="underline font-bold">Privacy Notice</a>.
-                    </p>
-                </form>
-            </div>`;
-        wireQty(modal);
-        const closeTickets = () => { modal.hidden = true; };
-        document.getElementById('closeTicketModal').addEventListener('click', closeTickets);
-        modal.addEventListener('click', event => { if (event.target === modal) closeTickets(); });
-        document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeTickets(); });
-
-        const wanted = new URLSearchParams(window.location.search).get('ticketDate') || '';
-        const dateInput = document.getElementById('tkDate');
-        if (/^\d{4}-\d{2}-\d{2}$/.test(wanted) && wanted >= today && wanted <= last) {
-            dateInput.value = wanted;
-            openTickets();
-        }
-
-        const kindInputs = [...document.querySelectorAll('#ticketForm [data-kind]')];
-        const counts = () => Object.fromEntries(kindInputs.map(i => [i.dataset.kind, Math.max(0, Math.floor(Number(i.value)) || 0)]));
-        const total = document.getElementById('tkTotal');
-        const error = document.getElementById('tkError');
-        const buyButton = document.getElementById('tkBuy');
-        const checkDate = () => {
-            const reason = closedDayReason(dateInput.value, offer);
-            error.textContent = reason;
-            error.hidden = !reason;
-            buyButton.disabled = Boolean(reason);
-        };
-        dateInput.addEventListener('change', checkDate);
-        // Today may itself be a closed day: open on the first day that is not.
-        if (closedDayReason(dateInput.value, offer) && !wanted) {
-            for (let i = 1; i <= offer.daysAhead; i++) {
-                const next = new Date(Date.now() + (8 + 24 * i) * 3600 * 1000).toISOString().slice(0, 10);
-                if (!closedDayReason(next, offer)) { dateInput.value = next; break; }
-            }
-        }
-        checkDate();
-        const showTotal = () => {
-            const c = counts();
-            const sum = kinds.reduce((t, k) => t + (c[k.key] || 0) * k.price, 0);
-            const people = kinds.reduce((t, k) => t + (c[k.key] || 0), 0);
-            document.getElementById('tkLines').innerHTML = kinds.filter(k => c[k.key] > 0).map(k =>
-                `<p class="bk-summary__line"><span>${c[k.key]} × ${escapeHtml(k.label)}</span><span>${escapeHtml(peso(c[k.key] * k.price))}</span></p>`).join('')
-                || '<p class="bk-summary__line"><span>No one added yet</span><span></span></p>';
-            total.textContent = peso(sum);
-            const label = document.getElementById('tkBuyLabel');
-            if (label) label.textContent = people > 0 ? `Buy ${people} ticket${people === 1 ? '' : 's'} · ${peso(sum)}` : 'Buy tickets';
-        };
-        kindInputs.forEach(i => i.addEventListener('input', showTotal));
-        showTotal();
-
-        document.getElementById('ticketForm').addEventListener('submit', async event => {
-            event.preventDefault();
-            error.hidden = true;
-            const button = document.getElementById('tkBuy');
-            const original = button.innerHTML;
-            button.disabled = true;
-            button.textContent = 'Opening the payment page\u2026';
-            try {
-                const response = await fetch(`${API_BASE}/tickets`, {
-                    method: 'POST',
-                    headers: visitorHeaders(),
-                    body: JSON.stringify({
-                        spotId,
-                        visitDate: document.getElementById('tkDate').value,
-                        counts: counts(),
-                        phone: document.getElementById('tkPhone').value.trim()
-                    })
-                });
-                const result = await response.json().catch(() => ({}));
-                if (response.status === 401) { location.assign(signInFor('tickets')); return; }
-                if (result.code === 'PROFILE_INCOMPLETE') document.getElementById('tkPhoneRow').hidden = false;
-                if (!response.ok || !result.checkoutUrl) throw new Error(result.message || 'The tickets could not be bought just now.');
-                window.location.assign(result.checkoutUrl);
-            } catch (e) {
-                error.textContent = e.message;
-                error.hidden = false;
-                button.disabled = false;
-                button.innerHTML = original;
-            }
-        });
     }
 
     /* ---- Book a room (a private place to stay that takes bookings) -------
@@ -1687,7 +1485,7 @@ body { overflow-x: hidden; }
 
     // What this destination lets a visitor do, and the buttons for it: under the
     // photo, and fixed to the bottom of a phone's screen.
-    const actions = { tickets: false, rooms: false, directions: false, bookingUrl: '' };
+    const actions = { rooms: false, directions: false, bookingUrl: '' };
     let currentIsStay = false;
     function startActions(spot) {
         currentIsStay = isStayPlace(spot);
@@ -1699,19 +1497,17 @@ body { overflow-x: hidden; }
         const size = 'btn-pill' + (compact ? ' flex-1 min-w-0 !px-2 !text-xs' : '');
         const list = [];
         // On a computer, the user's UX Pilot design: Directions solid first, then
-        // Buy tickets / Book outlined beside it.
+        // Book a room outlined beside it.
         if (!compact) {
             if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
             const second = actions.directions ? 'btn-secondary' : 'btn-primary';
-            if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
             if (actions.rooms) list.push(`<button type="button" data-act="rooms" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">bed</span>Book a room</button>`);
             if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn ${second} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
             return list.join('');
         }
-        if (actions.tickets) list.push(`<button type="button" data-act="tickets" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">confirmation_number</span>Buy tickets</button>`);
         if (actions.rooms) list.push(`<button type="button" data-act="rooms" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">bed</span>Book a room</button>`);
         if (actions.bookingUrl) list.push(`<a href="${escapeHtml(actions.bookingUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">open_in_new</span>${currentIsStay ? 'Book a room' : 'Book now'}</a>`);
-        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.tickets || actions.rooms || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
+        if (actions.directions) list.push(`<button type="button" data-act="directions" class="btn ${actions.rooms || actions.bookingUrl ? 'btn-highlight' : 'btn-primary'} min-h-[44px] ${size}"><span class="material-symbols-outlined !text-base">near_me</span>Directions</button>`);
         return list.join('');
     }
     function drawActions() {
@@ -1726,16 +1522,16 @@ body { overflow-x: hidden; }
         }
         honourArrival();
     }
-    /* Arriving from a Home page card's action (#tickets) or from
+    /* Arriving from a Home page card's action (#rooms) or from
        "What's next" (#directionsSection): go to that action once it exists. */
-    const arrivalAct = { '#tickets': 'tickets', '#rooms': 'rooms', '#directionsSection': 'directions' }[window.location.hash] || '';
+    const arrivalAct = { '#rooms': 'rooms', '#directionsSection': 'directions' }[window.location.hash] || '';
     let arrivalDone = false;
-    // If the action never appears (tickets off), the
+    // If the action never appears (bookings unavailable), the
     // section that says so is still the place to land.
     if (arrivalAct) setTimeout(() => {
         if (arrivalDone) return;
         arrivalDone = true;
-        const id = { tickets: 'spotFacts', rooms: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
+        const id = { rooms: 'spotFacts', directions: 'directionsSection' }[arrivalAct];
         const el = document.getElementById(id);
         if (el && el.offsetHeight) goTo(id);
     }, 3000);
@@ -1743,18 +1539,9 @@ body { overflow-x: hidden; }
         if (arrivalDone || !arrivalAct || !actions[arrivalAct]) return;
         arrivalDone = true;
         setTimeout(() => {
-            if (arrivalAct === 'tickets') openTickets();
             if (arrivalAct === 'rooms') openRooms();
             if (arrivalAct === 'directions') goTo('directionsSection');
         }, 150);
-    }
-    async function openTickets() {
-        const modal = document.getElementById('ticketModal');
-        if (!modal) return;
-        const visitor = await needAccount('tickets');
-        if (!visitor) return;
-        fillWho(visitor, 'tk');
-        modal.hidden = false;
     }
     function goTo(id) {
         const el = document.getElementById(id);
@@ -1764,7 +1551,6 @@ body { overflow-x: hidden; }
         const button = event.target.closest('[data-act]');
         if (!button) return;
         const act = button.dataset.act;
-        if (act === 'tickets') openTickets();
         if (act === 'rooms') openRooms();
         if (act === 'directions') goTo('directionsSection');
     });
@@ -1848,7 +1634,11 @@ body { overflow-x: hidden; }
         const facts = [
             { icon: 'schedule', label: isStay ? 'Open' : 'Open', value: days, sub: time },
         ];
-        if (!isStay) facts.push({ key: 'entrance', icon: 'confirmation_number', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: fee > 0 ? 'per person · pay online or onsite' : '' });
+        if (!isStay) {
+            facts.push({ key: 'entrance', icon: 'payments', label: 'Entrance', value: fee > 0 ? peso(fee) : 'Free', sub: 'Pay onsite' });
+            if(spot.studentFee != null) facts.push({label:'Student fee',value:peso(spot.studentFee),sub:'Pay onsite'});
+            if(spot.childFee != null) facts.push({label:'Child fee',value:peso(spot.childFee),sub:spot.childAgeMax ? `Up to age ${spot.childAgeMax} · Pay onsite` : 'Pay onsite'});
+        }
         if (travel > 0) facts.push({ icon: 'directions_bus', label: 'Travel fee', value: peso(travel), sub: 'estimated' });
         facts.push({ icon: 'location_on', label: 'Barangay', value: spot.barangay || 'Zamboanguita', sub: 'Zamboanguita' });
         return `
@@ -1905,7 +1695,6 @@ body { overflow-x: hidden; }
 
                 ${photoGallerySection(photos)}
 
-                <div id="ticketOffer" class="scroll-mt-24 empty:hidden"></div>
                 <div id="roomOffer" class="scroll-mt-24 empty:hidden"></div>
                 ${safeExternalUrl(spot.bookingUrl) ? `
                 <section id="stayLinkPanel" class="sd-panel">
@@ -1917,7 +1706,7 @@ body { overflow-x: hidden; }
                     ${contact}
                 </section>` : ''}
 
-                <section id="reviews" class="sd-panel scroll-mt-24" aria-labelledby="reviewsHeading"></section>
+                <section id="reviews" class="sd-panel scroll-mt-24" aria-labelledby="reviewsHeading"${isStayPlace(spot) ? '' : ' hidden'}></section>
 
                 <section id="relatedPlaces" hidden aria-labelledby="relatedHeading"></section>
             </div>
@@ -1989,7 +1778,7 @@ body { overflow-x: hidden; }
 
     /* Reviews (reviews.js): the average, the count, how many gave each number
        of stars, and the list, newest first. The form shows only to a signed-in
-       visitor with a used ticket or a completed stay here — the server checks
+       visitor with a completed stay here — the server checks
        it again — and their own review can be edited or deleted. Hidden reviews
        never come back from the public list. Counts and ratings only. */
     const RV_MAX = 600;
@@ -2187,11 +1976,10 @@ body { overflow-x: hidden; }
             renderRelated(spot);
             // The footer script may have run before this page was drawn.
             if (window.ztimsEmergency) window.ztimsEmergency.fill();
-            renderTicketOffer(spotId);
             renderRoomOffer(spot);
             renderNotices(spotId);
             if (window.ztimsSaved) window.ztimsSaved.refresh();
-            renderReviews(spotId).then(() => {
+            (isStayPlace(spot) ? renderReviews(spotId) : Promise.resolve()).then(() => {
                 // Back from signing in to review: open on the reviews.
                 if (location.hash === '#reviews') document.getElementById('reviews').scrollIntoView();
             });

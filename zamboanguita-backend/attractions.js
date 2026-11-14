@@ -1,21 +1,6 @@
-/* Attraction setup — what the Tourism Office decides, per destination, before a
- * visitor can buy a ticket there:
- *
- *   - which weekdays it opens (spots.working_days, read by open-days.js),
- *   - which particular dates it is shut (spot_closed_dates),
- *   - what each kind of visitor pays: the regular entrance fee, and a student
- *     and a child price, each offered only when the office sets it, with the
- *     age up to which a visitor counts as a child,
- *   - and what share of the price it keeps when a visitor cancels.
- *
- * dayVerdict() is the one answer to "can visitors come on this date?", used by
- * ticket sales (payments.js) and the Manage page (manage.js) alike, so a form
- * can never be told a day is open that the purchase would then refuse.
- *
- * Mounted at /api by server.js. Every write here is the officer's.
- */
+/* Attraction opening days, displayed onsite fees and closures. Officer writes only. */
 const express = require('express');
-const { query, transaction } = require('./db');
+const { query } = require('./db');
 const { spots: Spot, closedDates: ClosedDate, officers: TourismOfficer } = require('./models');
 const { WEEK, NAMES, parseOpenDays, formatOpenDays, weekdayOf, isOpenOn } = require('./open-days');
 
@@ -44,69 +29,6 @@ function feeTable(spot) {
         child: child === null || child === undefined || !childAgeMax ? null : money(child),
         childAgeMax: childAgeMax || null
     };
-}
-
-/* The kinds of visitor a ticket counts, in the order they are shown. Those
-   with an ID to show at the entrance say so. */
-const KINDS = [
-    { key: 'regular', column: 'count_regular', field: 'countRegular', label: 'Regular', plural: 'regular', needsId: false },
-    { key: 'student', column: 'count_student', field: 'countStudent', label: 'Student', plural: 'students', needsId: true },
-    { key: 'child', column: 'count_child', field: 'countChild', label: 'Child', plural: 'children', needsId: false }
-];
-
-/* A ticket's people, kind by kind — from the model (countRegular…) or a raw
-   row (count_regular…). Only the kinds it has. */
-function kindsOf(ticket) {
-    return KINDS.map(k => ({ key: k.key, label: k.label, needsId: k.needsId,
-                             count: Number(ticket[k.field] ?? ticket[k.column] ?? 0) }))
-        .filter(k => k.count > 0);
-}
-
-/* "2 regular, 1 student and 1 child" */
-function describeKinds(ticket) {
-    const parts = kindsOf(ticket).map(k => {
-        const kind = KINDS.find(x => x.key === k.key);
-        return `${k.count} ${k.count === 1 ? kind.label.toLowerCase() : kind.plural}`;
-    });
-    if (parts.length <= 1) return parts.join('');
-    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
-}
-
-/* Prices a ticket from the counts a visitor chose, at this destination's fees.
-   Throws a 400 with a plain message when a count is not allowed. */
-function priceTickets(spot, rawCounts, { maxPeople = 20 } = {}) {
-    const fees = feeTable(spot);
-    // A page from before a kind was taken away (senior and PWD) may still send it.
-    for (const [key, raw] of Object.entries(rawCounts || {})) {
-        if (!KINDS.some(k => k.key === key) && Number(raw) > 0) {
-            const e = new Error('This page is out of date. Please reload it and choose again.'); e.status = 400; throw e;
-        }
-    }
-    const counts = {};
-    let people = 0;
-    for (const k of KINDS) {
-        const raw = rawCounts && rawCounts[k.key];
-        const n = raw === undefined || raw === null || raw === '' ? 0 : Number(raw);
-        if (!Number.isInteger(n) || n < 0) {
-            const e = new Error('Each number of people must be a whole number.'); e.status = 400; throw e;
-        }
-        if (n > 0 && fees[k.key] === null) {
-            const e = new Error(`This attraction has no ${k.label.toLowerCase()} price.`); e.status = 400; throw e;
-        }
-        counts[k.key] = n;
-        people += n;
-    }
-    if (people < 1 || people > maxPeople) {
-        const e = new Error(`Choose between 1 and ${maxPeople} people.`); e.status = 400; throw e;
-    }
-    const unitFees = {};
-    let amount = 0;
-    for (const k of KINDS) {
-        if (!counts[k.key]) continue;
-        unitFees[k.key] = fees[k.key];
-        amount += counts[k.key] * fees[k.key];
-    }
-    return { counts, people, unitFees, amount: money(amount), fees };
 }
 
 /* The closed dates from `from` (today by default) for `days` days ahead. */
@@ -142,16 +64,6 @@ async function visitCalendar(spot, days) {
     };
 }
 
-/* Sales already made for one date: what closing it would affect, and, once
-   closed, how many visitors have still to choose a refund or a new date. */
-async function salesOn(spotId, dateKey) {
-    const { rows } = await query(`
-        select (select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'valid')::int as tickets,
-               (select count(*) from tickets where spot_id = $1 and visit_date = $2 and status = 'closed')::int as awaitingChoice`,
-        [spotId, dateKey]);
-    return { tickets: rows[0].tickets, awaitingChoice: rows[0].awaitingchoice };
-}
-
 function setupView(spot, closedDates) {
     const fees = feeTable(spot);
     return {
@@ -163,7 +75,6 @@ function setupView(spot, closedDates) {
         studentFee: spot.studentFee,
         childFee: spot.childFee,
         childAgeMax: spot.childAgeMax,
-        cancelKeepPercent: Number(spot.cancelKeepPercent) || 0,
         workingDays: spot.workingDays || 'Everyday',
         openDays: parseOpenDays(spot.workingDays),
         closedDates
@@ -199,7 +110,6 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             const spot = await Spot.findById(req.params.id);
             if (!spot) return fail(res, 404, 'That destination could not be found.');
             const closed = await closedDatesFor(spot._id);
-            for (const c of closed) Object.assign(c, await salesOn(spot._id, c.date));
             res.json({ success: true, setup: setupView(spot, closed), today: manilaToday() });
         } catch (error) {
             console.error('❌ Attraction setup read failure:', error);
@@ -231,12 +141,6 @@ module.exports = function attractionsRouter({ requireAdmin }) {
             if (spot.childFee !== null && spot.childFee !== undefined && !spot.childAgeMax) {
                 return fail(res, 400, 'Say up to what age the child price applies, or leave the child price empty.');
             }
-            if (body.cancelKeepPercent !== undefined) {
-                const pct = Number(body.cancelKeepPercent);
-                if (!Number.isFinite(pct) || pct < 0 || pct > 100) return fail(res, 400, 'The share kept on a cancellation must be from 0 to 100 percent.');
-                spot.cancelKeepPercent = Math.round(pct * 100) / 100;
-            }
-
             await Spot.save(spot);
             console.log(`🎫 Setup of ${spot.title} saved by ${await officerEmail(req)}`);
             const closed = await closedDatesFor(spot._id);
@@ -248,88 +152,23 @@ module.exports = function attractionsRouter({ requireAdmin }) {
         }
     });
 
-    /* A date the destination is shut. One that already has sales is refused
-       here: closing it means cancelling them and telling each visitor, which
-       is the closure action's job, not a quiet entry in a list. */
-    router.post('/spots/:id/closed-dates', requireAdmin, async (req, res) => {
-        try {
-            const spot = await Spot.findById(req.params.id);
-            if (!spot) return fail(res, 404, 'That destination could not be found.');
-            const date = String((req.body && req.body.date) || '').trim();
-            const reason = String((req.body && req.body.reason) || '').trim().slice(0, 200);
-            if (!isDateKey(date)) return fail(res, 400, 'Choose the date it is closed.');
-            if (date < manilaToday()) return fail(res, 400, 'That date has already passed.');
-
-            const sales = await salesOn(spot._id, date);
-            if (sales.tickets) {
-                const what = `${sales.tickets} ticket${sales.tickets === 1 ? '' : 's'} already ${sales.tickets === 1 ? 'exists' : 'exist'}`;
-                return fail(res, 409, `${what} for ${niceDate(date)}. Use "Close this date" so each visitor is refunded or moved.`, { sales });
-            }
-
-            const closed = await ClosedDate.create({ spotId: spot._id, closedDate: date, reason, createdByEmail: await officerEmail(req) });
-            res.status(201).json({ success: true, message: `${spot.title} is closed on ${niceDate(date)}.`, closed });
-        } catch (error) {
-            if (error && error.code === 11000) return fail(res, 409, 'That date is already marked closed.');
-            console.error('❌ Closed date failure:', error);
-            fail(res, 500, 'Could not save that closed date.');
-        }
-    });
-
-    /* Closing a date that already has sales: one action. The date is marked
-       closed; every paid ticket for it becomes 'closed' (out of
-       use, the visitor to choose a full refund or a new date on the Manage
-       page); unpaid ones are cancelled. Each visitor is emailed. All the
-       changes are one transaction; the emails follow it. */
-    router.post('/spots/:id/close-date', requireAdmin, async (req, res) => {
-        try {
-            const spot = await Spot.findById(req.params.id);
-            if (!spot) return fail(res, 404, 'That destination could not be found.');
-            const date = String((req.body && req.body.date) || '').trim();
-            const reason = String((req.body && req.body.reason) || '').trim().slice(0, 200);
-            if (!isDateKey(date)) return fail(res, 400, 'Choose the date to close.');
-            if (date < manilaToday()) return fail(res, 400, 'That date has already passed.');
-            const who = await officerEmail(req);
-
-            const changed = await transaction(async client => {
-                await query(`
-                    insert into spot_closed_dates (spot_id, closed_date, reason, created_by_email) values ($1, $2, $3, $4)
-                    on conflict (spot_id, closed_date) do update
-                       set reason = case when excluded.reason <> '' then excluded.reason else spot_closed_dates.reason end`,
-                    [spot._id, date, reason, who], client);
-                const ids = async (sql, params) => (await query(sql, params, client)).rows.map(r => r.id);
-                return {
-                    tickets: await ids(`update tickets set status = 'closed'
-                                         where spot_id = $1 and visit_date = $2 and status = 'valid' returning id`, [spot._id, date]),
-                    // Never paid: no ticket to keep. A payment that still lands on
-                    // one is recorded as a duplicate, for a refund.
-                    unpaidTickets: await ids(`update tickets set status = 'cancelled'
-                                         where spot_id = $1 and visit_date = $2 and status = 'pending_payment' returning id`, [spot._id, date])
-                };
-            });
-
-            // After the record is safe, tell each visitor. (Required here, not at
-            // the top: notices.js uses this file too.)
-            const notices = require('./notices');
-            const origin = `${req.protocol}://${req.get('host')}`;
-            let emailed = 0;
-            for (const id of changed.tickets) emailed += (await notices.closureNotice(id, { reason }, origin)).sent ? 1 : 0;
-
-            const affected = changed.tickets.length;
-            const told = affected;
-            console.log(`🚧 ${spot.title} closed on ${date} by ${who}: ${affected} to choose, ${changed.unpaidTickets.length} unpaid cancelled`);
-            res.status(201).json({
-                success: true,
-                message: `${spot.title} is closed on ${niceDate(date)}. ${affected
-                    ? `${affected} visitor${affected === 1 ? '' : 's'} with a paid ticket will choose a full refund or a new date.`
-                    : 'Nothing paid was affected.'}${told ? ` ${emailed} of ${told} emailed.` : ''}`,
-                changed: { tickets: changed.tickets.length, unpaidTickets: changed.unpaidTickets.length },
-                emailed
-            });
-        } catch (error) {
-            console.error('❌ Closure failure:', error);
-            fail(res, 500, 'Could not close that date.');
-        }
-    });
+    // Both routes only mark the date closed. No purchase or refund side effects.
+    async function closeDate(req,res){
+        try{
+            const spot=await Spot.findById(req.params.id);
+            if(!spot)return fail(res,404,'That destination could not be found.');
+            const date=String(req.body?.date || '').trim();
+            const reason=String(req.body?.reason || '').trim().slice(0,200);
+            if(!isDateKey(date))return fail(res,400,'Choose the date it is closed.');
+            if(date<manilaToday())return fail(res,400,'That date has already passed.');
+            const who=await officerEmail(req);
+            await query(`insert into spot_closed_dates(spot_id,closed_date,reason,created_by_email) values($1,$2,$3,$4)
+                on conflict(spot_id,closed_date) do update set reason=excluded.reason`,[spot._id,date,reason,who]);
+            return res.status(201).json({success:true,message:`${spot.title} is closed on ${niceDate(date)}.`});
+        }catch(error){console.error('Closure failure:',error);return fail(res,500,'Could not save that closed date.');}
+    }
+    router.post('/spots/:id/closed-dates',requireAdmin,closeDate);
+    router.post('/spots/:id/close-date',requireAdmin,closeDate);
 
     router.delete('/spots/:id/closed-dates/:closedId', requireAdmin, async (req, res) => {
         try {
@@ -347,12 +186,7 @@ module.exports = function attractionsRouter({ requireAdmin }) {
 };
 
 module.exports.feeTable = feeTable;
-module.exports.KINDS = KINDS;
-module.exports.kindsOf = kindsOf;
-module.exports.describeKinds = describeKinds;
-module.exports.priceTickets = priceTickets;
 module.exports.dayVerdict = dayVerdict;
 module.exports.visitCalendar = visitCalendar;
 module.exports.closedDatesFor = closedDatesFor;
-module.exports.salesOn = salesOn;
 module.exports.niceDate = niceDate;

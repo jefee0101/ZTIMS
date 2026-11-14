@@ -1,17 +1,5 @@
-/* Keeping visitors' personal data no longer than needed (Data Privacy Act of
- * 2012, Section 11: kept only as long as the purpose requires).
- *
- * A visitor's name, phone number and email are needed for the ticket,
- * a refund or complaint about it, and that year's reports. One year after the
- * visit they are erased; what is left — the date, the destination, how many
- * people, the country, the amount paid and its OR number — names nobody and
- * keeps Statistics and Collections whole. Feedback loses its name and email one
- * year after it was resolved; the message stays.
- *
- * Runs daily from Vercel's cron (GET /api/maintenance/privacy, CRON_SECRET),
- * and whenever the officer opens Tickets, so it happens even where no
- * cron is set up. Running it twice changes nothing the second time.
- */
+/* Erase old booking contact details and resolved-feedback contact details.
+ * Counts and saved reports remain. Runs through the daily privacy maintenance. */
 const { query, transaction } = require('./db');
 
 const ERASED_NAME = 'Removed after one year (privacy)';
@@ -20,9 +8,6 @@ const MANILA_TODAY = "(now() at time zone 'Asia/Manila')::date";
 
 async function forgetOldVisitors() {
     return transaction(async client => {
-        const tickets = await query(
-            `update tickets set full_name = $1, contact_number = '', email = ''
-              where visit_date < ${MANILA_TODAY} - ${RETAIN} and full_name <> $1`, [ERASED_NAME], client);
         const feedback = await query(
             `update feedback set name = '', email = ''
               where status = 'resolved' and coalesce(status_updated_at, created_at) < now() - ${RETAIN}
@@ -32,9 +17,9 @@ async function forgetOldVisitors() {
         const bookings = await query(
             `update bookings set guest_name = $1, email = '', phone = '', note = ''
               where check_out < ${MANILA_TODAY} - ${RETAIN} and guest_name <> $1`, [ERASED_NAME], client);
-        const done = { tickets: tickets.rowCount, feedback: feedback.rowCount, bookings: bookings.rowCount };
-        if (done.tickets + done.feedback + done.bookings) {
-            console.log(`🔒 Privacy: personal details erased from ${done.tickets} ticket(s), ${done.bookings} booking(s), ${done.feedback} feedback message(s) older than a year.`);
+        const done = { feedback: feedback.rowCount, bookings: bookings.rowCount };
+        if (done.feedback + done.bookings) {
+            console.log(`🔒 Privacy: personal details erased from ${done.bookings} booking(s), ${done.feedback} feedback message(s) older than a year.`);
         }
         return done;
     }).then(async done => {

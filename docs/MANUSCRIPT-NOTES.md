@@ -5,6 +5,37 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Entrance sales retired — Stage 1 (14 November 2026)
+
+This entry supersedes older entrance-sale and officer-collection descriptions
+below. Visitors pay attraction entrance fees onsite. Online Xendit payment
+remains only for room bookings, after confirmation, with test keys only.
+Stage 1 changes application code, pages, email and documentation; schema.sql
+and all live data are unchanged. Optional Stage 2 needs explicit approval and
+a separate commit. Do not erase collected research results or claim this later
+refinement was part of the original TAM/ISO evaluation.
+
+Manuscript changes to prepare (do not edit manuscript formatting/data here):
+- Specific Objective 3(d): replace entrance-ticket sales/checking/collection
+  claims with displayed onsite entrance information and room-booking payment
+  where appropriate; confirm the objective wording with the adviser.
+- Chapter I Scope and Limitations: remove online attraction sales, admission
+  checks, entrance refunds and officer collections. Keep room requests,
+  room-only online payment, attraction visitor records and statistics.
+- Chapter IV Figures 11 and 13: replace or remove retired screens and update
+  their captions/descriptions after the manuscript's figure mapping is checked.
+- Table 7 “Entrance ticketing and feedback”: remove entrance-selling functions;
+  retain feedback and describe onsite entrance-fee information separately.
+- Update user journeys, account tabs, notifications, Terms/Privacy/FAQ and
+  role permissions consistently. Do not alter original evaluation data.
+- Redraw list only: docs/diagrams/entrance-removal-redraw-list.md. Existing
+  context/DFD/ERD/use-case/architecture images and DBML are not changed here.
+
+Defaults flagged to the owner: accommodation reviews after a completed booking
+only; remove officer Collections; keep student/child fees as information.
+Stage 2 approval remains outstanding; approval to write its block does not by
+itself authorize deleting live records.
+
 ## Unified Rooms with individual rates and photos (14 November 2026)
 
 The manager's Rooms page groups actual numbered rooms under room types. A type

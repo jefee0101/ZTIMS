@@ -1,6 +1,6 @@
 /* Which weekdays a destination is open, read from and written to its
  * "working days" text ("Everyday", "Monday to Saturday", "Weekends only" …).
- * The attraction setup ticks days; the ticket form greys out the rest.
+ * The attraction setup records the opening days displayed on listings.
  *
  * DUPLICATED BY HAND from zamboanguita-backend/open-days.js, which decides what
  * the server accepts; this copy only saves a visitor a refused purchase.

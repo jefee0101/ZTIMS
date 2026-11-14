@@ -290,16 +290,15 @@ body { overflow-x: hidden; }
                 <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
-                <a href="../../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
         </div>
     </header>
 
     <!-- My account (visitor accounts, November 2026). Six tabs, each with its
-         own address like the officer's Settings: #tickets, #bookings, #saved,
+         own address like the officer's Settings: #bookings, #bookings, #saved,
          #reviews, #profile, #security. Styles: .ac-* in theme.css. The API is
          visitors.js; moving and cancelling open manage.html (Move or cancel) for one
-         of the account's own tickets or bookings. -->
+         of the account's own room bookings. -->
     <main class="flex-1 ac-page">
       <div class="ac-wrap">
         <div class="ac-head">
@@ -311,17 +310,12 @@ body { overflow-x: hidden; }
         </div>
 
         <div class="ac-tabs" role="tablist" aria-label="My account">
-          <button type="button" role="tab" class="ac-tab" data-tab="tickets" id="tab-tickets" aria-controls="panel-tickets"><span class="material-symbols-outlined" aria-hidden="true">confirmation_number</span>My tickets</button>
           <button type="button" role="tab" class="ac-tab" data-tab="bookings" id="tab-bookings" aria-controls="panel-bookings"><span class="material-symbols-outlined" aria-hidden="true">bed</span>My bookings</button>
           <button type="button" role="tab" class="ac-tab" data-tab="saved" id="tab-saved" aria-controls="panel-saved"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>Saved places</button>
           <button type="button" role="tab" class="ac-tab" data-tab="reviews" id="tab-reviews" aria-controls="panel-reviews"><span class="material-symbols-outlined" aria-hidden="true">reviews</span>My reviews</button>
           <button type="button" role="tab" class="ac-tab" data-tab="profile" id="tab-profile" aria-controls="panel-profile"><span class="material-symbols-outlined" aria-hidden="true">person</span>Profile</button>
           <button type="button" role="tab" class="ac-tab" data-tab="security" id="tab-security" aria-controls="panel-security"><span class="material-symbols-outlined" aria-hidden="true">lock</span>Security</button>
         </div>
-
-        <section id="panel-tickets" role="tabpanel" aria-labelledby="tab-tickets" class="ac-panel" hidden>
-          <div id="ticketList" class="ac-list"><div class="ac-skeleton"></div></div>
-        </section>
         <section id="panel-bookings" role="tabpanel" aria-labelledby="tab-bookings" class="ac-panel" hidden>
           <div id="bookingList" class="ac-list"><div class="ac-skeleton"></div></div>
         </section>
@@ -374,7 +368,7 @@ body { overflow-x: hidden; }
 
           <div class="ac-card ac-form ac-danger-zone">
             <h2 class="ac-h2">Delete account</h2>
-            <p class="ac-muted">Your name, email, phone and password are erased. Tickets and bookings keep their dates and amounts for one year. Reviews stay as "Former visitor".</p>
+            <p class="ac-muted">Your name, email, phone and password are erased. Bookings keep their dates and amounts for one year. Reviews stay as "Former visitor".</p>
             <div><button type="button" id="deleteOpen" class="btn btn-pill btn-danger min-h-[44px]">Delete account</button></div>
             <form id="deleteForm" hidden class="space-y-4 ac-confirm" novalidate>
               <div id="delPasswordRow"><label for="delPassword" class="bk-label">Your password</label><input id="delPassword" type="password" autocomplete="current-password" class="bk-field"/></div>
@@ -424,10 +418,10 @@ async function call(path, options) {
 const empty = (icon, text, link) => `<div class="ac-empty"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span><p>${esc(text)}</p>${link || ''}</div>`;
 
 /* ---- tabs ------------------------------------------------------------- */
-const TABS = ['tickets', 'bookings', 'saved', 'reviews', 'profile', 'security'];
+const TABS = ['bookings', 'saved', 'reviews', 'profile', 'security'];
 const loaded = {};
 function show(tab) {
-    if (!TABS.includes(tab)) tab = 'tickets';
+    if (!TABS.includes(tab)) tab = 'bookings';
     TABS.forEach(t => {
         $('panel-' + t).hidden = t !== tab;
         $('tab-' + t).setAttribute('aria-selected', String(t === tab));
@@ -453,8 +447,7 @@ async function loadMe() {
     $('acSince').textContent = me.lastSignInAt ? `Signed in since ${new Date(me.lastSignInAt).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila' })}.` : '';
 }
 
-/* ---- tickets and bookings --------------------------------------------- */
-const TICKET = { valid: ['Valid', 'success'], used: ['Used', 'neutral'], cancelled: ['Cancelled', 'danger'], expired: ['Expired', 'neutral'], closed: ['Closed that day', 'warning'] };
+/* ---- room bookings --------------------------------------------- */
 const BOOKING = {
     requested: ['Waiting for the resort', 'warning'], confirmed: ['Confirmed', 'success'], checked_in: ['Checked in', 'success'],
     completed: ['Completed', 'neutral'], declined: ['Declined', 'danger'], expired: ['Expired', 'neutral'],
@@ -462,24 +455,6 @@ const BOOKING = {
 };
 const pill = ([label, tone]) => `<span class="tone-pill tone-${tone} ac-pill">${esc(label)}</span>`;
 const section = (title, rows) => rows.length ? `<h2 class="ac-h3">${title}</h2>${rows.join('')}` : '';
-
-async function loadTickets() {
-    const r = await call('/visitors/me/tickets');
-    if (!r.ok) return ($('ticketList').innerHTML = empty('error', r.data.message || 'Could not load your tickets.'));
-    if (!r.data.length) return ($('ticketList').innerHTML = empty('confirmation_number', 'No tickets yet.', '<a href="../../index.html#featured" class="btn btn-pill btn-primary min-h-[44px]">Find a place to visit</a>'));
-    const row = t => `
-        <article class="ac-row">
-            <div class="ac-row__main">
-                <p class="ac-row__place"><a href="../spot.html?spotId=${encodeURIComponent(t.spot._id)}">${esc(t.spot.title)}</a></p>
-                <p class="ac-row__facts">${day(t.visitDate)} · ${plural(t.people, 'person', 'people')} · ${peso(t.amount)}</p>
-                <p class="ac-row__code">${esc(t.code)}</p>
-            </div>
-            <div class="ac-row__side">${pill(TICKET[t.status] || [t.status, 'neutral'])}
-                ${['valid', 'closed'].includes(t.status) ? `<a class="ac-link" href="../manage.html?code=${encodeURIComponent(t.code)}">Move or cancel</a>` : ''}</div>
-        </article>`;
-    const next = r.data.filter(t => t.visitDate >= today).reverse(), past = r.data.filter(t => t.visitDate < today);
-    $('ticketList').innerHTML = section('Coming up', next.map(row)) + section('Past', past.map(row));
-}
 
 async function loadBookings() {
     const r = await call('/visitors/me/bookings');
@@ -528,7 +503,7 @@ $('savedList').addEventListener('click', async event => {
 async function loadReviews() {
     const r = await call('/visitors/me/reviews');
     if (!r.ok) return ($('reviewList').innerHTML = empty('error', r.data.message || 'Could not load your reviews.'));
-    if (!r.data.length) return ($('reviewList').innerHTML = empty('reviews', 'No reviews yet. You can review a place after a used ticket or a completed stay.'));
+    if (!r.data.length) return ($('reviewList').innerHTML = empty('reviews', 'No reviews yet. You can review a place after a completed stay.'));
     $('reviewList').innerHTML = r.data.map(v => `
         <article class="ac-row">
             <div class="ac-row__main">
@@ -620,7 +595,7 @@ $('deleteForm').addEventListener('submit', async event => {
     location.assign('../../index.html');
 });
 
-const LOAD = { tickets: loadTickets, bookings: loadBookings, saved: loadSaved, reviews: loadReviews, profile: loadProfile, security: loadSecurity };
+const LOAD = { bookings: loadBookings, saved: loadSaved, reviews: loadReviews, profile: loadProfile, security: loadSecurity };
 if (V.token()) loadMe().then(() => { if (me) show(location.hash.slice(1)); });
 </script>
 

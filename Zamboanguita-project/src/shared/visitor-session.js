@@ -103,7 +103,7 @@
                 </button>
                 <div class="site-acct__menu" role="menu" hidden>
                     <p class="site-acct__who">${esc(name)}</p>
-                    <a role="menuitem" href="${ACCOUNT}#tickets"><span class="material-symbols-outlined" aria-hidden="true">account_circle</span>My account</a>
+                    <a role="menuitem" href="${ACCOUNT}#bookings"><span class="material-symbols-outlined" aria-hidden="true">account_circle</span>My account</a>
                     <button type="button" role="menuitem" data-sign-out><span class="material-symbols-outlined" aria-hidden="true">logout</span>Sign out</button>
                 </div>
             </div>`;

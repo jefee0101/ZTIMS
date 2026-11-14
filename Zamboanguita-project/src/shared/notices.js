@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    One copy of what the public pages share: Manila dates, the category pill,
    an event's date block, "Add to calendar" (an .ics made in the browser, in
-   Manila time, as payment.html does for a ticket) and the month grid. Used by
+   Manila time) and the month grid. Used by
    announcements.html, events.html, Home's "What is happening" section and the
    destination page's notice line. The data comes from announcements.js.
    A plain global-scope IIFE like the other shared pieces (window.ZTIMS_NOTICES).

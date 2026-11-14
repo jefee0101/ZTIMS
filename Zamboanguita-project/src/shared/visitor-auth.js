@@ -20,7 +20,7 @@
 
     const safeNext = value => (String(value || '').startsWith('/') && !String(value).startsWith('//') && !String(value).includes('\\') ? String(value) : '');
     const session = (key, value) => { try { if (value === undefined) return sessionStorage.getItem(key) || ''; value ? sessionStorage.setItem(key, value) : sessionStorage.removeItem(key); } catch { return ''; } return ''; };
-    const nextPlace = () => safeNext(params.get('next')) || safeNext(session(NEXT_KEY)) || '/src/user/account.html#tickets';
+    const nextPlace = () => safeNext(params.get('next')) || safeNext(session(NEXT_KEY)) || '/src/user/account.html#bookings';
     if (safeNext(params.get('next'))) session(NEXT_KEY, params.get('next'));
     // Links between the sign-in pages keep where to go back to.
     document.querySelectorAll('a[data-keep-next]').forEach(a => {

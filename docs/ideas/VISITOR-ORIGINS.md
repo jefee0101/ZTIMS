@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Idea: where each group comes from (country, male / female)
 
 **Status: idea only, nothing built (October 2026).** Held by the user; build

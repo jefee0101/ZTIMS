@@ -4,7 +4,7 @@
  * confirms or declines by hand. The rules (see the notes repo's "Booking
  * system proposal"):
  *   - No visitor accounts: a booking is managed with its code AND the email,
- *     like a ticket (manage.js).
+ *     through Manage (manage.js).
  *   - ZTIMS never holds the money. The guest pays the resort as its payment
  *     instructions say; the manager may record what was received.
  *   - A request holds its rooms until the resort's response time runs out;
@@ -64,7 +64,7 @@ function problem(status, message) {
 
 /* ------------------------------------------------------------------ codes */
 
-// Like ticket codes: no letters or digits that read alike (0/O, 1/I/L).
+// Booking codes: no letters or digits that read alike (0/O, 1/I/L).
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const randomCode = length => Array.from(crypto.randomBytes(length), b => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
 function codePrefix(title) {

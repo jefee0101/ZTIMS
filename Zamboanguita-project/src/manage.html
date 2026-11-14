@@ -295,7 +295,6 @@ body { overflow-x: hidden; }
                 <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
-                <a href="../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
         </div>
     </header>
@@ -304,7 +303,7 @@ body { overflow-x: hidden; }
         <section class="pt-8 sm:pt-12 pb-16 sm:pb-24">
             <div class="max-w-2xl mx-auto px-5 sm:px-6 space-y-5">
 
-                <a href="user/account.html#tickets" class="ac-link inline-flex items-center gap-1.5 min-h-[44px]">
+                <a href="user/account.html#bookings" class="ac-link inline-flex items-center gap-1.5 min-h-[44px]">
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">arrow_back</span>My account
                 </a>
                 <div class="space-y-2">
@@ -324,7 +323,7 @@ body { overflow-x: hidden; }
 <script type="module" src="./shared/site-footer.js"></script>
 <script type="module" src="./shared/visitor-session.js"></script>
 <script>
-/* Move or cancel: one ticket or booking of the signed-in visitor's own
+/* Move or cancel: a room booking of the signed-in visitor's own
    account (?code=, from My account or an email). There is no public search:
    the server opens it only for the account that holds it. This page shows
    what the server says and asks before anything that cannot be undone. */
@@ -339,11 +338,6 @@ body { overflow-x: hidden; }
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const peso = n => '₱' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const METHOD = { cash: 'Cash', gcash: 'GCash', maya: 'Maya', card: 'Card', grabpay: 'GrabPay', shopeepay: 'ShopeePay', qrph: 'QR Ph', bank: 'Bank transfer', otc: 'Over the counter' };
-    const STATUS = {
-        valid: ['tone-success', 'Valid'], used: ['tone-info', 'Used at the entrance'], cancelled: ['tone-neutral', 'Cancelled'],
-        pending_payment: ['tone-warning', 'Waiting for payment'], expired: ['tone-neutral', 'Not paid'],
-        closed: ['tone-warning', 'Date closed by the office']
-    };
     function niceDate(value) {
         const [y, m, d] = String(value || '').slice(0, 10).split('-').map(Number);
         if (!y) return esc(value);
@@ -354,17 +348,6 @@ body { overflow-x: hidden; }
             <span class="text-on-surface-variant">${label}</span><span class="font-bold text-on-surface text-right">${value}</span>
         </div>`;
 
-    // Why a date cannot be chosen, from what the server sent (the same rule it enforces).
-    const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    function closedDayReason(dateKey, cal) {
-        if (!cal || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return '';
-        const day = new Date(dateKey + 'T00:00:00Z').getUTCDay();
-        if (Array.isArray(cal.openDays) && !cal.openDays.includes(WEEKDAY_KEYS[day])) return `Closed on ${WEEKDAY_NAMES[day]}s. Open: ${cal.openDaysText}.`;
-        const closed = (cal.closedDates || []).find(c => c.date === dateKey);
-        return closed ? `Closed on that date${closed.reason ? ` (${closed.reason})` : ''}.` : '';
-    }
-
     async function call(path, extra) {
         const response = await fetch(`${API_BASE}${path}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
@@ -374,64 +357,6 @@ body { overflow-x: hidden; }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data.success === false) throw new Error(data.message || 'That did not work. Please try again.');
         return data;
-    }
-
-    function render(item, notice) {
-        if (item.kind === 'booking') return renderBooking(item, notice);
-        const [tone, label] = STATUS[item.status] || ['tone-neutral', item.status];
-        const details = [
-            row('Ticket code', `<span class="font-mono">${esc(item.code)}</span>`),
-            row('Attraction', esc(item.spot && item.spot.title)),
-            row('Date', niceDate(item.visitDate)),
-            row('People', `${esc(item.people)} · ${esc(item.kindsText)}`)
-        ];
-        if (item.paid) {
-            details.push(row('Paid', `${peso(item.paid.amount)} · ${esc(METHOD[item.paid.method] || item.paid.method)}${item.paid.channel === 'online' ? ' · online' : ' · at the office'}`));
-            if (item.paid.refundedAt) details.push(row('Refunded', peso(item.paid.refundAmount)));
-        }
-
-        const minDate = item.today;
-        const moveForm = item.canMove ? `
-            <form id="moveForm" class="space-y-3 border-t border-outline-variant/30 pt-4" novalidate>
-                <h2 class="font-bold text-on-surface">Move to another date</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
-                    <label class="block"><span class="bk-label">New date</span>
-                        <input id="moveDate" type="date" required min="${esc(minDate)}" max="${esc(item.maxDate)}" class="bk-field"/></label>
-                    <button type="submit" id="moveBtn" class="btn btn-pill btn-secondary min-h-[44px]">Move</button>
-                </div>
-                <p id="moveNote" class="text-support">The price and the ticket code stay the same.</p>
-            </form>` : '';
-        const closureForm = item.canRefundClosure ? `
-            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
-                <h2 class="font-bold text-on-surface">Take a full refund</h2>
-                <p class="text-sm text-on-surface-variant">You get all of it back: <b>${peso(item.refund)}</b>, to the way you paid.</p>
-                <button type="button" id="closureRefundBtn" class="btn btn-pill btn-secondary min-h-[44px]">Refund me in full</button>
-            </div>` : '';
-        const cancelForm = item.canCancel ? `
-            <div class="space-y-3 border-t border-outline-variant/30 pt-4">
-                <h2 class="font-bold text-on-surface">Cancel</h2>
-                <p class="text-sm text-on-surface-variant">${item.paid && !item.paid.refundedAt
-                    ? `You get <b>${peso(item.refund)}</b> back${item.kept > 0 ? `; the office keeps ${esc(item.keepPercent)}% (${peso(item.kept)})` : ''}. This cannot be undone.`
-                    : 'Nothing has been paid, so nothing is refunded. This cannot be undone.'}</p>
-                <button type="button" id="cancelBtn" class="btn btn-pill btn-danger-solid min-h-[44px]">Cancel this ticket</button>
-            </div>` : '';
-
-        box.innerHTML = `
-            ${notice ? `<p class="tone-success text-sm font-bold border border-outline-variant/30 p-3">${esc(notice)}</p>` : ''}
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <h2 class="text-2xl font-display font-extrabold tracking-tight text-on-surface">Your entrance ticket</h2>
-                <span class="${tone} tone-pill rounded-pill text-xs font-bold px-3 py-1">${esc(label)}</span>
-            </div>
-            <div>${details.join('')}</div>
-            ${item.closedByOffice || !(item.canMove || item.canCancel)
-                ? `<p class="text-sm tone-warning">${esc(item.why || 'This can no longer be changed here.')}</p>`
-                : `<p class="text-support">You can change this until 11:59 PM on ${niceDate(item.changeUntil)}.</p>`}
-            ${moveForm}
-            ${closureForm}
-            ${cancelForm}
-            <p id="actionError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>`;
-        box.hidden = false;
-        wireActions(item);
     }
 
     /* ---- a room booking (bookings.js' describeForVisitor) ------------ */
@@ -447,7 +372,7 @@ body { overflow-x: hidden; }
     const addDay = (key, n) => { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
     const answerBy = iso => new Intl.DateTimeFormat('en-PH', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).format(new Date(iso));
 
-    function renderBooking(b, notice) {
+    function render(b, notice) {
         const [tone, label] = BOOKING[b.status] || ['tone-neutral', b.status];
         const place = b.enterpriseName || (b.spot && b.spot.title) || 'The resort';
         const details = [
@@ -586,7 +511,7 @@ body { overflow-x: hidden; }
                 render(result.item, result.message);
             } catch (error) { showError('actionError', error.message); btn.disabled = false; }
         }));
-        wireActions({});
+        wireActions();
     }
 
     function showError(id, message) {
@@ -596,45 +521,7 @@ body { overflow-x: hidden; }
         el.hidden = !message;
     }
 
-    function wireActions(item) {
-        const move = document.getElementById('moveForm');
-        if (move) {
-            const dateInput = document.getElementById('moveDate');
-            const button = document.getElementById('moveBtn');
-            dateInput.addEventListener('change', () => {
-                const reason = closedDayReason(dateInput.value, item.calendar);
-                showError('actionError', reason);
-                button.disabled = Boolean(reason);
-            });
-            move.addEventListener('submit', async event => {
-                event.preventDefault();
-                showError('actionError', '');
-                if (!dateInput.value) return showError('actionError', 'Choose the new date.');
-                button.disabled = true;
-                try {
-                    const result = await call('/manage/move', { date: dateInput.value });
-                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
-                } catch (error) {
-                    showError('actionError', error.message);
-                    button.disabled = false;
-                }
-            });
-        }
-        const full = document.getElementById('closureRefundBtn');
-        if (full) {
-            full.addEventListener('click', async () => {
-                if (!full.dataset.sure) { full.dataset.sure = '1'; full.textContent = 'Yes, refund me'; return; }
-                full.disabled = true;
-                showError('actionError', '');
-                try {
-                    const result = await call('/manage/refund-closure');
-                    render(result.item, result.message + (result.emailed ? ' We have emailed you.' : ''));
-                } catch (error) {
-                    showError('actionError', error.message);
-                    full.disabled = false;
-                }
-            });
-        }
+    function wireActions() {
         const cancel = document.getElementById('cancelBtn');
         if (cancel) {
             // Asked twice: the second press is the decision.
@@ -663,7 +550,7 @@ body { overflow-x: hidden; }
     // Back from the payment page: ?paid=<checkout> (and &cancelled=1 when they left it).
     const backFromPay = params.has('paid'), payLeft = params.get('cancelled') === '1';
     if (!token) { signIn(); return; }
-    if (!code) { location.replace('user/account.html#tickets'); return; }
+    if (!code) { location.replace('user/account.html#bookings'); return; }
     current = { code };
     call('/manage/lookup')
         .then(result => {

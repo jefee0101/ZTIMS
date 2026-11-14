@@ -351,7 +351,6 @@ body { overflow-x: hidden; }
                 <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
-                <a href="../index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
         </div>
     </header>
@@ -381,7 +380,7 @@ body { overflow-x: hidden; }
                      to open ten accordions to find the one about payment. -->
                 <div class="relative max-w-3xl mb-8">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none">search</span>
-                    <input id="faqSearch" type="search" class="field !pl-12 !rounded-full" placeholder="Search the questions — try “payment” or “ticket”"
+                    <input id="faqSearch" type="search" class="field !pl-12 !rounded-full" placeholder="Search the questions — try “payment” or “entrance”"
                            aria-label="Search the questions" autocomplete="off"/>
                 </div>
                 <p id="faqEmpty" hidden class="text-on-surface-variant mb-8">
@@ -394,7 +393,7 @@ body { overflow-x: hidden; }
                         <p class="text-label font-bold uppercase tracking-widest text-on-surface mb-2 hidden lg:block">Topics</p>
                         <ul class="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 lg:sticky lg:top-24">
                             <li><a href="#visiting">Visiting &amp; browsing</a></li>
-                            <li><a href="#tickets">Tickets &amp; payment</a></li>
+                            <li><a href="#entrance-fees">Entrance fees</a></li>
                             <li><a href="#rooms">Room bookings</a></li>
                             <li><a href="#account">Your account &amp; reviews</a></li>
                             <li><a href="#directions">Map &amp; directions</a></li>
@@ -411,7 +410,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Do I need an account to use ZTIMS?</summary>
                                 <div class="faq-answer">
-                                    <p>Not to look around: browsing, the map and directions work without one. You need a free account to buy entrance tickets, request a room, save places and write reviews. Press <b>Sign in</b> at the top of any page. The sign-in link in the footer is for Tourism Office staff and the managers of listed enterprises.</p>
+                                    <p>Not to look around: browsing, the map and directions work without one. You need a free account to request a room, save places and write reviews. Press <b>Sign in</b> at the top of any page. The sign-in link in the footer is for Tourism Office staff and the managers of listed enterprises.</p>
                                 </div>
                             </details>
 
@@ -444,31 +443,9 @@ body { overflow-x: hidden; }
                             </details>
                         </section>
 
-                        <section class="faq-group" aria-labelledby="tickets">
-                            <h2 id="tickets" class="faq-heading">Tickets &amp; payment</h2>
-
-                            <details class="faq">
-                                <summary>How do I buy an entrance ticket?</summary>
-                                <div class="faq-answer">
-                                    <p>Sign in, open the attraction's page and press <b>Buy tickets</b>: choose the date and who is coming, and pay. Your name and email come from your account. Your ticket code is shown at once and emailed to you; show it at the entrance or at the Municipal Tourism Office.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>Can I move or cancel my ticket?</summary>
-                                <div class="faq-answer">
-                                    <p>Yes, until 11:59 PM the day before. Sign in, open <a href="user/account.html#tickets">My account</a>, and choose Move or cancel on the ticket.</p>
-                                    <p>If you cancel, you get back what you paid less the share the Tourism Office keeps for that destination; the page shows the exact amount before you confirm. If the office cancels or closes, you get everything back. A ticket already used at the entrance cannot be refunded.</p>
-                                </div>
-                            </details>
-
-                            <details class="faq">
-                                <summary>Can I pay online?</summary>
-                                <div class="faq-answer">
-                                    <p>Where a destination's page shows a <b>Buy tickets</b> button, yes, on the payment service's own page (e-wallets, QR code, bank transfer, credit or debit card, or cash over the counter). For now this runs in <b>test mode</b>, a demonstration in which no real money moves. ZTIMS itself never sees or asks for your card or e-wallet details.</p>
-                                    <p>You can always pay onsite at the Municipal Tourism Office instead.</p>
-                                </div>
-                            </details>
+                        <section class="faq-group" aria-labelledby="entrance-fees">
+                            <h2 id="entrance-fees" class="faq-heading">Entrance fees</h2>
+                            <details class="faq-item"><summary>Where do I pay the entrance fee?</summary><div class="faq-answer"><p>Pay onsite at the attraction. The listing shows entrance fees, opening days and visitor information.</p></div></details>
                         </section>
 
                         <section class="faq-group" aria-labelledby="rooms">
@@ -485,7 +462,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>How do I pay for a room?</summary>
                                 <div class="faq-answer">
-                                    <p>When you ask for the rooms you choose, where the resort offers both, <b>Pay at the property</b> or <b>Pay online</b>. Paying at the property: once the resort confirms, its confirmation email and the booking in <a href="user/account.html#bookings">My account</a> show how to pay it, and any refund is between you and the resort. Paying online: you pay only after the resort confirms, the full amount, on the payment service's own page (GCash, Maya, QR Ph, card or bank transfer); nothing is charged if the resort declines. You can switch between the two in My account until you pay. Online payment currently runs in test mode, as for tickets: no real money moves.</p>
+                                    <p>When you ask for the rooms you choose, where the resort offers both, <b>Pay at the property</b> or <b>Pay online</b>. Paying at the property: once the resort confirms, its confirmation email and the booking in <a href="user/account.html#bookings">My account</a> show how to pay it, and any refund is between you and the resort. Paying online: you pay only after the resort confirms, the full amount, on the payment service's own page (GCash, Maya, QR Ph, card or bank transfer); nothing is charged if the resort declines. You can switch between the two in My account until you pay. </p>
                                 </div>
                             </details>
 
@@ -538,7 +515,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Who can write a review?</summary>
                                 <div class="faq-answer">
-                                    <p>A visitor who has been there: after your ticket is used at the entrance, or after your stay at a resort is complete. Open the place's page and go to <b>Reviews</b>. You give 1 to 5 stars and, if you like, a few words. One review per place; you can edit or delete yours at any time.</p>
+                                    <p>A visitor who has been there: after your stay at a resort is complete. Open the place's page and go to <b>Reviews</b>. You give 1 to 5 stars and, if you like, a few words. One review per place; you can edit or delete yours at any time.</p>
                                 </div>
                             </details>
 
@@ -559,7 +536,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>How do I delete my account, and what happens?</summary>
                                 <div class="faq-answer">
-                                    <p>In <a href="user/account.html#security">My account</a> → Security, press <b>Delete account</b> and confirm with your password, or with Google if you signed up with Google. Your name, email, phone and password are erased at once and your saved places go. Your tickets and bookings stay as records, with their details erased after one year. Your reviews stay, shown as "Former visitor"; delete them first if you want them gone. See the <a href="privacy.html#account">Privacy Policy</a>.</p>
+                                    <p>In <a href="user/account.html#security">My account</a> → Security, press <b>Delete account</b> and confirm with your password, or with Google if you signed up with Google. Your name, email, phone and password are erased at once and your saved places go. Your bookings stay as records, with their details erased after one year. Your reviews stay, shown as "Former visitor"; delete them first if you want them gone. See the <a href="privacy.html#account">Privacy Policy</a>.</p>
                                 </div>
                             </details>
                         </section>
@@ -577,7 +554,7 @@ body { overflow-x: hidden; }
                             <details class="faq">
                                 <summary>Does the site track my location?</summary>
                                 <div class="faq-answer">
-                                    <p>No. If you allow it, your position is sent once to calculate the route you asked for and then discarded. It is never stored and never linked to a ticket. You can always type a starting point instead.</p>
+                                    <p>No. If you allow it, your position is sent once to calculate the route you asked for and then discarded. It is never stored and never linked to a booking. You can always type a starting point instead.</p>
                                 </div>
                             </details>
 
@@ -749,7 +726,7 @@ body { overflow-x: hidden; }
 
     input.addEventListener('input', apply);
 
-    // A link straight to a question (#tickets) still lands on the heading, but
+    // A link straight to a question (#bookings) still lands on the heading, but
     // if someone arrives with a query in the box (browser restore), honour it.
     if (input.value) apply();
 })();

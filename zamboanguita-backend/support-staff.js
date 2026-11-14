@@ -15,7 +15,7 @@
      account is added or a password is issued (alertAccountOwner).
    - Deactivating ends every open session at once (session_version, and
      requireAuth refuses an inactive account on every route).
-   No tickets, money, Finalize / Reopen, closed dates or deletes here. */
+   No money, Finalize / Reopen, closed dates or deletes here. */
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { query, transaction } = require('./db');

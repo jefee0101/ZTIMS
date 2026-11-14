@@ -279,7 +279,6 @@ body { overflow-x: hidden; }
                 <button id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle theme" class="site-header__theme">
                     <span id="themeToggleIcon" class="material-symbols-outlined !text-lg">dark_mode</span>
                 </button>
-                <a href="index.html#featured" class="site-header__cta">Buy tickets<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
             </div>
         </div>
     </header>
@@ -303,7 +302,7 @@ body { overflow-x: hidden; }
             <div class="hm-hero__inner">
                 <p class="hm-hello">Mabuhay! Negros Oriental, Philippines</p>
                 <h1 id="heroTitle" class="hm-title">Welcome to <span class="hm-serif">Zamboanguita</span></h1>
-                <p class="hm-lead">Beaches, diving, waterfalls and heritage in one place. Find a place, buy your ticket, get directions.</p>
+                <p class="hm-lead">Beaches, diving, waterfalls and heritage in one place. Find a place, check entrance fees, get directions.</p>
 
                 <!-- Typing narrows the destinations below and offers names to
                      jump to; Search takes the visitor to the results. -->
@@ -480,7 +479,7 @@ body { overflow-x: hidden; }
                         <span class="hm-step__icon" aria-hidden="true"><span class="material-symbols-outlined">confirmation_number</span></span>
                         <p class="hm-step__n">Step 2</p>
                         <h3>Book &amp; pay</h3>
-                        <p>Get your entrance ticket online before you go, or pay onsite.</p>
+                        <p>Check the entrance fees before you go. Pay onsite.</p>
                     </li>
                     <li class="hm-step hm-step--teal">
                         <span class="hm-step__icon" aria-hidden="true"><span class="material-symbols-outlined">route</span></span>
@@ -688,12 +687,6 @@ body { overflow-x: hidden; }
         return `Open ${days}${time ? `, ${time}` : ''}`;
     }
 
-    // Whether online tickets can be bought at all right now (the payment
-    // service is on). Asked once; until it answers, no card offers tickets.
-    let ticketsOnline = false;
-    fetch(`${API_BASE}/payments/config`).then(r => r.ok ? r.json() : null)
-        .then(config => { if (config && config.online) { ticketsOnline = true; if (allSpots.length) applyFilters(); } })
-        .catch(() => {});
     // The places to stay taking room requests through ZTIMS now: their card
     // says Book a room and opens the destination page's booking window.
     let takingBookings = new Set();
@@ -716,16 +709,13 @@ body { overflow-x: hidden; }
     }
 
     // The one thing a visitor can do next at this place, the same rules the
-    // destination page uses: tickets for an office-run attraction with a fee,
+    // destination page uses: onsite entrance fees for attractions,
     // Book a room for a place to stay taking bookings, else the place's own
     // booking link. The destination page opens on the
-    // ticket form (#tickets).
+    // room form (#rooms).
     function mainAction(spot) {
         const page = `src/spot.html?spotId=${encodeURIComponent(spot._id)}`;
         const isStay = isStayPlace(spot);
-        if (ticketsOnline && spot.type === 'spot' && !spot.managedBy && Number(spot.entranceFee) > 0) {
-            return { href: `${page}#tickets`, label: 'Buy tickets', icon: 'confirmation_number' };
-        }
         // Book a room replaces the resort's own link only while it takes bookings here.
         if (isStay && takingBookings.has(spot._id)) {
             return { href: `${page}#rooms`, label: 'Book a room', icon: 'bed' };

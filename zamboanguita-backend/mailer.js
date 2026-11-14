@@ -1,4 +1,4 @@
-/* Emails to visitors — receipts and notices about their own ticket,
+/* Emails to visitors — receipts and notices about their own room booking,
  * never anything else (no newsletters, no marketing).
  *
  * Sent from the office's Gmail with an App Password (MAIL_USER, MAIL_PASSWORD),
@@ -76,7 +76,7 @@ function niceDate(dateKey) {
 }
 
 const FOOTER = 'Municipal Tourism Office, Municipal Hall, Poblacion, Zamboanguita, Negros Oriental.\n'
-    + 'You are getting this because this email address was given for this ticket. We send nothing else.';
+    + 'You are getting this because this email address was given for this room booking. We send nothing else.';
 
 /* One email from labelled lines: plain text, and a simple HTML version of the
    same, so it reads well in any mail app. */

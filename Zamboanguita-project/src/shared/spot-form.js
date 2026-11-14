@@ -64,7 +64,7 @@
 
     /* Opening days are ticked, one box a weekday, and stored as the words
        visitors read ("Monday to Saturday"). shared/open-days.js turns one into
-       the other; ticket sales refuse the unticked days. */
+       the other; opening days are shown consistently on listings. */
     const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const openDaysHelper = function () { return window.ZTIMS_OPEN_DAYS; };
@@ -200,7 +200,7 @@
     }
 
     function buildMarkup(p, role) {
-        // The steps as the visitor's ticket form shows them: a round number,
+        // The steps as the visitor's booking form shows them: a round number,
         // its name under it, joined by a line (.sf-steps in theme.css).
         const stepTabs = STEPS.map(function (step, index) {
             return '<li><button type="button" data-step-tab="' + index + '" class="sf-step">' +
@@ -1915,23 +1915,23 @@
            and one request per photo would be wasteful. If the server has no
            credentials configured it says so, and the old unsigned preset is used —
            uploads keep working while that is being set up. */
-        let uploadTicket = null;
+        let uploadPass = null;
 
-        async function getUploadTicket() {
-            if (uploadTicket) return uploadTicket;
+        async function getUploadPass() {
+            if (uploadPass) return uploadPass;
             try {
                 const response = await fetch(apiBase + '/uploads/signature', { headers: authHeaders() });
                 if (response.status === 401 || response.status === 403) {
                     throw new Error('Your sign-in does not allow uploading photos. Sign in again and retry.');
                 }
                 if (!response.ok) throw new Error('Could not authorise the upload.');
-                uploadTicket = await response.json();
+                uploadPass = await response.json();
             } catch (error) {
                 if (/sign-in/.test(error.message)) throw error;
                 // A network blip should not block the upload path entirely.
-                uploadTicket = { signed: false };
+                uploadPass = { signed: false };
             }
-            return uploadTicket;
+            return uploadPass;
         }
 
         function authHeaders(extra) {
@@ -1961,18 +1961,18 @@
                 throw new Error('that is not an image');
             }
 
-            const ticket = await getUploadTicket();
+            const pass = await getUploadPass();
             const body = new FormData();
             body.append('file', file);
 
             let cloudName = options.cloudName;
-            if (ticket.signed) {
-                cloudName = ticket.cloudName;
-                body.append('api_key', ticket.apiKey);
-                body.append('timestamp', ticket.timestamp);
-                body.append('folder', ticket.folder);
-                if (ticket.allowedFormats) body.append('allowed_formats', ticket.allowedFormats);
-                body.append('signature', ticket.signature);
+            if (pass.signed) {
+                cloudName = pass.cloudName;
+                body.append('api_key', pass.apiKey);
+                body.append('timestamp', pass.timestamp);
+                body.append('folder', pass.folder);
+                if (pass.allowedFormats) body.append('allowed_formats', pass.allowedFormats);
+                body.append('signature', pass.signature);
             } else {
                 body.append('upload_preset', options.uploadPreset);
             }
@@ -1983,8 +1983,8 @@
             const result = await response.json().catch(function () { return {}; });
             if (!response.ok || !result.secure_url) {
                 // A stale signature is worth one retry with a fresh one.
-                if (ticket.signed && response.status === 401) {
-                    uploadTicket = null;
+                if (pass.signed && response.status === 401) {
+                    uploadPass = null;
                 }
                 throw new Error((result && result.error && result.error.message) || 'Cloudinary rejected the upload.');
             }
@@ -2269,7 +2269,7 @@
 
         function open(spot) {
             sectionOnly = false;
-            uploadTicket = null;      // re-authorised per dialog
+            uploadPass = null;      // re-authorised per dialog
             currentSpot = spot || null;
             editingId = spot && spot._id ? String(spot._id) : '';
 

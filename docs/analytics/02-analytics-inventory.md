@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Analytics inventory
 
 Proposal, 12 November 2026. Nothing here is built. Each analytic names its data source, calculation, user value, best visualization and limitations. G-numbers refer to `03-dashboards-data-flow-gaps.md`.

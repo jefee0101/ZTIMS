@@ -129,7 +129,6 @@ const spots = new Table('spots', {
     studentFee: { type: 'number', nullable: true, min: 0 },
     childFee: { type: 'number', nullable: true, min: 0 },
     childAgeMax: { type: 'integer', nullable: true, min: 1, max: 17 },
-    cancelKeepPercent: number({ min: 0, max: 100 })
 }, {
     select: `select spots.*, ${PHOTOS_OF('spots')}, ${MORE_CATEGORIES_OF('spots')} from spots`,
     virtuals: {
@@ -239,86 +238,12 @@ spots.findByIdWithManager = async function (id) {
     return spot || null;
 };
 
-const payments = new Table('payments', {
-    // For one ticket.
-    ticketId: ref(),
-    amount: { type: 'number', required: true, min: 0 },
-    method: text({ default: 'cash' }),
-    receiptNumber: text(),
-    paidAt: { type: 'date', default: () => new Date() },
-    recordedByEmail: text(),
-    remarks: text(),
-    // 'counter' (cash taken at the office) or 'online' (the gateway, test mode).
-    channel: text({ default: 'counter', enum: ['counter', 'online'] }),
-    gatewayRef: text(),
-    refundedAt: when(),
-    refundReason: text(),
-    refundedByEmail: text(),
-    refundAmount: { type: 'number', nullable: true, min: 0 },
-    isDemo: flag(false)
-});
-
-/* An entrance ticket to an attraction the office runs. */
-const VISITOR_KINDS = ['regular', 'student', 'child'];
-const feeKey = kind => 'fee' + kind[0].toUpperCase() + kind.slice(1);   // 'child' → feeChild
-const tickets = new Table('tickets', {
-    code: required(),
-    spotId: { type: 'id', required: true },
-    visitDate: required(),   // YYYY-MM-DD
-    // Worked out by the database from the counts and prices below.
-    people: { type: 'integer', generated: true },
-    amount: { type: 'number', generated: true },
-    fullName: required({ trim: true }),
-    email: required({ trim: true, lowercase: true }),
-    contactNumber: text({ trim: true }),
-    // The visitor account that bought it (visitors.js); null for a ticket
-    // bought as a guest before accounts, until linked by its email.
-    visitorId: ref(),
-    status: text({ default: 'pending_payment', enum: ['pending_payment', 'valid', 'used', 'cancelled', 'expired', 'closed'] }),
-    usedAt: when(),
-    usedByEmail: text(),
-    isDemo: flag(false),
-    // How many of each kind of visitor; they add up to `people`.
-    countRegular: { type: 'integer', default: 0, min: 0 },
-    countStudent: { type: 'integer', default: 0, min: 0 },
-    countChild: { type: 'integer', default: 0, min: 0 },
-    // The price each kind paid per person when the ticket was bought, one
-    // column per kind (null: not offered). The routes see them as
-    // feeBreakdown { regular: 20, child: 10, … } and unitFee (the regular price).
-    ...Object.fromEntries(VISITOR_KINDS.map(kind => [feeKey(kind), { type: 'number', nullable: true, min: 0, hidden: true }]))
-}, {
-    virtuals: {
-        feeBreakdown: {
-            read: fields => Object.fromEntries(VISITOR_KINDS
-                .filter(kind => fields[feeKey(kind)] !== null && fields[feeKey(kind)] !== undefined)
-                .map(kind => [kind, fields[feeKey(kind)]])),
-            write: fees => Object.fromEntries(VISITOR_KINDS.map(kind => [feeKey(kind),
-                fees && fees[kind] !== undefined && fees[kind] !== null ? Number(fees[kind]) : null]))
-        },
-        unitFee: { read: fields => fields.feeRegular ?? 0 }
-    }
-});
-
 /* A date a destination is shut. */
 const closedDates = new Table('spot_closed_dates', {
     spotId: { type: 'id', required: true },
     closedDate: required(),   // YYYY-MM-DD
     reason: text({ trim: true, maxlength: 200 }),
     createdByEmail: text()
-});
-
-/* One trip to the payment gateway's checkout page. */
-const checkouts = new Table('online_checkouts', {
-    ticketId: ref(),
-    amount: { type: 'number', required: true, min: 0 },
-    sessionId: text(),
-    checkoutUrl: text(),
-    status: text({ default: 'pending', enum: ['pending', 'paid', 'expired', 'duplicate'] }),
-    method: text(),
-    paymentRef: text(),
-    expiresAt: { type: 'date', required: true },
-    paidAt: when(),
-    isDemo: flag(true)
 });
 
 const feedback = new Table('feedback', {
@@ -435,9 +360,6 @@ module.exports = {
     managers,
     supportStaff,
     spots,
-    payments,
-    tickets,
-    checkouts,
     closedDates,
     feedback,
     MAX_SPOT_IMAGES,

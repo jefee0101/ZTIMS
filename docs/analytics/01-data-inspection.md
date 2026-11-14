@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Data inspection: what ZTIMS actually collects
 
 12 November 2026. Inspection only. Nothing in the application, the database or the live project was changed, and nothing was pushed or deployed. The live project was read with a read-only connection, counts and totals only: no names, emails, phone numbers or other personal details were read.

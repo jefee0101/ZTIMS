@@ -1,9 +1,7 @@
 /* Reviews of places (November 2026), mounted at /api.
 
    The user's decisions:
-   - Only a signed-in visitor who has been there may review a place: a ticket
-     of theirs for it that was used, or a stay of theirs there that was
-     completed. The server checks it; the page only hides the form.
+   - Only a signed-in visitor who has been there may review a place: a completed stay of theirs there. The server checks it; the page only hides the form.
    - One review per visitor per place (reviews_one_per_place). The visitor may
      edit or delete their own. Editing a review the officer hid keeps it hidden.
    - The Tourism Officer may hide a review, or show it again, always with a
@@ -54,19 +52,13 @@ async function publishedSpot(spotId) {
     return rows[0];
 }
 
-/* The visit that lets this visitor review the place: their latest used
-   ticket, else their latest completed stay. Null when there is none. */
+/* The visit that lets this visitor review the place: their latest completed stay. Null when there is none. */
 async function proofOfVisit(visitorId, spotId, client) {
-    const t = await query(`
-        select id from tickets
-         where visitor_id = $1 and spot_id = $2 and status = 'used'
-         order by visit_date desc limit 1`, [visitorId, spotId], client);
-    if (t.rows.length) return { ticketId: t.rows[0].id, bookingId: null };
     const b = await query(`
-        select id from bookings
-         where visitor_id = $1 and spot_id = $2 and status = 'completed'
-         order by check_out desc limit 1`, [visitorId, spotId], client);
-    if (b.rows.length) return { ticketId: null, bookingId: b.rows[0].id };
+        select b.id from bookings b join spots s on s.id=b.spot_id and s.type='accommodation'
+         where b.visitor_id = $1 and b.spot_id = $2 and b.status = 'completed'
+         order by b.check_out desc limit 1`, [visitorId, spotId], client);
+    if (b.rows.length) return { bookingId: b.rows[0].id };
     return null;
 }
 
@@ -98,7 +90,7 @@ function reviewsRouter({ requireAdmin, sharedRateLimit }) {
             const { rows } = await query(`
                 select r.spot_id, avg(r.rating) as average, count(*) as count
                   from reviews r join spots s on s.id = r.spot_id
-                 where r.status = 'visible' and s.status = 'published'
+                 where r.status = 'visible' and s.status = 'published' and s.type='accommodation'
                  group by r.spot_id`);
             res.set('Cache-Control', 'public, max-age=60');
             return res.json(Object.fromEntries(rows.map(r => [r.spot_id, summaryOf(r)])));
@@ -156,11 +148,11 @@ function reviewsRouter({ requireAdmin, sharedRateLimit }) {
                 const had = await query('select id from reviews where visitor_id = $1 and spot_id = $2', [req.visitor.id, spot.id], client);
                 if (had.rows.length) throw problem(409, 'You have already reviewed this place. Edit your review instead.', 'ALREADY_REVIEWED');
                 const proof = await proofOfVisit(req.visitor.id, spot.id, client);
-                if (!proof) throw problem(403, 'You can review a place after a used ticket or a completed stay there.', 'NO_VISIT');
+                if (!proof) throw problem(403, 'You can review a place after a completed stay there.', 'NO_VISIT');
                 const { rows } = await query(`
-                    insert into reviews (visitor_id, spot_id, rating, body, ticket_id, booking_id)
-                    values ($1, $2, $3, $4, $5, $6) returning *`,
-                    [req.visitor.id, spot.id, rating, body, proof.ticketId, proof.bookingId], client);
+                    insert into reviews (visitor_id, spot_id, rating, body, booking_id)
+                    values ($1, $2, $3, $4, $5) returning *`,
+                    [req.visitor.id, spot.id, rating, body, proof.bookingId], client);
                 return rows[0];
             });
             return res.status(201).json({ success: true, message: 'Thank you. Your review is posted.', review: ownView(row) });

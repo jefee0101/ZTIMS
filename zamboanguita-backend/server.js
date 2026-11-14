@@ -824,7 +824,7 @@ function reportWriteFailure(res, error, context) {
     if (error && error.code === 11000) {
         const field = Object.keys(error.keyPattern || error.keyValue || {})[0] || 'value';
         // db.js names the specific case when it knows it ("Payment for that
-        // ticket was already recorded"); otherwise, the generic wording.
+        // record was already saved"); otherwise, the generic wording.
         return res.status(409).json({ success: false, message: error.specific || `That ${field} is already registered.` });
     }
     return res.status(500).json({
@@ -1977,11 +1977,11 @@ app.delete('/api/spots/:id', requireStaff, async (req, res) => {
         await Spot.deleteById(spot._id);
         return res.status(200).json({ success: true, message: 'Spot deleted.' });
     } catch (error) {
-        // A listing with tickets on record keeps them: the database refuses the delete.
+        // A listing with dependent records keeps them: the database refuses the delete.
         if (error && error.code === 'STILL_REFERENCED') {
             return res.status(409).json({
                 success: false,
-                message: 'This listing has tickets on record, so it cannot be deleted. Archive it instead — the record is kept and the public no longer sees it.'
+                message: 'This listing has saved records, so it cannot be deleted. Archive it instead — the record is kept and the public no longer sees it.'
             });
         }
         return res.status(500).json({ error: error.message });
@@ -2006,7 +2006,7 @@ app.get('/api/maintenance/privacy', async (req, res) => {
         const erased = await forgetOldVisitors();
         // The same daily run reminds resorts of unanswered booking requests and
         // expires the overdue ones (bookings.js; also run as bookings are read).
-        const bookings = await bookingsModule.sweepBookings(paymentsModule.siteOrigin(req));
+        const bookings = await bookingsModule.sweepBookings(gatewayModule.siteOrigin(req));
         return res.json({ success: true, erased, bookings });
     } catch (error) {
         console.error('❌ Privacy clean-up failure:', error);
@@ -2023,7 +2023,7 @@ app.get('/api/maintenance/privacy', async (req, res) => {
    a message cannot go astray because a mailbox was full or a password expired.
 ========================================== */
 
-// One of the writes anyone on the internet can make (buying tickets is the
+// One of the writes anyone on the internet can make (booking rooms is the
 // other), so it is held tightly: ten an hour is plenty for a person, and a
 // resort or the office itself behind one shared connection, and nothing for a
 // script.
@@ -2660,12 +2660,12 @@ app.use('/api', require('./support-staff')({
 /* ==========================================
    ONLINE PAYMENTS — a demonstration in the gateway's test mode (payments.js)
 ========================================== */
-const paymentsModule = require('./payments');
-app.use('/api', paymentsModule({ requireAdmin, requirePasswordConfirmation, sharedRateLimit, isPubliclyVisible }));
+const gatewayModule = require('./xendit-gateway');
+app.use('/api', require('./payments')());
 
 /* ==========================================
    ATTRACTION SETUP — opening days, closed dates, prices per kind of visitor,
-   and the share kept on a cancellation (attractions.js)
+   paid onsite (attractions.js)
 ========================================== */
 const attractions = require('./attractions');
 app.use('/api', attractions({ requireAdmin }));
@@ -2683,7 +2683,7 @@ app.use('/api', require('./announcements')({ requireAdmin, checkPhotoSources }))
 /* Visitor accounts (visitors.js): sign up, sign in (password or Google), the
    account, saved places. Their tokens never open a staff route, nor staff
    tokens a visitor route (another audience). */
-app.use('/api', require('./visitors')({ sharedRateLimit, emailTakenBy, siteOrigin: paymentsModule.siteOrigin }));
+app.use('/api', require('./visitors')({ sharedRateLimit, emailTakenBy, siteOrigin: gatewayModule.siteOrigin }));
 
 /* Reviews (reviews.js): visitors who have been to a place rate it; the
    officer may hide one, with a reason. Counts and ratings only. */
@@ -2692,18 +2692,18 @@ app.use('/api', require('./reviews')({ requireAdmin, sharedRateLimit }));
 /* Room booking at private places to stay (bookings.js): visitors ask, the
    resort's manager confirms by hand, the officer sees counts and can pause. */
 // Pay at the property or pay online (booking-payments.js), before bookings.js's routes.
-app.use('/api', require('./booking-payments')({ sharedRateLimit, siteOrigin: paymentsModule.siteOrigin }));
+app.use('/api', require('./booking-payments')({ sharedRateLimit, siteOrigin: gatewayModule.siteOrigin }));
 const bookingsModule = require('./bookings');
 app.use('/api', bookingsModule({
     requireAdmin, requireEstablishmentManager, sharedRateLimit, isPubliclyVisible,
-    siteOrigin: paymentsModule.siteOrigin, checkPhotoSources
+    siteOrigin: gatewayModule.siteOrigin, checkPhotoSources
 }));
 
 /* ==========================================
-   MANAGE MY TICKET — a visitor moves or cancels with the code and
-   the email it was bought with (manage.js)
+   MANAGE MY BOOKING — a visitor moves or cancels with the code and
+   their signed-in account (manage.js)
 ========================================== */
-app.use('/api', require('./manage')({ sharedRateLimit, refund: paymentsModule.refund, siteOrigin: paymentsModule.siteOrigin }));
+app.use('/api', require('./manage')({ sharedRateLimit, siteOrigin: gatewayModule.siteOrigin }));
 
 /* ==========================================
    5. ERROR HANDLER

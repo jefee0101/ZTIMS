@@ -73,8 +73,7 @@ collides. The user's chat is in plain, simple language.
    before re-adding). Run it twice on the local database to prove it.
    **Never change the live Supabase database ahead of `main`**: the code that
    uses a schema change goes to `main` first, then the user re-runs
-   `schema.sql` in the Supabase SQL Editor, then redeploys. (On 2 October a
-   schema applied before its code reached `main` broke every ticket purchase.)
+   `schema.sql` in the Supabase SQL Editor, then redeploys. (A schema applied before its code once broke checkout.)
    Anything that deletes live data needs the user's yes first.
 5. **Keep this file current in the same commit** as the change: a new table,
    route, page, rule or decision is written here, so the next session knows.
@@ -178,7 +177,7 @@ purpose — see the header comment in `spot-form.js`:
   Dashboard quick-add. Owns barangay list, validation, the location picker
   and its Zamboanguita bounding-box sanity check. Its look is the standard one wherever it
   opens: the four steps as round numbered buttons joined by a line
-  (`.sf-steps`, like the visitor's ticket steps), sentence-case labels, pills
+  (`.sf-steps`, like the visitor's booking steps), sentence-case labels, pills
   for the secondary controls (`.sf-chip`), open days as pills, yes/no settings
   as switches (`.sf-switch`), and a Cancel / Next / Save row that stays at the
   bottom of the window (`.sf-footer`). **Adding** walks Back / Next to Publish
@@ -414,7 +413,7 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
   one rule in `theme.css` (`#toastHost > *`) shapes them all — solid surface,
   hairline outline, the tone in the icon only.
   **Leaving and destroying are red** (the user's decision, every page, rules
-  at the end of `theme.css`): Delete / Remove / Cancel a ticket and a
+  at the end of `theme.css`): Delete / Remove / Cancel a booking and a
   dialog's destroying confirm (`.btn-danger`) are a solid red pill, the same
   deep red in both themes; a Cancel that only closes a form or dialog, Discard,
   and Sign out of all devices (`.btn-cancel`, `#signOutEverywhereBtn`) a red
@@ -445,7 +444,7 @@ enterprise managers, feedback, `/api/statistics/tracker` and `/form-a4`,
 `/api/payments`, `/api/attraction-visits/tracker`) and shows what is waiting on each — every card links to the
 page where it is dealt with, Statistics through the tab named in the link's
 address (`admin_statistics.html#tracker`) — plus the month just ended's Form A4
-reports, the month's collections, and Form A4 counts by month and by country. Counts only, like the statistics themselves. Its "Add new
+reports, Form A4 counts by month and by country. Counts only, like the statistics themselves. Its "Add new
 spot" publishes, then opens Destinations at `?new=<id>`, which finds that
 listing (search filled in, scrolled to, marked for a moment with
 `.just-published`), says it is live, and drops `?new` from the address.
@@ -500,7 +499,7 @@ the old collection names (`admins`, `resortOwners`) did not.
    `*.vercel.app`", which would trust anyone's site there; see
    `isSameOrigin` / `isAllowedOrigin`), rate limits, JSON body parsing
    capped at 1MB (photos go straight browser → Cloudinary, never through this
-   API). The limits that guard something (login, password reset, tickets,
+   API). The limits that guard something (login, password reset, room requests,
    feedback, directions) go through `sharedRateLimit`, which counts in the
    `rate_limits` table (`rate-limit-store.js`) so they hold across serverless
    instances; only the blanket per-request limit stays in memory, on purpose.
@@ -532,7 +531,7 @@ the old collection names (`admins`, `resortOwners`) did not.
    route searches officers, then managers, then Support Staff, so `emailTakenBy`
    refuses any sign-in email another staff account already uses.
 4. Routes, grouped by resource: admin, establishment-managers, login/forgot/
-   reset-password, spots (listings), payments and tickets (`payments.js`),
+   reset-password, spots (listings), and room payments (`booking-payments.js`),
    feedback (public `POST /api/feedback`, rate-limited with a honeypot;
    officer inbox `GET`/`PATCH …/status` read in `src/admin/admin_feedback.html`),
    `/api/directions/*`, and `/api/statistics/*` — mounted from `statistics.js`
@@ -578,8 +577,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   the rates and shares the DAE-1A, DAE-1B and FORM A templates require
   (occupancy rate, average length of stay, guests per room, % share, %
   difference) are shown there. Still no revenue.
-- **Nothing from tickets.** Enterprises report their own already-totalled
-  month; ZTIMS never derives these figures from tickets sold.
+- **Nothing from purchases.** Enterprises report their own already-totalled
+  month; ZTIMS never derives these figures from online purchases.
 - **Who reports.** A manager, for the listing they manage. Support Staff, for
   the office attraction they look after, now through the Daily Visitor Record
   (see "Attraction visitor reporting"; the officer's backup entry of an
@@ -936,59 +935,24 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   left their data; restart the local API between suites (the blanket per-address
   limit).
 
-### Online payments (demonstration, test mode)
+### Online payments — room bookings only (14 November 2026)
 
-`payments.js`, mounted at `/api`: a visitor buys entrance tickets
-(`POST /api/tickets`) on a Xendit hosted invoice, and
-comes back to `src/payment.html?c=<checkout id>`. Tickets are sold only for
-attractions the office runs (`managed_by` null, published, `entrance_fee` > 0).
+`xendit-gateway.js` owns gateway access, development-key validation, callback
+token checking, allowed methods/URLs, checkout duration and minimum amount.
+`booking-payments.js` owns room checkout, settlement and full cancellation
+refunds. `payments.js` mounts only `POST /api/payments/webhook`; keep that exact
+path because Xendit's dashboard calls it. Only `ztims-b-<id>` external IDs route
+to booking settlement. Unknown or retired invoice types are ignored after
+callback authentication. A webhook body never proves payment: fetch Xendit and
+verify the invoice ID, external ID, amount and PHP currency, then record once.
+Live keys are refused and online booking payments keep `is_demo=true`.
+Keep the Xendit CSP hosts in vercel.json. `XENDIT_API_BASE` is a local-test
+stand-in override, not a production setting. The officer never sees booking money.
 
-- **Ways to pay** (12 November 2026, the user's choice): e-wallets, QR Ph, bank
-  transfer, credit or debit card, and cash over the counter, set with
-  `XENDIT_METHODS` (Xendit's own codes, taken from the dashboard; unset shows
-  every method the account has on). Receipts name them `gcash`, `maya`, `qrph`,
-  `bank`, `card`, `otc` (`METHOD_NAMES`).
-- **Test mode only.** `XENDIT_SECRET_KEY` must start `xnd_development_`; anything
-  else (a `xnd_production_` key above all) switches online payment off
-  (`gatewayState`). Every online payment, the ticket it paid for, and the
-  generated sample data carry `is_demo`.
-  Visitor pages and emails do not label it "test mode" (decided); Xendit's own
-  checkout page shows that, and Terms, Privacy and FAQ still say so. Paying in
-  person is called paying **onsite** (never "at the gate").
-- **The server decides.** Amounts come from the fees on record (`priceTickets`). A
-  payment is confirmed only by the server asking Xendit itself (`settle`:
-  `GET /v2/invoices/:id` with its own key), when the visitor returns or when
-  Xendit's callback (`POST /api/payments/webhook`) arrives carrying the
-  `X-CALLBACK-TOKEN` (`XENDIT_CALLBACK_TOKEN`, constant-time compare). The
-  callback's body is never believed, only used to find the checkout to settle.
-  The invoice must match the checkout (`external_id` `ztims-<checkout id>`),
-  be in PHP and for the amount asked. `recordPaid` locks the checkout row so
-  both arriving at once record it once.
-  A payment for something already paid or cancelled is marked `duplicate` for a
-  refund.
-- **Tables** (`schema.sql`): `tickets`, `online_checkouts` (one ticket each);
-  `payments` belongs to one ticket and has `channel` (counter/online),
-  `gateway_ref`, refund fields and `is_demo`. 34 tables in all, with `announcements`,
-  `spot_closed_dates`, `spot_photos`, `spot_more_categories`, `office_info`,
-  `emergency_numbers`, the Guest Register's `register_entries` /
-  `register_entry_guests`, room booking's seven and `booking_checkouts` (see "Room booking") and
-  visitor accounts' four (`visitors`, `visitor_tokens`, `saved_places`,
-  `reviews`; see "Visitor accounts"), `review_changes` (see "Saved places
-  and reviews") and `support_staff` (see "Support Staff").
-- **The office:** `admin_collections.html` (money per month and day, OR numbers,
-  refunds, Excel, load/remove demo data), `admin_tickets.html` (the check: type
-  the ticket code — tickets have no QR, by the user's decision: most places
-  have no entrance or staff to scan one; `admit` is one conditional update, so a ticket is used once),
-  and a collections line on the Dashboard. One refund rule: the office
-  cancels, the visitor is refunded. A refund goes back
-  through Xendit (`POST /refunds`, `invoice_id`, an `Idempotency-key` per
-  payment so a second click asks for the same refund) only for a payment one
-  of our invoices made; seeded and counter payments are recorded only.
-- **Demo data:** `POST /api/payments/demo` replaces the generated sample
-  (tickets with no checkout) and keeps test-mode payments;
-  `DELETE /api/payments/demo` removes everything `is_demo`. Real records are
-  never touched.
-- Money never reaches Statistics or Form A4, which stay counts only.
+Stage 1 removes entrance sales, checks, refunds, checkout pages and collections
+from application code only. The existing database remains unchanged. Stage 2
+is optional, requires a separate explicit yes and a separate commit, and must
+not be applied live ahead of main. Never delete live data without explicit yes.
 
 ### The officer's Destinations (`admin_dashboard_manage.html`)
 
@@ -1011,7 +975,7 @@ the manager edits it) and a ⋯ menu (View public page, Visitor setup where it
 applies, Take down in red). Nine cards, then **Load more**; "Showing n of m
 destinations" counts the filtered list. Prices without cents.
 
-### The officer's Enterprise Managers, Tickets and Collections
+### The officer's Enterprise Managers
 
 Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
 `portal-flat.css`), no page intro or help lines:
@@ -1029,26 +993,6 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   Previous / numbers / Next and "Showing n of m managers".
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
-- **Tickets** (`admin_tickets.html`): Check a ticket first (code, Check, Let
-  them in), then "Tickets for
-  today" (or the chosen date) with counts that filter (All, Not yet used, Used,
-  Cancelled or closed) and one box per place ("6 of 8 people let in") with
-  a row per ticket (`.tk-row`: code, name and people, status pill). A valid
-  ticket for today or a day gone by has **Mark used** (a check, asked once):
-  most places have no entrance or staff, so the office ticks it afterwards
-  (the user's decision; `POST /api/tickets/:id/admit` takes any day up to
-  today, never a later one).
-- **Collections** (`admin_collections.html`): title with the online-payments
-  pill, month and Excel beside it; four tiles (Collected, Online, Onsite,
-  Waiting for an OR in red when any); Payments as counts that filter (All,
-  Waiting for an OR, Refunded), search, and a row per payment (`.pay-row`,
-  read top to bottom: the place, what was paid for and how many people, then
-  labelled facts in fixed columns `.pay-facts` — Ticket code, Paid
-  by, Paid with (method, online or onsite), Paid on — the amount large, the OR number or its field with Save, and ⋯ → Cancel and refund in
-  red); Day by day (payments and total); Demo data as one line with its two buttons. Pesos are whole
-  unless a refund left centavos.
-
-
 ### The officer's Feedback (`admin_feedback.html`)
 
 Title; counts that filter (Open — new and read, the default — New in red,
@@ -1088,7 +1032,7 @@ Refresh.
   place exists, and the photo passes `checkPhotoSources` (the listings' hosts).
 - No Facebook feature: no Facebook code, tokens or fields (the user's decision).
 - **The officer's page** (`admin/admin_announcements.html`, "Announcements" in
-  the officer menu after Collections and Bookings; `nav-active.js` marks it by its file
+  the officer menu after Bookings; `nav-active.js` marks it by its file
   name), from the design images in the notes repo
   (`Design/Announcements and events/`), laid out like Statistics and Settings
   (November 2026, to match the other officer pages): the title only, then two
@@ -1146,234 +1090,50 @@ Refresh.
 
 ### Attraction setup
 
-`attractions.js`, mounted at `/api`, and the officer's **Visitor setup** window
-on Destinations (`admin_dashboard_manage.html`), for office-run attractions:
+`attractions.js` keeps the officer's opening days and `spot_closed_dates`.
+Both POST `/spots/:id/closed-dates` and `/spots/:id/close-date` only mark a date
+closed; there are no sale, refund or visitor-email side effects. Reopening
+removes that closure. The frontend/backend open-days readers remain in sync.
+Regular, student and child entrance fees (and child age limit) remain displayed
+information, paid onsite. Student/child fields may be empty. There is no
+cancellation-share control or selling calculation. Support Staff still read
+fees without editing them; attraction Daily Visitor Records still use closures.
 
-- **Opening days** are `spots.working_days`, the text visitors read. The listing
-  form and Visitor setup tick weekdays; `open-days.js` (both sides) writes the
-  ticks as text ("Tuesday to Sunday") and reads text back, older free text
-  included ("Closed Mondays", "Mon–Fri"). Text naming no day is unknown and
-  means open every day — a sale is never refused on a guess.
-- **Closed dates** (`spot_closed_dates`). Adding one that already has valid
-  tickets is refused: closing a sold date is the
-  closure action's job (cancel, refund or move, tell each visitor).
-- **Prices per kind of visitor** (`feeTable`): regular is the entrance fee;
-  `student_fee` and `child_fee` + `child_age_max` are offered only when set.
-  There is no senior citizen or PWD price (taken away October 2026, the
-  user's decision): `priceTickets` refuses a count for a kind that no longer
-  exists, so an old cached page can't buy fewer tickets than it shows, and
-  `schema.sql` drops `count_senior|pwd` / `fee_senior|pwd` once no ticket
-  counts anyone in them (until then they stay, unused).
-  A ticket counts people by kind (`tickets.count_regular|student|child`)
-  and keeps the price each kind paid (`fee_regular|student|child`,
-  read by routes as `feeBreakdown`); `people` and `amount` are worked out by
-  the database (see "Normalisation"); `priceTickets` prices a purchase from the counts, and the
-  gate's check says whose ID to look at. No ID is ever stored.
-- **`cancel_keep_percent`**: the share kept when a visitor cancels a ticket
-  at that destination.
-- `dayVerdict(spot, date)` is the one answer to "can visitors come that day?",
-  used by ticket sales and the Manage page alike; the public ticket offer
-  carries `openDays` and `closedDates` so the form says so first.
+### The visitor's journey (Home → destination → visit or stay)
 
-### The visitor's journey (Home → destination → pay → after)
+Home cards offer Directions, listing details or Book a room for accommodation.
+Attractions display entrance fees and opening days; visitors pay onsite.
+Visitor headers no longer have a purchase CTA. Spot pages keep directions,
+galleries, saved places, announcements and room booking. The room window
+retains Dates and guests, Rooms, Your details, Payment and Sent. Online payment
+is offered only for room bookings after confirmation. My account starts with
+My bookings and retains saved places, reviews, profile and security.
+No new React or offline features. Keep the existing design and wording rules.
 
-Frontend only, no tables of their own:
-- **Home** (`index.html`), the user's design from UX Pilot (October 2026;
-  styles `.hm-*` in `theme.css` "Home page"), top to bottom: the **hero** — a
-  rounded frame holding the film (`hm-hero__media`, still from frame zero, film
-  added by `heroFilm` on wide screens only), darkened toward the words on the
-  left (`.hm-hero::before`), with the header floating over it; a "Mabuhay!
-  Negros Oriental, Philippines" pill, "Welcome to" and *Zamboanguita* (Fraunces
-  italic, a peach-to-tangerine gradient), one line, the **search**
-  (`#heroSearch`: field with name suggestions, category from 640px, Search
-  scrolls to the cards) and a mouse to scroll (no featured place and no
-  "Popular" places: both taken out November 2026, the user's choice); a moving strip of what is
-  here (`.hm-marquee`, decoration); **Browse by interest** (`#browse`: "What are
-  you *in the mood* for?", four big photo tiles — Beach & Sea, Diving &
-  Snorkeling, Nature, Adventure — in `#categoryTiles` and four small cards —
-  Culture & Heritage, Faith, Leisure & Recreation, Places to stay — in
-  `#categoryMinis`, each with its count; a tap shows that category below, a
-  second tap everything); **Featured destinations** (`#featured`: the
-  category pills `#categoryFilter`, a status line only while something narrows
-  the list, and the cards — six, then **View all destinations**; everything
-  while narrowed); **Find it on the map** (`#map`: the Leaflet map, the
-  legend in its own card, and **Open full map**, which presses the map's own
-  expand control); **Plan your visit** (`#plan`: three step cards — Discover,
-  Book & pay in a dark card, Get there in teal — then the Tourism Office card:
-  hours, address, contact and emergency from `GET /api/office`, with Contact
-  the Tourism Office and My account on a burnt-orange panel). The tiles,
-  the pills and the search's category are one control (`setCategory`); the
-  search and category are kept for the visit in `sessionStorage.ztimsBrowse`;
-  `?category=` opens a category.
-  A **card** (`.hm-card`): photo with the category pill and, at ₱0, a teal
-  "Free entrance" pill; name (the card's stretched link), barangay, "Open …"
-  from `workingDays`/`workingTime`; the price (none for a place to stay) and
-  its main action (`mainAction`, the destination page's rules): Buy tickets
-  (office-run attraction with a fee, and `/api/payments/config` says online),
-  Book a room for a place to stay taking room requests (its id in
-  `GET /api/rooms/open`, fetched once; opens `spot.html` at `#rooms`, which
-  `honourArrival` turns into the booking window), else Book a room / Book now
-  (its own booking link, new tab), else Details. Tickets open `spot.html` at
-  `#tickets`, which `honourArrival` turns into the ticket form. Grey skeleton cards while loading.
-- **Header**: the same on all eleven visitor pages (Home, destination, History,
-  My ticket, payment, Terms, Privacy, FAQ, Contact, Announcements, Events; styles `.site-header*` and
-  `.site-link` in `theme.css`), the user's UX Pilot design (October 2026): a
-  floating, rounded glass bar — the ZTIMS seal (`public/ztims-logo.png`, the
-  user's logo, November 2026; it replaced the orange sun badge) and "ZAMBOANGUITA /
-  Tourism · Information System", the links Destinations, Map
-  (`index.html#map`), Announcements, Events, History, My account (`user/account.html`; it was My ticket or booking until 9 November; shown only while a visitor is signed in, `data-visitor-link`, so a signed-out visitor sees Sign in alone, 12 November 2026) (no Staff link since November
-  2026, the user's choice: staff sign in from the footer's "Staff and
-  Enterprise Manager sign in"), the
-  current page a solid ink pill, the visitor's **Sign in** or account menu
-  (`visitor-session.js`, see "Visitor accounts") (`aria-current="page"`; light in dark mode;
-  the destination page counts as Destinations), then the round theme toggle
-  and **Buy tickets** (→ `index.html#featured`; from 420px). It stays at the
-  top as the page scrolls; on Home it floats over the hero
-  (`.site-header--over`). Up to 1259px it is two rows: the name and the
-  buttons, then the links (scrolling sideways on a phone); one row from 1260px
-  (the header stops growing at 77rem, and below that the links did not fit).
-  Links that overflow scroll from the first one (auto margins, never
-  `justify-content: center`, which cut both ends).
-- **Destination** (`spot.html`), the user's UX Pilot design (November 2026;
-  styles `.sd-*` at the end of `theme.css`), as wide as the floating header
-  (`.sd-wrap`), read top to bottom in the order a visitor asks — the photo as a
-  rounded frame; under it the categories as one small label ("Beach & Sea ·
-  Diving & Snorkeling"), the name and barangay, and on a computer the actions
-  the place really offers on the right (`#actionBar`: Directions solid first,
-  then Buy tickets / Book a room / Book now outlined); on a phone the actions
-  are `#mobileActions`, fixed to the bottom (`drawActions`; never both). No
-  breadcrumb (the design has none). **At a glance** tiles (`glanceFacts`,
-  `.sd-fact`, tinted: open days and hours, entrance or Free, a travel fee only
-  if set, barangay); About beside a **Getting there** card (address,
-  emergency numbers, Get directions) that takes the whole row once directions
-  are open (`.sd-two.is-routing`); Photos (`.sd-gallery`, the first one tall
-  from four photos); tickets have no section of their own: "Buy tickets" opens
-  the ticket form in a window, `#ticketModal` built by `renderTicketOffer`, and
-  the Entrance tile says "less for students and children" when those prices are
-  set; Book your stay / visit (its booking link) or Contact; "Nearby places to
-  visit" (`.sd-near` cards: category label, name, "Open …" from `openLine`,
-  distance or barangay, the price or Free entrance; nearest first when both
-  have a pin, else "More places to explore", same category first;
-  `renderRelated`). Prices without cents (`peso`).
-- **History** (`history.html`), the user's UX Pilot design (November 2026;
-  `.hs-*` in `theme.css`): the title and lead, the story in three paragraphs,
-  "The municipality at a glance" as tinted tiles, "Where it is" and "The
-  barangays" as heading-left / text-right rows, the town fiesta as a rounded
-  ember band, and the Wikipedia source note. Its one image is the Zamboanguita
-  Tourism Office logo (`public/zamboanguita-tourism-office.png`, the user's
-  choice, November 2026; `.hs-logo`: a large portrait tile, 4:5, white so it
-  reads in dark mode, 26rem wide beside the title from 1024px and 20rem above it
-  on a phone). No back link.
-- **Staff sign in** (`staff_login.html`), the user's UX Pilot design (November
-  2026; `.ss-*` in `theme.css`): from 1024px the coast (the hero film's first
-  frame) fills the left with "Keeping Zamboanguita ready for its visitors.";
-  on the right "Back to the site", the round theme toggle, and one rounded
-  card — Staff sign in, Email address, Password with "Forgot password?" beside
-  its label and the eye, Sign in, "Accounts are issued by the Municipal Tourism
-  Office." The forgot-password and choose-your-own-password forms swap into the
-  same card.
-- **Move or cancel** (`manage.html`; it was "My ticket or booking", with a
-  public code-and-email search, until 9 November 2026) and the reset-password
-  page follow the flat style: sentence-case labels above `.bk-field`s, flat
-  `.spot-panel` cards, pill buttons, status and chips as pills (`.pill`,
-  `.tone-pill.rounded-pill`), short titles. It opens one ticket or booking of
-  the signed-in account (`?code=`, from My account or an email; signed out it
-  goes to Sign in and comes back; no code goes to My account); there is no
-  search form. A booking shows as "Your room booking" (status pill,
-  "answers by …" while requested, the reason when declined, code, place,
-  check-in and check-out with the resort's times, guests, rooms and rates,
-  total, the resort's payment instructions only once confirmed, Ask for new
-  dates, Cancel this booking — pressed twice — until the deadline shown). The footer's Send
-  feedback is a pill too.
-- **Steps** (`.journey-steps`, a one-line progress bar: equal columns, a round
-  number with its label under it, joined by a line; done green with a tick,
-  current solid burnt orange). The ticket window: price line, Your visit (date; who is coming, one row per kind with a
-  − / + stepper), Your details (name, email), a summary of lines and the total,
-  and one button that says what it buys ("Buy 4 tickets · ₱180"), in the
-  form styles in `theme.css` (`.bk-*`, `.qty` wired by `wireQty`); the steps
-  are Date & visitors → Payment → Your ticket, and `payment.html` continues
-  them.
-- **After paying** (`payment.html`): "What's next" — the date, Directions
-  (`spot.html?spotId=…#directionsSection`; the checkout view carries `spotId`),
-  Add to calendar (an `.ics` made in the browser: the whole day, Manila time),
-  and Move or cancel (`manage.html?code=`).
-  Flat style like the other visitor pages: one bordered card (place, date, the
-  ticket code large, people), then Paid, then "What's next". The page never says the
-  visitor was emailed.
+### Visitor emails and Manage my booking
 
-### Visitor emails and "Manage my ticket"
-
-- **`mailer.js`** sends through the office's Gmail (`MAIL_USER`, `MAIL_PASSWORD`,
-  an App Password — the same account as the staff password reset). It never
-  throws and gives up after 8 s: an email is a courtesy, never the record, so a
-  missing setting or a refused message is logged and the change stands. Pages
-  only say "we have emailed you" when the server says it went (`emailed`).
-  `MAIL_TRANSPORT=file:/path` writes messages to a file, for local tests only.
-  The staff password-reset email goes through it too; its link is
-  `PUBLIC_SITE_URL`, else the address the request came to (never the CORS
-  list, whose first entry is a local test address when `CORS_ORIGIN` is unset).
-- **`notices.js`** writes each email from the database: ticket receipt (the ticket
-  code, to show on the email or a screenshot), moved, cancelled, and
-  (closures) the office's notice.
-  An online payment's receipt is sent only by the call that recorded it
-  (`recordPaid`'s `justPaid`), so the return page and Xendit's callback never
-  send two. Links carry the code, never the email address.
-- **`manage.js`** (`/api/manage/lookup|move|cancel|refund-closure`, each
-  `requireVisitor` then rate-limited per account) and `src/manage.html`: the
-  code, for the signed-in account only — a ticket or booking opens only when
-  its `visitor_id` is that account's; any other code is "not in your account".
-  **No public search** (the user's decision, 9 November 2026): nothing opens by
-  code and email any more. Email links (`manageUrl`, "Move or cancel (sign
-  in)", "See my booking (sign in)") carry the code and pass through Sign in.
-  Its buttons are pills: Cancel solid red
-  (`.btn-danger-solid`, the same deep red in both themes), Move and Refund
-  outlined.
-  Changes close at 11:59 PM Manila time the day before. A visitor's cancellation
-  refunds the amount less `cancel_keep_percent` (a partial Xendit refund,
-  `payments.refund_amount`); the office's refunds return everything. A used
-  ticket is never moved or refunded. Collections counts what was kept.
-- **Closures** (`POST /api/spots/:id/close-date`, Visitor setup's "Close this
-  date anyway?"): one transaction marks the date closed, puts every paid ticket
-  for it in status `closed` (out of use; the gate says so) and
-  cancels the unpaid ones; then each visitor is emailed (`closureNotice`). A
-  `closed` one is the visitor's to settle on the Manage page whatever the
-  deadline: a full refund (`/api/manage/refund-closure`) or a new date, which
-  makes it valid again. The office cannot set
-  `closed` by hand; Visitor setup shows how many visitors still have to choose.
-
-A serverless host has no single startup, so nothing runs at boot: the
-database pool in `db.js` opens its first connection when the first query
-needs one (a route that never queries, like `/api/directions/capabilities`,
-never waits on the database), and the schema and `bootstrapAdmin` run only
-when someone runs `npm run migrate` (see `runMigrations` and the header of
-`migrate.js`). MongoDB's two in-place reshapings (`resortName` →
-`establishmentName`, `ownerId` → `managedBy`) are gone: the one-time copy
-script (since deleted) translated both on the way across.
-`bootstrapAdmin` reads `INITIAL_ADMIN_EMAIL`/`INITIAL_ADMIN_PASSWORD` to create
-the first officer account if none exists yet, and `ADMIN_PASSWORD_RESET=true`
-to force a reset on an existing one — both are meant to be deleted from the
-environment once used.
+`notices.js` and `mailer.js` send room request, confirmation, decline, expiry,
+date-change, cancellation and online-payment notices. `manage.html` and
+`manage.js` only manage the signed-in visitor's own room booking, using its
+code. Lookup settles pending room payments; move/cancel retain the resort's
+rules and refund flow. No public code/email search. Emails are a courtesy;
+failure to deliver never rolls back a stored action.
 
 ### Normalisation
 
 The schema keeps one fact in one place (3NF), with `schema.sql`'s
 "Normalisation" block converting a database from before:
 
-- **Worked out, never typed in** (Postgres generated columns): `tickets.people`
-  (the counts added up), `tickets.amount` (counts × prices),
-  `monthly_report_counts.total` (male + female, or `total_unsplit` for a month
-  with no split, the 2025 sheet). Writing one is an error, so models mark them `generated`.
+- **Worked out, never typed in**: `monthly_report_counts.total` (male + female, or the unsplit total); generated columns are not written by models.
 - **One value per column or row**: a listing's gallery is `spot_photos` (one
   row per photo, `position` 0–29; routes still see `spot.images`, written by
   `spots.create/save` in one transaction); a listing's other
-  categories are `spot_more_categories` (routes see `moreCategories`); a ticket's prices
-  are `fee_*` columns (routes still see `feeBreakdown` and `unitFee`).
+  categories are `spot_more_categories` (routes see `moreCategories`).
 - **Not stored**: a listing's municipality and province (always Zamboanguita,
   Negros Oriental — `MUNICIPALITY`/`PROVINCE` in `models.js`, added on read)
-  and status note; the account ids that sat beside `payments.recorded_by_email`
-  and `monthly_reports.submitted_by_email`.
+  and status note; reports retain the submitting email as provenance.
 - **Kept on purpose**: what a record says about its own moment — the price a
-  ticket was bought at, who recorded or changed something (by email, so it
+  room was booked at, who recorded or changed something (by email, so it
   outlives the account). Those are facts of
   that record, like a receipt's price, not copies to keep in step.
 
@@ -1501,7 +1261,7 @@ a disposable `*_rooms_test` database; never run it on the live database.
   `bookings.payment_choice` (`property` | `online`). Online is paid **only
   after the resort confirms, for what is still owed** (the total less what is
   paid; a deposit recorded at the property counts), on a Xendit test-mode
-  invoice like tickets: `POST /api/bookings/pay` {code} (the visitor's own,
+  invoice: `POST /api/bookings/pay` {code} (the visitor's own,
   confirmed, choice online) opens or reuses one (`booking_checkouts`,
   external_id `ztims-b-<id>`, back to `manage.html?code=&paid=`);
   `POST /api/bookings/payment-choice` {code, choice} switches while requested
@@ -1523,7 +1283,7 @@ a disposable `*_rooms_test` database; never run it on the live database.
   `pay-test.js` (53 API checks) and `pay-browser.js` (17 browser checks), in
   the session's scratchpad, not in the repo.
 - **The officer's Bookings** (`admin/admin_bookings.html`, "Bookings" in the
-  officer menu after Collections, on all eleven officer pages): one month at a
+  officer menu after Destinations, on all eleven officer pages): one month at a
   time (Previous / Next; stays whose check-in falls in it,
   `GET /api/bookings/overview?month=YYYY-MM`), four tiles (Waiting for an
   answer, Confirmed, Checked in or stayed, Declined / expired / cancelled /
@@ -1539,7 +1299,7 @@ a disposable `*_rooms_test` database; never run it on the live database.
   place not taking requests keeps its link) and a "Book your stay" panel
   (check-in and check-out times, each room type with sleeps and price a night,
   Book a room · from ₱…). The window (`renderRoomOffer`, `#roomModal`, styles
-  `.rb-*` at the end of `theme.css`, the ticket window's `.bk-*`, `.qty` and
+  `.rb-*` at the end of `theme.css`, the booking window's `.bk-*`, `.qty` and
   `.journey-steps`) has four steps — **Dates and guests** (check-in, check-out,
   adults, children), **Rooms** (only what is free for every night, each with
   its number, room photos, price a night and for the stay, selection 0 or 1;
@@ -1604,8 +1364,8 @@ a disposable `*_rooms_test` database; never run it on the live database.
 
 `visitors.js`, mounted at `/api`. Decided 9 November 2026 (the panelist's
 request; notes repo `Design/Visitor accounts/`): visitors get accounts, role
-`tourist`, for My tickets and bookings, Saved places, Reviews and a faster
-checkout, and **signing in is required** to buy a ticket or book a room.
+`tourist`, for My bookings, Saved places, Reviews and a faster
+checkout, and **signing in is required** to book a room.
 - **Tables** (`schema.sql`, block "Visitor accounts"): `visitors` (`email`
   unique case-insensitive and null only once deleted, `email_verified_at`,
   `password_hash` null for Google-only, `google_sub` unique, `full_name`,
@@ -1613,9 +1373,9 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   deleted, `last_sign_in_at`, `deleted_at`); `visitor_tokens` (emailed links:
   sha-256 hash only, purpose `verify` | `reset`, single-use, `expires_at`);
   `saved_places` (visitor, spot; the pair is the key); `reviews` (rating 1–5,
-  body ≤ 600, `visible` | `hidden` with reason, by and when, the ticket or
+  body ≤ 600, `visible` | `hidden` with reason, by and when, the completed
   booking that proves the visit, one per visitor per place; see "Saved places
-  and reviews"). `tickets.visitor_id` and `bookings.visitor_id` (nullable).
+  and reviews"). `bookings.visitor_id` (nullable).
 - **Tokens.** Signed like staff tokens but with audience `ztims-visitor`
   (staff: `ztims-web`), role `tourist`, `sv` (the account's
   `session_version`), 30 days. A staff check (`requireAuth`, `optionalAuth`)
@@ -1633,7 +1393,7 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   every session), `GET|PATCH /api/visitors/me`, `POST
   /api/visitors/me/password`, `POST /api/visitors/me/sign-out-everywhere`,
   `DELETE /api/visitors/me` {password} or {credential}, and `GET
-  /api/visitors/me/tickets|bookings|saved|reviews`, `PUT|DELETE
+  /api/visitors/me/bookings|saved|reviews`, `PUT|DELETE
   /api/visitors/me/saved/:spotId`. Rate limits (`sharedRateLimit`): sign-up 5
   an hour, failed sign-ins 10 per 15 minutes, emails 5 per 15 minutes, links
   and Google 20 per 15 minutes, wrong own passwords 10 per 15 minutes per
@@ -1647,24 +1407,22 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   dropped and its sessions end) or when the visitor also gives its password
   (`LINK_NEEDS_PASSWORD`). Without `GOOGLE_CLIENT_ID` Google sign-in is off.
 - **Linking.** Once an account's email is verified (verify, reset, Google)
-  and at each sign-in, guest tickets and bookings with that email and no owner
+  and at each sign-in, guest bookings with that email and no owner
   get its `visitor_id` (`linkOldRecords`).
-- **Purchases.** `POST /api/tickets` and `POST /api/bookings` take
+- **Purchases.** `POST /api/bookings` take
   `requireVisitor`; the name, email and phone (and, for a room, the country)
   come from the account (`checkoutDetails`), never the page. A missing phone or
   country may be given once at checkout and is saved to the account (409
   `PROFILE_INCOMPLETE` when neither has it). Move or cancel opens only the
-  account's own tickets and bookings; a guest one from before accounts opens
-  once it is linked (the account with its email signs in). The payment return
-  (`GET /api/payments/checkout/:id`, `payment.html`) is `requireVisitor` too,
-  and only for the account that bought the ticket.
+  account's own bookings; a guest one from before accounts opens
+  once it is linked (the account with its email signs in). The room-payment return opens the signed-in account's booking in `manage.html`.
 - **Deleting** (`DELETE /api/visitors/me`; the password, or for Google-only a
   Google sign-in from the last ten minutes with the same Google account)
   erases the email, name, phone, country, password hash and `google_sub`,
   marks the row `deleted`, ends every session and removes saved places. The row
-  stays so old tickets, bookings and reviews still point somewhere. **Reviews
+  stays so old bookings and reviews still point somewhere. **Reviews
   stay and show as "Former visitor"** (chosen so places' ratings stay honest).
-  Tickets and bookings keep counts and amounts and their own guest details
+  Bookings keep counts and amounts and their own guest details
   until `privacy.js`'s one-year rule. The email can sign up again; the new
   account does not inherit the old one's records.
 - **Pages.** `src/user/sign_in.html`, `sign_up.html` (consent line linking
@@ -1679,16 +1437,16 @@ checkout, and **signing in is required** to buy a ticket or book a room.
   `localStorage.ztimsVisitorToken` (never the staff `authToken`) and draws the
   header's **Sign in** pill, or the initials and first name with a menu (My
   account, Sign out) — `.site-header__signin`, `.site-acct*`; with it present,
-  Buy tickets shows only on the two-row header from 560 to 1259px (on a phone
+  Book a room shows only on the two-row header from 560 to 1259px (on a phone
   and on the one-row header there is no room for both).
   **My account** (`src/user/account.html`, `.ac-*`): six tabs with their own
-  addresses — `#tickets`, `#bookings` (coming up, then past; "Move or cancel"
+  addresses — `#bookings`, `#bookings` (coming up, then past; "Move or cancel"
   opens `manage.html?code=` for that one),
   `#saved`, `#reviews`, `#profile`, `#security` (change password, or "Set a
   password by email" for Google-only; Sign out of all devices; Delete account
   with the password or a fresh Google sign-in). **Checkout** (`spot.html`):
-  signed out, Buy tickets and Book a room go to Sign in with `next` back to
-  `#tickets` / `#rooms`, which reopens the form; signed in, "Your details" shows
+  signed out, Book a room and Book a room go to Sign in with `next` back to
+  `#bookings` / `#rooms`, which reopens the form; signed in, "Your details" shows
   the account's name and email, and asks only a missing phone (and, for a
   room, country). A failed account check (no signal) says so instead of
   sending the visitor to Sign in.
@@ -1725,10 +1483,7 @@ ratings only, never money.
   small window (`#svAsk`, `.sv-ask`: "Sign in to save places", Not now / Sign
   in, which comes back to the page). Home redraws its cards when the module
   arrives (`ztims-saved-ready`). The list is My account → Saved places.
-- **Who may review** (`proofOfVisit`, checked by the server on every post): a
-  ticket of the account's for that place with status `used`, else a booking of
-  the account's there with status `completed`; the review keeps which one
-  (`ticket_id` / `booking_id`). No visit: 403 `NO_VISIT`. A second review of
+- **Who may review** (`proofOfVisit`, enforced on each post): the account must have a completed booking at that accommodation. The review stores `booking_id`. No visit: 403 `NO_VISIT`. A second review of
   the same place: 409 `ALREADY_REVIEWED` (and `reviews_one_per_place`). Rating
   a whole number 1–5 (400 `BAD_RATING`), text ≤ 600.
 - **Routes.** Public: `GET /api/reviews/summary` (each published place with
@@ -1779,7 +1534,7 @@ visitors only through its Support Staff, and the officer has no Guest
 Register, 10 November 2026). They keep its Daily Visitor Record and submit its
 monthly report (see "Attraction visitor reporting"; until stage 5 this was a Guest
 Register and a typed monthly report) and its listing details except
-category and prices. They never check or mark tickets, see Collections or
+category and prices. They never see room money or
 refunds, set closed dates, take a place down, Finalize or Reopen, touch other
 places, accounts, settings or feedback, or delete anything. One active account
 per attraction; accounts are deactivated, never deleted; to replace someone the
@@ -1870,7 +1625,7 @@ officer deactivates the old account and adds a new one.
   (`/statistics/places` carries `supportStaffName`); the report's change log
   names each person (`changed_by_name`, "(Support Staff)").
 - Tested with real API calls (first sign-in and forced change; refused on
-  officer, manager, ticket, money and other-place routes and the reverse; own
+  officer, manager, money and other-place routes and the reverse; own
   register and report only; every locked field; one active per attraction; a
   deactivated session stops at once; the officer's password for add, issue and
   deactivate),
@@ -1879,7 +1634,7 @@ officer deactivates the old account and adds a new one.
   monthly report filled from the register and saved → the officer finalizes the
   month → the officer deactivates the account; the records stay). The Privacy
   page (§8) says what Support Staff can see: their attraction and its counts,
-  never names, tickets, payments, bookings or feedback. The full manuscript
+  never names, room payments, bookings or feedback. The full manuscript
   entry is "Support Staff: the complete module" in `docs/MANUSCRIPT-NOTES.md`. The officer-password limit (10 refusals per 15 minutes) counts
   every refused confirmation, a validation error included.
 
@@ -1895,7 +1650,7 @@ officer deactivates the old account and adds a new one.
   again; routes see `spot.moreCategories`, written by `spots.create/save` in the
   same transaction as the photos). Whether it is a **place to stay** is its own
   question, `spots.type` (`accommodation` | `spot`), and it alone decides the
-  monthly report's kind, tickets and "Book a room". The form asks "Kind of
+  monthly report's kind and "Book a room". The form asks "Kind of
   place" (two pills) and "Known for" (seven pills to tick; the first ticked is the
   main one, marked Main); `normaliseSpotCategories` in `server.js` checks them
   and reads the four old codes a cached page may send. Home's tiles and filter
@@ -1927,11 +1682,10 @@ officer deactivates the old account and adds a new one.
   place, so Form A4 and the Guest Register are unchanged. Listings the office
   keeps (`managed_by` null) are not limited.
 - **Visitors' details are kept one year.** `privacy.js` erases names, phones and
-  emails from tickets a year after the visit, and from feedback a year after
+  emails from purchases a year after the visit, and from feedback a year after
   it was resolved; dates, counts, amounts and OR numbers stay. Run daily by
   Vercel's cron (`vercel.json` → `GET /api/maintenance/privacy`, which needs
-  `CRON_SECRET`, 2 AM Manila) and whenever the officer opens Tickets
-  (`GET /api/tickets`). The Privacy page says so.
+  `CRON_SECRET`, 2 AM Manila) through the daily cron. The Privacy page says so.
 - **Emergency numbers** are kept by the officer on Settings → Office Information
   (`emergency_numbers`, one row each) and show in the footer and each
   destination's `[data-emergency]` box; nothing shows while there are none.
@@ -2042,7 +1796,7 @@ framework change.
 group's countries and male / female when it arrives (at Let them in) so
 Statistics can suggest a month's visitor report. Its guide-report half no
 longer applies (no guides). Not built; it needs the user's yes to change
-"Nothing from tickets", and the
+"Nothing from purchases", and the
 user noted weak signal at many places makes counting at the entrance hard
 (see the note's "Weak signal").
 
@@ -2082,21 +1836,19 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - Authorization is enforced backend-side only. Hiding a button client-side is
   never treated as a control.
 - Online only. The site needs a connection: nothing works offline (no service
-  worker, no offline gate check, no sealed or offline-checkable QR codes, no
-  saved routes), as the manuscript's Limitations say. Don't add offline features.
+  worker, no saved routes), as the manuscript's Limitations say. Don't add offline features.
 - Visitor accounts (9 November 2026, the panelist's request; this reverses
   the old "no `tourist` role, no tourist accounts" rule): visitors sign in
   (email and password, or Google) with role `tourist`, and signing in is
-  required to buy tickets and book rooms — there is no guest buying. Their
+  required to book rooms — there is no guest buying. Their
   tokens never open a staff route and staff tokens never a visitor route. The
-  account stays until the visitor deletes it. Reviews only after a used ticket
-  or completed stay, one per place; the officer may hide or unhide one, always
-  with a reason; no manager replies; ratings and counts only. Tickets and bookings open only in the account that holds them:
+  account stays until the visitor deletes it. Reviews only after a completed stay, one per place; the officer may hide or unhide one, always
+  with a reason; no manager replies; ratings and counts only. Bookings open only in the account that holds them:
   no public search by code and email (9 November 2026). See "Visitor accounts".
 - Support Staff (9 November 2026, the user's decisions): one office-run,
   counting attraction each, one active account per attraction; Guest
   Register, monthly report and listing details except category and prices;
-  no tickets, money, closed dates, taking down, Finalize / Reopen, other
+  no money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
 - Attraction visits (stages 4 and 5): one count per attraction and date, kept
@@ -2111,8 +1863,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   need no counting have Count visitors here off.
 - Online payment exists only as a
   **demonstration in Xendit's test mode** (see "Online payments" above): a
-  live key is refused, every online record is `is_demo`, and paying onsite at the
-  Municipal Tourism Office always stays available. Collecting real fees would need a
+  live key is refused, every online record is `is_demo`, and entrance fees are paid onsite at attractions. Collecting real fees would need a
   municipal ordinance, the Municipal Treasurer, a merchant account in the
   municipality's name and COA-compliant official receipts — don't switch it to
   live keys. (Saved at the user's request, October 2026, as a known limit to
@@ -2127,17 +1878,13 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   (`establishment_managers`, `establishmentName`, `/api/establishment-managers`,
   the `establishment_manager` role in tokens): renaming them would break saved
   sign-ins and the live data for no visible gain.
-- Tickets have no QR code: the ticket code is shown and typed. Where nobody
-  stands at the entrance, the office marks tickets used from the day's list.
-- Tickets have no senior citizen or PWD price (October 2026, the user's
-  decision): regular, plus student and child where the office sets them.
 - Room booking (8 November 2026, the user's decisions): the resort confirms by
   hand (the email's Review request button only opens it); unanswered requests
   expire after the resort's response hours, with a reminder halfway; payment
   stays outside ZTIMS except the test-mode online option below; the server computes every price and a booking keeps its
   rates; the officer sees counts and can pause, never money; a guest pays at
   the property or, where the resort allows it, online after it confirms (13
-  November 2026; Xendit test mode only, like tickets, all `is_demo`); a booking is not
+  November 2026; Xendit test mode only, all `is_demo`); a booking is not
   a count (only the Guest Register entry saved at check-in is); the guest signs
   in to a visitor account to book (since 9 November); no SMS, no seasonal rates
   in version 1; booking history is never deleted. Since 14 November, unused
@@ -2153,7 +1900,7 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   stay. Monthly and annual reports and FORM A are worked out from it, never
   typed. Submitted versions are never changed. The officer finalizes and
   reopens with a reason and never edits stays or rooms. A finalized month
-  refuses every direct and indirect change. Bookings and tickets are never
+  refuses every direct and indirect change. Bookings are never
   arrivals. Exports keep the DOT templates' layout with ZTIMS's own formulas,
   never a formula from typed text, and no personal details.
 - Analytics (12 November 2026): read only, from the

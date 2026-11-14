@@ -28,29 +28,29 @@
         );
     }
 
-    /* One ticket per session of uploading, cleared by reset(). A dialog that
+    /* One pass per session of uploading, cleared by reset(). A dialog that
        opens, uploads, closes and reopens asks for a fresh one, because the
        signature carries a timestamp Cloudinary will eventually refuse. */
-    let ticket = null;
+    let pass = null;
 
-    async function getTicket(apiBase) {
-        if (ticket) return ticket;
+    async function getPass(apiBase) {
+        if (pass) return pass;
         try {
             const response = await fetch((apiBase || '') + '/uploads/signature', { headers: authHeaders() });
             if (response.status === 401 || response.status === 403) {
                 throw new Error('Your sign-in does not allow uploading photos. Sign in again and retry.');
             }
             if (!response.ok) throw new Error('Could not authorise the upload.');
-            ticket = await response.json();
+            pass = await response.json();
         } catch (error) {
             if (/sign-in/.test(error.message)) throw error;
             // A network blip should not close off the upload path entirely.
-            ticket = { signed: false };
+            pass = { signed: false };
         }
-        return ticket;
+        return pass;
     }
 
-    function reset() { ticket = null; }
+    function reset() { pass = null; }
 
     function configured(options) {
         const settings = options || {};
@@ -75,7 +75,7 @@
             throw new Error('That photo is larger than 10MB. Please choose a smaller one.');
         }
 
-        const pass = await getTicket(settings.apiBase);
+        const pass = await getPass(settings.apiBase);
         const body = new FormData();
         body.append('file', file);
 

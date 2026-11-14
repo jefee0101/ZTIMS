@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Accommodation reporting: field and calculation mapping
 
 Stage 1 (review only). No production code, live database or deployment was changed.

@@ -1424,7 +1424,7 @@ div.leaflet-container {
    --------------------------------------------------------------------------
    The same on all nine visitor pages: a floating, rounded glass bar — the
    orange badge and the name, the links (the current page a solid ink pill),
-   the round theme toggle and Buy tickets. On Home it floats over the hero
+   the round theme toggle and booking actions. On Home it floats over the hero
    film (.site-header--over); elsewhere it stays at the top as the page
    scrolls. Two rows (name and buttons, then the links) up to 1259px, one row
    from 1260px.
@@ -1566,15 +1566,15 @@ html.dark .site-acct__initials { background: #F5F1EA; color: #1C1917; }
 .site-acct__menu a:hover, .site-acct__menu button:hover { background: rgb(var(--ztims-on-surface) / .07); }
 .site-acct__menu .material-symbols-outlined { font-size: 1.15rem; }
 .site-acct__menu [data-sign-out] { color: rgb(var(--ztims-error)); }
-/* With Sign in beside it, Buy tickets waits for a wider screen. */
-/* The header stops growing at 77rem: with Sign in there, Buy tickets fits
+/* With Sign in beside it, booking actions waits for a wider screen. */
+/* The header stops growing at 77rem: with Sign in there, booking actions fits
    only on the two-row header (560 to 1259px). */
 @media (max-width: 559px), (min-width: 1260px) {
     .site-header__tools:has(.site-header__visitor) .site-header__cta { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .site-header__signin, .site-acct__btn { transition: none; } }
 
-/* Filled pill buttons (the destination page, My ticket, payment, sign-in):
+/* Filled pill buttons (the destination page, My booking, sign-in):
    burnt orange for the main action, tangerine for the map. */
 .btn-pill { border-radius: 9999px; border: 0; }
 .btn-pill.btn-primary,
@@ -2082,7 +2082,7 @@ html.dark .site-footer__feedback { background: #F5F1EA; color: #1C1917; }
 @media (min-width: 640px) { .spot-panel { padding: 1.5rem; } }
 
 /* ==========================================================================
-   Booking forms (entrance tickets on spot.html): flat,
+   Booking forms (room bookings on spot.html): flat,
    sentence-case labels above roomy fields, related fields grouped under a
    short heading, people counted with − / + steppers, and a summary with the
    total right above the one main button.
@@ -2123,11 +2123,6 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* One row per kind of visitor: who, the price, the count. */
-.bk-people { border: 1px solid rgb(var(--ztims-outline)); }
-.bk-person { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem .85rem; }
-.bk-person + .bk-person { border-top: 1px solid rgb(var(--ztims-outline)); }
-.bk-person__name { font-weight: 700; color: rgb(var(--ztims-on-surface)); }
-.bk-person__price { font-size: .875rem; color: rgb(var(--ztims-on-surface-variant)); }
 
 /* The total, and what it is made of, right above the button. */
 .bk-summary { border: 1px solid rgb(var(--ztims-outline)); background: rgb(var(--ztims-surface-low)); padding: .9rem 1rem; }
@@ -2142,15 +2137,13 @@ textarea.bk-field { min-height: 0; resize: vertical; }
 .btn-pill.btn-secondary { border-radius: 9999px; border: 1px solid rgb(var(--ztims-primary-text) / .45); }
 
 /* A code typed in capitals; its hint stays as written. */
-.bk-field--code { text-transform: uppercase; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
-.bk-field--code::placeholder { text-transform: none; font-family: var(--ztims-font-body); letter-spacing: 0; }
 /* Status pills, round like the category badges. */
 .tone-pill.rounded-pill { border-radius: 9999px; }
 
 /* A chip as a pill (History's name journey and barangays). */
 .pill { border-radius: 9999px; }
 
-/* The round icon at the top of a result (payment received, ticket, …). */
+/* The round icon at the top of a result (payment received, booking, …). */
 #payState .icon-chip { border-radius: 50%; }
 
 /* The hero's greeting, in order (index.html): "Mabuhay" letter by letter, each
@@ -2705,7 +2698,7 @@ button[data-drop]:hover, button[data-em-remove]:hover { background: #B3261E !imp
 
 /* ==========================================================
    BOOK A ROOM (spot.html, a private place to stay taking bookings; November
-   2026). The ticket window's form styles (.bk-*, .qty, .journey-steps) with
+   2026). Shared booking form styles (.bk-*, .qty, .journey-steps) with
    room cards; the panel on the page is an .sd-panel.
    ========================================================== */
 .rb-times { display: flex; align-items: center; gap: .45rem; color: rgb(var(--ztims-on-surface-variant)); font-size: .95rem; }
@@ -2872,7 +2865,7 @@ html.dark .ac-tab[aria-selected="true"], html.dark .ac-tab[aria-selected="true"]
 .ac-card .bk-field { border-radius: 10px; }
 @media (prefers-reduced-motion: reduce) { .ac-panel { animation: none; } }
 
-/* "Booked under" in the ticket and room forms (spot.html): the signed-in
+/* "Booked under" in the room form (spot.html): the signed-in
    visitor's name, email and phone, from the account. */
 .bk-who { display: flex; gap: .65rem; align-items: flex-start; padding: .75rem .9rem; border-radius: 12px;
     background: rgb(var(--ztims-on-surface) / .05); color: rgb(var(--ztims-on-surface)); font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere; }

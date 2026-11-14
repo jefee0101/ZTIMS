@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Attraction reporting: impact, conflicts, gaps and security plan
 
 Proposal for review. The repository was inspected on 12 November 2026 (branch `claude/wizardly-dijkstra-ssze0r`).

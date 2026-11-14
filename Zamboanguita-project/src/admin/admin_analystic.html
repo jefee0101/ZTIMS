@@ -487,14 +487,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Tickets</span>
-            </a>
-            <a title="Collections" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_collections.html">
-                <span class="material-symbols-outlined text-accent">payments</span>
-                <span class="sidebar-label">Collections</span>
-            </a>
             <a title="Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
                 <span class="material-symbols-outlined text-accent">bed</span>
                 <span class="sidebar-label">Bookings</span>
@@ -613,13 +605,6 @@ body { overflow-x: hidden; }
                         <a href="admin_statistics.html#forma4" class="inline-block text-sm font-bold text-primary">Every country, in the Arrivals Report →</a>
                     </figure>
                 </div>
-            </section>
-
-            <!-- 4. Money collected this month, and the listings, each in a line -->
-            <section class="glass-panel p-5 sm:p-6 flex flex-wrap items-center gap-x-8 gap-y-3">
-                <h3 class="text-lg font-extrabold text-on-surface">Collections this month</h3>
-                <div id="collectionCounts" class="flex flex-wrap gap-x-7 gap-y-2 text-sm text-on-surface-variant flex-1"></div>
-                <a href="admin_collections.html" class="text-sm font-bold text-primary">Go to Collections →</a>
             </section>
 
             <section class="glass-panel p-5 sm:p-6 flex flex-wrap items-center gap-x-8 gap-y-3">
@@ -1053,21 +1038,6 @@ body { overflow-x: hidden; }
             ].join(' ');
         }
 
-        /* Entrance fees this month. Online payments are a
-           test-mode demonstration; the Collections page says so. */
-        function renderCollections(col) {
-            const box = document.getElementById('collectionCounts');
-            if (!col || !col.summary) { box.innerHTML = '<span class="tone-danger">The collections could not be loaded.</span>'; return; }
-            const s = col.summary;
-            const peso = n => '\u20B1' + (Number(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const n = (value, label, cls) => `<span><b class="text-xl ${cls || 'text-on-surface'}">${value}</b> ${label}</span>`;
-            box.innerHTML = [
-                n(peso(s.total), 'collected'),
-                n(peso(s.entranceFees), 'entrance fees'),
-                n(fmt(s.awaitingReceipt), plural(s.awaitingReceipt, 'waiting for an OR', 'waiting for an OR'), s.awaitingReceipt ? 'tone-warning' : '')
-            ].join(' ') + (col.demo && col.demo.payments ? ' <span class="tone-warning tone-pill text-[10px] font-extrabold px-2 py-1">INCLUDES DEMO DATA</span>' : '');
-        }
-
         /* ==========================================================
            LOADING
            ========================================================== */
@@ -1077,12 +1047,11 @@ body { overflow-x: hidden; }
                 `Here is what needs you today, ${new Date().toLocaleDateString('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Manila' })}.`;
             const period = reportPeriod(today);
 
-            const [spots, managers, feedback, tracker, collections, attractionTracker] = await Promise.all([
+            const [spots, managers, feedback, tracker, attractionTracker] = await Promise.all([
                 getJson('/spots'),
                 getJson('/establishment-managers'),
                 getJson('/feedback?status=new'),
                 getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`),
-                getJson(`/payments?month=${today.key.slice(0, 7)}`),
                 getJson(`/attraction-visits/tracker?year=${period.year}`)
             ]);
             if (sessionExpired) { handleExpiredSession(); return; }
@@ -1097,7 +1066,6 @@ body { overflow-x: hidden; }
             }, today);
             renderReports(reports);
             renderListings(Array.isArray(spots) ? spots : null);
-            renderCollections(collections);
         }
 
         // The year picker: this year and the two before. It opens on the latest

@@ -6,7 +6,7 @@
  * resort says which ways it takes (enterprise_booking_settings
  * .allow_pay_at_property / .allow_pay_online). An online payment is made only
  * after the resort confirms, for what is still owed, on a Xendit hosted
- * invoice — the same test-mode demonstration as tickets (payments.js), with
+ * invoice — a test-mode demonstration, with
  * the same rules:
  *   - the server works out the amount (the booking's total less what is paid);
  *   - a payment is believed only when the server asks Xendit itself (settle);
@@ -22,7 +22,7 @@
 const express = require('express');
 const { query, transaction } = require('./db');
 const { bookingCheckouts: Checkout, BOOKING_ONLINE_METHODS } = require('./models');
-const payments = require('./payments');
+const payments = require('./xendit-gateway');
 const { requireVisitor } = require('./visitors');
 
 const ONLINE_LABEL = 'Online (Xendit test mode)';
@@ -263,7 +263,7 @@ module.exports = function bookingPaymentsRouter({ sharedRateLimit, siteOrigin })
     };
     const own = async req => {
         const b = await bookings().findOwnBooking((req.body || {}).code, req.visitor.id);
-        if (!b) throw problem(404, 'This ticket or booking is not in your account.');
+        if (!b) throw problem(404, 'This booking is not in your account.');
         return b;
     };
 

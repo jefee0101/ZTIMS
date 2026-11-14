@@ -1,7 +1,7 @@
 /* Visitor accounts (decided 9 November 2026, the panelist's request).
  *
  * A visitor signs in with an email and password, or with Google, to buy
- * tickets and book rooms (both need a signed-in, verified account), see them
+ * book rooms (with a signed-in, verified account), see them
  * all in one place, keep saved places and write reviews. The role in their
  * tokens is 'tourist'. Visitors are a separate kind of account from staff:
  *   - their own table (visitors), their own sign-in routes and pages;
@@ -21,12 +21,12 @@
  *     mailbox, and the unproven password is dropped), or when the visitor also
  *     gives that account's password.
  *   - Passwords follow passwords.js, like staff passwords.
- *   - Tickets and bookings made earlier with the same email (as a guest) are
+ *   - Bookings made earlier with the same email (as a guest) are
  *     linked to the account once its email is verified.
  *   - Deleting the account (password, or a fresh Google sign-in) erases the
  *     name, phone, email, password and Google id. The row stays as "deleted"
- *     so old tickets, bookings and reviews still point somewhere; reviews stay
- *     and show as "Former visitor". Tickets and bookings keep their counts and
+ *     so old bookings and reviews still point somewhere; reviews stay
+ *     and show as "Former visitor". Bookings keep their counts and
  *     amounts and fall under privacy.js's one-year rule.
  *
  * Mounted at /api by server.js, which hands over the shared rate limiter, the
@@ -159,13 +159,12 @@ async function verifyGoogleCredential(credential) {
 
 /* ----------------------------------------------------------------- records */
 
-/* Tickets and bookings bought as a guest with this email become the account's.
+/* Bookings bought as a guest with this email become the account's.
    Only records nobody owns are taken; running it again changes nothing. */
 async function linkOldRecords(visitor, client) {
-    if (!visitor.email || !visitor.email_verified_at) return { tickets: 0, bookings: 0 };
-    const t = await query('update tickets set visitor_id = $1 where visitor_id is null and email = $2', [visitor.id, visitor.email], client);
+    if (!visitor.email || !visitor.email_verified_at) return { bookings: 0 };
     const b = await query('update bookings set visitor_id = $1 where visitor_id is null and email = $2', [visitor.id, visitor.email], client);
-    return { tickets: t.rowCount, bookings: b.rowCount };
+    return { bookings: b.rowCount };
 }
 
 const profile = v => ({
@@ -526,7 +525,7 @@ function visitorsRouter({ sharedRateLimit, emailTakenBy, siteOrigin }) {
     }
 
     /* Deletes the account: the person's details go; the row stays, so old
-       tickets, bookings and reviews still point somewhere. */
+       bookings and reviews still point somewhere. */
     router.delete('/visitors/me', requireVisitor, ownLimit, async (req, res) => {
         try {
             const v = req.visitor;
@@ -545,20 +544,6 @@ function visitorsRouter({ sharedRateLimit, emailTakenBy, siteOrigin }) {
     });
 
     /* ---- what the account holds ------------------------------------ */
-
-    router.get('/visitors/me/tickets', requireVisitor, async (req, res) => {
-        try {
-            const { rows } = await query(`
-                select t.id, t.code, t.visit_date, t.people, t.amount, t.status, t.created_at, s.id as spot_id, s.title as spot_title
-                  from tickets t join spots s on s.id = t.spot_id
-                 where t.visitor_id = $1 and t.status <> 'pending_payment'
-                 order by t.visit_date desc, t.created_at desc limit 200`, [req.visitor.id]);
-            return res.json(rows.map(t => ({
-                _id: t.id, code: t.code, visitDate: t.visit_date, people: t.people, amount: Number(t.amount), status: t.status,
-                spot: { _id: t.spot_id, title: t.spot_title }, createdAt: t.created_at
-            })));
-        } catch (error) { return fail(res, error, '❌ Visitor tickets failure:'); }
-    });
 
     router.get('/visitors/me/bookings', requireVisitor, async (req, res) => {
         try {

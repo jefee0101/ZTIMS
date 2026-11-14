@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # Prioritized gaps
 
 Proposal, 12 November 2026. What cannot be shown honestly yet, in the order it blocks the analytics. **P0** stops the core picture, **P1** limits it, **P2** is a known limit. Evidence comes from the repository and a read-only check of the live project.

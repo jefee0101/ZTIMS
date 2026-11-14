@@ -474,14 +474,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">storefront</span>
                 <span class="sidebar-label">Managers</span>
             </a>
-            <a title="Tickets" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_tickets.html">
-                <span class="material-symbols-outlined text-accent">confirmation_number</span>
-                <span class="sidebar-label">Tickets</span>
-            </a>
-            <a title="Collections" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_collections.html">
-                <span class="material-symbols-outlined text-accent">payments</span>
-                <span class="sidebar-label">Collections</span>
-            </a>
             <a title="Bookings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_bookings.html">
                 <span class="material-symbols-outlined text-accent">bed</span>
                 <span class="sidebar-label">Bookings</span>
@@ -625,7 +617,7 @@ body { overflow-x: hidden; }
         </div>
     </div>
 
-    <!-- Visitor setup: what the office decides before a visitor can buy a ticket
+    <!-- Visitor setup: opening days, displayed onsite fees and closed dates
          here — opening days, prices per kind of visitor, what a
          cancellation keeps, and dates it is shut. -->
     <div id="setupModal" hidden class="fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4">
@@ -644,11 +636,11 @@ body { overflow-x: hidden; }
                 <fieldset class="space-y-2">
                     <legend class="field-label">Open on</legend>
                     <div id="setupDays" class="flex flex-wrap gap-2"></div>
-                    <p id="setupDaysNote" class="text-support">Visitors cannot buy a ticket on the other days.</p>
+                    <p id="setupDaysNote" class="text-support">Closed on the other days.</p>
                 </fieldset>
 
                 <fieldset id="setupPrices" class="space-y-3">
-                    <legend class="field-label">Ticket price per person</legend>
+                    <legend class="field-label">Entrance fees · Pay onsite</legend>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="ztims-card p-3">
                             <p class="text-support">Regular</p>
@@ -671,16 +663,6 @@ body { overflow-x: hidden; }
                             </label>
                         </div>
                     </div>
-                </fieldset>
-
-                <fieldset class="space-y-2">
-                    <legend class="field-label">When a visitor cancels</legend>
-                    <label class="flex flex-wrap items-center gap-2 text-sm">
-                        The office keeps
-                        <input id="setupKeep" type="number" min="0" max="100" step="1" class="field !w-24" aria-label="Percent kept"/>
-                        % and refunds the rest.
-                    </label>
-                    <p class="text-support">Visitors can move or cancel a ticket until 11:59 PM the day before. When the office cancels or closes, the visitor always gets everything back.</p>
                 </fieldset>
 
                 <p id="setupError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
@@ -1380,23 +1362,22 @@ body { overflow-x: hidden; }
                     <span class="text-sm font-bold">${days.NAMES[i].slice(0, 3)}</span>
                 </label>`).join('');
             document.getElementById('setupDaysNote').textContent = setup.openDays
-                ? 'Visitors cannot buy a ticket on the other days.'
+                ? 'Closed on the other days.'
                 : `The listing says "${setup.workingDays}", which names no days, so every day is treated as open. Tick the real days and save.`;
 
-            const sells = setup.officeRun && setup.type !== 'accommodation';
-            document.getElementById('setupPrices').hidden = !sells;
+            const showFees = setup.officeRun && setup.type !== 'accommodation';
+            document.getElementById('setupPrices').hidden = !showFees;
             document.getElementById('setupRegular').textContent = formatPeso(setup.entranceFee);
             document.getElementById('setupStudent').value = setup.studentFee ?? '';
             document.getElementById('setupChild').value = setup.childFee ?? '';
             document.getElementById('setupChildAge').value = setup.childAgeMax ?? '';
-            document.getElementById('setupKeep').value = setup.cancelKeepPercent;
 
             const list = document.getElementById('setupClosedList');
             list.innerHTML = setup.closedDates.length
                 ? setup.closedDates.map(c => `
                     <li class="py-2.5 flex flex-wrap items-center justify-between gap-2">
                         <span><b class="text-on-surface">${escapeHtml(niceDay(c.date))}</b>${c.reason ? ` · ${escapeHtml(c.reason)}` : ''}
-                            ${c.awaitingChoice ? `<span class="block tone-warning text-support">${c.awaitingChoice} visitor${c.awaitingChoice === 1 ? '' : 's'} still to choose a refund or a new date</span>` : ''}</span>
+                            </span>
                         <button type="button" data-reopen="${escapeHtml(c._id)}" class="btn btn-ghost btn-sm">Open again</button>
                     </li>`).join('')
                 : '<li class="py-2.5 text-support italic">No closed dates coming up.</li>';
@@ -1438,7 +1419,7 @@ body { overflow-x: hidden; }
                 event.preventDefault();
                 setupError('setupError', '');
                 const openDays = [...document.querySelectorAll('#setupDays input:checked')].map(i => i.value);
-                const body = { openDays, cancelKeepPercent: document.getElementById('setupKeep').value || 0 };
+                const body = { openDays };
                 if (!document.getElementById('setupPrices').hidden) {
                     body.studentFee = document.getElementById('setupStudent').value;
                     body.childFee = document.getElementById('setupChild').value;
@@ -1465,21 +1446,7 @@ body { overflow-x: hidden; }
                 const reason = document.getElementById('closedReason').value.trim();
                 if (!date) return setupError('closedError', 'Choose the date it is closed.');
                 try {
-                    let result;
-                    try {
-                        result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates`, 'POST', { date, reason });
-                    } catch (error) {
-                        // Already sold: closing it is the closure action, which tells each visitor.
-                        if (!(error.status === 409 && error.data && error.data.sales)) throw error;
-                        const sales = error.data.sales;
-                        const sure = await ztimsDialog.confirm({
-                            title: `Close ${niceDay(date)} anyway?`,
-                            message: `${sales.tickets} ticket${sales.tickets === 1 ? ' exists' : 's exist'} for that day. Each paid one will be put on hold and its visitor emailed to choose a full refund or a new date.`,
-                            confirmLabel: 'Close this date', tone: 'danger'
-                        });
-                        if (!sure) return;
-                        result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/close-date`, 'POST', { date, reason });
-                    }
+                    const result = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/closed-dates`, 'POST', { date, reason });
                     showToast(result.message, 'success');
                     document.getElementById('closedForm').reset();
                     const { setup } = await setupCall(`/spots/${encodeURIComponent(setupSpotId)}/setup`);

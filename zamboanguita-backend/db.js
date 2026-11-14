@@ -23,7 +23,7 @@ const { Pool, types } = require('pg');
 // pages do arithmetic on them, so they are numbers here.
 types.setTypeParser(1700, value => (value === null ? null : Number(value)));
 types.setTypeParser(20, value => (value === null ? null : Number(value)));
-// A date column (a ticket's visit date) stays the 'YYYY-MM-DD' string the
+// A date column (a booking's date) stays the 'YYYY-MM-DD' string the
 // form sent. Turned into a Date it would be midnight UTC, which is the previous
 // evening in some timezones.
 types.setTypeParser(1082, value => value);
@@ -132,7 +132,6 @@ const CONSTRAINT_MESSAGES = {
     spot_photos_position: 'A spot can have at most 30 photos.',
     spots_coordinates_pair: 'Pick the location on the map — latitude and longitude must be a valid pair.',
     spots_managed_by_fkey: 'That enterprise account does not exist.',
-    payments_ticket_id_key: 'Payment for that ticket was already recorded.'
 };
 
 /* Turns a Postgres error into what the routes expect:

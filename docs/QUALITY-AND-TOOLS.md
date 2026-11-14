@@ -1,3 +1,5 @@
+> Current scope (14 November 2026): entrance sales and officer collections are retired. Room payments remain. Admission-related descriptions below are historical, not current behavior. See MANUSCRIPT-NOTES.md and diagrams/entrance-removal-redraw-list.md.
+
 # ZTIMS — quality (ISO/IEC 25010:2023) and tools: notes
 
 Notes kept on 10 October 2026, for the manuscript and for later work. Nothing
