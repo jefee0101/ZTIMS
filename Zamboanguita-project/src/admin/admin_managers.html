@@ -486,10 +486,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">forum</span>
                 <span class="sidebar-label">Feedback</span>
             </a>
-            <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_reviews.html">
-                <span class="material-symbols-outlined text-accent">reviews</span>
-                <span class="sidebar-label">Reviews</span>
-            </a>
             <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
                 <span class="material-symbols-outlined text-accent">settings</span>
                 <span class="sidebar-label">Settings</span>
@@ -590,10 +586,19 @@ body { overflow-x: hidden; }
                     <input id="newManagerPhone" type="text" placeholder="09XX XXX XXXX"
                            class="field w-full"/>
                 </div>
-                <div>
-                    <label for="newManagerPassword" class="block text-sm font-semibold text-on-surface mb-1.5">Starting password</label>
-                    <input id="newManagerPassword" type="text" required minlength="10" maxlength="72" placeholder="At least 10 characters" autocomplete="off"
+                <fieldset class="inv-method">
+                    <legend class="block text-sm font-semibold text-on-surface mb-1.5">How they sign in</legend>
+                    <label class="inv-option"><input type="radio" name="managerMethod" value="invite" data-invite-method checked/><span>Send an invitation link</span></label>
+                    <label class="inv-option"><input type="radio" name="managerMethod" value="password" data-invite-method/><span>Set a password now</span></label>
+                </fieldset>
+                <div data-invite-password hidden>
+                    <label for="newManagerPassword" class="block text-sm font-semibold text-on-surface mb-1.5">Starting password <span class="font-normal text-on-surface-variant">(optional)</span></label>
+                    <input id="newManagerPassword" type="text" minlength="10" maxlength="72" placeholder="Leave blank to generate one" autocomplete="off"
                            class="field w-full"/>
+                </div>
+                <div>
+                    <label for="newManagerConfirm" class="block text-sm font-semibold text-on-surface mb-1.5">Your password</label>
+                    <input id="newManagerConfirm" type="password" required autocomplete="current-password" class="field w-full"/>
                 </div>
 
                 <p id="createManagerError" hidden class="text-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3"></p>
@@ -756,6 +761,7 @@ body { overflow-x: hidden; }
                         </div>
                     </div>
                     <h3 class="pg-card__name">${escapeHtml(name)}</h3>
+                    ${!suspended && manager.invitePending ? `<p class="inv-row">${ztimsInvite.pill(manager)}</p>` : ''}
                     <div class="pg-card__facts">
                         <span><span class="material-symbols-outlined" aria-hidden="true">storefront</span><b>${enterprises.length ? escapeHtml(enterprises.map(e => e.name).join(', ')) : 'No enterprise yet'}</b></span>
                         <span><span class="material-symbols-outlined" aria-hidden="true">mail</span>${escapeHtml(manager.email || '—')}</span>
@@ -769,6 +775,7 @@ body { overflow-x: hidden; }
                                     class="pg-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
                             <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>
                                 ${enterprises.map(e => `<a href="../spot.html?spotId=${encodeURIComponent(e.id)}" target="_blank" rel="noopener"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>View ${escapeHtml(e.name)}</a>`).join('')}
+                                ${!suspended && manager.invitePending ? `<button type="button" data-resend="${id}"><span class="material-symbols-outlined" aria-hidden="true">forward_to_inbox</span>Resend invitation</button>` : ''}
                                 <button type="button" data-password="${id}"><span class="material-symbols-outlined" aria-hidden="true">key</span>New password</button>
                                 <button type="button" data-suspend="${id}"><span class="material-symbols-outlined" aria-hidden="true">${suspended ? 'how_to_reg' : 'person_off'}</span>${suspended ? 'Restore' : 'Suspend'}</button>
                                 <button type="button" data-delete="${id}" class="is-danger"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
@@ -943,6 +950,25 @@ body { overflow-x: hidden; }
             }
         }
 
+        // A new link for someone who has not accepted yet; the old one stops working.
+        async function resendInvitation(id, button) {
+            const manager = managerById(id);
+            if (!manager) return;
+            try {
+                await ztimsInvite.resend({
+                    kind: 'manager', id, name: nameOf(manager) || manager.email,
+                    send: (path, body) => callManagerRoute(`${API_BASE}${path}`, {
+                        method: 'POST',
+                        headers: authHeaders({ 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(body)
+                    }, button, '')
+                });
+                await loadDirectory();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
         async function editManager(id, button) {
             const manager = managerById(id);
             if (!manager) return;
@@ -1046,10 +1072,21 @@ body { overflow-x: hidden; }
             const email = document.getElementById('newManagerEmail').value.trim();
             const contactEmail = document.getElementById('newManagerContactEmail').value.trim();
             const phone = document.getElementById('newManagerPhone').value.trim();
-            const password = document.getElementById('newManagerPassword').value;
+            const form = document.getElementById('createManagerForm');
+            const method = ztimsInvite.method(form);
+            const password = method === 'password' ? document.getElementById('newManagerPassword').value.trim() : '';
+            const confirmPassword = document.getElementById('newManagerConfirm').value;
 
-            if (!managerName || !email || !password) {
-                setCreateError('A manager name, email and password are all needed.');
+            if (!managerName || !email) {
+                setCreateError("Enter the manager's name and sign-in email.");
+                return;
+            }
+            if (password && password.length < 10) {
+                setCreateError('A password must be at least 10 characters.');
+                return;
+            }
+            if (!confirmPassword) {
+                setCreateError('Enter your password to confirm.');
                 return;
             }
 
@@ -1059,7 +1096,7 @@ body { overflow-x: hidden; }
                 const response = await fetch(`${API_BASE}/establishment-managers`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ managerName, email, contactEmail, phone, password })
+                    body: JSON.stringify({ managerName, email, contactEmail, phone, method, password, confirmPassword })
                 });
 
                 const result = await response.json().catch(() => ({}));
@@ -1070,9 +1107,13 @@ body { overflow-x: hidden; }
                 restoreButton();
                 toggleCreateModal(false);
                 await loadDirectory();
-                showToast(
-                    `Account created for ${managerName}.\nSign-in email: ${email}\nPassword: ${password}\n\nPass these on — the password cannot be read again.`,
-                    'success', { duration: 0 });
+                if (result.inviteLink) {
+                    ztimsInvite.showLink({ title: `Account created for ${managerName}`, ...result });
+                } else {
+                    showToast(
+                        `Account created for ${managerName}.\nSign-in email: ${result.email}\nPassword: ${result.newPassword}\n\nPass these on — the password cannot be read again.`,
+                        'success', { duration: 0 });
+                }
             } catch (error) {
                 restoreButton();
                 setCreateError(error.message);
@@ -1088,6 +1129,7 @@ body { overflow-x: hidden; }
             document.getElementById('closeCreateModalBtn').addEventListener('click', () => toggleCreateModal(false));
             document.getElementById('cancelCreateBtn').addEventListener('click', () => toggleCreateModal(false));
             document.getElementById('createManagerForm').addEventListener('submit', createManager);
+            ztimsInvite.wire(document.getElementById('createManagerForm'));
             document.getElementById('searchInput').addEventListener('input', () => { page = 1; renderTable(); });
             document.getElementById('managerPager').addEventListener('click', event => {
                 const button = event.target.closest('[data-page]');
@@ -1133,10 +1175,11 @@ body { overflow-x: hidden; }
 
             // Delegated so the buttons survive every re-render of the table.
             document.getElementById('managerTableBody').addEventListener('click', event => {
-                const button = event.target.closest('[data-edit], [data-password], [data-suspend], [data-delete]');
+                const button = event.target.closest('[data-edit], [data-password], [data-resend], [data-suspend], [data-delete]');
                 if (!button) return;
-                const { edit, password, suspend, delete: remove } = button.dataset;
+                const { edit, password, resend, suspend, delete: remove } = button.dataset;
                 if (edit) editManager(edit, button);
+                else if (resend) resendInvitation(resend, button);
                 else if (password) issueNewPassword(password, button);
                 else if (suspend) toggleSuspension(suspend, button);
                 else if (remove) deleteManager(remove, button);
@@ -1237,6 +1280,7 @@ body { overflow-x: hidden; }
 <script type="module" src="../shared/nav-active.js"></script>
 <!-- The site's own confirm/prompt, in place of the browser's: the suspend,
      delete, new-password and edit-details questions on each account row. -->
+<script type="module" src="../shared/staff-invite.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 <script type="module" src="../shared/password-eye.js"></script>
 <script type="module" src="../shared/idle-signout.js"></script>

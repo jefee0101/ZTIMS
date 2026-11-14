@@ -10,9 +10,11 @@
    - One active account per attraction (support_staff_one_active_per_spot). To
      replace someone, the officer deactivates the old account and adds a new
      one; the old reports keep the earlier person's email.
-   - A blank password is generated and shown once; it is replaced at the
-     first sign-in (must_change_password). The person is emailed when the
-     account is added or a password is issued (alertAccountOwner).
+   - Added by invitation link (the default, staff-invitations.js: the person
+     chooses their own password) or with a password now: a blank one is
+     generated and shown once, and replaced at the first sign-in
+     (must_change_password). The person is emailed when the account is added
+     or a password is issued.
    - Deactivating ends every open session at once (session_version, and
      requireAuth refuses an inactive account on every route).
    No money, Finalize / Reopen, closed dates or deletes here. */
@@ -68,7 +70,7 @@ async function activeOn(spotId, exceptId, client) {
 module.exports = function supportStaffRouter(deps) {
     const {
         requireAdmin, requirePasswordConfirmation, requireSupportStaff, ownPasswordRateLimit, changeOwnPassword,
-        emailTakenBy, storePassword, endSessions, alertAccountOwner, reportWriteFailure
+        emailTakenBy, storePassword, endSessions, alertAccountOwner, reportWriteFailure, invitations
     } = deps;
     const router = express.Router();
     const fail = (res, error, label) => {
@@ -119,7 +121,8 @@ module.exports = function supportStaffRouter(deps) {
     router.get('/support-staff', requireAdmin, async (req, res) => {
         try {
             const { rows } = await query(`${SELECT} order by (ss.status = 'active') desc, ss.full_name`);
-            return res.json(rows.map(view));
+            const pending = await invitations.pendingInvitations('support_staff');
+            return res.json(rows.map(row => ({ ...view(row), ...invitations.inviteFields(pending, row.id) })));
         } catch (error) { return fail(res, error, '❌ Support Staff list failure:'); }
     });
 
@@ -134,13 +137,17 @@ module.exports = function supportStaffRouter(deps) {
             if (!looksLikeEmail(email)) throw problem(400, 'That email does not look like an email address.');
             if (fullName.length > 120 || position.length > 120) throw problem(400, 'Name and position are limited to 120 characters.');
             if (contactNumber.length > 40) throw problem(400, 'The contact number is too long.');
-            const password = String(b.password || '').trim() || generatePassword();
-            const weak = passwordProblem(password, { email });
-            if (weak) throw problem(400, weak);
+            // An invitation link (the default) or a password now (staff-invitations.js).
+            const method = invitations.createMethod(b);
+            const password = method === 'password' ? (String(b.password || '').trim() || generatePassword()) : '';
+            if (method === 'password') {
+                const weak = passwordProblem(password, { email });
+                if (weak) throw problem(400, weak);
+            }
             const takenBy = await emailTakenBy(email);
             if (takenBy) throw problem(409, `This email already signs in as ${takenBy}.`);
 
-            const hash = await bcrypt.hash(password, 12);
+            const hash = method === 'password' ? await bcrypt.hash(password, 12) : await invitations.unusablePasswordHash();
             const row = await transaction(async client => {
                 const spot = await assignableSpot(b.spotId, client);
                 // Lock the attraction so two officers cannot both assign someone.
@@ -149,16 +156,20 @@ module.exports = function supportStaffRouter(deps) {
                 if (other) throw problem(409, `${spot.title} already has active Support Staff: ${other.full_name} (${other.email}). Deactivate that account first.`);
                 const { rows } = await query(
                     `insert into support_staff (email, password_hash, full_name, position, contact_number, spot_id, must_change_password, created_by_email)
-                     values ($1, $2, $3, $4, $5, $6, true, $7) returning *`,
-                    [email, hash, fullName, position, contactNumber, spot.id, officerEmail(req)], client);
+                     values ($1, $2, $3, $4, $5, $6, $7, $8) returning *`,
+                    [email, hash, fullName, position, contactNumber, spot.id, method === 'password', officerEmail(req)], client);
                 await query('update spots set counts_visitors = true where id = $1', [spot.id], client);
                 return { ...rows[0], spot_title: spot.title };
             });
             console.log(`🛡️ Support Staff account added for ${row.spot_title}: ${email}`);
+            if (method === 'invite') {
+                const offer = await invitations.offerInvitation(req, { kind: 'support', accountId: row.id, email, name: fullName, place: row.spot_title });
+                return res.status(201).json({ success: true, message: 'Support Staff account added.', email, _id: row.id, ...offer });
+            }
             await alertAccountOwner(email, 'Your ZTIMS Support Staff account',
                 `${officerEmail(req)} added a Support Staff account for you, for ${row.spot_title}. The Tourism Office will give you your first password; you will choose your own when you sign in.`);
             // The password is returned once so it can be passed on; only its hash is kept.
-            return res.status(201).json({ success: true, message: 'Support Staff account added.', email, newPassword: password, _id: row.id });
+            return res.status(201).json({ success: true, message: 'Support Staff account added.', method, email, newPassword: password, _id: row.id });
         } catch (error) { return fail(res, error, '❌ Support Staff add failure:'); }
     });
 

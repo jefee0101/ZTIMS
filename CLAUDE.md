@@ -986,23 +986,38 @@ Laid out like Destinations (same `.dest-chips`, `.dest-row`, `.dest-menu` from
   account (`managerCard`: initials, ACTIVE / SUSPENDED, No enterprise yet and
   "n enterprises" chips, the manager's name, their enterprises (`enterprises` on
   `GET /api/establishment-managers`), sign-in email, phone, "Since <date>", a
-  full-width **Edit** and ⋯ — View <each enterprise>, New password, Suspend /
-  Restore, Delete in red). New manager account asks for the manager's name,
-  sign-in email, password (and optional contact email, phone), never an
+  full-width **Edit** and ⋯ — View <each enterprise>, Resend invitation while
+  one is waiting, New password, Suspend / Restore, Delete in red; a "Waiting for
+  the person to accept" pill while an invitation is open). New manager account
+  asks for the manager's name, sign-in email, how they sign in (an invitation
+  link, the default, or a password now; see "Staff invitations"), the
+  officer's own password (and optional contact email, phone), never an
   enterprise. The page reads everything from that one list (no listing fetch). Pages of 6 cards (three columns), 4 (two) or 3 (a phone), with
   Previous / numbers / Next and "Showing n of m managers".
 - The list boxes have no `overflow-hidden`, so a ⋯ menu on the last row is never
   cut off (Destinations too). `ztims-dialog`'s field labels are sentence case.
 ### The officer's Feedback (`admin_feedback.html`)
 
-Title; counts that filter (Open — new and read, the default — New in red,
-Resolved, All); topic pills (one scrolling row on a phone); search. One row per
-message (`.fb-row` in `portal-flat.css`): the topic's icon, the topic, status
-pill and when, the whole message (never cut), "From" name · email and "Sent
-from" the page; a new message has a tangerine edge. One main button — **Mark
-resolved**, or **Reopen** once resolved — and a ⋯ menu (Reply by email, a
-`mailto:` with a subject, when there is an email; Mark read for a new one). No
-Refresh.
+One officer menu item, **Feedback**, with two groups (14 November 2026):
+- **Office-managed:** one private inbox for office-run attractions and general
+  Tourism Office messages; filter by attraction, status, topic and search.
+  Open (new/read) is the default. Compact expandable rows retain the full
+  message, name/email, topic and source context; Mark read, Mark resolved and
+  Reopen use the existing officer-only feedback routes.
+- **Enterprise reviews:** accommodation enterprises selected individually;
+  shown/hidden status, rating and search filters, expandable review rows and
+  moderation history. Hide/Show always requires a reason and retains the
+  existing audit trail. No delete or enterprise reply is added.
+
+`shared/officer-feedback.js` drives the workspace; load `ztims-dialog.js` for
+moderation. The former `admin_reviews.html` redirects to
+`admin_feedback.html#enterprises`; every officer sidebar has just Feedback.
+Contact's optional office-attraction selector sends `spotId`; the server
+requires a public office-run attraction and records its canonical destination
+URL in the existing feedback `page` column. No schema change. General and
+legacy messages remain available. The context is visitor-supplied, not proof
+of a visit. Private feedback never becomes a public review, and no manager
+access is granted. Accommodation reviews still require a completed stay.
 
 ### Announcements and events (November 2026)
 
@@ -1515,13 +1530,10 @@ ratings only, never money.
 - **Cards.** Home's card shows "★ 4.6 (12)" under the name
   (`.hm-card__rating`) and the officer's Destinations card "★ 4.6 from 12
   reviews" (`.pg-card__rating`), only when the place has visible reviews.
-- **The officer's Reviews** (`admin/admin_reviews.html`, "Reviews" in the
-  officer menu after Feedback, on every officer page): counts that filter
-  (Shown, 1 or 2 stars in red, Hidden, All), search, a row per review
-  (`.rvo-row` in `portal-flat.css`: stars, the place linked to its page,
-  Shown / Hidden pill, the whole text, name · Visited or Stayed · when, the
-  reason — "Hidden: …" or "Shown again: …" with who and when) and **Hide** (red)
-  or **Unhide**, each asking for the reason in a dialog. No delete, no reply.
+- **The officer's reviews** live in Feedback → Enterprise reviews, separated
+  by accommodation enterprise (see "The officer's Feedback"). The former
+  `admin/admin_reviews.html` is a redirect for saved links. Reasons and
+  moderation history remain available; no delete or enterprise reply.
 
 ### Support Staff (November 2026)
 
@@ -1561,7 +1573,9 @@ officer deactivates the old account and adds a new one.
 - **Officer routes** (`requireAdmin`; add, password and status also
   `requirePasswordConfirmation`): `GET /api/support-staff`, `POST
   /api/support-staff` {fullName, email, position?, contactNumber?, spotId,
-  password?} (a blank password is generated and returned once; refused for a
+  method?, password?} (`method` `invite`, the default, emails an invitation
+  link — see "Staff invitations"; `password`: a blank password is generated
+  and returned once; refused for a
   private place, a place to stay or an unpublished one (400), an email another
   staff account uses or a second active account on the attraction (409); the
   attraction's counting is switched on), `POST /api/support-staff/:id/password`,
@@ -1710,8 +1724,9 @@ Statistics').
   all devices" (`POST /api/me/sign-out-everywhere`, this one too). The
   manager's Account has the same two.
 - **Tourism Office Accounts**: every officer with position, date added, last
-  sign-in and status. Add one (name required; a blank password is generated
-  and shown once), issue a new password (`POST /api/admin/:id/password`), and
+  sign-in and status. Add one (name required; an invitation link, or a password
+  now — a blank one is generated and shown once; see "Staff invitations"),
+  Resend invitation while one is waiting, issue a new password (`POST /api/admin/:id/password`), and
   deactivate or reactivate (`PATCH /api/admin/:id/status`) — all three ask for
   the officer's own password. Officers are never deleted; nobody deactivates
   themselves; a deactivated officer cannot sign in or reset a password, and an
@@ -1729,6 +1744,47 @@ Statistics').
   written by `privacy.js`, officer-only via `GET /api/office/admin`). office_info
   has its own `updated_at` trigger (`ztims_touch_office_info`) so that daily run
   never changes Office Information's "last updated".
+
+### Staff invitations (14 November 2026)
+
+`staff-invitations.js`, mounted at `/api`; table `staff_invitations`
+(`account_table`, `account_id`, `token_hash`, `expires_at`, `used_at`,
+`created_by_email`, `created_at`; RLS on, no policies). When the officer adds a
+Tourism Officer (`POST /api/admin/create`), Enterprise Manager (`POST
+/api/establishment-managers`) or Support Staff account (`POST
+/api/support-staff`), the body's `method` chooses how the person gets in, and
+every create asks for the officer's password (`requirePasswordConfirmation`):
+- **`invite` (the default)**: the account gets the bcrypt hash of a random
+  secret nobody sees (no usable password), and a token (32 random bytes;
+  only its sha-256 hash stored; single-use; 72 hours) is emailed through
+  `mailer.compose` as `src/staff/accept_invite.html?token=` — the token only,
+  never the email. The response carries `inviteLink`, `emailSent`,
+  `emailMessage`, `expiresAt`; the officer's window (`src/shared/staff-invite.js`,
+  `window.ztimsInvite`, `.inv-*` in `portal-flat.css`) shows the link with
+  **Copy invitation link**, and "Email could not be sent. Copy the link
+  instead." when the email failed (the account stays).
+- **`password`**: unchanged — typed or generated, returned once,
+  `must_change_password` forces a change at first sign-in.
+- **Accepting**: `POST /api/invitations/check` {token} (the email and account
+  kind, for the page) and `POST /api/invitations/accept` {token, password}
+  (`passwords.js`; sets the password, spends the token, clears
+  `must_change_password`, adds one to `session_version`). The page then sends
+  the person to Staff sign in. An expired, used, replaced or unknown token, or
+  a deactivated / suspended account, gets one message: "This invitation link
+  is no longer valid. Ask the Tourism Office for a new one." Rate-limited (30
+  per 15 minutes, `staff-invite`). The page removes the token from the address.
+- **Before accepting** the sign-in route refuses the account exactly like a
+  wrong password (`hasOpenInvitation`).
+- **Resend**: `POST /api/invitations/:kind/:id/resend` (`officer` | `manager` |
+  `support`; officer's password) replaces the token, so the old link stops; 409
+  once accepted ("Use New password instead") or while deactivated. Lists carry
+  `invitePending`, `inviteExpired`, `inviteExpiresAt`: a "Waiting for the
+  person to accept" pill (and "Link expired") and Resend invitation.
+- Any password set another way (New password, a reset link) spends open
+  invitations (`storePassword`). Forgot-password, 401
+  `PASSWORD_CHANGE_REQUIRED`, deactivate and suspend are unchanged; no account
+  is deleted. Every active officer is still emailed when an officer account
+  is added.
 
 ### Sign-in safety (October 2026)
 
@@ -1845,6 +1901,11 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   account stays until the visitor deletes it. Reviews only after a completed stay, one per place; the officer may hide or unhide one, always
   with a reason; no manager replies; ratings and counts only. Bookings open only in the account that holds them:
   no public search by code and email (9 November 2026). See "Visitor accounts".
+- Feedback workspace (14 November 2026): one officer page combines private
+  office-managed attraction/general messages and per-accommodation-enterprise
+  public reviews. Enterprises have reviews only; no private enterprise inbox,
+  manager moderation or replies. Reviews require a completed stay; moderation
+  keeps a reason and audit history. Message context does not prove a visit.
 - Support Staff (9 November 2026, the user's decisions): one office-run,
   counting attraction each, one active account per attraction; Guest
   Register, monthly report and listing details except category and prices;
@@ -1911,6 +1972,10 @@ Decisions already made on purpose — don't reintroduce what they rule out:
 - Tourism statistics hold counts and totals only — no revenue and no
   percentages — except the rates and shares the DAE-1A, DAE-1B and FORM A
   templates require for places to stay (see "Accommodation reporting").
+- Staff invitations (14 November 2026, the user's decision): new staff
+  accounts default to an emailed, single-use, 72-hour invitation link (hash
+  only stored) so nobody else knows the person's password; "Set a password
+  now" stays as the alternative. See "Staff invitations".
 - Security decisions (October 2026): passwords follow `passwords.js` (length
   and guessability, no forced symbols, no expiry); a password someone else
   chose is always replaced at first sign-in; risky officer actions re-ask the

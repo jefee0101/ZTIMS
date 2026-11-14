@@ -25,6 +25,7 @@ const {
 } = require('./models');
 const { forgetOldVisitors } = require('./privacy');
 const { passwordProblem, generatePassword } = require('./passwords');
+const invitations = require('./staff-invitations');
 const mailer = require('./mailer');
 
 const app = express();
@@ -445,6 +446,8 @@ async function storePassword(role, id, plainPassword, { issued }) {
           where id = $1
       returning session_version`,
         [String(id), hash, Boolean(issued)]);
+    // A password set any other way (issued, reset) ends a pending invitation.
+    await invitations.spendInvitations(ACCOUNT_TABLES[role], id);
     return rows[0] ? Number(rows[0].session_version) : 0;
 }
 
@@ -552,8 +555,10 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
         const { email } = req.body;
         const fullName = String(req.body.fullName || '').trim();
         const position = String(req.body.position || '').trim();
+        // An invitation link (the default) or a password now (staff-invitations.js).
+        const method = invitations.createMethod(req.body);
         // Blank asks for one to be generated, as for managers.
-        const password = String(req.body.password || '').trim() || generatePassword();
+        const password = method === 'password' ? (String(req.body.password || '').trim() || generatePassword()) : '';
 
         if (!email || !fullName) {
             return res.status(400).json({ success: false, message: "The officer's full name and email address are required." });
@@ -562,8 +567,10 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
             return res.status(400).json({ success: false, message: 'Name and position are limited to 120 characters.' });
         }
         const normalizedEmail = email.toLowerCase().trim();
-        const weak = passwordProblem(password, { email: normalizedEmail });
-        if (weak) return res.status(400).json({ success: false, message: weak });
+        if (method === 'password') {
+            const weak = passwordProblem(password, { email: normalizedEmail });
+            if (weak) return res.status(400).json({ success: false, message: weak });
+        }
 
         // Check if an admin with this email already exists
         const existingAdmin = await TourismOfficer.findOne({ email: normalizedEmail });
@@ -575,14 +582,17 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
             return res.status(409).json({ success: false, message: `This email already signs in as ${takenBy}.` });
         }
 
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = method === 'password' ? await bcrypt.hash(password, 12) : await invitations.unusablePasswordHash();
         const created = await TourismOfficer.create({
             email: normalizedEmail,
             password: passwordHash,
             fullName, position
         });
         // Chosen by someone else: its owner sets their own at first sign-in.
-        await db.query('update tourism_officers set must_change_password = true where id = $1', [created._id]);
+        if (method === 'password') await db.query('update tourism_officers set must_change_password = true where id = $1', [created._id]);
+        const offer = method === 'invite'
+            ? await invitations.offerInvitation(req, { kind: 'officer', accountId: created._id, email: normalizedEmail, name: fullName })
+            : null;
 
         console.log(`🛡️ New Tourism Officer account created: ${normalizedEmail}`);
         // Every active officer hears of a new officer account, so one added
@@ -592,8 +602,9 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
         await Promise.all(colleagues.map(({ email: to }) => alertAccountOwner(to,
             'A new officer account was added',
             `A Tourism Officer account for ${fullName} (${normalizedEmail}) was added by ${addedBy}.`)));
+        if (offer) return res.status(201).json({ success: true, message: 'Officer account created.', email: normalizedEmail, ...offer });
         // The password is returned once so it can be passed on; only its hash is kept.
-        return res.status(201).json({ success: true, message: 'Officer account created.', email: normalizedEmail, newPassword: password });
+        return res.status(201).json({ success: true, message: 'Officer account created.', method, email: normalizedEmail, newPassword: password });
     } catch (error) {
         console.error("❌ Add Admin Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -607,7 +618,10 @@ app.post('/api/admin/create', requireAdmin, requirePasswordConfirmation, async (
 app.get('/api/admin/list', requireAdmin, async (req, res) => {
     try {
         const adminList = await TourismOfficer.find({}, { sort: { createdAt: 1 } });
-        return res.status(200).json(adminList.map(a => ({ ...a, isYou: String(a._id) === String(req.auth.sub) })));
+        const pending = await invitations.pendingInvitations('tourism_officers');
+        return res.status(200).json(adminList.map(a => ({
+            ...a, isYou: String(a._id) === String(req.auth.sub), ...invitations.inviteFields(pending, a._id)
+        })));
     } catch (error) {
         console.error("❌ Get Admin List Endpoint Failure:", error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -721,18 +735,23 @@ app.post('/api/admin/:id/password', requireAdmin, requirePasswordConfirmation, a
  */
 async function createEstablishmentManager(req, res) {
     try {
-        const { email, password, phone } = req.body;
+        const { email, phone } = req.body;
         const managerName = String(req.body.managerName || '').trim();
+        // An invitation link (the default) or a password now (staff-invitations.js).
+        const method = invitations.createMethod(req.body);
+        const password = method === 'password' ? (String(req.body.password || '').trim() || generatePassword()) : '';
 
         // The account is the person; their enterprises are added afterwards,
         // by them or by the officer, as listings.
-        if (!email || !password || !managerName) {
-            return res.status(400).json({ success: false, message: 'Missing mandatory manager name, email or password.' });
+        if (!email || !managerName) {
+            return res.status(400).json({ success: false, message: "The manager's name and sign-in email are required." });
         }
 
-        const normalizedEmail = email.toLowerCase().trim();
-        const weak = passwordProblem(String(password), { email: normalizedEmail });
-        if (weak) return res.status(400).json({ success: false, message: weak });
+        const normalizedEmail = String(email).toLowerCase().trim();
+        if (method === 'password') {
+            const weak = passwordProblem(password, { email: normalizedEmail });
+            if (weak) return res.status(400).json({ success: false, message: weak });
+        }
         const existingManager = await EstablishmentManager.findOne({ email: normalizedEmail });
         if (existingManager) {
             return res.status(409).json({ success: false, message: 'This email is already registered as an enterprise manager.' });
@@ -742,7 +761,7 @@ async function createEstablishmentManager(req, res) {
             return res.status(409).json({ success: false, message: `This email already signs in as ${takenBy}.` });
         }
 
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = method === 'password' ? await bcrypt.hash(password, 12) : await invitations.unusablePasswordHash();
         const created = await EstablishmentManager.create({
             email: normalizedEmail,
             password: passwordHash,
@@ -753,11 +772,15 @@ async function createEstablishmentManager(req, res) {
             phone: phone || ""
         });
 
+        console.log(`🏨 New Tourist Enterprise Manager account created by Tourist Officer: ${normalizedEmail}`);
+        if (method === 'invite') {
+            const offer = await invitations.offerInvitation(req, { kind: 'manager', accountId: created._id, email: normalizedEmail, name: managerName });
+            return res.status(201).json({ success: true, message: 'Enterprise Manager account created.', email: normalizedEmail, ...offer });
+        }
         // The officer chose this password: the manager sets their own at first sign-in.
         await db.query('update establishment_managers set must_change_password = true where id = $1', [created._id]);
-
-        console.log(`🏨 New Tourist Enterprise Manager account created by Tourist Officer: ${normalizedEmail}`);
-        return res.status(201).json({ success: true, message: 'Enterprise manager account created!' });
+        // Returned once so it can be passed on; only its hash is kept.
+        return res.status(201).json({ success: true, message: 'Enterprise Manager account created.', method, email: normalizedEmail, newPassword: password });
     } catch (error) {
         return reportWriteFailure(res, error, '❌ Create Enterprise Manager Endpoint Failure:');
     }
@@ -786,8 +809,10 @@ async function listEstablishmentManagers(req, res) {
         // Oldest first, the order MongoDB returned them in. Never the hashes.
         const managers = await EstablishmentManager.find({}, { sort: { createdAt: 1 } });
         const enterprises = await enterprisesByManager();
+        const pending = await invitations.pendingInvitations('establishment_managers');
         return res.status(200).json(managers.map(manager => ({
             ...manager,
+            ...invitations.inviteFields(pending, manager._id),
             contactEmail: manager.contactEmail || manager.email,
             enterprises: enterprises.get(String(manager._id)) || []
         })));
@@ -797,7 +822,7 @@ async function listEstablishmentManagers(req, res) {
     }
 }
 
-app.post('/api/establishment-managers', requireAdmin, createEstablishmentManager);
+app.post('/api/establishment-managers', requireAdmin, requirePasswordConfirmation, createEstablishmentManager);
 app.get('/api/establishment-managers', requireAdmin, listEstablishmentManagers);
 
 /* ---- The manager's own account ---------------------------------------------
@@ -1105,7 +1130,11 @@ app.post('/api/login', sharedRateLimit('login', {
         // stand-in hash, so the answer takes as long either way). Only someone
         // who knows the password learns that an account exists or is suspended.
         const passwordMatches = await bcrypt.compare(String(password), (account && account.password) || NO_ACCOUNT_HASH);
-        if (!account || !account.password || !passwordMatches) {
+        // An invited account has no password of its own until the link is used
+        // (staff-invitations.js): refused exactly like a wrong password.
+        const waitingOnInvitation = Boolean(account && passwordMatches
+            && await invitations.hasOpenInvitation(ACCOUNT_TABLES[resolvedRole], account._id));
+        if (!account || !account.password || !passwordMatches || waitingOnInvitation) {
             // Deliberately the same wording whichever collection was searched, so the
             // response can't be used to discover which emails are registered.
             const audience = requestedRole === 'staff' ? 'staff'
@@ -2051,7 +2080,14 @@ app.post('/api/feedback', feedbackRateLimit, async (req, res) => {
         const message = String(body.message || '').trim();
         const name = String(body.name || '').trim().slice(0, 120);
         const email = String(body.email || '').trim().toLowerCase();
-        const page = String(body.page || '').trim().slice(0, 500);
+        let page = String(body.page || '').trim().slice(0, 500);
+        if(body.spotId){
+            const place=await Spot.findById(String(body.spotId));
+            if(!place || place.type!=='spot' || place.managedBy || !isPubliclyVisible(place))
+                return res.status(400).json({success:false,message:'Choose an office-managed attraction or a general enquiry.'});
+            // Existing context URL records the selected attraction; no schema change.
+            page='/src/spot.html?spotId='+place._id;
+        }
 
         if (message.length < 10) {
             return res.status(400).json({ success: false, message: 'Please write a little more, so the office knows what to look at.' });
@@ -2654,7 +2690,13 @@ app.use('/api', require('./analytics')({ requireReporter, sharedRateLimit }));
    password, deactivates or reactivates; the person keeps their own details. */
 app.use('/api', require('./support-staff')({
     requireAdmin, requirePasswordConfirmation, requireSupportStaff, ownPasswordRateLimit, changeOwnPassword,
-    emailTakenBy, storePassword, endSessions, alertAccountOwner, reportWriteFailure
+    emailTakenBy, storePassword, endSessions, alertAccountOwner, reportWriteFailure, invitations
+}));
+/* Staff invitations (staff-invitations.js): the link a new Tourism Officer,
+   Enterprise Manager or Support Staff account uses to set its own password,
+   and the officer's Resend invitation. */
+app.use('/api', invitations.invitationsRouter({
+    requireAdmin, requirePasswordConfirmation, sharedRateLimit, passwordProblem, reportWriteFailure
 }));
 
 /* ==========================================

@@ -51,6 +51,10 @@
 
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined' !important;
+    /* Keep controls stable while the external icon font is unavailable. */
+    display: inline-block; width: 1.5rem; height: 1.5rem;
+    font-size: 24px; line-height: 1; flex-shrink: 0;
+    overflow: hidden; white-space: nowrap;
 }
 
 /* ==========================================================
@@ -486,10 +490,6 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">forum</span>
                 <span class="sidebar-label">Feedback</span>
             </a>
-            <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_reviews.html">
-                <span class="material-symbols-outlined text-accent">reviews</span>
-                <span class="sidebar-label">Reviews</span>
-            </a>
             <a title="Settings" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_profile.html">
                 <span class="material-symbols-outlined text-accent">settings</span>
                 <span class="sidebar-label">Settings</span>
@@ -524,69 +524,11 @@ body { overflow-x: hidden; }
 
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Feedback</h1>
 
-            <!-- Counts that filter, the topics, then the search. -->
-            <div class="space-y-3">
-                <div id="feedbackStatusFilter" class="dest-chips" role="group" aria-label="Show">
-                    <button type="button" data-status="open" aria-pressed="true">Open <b data-count="open">0</b></button>
-                    <button type="button" data-status="new" aria-pressed="false" class="dest-chips__warn">New <b data-count="new">0</b></button>
-                    <button type="button" data-status="resolved" aria-pressed="false">Resolved <b data-count="resolved">0</b></button>
-                    <button type="button" data-status="all" aria-pressed="false">All <b data-count="all">0</b></button>
-                </div>
-                <div id="feedbackTopicFilter" class="dest-chips dest-chips--scroll" role="group" aria-label="Topic">
-                    <button type="button" data-topic="all" aria-pressed="true">All topics</button>
-                    <button type="button" data-topic="listing" aria-pressed="false">Listing wrong</button>
-                    <button type="button" data-topic="problem" aria-pressed="false">Something not working</button>
-                    <button type="button" data-topic="suggestion" aria-pressed="false">Suggestion</button>
-                    <button type="button" data-topic="booking" aria-pressed="false">Room booking</button>
-                    <button type="button" data-topic="other" aria-pressed="false">Other</button>
-                </div>
-                <div class="relative">
-                    <label for="feedbackSearch" class="sr-only">Search messages</label>
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant !text-xl pointer-events-none" aria-hidden="true">search</span>
-                    <input id="feedbackSearch" type="search" placeholder="Search a message, name or email"
-                           class="field !pl-11 w-full min-h-[44px]" autocomplete="off"/>
-                </div>
-            </div>
-
-            <!-- One row per message: the whole message is the important part, so
-                 it is never cut; who sent it and from which page under it. -->
-            <div class="glass-panel">
-                <div id="feedbackList" class="ztims-stagger divide-y divide-outline-variant/20"></div>
-                <p id="feedbackShown" class="px-5 py-3 border-t border-outline-variant/30 text-support"></p>
-            </div>
-
-            <p id="feedbackError" hidden class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3"></p>
+            <div id="ufApp" class="space-y-4" aria-live="polite"></div>
         </div>
     </main>
 
     <script>
-        const API_BASE = "/api";
-
-        let allFeedback = [];
-
-        const authHeaders = extra =>
-            Object.assign({ 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }, extra || {});
-
-        // Every message here was typed by someone on the internet, so it is
-        // escaped before it reaches innerHTML rather than trusted as markup.
-        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch =>
-            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-
-        const TOPIC_LABEL = {
-            listing: 'Listing wrong / out of date', problem: 'Something not working',
-            suggestion: 'Suggestion', booking: 'Room booking', other: 'Other'
-        };
-        const TOPIC_ICON = {
-            listing: 'edit_location_alt', problem: 'bug_report', suggestion: 'lightbulb', booking: 'confirmation_number', other: 'chat'
-        };
-        const STATUS_LABEL = { new: 'New', read: 'Read', resolved: 'Resolved' };
-        const STATUS_STYLE = {
-            new: 'tone-warning tone-pill',
-            read: 'tone-info tone-pill',
-            resolved: 'tone-success tone-pill'
-        };
-
-        // Shared with the sidebar's Log Out, so both doors behave identically.
         function signOutStaff() {
             try {
                 window.ztimsTheme.clearStorage();
@@ -623,209 +565,13 @@ body { overflow-x: hidden; }
             setTimeout(() => window.location.replace('../staff_login.html'), 900);
         }
 
-        function setFeedbackError(message) {
-            const box = document.getElementById('feedbackError');
-            box.textContent = message || '';
-            box.hidden = !message;
-        }
-
-        function formatWhen(value) {
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) return '';
-            return date.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
-        }
-
-        async function loadFeedback() {
-            const list = document.getElementById('feedbackList');
-            list.innerHTML = `<div class="ztims-empty">Loading messages…</div>`;
-            setFeedbackError('');
-            try {
-                const response = await fetch(`${API_BASE}/feedback`, { headers: authHeaders() });
-                if (response.status === 401) { handleExpiredSession(); return; }
-                if (!response.ok) throw new Error('The server refused the feedback list.');
-                allFeedback = await response.json();
-                renderStats();
-                renderList();
-            } catch (error) {
-                list.innerHTML = '';
-                setFeedbackError(error.message);
-            }
-        }
-
-        let activeStatus = 'open', activeTopic = 'all';
-
-        function renderStats() {
-            const by = status => allFeedback.filter(f => f.status === status).length;
-            const n = { open: allFeedback.length - by('resolved'), new: by('new'), resolved: by('resolved'), all: allFeedback.length };
-            document.querySelectorAll('#feedbackStatusFilter [data-count]').forEach(el => { el.textContent = n[el.dataset.count]; });
-        }
-
-        function visibleFeedback() {
-            const query = (document.getElementById('feedbackSearch').value || '').trim().toLowerCase();
-            const status = activeStatus, topic = activeTopic;
-            return allFeedback.filter(f => {
-                if (status === 'open' ? f.status === 'resolved' : (status !== 'all' && f.status !== status)) return false;
-                if (topic !== 'all' && f.topic !== topic) return false;
-                if (!query) return true;
-                return [f.message, f.name, f.email, f.page]
-                    .filter(Boolean).some(field => String(field).toLowerCase().includes(query));
-            });
-        }
-
-        // The page a visitor wrote from is a URL they did not type, but it is
-        // still only ever shown as text and linked when it is plainly http(s).
-        function pageLink(page) {
-            if (!page) return '';
-            let href = null;
-            try {
-                const parsed = new URL(page);
-                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') href = parsed.href;
-            } catch (e) { /* not a URL */ }
-            const label = escapeHtml(page.replace(/^https?:\/\//, '').slice(0, 80));
-            return href
-                ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-primary hover:text-accent underline underline-offset-2 break-all"><span class="material-symbols-outlined !text-sm">open_in_new</span>${label}</a>`
-                : `<span class="break-all">${label}</span>`;
-        }
-
-        function renderList() {
-            const list = document.getElementById('feedbackList');
-            const items = visibleFeedback();
-
-            if (items.length === 0) {
-                document.getElementById('feedbackShown').textContent = '';
-                list.innerHTML = `<div class="p-4"><div class="ztims-empty">${
-                    allFeedback.length === 0 ? 'No feedback yet.' : 'No message matches.'
-                }</div></div>`;
-                return;
-            }
-
-            document.getElementById('feedbackShown').innerHTML = `Showing <b class="text-on-surface">${items.length}</b> of <b class="text-on-surface">${allFeedback.length}</b>`;
-            list.innerHTML = items.map(f => {
-                const id = escapeHtml(f._id);
-                const status = STATUS_LABEL[f.status] ? f.status : 'new';
-                const topic = TOPIC_LABEL[f.topic] ? f.topic : 'other';
-                const who = f.name ? `<b class="text-on-surface">${escapeHtml(f.name)}</b>` : 'No name given';
-                const mail = f.email
-                    ? `<a href="mailto:${escapeHtml(f.email)}" class="text-primary underline underline-offset-2 break-all">${escapeHtml(f.email)}</a>`
-                    : 'no email, cannot reply';
-                const handled = f.statusUpdatedAt
-                    ? `${escapeHtml(STATUS_LABEL[status])} ${escapeHtml(formatWhen(f.statusUpdatedAt))}${f.statusUpdatedByEmail ? ' by ' + escapeHtml(f.statusUpdatedByEmail) : ''}`
-                    : '';
-                const reply = f.email
-                    ? `<a href="mailto:${escapeHtml(f.email)}?subject=${encodeURIComponent('Re: your message to the Zamboanguita Tourism Office')}"><span class="material-symbols-outlined" aria-hidden="true">reply</span>Reply by email</a>` : '';
-                const main = status === 'resolved'
-                    ? `<button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-action="read" data-id="${id}">Reopen</button>`
-                    : `<button type="button" class="btn btn-primary btn-sm min-h-[40px]" data-action="resolved" data-id="${id}">Mark resolved</button>`;
-                const menu = [
-                    reply,
-                    status === 'new' ? `<button type="button" data-action="read" data-id="${id}"><span class="material-symbols-outlined" aria-hidden="true">drafts</span>Mark read</button>` : ''
-                ].filter(Boolean).join('');
-
-                return `
-                <article class="fb-row${status === 'new' ? ' is-new' : ''}">
-                    <span class="fb-row__icon" aria-hidden="true"><span class="material-symbols-outlined">${TOPIC_ICON[topic]}</span></span>
-                    <div class="dest-row__body">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="dest-row__name">${escapeHtml(TOPIC_LABEL[topic])}</h3>
-                            <span class="${STATUS_STYLE[status]} rounded-pill text-xs font-bold px-2.5 py-0.5">${escapeHtml(STATUS_LABEL[status])}</span>
-                            <span class="text-support">${escapeHtml(formatWhen(f.createdAt))}</span>
-                        </div>
-                        <p class="fb-row__message">${escapeHtml(f.message)}</p>
-                        <p class="dest-row__facts">From ${who} · ${mail}</p>
-                        ${f.page ? `<p class="dest-row__facts">Sent from ${pageLink(f.page)}</p>` : ''}
-                        ${handled ? `<p class="dest-row__facts">${handled}</p>` : ''}
-                    </div>
-                    <div class="dest-row__actions">
-                        ${main}
-                        ${menu ? `<div class="relative">
-                            <button type="button" data-more="${id}" aria-haspopup="true" aria-expanded="false" aria-label="More for this message"
-                                    class="dest-more"><span class="material-symbols-outlined" aria-hidden="true">more_horiz</span></button>
-                            <div class="ztims-dropdown dest-menu" data-menu="${id}" hidden>${menu}</div>
-                        </div>` : ''}
-                    </div>
-                </article>`;
-            }).join('');
-        }
-
-        async function setStatus(id, status, button) {
-            const originalHTML = button.innerHTML;
-            button.disabled = true;
-            if (button.classList.contains('btn')) button.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent animate-spin"></span> Saving…';
-            try {
-                const response = await fetch(`${API_BASE}/feedback/${encodeURIComponent(id)}/status`, {
-                    method: 'PATCH',
-                    headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ status })
-                });
-                if (response.status === 401) { handleExpiredSession(); return; }
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(data.message || 'The server refused that change.');
-
-                const index = allFeedback.findIndex(f => f._id === id);
-                if (index !== -1 && data.feedback) allFeedback[index] = data.feedback;
-                renderStats();
-                renderList();
-                showToast(data.message || `Marked ${status}.`, 'success', { duration: 2500 });
-            } catch (error) {
-                showToast(error.message, 'error');
-                button.disabled = false;
-                button.innerHTML = originalHTML;
-            }
-        }
-
-        function wire() {
+        window.addEventListener('DOMContentLoaded',()=>{
             mountPortalAccountMenu();
-            document.getElementById('feedbackSearch').addEventListener('input', renderList);
-            document.getElementById('feedbackStatusFilter').addEventListener('click', event => {
-                const chip = event.target.closest('[data-status]');
-                if (!chip) return;
-                activeStatus = chip.dataset.status;
-                document.querySelectorAll('#feedbackStatusFilter [data-status]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.status === activeStatus)));
-                renderList();
-            });
-            document.getElementById('feedbackTopicFilter').addEventListener('click', event => {
-                const chip = event.target.closest('[data-topic]');
-                if (!chip) return;
-                activeTopic = chip.dataset.topic;
-                document.querySelectorAll('#feedbackTopicFilter [data-topic]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.topic === activeTopic)));
-                renderList();
-            });
-
-            // The ⋯ menu on each row: one open at a time; a click elsewhere or
-            // Escape closes it.
-            const closeMenus = except => document.querySelectorAll('.dest-menu').forEach(menu => {
-                if (menu === except) return;
-                menu.hidden = true;
-                const opener = document.querySelector(`[data-more="${menu.dataset.menu}"]`);
-                if (opener) opener.setAttribute('aria-expanded', 'false');
-            });
-            document.addEventListener('click', event => {
-                const opener = event.target.closest('[data-more]');
-                if (opener) {
-                    const menu = [...document.querySelectorAll('.dest-menu')].find(m => m.dataset.menu === opener.dataset.more);
-                    closeMenus(menu);
-                    if (menu) { menu.hidden = !menu.hidden; opener.setAttribute('aria-expanded', String(!menu.hidden)); }
-                    return;
-                }
-                closeMenus();
-            });
-            document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
-
-            // One listener for every card's buttons, so re-rendering the list
-            // never leaves a button unwired.
-            document.getElementById('feedbackList').addEventListener('click', event => {
-                const button = event.target.closest('button[data-action]');
-                if (!button) return;
-                setStatus(button.dataset.id, button.dataset.action, button);
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!guardOfficerSession()) return;
-            wire();
-            loadFeedback();
+            if(guardOfficerSession()) window.ZTIMSFeedback.start(document.getElementById('ufApp'));
         });
     </script>
+    <script src="../shared/ztims-dialog.js" type="module"></script>
+    <script src="../shared/officer-feedback.js" type="module"></script>
 
 <script>
 /* Collapsed sidebar state, shared across every portal page via one key. */

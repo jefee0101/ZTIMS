@@ -984,3 +984,29 @@ aside > nav::-webkit-scrollbar { display: none; }
 .dae2-grand th, .dae2-grand td { background: rgb(var(--ztims-gold) / .45); font-weight: 900; font-style: normal !important; }
 .dae2-spacer td { height: .45rem; padding: 0; background: rgb(var(--ztims-on-surface) / .03); }
 .dae2-zero td { color: rgb(var(--ztims-on-surface-variant)); font-weight: 500; }
+
+/* ---- Staff invitations (staff-invite.js, 14 November 2026) ----------------
+   The officer's "How they sign in" choice, the waiting pill and the window
+   with the invitation link. */
+.inv-method { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.inv-method legend { width: 100%; }
+.inv-option {
+    display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px;
+    padding: 0.5rem 1rem; border: 1px solid rgb(var(--ztims-outline));
+    border-radius: 999px; cursor: pointer; font-size: 0.875rem; font-weight: 600;
+}
+.inv-option:has(input:checked) { border-color: rgb(var(--brand-burnt, 191 87 0)); box-shadow: inset 0 0 0 1px rgb(var(--brand-burnt, 191 87 0)); }
+.inv-option input { accent-color: rgb(var(--brand-burnt, 191 87 0)); }
+.inv-row { margin-top: 0.375rem; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.inv-pill { display: inline-block; font-size: 0.6875rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; white-space: normal; }
+.inv-scrim {
+    position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+    padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.inv-modal { width: 100%; max-width: 32rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.875rem; }
+.inv-title { font-size: 1.25rem; font-weight: 800; }
+.inv-note { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.625rem 0.75rem; font-size: 0.875rem; }
+.inv-label { font-size: 0.8125rem; font-weight: 600; }
+.inv-link { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8125rem; }
+.inv-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+.inv-actions .btn { min-height: 44px; }
