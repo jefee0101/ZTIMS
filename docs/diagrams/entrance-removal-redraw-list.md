@@ -1,6 +1,9 @@
 # Diagrams to update after entrance sales removal
 
-Stage 1 checklist only; no diagrams or DBML redrawn in this change.
+Stage 1 checklist. Redrawn 14 November 2026 (context, top level, ERD, use case,
+architecture: .drawio and .png); ztims-schema.dbml is unchanged until Stage 2.
+In the ERD, Payments (entrance tickets) became Booking Payments under Bookings;
+the retired ticket tables still exist in the database but are no longer drawn.
 
 | Existing files | Redraw/change required |
 | --- | --- |
