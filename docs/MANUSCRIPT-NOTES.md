@@ -5,6 +5,27 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Chapter III written like the reference group's (16 November 2026)
+
+Done in the Google Doc. Chapter III's prose no longer points at tables,
+appendices or SOP numbers. After each table: the *Note.* (N, items with fewer
+valid answers) and *Scale.*, then paragraphs that give the overall result,
+each area's or construct's WM and SD from highest to lowest, the related
+literature that supports it, and the ZTIMS feature that answers it. Citations
+used are all already in the RRL and References (United Nations, 2010;
+Hernández-Martín et al., 2025; Buhalis, 2020; Amangeldi et al., 2025; Panjanji
+& Lede, 2026; Höpken et al., 2015; Data Privacy Act of 2012; Sorokina et al.,
+2022; Sautter & Leisen, 1999; d’Angella & Go, 2009; Ligason et al., 2025;
+Mohamed et al., 2022; Chai-Arayalert et al., 2023; Abu-AlShaeer et al., 2024;
+Muhardono et al., 2026; McLeod, 2024; Gobov & Zuieva, 2025; Balintag et al.,
+2025; Deloso & Escorial, 2026; Davis, 1989; Marangunić & Granić, 2015; Li et
+al., 2024; Islam, 2023; Rocamora, 2022). The ISO table's note now carries its
+scale (Excellent, Good, Moderate, Poor, Very Poor) and the TAM table's the
+agreement scale, instead of "Interpretation follows Table 3/4". The Doc's
+first results table caption reads "Table 2. Existing Tourism Information
+Practices" while the next ones read Tables 6 to 9; captions were left as they
+are for the user to number.
+
 ## Monthly DTA2M submission flow (17 November 2026)
 
 - Supersedes the attraction-first navigation below: the officer starts with the year and month, views one combined DTA2M, opens supporting attraction records as needed, marks records reviewed and submits the DTA2M. Submission history is inside the selected month. There is no separate Issued reports tab. Saving a submission does not automatically deliver it to another office; the officer downloads Excel for the usual submission channel.
