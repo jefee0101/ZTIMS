@@ -835,6 +835,17 @@ visitors here").
 
 ### Attraction visitor reporting (stages 4 and 5; on main 12 November 2026, schema not yet run on live)
 
+Officer reports (16 November 2026): Attractions opens a searchable directory,
+then one attraction and reporting year, twelve labeled month cards, and an
+inline monthly visitor summary / daily VAR1 switch. Municipal DTA2M, annual
+VAR3M and issued reports remain separate tabs. Finalize / reasoned Reopen
+refresh the selected month. Both officer accommodation and attraction views
+have expandable status legends; blue means awaiting review, green finalized,
+amber submission/correction needed, red missing/overdue, gray other states.
+The attraction month API includes saved daily figures in each version, so
+VAR1 and the summary show the same saved submission (live counts when reopened).
+No schema change or new report-entry permission.
+
 An office-run, counting attraction's visitors are recorded **one count per date**
 by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
 are worked out from those counts, never typed. Proposal, mockup, decisions and

@@ -186,7 +186,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         const state = E.periodState({ year, month, today: ctx.today, reportingFrom: ctx.reportingFrom, period, figures, hasStaff: await hasStaff(spot.id, client) });
         const shaped = versions.map((v, i) => {
             const f = E.figuresFromVersion(v);
-            return { ...shapeVersion(v, summary(f)), changes: i ? E.diffDaily(versions[i - 1].daily, v.daily) : [] };
+            return { ...shapeVersion(v, { ...summary(f), daily: f.daily }), changes: i ? E.diffDaily(versions[i - 1].daily, v.daily) : [] };
         });
         const idv = new Map(versions.map(v => [v.id, v.version]));
         return { spot, settings: await settingsOf(spot.id, client), figures, state, period, versions: shaped, versionRows: versions,

@@ -213,9 +213,12 @@
                 ${v.map(([l, x]) => `<tr><td>${l}</td><td class="text-right">${x.male}</td><td class="text-right">${x.female}</td></tr>`).join('')}</tbody></table></div></div>`;
     }
 
+    // Each view supplies its own truthful status descriptions and pill markup.
+    const statusLegend = items => `<details class="acc-status-legend"><summary>Status legend</summary><dl>${items.map(([pill, description]) => `<div><dt>${pill}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl></details>`;
+
     window.ztimsAcc = {
         partOneHtml, partTwoHtml,
         api, download, esc, MONTHS, pad, manilaToday, addDays, daysIn, monthName, monthKey, shiftMonth, fmtDate, fmtWhen, weekday,
-        nf, pct, dec, STATES, statePill, loadResidences, residenceName, residenceSection, openWindow, toast, loading, failed
+        nf, pct, dec, STATES, statePill, statusLegend, loadResidences, residenceName, residenceSection, openWindow, toast, loading, failed
     };
 })();

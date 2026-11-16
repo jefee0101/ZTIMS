@@ -5,6 +5,11 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Attraction report navigation and status legends (16 November 2026)
+
+- The Tourism Officer selects an office-run attraction from a searchable directory, chooses its reporting year and month, then views its monthly visitor summary or daily VAR1 report inline. Municipal monthly DTA2M, annual VAR3M (all 12 months) and issued reports remain separate. Finalization and reasoned reopening refresh the selected month; saved reports use saved daily counts. Officers still cannot enter daily counts.
+- Both accommodation and attraction report views include expandable status legends with full text labels and explanations. Update current-workflow screenshots when authorized; this is a later refinement, not part of the original evaluation.
+
 ## Actual DAE-1B and paired monthly submissions (16 November 2026)
 
 - The Tourism Officer's accommodation reports now start with a searchable enterprise directory. Select an enterprise and year, then a labeled month card and the submitted DAE-1A or DAE-1B. Annual municipal Form A is accessed separately. Review statuses use full labels; versions and history are collapsed. Update current-workflow screenshots when authorized, without attributing this refinement to the original evaluation.

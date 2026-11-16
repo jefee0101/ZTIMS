@@ -15,12 +15,12 @@
         finalized: ['tone-success', 'Finalized', 'Monthly submission locked'],
         reopened: ['tone-warning', 'Open for correction', 'Waiting for a corrected submission'],
         open: ['tone-neutral', 'In progress', 'Month is still in progress'],
-        due: ['tone-neutral', 'Not submitted', ''],
-        overdue: ['tone-danger', 'Overdue', ''],
+        due: ['tone-neutral', 'Not submitted', 'Submission is due by the 5th of the following month'],
+        overdue: ['tone-danger', 'Overdue', 'Submission deadline has passed'],
         not_recorded: ['tone-neutral', 'No report recorded', 'Before reporting started'],
         not_operating: ['tone-neutral', 'Not operating', 'Closed throughout this month'],
         not_set_up: ['tone-neutral', 'Not set up', 'Reporting has not been set up'],
-        future: ['tone-neutral', 'Not started', '']
+        future: ['tone-neutral', 'Not started', 'Month has not started']
     };
     const statusPill = state => {
         const [tone, label] = STATUS[state] || ['tone-neutral', state];
@@ -53,6 +53,7 @@
             el.innerHTML = `<div class="acc-directory space-y-5">
                 <div class="acc-head"><div class="acc-flow-title">${enterprise ? '<button type="button" class="btn btn-secondary btn-sm" data-directory>← All enterprises</button>' : ''}<h2 class="acc-part">${enterprise ? A().esc(enterprise.name) : 'Accommodation enterprises'}</h2></div>
                 <div class="acc-head__actions"><label><span class="field-label">Reporting year</span><select class="field" data-report-year aria-label="Reporting year">${Array.from({length: Math.max(currentYear,year)-2024},(_,i)=>Math.max(currentYear,year)-i).map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}</select></label><button type="button" class="btn btn-secondary" data-annual>Annual municipal report · Form A</button></div></div>
+                ${A().statusLegend(Object.entries(STATUS).map(([key, value]) => [statusPill(key), value[2]]))}
                 ${enterprise ? `<section aria-label="Reporting months"><h3 class="acc-part mb-3">Select a month</h3><div class="acc-month-cards">${enterprise.months.map(m=>{
                     const [tone,label,note] = STATUS[m.state] || ['tone-neutral',m.state,''];
                     const [dueYear,dueMonth] = A().shiftMonth(year,m.month,1);
@@ -86,12 +87,14 @@
                 const report=el.querySelector('[data-month-report]');
                 const open = () => {
                     if (!state.month) { report.innerHTML='<div class="ztims-empty">Select a month to view its submitted DAE-1A and DAE-1B.</div>'; return; }
-                    month(report,enterprise,year,state.month,{onStateChange:refresh});
+                    return month(report,enterprise,year,state.month,{onStateChange:refresh});
                 };
-                el.querySelectorAll('[data-report-month]').forEach(b=>b.addEventListener('click',()=>{
+                el.querySelectorAll('[data-report-month]').forEach(b=>b.addEventListener('click',async()=>{
                     state.month=+b.dataset.reportMonth;
+                    const selectedMonth=state.month;
                     el.querySelectorAll('[data-report-month]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.reportMonth===state.month)));
-                    open();
+                    await open();
+                    if (report.isConnected && state.month===selectedMonth) report.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
                 }));
                 open();
             }
