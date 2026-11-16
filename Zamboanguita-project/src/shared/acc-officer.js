@@ -8,31 +8,99 @@
 (function () {
     const A = () => window.ztimsAcc;
     const monthLoads = new WeakMap();
-    const SHORT = { submitted: '✓', changed: '!', finalized: '🔒', reopened: 'Re', open: '…', due: 'Due', overdue: '!', not_recorded: '–', not_operating: 'N/A', not_set_up: '?', future: '' };
+    const trackerViews = new WeakMap();
+    const STATUS = {
+        submitted: ['tone-info', 'Awaiting review', 'Submitted to the Tourism Office'],
+        changed: ['tone-warning', 'Needs resubmission', 'Register changed after submission'],
+        finalized: ['tone-success', 'Finalized', 'Monthly submission locked'],
+        reopened: ['tone-warning', 'Open for correction', 'Waiting for a corrected submission'],
+        open: ['tone-neutral', 'In progress', 'Month is still in progress'],
+        due: ['tone-neutral', 'Not submitted', ''],
+        overdue: ['tone-danger', 'Overdue', ''],
+        not_recorded: ['tone-neutral', 'No report recorded', 'Before reporting started'],
+        not_operating: ['tone-neutral', 'Not operating', 'Closed throughout this month'],
+        not_set_up: ['tone-neutral', 'Not set up', 'Reporting has not been set up'],
+        future: ['tone-neutral', 'Not started', '']
+    };
+    const statusPill = state => {
+        const [tone, label] = STATUS[state] || ['tone-neutral', state];
+        const icon = state === 'finalized' ? '<span class="material-symbols-outlined" aria-hidden="true">lock</span>' : '';
+        return `<span class="tone-pill rounded-pill acc-pill ${tone}${state === 'submitted' ? ' acc-status-review' : ''}">${icon}${A().esc(label)}</span>`;
+    };
 
-    /* ---- tracker ---------------------------------------------------------- */
-    async function tracker(el, year, onPick) {
-        el.innerHTML = A().loading();
-        try {
-            const d = await A().api(`/accommodation/tracker?year=${year}`);
-            if (!d.enterprises.length) { el.innerHTML = '<div class="ztims-empty m-4">No private places to stay are listed.</div>'; return; }
-            const tally = {};
-            const rows = d.enterprises.map(e => `<tr class="own-row--private"><td class="px-3 py-2 acc-sticky"><span class="font-bold">${A().esc(e.name)}</span></td>${e.months.map(m => {
-                tally[m.state] = (tally[m.state] || 0) + 1;
-                const s = A().STATES[m.state] || ['tone-neutral', '', m.state];
-                const label = `${e.name} · ${A().monthName(year, m.month)}: ${s[2]}${m.latestVersion ? ' · version ' + m.latestVersion : ''}`;
-                return `<td class="px-1 py-1.5 text-center">${m.state === 'future' ? '' : `<button type="button" class="st-cell tone-pill ${s[0]}" data-spot="${A().esc(e._id)}" data-month="${m.month}" title="${A().esc(label)}" aria-label="${A().esc(label)}">${SHORT[m.state] || ''}</button>`}</td>`;
-            }).join('')}</tr>`).join('');
-            const pill = (state, n) => `<span class="tone-pill rounded-pill acc-pill ${(A().STATES[state] || ['tone-neutral'])[0]}">${n} ${A().STATES[state][2].toLowerCase()}</span>`;
-            el.innerHTML = `<div class="flex flex-wrap gap-2 p-4">${['submitted', 'finalized', 'changed', 'reopened', 'overdue', 'not_recorded', 'not_operating'].filter(k => tally[k]).map(k => pill(k, tally[k])).join('') || '<span class="text-support">Nothing reported yet.</span>'}</div>
-                <p class="flex flex-wrap gap-2 px-4 pb-3 text-xs font-bold" aria-label="What the cells mean">${['submitted', 'changed', 'finalized', 'reopened', 'due', 'overdue', 'not_recorded', 'not_operating'].map(k => `<span class="tone-pill rounded-pill px-2.5 py-0.5 ${A().STATES[k][0]}">${SHORT[k]} ${A().STATES[k][2]}</span>`).join('')}</p>
-                <div class="acc-scroll"><table class="ztims-table text-sm min-w-[900px]"><thead><tr><th class="text-left px-3 py-2 acc-sticky">Place to stay</th>${A().MONTHS.map(m => `<th class="px-1 py-2 text-center">${m.slice(0, 3)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-            el.querySelectorAll('[data-spot]').forEach(b => b.addEventListener('click', () => onPick(b.dataset.spot, year, +b.dataset.month)));
-        } catch (e) { if (e.message !== 'Signed out') el.innerHTML = A().failed(e.message); }
+    /* Directory → enterprise/year → month → submitted forms. */
+    async function tracker(el, year) {
+        const previous = trackerViews.get(el) || {};
+        const state = { selected: previous.selected || '', month: previous.year === year ? previous.month : null, year, query: previous.query || '' };
+        trackerViews.set(el, state);
+        el.innerHTML = A().loading('Loading enterprise reports…');
+        let data;
+        try { data = await A().api(`/accommodation/tracker?year=${year}`); }
+        catch (e) { if (trackerViews.get(el) === state && e.message !== 'Signed out') { el.innerHTML = A().failed(e.message, true); el.querySelector('[data-acc-retry]').addEventListener('click',()=>tracker(el,year),{once:true}); } return; }
+        if (trackerViews.get(el) !== state) return;
+        const enterprises = data.enterprises;
+        if (!enterprises.some(e => e._id === state.selected)) state.selected = '';
+        const refresh = () => tracker(el, year);
+        const summary = e => {
+            const submitted = e.months.filter(m => m.latestVersion > 0).length;
+            const review = e.months.filter(m => m.state === 'submitted').length;
+            const overdue = e.months.filter(m => m.state === 'overdue').length;
+            return `${submitted} of 12 months submitted${review ? ` · ${review} awaiting review` : ''}${overdue ? ` · ${overdue} overdue` : ''}`;
+        };
+        function draw() {
+            const enterprise = enterprises.find(e => e._id === state.selected);
+            const currentYear = +A().manilaToday().slice(0,4);
+            el.innerHTML = `<div class="acc-directory space-y-5">
+                <div class="acc-head"><div class="acc-flow-title">${enterprise ? '<button type="button" class="btn btn-secondary btn-sm" data-directory>← All enterprises</button>' : ''}<h2 class="acc-part">${enterprise ? A().esc(enterprise.name) : 'Accommodation enterprises'}</h2></div>
+                <div class="acc-head__actions"><label><span class="field-label">Reporting year</span><select class="field" data-report-year aria-label="Reporting year">${Array.from({length: Math.max(currentYear,year)-2024},(_,i)=>Math.max(currentYear,year)-i).map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}</select></label><button type="button" class="btn btn-secondary" data-annual>Annual municipal report · Form A</button></div></div>
+                ${enterprise ? `<section aria-label="Reporting months"><h3 class="acc-part mb-3">Select a month</h3><div class="acc-month-cards">${enterprise.months.map(m=>{
+                    const [tone,label,note] = STATUS[m.state] || ['tone-neutral',m.state,''];
+                    const [dueYear,dueMonth] = A().shiftMonth(year,m.month,1);
+                    const detail = ['due','overdue'].includes(m.state) ? `Due 5 ${A().MONTHS[dueMonth-1].slice(0,3)} ${dueYear}` : note;
+                    return `<button type="button" class="acc-month-card" data-report-month="${m.month}" data-spot="${A().esc(enterprise._id)}" aria-pressed="${state.month===m.month}"${m.state==='future'?' disabled':''}><b>${A().MONTHS[m.month-1]}</b>${statusPill(m.state)}<span class="acc-note">${A().esc(detail)}${m.latestVersion ? ` · v${m.latestVersion}` : ''}</span></button>`;
+                }).join('')}</div></section><section data-month-report aria-label="Selected monthly submission" class="space-y-4">${A().loading()}</section>` : `
+                <label class="block"><span class="field-label">Find an enterprise</span><input type="search" class="field" data-enterprise-search placeholder="Search enterprise names" value="${A().esc(state.query)}"></label>
+                <div data-enterprise-list class="acc-enterprise-list"></div>`}
+                </div>`;
+            el.querySelector('[data-report-year]').addEventListener('change', e => {
+                const outer = document.getElementById('trYear');
+                if (outer) { outer.value=e.target.value; outer.dispatchEvent(new Event('change')); }
+                else tracker(el,+e.target.value);
+            });
+            el.querySelector('[data-annual]').addEventListener('click', () => {
+                el.innerHTML='<button type="button" class="btn btn-secondary mb-4" data-return>← Back to enterprise reports</button><div data-annual-report></div>';
+                el.querySelector('[data-return]').addEventListener('click',draw);
+                formA(el.querySelector('[data-annual-report]'),{year});
+            });
+            if (!enterprise) {
+                const list=el.querySelector('[data-enterprise-list]');
+                function filter() {
+                    const matched=enterprises.filter(e=>e.name.toLocaleLowerCase().includes(state.query.toLocaleLowerCase()));
+                    list.innerHTML=matched.length ? matched.map(e=>`<button type="button" class="acc-enterprise-row" data-enterprise="${A().esc(e._id)}"><span><b>${A().esc(e.name)}</b><span class="acc-note">${summary(e)}</span></span><span aria-hidden="true">→</span></button>`).join('') : '<div class="ztims-empty">No matching enterprises.</div>';
+                    list.querySelectorAll('[data-enterprise]').forEach(b=>b.addEventListener('click',()=>{state.selected=b.dataset.enterprise;state.month=null;draw();}));
+                }
+                el.querySelector('[data-enterprise-search]').addEventListener('input',e=>{state.query=e.target.value;filter();});
+                filter();
+            } else {
+                el.querySelector('[data-directory]').addEventListener('click',()=>{state.selected='';state.month=null;draw();});
+                const report=el.querySelector('[data-month-report]');
+                const open = () => {
+                    if (!state.month) { report.innerHTML='<div class="ztims-empty">Select a month to view its submitted DAE-1A and DAE-1B.</div>'; return; }
+                    month(report,enterprise,year,state.month,{onStateChange:refresh});
+                };
+                el.querySelectorAll('[data-report-month]').forEach(b=>b.addEventListener('click',()=>{
+                    state.month=+b.dataset.reportMonth;
+                    el.querySelectorAll('[data-report-month]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.reportMonth===state.month)));
+                    open();
+                }));
+                open();
+            }
+        }
+        draw();
     }
 
     /* ---- one enterprise's month ------------------------------------------ */
-    async function month(el, place, year, mon) {
+    async function month(el, place, year, mon, options = {}) {
         const request = {};
         monthLoads.set(el, request);
         el.innerHTML = A().loading();
@@ -65,24 +133,22 @@
         }[s] || '';
         const f = latest ? latest.figures : null;
         const actions = [];
-        if (s === 'submitted') actions.push(`<button type="button" class="btn btn-primary min-h-[44px]" data-act="finalize"><span class="material-symbols-outlined !text-base" aria-hidden="true">lock</span>Finalize version ${latest.version}</button>`);
-        if (s === 'finalized') actions.push(`<button type="button" class="btn btn-secondary min-h-[44px]" data-act="reopen"><span class="material-symbols-outlined !text-base" aria-hidden="true">lock_open</span>Reopen</button>`);
+        if (s === 'submitted') actions.push(`<button type="button" class="btn btn-primary min-h-[44px]" data-act="finalize"><span class="material-symbols-outlined !text-base" aria-hidden="true">lock</span>Finalize submission</button>`);
+        if (s === 'finalized') actions.push(`<button type="button" class="btn btn-secondary min-h-[44px]" data-act="reopen"><span class="material-symbols-outlined !text-base" aria-hidden="true">lock_open</span>Reopen for correction</button>`);
         if (latest) actions.push(`<button type="button" class="btn btn-secondary min-h-[44px]" data-xl="${latest.version}"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel</button>`);
         el.innerHTML = `<div class="space-y-5">
-            <div class="acc-head"><div class="flex flex-wrap items-center gap-2"><h2 class="text-xl font-headline font-bold text-on-surface">${A().esc(v.enterprise.name)} · ${A().monthName(year, mon)}</h2>${A().statePill(s, v.state.latestVersion)}</div>
+            <div class="acc-head"><div class="flex flex-wrap items-center gap-2"><h2 class="text-xl font-headline font-bold text-on-surface">${A().esc(v.enterprise.name)} · ${A().monthName(year, mon)}</h2>${statusPill(s)}</div>
                 <div class="acc-head__actions">${actions.join('')}</div></div>
             ${banner}
             ${f ? `<p class="text-support">Showing version ${latest.version}, as submitted${latest.provenance === 'legacy_manual' ? ' (typed by hand before the stay register)' : ''}.</p>
-                <div class="stat-tiles"><div class="stat-tile"><p>Guest arrivals</p><p>${A().nf(f.arrivals)}</p></div><div class="stat-tile"><p>Guest-nights</p><p>${A().nf(f.guestNights)}</p></div>
-                <div class="stat-tile"><p>Occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div><div class="stat-tile"><p>Average length of stay</p><p>${A().dec(f.averageLengthOfStay)}</p></div></div>
-                <div data-submitted-forms class="space-y-4"></div>` : ''}
-            ${v.versions.length ? `<section class="space-y-2"><h3 class="acc-part">Versions</h3><div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Version</th><th>Submitted</th><th>Reason</th><th class="text-right">Arrivals</th><th class="text-right">Guest-nights</th><th></th></tr></thead><tbody>
-                ${v.versions.slice().reverse().map(x => `<tr><td><b>v${x.version}</b></td><td>${A().fmtWhen(x.submittedAt)}${x.late ? ' · late' : ''}</td><td>${x.reason ? A().esc(x.reason) : '<span class="text-on-surface-variant">First submission</span>'}</td><td class="text-right">${A().nf(x.figures.arrivals)}</td><td class="text-right">${A().nf(x.figures.guestNights)}</td><td class="text-right"><button type="button" class="btn btn-secondary btn-sm" data-xl="${x.version}">Excel</button></td></tr>`).join('')}</tbody></table></div></section>` : ''}
-            ${v.events.length ? `<section class="space-y-2"><h3 class="acc-part">History</h3><ul class="acc-history">${v.events.slice().reverse().map(e => `<li><span class="text-on-surface-variant">${A().fmtWhen(e.at)}</span> <b>${({ submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' })[e.action]}</b>${e.reason ? ' · ' + A().esc(e.reason) : ''} <span class="text-on-surface-variant">(${e.actorRole === 'admin' ? 'Tourism Office' : 'Enterprise'})</span></li>`).join('')}</ul></section>` : ''}
+                <div data-submitted-forms class="space-y-4"></div>` : '<div class="acc-empty-forms"><div class="acc-tabs"><button type="button" class="settings-tab" disabled>DAE-1A</button><button type="button" class="settings-tab" disabled>DAE-1B</button></div><p class="ztims-empty">No submitted forms for this month.</p></div>'}
+            ${v.versions.length ? `<details class="space-y-2"><summary class="acc-part">Previous submissions</summary><div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Version</th><th>Submitted</th><th>Reason</th><th class="text-right">Arrivals</th><th class="text-right">Guest-nights</th><th></th></tr></thead><tbody>
+                ${v.versions.slice().reverse().map(x => `<tr><td><b>v${x.version}</b></td><td>${A().fmtWhen(x.submittedAt)}${x.late ? ' · late' : ''}</td><td>${x.reason ? A().esc(x.reason) : '<span class="text-on-surface-variant">First submission</span>'}</td><td class="text-right">${A().nf(x.figures.arrivals)}</td><td class="text-right">${A().nf(x.figures.guestNights)}</td><td class="text-right"><button type="button" class="btn btn-secondary btn-sm" data-xl="${x.version}">Excel</button></td></tr>`).join('')}</tbody></table></div></details>` : ''}
+            ${v.events.length ? `<details class="space-y-2"><summary class="acc-part">Submission history</summary><ul class="acc-history">${v.events.slice().reverse().map(e => `<li><span class="text-on-surface-variant">${A().fmtWhen(e.at)}</span> <b>${({ submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' })[e.action]}</b>${e.reason ? ' · ' + A().esc(e.reason) : ''} <span class="text-on-surface-variant">(${e.actorRole === 'admin' ? 'Tourism Office' : 'Enterprise'})</span></li>`).join('')}</ul></details>` : ''}
         </div>`;
         if (submitted) A().mountForms(el.querySelector('[data-submitted-forms]'), {
             year, month: mon, enterprise: v.enterprise, profile: v.profile, figures: submitted.figures, detail: submitted.detail, rows: submitted.dae1b
-        }, { formA: host => formA(host, { year }) });
+        });
         el.querySelectorAll('[data-xl]').forEach(button => {
             const version = v.versions.find(x => x.version === +button.dataset.xl);
             const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = 'View forms';
@@ -96,7 +162,7 @@
                 } catch (e) { if (e.message !== 'Signed out') A().toast(e.message, 'error'); }
             });
         });
-        const again = () => month(el, place, year, mon);
+        const again = () => options.onStateChange ? options.onStateChange() : month(el, place, year, mon);
         el.querySelectorAll('[data-xl]').forEach(b => b.addEventListener('click', async () => {
             try { await A().download(`/accommodation/${place._id}/months/${year}/${mon}/export.xlsx?version=${b.dataset.xl}`, 'report.xlsx'); A().toast('Excel downloaded'); }
             catch (e) { A().toast(e.message, 'error'); }

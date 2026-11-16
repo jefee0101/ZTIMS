@@ -562,6 +562,17 @@ and `spots.requires_guide`. Don't bring any of it back unless the user asks.
 
 ### Actual DAE-1B and the monthly accommodation package (16 November 2026)
 
+Officer accommodation reports open the searchable enterprise directory by
+default. Select an enterprise and reporting year, then one of 12 labeled month
+cards to read its submitted DAE-1A and DAE-1B. Status wording is explicit:
+Awaiting review, Needs resubmission, Finalized, Open for correction, Not
+submitted (with due date), Overdue, No report recorded, Not operating, In
+progress, Not set up and Not started. Future month cards are disabled. Finalize
+submission and Reopen for correction apply to the monthly package, and refresh
+the cards after success. Saved versions and history are collapsed disclosures.
+Annual municipal Form A is separate from the monthly form tabs and always
+includes all 12 months and all accommodation enterprises.
+
 The owner's `DAE1B-30_days.pdf`, pages 1–3, is the DAE-1B reference; a copy of
 only those pages is `docs/accommodation-reporting/DAE-1B-reference.pdf`.
 Exclude its Manual-Summary pages. The monthly Excel package has exactly two

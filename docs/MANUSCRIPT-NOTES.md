@@ -7,6 +7,8 @@ where the manuscript already has them, and the answer to give the panel.
 
 ## Actual DAE-1B and paired monthly submissions (16 November 2026)
 
+- The Tourism Officer's accommodation reports now start with a searchable enterprise directory. Select an enterprise and year, then a labeled month card and the submitted DAE-1A or DAE-1B. Annual municipal Form A is accessed separately. Review statuses use full labels; versions and history are collapsed. Update current-workflow screenshots when authorized, without attributing this refinement to the original evaluation.
+
 - The DAE-1B follows the owner's `DAE1B-30_days.pdf`, pages 1–3: arrivals by country of residence across the days of the month, followed by other indicators and volume per sex. Exclude the Manual-Summary pages. `DAE-1B-reference.pdf` preserves only the actual form.
 - The Enterprise Manager's desktop workspace has the Guest Register on the left (30%) and Tourist Influx Report on the right (70%). Mobile uses separate subpages with the same selected month. Guest Register changes refresh the report.
 - One monthly submission saves DAE-1A and DAE-1B together as an immutable version. The monthly Excel contains those two forms. Date-only corrections require a new version even if monthly totals stay the same.

@@ -530,11 +530,10 @@ body { overflow-x: hidden; }
 
             <!-- Tabs (accommodation; attractions have their own inside their panel) -->
             <div role="tablist" id="accTabs" aria-label="Accommodation statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
-                <!-- The report the office sends out, so it is where the page opens. -->
-                <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="true" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">summarize</span>FORM A</button>
-                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
+                <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="true" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">fact_check</span>Enterprises</button>
+                <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="false" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">summarize</span>Annual Form A</button>
             </div>
 
             <!-- ============ FORM A: private places to stay, from their saved versions (acc-officer.js) ============ -->
@@ -545,7 +544,7 @@ body { overflow-x: hidden; }
 
             <!-- ============ Tracker ============ -->
             <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4" hidden>
-                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                <div hidden>
                     <label class="block"><span class="field-label">Year</span><select id="trYear" class="field w-32"></select></label>
                     <input type="hidden" id="trKind" value="accommodation">
                     <p class="text-sm min-h-[44px] flex items-center">Places to stay.&nbsp;<button type="button" class="font-bold underline" id="trToAttractions">Attractions are under Attraction visits</button></p>
@@ -670,7 +669,7 @@ body { overflow-x: hidden; }
         const TABS = ['forma', 'tracker', 'enter', 'attractions'];
         // The switch above the tabs: Accommodation shows the four tabs, Attraction
         // shows the attraction panel (its own tabs are inside it).
-        let lastAccTab = 'forma';
+        let lastAccTab = 'tracker';
         function showTab(name) {
             const attraction = name === 'attractions';
             if (!attraction) lastAccTab = name;
@@ -840,18 +839,18 @@ body { overflow-x: hidden; }
             if (!guardOfficerSession()) return;
             mountPortalAccountMenu();
             wire();
-            // Coming here from the sidebar always opens FORM A; only
+            // Coming here from the sidebar opens the enterprise directory; only
             // a reload goes back to the tab that was open. A link that names a
             // tab in its address (the Dashboard's "Open the tracker" is
             // admin_statistics.html#tracker) opens that tab instead.
-            let first = 'forma';
+            let first = 'tracker';
             try {
                 const nav = performance.getEntriesByType('navigation')[0];
                 if (nav && nav.type === 'reload') first = sessionStorage.getItem('statsTab') || first;
             } catch (e) {}
             const asked = window.location.hash.slice(1);
             if (TABS.includes(asked)) first = asked;
-            showTab(TABS.includes(first) ? first : 'forma');
+            showTab(TABS.includes(first) ? first : 'tracker');
             // The Guest Register's "Open the monthly report" names the place and
             // month (?place=<id>&month=2026-9#enter).
             const params = new URLSearchParams(window.location.search);

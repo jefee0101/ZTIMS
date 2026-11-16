@@ -682,6 +682,26 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
    a left edge, never colour alone. */
 .acc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
 .acc-head h1 { margin-right: auto; }
+.acc-directory { padding: 1rem; min-width: 0; }
+.acc-flow-title { display: grid; gap: .75rem; margin-right: auto; }
+.acc-flow-title h2 { font-size: 1.35rem; }
+.acc-directory .acc-head__actions { align-items: flex-end; }
+.acc-directory .acc-month-card { border: 1px solid rgb(var(--ztims-outline-variant) / .6); }
+.acc-directory .acc-status-review { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+.dark .acc-directory .acc-status-review { color: #bfdbfe; background: #172c48; border-color: #365b8c; }
+.acc-enterprise-list { display: grid; gap: .75rem; }
+.acc-enterprise-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; padding: 1rem; border: 1px solid rgb(var(--ztims-outline-variant) / .6); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); }
+.acc-enterprise-row .acc-note { display: block; margin-top: .4rem; }
+.acc-enterprise-row:hover, .acc-month-card:hover:not(:disabled) { border-color: rgb(var(--ztims-primary)); }
+.acc-month-cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem; }
+.acc-month-card { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: .85rem; min-width: 0; text-align: left; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline-variant) / .6); }
+.acc-month-card .acc-pill { white-space: normal; text-align: left; }
+.acc-month-card[aria-pressed="true"] { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: -2px; }
+.acc-month-card:disabled { opacity: .6; cursor: default; }
+.acc-enterprise-row:focus-visible, .acc-month-card:focus-visible { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: 2px; }
+[data-month-report] { border-top: 1px solid rgb(var(--ztims-outline-variant) / .5); padding-top: 1.25rem; }
+@media(max-width: 1000px) { .acc-month-cards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width: 600px) { .acc-month-cards { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; } .acc-directory { padding: .75rem; } .acc-month-card { padding: .65rem; } }
 /* Manager's desktop workspace: 30% register, 70% report. Small screens use
    the existing separate pages, with the month carried in both links. */
 .acc-workspace { max-width: none !important; min-width: 0; }
