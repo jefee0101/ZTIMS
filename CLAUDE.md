@@ -835,23 +835,25 @@ visitors here").
 
 ### Attraction visitor reporting (stages 4 and 5; on main 12 November 2026, schema not yet run on live)
 
-Officer reports (17 November 2026): Attractions is month-first, with only
-Monthly DTA2M and Annual VAR3M tabs. Year → month → combined DTA2M → supporting
-attraction records → Submit DTA2M. Support Staff send daily records for review;
-the officer marks those versions Reviewed (existing finalized state). This
-readiness is separate from the combined DTA2M submission. The existing outputs
-table stores saved monthly DTA2M submissions; their history is inside each
-month, with no Issued reports tab. Submission requires an ended month and all
-applicable attractions finalized; the API checks this with per-attraction locks.
-Reopening marks the DTA2M Correction required; resubmitting preserves earlier
-copies. GET /attraction-visits/outputs/:id returns the saved DTA2M composition.
-Annual JSON/Excel with basis=submitted uses the latest non-superseded DTA2M
-versions, including the prior copy during corrections. All 12 months remain;
-unsubmitted months are blank. Legacy consolidation endpoints remain compatible.
-Both reporting areas have status legends. Attraction record statuses and
-combined DTA2M submission statuses are explained separately. No schema change.
-Submitting saves an internal record; Excel delivery to another office remains
-manual, and the confirmation says so. Counts remain editable only by Support Staff.
+Officer packages (17 November 2026): Both accommodation and attraction reports
+have Download submission package, with year/month preview and a ZIP. There is
+no officer Submit DTA2M action. Downloading is not proof of external delivery.
+`report-package.js` builds safe ZIP paths and a workbook checklist. GET
+/accommodation/submission-package[.zip] and /attraction-visits/submission-package[.zip]
+are officer-only. Preview returns included files, missing/unreviewed statuses
+and a fingerprint; ZIP rejects a changed preview (409). Each build reads a
+repeatable-read snapshot. Accommodation includes annual Form A (12 months),
+saved paired DAE-1A/DAE-1B per enterprise and a checklist. Attraction includes
+monthly DTA2M, required daily VAR1 for every applicable attraction, and a
+checklist. Missing/unreviewed/correction or incomplete daily records mean DRAFT;
+missing is never zero. VAR1 has no opt-out. Complete packages need an ended
+month and reviewed records. ZIPs contain no raw guest registers or visitor names.
+Attraction tabs remain Monthly DTA2M and Annual VAR3M. Annual now uses reviewed
+monthly records (official consolidation), independent of package downloads.
+Earlier stored DTA2M copies remain readable as Previous saved reports; legacy
+outputs and basis=submitted endpoints remain compatible. No new schema or
+package-delivery status. Support Staff still send records for review and only
+Support Staff can edit daily attraction counts.
 
 An office-run, counting attraction's visitors are recorded **one count per date**
 by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2

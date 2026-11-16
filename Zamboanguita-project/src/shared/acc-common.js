@@ -216,8 +216,29 @@
     // Each view supplies its own truthful status descriptions and pill markup.
     const statusLegend = items => `<details class="acc-status-legend"><summary>Status legend</summary><dl>${items.map(([pill, description]) => `<div><dt>${pill}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl></details>`;
 
+    function packagePreview(kind, year, month) {
+        const base=kind==='Accommodation'?'/accommodation':'/attraction-visits';
+        let preview=null, serial=0;
+        openWindow({title:`${kind} submission package`,wide:true,body:`<label class="block"><span class="field-label">Reporting month</span><input type="month" class="field" data-package-month value="${year}-${pad(month)}"></label><button type="button" class="btn btn-secondary" data-package-preview>Refresh preview</button><div data-package-content class="space-y-4" aria-live="polite"></div>`,actions:[{label:'Close',kind:'cancel'},{label:'Download package',kind:'primary',run:async w=>{
+            if(!preview)throw new Error('Load the preview first.');
+            await download(`${base}/submission-package.zip?year=${preview.year}&month=${preview.month}&fingerprint=${encodeURIComponent(preview.fingerprint)}`,`ZTIMS_${kind}_${preview.year}-${pad(preview.month)}${preview.complete?'':'_DRAFT'}.zip`);
+            toast('Package downloaded. Deliver the files through your office’s usual channel.','success');
+        }}],onOpen:w=>{
+            const button=w.el.querySelector('.acc-window__actions button:last-child'),host=w.body.querySelector('[data-package-content]');
+            async function refresh(){const id=++serial;preview=null;button.disabled=true;host.innerHTML=loading();const value=w.body.querySelector('[data-package-month]').value;
+                if(!/^\d{4}-\d{2}$/.test(value)){host.innerHTML=failed('Select a month.');return;}
+                try{const [y,m]=value.split('-').map(Number),data=await api(`${base}/submission-package?year=${y}&month=${m}`);if(id!==serial)return;preview=data;
+                    host.innerHTML=`<div class="acc-banner ${data.complete?'acc-banner--info':'acc-banner--warn'}">${data.complete?'Ready for submission':'DRAFT — missing or unreviewed reports are listed below.'}</div><p class="acc-note">${kind==='Accommodation'?'Includes annual Form A (all 12 months), paired DAE-1A/DAE-1B workbooks and a checklist.':'Includes monthly DTA2M, a required daily VAR1 for every reporting attraction and a checklist. Annual VAR3M is downloaded separately.'}</p><div class="acc-scroll"><table class="acc-table ztims-table"><thead><tr><th>Name</th><th>Report</th><th>Version</th><th>Status</th><th>File included</th></tr></thead><tbody>${data.entries.map(e=>`<tr><th>${esc(e.name)}</th><td>${esc(e.report)}</td><td>${e.version?'v'+e.version:'—'}</td><td>${esc(e.status)}</td><td>${e.file?'Yes':'No'}</td></tr>`).join('')||'<tr><td colspan="5">No reporting enterprises or attractions.</td></tr>'}</tbody></table></div><p class="acc-note">Downloading does not mark these files as delivered to another office.</p>`;
+                    button.textContent=data.complete?'Download submission package':'Download draft package';button.disabled=false;
+                }catch(e){if(id===serial)host.innerHTML=failed(e.message);}
+            }
+            w.body.querySelector('[data-package-preview]').onclick=refresh;
+            w.body.querySelector('[data-package-month]').onchange=refresh;
+            refresh();
+        }});
+    }
     window.ztimsAcc = {
-        partOneHtml, partTwoHtml,
+        partOneHtml, partTwoHtml, packagePreview,
         api, download, esc, MONTHS, pad, manilaToday, addDays, daysIn, monthName, monthKey, shiftMonth, fmtDate, fmtWhen, weekday,
         nf, pct, dec, STATES, statePill, statusLegend, loadResidences, residenceName, residenceSection, openWindow, toast, loading, failed
     };

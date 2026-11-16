@@ -52,7 +52,7 @@
             const currentYear = +A().manilaToday().slice(0,4);
             el.innerHTML = `<div class="acc-directory space-y-5">
                 <div class="acc-head"><div class="acc-flow-title">${enterprise ? '<button type="button" class="btn btn-secondary btn-sm" data-directory>← All enterprises</button>' : ''}<h2 class="acc-part">${enterprise ? A().esc(enterprise.name) : 'Accommodation enterprises'}</h2></div>
-                <div class="acc-head__actions"><label><span class="field-label">Reporting year</span><select class="field" data-report-year aria-label="Reporting year">${Array.from({length: Math.max(currentYear,year)-2024},(_,i)=>Math.max(currentYear,year)-i).map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}</select></label><button type="button" class="btn btn-secondary" data-annual>Annual municipal report · Form A</button></div></div>
+                <div class="acc-head__actions"><label><span class="field-label">Reporting year</span><select class="field" data-report-year aria-label="Reporting year">${Array.from({length: Math.max(currentYear,year)-2024},(_,i)=>Math.max(currentYear,year)-i).map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}</select></label><button type="button" class="btn btn-primary" data-package>Download submission package</button><button type="button" class="btn btn-secondary" data-annual>Annual municipal report · Form A</button></div></div>
                 ${A().statusLegend(Object.entries(STATUS).map(([key, value]) => [statusPill(key), value[2]]))}
                 ${enterprise ? `<section aria-label="Reporting months"><h3 class="acc-part mb-3">Select a month</h3><div class="acc-month-cards">${enterprise.months.map(m=>{
                     const [tone,label,note] = STATUS[m.state] || ['tone-neutral',m.state,''];
@@ -68,6 +68,7 @@
                 if (outer) { outer.value=e.target.value; outer.dispatchEvent(new Event('change')); }
                 else tracker(el,+e.target.value);
             });
+            el.querySelector('[data-package]').onclick=()=>{const [y,m]=A().shiftMonth(+A().manilaToday().slice(0,4),+A().manilaToday().slice(5,7),-1);A().packagePreview('Accommodation',year,state.month || (y===year?m:1));};
             el.querySelector('[data-annual]').addEventListener('click', () => {
                 el.innerHTML='<button type="button" class="btn btn-secondary mb-4" data-return>← Back to enterprise reports</button><div data-annual-report></div>';
                 el.querySelector('[data-return]').addEventListener('click',draw);

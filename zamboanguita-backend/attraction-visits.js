@@ -520,6 +520,32 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     };
     const fileName = (spot, tail) => `${String(spot.title).replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40)}_${tail}.xlsx`;
 
+    async function submissionPackage(req,res,download) {
+        const year=Number(req.query.year),month=Number(req.query.month);
+        if(!Number.isInteger(year)||year<2001||year>2100||!Number.isInteger(month)||month<1||month>12) refuse(400,'BAD_PERIOD','Choose a valid reporting month and year.');
+        const P=require('./report-package');
+        const result=await transaction(async client=>{
+            await query('set transaction isolation level repeatable read, read only',[],client);
+            const report=await monthlyConsolidation(year,month,'operational',client),entries=[],files=[];
+            for(const r of report.rows) {
+                const version=r.source.version ? (await query('select * from attraction_report_versions where spot_id=$1 and year=$2 and month=$3 and version=$4',[r.spot.id,year,month,r.source.version],client)).rows[0] : null;
+                const figures=version ? E.figuresFromVersion(version) : (await monthView(r.spot,year,month,client)).figures;
+                const dailyComplete=figures.daily.length===E.daysIn(year,month)&&figures.daily.every(d=>d.count||d.state==='closed');
+                const file=`02_Supporting_Records/${P.safe(r.spot.title)}_${r.spot.id}/VAR1_${year}-${E.pad(month)}.xlsx`;
+                entries.push({id:r.spot.id,name:r.spot.title,report:'Daily visitor report — VAR1 (required)',version:version?.version||null,ready:r.state==='finalized'&&dailyComplete,status:r.state==='finalized'&&dailyComplete?'Included — reviewed':r.state==='reopened'?'Open for correction':r.state==='submitted'?'Awaiting review':!dailyComplete?'Missing daily counts':'Not reviewed',file});
+                if(download) {const wb=X.workbook();X.addVar1(wb,{attraction:spotInfo(r.spot,await settingsOf(r.spot.id,client)),figures,status:`${version?'Saved version '+version.version:'DRAFT daily records'}; ${entries[entries.length-1].status}`});files.push([file,await X.toBuffer(wb)]);}
+            }
+            const data=P.manifest('Attractions',year,month,entries,{ended:E.lastDay(year,month)<E.manilaToday(),sourceFingerprint:P.fingerprint(report)});
+            if(download) {const wb=X.workbook();X.addDta2m(wb,{...report,mode:data.complete?'official':'operational'});files.unshift([`01_Municipal_Report/DTA2M_${year}-${E.pad(month)}.xlsx`,await X.toBuffer(wb)]);}
+            return {data,files};
+        });
+        if(!download)return res.json(result.data);
+        if(req.query.fingerprint!==result.data.fingerprint)refuse(409,'PACKAGE_CHANGED','Reports changed since the preview. Open the preview again.');
+        return P.send(res,result.data,result.files);
+    }
+    router.get('/attraction-visits/submission-package',requireAdmin,handle((req,res)=>submissionPackage(req,res,false)));
+    router.get('/attraction-visits/submission-package.zip',requireAdmin,handle((req,res)=>submissionPackage(req,res,true)));
+
     /* VAR 1 for one attraction and month: a saved version as submitted, or the daily counts now (marked not submitted). */
     router.get('/attraction-visits/:spotId/months/:year/:month/export.xlsx', READ, handle(async (req, res) => {
         const spot = await placeFor(req, req.params.spotId);
