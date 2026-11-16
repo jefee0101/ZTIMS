@@ -573,6 +573,10 @@ workspace (`acc-workspace.js`): 30% register on the left, 70% report on the
 right, synchronized month and refresh after stay changes. Under 1024px the
 existing two URLs are separate subpages, carrying the month in their links.
 `acc-forms.js` renders the actual daily forms from the server's template rows.
+The DAE-1B's sticky residence labels and header use a solid theme surface
+under their row tints, so daily numbers never show through during horizontal
+scrolling (16 November 2026). Keep the subtotal and section tints on that
+opaque backing rather than using a translucent background alone.
 The officer opens a resort/month in Tracker to read its submitted DAE-1A and
 DAE-1B, plus Zamboanguita's annual municipal Form A for that year. Form A always
 covers all 12 months and combines all accommodation enterprises, not only the
