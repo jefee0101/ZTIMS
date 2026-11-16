@@ -38,8 +38,7 @@ const today = E.manilaToday();
     ok(A && B && C, 'three office-run attractions exist locally');
 
     // ---- clean slate for the attraction tables only (local test database) ----
-    const h2025 = () => sql(`select md5(string_agg(r.id||r.month||coalesce(r.rooms,0)||coalesce(r.room_nights_occupied,0)||coalesce(r.guest_nights,0)||c.residence_code||c.total, ',' order by r.month, c.residence_code)) from monthly_reports r join monthly_report_counts c on c.report_id=r.id where r.kind='municipal_total'`);
-    const before2025 = h2025(), legacyBefore = sql(`select md5(string_agg(row(m.*)::text, ',' order by m.id)) from monthly_reports m where m.kind = 'attraction'`);
+    const legacyBefore = sql(`select md5(string_agg(row(m.*)::text, ',' order by m.id)) from monthly_reports m where m.kind = 'attraction'`);
     const legacyCount = sql(`select count(*) from monthly_reports where kind = 'attraction'`);
     sql(`set session_replication_role = replica; delete from attraction_outputs; delete from attraction_period_events; delete from attraction_periods; delete from attraction_report_versions;
          delete from attraction_count_changes; delete from attraction_daily_counts; delete from attraction_settings;
@@ -271,7 +270,7 @@ const today = E.manilaToday();
     ok(aB.months[0].cell.included === false && aB.months[10].cell.included === false, 'months with no finalized version are not included (not zero)');
     ok(an.grand.total === an.totals.reduce((a, t) => a + t.total, 0), 'the grand total adds the attraction totals');
     const an2025 = (await call('GET', '/attraction-visits/consolidated/annual?year=2025&mode=official', undefined, officer)).data;
-    ok(an2025.legacy.municipalTotalMonths === 12 && /not allocated to attractions/.test(an2025.legacy.note) && an2025.grand.total === 0, '2025: the municipal totals are noted, not allocated to attractions, and add nothing');
+    ok(!('legacy' in an2025) && an2025.grand.total === 0, '2025: no municipal-total note (taken out) and nothing added');
 
     console.log('Issued outputs, superseded when a month is reopened');
     r = await call('POST', '/attraction-visits/outputs', { kind: 'DTA2M', year: 2024, month: 2 }, officer);
@@ -298,18 +297,10 @@ const today = E.manilaToday();
     ok(r.status === 409 && r.data.code === 'NOTHING_FINALIZED', 'nothing is issued when nothing is finalized');
 
     console.log('Statistics separation and historical data');
-    ok(h2025() === before2025, 'the 2025 municipal totals are exactly as before');
+    ok(sql(`select count(*) from monthly_reports where kind = 'municipal_total'`) === '0', 'no 2025 municipal totals (taken out)');
     ok(sql(`select md5(string_agg(row(m.*)::text, ',' order by m.id)) from monthly_reports m where m.kind = 'attraction'`) === legacyBefore && sql(`select count(*) from monthly_reports where kind = 'attraction'`) === legacyCount, 'earlier attraction reports are untouched');
-    const legacyMonth = sql(`select year || '-' || month from monthly_reports where kind = 'attraction' limit 1`);
-    if (legacyMonth) {
-        const [ly, lm] = legacyMonth.split('-');
-        const fa = (await call('GET', `/statistics/form-a4?year=${ly}&from=${lm}&to=${lm}`, undefined, officer)).data;
-        const legacyTotal = Number(sql(`select coalesce(sum(c.total), 0) from monthly_reports r join monthly_report_counts c on c.report_id = r.id where r.kind = 'attraction' and r.status = 'submitted' and r.year = ${ly} and r.month = ${lm}`));
-        const allTotal = Object.values(fa.counts).reduce((a, c) => a + c.total[lm - 1], 0);
-        const accTotal = Number(sql(`select coalesce(sum(c.total), 0) from monthly_reports r join monthly_report_counts c on c.report_id = r.id where r.kind = 'accommodation' and r.status = 'submitted' and r.year = ${ly} and r.month = ${lm}`))
-            + Number(sql(`select coalesce(sum(v.arrivals), 0) from (select distinct on (spot_id) arrivals from accommodation_report_versions where year = ${ly} and month = ${lm} order by spot_id, version desc) v`));
-        ok(legacyTotal > 0 && allTotal !== accTotal + legacyTotal && fa.places.every(p => p.kind === 'accommodation'), `the Arrivals Report (Form A4) no longer adds attraction visits (${legacyMonth}: legacy attraction ${legacyTotal}, report ${allTotal})`, [allTotal, accTotal, legacyTotal]);
-    } else ok(true, '(no earlier attraction report to compare)');
+    // Form A4 (which once added attraction visits) was taken out on 16 November 2026.
+    ok((await call('GET', '/statistics/form-a4?year=2026', undefined, officer)).status === 404, 'Form A4 is gone: attraction visits appear only in DTA2M and VAR 3M');
     r = await call('PUT', `/statistics/reports/${A}/2026/10`, { counts: [{ code: 'ph-filipino', male: 3, female: 4 }] }, officer);
     ok(r.status === 403 || r.status === 409, 'the old monthly report no longer takes an attraction\'s figures (officer)', r.status);
     r = await call('PUT', `/statistics/reports/${A}/2026/10`, { counts: [{ code: 'ph-filipino', male: 3, female: 4 }] }, sa);
@@ -322,7 +313,7 @@ const today = E.manilaToday();
     const legEntry = sql(`select e.id from register_entries e join spots s on s.id = e.spot_id where s.type = 'spot' limit 1`), legReport = sql(`select id from monthly_reports where kind = 'attraction' limit 1`);
     if (legEntry) ok(/LEGACY_REGISTER_FROZEN/.test(sqlErr(`insert into register_entry_guests (entry_id, residence_code, male, female) values ('${legEntry}', 'PH', 1, 0)`)) && /LEGACY_REGISTER_FROZEN/.test(sqlErr(`delete from register_entry_guests where entry_id = '${legEntry}'`)), 'database: an earlier attraction register entry\'s guests cannot change or be removed');
     if (legReport) ok(/LEGACY_ATTRACTION_FROZEN/.test(sqlErr(`delete from monthly_report_counts where report_id = '${legReport}'`)), 'database: an earlier attraction report\'s country rows cannot be removed');
-    ok(sql(`select count(*) from monthly_reports where kind = 'municipal_total' and year = 2025`) === '12', 'all twelve 2025 municipal months are still there');
+    ok(sql(`select count(*) from monthly_reports where kind = 'municipal_total'`) === '0', 'no municipal total came back');
     const tr = (await call('GET', '/attraction-visits/tracker?year=2024', undefined, officer)).data;
     ok(tr.attractions.find(x => x._id === A).months[1].state === 'submitted' || tr.attractions.find(x => x._id === A).months[1].state === 'finalized', 'the tracker reads the new module', tr.attractions.find(x => x._id === A).months[1]);
 

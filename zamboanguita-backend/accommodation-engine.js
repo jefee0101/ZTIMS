@@ -213,12 +213,11 @@ function sourceDigest(raw, year, month) {
 }
 
 /* Where a place's month stands. */
-function periodState({ year, month, today, reportingFrom, versions, finalized, events, figures, municipal }) {
+function periodState({ year, month, today, reportingFrom, versions, finalized, events, figures }) {
     const first = firstDay(year, month), last = lastDay(year, month);
     const latest = versions.length ? versions[versions.length - 1] : null;
     const lastEvent = events.length ? events[events.length - 1] : null;
     const base = { latestVersion: latest ? latest.version : 0, deadline: deadlineFor(year, month).toISOString() };
-    if (municipal) return { ...base, state: 'municipal_total' };
     if (first > today) return { ...base, state: 'future' };
     if (finalized) return { ...base, state: 'finalized' };
     let diff = [];

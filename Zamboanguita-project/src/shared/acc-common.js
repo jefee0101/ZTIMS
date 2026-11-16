@@ -99,8 +99,7 @@
         not_recorded: ['tone-danger', 'report', 'Not reported'],
         not_operating: ['tone-neutral', 'block', 'N/A, not operating'],
         not_set_up: ['tone-neutral', 'settings', 'Not set up'],
-        future: ['tone-neutral', 'hourglass_empty', 'Not yet'],
-        municipal_total: ['tone-neutral', 'inventory_2', 'Municipal total']
+        future: ['tone-neutral', 'hourglass_empty', 'Not yet']
     };
     function statePill(state, version) {
         const s = STATES[state] || ['tone-neutral', 'help', state];
@@ -108,7 +107,7 @@
         return `<span class="tone-pill rounded-pill acc-pill ${s[0]}"><span class="material-symbols-outlined" aria-hidden="true">${s[1]}</span>${esc(label)}</span>`;
     }
 
-    /* Residence codes and names (Form A4's rows), fetched once. */
+    /* Residence codes and names (the DOT forms' rows), fetched once. */
     let residences = null;
     async function loadResidences() {
         if (residences) return residences;
@@ -177,7 +176,7 @@
     const failed = (message, retry) => `<div class="ztims-empty tone-danger" role="alert">${esc(message)}${retry ? ` <button type="button" class="btn btn-secondary btn-sm ml-2" data-acc-retry>Try again</button>` : ''}</div>`;
 
     /* Part I (arrivals by residence) and Part II as tables. `counts` is
-       { code: { male, female } } or, for the paper months, { code: { unsplit } }.
+       { code: { male, female } } (or { code: { unsplit } } where no sex was given).
        Rows with no arrivals are left out; group totals always show. */
     function partOneHtml(counts) {
         const list = residences || [];

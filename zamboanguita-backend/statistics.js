@@ -1,5 +1,7 @@
-/* Tourism statistics: the monthly counts behind Form A4 ("Report on the
- * Regional Distribution of Travelers"), and visitor counts at attractions.
+/* Tourism statistics: the monthly reports a place sends, the Guest Register
+ * behind them, and the tracker of who has reported. The municipality's
+ * Tourist Influx Report is FORM A (accommodation.js); Form A4 and the 2025
+ * paper totals were taken out on 16 November 2026 (the user's decision).
  *
  * Mounted at /api/statistics by server.js, which hands over its own sign-in
  * checks so this file enforces exactly the same roles.
@@ -210,7 +212,7 @@ function wholeNumber(value, label, { required = true } = {}) {
 module.exports = function statisticsRouter({ requireAdmin, requireStaff, requireReporter }) {
     const router = express.Router();
 
-    /* The rows of Form A4, in the form's order. */
+    /* The country-of-residence rows, in the DOT forms' order. */
     router.get('/residences', requireReporter, async (req, res) => {
         try {
             const { rows } = await query('select code, name, section, continent, region from residences order by sort_order');
@@ -270,9 +272,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                       where c.report_id = $1 order by c.changed_at desc limit 50`, [report._id]);
                 history = rows;
             }
-            const municipal = await query(
-                `select 1 from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1 and month = $2`,
-                [period.year, period.month]);
             // The number of rooms rarely changes, so a new report starts from the
             // last one the place sent; the manager changes it when it did.
             const last = await query(
@@ -284,7 +283,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                 place: { _id: spot.id, title: spot.title, kind: kindOf(spot), barangay: spot.barangay },
                 year: period.year, month: period.month, daysInMonth: daysIn(period.year, period.month),
                 deadline: deadlineFor(period.year, period.month),
-                recordedAsMunicipalTotal: municipal.rows.length > 0,
                 lastRooms: last.rows.length ? last.rows[0].rooms : null,
                 report, history
             });
@@ -319,7 +317,7 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             const seen = new Set();
             for (const row of list) {
                 const code = String((row && row.code) || '');
-                if (!codes.has(code)) return badRequest(res, `"${code}" is not a row on Form A4.`);
+                if (!codes.has(code)) return badRequest(res, `"${code}" is not a country-of-residence row.`);
                 if (seen.has(code)) return badRequest(res, `A country appears twice in the report (${code}).`);
                 seen.add(code);
                 const male = wholeNumber(row.male, 'Male', { required: false });
@@ -356,12 +354,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
 
             const who = await whoIsSigningIn(req);
             const result = await transaction(async client => {
-                const municipal = await query(
-                    `select 1 from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1 and month = $2`,
-                    [period.year, period.month], client);
-                if (municipal.rows.length) {
-                    return { conflict: 'This month is already recorded as the municipality\'s total from the printed sheet, so reports for single places would count its guests twice.' };
-                }
                 const before = await liveReport(spot.id, period.year, period.month, client);
                 if (before && before.lockedAt) {
                     return { conflict: 'This month has been finalized and submitted to the Province. The Tourism Officer can reopen it to correct it.', locked: true };
@@ -684,9 +676,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                   where year = $1 and kind = $2 and status = 'submitted'`, [year, kind]);
             const byPlace = new Map();
             for (const r of reports.rows) byPlace.set(r.spot_id + ':' + r.month, r);
-            const municipal = await query(
-                `select month from monthly_reports where year = $1 and kind = 'municipal_total' and status = 'submitted'`, [year]);
-            const municipalMonths = new Set(municipal.rows.map(r => r.month));
             const now = new Date();
 
             const rows = places.rows.map(p => ({
@@ -699,7 +688,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
                         return { month, status: new Date(report.submitted_at) > deadlineFor(year, month) ? 'late' : 'submitted',
                                  reportId: report.id, locked: !!report.locked_at };
                     }
-                    if (municipalMonths.has(month)) return { month, status: 'municipal_total' };
                     const periodEnded = now >= new Date(Date.UTC(year, month, 1) - MANILA_OFFSET_HOURS * 3600 * 1000);
                     if (!periodEnded) return { month, status: 'not_due' };
                     return { month, status: now > deadlineFor(year, month) ? 'missing' : 'due' };
@@ -710,140 +698,6 @@ module.exports = function statisticsRouter({ requireAdmin, requireStaff, require
             return res.json({ year, kind, places: rows, ...(kind === 'attraction' ? { legacy: true, current: '/api/attraction-visits/tracker' } : {}) });
         } catch (error) {
             return failure(res, error, '❌ Statistics tracker failure:');
-        }
-    });
-
-    /* Form A4 for a year (optionally a range of its months), added up now.
-       Part I, arrivals, adds every place's report: places to stay and
-       attractions, the office's and private ones (the user's decision,
-       October 2026). It counts arrivals at places: a guest who stays at a
-       resort and visits the falls is two arrivals. Part II (rooms, room-nights,
-       guest nights) comes from places to stay only. */
-    async function formA4(year, from, to) {
-        const residences = (await query('select code, name, section, continent, region from residences order by sort_order')).rows;
-        const reports = (await query(
-            `select id, kind, spot_id, month, rooms, room_nights_occupied, guest_nights, locked_at from monthly_reports
-              where year = $1 and month between $2 and $3 and status = 'submitted'
-                and kind in ('accommodation', 'municipal_total')`, [year, from, to])).rows;      // attraction visits are kept apart (attraction-visits.js)
-        // A month recorded as a municipal total is that total; otherwise it is
-        // the sum of the places' reports. Never both.
-        const municipalMonths = new Set(reports.filter(r => r.kind === 'municipal_total').map(r => r.month));
-        // A private place to stay reports through its stay register: its
-        // month is the latest saved accommodation version (a hand-typed
-        // report was copied into one as legacy_manual), never a monthly_report.
-        // Between a deploy and the schema run the stay-register tables may not
-        // exist yet: then the month is read from monthly_reports as before.
-        const hasVersions = !!(await query(`select to_regclass('accommodation_report_versions') as t`)).rows[0].t;
-        const privateStays = !hasVersions ? new Set() : new Set((await query(
-            `select id from spots where type = 'accommodation' and managed_by is not null`)).rows.map(r => r.id));
-        const used = reports.filter(r => municipalMonths.has(r.month) ? r.kind === 'municipal_total'
-            : r.kind !== 'municipal_total' && !privateStays.has(r.spot_id));
-        const ids = used.map(r => r.id);
-        const counts = ids.length ? (await query(
-            `select c.*, r.month, r.spot_id from monthly_report_counts c join monthly_reports r on r.id = c.report_id
-              where c.report_id = any($1)`, [ids])).rows : [];
-        const versions = !hasVersions ? [] : (await query(
-            `select distinct on (spot_id, month) id, spot_id, month, rooms, room_nights_available, room_nights_occupied, guest_nights, locked
-               from (select v.*, (p.finalized_at is not null) as locked from accommodation_report_versions v
-                       left join accommodation_periods p on p.spot_id = v.spot_id and p.year = v.year and p.month = v.month
-                      where v.year = $1 and v.month between $2 and $3) v
-              order by spot_id, month, version desc`, [year, from, to])).rows.filter(v => !municipalMonths.has(v.month));
-        if (versions.length) {
-            const vc = (await query('select version_id, residence_code, male, female from accommodation_report_version_counts where version_id = any($1)',
-                [versions.map(v => v.id)])).rows;
-            const of = new Map(versions.map(v => [v.id, v]));
-            for (const c of vc) counts.push({ residence_code: c.residence_code, male: c.male, female: c.female, total: c.male + c.female,
-                                              month: of.get(c.version_id).month, spot_id: of.get(c.version_id).spot_id });
-            for (const v of versions) used.push({ kind: 'accommodation', spot_id: v.spot_id, month: v.month, rooms: v.rooms,
-                room_nights_available: v.room_nights_available, room_nights_occupied: v.room_nights_occupied,
-                guest_nights: v.guest_nights, locked_at: v.locked ? true : null });
-        }
-
-        const zero = () => Array(12).fill(0);
-        const inRange = i => i + 1 >= from && i + 1 <= to;
-        const byCode = Object.fromEntries(residences.map(r => [r.code, { total: zero(), male: zero(), female: zero() }]));
-
-        // Every place that could report this year, with what it reported.
-        const placeRows = (await query(
-            `select s.id, s.title, s.barangay, s.type, s.managed_by from spots s
-              where s.type = 'accommodation' and s.counts_visitors and (s.status <> 'archived'
-                 or exists (select 1 from monthly_reports r where r.spot_id = s.id and r.year = $1)
-                 ${hasVersions ? 'or exists (select 1 from accommodation_report_versions v where v.spot_id = s.id and v.year = $1)' : ''})
-              order by s.type, s.title`, [year])).rows;
-        const placeOf = new Map(placeRows.map(p => [p.id, {
-            _id: p.id, title: p.title, barangay: p.barangay, keptByOffice: p.managed_by === null,
-            kind: p.type === 'accommodation' ? 'accommodation' : 'attraction',
-            total: zero(), reported: Array(12).fill(false)
-        }]));
-
-        const sexKnown = Array(12).fill(true);
-        for (const c of counts) {
-            const m = c.month - 1, cell = byCode[c.residence_code];
-            cell.total[m] += c.total;
-            if (c.male === null) sexKnown[m] = false; else { cell.male[m] += c.male; cell.female[m] += c.female; }
-            const place = placeOf.get(c.spot_id);
-            if (place) place.total[m] += c.total;
-        }
-        const dae = { rooms: zero(), roomNightsAvailable: zero(), roomNightsOccupied: zero(), guestNights: zero() };
-        const reportsPerMonth = zero();
-        for (const r of used) {
-            const m = r.month - 1;
-            reportsPerMonth[m] += 1;
-            const place = placeOf.get(r.spot_id);
-            if (place) place.reported[m] = true;
-            if (r.kind === 'attraction') continue;      // no rooms or nights at an attraction
-            dae.rooms[m] += r.rooms || 0;
-            // A stay register's version knows its available room-nights (rooms
-            // out of service and closed days excluded); a typed report gives rooms.
-            dae.roomNightsAvailable[m] += r.room_nights_available != null ? r.room_nights_available : (r.rooms || 0) * daysIn(year, r.month);
-            dae.roomNightsOccupied[m] += r.room_nights_occupied || 0;
-            dae.guestNights[m] += r.guest_nights || 0;
-        }
-        dae.roomNightsNotOccupied = dae.roomNightsAvailable.map((a, i) => a - dae.roomNightsOccupied[i]);
-        for (const key of Object.keys(dae)) dae[key] = dae[key].map((v, i) => (inRange(i) ? v : null));
-
-        return {
-            year, fromMonth: from, toMonth: to, residences,
-            counts: byCode,
-            sexKnown: sexKnown.map((known, i) => (inRange(i) ? known && reportsPerMonth[i] > 0 : null)),
-            municipalTotalMonths: [...municipalMonths].sort((a, b) => a - b),
-            reportsPerMonth: reportsPerMonth.map((n, i) => (inRange(i) ? n : null)),
-            lockedMonths: [...new Set(used.filter(r => r.locked_at).map(r => r.month))].sort((a, b) => a - b),
-            dae,
-            places: [...placeOf.values()].map(p => ({ ...p, reported: p.reported.map((v, i) => (inRange(i) ? v : null)) }))
-        };
-    }
-
-    function rangeFrom(q) {
-        const year = Number(q.year);
-        const from = q.from ? Number(q.from) : 1, to = q.to ? Number(q.to) : 12;
-        if (!Number.isInteger(year) || year < 2000 || year > 2100) return { error: 'Give a year.' };
-        if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to > 12 || from > to) return { error: 'Give a range of months, January to December.' };
-        return { year, from, to };
-    }
-
-    router.get('/form-a4', requireAdmin, async (req, res) => {
-        try {
-            const range = rangeFrom(req.query);
-            if (range.error) return badRequest(res, range.error);
-            return res.json(await formA4(range.year, range.from, range.to));
-        } catch (error) {
-            return failure(res, error, '❌ Form A4 failure:');
-        }
-    });
-
-    router.get('/form-a4.xlsx', requireAdmin, async (req, res) => {
-        try {
-            const range = rangeFrom(req.query);
-            if (range.error) return badRequest(res, range.error);
-            const data = await formA4(range.year, range.from, range.to);
-            const buffer = await require('./statistics-excel').formA4Workbook(data);
-            const name = `Form_A4_Zamboanguita_${range.year}${range.from === 1 && range.to === 12 ? '' : `_${range.from}-${range.to}`}.xlsx`;
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
-            return res.send(Buffer.from(buffer));
-        } catch (error) {
-            return failure(res, error, '❌ Form A4 Excel failure:');
         }
     });
 

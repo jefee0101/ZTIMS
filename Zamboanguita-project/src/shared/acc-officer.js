@@ -7,7 +7,7 @@
  */
 (function () {
     const A = () => window.ztimsAcc;
-    const SHORT = { submitted: '✓', changed: '!', finalized: '🔒', reopened: 'Re', open: '…', due: 'Due', overdue: '!', not_recorded: '–', not_operating: 'N/A', not_set_up: '?', future: '', municipal_total: 'Total' };
+    const SHORT = { submitted: '✓', changed: '!', finalized: '🔒', reopened: 'Re', open: '…', due: 'Due', overdue: '!', not_recorded: '–', not_operating: 'N/A', not_set_up: '?', future: '' };
 
     /* ---- tracker ---------------------------------------------------------- */
     async function tracker(el, year, onPick) {
@@ -24,7 +24,7 @@
             }).join('')}</tr>`).join('');
             const pill = (state, n) => `<span class="tone-pill rounded-pill acc-pill ${(A().STATES[state] || ['tone-neutral'])[0]}">${n} ${A().STATES[state][2].toLowerCase()}</span>`;
             el.innerHTML = `<div class="flex flex-wrap gap-2 p-4">${['submitted', 'finalized', 'changed', 'reopened', 'overdue', 'not_recorded', 'not_operating'].filter(k => tally[k]).map(k => pill(k, tally[k])).join('') || '<span class="text-support">Nothing reported yet.</span>'}</div>
-                <p class="flex flex-wrap gap-2 px-4 pb-3 text-xs font-bold" aria-label="What the cells mean">${['submitted', 'changed', 'finalized', 'reopened', 'due', 'overdue', 'not_recorded', 'not_operating', 'municipal_total'].map(k => `<span class="tone-pill rounded-pill px-2.5 py-0.5 ${A().STATES[k][0]}">${SHORT[k]} ${A().STATES[k][2]}</span>`).join('')}</p>
+                <p class="flex flex-wrap gap-2 px-4 pb-3 text-xs font-bold" aria-label="What the cells mean">${['submitted', 'changed', 'finalized', 'reopened', 'due', 'overdue', 'not_recorded', 'not_operating'].map(k => `<span class="tone-pill rounded-pill px-2.5 py-0.5 ${A().STATES[k][0]}">${SHORT[k]} ${A().STATES[k][2]}</span>`).join('')}</p>
                 <div class="acc-scroll"><table class="ztims-table text-sm min-w-[900px]"><thead><tr><th class="text-left px-3 py-2 acc-sticky">Place to stay</th>${A().MONTHS.map(m => `<th class="px-1 py-2 text-center">${m.slice(0, 3)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
             el.querySelectorAll('[data-spot]').forEach(b => b.addEventListener('click', () => onPick(b.dataset.spot, year, +b.dataset.month)));
         } catch (e) { if (e.message !== 'Signed out') el.innerHTML = A().failed(e.message); }
@@ -51,8 +51,7 @@
             not_recorded: B('bad', 'report', '<b>No report.</b> Before this enterprise started reporting in ZTIMS.'),
             not_operating: B('info', 'block', '<b>Not operating.</b> Closed every day of the month; N/A, not zero.'),
             not_set_up: B('info', 'settings', '<b>Not set up.</b> The enterprise has not set when its reporting starts.'),
-            future: B('info', 'hourglass_empty', '<b>Not started.</b>'),
-            municipal_total: B('info', 'inventory_2', '<b>Held as a municipal total</b> from the paper Form A4.')
+            future: B('info', 'hourglass_empty', '<b>Not started.</b>')
         }[s] || '';
         const f = latest ? latest.figures : null;
         const actions = [];
@@ -117,7 +116,6 @@
             catch (e) { if (e.message !== 'Signed out') body.innerHTML = A().failed(e.message, true); }
         }
         function coverage(m) {
-            if (m.source === 'municipal_total') return ['tone-neutral', 'Paper total'];
             if (m.source === 'none') {
                 if (!m.expected || `${year}-${A().pad(m.month)}-01` > A().manilaToday()) return ['tone-neutral', '–'];
                 if (m.beforeReporting + m.notOperating >= m.expected) return ['tone-neutral', 'Before reporting'];
@@ -127,7 +125,7 @@
             return ['tone-warning', `${m.reported} of ${m.expected - m.notOperating}, ${m.missing} missing`];
         }
         function draw() {
-            const has = d.months.map(m => m.source === 'municipal_total' || (m.source === 'enterprise_reports' && m.reported > 0));
+            const has = d.months.map(m => m.source === 'enterprise_reports' && m.reported > 0);
             const cell = n => (n == null ? '<td class="text-right text-on-surface-variant">–</td>' : `<td class="text-right">${A().nf(n)}</td>`);
             const cmp = d.comparison.comparableMonths.length;
             const sections = [['philippine', 'Philippine residents'], ['foreign', 'Non-Philippine residents'], ['overseas_filipino', 'Overseas Filipinos'], ['unspecified', 'Unspecified residence']];
@@ -158,15 +156,15 @@
                 <section class="glass-panel p-4 space-y-3"><h3 class="acc-part">Part II. Other indicators</h3>
                     <div class="acc-scroll"><table class="acc-grid acc-grid--wide"><thead><tr><th class="acc-sticky">${year}</th>${A().MONTHS.map(m => `<th>${m.slice(0, 3)}</th>`).join('')}<th>Total</th></tr></thead><tbody>
                     ${line('Rooms occupied (room-nights)', m => A().nf(m.roomNightsOccupied), A().nf(p2.total.roomNightsOccupied))}
-                    ${line('Rooms available (room-nights)', m => A().nf(m.roomNightsAvailable) + (m.roomNightsAvailableDerived ? '<sup title="Rooms × days, from the paper total">†</sup>' : ''), A().nf(p2.total.roomNightsAvailable))}
+                    ${line('Rooms available (room-nights)', m => A().nf(m.roomNightsAvailable), A().nf(p2.total.roomNightsAvailable))}
                     ${line('Guest-nights', m => A().nf(m.guestNights), A().nf(p2.total.guestNights))}
                     ${line('Occupancy rate', m => A().pct(m.occupancyRate), A().pct(p2.total.occupancyRate))}
                     ${line('Average length of stay', m => A().dec(m.averageLengthOfStay), A().dec(p2.total.averageLengthOfStay))}</tbody></table></div>
-                    <p class="acc-note">† Paper months give rooms, not room-nights: rooms × days. Yearly rates use the year's totals.</p></section>
+                    <p class="acc-note">Yearly rates use the year's totals.</p></section>
                 <section class="glass-panel p-4 space-y-3"><h3 class="acc-part">Volume per sex</h3>
                     ${vol.months.length ? `<div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th></th><th class="text-right">Male</th><th class="text-right">Female</th></tr></thead><tbody>
                         ${sections.map(([k, l]) => `<tr><td>${l}</td><td class="text-right">${A().nf(vol[k].male)}</td><td class="text-right">${A().nf(vol[k].female)}</td></tr>`).join('')}</tbody></table></div>` : ''}
-                    <p class="acc-note">${vol.notRecordedMonths.length ? `Not recorded for ${vol.notRecordedMonths.map(n => A().MONTHS[n - 1].slice(0, 3)).join(', ')} (paper totals without male and female).` : 'From every reported month.'}</p></section>`;
+                    <p class="acc-note">${vol.notRecordedMonths.length ? `Not recorded for ${vol.notRecordedMonths.map(n => A().MONTHS[n - 1].slice(0, 3)).join(', ')} (no male and female recorded).` : 'From every reported month.'}</p></section>`;
         }
         el.querySelector('[data-year]').addEventListener('change', e => { year = +e.target.value; load(); });
         el.querySelector('[data-only]').addEventListener('change', e => { onlyUsed = e.target.checked; if (d) draw(); });

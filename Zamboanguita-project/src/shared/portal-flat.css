@@ -208,7 +208,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
               border: 1px solid rgb(var(--ztims-outline-variant) / .5); }
 .own-banner--office { box-shadow: inset 4px 0 0 rgb(var(--brand-tangerine)); }
 .own-banner--private { box-shadow: inset 4px 0 0 rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-on-surface) / .025); }
-/* Statistics' number tiles (Arrivals Report). */
+/* Statistics' number tiles. */
 .stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 @media (min-width: 1024px) { .stat-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .stat-tile { border: 1px solid rgb(var(--ztims-outline-variant) / .5); background: rgb(var(--ztims-surface)); padding: .9rem 1rem; }
@@ -767,7 +767,7 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .acc-coverage__m { font-size: .75rem; font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); }
 
 /* ---- Attraction visitor reporting (att-*.js) --------------------------------
-   The Support Staff's Daily Visitor Record and Monthly Report, and the
+   The Support Staff's Daily Visitor Record and Tourist Influx Report, and the
    officer's Attraction visits tab. A day's state is in words (aria-label),
    a pattern and a colour, never colour alone: missing is dashed red, a
    confirmed 0 is hatched, a closure is struck through. */
@@ -878,7 +878,6 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .ax-svg .ax-hatch-line { stroke: rgb(var(--ztims-primary-text)); stroke-width: 2.5; }
 .ax-svg .ax-zero { stroke: rgb(var(--ztims-primary-text)); stroke-width: 2.5; }
 .ax-svg .ax-gap { fill: none; stroke: rgb(var(--ztims-on-surface-variant) / .7); stroke-width: 1.25; stroke-dasharray: 3 3; }
-.ax-svg .ax-paper { fill: rgb(var(--ztims-on-surface-variant) / .35); }
 .ax-svg .ax-cmp { fill: none; stroke: rgb(var(--ztims-on-surface-variant)); stroke-width: 2; stroke-dasharray: 6 4; }
 .ax-svg .ax-cmp-pt { fill: rgb(var(--ztims-surface)); stroke: rgb(var(--ztims-on-surface-variant)); stroke-width: 2; }
 .ax-svg .ax-avg { fill: none; stroke: rgb(var(--ztims-on-surface)); stroke-width: 2; }
@@ -892,7 +891,6 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .ax-key--solid { background: rgb(var(--ztims-primary-text)); }
 .ax-key--hatch { background: repeating-linear-gradient(45deg, rgb(var(--ztims-primary-text)) 0 2px, rgb(var(--ztims-primary-text) / .18) 2px 5px); }
 .ax-key--gap { border: 1.25px dashed rgb(var(--ztims-on-surface-variant)); }
-.ax-key--paper { background: rgb(var(--ztims-on-surface-variant) / .35); height: .35rem; }
 .ax-key--cmp { height: 0; border-top: 2px dashed rgb(var(--ztims-on-surface-variant)); width: 1.2rem; }
 .ax-key--avg { height: 0; border-top: 2px solid rgb(var(--ztims-on-surface)); width: 1.2rem; }
 .ax-key--unknown, .ax-hatch.ax-unknown { background: repeating-linear-gradient(45deg, rgb(var(--ztims-on-surface-variant) / .55) 0 2px, rgb(var(--ztims-on-surface-variant) / .12) 2px 5px); }

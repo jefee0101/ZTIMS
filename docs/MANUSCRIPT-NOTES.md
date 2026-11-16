@@ -5,6 +5,21 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Tourist Influx Report; Form A4 and the 2025 paper totals taken out (16 November 2026)
+
+What changed in the system (the user's decision):
+- Every report is called the **Tourist Influx Report**: the officer's menu item and page (was "Statistics"), the Enterprise Manager's and Support Staff's report page (was "Monthly Report"), and every Excel file (name starts "Tourist_Influx_Report_", printed pages headed "TOURIST INFLUX REPORT"). The DOT form codes (DAE-1A, DAE-1B / DAE 2, FORM A, DTA2M, VAR 1/2/3M) stay beside the name.
+- **The municipal report is FORM A**, worked out from the enterprises' saved monthly reports. The officer's accommodation side has only FORM A and its Tracker.
+- **Form A4 ("Report on the Regional Distribution of Travelers") is gone**: no Arrivals Report tab, no Form A4 Excel, no import of a paper year. The Dashboard's report card and "Tourism at a glance" now read FORM A.
+- **The 2025 paper totals are deleted** and can no longer be recorded. FORM A's comparison with the previous year therefore has nothing to compare for 2026 until 2027.
+
+What the manuscript must say:
+- Chapter IV (functions, Tourism Officer use case, reports): replace "Form A4" / "Arrivals Report" with "Tourist Influx Report (FORM A)"; the officer generates FORM A and follows the Tracker; enterprises and Support Staff submit their Tourist Influx Reports (DAE-1B; DTA2M from daily counts).
+- Abstract, Significance, Specific Objective 3e, Scope, Chapter V summary 3 and Recommendations: "Form A4 and tourism summaries" → "the Tourist Influx Report (FORM A)".
+- Remove any mention of loading or comparing the 2025 paper Form A4 totals.
+- System User Interface: the officer's report page is now titled "Tourist Influx Report" with FORM A and Tracker tabs; the Enterprise Manager's and Support Staff's "Monthly Report" pages are now "Tourist Influx Report". Retake those screenshots.
+- Definition of Terms: add "Tourist Influx Report" (the monthly count of guests and visitors a place reports, and the municipality's FORM A built from them); remove or reword "Form A4".
+
 ## Reviews belong in the manager portal — owner correction (14 November 2026)
 
 This supersedes the earlier combined officer Feedback design below. Tourism

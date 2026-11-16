@@ -204,7 +204,9 @@ function signature(ws, r, withDate) {
 function a4(ws, landscape, titleRows, onePage) {
     ws.pageSetup = { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: onePage ? 1 : 0,
                      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }, printTitlesRow: titleRows };
-    ws.headerFooter = { oddFooter: 'Page &P of &N' };
+    // Every report ZTIMS prints is a Tourist Influx Report (16 November 2026);
+    // the DOT form's own headings stay as they are below it.
+    ws.headerFooter = { oddHeader: '&C&"Arial,Bold"&10TOURIST INFLUX REPORT', oddFooter: 'Page &P of &N' };
 }
 
 /* ---- DAE-1A -------------------------------------------------------------- */
@@ -500,7 +502,7 @@ function addFormA(wb, ctx) {
 }
 
 async function toBuffer(wb) { return Buffer.from(await wb.xlsx.writeBuffer()); }
-function workbook() { const wb = new ExcelJS.Workbook(); wb.creator = 'ZTIMS'; wb.created = new Date(); return wb; }
+function workbook() { const wb = new ExcelJS.Workbook(); wb.creator = 'ZTIMS'; wb.title = 'Tourist Influx Report'; wb.created = new Date(); return wb; }
 
 /* The DAE-1B / DAE 2 (2019) Part I rows with their totals, for the screen:
    the same TEMPLATE the Excel walks, so the two never differ.

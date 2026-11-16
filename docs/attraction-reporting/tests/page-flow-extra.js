@@ -60,8 +60,7 @@ const num = c => (c && c.value && typeof c.value === 'object' && 'result' in c.v
   ok(fa25 && fa25.months[11].cell.total === 77 && fa25.months.slice(0, 11).every(x => !x.cell.included), 'VAR 3M 2025 (operational) shows only December for Test Falls');
   const y26 = (await call('GET', '/attraction-visits/consolidated/annual?year=2026&mode=operational', null, off)).data;
   ok(y26.attractions.find(a => a._id === A).months[0].cell.total === 33, 'VAR 3M 2026 January holds the 1 January count, not December\'s');
-  const legacy25 = sql(`select count(*) from monthly_reports where kind = 'municipal_total' and year = 2025 and status = 'submitted'`);
-  ok(y25.legacy.municipalTotalMonths === Number(legacy25), `the 2025 municipal totals (${legacy25} months) are reported apart, not added to attraction visits`);
+  ok(!('legacy' in y25), 'no 2025 municipal-total note (Form A4 and the paper totals were taken out)');
 
   console.log('A change of Support Staff: the record stays with the attraction');
   const hash = bcrypt.hashSync(PW, 10);

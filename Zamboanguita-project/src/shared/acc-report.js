@@ -1,4 +1,4 @@
-/* Monthly Report for a private place to stay: Month (DAE-1B) with Submit,
+/* Tourist Influx Report for a private place to stay: Month (DAE-1B) with Submit,
  * Versions, and Year (the annual summary). Mounted by resort_statistics.html
  * when the current enterprise is a place to stay
  * (window.ztimsAccReport.mount(el, spot)). Needs acc-common.js.
@@ -17,10 +17,10 @@
         tab = ['month', 'versions', 'year'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'month';
         root.innerHTML = `
             <div class="acc-head">
-                <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h1>
+                <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Tourist Influx Report</h1>
                 <div class="acc-head__actions" data-actions></div>
             </div>
-            <div role="tablist" aria-label="Monthly Report" class="flex gap-2 border-b border-outline-variant/30">
+            <div role="tablist" aria-label="Tourist Influx Report" class="flex gap-2 border-b border-outline-variant/30">
                 <button role="tab" class="settings-tab" data-tab="month"><span class="material-symbols-outlined !text-base" aria-hidden="true">assignment</span>Month (DAE-1B)</button>
                 <button role="tab" class="settings-tab" data-tab="versions"><span class="material-symbols-outlined !text-base" aria-hidden="true">history</span>Versions</button>
                 <button role="tab" class="settings-tab" data-tab="year"><span class="material-symbols-outlined !text-base" aria-hidden="true">calendar_view_month</span>Year</button>
@@ -73,15 +73,14 @@
             not_recorded: B('bad', 'report', `<b>No report.</b> Reporting in ZTIMS starts ${view.profile.reportingFrom ? A().monthName(+view.profile.reportingFrom.slice(0, 4), +view.profile.reportingFrom.slice(5, 7)) : 'once it is set'}; no figures are filled in for earlier months.`),
             not_operating: B('info', 'block', `<b>Not operating.</b> Every day of the month is in a closed period; the month is N/A, not zero.`),
             not_set_up: B('info', 'settings', `<b>Set up reporting first:</b> the month reporting starts (Enterprise → Reporting) and the room numbers (Rooms → Room numbers).`),
-            future: B('info', 'hourglass_empty', `<b>Not started.</b>`),
-            municipal_total: B('info', 'inventory_2', `<b>Held as a municipal total</b> from the paper Form A4. Enterprises do not report this month.`)
+            future: B('info', 'hourglass_empty', `<b>Not started.</b>`)
         }[s] || '';
         const canSubmit = ['due', 'overdue', 'changed', 'reopened'].includes(s);
         const actions = root.querySelector('[data-actions]');
         actions.innerHTML = (canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-act="submit"><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>${latest ? 'Submit correction as version ' + (latest.version + 1) : 'Submit ' + A().MONTHS[month - 1]}</button>` : '')
             + (s === 'open' ? `<button type="button" class="btn btn-primary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>Submit from ${A().fmtDate(from)}</button>` : '')
             + (['open', 'due', 'overdue', 'submitted', 'changed', 'finalized', 'reopened'].includes(s) ? `<button type="button" class="btn btn-secondary min-h-[44px]" data-act="excel"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel</button>` : '');
-        const showFigures = !['not_recorded', 'not_operating', 'not_set_up', 'future', 'municipal_total'].includes(s);
+        const showFigures = !['not_recorded', 'not_operating', 'not_set_up', 'future'].includes(s);
         body.innerHTML = banner + (showFigures ? `
             <div class="stat-tiles">
                 <div class="stat-tile"><p>Guest arrivals</p><p>${A().nf(f.arrivals)}</p></div>

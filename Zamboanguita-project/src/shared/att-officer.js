@@ -19,7 +19,6 @@
     const yearSelect = (attr, value) => `<label class="block"><span class="field-label">Year</span><select class="field w-32" ${attr}>${years().map(y => `<option ${y === value ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
     const modeToggle = mode => `<div class="att-mode" role="group" aria-label="Which figures"><button type="button" data-mode="official" aria-pressed="${mode === 'official'}">Official (finalized)</button><button type="button" data-mode="operational" aria-pressed="${mode === 'operational'}">Operational</button></div>`;
     const opBanner = '<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">visibility</span><span><b>Operational view.</b> It also takes submitted and draft months, each labeled. Send only the official (finalized) figures.</span></div>';
-    const legacyLine = l => (l && l.municipalTotalMonths ? `<p class="acc-note">${esc(l.note)} (${l.municipalTotalMonths} month${l.municipalTotalMonths === 1 ? '' : 's'} in that year.)</p>` : '');
 
     function mount(el) {
         el.innerHTML = `<div role="tablist" aria-label="Attraction visits" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
@@ -213,7 +212,7 @@
         let d;
         try { d = await api(`/attraction-visits/consolidated/annual?${q}`); }
         catch (e) { if (e.status !== 401) host.innerHTML = A.failed(e.message); return; }
-        if (!d.attractions.length) { host.innerHTML = '<div class="ztims-empty">No office-run attraction reports in that year.</div>' + legacyLine(d.legacy); return; }
+        if (!d.attractions.length) { host.innerHTML = '<div class="ztims-empty">No office-run attraction reports in that year.</div>'; return; }
         const c = cell => (cell && cell.included ? cell : null);
         // "–": no usable month; empty: the month is in, but its residence was not recorded.
         const td = (x, k, strong) => `<td class="text-right"${x && x.pending ? ' title="Correction pending"' : ''}>${!x ? '–' : x[k] == null ? '' : strong ? `<b>${nf(x[k])}</b>` : nf(x[k])}</td>`;
@@ -227,7 +226,7 @@
                 <tfoot><tr><th>Total</th>${d.totals.map((t, i) => (anyIn(d.attractions[i]) ? td(t, 'domestic') + td(t, 'foreign') + td(t, 'total') : '<td>–</td><td>–</td><td>–</td>')).join('')}
                     ${d.byMonth.some(Boolean) ? td(d.grand, 'domestic') + td(d.grand, 'foreign') + td(d.grand, 'total') : '<td>–</td><td>–</td><td>–</td>'}</tr>
                 <tr class="att-row--note"><th>Residence not recorded</th>${d.totals.map(t => `<td colspan="3" class="text-right">${nf(t.unrecorded)}</td>`).join('')}<td colspan="3" class="text-right">${nf(d.grand.unrecorded)}</td></tr></tfoot></table></div>
-            <p class="acc-note">${esc(d.note)} "–": no ${state.mode === 'official' ? 'finalized' : 'usable'} figures for that month, never 0. Empty: residence not recorded that month.</p>${legacyLine(d.legacy)}`;
+            <p class="acc-note">${esc(d.note)} "–": no ${state.mode === 'official' ? 'finalized' : 'usable'} figures for that month, never 0. Empty: residence not recorded that month.</p>`;
     }
 
     function issueWindow(kind, year, month, done) {

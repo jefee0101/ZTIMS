@@ -42,7 +42,6 @@ function fromDatabase(error) {
     const arg = rest.join(' ');
     const map = {
         PERIOD_FINALIZED: [409, `${monthName(arg)} is finalized. The Tourism Office must reopen it before anything in it can change.`, { month: arg }],
-        MUNICIPAL_TOTAL_MONTH: [409, `${monthName(arg)} is held as a municipal total from the paper Form A4, so enterprise reports are not taken for it.`, { month: arg }],
         ROOM_OUT_OF_SERVICE: [409, 'A room is out of service on one of those nights.'],
         PLACE_CLOSED: [409, 'The place is closed on one of those nights.'],
         NIGHT_WITHOUT_ROOM: [400, 'Every night of the stay needs a room.'],
@@ -152,9 +151,6 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     async function periodOf(spotId, year, month, client) {
         return (await query('select * from accommodation_periods where spot_id = $1 and year = $2 and month = $3', [spotId, year, month], client)).rows[0] || null;
     }
-    async function municipalMonth(year, month, client) {
-        return (await query(`select 1 from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1 and month = $2`, [year, month], client)).rows.length > 0;
-    }
 
     async function monthView(spot, year, month, today, client) {
         const [from, until] = monthRange(year, month);
@@ -166,7 +162,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const period = await periodOf(spot.id, year, month, client);
         const profile = await profileOf(spot.id, client);
         const state = E.periodState({ year, month, today, reportingFrom: profile.reportingFrom, versions, finalized: !!(period && period.finalized_at),
-                                      events, figures, municipal: await municipalMonth(year, month, client) });
+                                      events, figures });
         return { spot, profile, figures, versions, events, period, state, records };
     }
 
@@ -544,7 +540,6 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             if (s === 'not_set_up') refuse(409, 'NOT_SET_UP', 'Set the month reporting starts in the statistical profile first.');
             if (s === 'not_recorded') refuse(409, 'BEFORE_REPORTING', 'That month is before this enterprise started reporting in ZTIMS.');
             if (s === 'finalized') refuse(409, 'PERIOD_FINALIZED', 'This month is finalized. The Tourism Office must reopen it first.');
-            if (s === 'municipal_total') refuse(409, 'MUNICIPAL_TOTAL_MONTH', 'This month is held as a municipal total from the paper Form A4.');
             const latest = v.versions.length ? v.versions[v.versions.length - 1] : null;
             if (Number(b.expectedVersion || 0) !== (latest ? latest.version : 0)) {
                 refuse(409, 'STALE', 'A version was submitted meanwhile. Reload and check the figures again.', { latestVersion: latest ? latest.version : 0 });
@@ -629,14 +624,13 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const counts = versions.length ? (await query('select * from accommodation_report_version_counts where version_id = any($1)', [versions.map(v => v.id)], client)).rows : [];
         const periods = (await query('select * from accommodation_periods where spot_id = $1 and year = $2', [spot.id, year], client)).rows;
         const events = (await query('select * from accommodation_period_events where spot_id = $1 and year = $2 order by at, id', [spot.id, year], client)).rows;
-        const municipal = new Set((await query(`select month from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1`, [year], client)).rows.map(r => r.month));
         return Array.from({ length: 12 }, (_, i) => {
             const month = i + 1;
             const vs = versions.filter(v => v.month === month).map(v => shapeVersion(v, counts.filter(c => c.version_id === v.id)));
             const figures = E.monthFigures(rec, year, month, { today, sections: sec });
             const period = periods.find(p => p.month === month);
             const state = E.periodState({ year, month, today, reportingFrom: profile.reportingFrom, versions: vs, finalized: !!(period && period.finalized_at),
-                                          events: events.filter(e => e.month === month), figures, municipal: municipal.has(month) });
+                                          events: events.filter(e => e.month === month), figures });
             return { month, state: state.state, latestVersion: vs.length ? vs[vs.length - 1] : null, notOperating: figures.notOperating };
         });
     }
@@ -670,14 +664,11 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     }));
 
     /* ---- FORM A: the municipality's year ---------------------------------- */
-    /* Each month has one source: the paper municipal total where one is held,
-       otherwise every enterprise's latest saved version. Never both. A month
+    /* Each month is every enterprise's latest saved version. A month
        of enterprise reports is complete when every enterprise expected that
        month reported or was not operating; missing ones are not filled in. */
     async function municipalYear(year, client) {
         const residences = (await query('select code, name, section, continent, region, sort_order from residences order by sort_order', [], client)).rows;
-        const municipal = (await query(`select * from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1`, [year], client)).rows;
-        const mCounts = municipal.length ? (await query('select * from monthly_report_counts where report_id = any($1)', [municipal.map(m => m.id)], client)).rows : [];
         const latest = (await query(
             `select distinct on (spot_id, month) * from accommodation_report_versions where year = $1 order by spot_id, month, version desc`, [year], client)).rows;
         const vCounts = latest.length ? (await query('select * from accommodation_report_version_counts where version_id = any($1)', [latest.map(v => v.id)], client)).rows : [];
@@ -689,17 +680,6 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const months = [];
         for (let month = 1; month <= 12; month++) {
             const first = E.firstDay(year, month), last = E.lastDay(year, month);
-            const m = municipal.find(r => r.month === month);
-            if (m) {
-                const counts = {};
-                for (const c of mCounts.filter(c => c.report_id === m.id)) counts[c.residence_code] = c.male === null ? { unsplit: c.total_unsplit } : { male: c.male, female: c.female };
-                months.push({ month, source: 'municipal_total', complete: true, sexSplit: mCounts.filter(c => c.report_id === m.id).every(c => c.male !== null),
-                    rooms: m.rooms, roomNightsOccupied: m.room_nights_occupied, guestNights: m.guest_nights,
-                    // The paper sheet gives rooms, not room-nights available: rooms × days, stated as derived.
-                    roomNightsAvailable: m.rooms == null ? null : m.rooms * E.daysIn(year, month), roomNightsAvailableDerived: true,
-                    arrivals: Object.values(counts).reduce((a, c) => a + (c.unsplit || 0) + (c.male || 0) + (c.female || 0), 0), counts, locked: !!m.locked_at });
-                continue;
-            }
             // Every private place to stay listed now (an archived one only if it reported that month).
             // One that opened later records the months before as a closed period.
             const expected = spots.filter(s => s.status !== 'archived' || latest.some(v => v.spot_id === s.id && v.month === month));
@@ -732,7 +712,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         return true;
     }
     const countOf = c => (c ? (c.unsplit || 0) + (c.male || 0) + (c.female || 0) : 0);
-    const hasData = m => m && (m.source === 'municipal_total' || (m.source === 'enterprise_reports' && m.reported > 0));
+    const hasData = m => m && m.source === 'enterprise_reports' && m.reported > 0;
 
     router.get('/accommodation/form-a', requireAdmin, handle(async (req, res) => {
         const year = Number(req.query.year);
@@ -771,7 +751,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             months: cur.months.map(m => ({ ...m, counts: undefined })),
             rows, grandTotal: grand,
             partII: { months: cur.months.map(m => (hasData(m) ? { roomNightsOccupied: m.roomNightsOccupied, roomNightsAvailable: m.roomNightsAvailable,
-                          roomNightsAvailableDerived: !!m.roomNightsAvailableDerived, guestNights: m.guestNights,
+                          guestNights: m.guestNights,
                           occupancyRate: E.ratio(m.roomNightsOccupied, m.roomNightsAvailable), averageLengthOfStay: E.ratio(m.guestNights, m.arrivals) } : null)),
                       total: part2(year, cur.months),
                       comparison: comparable.length ? { current: part2(year, pick(cur.months, comparable)), previous: part2(year - 1, pick(prev.months, comparable)) } : null },
@@ -790,7 +770,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     const sendXlsx = async (res, wb, name) => {
         const buffer = await XLSX.toBuffer(wb);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${name.replace(/[^A-Za-z0-9_.-]/g, '_')}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${('Tourist_Influx_Report_' + name).replace(/[^A-Za-z0-9_.-]/g, '_')}"`);
         res.setHeader('Cache-Control', 'no-store');
         return res.send(buffer);
     };
@@ -830,7 +810,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         return sendXlsx(res, wb, fileName(spot, `${only ? 'DAE-1B_DAE-2' : 'DAE-1A_DAE-1B'}_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
     }));
 
-    /* FORM A layout: the months from saved versions (or municipal totals),
+    /* FORM A layout: the months from saved versions,
        previous year only over comparable months. */
     function formAWorkbookContext(cur, prev, comparable) {
         const months = cur.months.map(m => (hasData(m) ? m : null));
@@ -862,10 +842,9 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         ctx.year = year;
         ctx.notes = [
             `Months with figures: ${monthList(reported.map(m => m.month))}. Blank: no report for that month (not zero).`,
-            `Source: ${reported.some(m => m.source === 'municipal_total') ? 'municipal totals from the paper Form A4 (no male/female split, no enterprise detail)' : ''}${reported.some(m => m.source === 'municipal_total') && reported.some(m => m.source === 'enterprise_reports') ? '; ' : ''}${reported.some(m => m.source === 'enterprise_reports') ? 'saved enterprise reports' : ''}.`,
+            'Source: saved enterprise reports.',
             `Incomplete months (an enterprise has not reported): ${monthList(cur.months.filter(m => hasData(m) && !m.complete).map(m => m.month))}.`,
             `Total (Previous Year) and % Difference cover months complete in both years only: ${monthList(comparable)}.`,
-            reported.some(m => m.roomNightsAvailableDerived) ? 'Rooms available for the paper months: rooms × days in the month.' : ''
         ].filter(Boolean);
         const wb = XLSX.workbook();
         XLSX.addFormA(wb, ctx);

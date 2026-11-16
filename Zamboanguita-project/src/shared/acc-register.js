@@ -81,8 +81,8 @@
     function banner() {
         const s = view.state.state;
         if (s === 'finalized') return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div><b>${A().monthName(year, month)} is finalized.</b> Stays with an arrival or a night in it cannot change until the Tourism Office reopens it.</div></div>`;
-        if (s === 'reopened') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><div><b>Reopened by the Tourism Office.</b> Correct the stays, then submit the month again on Monthly Report.</div></div>`;
-        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_statistics.html?month=${A().monthKey(year, month)}">Monthly Report</a>.</div></div>`;
+        if (s === 'reopened') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><div><b>Reopened by the Tourism Office.</b> Correct the stays, then submit the month again on Tourist Influx Report.</div></div>`;
+        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_statistics.html?month=${A().monthKey(year, month)}">Tourist Influx Report</a>.</div></div>`;
         if (view.figures.partial) return `<p class="text-support">Month to date: nights through ${A().fmtDate(view.figures.through)}.</p>`;
         return '';
     }
@@ -147,7 +147,7 @@
         }).join('');
         return `${banner()}
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-support"><b class="text-on-surface">Form DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
+                <p class="text-support"><b class="text-on-surface">Tourist Influx Report · DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
                 <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (register now)</button>
             </div>
             <section class="glass-panel p-3 sm:p-4"><div class="acc-layout">
@@ -186,7 +186,7 @@
         }).join('');
         return `${banner()}
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-support"><b class="text-on-surface">DAE-1B / DAE 2 (2019)</b> · Part I. Guest arrivals by nationality / country of residence</p>
+                <p class="text-support"><b class="text-on-surface">Tourist Influx Report · DAE-1B / DAE 2 (2019)</b> · Part I. Guest arrivals by nationality / country of residence</p>
                 <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export-dae2"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (DAE 2)</button>
             </div>
             <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="dae2">

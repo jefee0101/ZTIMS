@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script src="../shared/theme.js"></script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Explore Zamboanguita Admin | Tourism Statistics</title>
+<title>Explore Zamboanguita Admin | Tourist Influx Report</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -458,9 +458,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">space_dashboard</span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
-            <a title="Statistics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
+            <a title="Tourist Influx Report" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
-                <span class="sidebar-label">Statistics</span>
+                <span class="sidebar-label">Tourist Influx Report</span>
             </a>
             <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_insights.html">
                 <span class="material-symbols-outlined text-accent">insights</span>
@@ -518,7 +518,7 @@ body { overflow-x: hidden; }
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1400px] mx-auto space-y-8">
 
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourism Statistics</h1>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-headline tracking-tighter text-on-surface">Tourist Influx Report</h1>
 
             <!-- Places to stay or attractions: each has its own reports -->
             <div class="seg-switch" role="group" aria-label="Kind of place">
@@ -531,14 +531,10 @@ body { overflow-x: hidden; }
             <!-- Tabs (accommodation; attractions have their own inside their panel) -->
             <div role="tablist" id="accTabs" aria-label="Accommodation statistics" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
                 <!-- The report the office sends out, so it is where the page opens. -->
-                <button role="tab" id="tab-forma4" aria-controls="panel-forma4" aria-selected="true" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">summarize</span>Arrivals Report</button>
-                <button role="tab" id="tab-enter" aria-controls="panel-enter" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">edit_note</span>Enter a report</button>
+                <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="true" class="stats-tab">
+                    <span class="material-symbols-outlined !text-base">summarize</span>FORM A</button>
                 <button role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" class="stats-tab">
                     <span class="material-symbols-outlined !text-base">fact_check</span>Tracker</button>
-                <button role="tab" id="tab-forma" aria-controls="panel-forma" aria-selected="false" class="stats-tab">
-                    <span class="material-symbols-outlined !text-base">hotel</span>FORM A</button>
             </div>
 
             <!-- ============ FORM A: private places to stay, from their saved versions (acc-officer.js) ============ -->
@@ -546,27 +542,6 @@ body { overflow-x: hidden; }
 
             <!-- ============ Attraction visits: office attractions' daily counts, DTA2M and VAR 3M (att-officer.js) ============ -->
             <section role="region" id="panel-attractions" aria-label="Attraction visits" class="space-y-4" hidden></section>
-
-            <!-- ============ Arrivals Report (Form A4) ============ -->
-            <section role="tabpanel" id="panel-forma4" aria-labelledby="tab-forma4" class="space-y-4">
-                <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
-                    <label class="block"><span class="field-label">Year</span><select id="faYear" class="field w-32"></select></label>
-                    <label class="block"><span class="field-label">From</span><select id="faFrom" class="field w-40"></select></label>
-                    <label class="block"><span class="field-label">To</span><select id="faTo" class="field w-40"></select></label>
-                    <button id="faGenerate" type="button" class="btn btn-primary min-h-[44px]"><span class="material-symbols-outlined !text-base">summarize</span>Generate report</button>
-                    <button id="faDownload" type="button" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">download</span>Download Excel</button>
-                    <label class="inline-flex items-center gap-2 text-sm font-semibold min-h-[44px] cursor-pointer ml-auto"><input id="faOnlyUsed" type="checkbox" class="accent-primary w-4 h-4" checked> Only countries with arrivals</label>
-                </div>
-                <div id="formA4Host" class="space-y-4"></div>
-                <div class="glass-panel p-4 space-y-3">
-                    <h3 class="font-bold">Submitted to the Province?</h3>
-                    <p class="text-support">Finalizing locks these months' reports. Only the Tourism Officer can reopen one, and every change is recorded.</p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="inline-flex items-center gap-2 text-sm min-h-[44px] cursor-pointer"><input id="faConfirmLock" type="checkbox" class="accent-primary"> I have submitted these months to the Province</label>
-                        <button id="faLock" type="button" class="btn btn-secondary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base">lock</span>Finalize these months</button>
-                    </div>
-                </div>
-            </section>
 
             <!-- ============ Tracker ============ -->
             <section role="tabpanel" id="panel-tracker" aria-labelledby="tab-tracker" class="space-y-4" hidden>
@@ -582,15 +557,15 @@ body { overflow-x: hidden; }
                     <span class="tone-pill tone-danger rounded-pill px-2.5 py-0.5">! Missing</span>
                     <span class="tone-pill tone-info rounded-pill px-2.5 py-0.5">Due by the 5th</span>
                     <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">– Not due</span>
-                    <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">Total: municipal total</span>
                     <span class="tone-pill tone-neutral rounded-pill px-2.5 py-0.5">🔒 Finalized</span>
                 </p>
                 <div id="trackerHost" class="glass-panel overflow-x-auto"></div>
             </section>
 
             <!-- ============ Enter a report ============ -->
-            <section role="tabpanel" id="panel-enter" aria-labelledby="tab-enter" class="space-y-4" hidden>
+            <section role="region" id="panel-enter" aria-label="A place's month" class="space-y-4" hidden>
                 <div class="glass-panel p-4 flex flex-wrap items-end gap-3">
+                    <button type="button" id="enBack" class="btn btn-ghost min-h-[44px]"><span class="material-symbols-outlined !text-base" aria-hidden="true">arrow_back</span>Tracker</button>
                     <label class="block flex-1 min-w-[16rem]"><span class="field-label">Place</span><select id="enPlace" class="field"></select></label>
                     <label class="block"><span class="field-label">Month</span><select id="enPeriod" class="field w-56"></select></label>
                 </div>
@@ -691,10 +666,10 @@ body { overflow-x: hidden; }
         const ownRow = office => (office ? 'own-row--office' : 'own-row--private');
 
         // ---------------------------------------------------------- tabs
-        const TABS = ['forma4', 'enter', 'tracker', 'forma', 'attractions'];
+        const TABS = ['forma', 'tracker', 'enter', 'attractions'];
         // The switch above the tabs: Accommodation shows the four tabs, Attraction
         // shows the attraction panel (its own tabs are inside it).
-        let lastAccTab = 'forma4';
+        let lastAccTab = 'forma';
         function showTab(name) {
             const attraction = name === 'attractions';
             if (!attraction) lastAccTab = name;
@@ -707,7 +682,6 @@ body { overflow-x: hidden; }
                 document.getElementById('panel-' + t).hidden = t !== name;
             }
             try { sessionStorage.setItem('statsTab', name); } catch (e) {}
-            if (name === 'forma4') generateForm();
             if (name === 'tracker') loadTracker();
             if (name === 'enter') loadEntry();
             if (name === 'forma') mountFormA();
@@ -737,7 +711,7 @@ body { overflow-x: hidden; }
             missing: ['tone-danger', 'Missing', '!'],
             due: ['tone-info', 'Due by the 5th', 'Due'],
             not_due: ['tone-neutral', 'Not due yet', '–'],
-            municipal_total: ['tone-neutral', 'Recorded as the municipal total', 'Total']
+            
         };
         async function loadTracker() {
             const host = document.getElementById('trackerHost');
@@ -846,164 +820,18 @@ body { overflow-x: hidden; }
             });
         }
 
-        // ---------------------------------------------------------- Arrivals Report (Form A4)
-        function formRange() {
-            return { year: document.getElementById('faYear').value, from: document.getElementById('faFrom').value, to: document.getElementById('faTo').value };
-        }
-        async function generateForm() {
-            const host = document.getElementById('formA4Host');
-            const { year, from, to } = formRange();
-            if (Number(from) > Number(to)) { host.innerHTML = '<div class="ztims-empty tone-warning">"From" has to be before "To".</div>'; return; }
-            host.innerHTML = '<div class="ztims-empty">Adding up the reports…</div>';
-            try {
-                const d = await getJson(`/form-a4?year=${year}&from=${from}&to=${to}`);
-                const months = []; for (let m = Number(from); m <= Number(to); m++) months.push(m);
-                const vals = arr => months.map(m => arr[m - 1]);
-                const sum = arr => arr.reduce((x, y) => x + (y || 0), 0);
-                const add = (a, b) => a.map((v, i) => v + b[i]);
-                // The country's flag beside its name (stat-form.js keeps the pictures' rules).
-                const withFlag = r => `<span class="sf-name">${(window.ZTIMS_STATS && window.ZTIMS_STATS.flag) ? window.ZTIMS_STATS.flag(r.code) : ''}${escapeHtml(r.name)}</span>`;
-                const row = (label, arr, cls = '', indent = false) => `<tr class="${cls}"><td class="px-3 py-1.5 ${indent ? 'pl-6' : ''}">${label}</td>${vals(arr).map(v => `<td class="px-2 py-1.5 text-right font-mono ${!v ? 'text-on-surface-variant' : ''}">${v === null ? '–' : fmt(v)}</td>`).join('')}<td class="px-3 py-1.5 text-right font-mono font-bold">${fmt(sum(vals(arr)))}</td></tr>`;
-                const head = (label, cls) => `<tr class="${cls}"><th colspan="${months.length + 2}" class="text-left px-3 py-2 text-xs font-extrabold uppercase tracking-widest">${label}</th></tr>`;
-                // With "Only countries with arrivals" ticked, a country (or a whole
-                // region) with nobody in these months is left out; totals stay.
-                const onlyUsed = document.getElementById('faOnlyUsed').checked;
-                const used = arr => !onlyUsed || sum(vals(arr)) > 0;
-
-                let body = head('Philippine residents', 'bg-primary/10 text-primary');
-                let ph = Array(12).fill(0);
-                for (const r of d.residences.filter(x => x.section === 'philippine')) { if (used(d.counts[r.code].total)) body += row(withFlag(r), d.counts[r.code].total, '', true); ph = add(ph, d.counts[r.code].total); }
-                body += row('<b>Total Philippine residents</b>', ph, 'font-bold');
-                body += head('Non-Philippine residents', 'bg-primary/10 text-primary');
-                let foreign = Array(12).fill(0);
-                const regions = [];
-                for (const r of d.residences.filter(x => x.section === 'foreign')) {
-                    let g = regions.find(x => x.region === r.region); if (!g) regions.push(g = { region: r.region, list: [] }); g.list.push(r);
-                }
-                for (const g of regions) {
-                    let sub = Array(12).fill(0);
-                    const rowsHtml = g.list.map(r => { sub = add(sub, d.counts[r.code].total); return used(d.counts[r.code].total) ? row(withFlag(r), d.counts[r.code].total, 'fa-country', true) : ''; }).join('');
-                    if (used(sub)) body += head(escapeHtml(g.region), 'text-on-surface-variant') + rowsHtml + row(`Sub-total, ${escapeHtml(g.region)}`, sub, 'font-bold bg-on-surface/[0.03]', true);
-                    foreign = add(foreign, sub);
-                }
-                body += row('<b>Total non-Philippine residents</b>', foreign, 'font-bold');
-                const of = d.counts['overseas-filipino'].total, un = d.counts['unspecified'].total;
-                if (used(of)) body += row(withFlag({ code: 'overseas-filipino', name: 'Overseas Filipinos' }), of);
-                if (used(un)) body += row(withFlag({ code: 'unspecified', name: 'Guests with unspecified residence' }), un);
-                const grand = ph.map((v, i) => v + foreign[i] + of[i] + un[i]);
-                body += row('<b>GRAND TOTAL ARRIVALS</b>', grand, 'font-extrabold text-primary bg-gold/15');
-
-                const dae = d.dae;
-                let part2 = head('Part II · Overnight stays (places to stay) · A. DAE-2', 'bg-primary/10 text-primary')
-                    + row('Room-nights available (rooms × days)', dae.roomNightsAvailable, '', true)
-                    + row('Room-nights occupied', dae.roomNightsOccupied, '', true)
-                    + row('Room-nights not occupied', dae.roomNightsNotOccupied, '', true)
-                    + row('Total guest nights', dae.guestNights, 'font-bold', true);
-                part2 += head('Part II · B. Arrivals per sex', 'bg-primary/10 text-primary');
-                for (const sex of ['male', 'female']) {
-                    let t = Array(12).fill(0);
-                    for (const r of d.residences) t = add(t, d.counts[r.code][sex]);
-                    const shown = t.map((v, i) => (d.sexKnown[i] ? v : null));
-                    part2 += row(sex === 'male' ? 'Male' : 'Female', shown, '', true);
-                }
-                // Arrivals by place: where Part I's arrivals came from, each place
-                // marked as the office's or a private enterprise's; "–" for a month not reported.
-                let byPlace = head('Arrivals by place', 'bg-primary/10 text-primary');
-                for (const [kind, title] of [['accommodation', 'Places to stay'], ['attraction', 'Attractions']]) {
-                    const list = d.places.filter(p => p.kind === kind);
-                    if (!list.length) continue;
-                    byPlace += head(title, 'text-on-surface-variant');
-                    for (const p of list) {
-                        const shown = p.total.map((t, i) => (p.reported[i] ? t : null));
-                        byPlace += row(`<span class="inline-flex flex-wrap items-center gap-2">${escapeHtml(p.title)} ${ownTag(p.keptByOffice)}</span>`, shown, ownRow(p.keptByOffice), true);
-                    }
-                }
-                const reported = vals(d.reportsPerMonth);
-                const noSex = months.filter(m => d.sexKnown[m - 1] === false && d.reportsPerMonth[m - 1] > 0);
-                host.innerHTML = `
-                    <div class="stat-tiles">
-                        <div class="stat-tile"><p>Arrivals</p><p>${fmt(sum(vals(grand)))}</p></div>
-                        <div class="stat-tile"><p>Guest nights</p><p>${fmt(sum(vals(dae.guestNights)))}</p></div>
-                        <div class="stat-tile"><p>Places reported</p><p>${fmt(d.places.filter(p => p.reported.some(Boolean)).length)} <span class="text-base font-bold text-on-surface-variant">of ${fmt(d.places.length)}</span></p></div>
-                        <div class="stat-tile"><p>Reports</p><p>${fmt(sum(reported))}</p></div>
-                    </div>
-                    ${d.municipalTotalMonths.length || d.lockedMonths.length ? `<p class="flex flex-wrap gap-2">
-                        ${d.municipalTotalMonths.length ? `<span class="tone-pill tone-neutral rounded-pill text-xs font-bold px-2.5 py-0.5">Municipal totals: ${d.municipalTotalMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
-                        ${d.lockedMonths.length ? `<span class="tone-pill tone-success rounded-pill text-xs font-bold px-2.5 py-0.5">Finalized: ${d.lockedMonths.map(m => MON[m - 1]).join(', ')}</span>` : ''}
-                    </p>` : ''}
-                    ${sum(reported) === 0 ? '<p class="text-sm font-semibold tone-warning">No reports for these months yet.</p>' : ''}
-                    ${noSex.length ? `<p class="text-support">Volume per sex is blank for ${noSex.map(m => MON[m - 1]).join(', ')}: those months were not split by sex.</p>` : ''}
-                    <div class="glass-panel overflow-x-auto">
-                        <table class="ztims-table text-sm min-w-[980px]">
-                            <thead><tr><th class="text-left px-3 py-2">Country of residence</th>${months.map(m => `<th class="px-2 py-2 text-right">${MON[m - 1]}</th>`).join('')}<th class="px-3 py-2 text-right">Total</th></tr></thead>
-                            <tbody>${body}${part2}${byPlace}</tbody>
-                        </table>
-                    </div>`;
-            } catch (e) {
-                if (e.message !== 'Signed out') host.innerHTML = `<div class="ztims-empty tone-danger">${escapeHtml(e.message)}</div>`;
-            }
-        }
-        async function downloadExcel() {
-            const btn = document.getElementById('faDownload');
-            const { year, from, to } = formRange();
-            const original = btn.innerHTML;
-            btn.disabled = true; btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-current border-t-transparent animate-spin"></span> Preparing…';
-            try {
-                const res = await fetch(`${API_BASE}/statistics/form-a4.xlsx?year=${year}&from=${from}&to=${to}`, { headers: authHeaders() });
-                if (res.status === 401) return handleExpiredSession();
-                if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.message || 'The Excel file could not be made.'); }
-                const blob = await res.blob();
-                const name = (res.headers.get('content-disposition') || '').match(/filename="([^"]+)"/);
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = name ? name[1] : `Form_A4_Zamboanguita_${year}.xlsx`;
-                document.body.appendChild(a); a.click(); a.remove();
-                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-                showToast('Arrivals Report downloaded.', 'success');
-            } catch (e) {
-                showToast(e.message, 'error');
-            } finally {
-                btn.disabled = false; btn.innerHTML = original;
-            }
-        }
-        async function lockMonths() {
-            const btn = document.getElementById('faLock');
-            const { year, from, to } = formRange();
-            btn.disabled = true;
-            try {
-                const res = await fetch(`${API_BASE}/statistics/periods/lock`, {
-                    method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
-                    body: JSON.stringify({ year: Number(year), fromMonth: Number(from), toMonth: Number(to) })
-                });
-                if (res.status === 401) return handleExpiredSession();
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.message || 'The months could not be finalized.');
-                showToast(data.message, 'success');
-                document.getElementById('faConfirmLock').checked = false;
-                generateForm();
-            } catch (e) {
-                showToast(e.message, 'error');
-                btn.disabled = false;
-            }
-        }
 
         function wire() {
-            for (const t of TABS.filter(t => t !== 'attractions')) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
+            for (const t of ['forma', 'tracker']) document.getElementById('tab-' + t).addEventListener('click', () => showTab(t));
             document.getElementById('kindAccommodation').addEventListener('click', () => showTab(lastAccTab));
             document.getElementById('kindAttraction').addEventListener('click', () => showTab('attractions'));
-            for (const id of ['trYear', 'faYear']) fillYears(document.getElementById(id));
-            for (const id of ['faFrom', 'faTo']) MONTHS.forEach((m, i) => document.getElementById(id).add(new Option(m, String(i + 1))));
-            document.getElementById('faTo').value = '12';
+            fillYears(document.getElementById('trYear'));
             document.getElementById('trYear').addEventListener('change', loadTracker);
             document.getElementById('trKind').addEventListener('change', loadTracker);
             document.getElementById('trToAttractions').addEventListener('click', () => showTab('attractions'));
             document.getElementById('enPlace').addEventListener('change', renderEntry);
             document.getElementById('enPeriod').addEventListener('change', renderEntry);
-            document.getElementById('faGenerate').addEventListener('click', generateForm);
-            document.getElementById('faOnlyUsed').addEventListener('change', generateForm);
-            document.getElementById('faDownload').addEventListener('click', downloadExcel);
-            document.getElementById('faLock').addEventListener('click', lockMonths);
-            document.getElementById('faConfirmLock').addEventListener('change', e => { document.getElementById('faLock').disabled = !e.target.checked; });
+            document.getElementById('enBack').addEventListener('click', () => showTab('tracker'));
 
         }
 
@@ -1011,18 +839,18 @@ body { overflow-x: hidden; }
             if (!guardOfficerSession()) return;
             mountPortalAccountMenu();
             wire();
-            // Coming here from the sidebar always opens the Arrivals Report; only
+            // Coming here from the sidebar always opens FORM A; only
             // a reload goes back to the tab that was open. A link that names a
             // tab in its address (the Dashboard's "Open the tracker" is
             // admin_statistics.html#tracker) opens that tab instead.
-            let first = 'forma4';
+            let first = 'forma';
             try {
                 const nav = performance.getEntriesByType('navigation')[0];
                 if (nav && nav.type === 'reload') first = sessionStorage.getItem('statsTab') || first;
             } catch (e) {}
             const asked = window.location.hash.slice(1);
             if (TABS.includes(asked)) first = asked;
-            showTab(TABS.includes(first) ? first : 'forma4');
+            showTab(TABS.includes(first) ? first : 'forma');
             // The Guest Register's "Open the monthly report" names the place and
             // month (?place=<id>&month=2026-9#enter).
             const params = new URLSearchParams(window.location.search);

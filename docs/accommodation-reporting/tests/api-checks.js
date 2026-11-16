@@ -1,7 +1,8 @@
 // Accommodation reporting: real API calls against a LOCAL API (:8080) and LOCAL database only.
 // Never point it at the live database: it clears the accommodation_* tables first.
 // Needs DATABASE_URL (local), TEST_MANAGER_PASSWORD (maria@x.test and juan@x.test), TEST_OFFICER_PASSWORD
-// (officer@lgu.test), the 2025 import (scripts/import-form-a4.js) and two private places to stay of maria's.
+// (officer@lgu.test) and two private places to stay of maria's. (The 2025 paper totals and Form A4
+// were taken out on 16 November 2026: schema.sql deletes them and refuses new ones.)
 const { execFileSync } = require('child_process');
 const API = 'http://localhost:8080/api';
 const DB = process.env.DATABASE_URL;
@@ -36,9 +37,9 @@ const SPOT = '5b623f31b0f74d0bb5630dbe', OTHER = '2f9d15101bf34b3382a3b6b4';
     const officer = await login('officer@lgu.test', process.env.TEST_OFFICER_PASSWORD);
     ok(maria && juan && officer, 'three staff sign-ins');
 
-    console.log('Preserved 2025 data (same as live)');
-    ok(sql(`select count(*)||'/'||sum((select count(*) from monthly_report_counts c where c.report_id=r.id)) from monthly_reports r where kind='municipal_total' and year=2025`) === '12/321', '12 municipal months, 321 residence rows');
-    const before2025 = sql(`select md5(string_agg(r.id||r.month||r.rooms||r.room_nights_occupied||r.guest_nights||c.residence_code||c.total, ',' order by r.month, c.residence_code)) from monthly_reports r join monthly_report_counts c on c.report_id=r.id where r.kind='municipal_total'`);
+    console.log('2025 paper totals taken out');
+    ok(sql(`select count(*) from monthly_reports where kind='municipal_total'`) === '0', 'no municipal total is kept');
+    ok(/monthly_reports_kind/.test(sqlErr(`insert into monthly_reports (kind, year, month, rooms) values ('municipal_total', 2025, 3, 1)`)), 'a municipal total can no longer be recorded');
 
     console.log('Profile, rooms, out of service, closed');
     let r = await call('POST', `/accommodation/${SPOT}/stays`, { checkIn: '2026-08-01', checkOut: '2026-08-02', rooms: [], guests: [] }, maria);
@@ -254,31 +255,29 @@ const SPOT = '5b623f31b0f74d0bb5630dbe', OTHER = '2f9d15101bf34b3382a3b6b4';
     r = await call('GET', `/accommodation/${SPOT}/year/2026`, null, officer);
     ok(r.status === 200, 'officer reads it');
 
-    console.log('Municipal: FORM A and historical totals');
-    ok(/MUNICIPAL_TOTAL_MONTH/.test(sqlErr(`begin; insert into accommodation_report_versions (spot_id, year, month, version, provenance, rooms, room_nights_available, room_nights_occupied, guest_nights, arrivals) values ('${SPOT}', 2025, 3, 1, 'register', 1, 31, 0, 0, 0); commit;`)), 'no enterprise version for a 2025 municipal month');
-    ok(/ENTERPRISE_REPORTS_EXIST/.test(sqlErr(`insert into monthly_reports (kind, year, month, rooms) values ('municipal_total', 2026, 8, 1)`)), 'no municipal total for a month enterprises reported');
+    console.log('Municipal: FORM A');
+    ok(!/MUNICIPAL_TOTAL_MONTH/.test(sqlErr(`begin; insert into accommodation_report_versions (spot_id, year, month, version, provenance, rooms, room_nights_available, room_nights_occupied, guest_nights, arrivals) values ('${SPOT}', 2025, 3, 1, 'register', 1, 31, 0, 0, 0); rollback;`)), 'a 2025 month is no longer held back for a paper total');
+    ok(sql(`select count(*) from pg_proc where proname = 'accommodation_municipal_guard'`) === '0', 'the municipal-total guard is gone');
     r = await call('GET', '/accommodation/form-a?year=2025', null, officer);
     const a25 = r.data;
-    ok(a25.grandTotal === 19298 && a25.months.every(m => m.source === 'municipal_total'), '2025: all 12 months from the paper totals, 19,298 arrivals (the rows; printed 19,308)', a25.grandTotal);
+    ok(a25.grandTotal === 0 && a25.months.every(m => m.source !== 'municipal_total'), '2025: no paper totals in FORM A', a25.grandTotal);
     ok(a25.comparison.comparableMonths.length === 0 && a25.rows.every(x => x.comparison === null), '2025 vs 2024: no baseline, no % difference');
-    ok(a25.volumePerSex.months.length === 0 && a25.volumePerSex.notRecordedMonths.length === 12, '2025: volume per sex not recorded, not zero');
-    ok(a25.partII.months[0].roomNightsAvailableDerived === true && a25.partII.months[0].roomNightsAvailable === 183 * 31, '2025 room-nights available derived from rooms × days and marked so');
+    ok(a25.volumePerSex.notRecordedMonths.length === 0, '2025: no month marked as without a sex split');
+    ok(a25.partII.months.every(m => m === null || !('roomNightsAvailableDerived' in m)), '2025: nothing derived from paper rooms');
     ok(a25.rows.map(x => x.code).slice(0, 3).join() === 'ph-filipino,ph-foreign,BN' && a25.rows.slice(-2).map(x => x.code).join() === 'overseas-filipino,unspecified', 'rows in the form\'s order, sections kept');
     r = await call('GET', '/accommodation/form-a?year=2026', null, officer);
     let a26 = r.data;
     const aug = a26.months[7];
     ok(aug.source === 'enterprise_reports' && aug.complete === false && aug.missing >= 1, '2026 Aug: enterprise reports, incomplete (others missing, not zero)', aug);
-    ok(a26.comparison.comparableMonths.length === 0 && a26.partII.comparison === null, 'incomplete coverage: no comparison with 2025');
+    ok(a26.comparison.comparableMonths.length === 0 && a26.partII.comparison === null, 'incomplete coverage: no comparison');
     ok(a26.months[0].source === 'none' && a26.rows[0].months[0] === null, 'January 2026: no source, shown as missing', a26.months[0]);
     ok(Math.abs(a26.partII.total.occupancyRate - a26.partII.total.roomNightsOccupied / a26.partII.total.roomNightsAvailable) < 1e-12, 'FORM A annual occupancy is a ratio of sums');
     // Make August complete: every other enterprise closed all August (local test only), then compare.
     const others = sql(`select string_agg(id, ',') from spots where type='accommodation' and managed_by is not null and id <> '${SPOT}'`).split(',');
     for (const o of others) sql(`insert into accommodation_closed_periods (spot_id, starts_on, ends_on, reason) values ('${o}', '2026-08-01', '2026-08-31', 'test: closed')`);
     a26 = (await call('GET', '/accommodation/form-a?year=2026', null, officer)).data;
-    ok(a26.comparison.comparableMonths.join() === '8', 'August complete: compared with August 2025 only', a26.comparison);
-    const ph = a26.rows.find(x => x.code === 'ph-filipino');
-    ok(ph.comparison.previous === 888 && ph.comparison.current === a26.rows.find(x => x.code === 'ph-filipino').months[7], 'Filipino residents: Aug 2026 vs Aug 2025 (888)', ph.comparison);
-    ok(a26.rows.find(x => x.code === 'overseas-filipino').comparison.percentDifference === null, 'zero baseline (Aug 2025 overseas Filipinos 0): % difference unavailable');
+    ok(a26.comparison.comparableMonths.length === 0 && a26.comparison.unavailableReason, 'August complete, but 2025 has no reports: no comparison', a26.comparison);
+    ok(a26.rows.every(x => x.comparison === null), 'no % difference without a comparable month');
     sql(`set session_replication_role = replica; delete from accommodation_closed_periods where reason = 'test: closed'`);
 
     console.log('Tracker and the old routes');
@@ -292,8 +291,8 @@ const SPOT = '5b623f31b0f74d0bb5630dbe', OTHER = '2f9d15101bf34b3382a3b6b4';
     r = await call('POST', `/statistics/register/${SPOT}`, { date: '2026-10-05', nights: 1, rooms: 1, guests: [{ code: 'US', male: 1, female: 0 }] }, maria);
     ok(r.status === 409 && r.data.code === 'USE_STAY_REGISTER', 'old Guest Register for a place to stay: refused');
     r = await call('GET', `/statistics/form-a4?year=2025`, null, officer);
-    ok(r.status === 200 && r.data.municipalTotalMonths.length === 12, 'the existing Form A4 still reads 2025 as before');
-    ok(sql(`select md5(string_agg(r.id||r.month||r.rooms||r.room_nights_occupied||r.guest_nights||c.residence_code||c.total, ',' order by r.month, c.residence_code)) from monthly_reports r join monthly_report_counts c on c.report_id=r.id where r.kind='municipal_total'`) === before2025, '2025 municipal data unchanged by all of the above');
+    ok(r.status === 404, 'Form A4 is gone', r.status);
+    ok(sql(`select count(*) from monthly_reports where kind='municipal_total'`) === '0', 'still no municipal total after all of the above');
 
     console.log(`\n${pass} passed, ${fail} failed`);
     process.exit(fail ? 1 : 0);

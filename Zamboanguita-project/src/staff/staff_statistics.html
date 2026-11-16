@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Monthly Report</title>
+    <title>Explore Zamboanguita | Tourist Influx Report</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -458,9 +458,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">edit_calendar</span>
                 <span class="sidebar-label">Daily Visitor Record</span>
             </a>
-            <a title="Monthly Report" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_statistics.html">
+            <a title="Tourist Influx Report" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="staff_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
-                <span class="sidebar-label">Monthly Report</span>
+                <span class="sidebar-label">Tourist Influx Report</span>
             </a>
             <a title="Account" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="staff_settings.html">
                 <span class="material-symbols-outlined text-accent">manage_accounts</span>
@@ -540,7 +540,7 @@ body { overflow-x: hidden; }
         }
 
 
-        /* Monthly Report: att-staff.js draws the page; the server checks every call. */
+        /* Tourist Influx Report: att-staff.js draws the page; the server checks every call. */
         async function start() {
             while (!window.ztimsAttStaff) await new Promise(r => setTimeout(r, 30));
             const host = document.getElementById('attHost');

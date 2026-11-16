@@ -137,9 +137,6 @@ npm start              # node server.js
 npm run migrate        # node migrate.js — applies db/schema.sql (idempotent)
                        # and the first-officer bootstrap (not run at startup)
 npm run create-admin   # node create-admin.js
-npm run import-form-a4 -- db/form-a4-2025.json --dry-run
-                       # loads a paper Form A4 year as locked municipal totals;
-                       # skips months already recorded (see the script's header)
 ```
 Needs a `.env` (see `.env.example` for every variable, each documented inline
 with what it defaults to when unset — most integrations degrade gracefully
@@ -249,7 +246,7 @@ purpose — see the header comment in `spot-form.js`:
   what visitors still need in red — Enterprise's five checklist items — Open
   and View page; the current one outlined) and an Add card (`.pg-card--add`);
   Add opens the listing form on Enterprise (`resort_spots.html?add=1`), and the new
-  enterprise becomes the current one. Enterprise, Guest Register and Monthly Report
+  enterprise becomes the current one. Enterprise, Guest Register and Tourist Influx Report
   all work on the current enterprise (the two reports' Place picker is gone, the
   name shows instead). The corner menu names the person (`localStorage.userName`).
 - **The manager's Enterprise** (`resort/resort_spots.html`, the menu's
@@ -284,7 +281,7 @@ purpose — see the header comment in `spot-form.js`:
   `resort/resort_bookings.html`, in the menu after Enterprise): see "Room
   booking" below.
 - **The manager's Guest Register** (`resort/resort_register.html`, in the
-  menu between Bookings and Monthly Report; for a private place to stay it is
+  menu between Bookings and Tourist Influx Report; for a private place to stay it is
   the stay register instead, see "Accommodation reporting"): the place's own log through
   the month, so nobody adds up by hand. A place to stay logs each **stay**
   (check-in date, nights, rooms, and who came: country of residence with male
@@ -313,10 +310,10 @@ purpose — see the header comment in `spot-form.js`:
   `statistics.js`), while the officer may still read a register (the report
   form's "Fill from the Guest Register") and still enter or correct a monthly
   report as a backup. A manager sees the current enterprise's name (from the
-  header switcher), not a picker, on the Guest Register and Monthly Report.
+  header switcher), not a picker, on the Guest Register and Tourist Influx Report.
 - `analytics-view.js` — the officer's and the manager's Analytics pages
   (cards, SVG charts, coverage band, tables); see "Analytics".
-- `stat-form.js` — the monthly statistics report form (Form A4 counts by
+- `stat-form.js` — the monthly statistics report form (counts by
   country of residence and sex, plus rooms and guest nights for an
   accommodation), used by `src/resort/resort_statistics.html` and the
   officer's `src/admin/admin_statistics.html`. See "Tourism statistics" below.
@@ -440,11 +437,13 @@ category badge (`.cat-badge`) is a pill everywhere. Emails
 The officer's first page is the **Dashboard**, `src/admin/admin_analystic.html`
 (the file keeps its old name so sign-in and bookmarks still land on it). It holds
 no data of its own: it reads the officer's existing endpoints (spots,
-enterprise managers, feedback, `/api/statistics/tracker` and `/form-a4`,
-`/api/payments`, `/api/attraction-visits/tracker`) and shows what is waiting on each — every card links to the
-page where it is dealt with, Statistics through the tab named in the link's
-address (`admin_statistics.html#tracker`) — plus the month just ended's Form A4
-reports, Form A4 counts by month and by country. Counts only, like the statistics themselves. Its "Add new
+enterprise managers, feedback, `/api/accommodation/tracker` and `/form-a`,
+`/api/attraction-visits/tracker`) and shows what is waiting on each — every card links to the
+page where it is dealt with, Tourist Influx Report through the tab named in the link's
+address (`admin_statistics.html#tracker`) — plus the month just ended's Tourist
+Influx Reports from the private places to stay (a place that has not set up
+reporting counts as not in, as FORM A counts it missing) and "Tourism at a
+glance", FORM A's counts by month and by country. Counts only, like the statistics themselves. Its "Add new
 spot" publishes, then opens Destinations at `?new=<id>`, which finds that
 listing (search filled in, scrolled to, marked for a moment with
 `.just-published`), says it is live, and drops `?new` from the address.
@@ -561,14 +560,24 @@ guide tables and records — guides, their destinations and languages, their
 reports, the guide bookings, and the payments and checkouts made for them —
 and `spots.requires_guide`. Don't bring any of it back unless the user asks.
 
-### Tourism statistics
+### Tourism statistics: the Tourist Influx Report
 
-The office's Form A4 ("Report on the Regional Distribution of Travelers",
-sent to the province each month) and the visitor counts at the attractions,
-collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
-`statistics.js`, the Excel file in `statistics-excel.js`, four tables in
-`schema.sql` (`residences`, `monthly_reports`, `monthly_report_counts`,
-`report_changes`).
+**Every report is called the Tourist Influx Report** (16 November 2026, the
+user's decision): the officer's menu item and page (`admin_statistics.html`,
+was "Statistics"), the manager's and Support Staff's report page and menu item
+(was "Tourist Influx Report"), and every Excel file, whose name starts
+`Tourist_Influx_Report_` and whose printed pages carry "TOURIST INFLUX REPORT"
+as the page header (the DOT form's own headings stay as they are; `wb.title`
+too). The DOT form code stays beside the name where a page shows one form
+(e.g. "Tourist Influx Report · DAE-1B / DAE 2"). **The municipal report is
+FORM A** (see "Accommodation reporting"). **Form A4 and the 2025 paper totals
+were taken out** the same day: no Arrivals Report tab, no `/api/statistics/form-a4`
+routes, no `statistics-excel.js`, no `scripts/import-form-a4.js`, no
+`municipal_total` reports (schema.sql's last block deleted them with their counts
+and change log, and `monthly_reports_kind` now allows only `accommodation` and
+`attraction`). Routes in `statistics.js` (a place's monthly report, the Guest
+Register, the old tracker), four tables in `schema.sql` (`residences`,
+`monthly_reports`, `monthly_report_counts`, `report_changes`).
 
 - **Counts and totals only.** No revenue, no percentages, anywhere — the
   office asked for both to stay out. DAE-2 is shown as its counts (rooms,
@@ -589,38 +598,21 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   The Guest Register is never the officer's (`mayKeepRegister`). `kind` comes from the listing: an accommodation reports arrivals,
   rooms and nights; an attraction reports its arrivals only (no rooms or
   nights). A private place to stay reports through its stay register instead
-  (see "Accommodation reporting"); the Arrivals Report reads its saved
-  versions.
-- **Arrivals are arrivals at places** (the user's decision, October 2026; **on the
-  attraction-reporting work (on main since 12 November 2026) attraction visits leave Part I and are reported only through DTA2M
-  and VAR 3M, see "Attraction visitor reporting"**):
-  Form A4's Part I adds every place's report — places to stay and
-  attractions, the office's and private ones — so a guest counts once at each
-  place they arrive at (Mark stays two nights at a resort and visits the falls:
-  2 arrivals, 2 guest nights). Part II (rooms, room-nights, guest nights) is
-  places to stay only; its volume per sex is Part I's arrivals by sex.
-  **Superseded on the branch:** "Don't split attraction arrivals back out into a
-  separate part or page" no longer holds — attraction visits are a separate
-  measure with their own tab and forms (D1, see "Attraction visitor reporting").
-- **One report page.** Statistics opens with a switch, **Accommodation /
-  Attraction** (`.seg-switch` in `portal-flat.css`: a rounded track, the chosen
-  side a raised pill; 13 November 2026, the user's choice). Accommodation shows
-  four tabs: Arrivals Report, Enter a report, Tracker and FORM A (private places
-  to stay; see "Accommodation reporting"). Attraction shows the **Attraction
-  visits** panel (office attractions' daily counts, DTA2M and VAR 3M, with its
-  own tabs; see "Attraction visitor reporting"). `#attractions` in the address
-  opens Attraction; switching back returns to the accommodation tab last open. Enter a report and
-  Tracker list places to stay only; the old "Attractions" choice there is gone. The Arrivals Report:
-  Part I arrivals by country, Part II overnight stays (places to stay), then
-  **Arrivals by place** (`formA4()`'s `places`: every place, places to stay
-  then attractions, each with its Tourism Office / Private tag, "–" for a
-  month not reported). The Excel has the Form A4 sheet ("GRAND TOTAL
-  ARRIVALS") and a "By place" sheet.
-- **The page's look** (the standard): title only; Arrivals Report has Year /
-  From / To, Generate, Download Excel and **Only countries with arrivals**
-  (ticked by default: a country or region with nobody in those months is left
-  out, totals stay; the Excel always lists all 72 rows), four number tiles
-  (Arrivals, Guest nights, Places reported of all places, Reports), municipal-total and finalized months as pills. Tracker: Year
+  (see "Accommodation reporting"); FORM A reads its saved versions.
+- **Arrivals are arrivals at places**: a guest counts once at each place they
+  arrive at. Accommodation arrivals (FORM A) and attraction visits (DTA2M, VAR
+  3M) are separate measures, never added together.
+- **One report page.** The Tourist Influx Report page opens with a switch,
+  **Accommodation / Attraction** (`.seg-switch` in `portal-flat.css`: a rounded
+  track, the chosen side a raised pill; 13 November 2026, the user's choice).
+  Accommodation shows two tabs, **FORM A** (first, where the page opens) and
+  **Tracker** (16 November 2026: "only FORM A and its tracker"); a tracker cell
+  opens that place's month (`#enter`, no tab of its own, a Back button to the
+  Tracker). Attraction shows the **Attraction visits** panel (office
+  attractions' daily counts, DTA2M and VAR 3M, with its own tabs; see
+  "Attraction visitor reporting"). `#attractions` in the address opens
+  Attraction; an old `#forma4` link opens FORM A.
+- **The page's look** (the standard): title only. Tracker: Year
   (places to stay only, with a link to Attraction visits), a one-line legend of the cell pills,
   the on-time / late / missing counts as pills. **Who runs a place** shows
   everywhere a place is listed in Statistics (the user's decision): `.own-tag`
@@ -630,14 +622,14 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   Enter a report shows the same as a banner (`.own-banner`): "The Tourism
   Office enters this report" or "Entered by <manager>. View only."
   `formA4()`'s `places` carry `keptByOffice` for this.
-- **Rows.** `residences` is Form A4's 72 rows in the form's order (ISO codes,
+- **Rows.** `residences` is the DOT forms' 72 residence rows in their order (ISO codes,
   plus `ph-filipino`, `ph-foreign`, `cis`, `other-foreign`,
   `overseas-filipino`, `unspecified`), seeded by `schema.sql`. It lives only
   in the database — the form fetches it — so it is not duplicated anywhere. Each row shows its flag beside the name, in the
-  report form and the officer's Arrivals Report (`flag` in `stat-form.js`,
+  report form and FORM A (`flag` in `stat-form.js`,
   `.sf-flag` in `theme.css`): small SVGs in `Zamboanguita-project/public/flags/`
   (copies of flag-icons 7.5.0, MIT, `LICENSE.txt` beside them; only the
-  countries Form A4 lists), served from the site itself, never emoji (Windows
+  countries the forms list), served from the site itself, never emoji (Windows
   shows those as letters) and never an outside host. The Philippine rows and
   overseas Filipinos take the Philippine flag; CIS, other foreign and
   unspecified take an icon. A country added to `residences` needs its flag
@@ -678,11 +670,8 @@ collected in ZTIMS instead of a hand-kept spreadsheet. Routes in
   the before and after. Locking marks months as sent to the province; a locked
   report refuses changes until the officer unlocks it, with a reason. The pages
   call these **Finalize** and **Reopen** (the API keeps `lock`/`unlock`).
-- **Municipal totals.** A month with a `municipal_total` report (a year kept on
-  paper, loaded by `scripts/import-form-a4.js`) refuses per-place reports, so
-  its guests are never counted twice; voiding it opens the month again. Those
-  months have no sex split, and Form A4's "volume per sex" is left blank for
-  them rather than shown as 0.
+- **No municipal totals.** The 2025 paper totals (`municipal_total`) were
+  deleted on 16 November 2026 by the user's decision, and none can be recorded.
 
 ### Accommodation reporting (November 2026)
 
@@ -724,16 +713,13 @@ visitors here").
   the API. Writes take a per-enterprise transaction lock. Stay edits name the
   `revision` they read; submit and finalize name the latest version
   (`expectedVersion`), so two at once give one result and one 409.
-- **2025:** the paper municipal totals stay in `monthly_reports`
-  (`municipal_total`, no sex split, no enterprise detail). A month holds either
-  them or enterprise versions, never both (triggers both ways). FORM A compares
-  with the previous year only over months with complete coverage in both
-  years; the comparison is null when no month qualifies or the baseline is 0.
+- **2025:** the paper municipal totals were taken out (16 November 2026), so
+  FORM A has only enterprise versions. It compares with the previous year only
+  over months with complete coverage in both years; the comparison is null when
+  no month qualifies or the baseline is 0.
 - **Old routes:** for a private place to stay, the hand-typed monthly report
   and the old Guest Register writes answer 409 `USE_STAY_REGISTER`.
-  `statistics.js`'s Form A4 (the Arrivals Report) reads each private place to
-  stay's latest saved version instead of `monthly_reports`, so its arrivals
-  and nights are counted once, from the stay register.
+  FORM A is the only municipal report (Form A4 was taken out).
 - **The manager's pages** (current enterprise from the header switcher; the
   attraction pages are unchanged):
   - **Guest Register** (`resort_register.html`) becomes the stay register:
@@ -753,7 +739,7 @@ visitors here").
     Excel button is `export.xlsx?form=dae2`, that one sheet; 13 November 2026), Record a stay, Excel of the register now. Bookings → Check
     in opens it at `?booking=<id>` with the stay filled in
     (`accommodation_stays.booking_id`).
-  - **Monthly Report** (`resort_statistics.html`): Month (DAE-1B, a banner per
+  - **Tourist Influx Report** (`resort_statistics.html`): Month (DAE-1B, a banner per
     state, Submit or Submit correction with what changed, Excel), Versions
     (View, Excel per version, history) and Year (the annual summary, says when
     incomplete, Excel).
@@ -763,12 +749,12 @@ visitors here").
   - **Enterprise → Reporting** (`resort_spots.html#reporting`, places to stay
     only): the DAE-1B header facts (kind of place, DOT classification, AE ID
     code), the month reporting starts, closed periods.
-- **The officer's pages** (Statistics, `admin_statistics.html`): Tracker →
+- **The officer's pages** (Tourist Influx Report, `admin_statistics.html`): Tracker →
   Places to stay is the stay-register tracker (enterprises × months, by state);
-  a cell opens the month on Enter a report: the submitted version, Finalize
-  (asked once), Reopen (a reason of 10+), versions, history, Excel. A fourth
+  a cell opens the month: the submitted version, Finalize
+  (asked once), Reopen (a reason of 10+), versions, history, Excel. The first
   tab, **FORM A**, shows coverage per month ("Complete n/n", "n of m, k
-  missing", "Paper total", "Before reporting"), Part I with % share and the
+  missing", "Before reporting"), Part I with % share and the
   comparable-month comparison, Part II, volume per sex, and its Excel.
 - **Excel** (`accommodation-excel.js`, rebuilt from the four DOT PDFs: DAE-1A,
   DAE-1B v4a daily, DAE-1B 2019 monthly, FORM A): headings, country order and
@@ -813,7 +799,7 @@ rollout, 05 the pages, the exports compared with the PDFs and the verification,
 `reconcile.sql`, `tests/`, `mockup.html`). Backend and pages ship together: the
 old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
 - **Pages (stage 5).** Support Staff (`src/staff/`, menu My attraction, Daily
-  Visitor Record, Monthly Report, Account): **Daily Visitor Record**
+  Visitor Record, Tourist Influx Report, Account): **Daily Visitor Record**
   (`staff_register.html`, `att-staff.js` `record`): the month as a calendar of
   days (counted, confirmed 0 hatched, missing dashed red, closure struck through;
   each day's state in its `aria-label`), Previous / Next month, the state banner
@@ -822,11 +808,11 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   live "n of N classified", Save (the next missing date is offered), Discard
   changes; leaving unsaved figures always asks; a stale save says so with "Load
   the saved figures"; "Record 0 for several dates" ticks only dates nobody came. With no reporting month set yet, the form stays open and the first date saved starts reporting from its month (the server sets `attraction_settings`); the officer can change it under Reporting settings.
-  **Monthly Report** (`staff_statistics.html`, `report`): month picker, tiles,
+  **Tourist Influx Report** (`staff_statistics.html`, `report`): month picker, tiles,
   incomplete breakdowns said plainly, residence and sex tables (unknown stays
   empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
   total, dates and incomplete breakdowns; a correction needs a reason),
-  versions with what changed and an Excel each, history. Officer: Statistics →
+  versions with what changed and an Excel each, history. Officer: Tourist Influx Report →
   **Attraction visits** (`att-officer.js`): Tracker (attractions × months by
   state; a cell opens the month: figures, versions, history, VAR 1 Excel,
   Finalize asked once, Reopen with a reason of 10+; "Reporting settings" sets the
@@ -872,12 +858,12 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   submitted", never 0. Incomplete residence: known Domestic and Foreign, the rest
   on a ZTIMS note outside the official grid, never assigned. Visits are never
   added to accommodation arrivals or guest-nights, and totals across attractions
-  are not unique tourists. The 2025 municipal totals are not allocated to
-  attractions or relabeled.
+  are not unique tourists.
 - **Old records:** `monthly_reports` kind `attraction`, their country rows and the
   attraction Guest Register stay as they are, read only (database guards
-  `LEGACY_*_FROZEN`). Form A4 (the Arrivals Report) no longer adds attraction
-  visits (decision D1 built as proposed). Live has none of the old records.
+  `LEGACY_*_FROZEN`). Attraction visits are never added to accommodation
+  arrivals (decision D1; Form A4 itself was taken out on 16 November 2026).
+  Live has none of the old records.
 - **Assumed, not yet decided by the office (D1 to D5, doc 03):** D1 as above; VAR 1
   has a row for every real day (28 to 31); DTA2M "This Province" excludes "This
   Municipality"; the figure is visits to the attraction, not claimed to be a
@@ -907,8 +893,8 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
 - **Sources:** accommodation from the saved versions (official = the finalized
   one, operational = the latest), coverage as FORM A counts it; attractions from
   `attraction-visits.js`'s exported `sources.yearSources`, the same function DTA2M
-  and VAR 3M use; reservations from `bookings` (never arrivals); the 2025 paper
-  totals as a separate `baseline`, officer's unfiltered view only.
+  and VAR 3M use; reservations from `bookings` (never arrivals). No paper-total
+  baseline (the 2025 totals were taken out on 16 November 2026).
 - **Rules:** missing is `null`, a confirmed zero is 0; coverage on every period;
   partial periods never ranked as peak or low; rates from summed counts; comparisons
   are count differences between complete periods only (no percentages, G4);
@@ -918,9 +904,9 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   (accommodation, reservations, stays); Support Staff own attraction; visitors nothing. `no-store`, 300 reads
   per 15 minutes per account, unknown or repeated parameters refused.
 - **Pages (stage 3, `docs/analytics/06-interface.md`):** the officer's
-  `admin/admin_insights.html` ("Analytics" after Statistics in the officer menu)
+  `admin/admin_insights.html` ("Analytics" after Tourist Influx Report in the officer menu)
   with tabs `#accommodation`, `#attractions`, `#requests`, `#coverage`, and the
-  manager's `resort/resort_analytics.html` ("Analytics" after Monthly Report;
+  manager's `resort/resort_analytics.html` ("Analytics" after Tourist Influx Report;
   current enterprise from the switcher; tabs Arrivals and nights, Guests and
   stays, Room requests). Both drawn by `src/shared/analytics-view.js`
   (`window.ztimsAnalytics`, on `acc-common.js`), styles `.ax-*` at the end of
@@ -1218,7 +1204,7 @@ a disposable `*_rooms_test` database; never run it on the live database.
   every night, considering reservations, stays, outages, closures, availability
   dates and legacy blocks. `holdRooms` rechecks under the shared enterprise
   advisory lock, preventing competing bookings and walk-ins from taking it.
-- **Public:** `GET /api/rooms/countries` (Form A4's residences for a
+- **Public:** `GET /api/rooms/countries` (the residence rows, for a
   visitor's form, worded for visitors — "Philippines (Filipino)", … — the
   Philippines first; cached a day), `GET /api/rooms/open` (ids of the places to
   stay taking requests now: published, manager active, accepting, not paused,
@@ -1341,7 +1327,7 @@ a disposable `*_rooms_test` database; never run it on the live database.
   (409) goes back to Rooms, counted again.
 - **The manager's pages** (November 2026), in the manager menu after
   Enterprise (My enterprises, Enterprise, Rooms, Bookings, Guest Register,
-  Monthly Report, Account, on every `src/resort/` page), both working on the
+  Tourist Influx Report, Account, on every `src/resort/` page), both working on the
   current enterprise from the header switcher; an attraction gets "Rooms and
   bookings are for places to stay". Styles `.bkm-*` at the end of
   `portal-flat.css`; dialogs, toasts, pills and tabs are the shared ones.
@@ -1630,7 +1616,7 @@ officer deactivates the old account and adds a new one.
   kind, take it down (`PATCH …/status` to unpublished or archived) or delete
   it: 409 `HAS_SUPPORT_STAFF`, naming the person.
 - **Their portal** (`src/staff/`, the manager pages' shell and portal-flat
-  look; menu: My attraction, Daily Visitor Record, Monthly Report, Account only;
+  look; menu: My attraction, Daily Visitor Record, Tourist Influx Report, Account only;
   `idle-signout.js` and `src/shared/staff-portal.js` on each). `staff-portal.js`
   reads `GET /api/support-staff/me` once (`window.ztimsStaff.me()`), puts the
   attraction's name in the header on a solid pill (`#staffPlace`,
@@ -1643,7 +1629,7 @@ officer deactivates the old account and adds a new one.
   'support_staff' })`, `openSection`), which shows the name, kind, categories,
   fees, tagline and booking link disabled (`lockOfficeFields`); Contact is a
   small window (phone, public email); "See it as visitors do". **Daily Visitor
-  Record** and **Monthly Report** (`staff_register.html`,
+  Record** and **Tourist Influx Report** (`staff_register.html`,
   `staff_statistics.html`): see "Attraction visitor reporting" (they no longer
   follow the manager's Guest Register and report pages). **Account**
   (`staff_settings.html`): name, position, contact number, the sign-in email
@@ -1657,7 +1643,7 @@ officer deactivates the old account and adds a new one.
   New password, Deactivate / Reactivate, each asking "Your password"; a new or
   issued password is shown once in a toast. Destinations' card says "Support
   Staff: <name>" on an attraction with someone active (`.pg-card__staff`).
-  Statistics → Enter a report: "Entered by <name>, Support Staff."
+  Tourist Influx Report → a place's month: "Entered by <name>, Support Staff."
   (`/statistics/places` carries `supportStaffName`); the report's change log
   names each person (`changed_by_name`, "(Support Staff)").
 - Tested with real API calls (first sign-in and forced change; refused on
@@ -1715,7 +1701,7 @@ officer deactivates the old account and adds a new one.
   Suspending an account hides all its enterprises; an account with enterprises
   cannot be deleted. The trading status (`operational_status`, `status_needs_review`)
   stays on the account for now (no page sets it). Statistics already filed per
-  place, so Form A4 and the Guest Register are unchanged. Listings the office
+  place, so the reports and the Guest Register are unchanged. Listings the office
   keeps (`managed_by` null) are not limited.
 - **Visitors' details are kept one year.** `privacy.js` erases names, phones and
   emails from purchases a year after the visit, and from feedback a year after
@@ -1992,6 +1978,12 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   visits and reservations always separate; missing never 0; official means
   finalized; no percentages beyond the DAE rates, no money, no unique tourists;
   role scope from the account. See "Analytics".
+- Tourist Influx Report (16 November 2026, the user's decision): every report
+  page, menu item and Excel file is called the Tourist Influx Report (DOT form
+  code beside it); the municipal report is FORM A; Form A4, its Excel, the
+  Arrivals Report tab and the 2025 paper totals are gone (deleted, the one
+  exception to "reports are never deleted"); the officer's accommodation side is
+  FORM A and its Tracker only. Don't bring Form A4 back unless the user asks.
 - Tourism statistics hold counts and totals only — no revenue and no
   percentages — except the rates and shares the DAE-1A, DAE-1B and FORM A
   templates require for places to stay (see "Accommodation reporting").

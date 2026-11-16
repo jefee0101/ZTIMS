@@ -99,20 +99,11 @@ const SPOT = { falls: '4b0dcc1722fc4e0bacc7b752', pool: '39fbfa3a5f6041dfabca394
     ok(cmp.comparison && cmp.comparison[0].periods.every(c => c.comparable === false && c.difference === null), 'comparison: nothing comparable yet, difference null, with a reason', cmp.comparison && cmp.comparison[0].periods[0]);
     ok(cmp.comparison[0].periods[0].reason && /not complete|Nothing/.test(cmp.comparison[0].periods[0].reason), 'the reason is stated');
 
-    console.log('\nAccommodation: the 2025 paper totals stay separate');
+    console.log('\nAccommodation: no 2025 paper totals (taken out 16 November 2026)');
     const y25 = (await call('/analytics/accommodation?from=2025-01&to=2025-12&granularity=year', officer)).data;
-    const raw25 = rows(`select sum(c.total) from monthly_reports r join monthly_report_counts c on c.report_id = r.id where r.kind = 'municipal_total' and r.status = 'submitted' and r.year = 2025`)[0][0];
-    const rawGN = rows(`select sum(guest_nights) from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = 2025`)[0][0];
-    ok(y25.baseline && y25.baseline.periods[0].figures.arrivals === +raw25, `baseline arrivals = the paper total (${raw25})`, y25.baseline && y25.baseline.periods[0]);
-    ok(y25.baseline.periods[0].figures.guestNights === +rawGN, `baseline guest nights = ${rawGN}`);
-    ok(y25.periods[0].figures === null && y25.periods[0].municipalTotal === true, 'enterprise series does not receive the paper total (no double count)');
-    ok(!('sex' in y25.baseline.periods[0].figures), 'the paper total has no invented sex split');
-    const y25m = (await call('/analytics/accommodation?from=2025-12&to=2025-12', officer)).data;
-    ok(y25m.baseline.periods[0].figures.arrivals === 2403, 'December 2025: 2,403 arrivals as on paper');
-    const filtered25 = (await call('/analytics/accommodation?from=2025-01&to=2025-12&barangay=poblacion', officer)).data;
-    ok(filtered25.baseline === null, 'a filtered view never shows the municipal paper total');
-    const mgr25 = (await call('/analytics/accommodation?from=2025-01&to=2025-12', maria)).data;
-    ok(mgr25.baseline === null, 'a manager never sees the municipal paper total');
+    ok(!('baseline' in y25), 'no paper-total baseline in the response');
+    ok(y25.periods.every(p => !('municipalTotal' in p)), 'no period is marked as a paper total');
+    ok(rows(`select count(*) from monthly_reports where kind = 'municipal_total'`)[0][0] === '0', 'no municipal total is stored');
 
     console.log('\nAccommodation: manager scope');
     const m = (await call('/analytics/accommodation' + Q + '&mode=operational', maria)).data;

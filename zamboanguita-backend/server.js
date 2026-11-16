@@ -2671,7 +2671,7 @@ app.get('/api/directions/reverse', directionsRateLimit, async (req, res) => {
 });
 
 /* ==========================================
-   TOURISM STATISTICS — Form A4 and attraction visitors (statistics.js)
+   TOURISM STATISTICS — monthly reports, Guest Register, tracker (statistics.js)
 ========================================== */
 app.use('/api/statistics', require('./statistics')({ requireAdmin, requireStaff, requireReporter }));
 
