@@ -843,6 +843,43 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     }
     const monthList = ms => (ms.length ? ms.map(m => MONTHS[m - 1].slice(0, 3)).join(', ') : 'none');
 
+    async function submissionPackage(req, res, download) {
+        const year = Number(req.query.year), month = Number(req.query.month);
+        if (!Number.isInteger(year) || year < 2001 || year > 2100 || !Number.isInteger(month) || month < 1 || month > 12) refuse(400, 'BAD_PERIOD', 'Choose a valid reporting month and year.');
+        const P = require('./report-package');
+        const result = await transaction(async client => {
+            await query('set transaction isolation level repeatable read, read only', [], client);
+            const today = E.manilaToday(), entries = [], files = [];
+            const spots = (await query(`select id, coalesce(nullif(enterprise_name,''),title) as name from spots where type='accommodation' and managed_by is not null and (status <> 'archived' or exists(select 1 from accommodation_report_versions v where v.spot_id=spots.id and year=$1)) order by name,id`, [year], client)).rows;
+            const sec = await sections(client);
+            for (const spot of spots) {
+                const m = (await yearStates(spot, year, today, client))[month-1], v = m.latestVersion;
+                const file = v ? `02_Enterprise_Reports/${P.safe(spot.name)}_${spot.id}/DAE-1A_DAE-1B_${year}-${E.pad(month)}.xlsx` : null;
+                entries.push({ id:spot.id, name:spot.name, report:'DAE-1A and DAE-1B', version:v?.version || null, ready:m.state==='finalized', exempt:m.state==='not_operating', status:({finalized:'Included — finalized',submitted:'Awaiting review',changed:'Needs resubmission',reopened:'Open for correction',not_operating:'Not operating',future:'Not started'})[m.state] || 'Missing report', file });
+                if (download && v) {
+                    const found = (await query('select * from accommodation_report_versions where id=$1',[v._id],client)).rows[0];
+                    const counts = (await query('select * from accommodation_report_version_counts where version_id=$1',[v._id],client)).rows;
+                    const version = {...shapeVersion(found,counts).figures,detail:found.detail};
+                    const ctx = {year,month,days:E.daysIn(year,month),enterpriseName:found.detail?.enterpriseName || spot.name,profile:found.detail?.profile || await profileOf(spot.id,client),sections:sec,status:`Saved version ${found.version}; package status: ${entries[entries.length-1].status}`,rooms:version.rooms,roomNightsAvailable:version.roomNightsAvailable,detail:found.detail,version};
+                    const wb = XLSX.workbook(); XLSX.addDae1A(wb,ctx); XLSX.addDae1B(wb,ctx,true); files.push([file,await XLSX.toBuffer(wb)]);
+                }
+            }
+            const cur = await municipalYear(year,client), prev = await municipalYear(year-1,client);
+            const data = P.manifest('Accommodation',year,month,entries,{ended:E.lastDay(year,month)<today,annualFingerprint:P.fingerprint([cur,prev])});
+            if (download) {
+                const comparable = cur.months.filter((m,i)=>hasData(m)&&m.complete&&hasData(prev.months[i])&&prev.months[i].complete).map(m=>m.month);
+                const ctx = {...formAWorkbookContext(cur,prev,comparable),year,notes:['Annual Form A: all 12 months, from saved enterprise reports. Package generated as of '+today+'.',data.complete?'Monthly package complete.':'DRAFT package: see checklist for missing or unreviewed reports.']};
+                const wb = XLSX.workbook(); XLSX.addFormA(wb,ctx); files.unshift([`01_Municipal_Report/Form_A_${year}_as-of_${today}.xlsx`,await XLSX.toBuffer(wb)]);
+            }
+            return {data,files};
+        });
+        if (!download) return res.json(result.data);
+        if (req.query.fingerprint !== result.data.fingerprint) refuse(409,'PACKAGE_CHANGED','Reports changed since the preview. Open the preview again.');
+        return P.send(res,result.data,result.files);
+    }
+    router.get('/accommodation/submission-package',requireAdmin,handle((req,res)=>submissionPackage(req,res,false)));
+    router.get('/accommodation/submission-package.zip',requireAdmin,handle((req,res)=>submissionPackage(req,res,true)));
+
     router.get('/accommodation/form-a.xlsx', requireAdmin, handle(async (req, res) => {
         const year = Number(req.query.year);
         if (!Number.isInteger(year) || year < 2001 || year > 2100) refuse(400, 'BAD_PERIOD', 'Give a year.');

@@ -5,6 +5,13 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Submission-package downloads (17 November 2026)
+
+- Supersedes the officer Submit DTA2M workflow: the officer previews and downloads a ZIP for the selected year/month. A download does not prove delivery to the receiving office. Missing/unreviewed records or corrections make the package DRAFT. The checklist lists report versions, included files, missing items and generation time.
+- Accommodation ZIP: annual municipal Form A (all 12 months), paired saved DAE-1A/DAE-1B workbooks by enterprise, and a checklist. No raw guest register or visitor names are included.
+- Attraction ZIP: combined monthly DTA2M, mandatory daily VAR1 workbooks for every reporting attraction, and a checklist. VAR1 cannot be deselected. Annual VAR3M stays separate and uses reviewed monthly records, independent of package downloads. Earlier stored DTA2M copies stay available.
+- Refresh the preview if source reports change. Generation uses one database snapshot so municipal figures and supporting workbooks agree. No database migration or manuscript document edit was made here.
+
 ## Chapter III written like the reference group's (16 November 2026)
 
 Done in the Google Doc. Chapter III's prose no longer points at tables,
