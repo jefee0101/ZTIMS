@@ -130,10 +130,12 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const counts = v.length ? (await query('select * from accommodation_report_version_counts where version_id = any($1)', [v.map(x => x.id)], client)).rows : [];
         return v.map(x => shapeVersion(x, counts.filter(c => c.version_id === x.id)));
     }
-    function shapeVersion(v, counts) {
+    function shapeVersion(v, counts, withDetail = false) {
         return {
             _id: v.id, version: v.version, provenance: v.provenance, reason: v.reason, late: v.late,
-            submittedAt: v.submitted_at, submittedByRole: v.submitted_by_role, sourceStays: v.source_stays,
+            submittedAt: v.submitted_at, submittedByRole: v.submitted_by_role, sourceStays: v.source_stays, sourceDigest: v.source_digest,
+            ...(withDetail ? { detail: v.detail || null,
+                dae1b: XLSX.dae1bRows(Object.fromEntries(counts.map(c => [c.residence_code, { male: c.male, female: c.female }])), v.detail, E.daysIn(v.year, v.month)) } : {}),
             figures: {
                 rooms: v.rooms, arrivals: v.arrivals, guestNights: v.guest_nights,
                 roomNightsOccupied: v.room_nights_occupied, roomNightsAvailable: v.room_nights_available,
@@ -162,7 +164,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const period = await periodOf(spot.id, year, month, client);
         const profile = await profileOf(spot.id, client);
         const state = E.periodState({ year, month, today, reportingFrom: profile.reportingFrom, versions, finalized: !!(period && period.finalized_at),
-                                      events, figures });
+                                      events, figures, sourceDigest: E.sourceDigest(records, year, month).digest });
         return { spot, profile, figures, versions, events, period, state, records };
     }
 
@@ -516,7 +518,11 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
     const shapeMonth = v => ({
         success: true, enterprise: { _id: v.spot.id, name: v.spot.name }, profile: v.profile,
         state: v.state, figures: { ...v.figures, daily: v.figures.daily.map(d => ({ date: d.date, counted: d.counted, checkIn: d.checkIn, guestNights: d.guestNights,
-            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })), dae2: XLSX.dae2Rows(v.figures.counts || {}) },
+            roomsOccupied: d.roomsOccupied, occupiedRooms: d.occupiedRooms, available: d.available, outOfService: d.outOfService, closed: d.closed })),
+            reportDetail: E.versionDetail(v.figures),
+            dae1b: XLSX.dae1bRows(v.figures.counts || {}, E.versionDetail(v.figures), v.figures.daily.length,
+                v.figures.daily.filter(d => d.date <= E.manilaToday()).length),
+            dae2: XLSX.dae2Rows(v.figures.counts || {}) },
         versions: v.versions, events: v.events.map(e => ({ action: e.action, versionId: e.version_id, reason: e.reason, actorRole: e.actor_role, at: e.at })),
         finalizedAt: v.period && v.period.finalized_at
     });
@@ -555,7 +561,8 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
                      guest_nights, arrivals, source_digest, source_stays, reason, late, submitted_by_role, submitted_by_email, detail)
                  values ($1, $2, $3, $4, 'register', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) returning id`,
                 [spot.id, year, month, (latest ? latest.version : 0) + 1, fig.rooms, fig.roomNightsAvailable, fig.roomNightsOccupied, fig.guestNights,
-                 fig.arrivals, src.digest, src.stays, reason, late, actor.role, actor.email, JSON.stringify(E.versionDetail(v.figures))], client);
+                 fig.arrivals, src.digest, src.stays, reason, late, actor.role, actor.email,
+                 JSON.stringify({ ...E.versionDetail(v.figures), profile: v.profile, enterpriseName: spot.name })], client);
             for (const [code, c] of Object.entries(fig.counts)) {
                 await query('insert into accommodation_report_version_counts (version_id, residence_code, male, female) values ($1, $2, $3, $4)', [rows[0].id, code, c.male, c.female], client);
             }
@@ -571,7 +578,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         if (!v) refuse(404, 'NOT_FOUND', 'Version not found.');
         await placeFor(req, v.spot_id);
         const counts = (await query('select * from accommodation_report_version_counts where version_id = $1', [v.id])).rows;
-        res.json({ success: true, year: v.year, month: v.month, spotId: v.spot_id, version: shapeVersion(v, counts) });
+        res.json({ success: true, year: v.year, month: v.month, spotId: v.spot_id, version: shapeVersion(v, counts, true) });
     }));
 
     /* ---- the officer: finalize, reopen ------------------------------------- */
@@ -630,7 +637,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             const figures = E.monthFigures(rec, year, month, { today, sections: sec });
             const period = periods.find(p => p.month === month);
             const state = E.periodState({ year, month, today, reportingFrom: profile.reportingFrom, versions: vs, finalized: !!(period && period.finalized_at),
-                                          events: events.filter(e => e.month === month), figures });
+                                          events: events.filter(e => e.month === month), figures, sourceDigest: E.sourceDigest(rec, year, month).digest });
             return { month, state: state.state, latestVersion: vs.length ? vs[vs.length - 1] : null, notOperating: figures.notOperating };
         });
     }
@@ -790,6 +797,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             version = { ...E.versionFigures(f), detail: E.versionDetail(f) };
             status = `NOT SUBMITTED: worked out from the stay register on ${today}` + (f.partial ? ` (nights through ${f.through})` : '');
             version.countedDays = f.partial ? f.daily.filter(d => d.counted).length : null;
+            version.arrivalDays = f.partial ? f.daily.filter(d => d.date <= today).length : null;
         } else {
             const n = which === 'latest' ? (view.versions.length ? view.versions[view.versions.length - 1].version : 0) : Number(which);
             const found = (await query('select * from accommodation_report_versions where spot_id = $1 and year = $2 and month = $3 and version = $4',
@@ -800,14 +808,17 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
             const finalized = view.period && view.period.finalized_version_id === found.id;
             status = `Version ${found.version}${found.provenance === 'legacy_manual' ? ' (hand-typed report, no day-by-day detail)' : ''}, submitted ${E.toDate(found.submitted_at)}${finalized ? ', finalized' : ''}`;
         }
-        const ctx = { year, month, days: E.daysIn(year, month), enterpriseName: spot.name, profile: view.profile, sections: sec, status,
-                      rooms: version.rooms, roomNightsAvailable: version.roomNightsAvailable, detail: version.detail, countedDays: version.countedDays, version };
+        const ctx = { year, month, days: E.daysIn(year, month), enterpriseName: version.detail && version.detail.enterpriseName || spot.name,
+                      profile: version.detail && version.detail.profile || view.profile, sections: sec, status,
+                      rooms: version.rooms, roomNightsAvailable: version.roomNightsAvailable, detail: version.detail, countedDays: version.countedDays, arrivalDays: version.arrivalDays, version };
         const wb = XLSX.workbook();
-        // ?form=dae2: the DAE-1B / DAE 2 (2019) form alone (the Guest Register's DAE 2 tab).
-        const only = String(req.query.form || '') === 'dae2';
-        if (!only) { XLSX.addDae1A(wb, ctx); XLSX.addDae1B(wb, ctx, true); }
-        XLSX.addDae1B(wb, ctx, false);
-        return sendXlsx(res, wb, fileName(spot, `${only ? 'DAE-1B_DAE-2' : 'DAE-1A_DAE-1B'}_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
+        // A submitted month's package is DAE-1A plus the actual daily DAE-1B.
+        // Keep old form=dae2 links working, but serve the replacement, never Manual-Summary.
+        const form = String(req.query.form || '');
+        const only = ['dae1b', 'dae2'].includes(form);
+        if (!only) XLSX.addDae1A(wb, ctx);
+        if (form !== 'dae1a') XLSX.addDae1B(wb, ctx, true);
+        return sendXlsx(res, wb, fileName(spot, `${only ? 'DAE-1B' : form === 'dae1a' ? 'DAE-1A' : 'DAE-1A_DAE-1B'}_${year}-${E.pad(month)}_${which === 'current' ? 'register' : 'v' + (version.version || which)}`));
     }));
 
     /* FORM A layout: the months from saved versions,
@@ -884,7 +895,7 @@ module.exports = function accommodationRouter({ requireAdmin, requireStaff, requ
         const wb = XLSX.workbook();
         const blankProfile = { accommodationType: '', accommodationTypeOther: '', dotClassification: '', aeCode: '' };
         if (name === 'dae1a.xlsx') XLSX.addDae1A(wb, { detail: null, days: 31, enterpriseName: '' });
-        else if (name === 'dae1b.xlsx') { XLSX.addDae1B(wb, { profile: blankProfile, sections: await sections(), enterpriseName: '', version: null, days: 31 }, true); XLSX.addDae1B(wb, { profile: blankProfile, sections: await sections(), enterpriseName: '', version: null }, false); }
+        else if (name === 'dae1b.xlsx') XLSX.addDae1B(wb, { profile: blankProfile, sections: await sections(), enterpriseName: '', version: null, days: 31 }, true);
         else if (name === 'form-a.xlsx') XLSX.addFormA(wb, { year: '', months: Array(12).fill(null), comparable: [], partII: { months: Array(12).fill(null), total: null } });
         else refuse(404, 'NOT_FOUND', 'No such template.');
         return sendXlsx(res, wb, `blank_${name}`);

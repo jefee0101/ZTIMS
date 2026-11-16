@@ -682,6 +682,47 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
    a left edge, never colour alone. */
 .acc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
 .acc-head h1 { margin-right: auto; }
+/* Manager's desktop workspace: 30% register, 70% report. Small screens use
+   the existing separate pages, with the month carried in both links. */
+.acc-workspace { max-width: none !important; min-width: 0; }
+.acc-workspace__panes { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr); gap: 1.5rem; align-items: start; }
+.acc-workspace__panes > section { min-width: 0; }
+.acc-workspace__nav { display: none; }
+.acc-workspace__register h1 { font-size: 1.5rem; line-height: 1.2; }
+.acc-workspace__register .stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.acc-workspace__register .stat-tile { min-width: 0; padding: .65rem; }
+.acc-workspace__register .stat-tile > p:last-child { font-size: 1.35rem; }
+.acc-workspace__register .acc-stay { grid-template-columns: minmax(0, 1fr) auto; padding: .8rem; }
+.acc-workspace__register .acc-stay > div { overflow-wrap: anywhere; }
+.acc-workspace__register .acc-stay__where { grid-column: 1 / -1; }
+.acc-workspace__register .acc-stay__go { grid-row: 1; grid-column: 2; }
+.acc-workspace__register .acc-month { max-width: 100%; gap: .15rem; }
+.acc-workspace__register .acc-month__name { min-width: 0; }
+.acc-workspace__report .stat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1023px) {
+  .acc-workspace__panes { display: block; }
+  .acc-workspace__nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .acc-workspace[data-active="register"] [data-pane="report"], .acc-workspace[data-active="report"] [data-pane="register"] { display: none; }
+  .acc-workspace__nav [aria-current="page"] { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+}
+.acc-paper { min-width: 0; padding: 1rem; }
+.acc-paper__head { padding-bottom: 1rem; color: rgb(var(--ztims-on-surface)); }
+.acc-paper__head h3 { font-weight: 800; margin: .5rem 0; text-transform: uppercase; }
+.acc-paper__code { font-weight: 800; }
+.acc-paper__head dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; margin-top: 1rem; font-size: .8rem; }
+.acc-paper__head dt { color: rgb(var(--ztims-on-surface-variant)); }
+.acc-paper__head dd { font-weight: 700; overflow-wrap: anywhere; }
+.acc-paper-scroll { border: 1px solid rgb(var(--ztims-outline-variant) / .5); }
+.acc-paper-scroll:focus-visible { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: 2px; }
+.acc-dae1b.dae2 { min-width: 1550px; width: 100%; max-width: none; }
+.acc-dae1b th:first-child { min-width: 19rem; max-width: 24rem; }
+.acc-dae1b td, .acc-dae1b thead th:not(:first-child) { min-width: 2.5rem; text-align: right; }
+.acc-dae1b .acc-sticky { z-index: 2; }
+.acc-paper__absent { background: repeating-linear-gradient(135deg, rgb(var(--ztims-on-surface) / .1) 0 3px, transparent 3px 6px) !important; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-paper__indicators { padding-top: 1.25rem; }
+.acc-dae1a { min-width: 650px; }
+.acc-dae1a td { text-align: right; }
+@media (max-width: 640px) { .acc-paper__head dl { grid-template-columns: minmax(0, 1fr); } .acc-paper { padding: .75rem; } }
 .acc-head__actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .acc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
 .acc-month { display: inline-flex; align-items: center; gap: .5rem; }

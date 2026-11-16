@@ -560,6 +560,37 @@ guide tables and records — guides, their destinations and languages, their
 reports, the guide bookings, and the payments and checkouts made for them —
 and `spots.requires_guide`. Don't bring any of it back unless the user asks.
 
+### Actual DAE-1B and the monthly accommodation package (16 November 2026)
+
+The owner's `DAE1B-30_days.pdf`, pages 1–3, is the DAE-1B reference; a copy of
+only those pages is `docs/accommodation-reporting/DAE-1B-reference.pdf`.
+Exclude its Manual-Summary pages. The monthly Excel package has exactly two
+sheets, DAE-1A and the actual daily DAE-1B (days 1–31, with non-existent dates
+blank and shaded). The blank DAE-1B template likewise excludes Manual-Summary.
+
+The manager's Guest Register and Tourist Influx Report share a desktop
+workspace (`acc-workspace.js`): 30% register on the left, 70% report on the
+right, synchronized month and refresh after stay changes. Under 1024px the
+existing two URLs are separate subpages, carrying the month in their links.
+`acc-forms.js` renders the actual daily forms from the server's template rows.
+The officer opens a resort/month in Tracker to read its submitted DAE-1A and
+DAE-1B, plus Zamboanguita's annual municipal Form A for that year. Form A always
+covers all 12 months and combines all accommodation enterprises, not only the
+selected resort. Each reported month remains filled as further months arrive;
+only months without reports stay blank. Choosing a resort/month never filters
+out the other months of Form A.
+
+The existing immutable version detail saves both daily forms together. New
+submissions also freeze the report profile and enterprise name in that JSON.
+`GET /api/accommodation/versions/:id` returns saved daily detail and template
+rows after the existing ownership/officer checks. Historical versions without
+detail keep monthly totals and leave daily detail unavailable; they are never
+rebuilt from the current register. A changed source digest now marks a
+daily-only correction as Changed since submitted even when monthly totals
+are identical, on the month page and tracker. No schema migration.
+Regression checks: `docs/accommodation-reporting/tests/monthly-package-checks.js`
+accepts only the explicitly named isolated local test database.
+
 ### Tourism statistics: the Tourist Influx Report
 
 **Every report is called the Tourist Influx Report** (16 November 2026, the

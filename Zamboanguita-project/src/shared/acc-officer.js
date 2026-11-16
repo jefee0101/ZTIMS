@@ -7,6 +7,7 @@
  */
 (function () {
     const A = () => window.ztimsAcc;
+    const monthLoads = new WeakMap();
     const SHORT = { submitted: '✓', changed: '!', finalized: '🔒', reopened: 'Re', open: '…', due: 'Due', overdue: '!', not_recorded: '–', not_operating: 'N/A', not_set_up: '?', future: '' };
 
     /* ---- tracker ---------------------------------------------------------- */
@@ -32,12 +33,21 @@
 
     /* ---- one enterprise's month ------------------------------------------ */
     async function month(el, place, year, mon) {
+        const request = {};
+        monthLoads.set(el, request);
         el.innerHTML = A().loading();
         await A().loadResidences();
         let v;
         try { v = await A().api(`/accommodation/${place._id}/months/${year}/${mon}`); }
-        catch (e) { if (e.message !== 'Signed out') el.innerHTML = A().failed(e.message); return; }
+        catch (e) { if (monthLoads.get(el) === request && e.message !== 'Signed out') el.innerHTML = A().failed(e.message); return; }
+        if (monthLoads.get(el) !== request) return;
         const s = v.state.state, latest = v.versions[v.versions.length - 1];
+        let submitted = null;
+        if (latest) {
+            try { submitted = (await A().api(`/accommodation/versions/${latest._id}`)).version; }
+            catch (e) { if (monthLoads.get(el) === request && e.message !== 'Signed out') el.innerHTML = A().failed(e.message); return; }
+            if (monthLoads.get(el) !== request) return;
+        }
         const B = (kind, icon, html) => `<div class="acc-banner acc-banner--${kind}"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span><div>${html}</div></div>`;
         const reopen = v.events.filter(x => x.action === 'reopened').pop();
         const banner = {
@@ -65,12 +75,27 @@
             ${f ? `<p class="text-support">Showing version ${latest.version}, as submitted${latest.provenance === 'legacy_manual' ? ' (typed by hand before the stay register)' : ''}.</p>
                 <div class="stat-tiles"><div class="stat-tile"><p>Guest arrivals</p><p>${A().nf(f.arrivals)}</p></div><div class="stat-tile"><p>Guest-nights</p><p>${A().nf(f.guestNights)}</p></div>
                 <div class="stat-tile"><p>Occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div><div class="stat-tile"><p>Average length of stay</p><p>${A().dec(f.averageLengthOfStay)}</p></div></div>
-                <section class="space-y-3"><h3 class="acc-part">Part I. Guest arrivals by nationality / country of residence</h3>${A().partOneHtml(f.counts)}</section>
-                <section class="space-y-3"><h3 class="acc-part">Part II. Other indicators</h3>${A().partTwoHtml(f)}</section>` : ''}
+                <div data-submitted-forms class="space-y-4"></div>` : ''}
             ${v.versions.length ? `<section class="space-y-2"><h3 class="acc-part">Versions</h3><div class="acc-scroll"><table class="ztims-table acc-table"><thead><tr><th>Version</th><th>Submitted</th><th>Reason</th><th class="text-right">Arrivals</th><th class="text-right">Guest-nights</th><th></th></tr></thead><tbody>
                 ${v.versions.slice().reverse().map(x => `<tr><td><b>v${x.version}</b></td><td>${A().fmtWhen(x.submittedAt)}${x.late ? ' · late' : ''}</td><td>${x.reason ? A().esc(x.reason) : '<span class="text-on-surface-variant">First submission</span>'}</td><td class="text-right">${A().nf(x.figures.arrivals)}</td><td class="text-right">${A().nf(x.figures.guestNights)}</td><td class="text-right"><button type="button" class="btn btn-secondary btn-sm" data-xl="${x.version}">Excel</button></td></tr>`).join('')}</tbody></table></div></section>` : ''}
             ${v.events.length ? `<section class="space-y-2"><h3 class="acc-part">History</h3><ul class="acc-history">${v.events.slice().reverse().map(e => `<li><span class="text-on-surface-variant">${A().fmtWhen(e.at)}</span> <b>${({ submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' })[e.action]}</b>${e.reason ? ' · ' + A().esc(e.reason) : ''} <span class="text-on-surface-variant">(${e.actorRole === 'admin' ? 'Tourism Office' : 'Enterprise'})</span></li>`).join('')}</ul></section>` : ''}
         </div>`;
+        if (submitted) A().mountForms(el.querySelector('[data-submitted-forms]'), {
+            year, month: mon, enterprise: v.enterprise, profile: v.profile, figures: submitted.figures, detail: submitted.detail, rows: submitted.dae1b
+        }, { formA: host => formA(host, { year }) });
+        el.querySelectorAll('[data-xl]').forEach(button => {
+            const version = v.versions.find(x => x.version === +button.dataset.xl);
+            const open = document.createElement('button'); open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = 'View forms';
+            button.before(open);
+            open.addEventListener('click', async () => {
+                try {
+                    const saved = (await A().api(`/accommodation/versions/${version._id}`)).version;
+                    A().openWindow({ title: `${A().monthName(year, mon)} · version ${version.version}`, wide: true,
+                        body: '<div data-saved-forms class="space-y-4"></div>', actions: [{ label: 'Close' }],
+                        onOpen: w => A().mountForms(w.body.querySelector('[data-saved-forms]'), { year, month: mon, enterprise: v.enterprise, profile: v.profile, figures: saved.figures, detail: saved.detail, rows: saved.dae1b }) });
+                } catch (e) { if (e.message !== 'Signed out') A().toast(e.message, 'error'); }
+            });
+        });
         const again = () => month(el, place, year, mon);
         el.querySelectorAll('[data-xl]').forEach(b => b.addEventListener('click', async () => {
             try { await A().download(`/accommodation/${place._id}/months/${year}/${mon}/export.xlsx?version=${b.dataset.xl}`, 'report.xlsx'); A().toast('Excel downloaded'); }
@@ -101,19 +126,21 @@
     }
 
     /* ---- FORM A ----------------------------------------------------------- */
-    function formA(el) {
+    function formA(el, options = {}) {
         const thisYear = +A().manilaToday().slice(0, 4);
-        let year = thisYear, onlyUsed = true, d = null;
+        let year = options.year || thisYear, onlyUsed = true, d = null, requestId = 0;
         el.innerHTML = `<div class="glass-panel p-4 flex flex-wrap items-end gap-3">
                 <label class="block"><span class="field-label">Year</span><select data-year class="field w-32">${Array.from({ length: thisYear - 2024 }, (_, i) => thisYear - i).map(y => `<option>${y}</option>`).join('')}</select></label>
                 <button type="button" class="btn btn-secondary min-h-[44px]" data-x="excel"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Download Excel</button>
                 <label class="inline-flex items-center gap-2 text-sm font-semibold min-h-[44px] cursor-pointer ml-auto"><input data-only type="checkbox" class="accent-primary w-4 h-4" checked> Only countries with arrivals</label>
             </div><div data-body class="space-y-4"></div>`;
         const body = el.querySelector('[data-body]');
+        el.querySelector('[data-year]').value = String(year);
         async function load() {
+            const request = ++requestId;
             body.innerHTML = A().loading('Adding up the saved versions…');
-            try { d = await A().api(`/accommodation/form-a?year=${year}`); draw(); }
-            catch (e) { if (e.message !== 'Signed out') body.innerHTML = A().failed(e.message, true); }
+            try { const data = await A().api(`/accommodation/form-a?year=${year}`); if (request !== requestId) return; d = data; draw(); }
+            catch (e) { if (request === requestId && e.message !== 'Signed out') body.innerHTML = A().failed(e.message, true); }
         }
         function coverage(m) {
             if (m.source === 'none') {
@@ -146,6 +173,7 @@
             const line = (label, fn, total) => `<tr><td class="acc-sticky">${label}</td>${pm.map(m => (m ? `<td class="text-right">${fn(m)}</td>` : '<td class="text-right text-on-surface-variant">–</td>')).join('')}<td class="text-right"><b>${total}</b></td></tr>`;
             const vol = d.volumePerSex;
             body.innerHTML = `
+                <div><h3 class="acc-part">Form A · Zamboanguita · ${year}</h3><p class="acc-note">All 12 months of the year. Municipal totals combine the latest saved submissions of all accommodation enterprises; months without reports stay blank.</p></div>
                 <section class="glass-panel p-4 space-y-2"><h3 class="acc-part">Coverage</h3>
                     <div class="acc-coverage">${d.months.map(m => { const [tone, text] = coverage(m); return `<div><span class="acc-coverage__m">${A().MONTHS[m.month - 1].slice(0, 3)}</span><span class="tone-pill rounded-pill acc-pill ${tone}">${A().esc(text)}</span></div>`; }).join('')}</div>
                     <p class="acc-note">${cmp ? `Compared with ${d.comparison.previousYear} over ${d.comparison.comparableMonths.map(n => A().MONTHS[n - 1].slice(0, 3)).join(', ')} only: the months complete in both years.` : `No comparison with ${d.comparison.previousYear}: ${A().esc(d.comparison.unavailableReason || '')}`} Missing reports are left blank, never counted as zero.</p></section>
@@ -176,5 +204,8 @@
         A().loadResidences().then(load);
     }
 
-    window.ztimsAccOfficer = { tracker, month, formA };
+    (function ready() {
+        if (!window.ztimsAcc || !window.ztimsAcc.mountForms) return setTimeout(ready, 20);
+        window.ztimsAccOfficer = { tracker, month, formA };
+    })();
 })();

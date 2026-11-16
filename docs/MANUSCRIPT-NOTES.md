@@ -5,6 +5,14 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Actual DAE-1B and paired monthly submissions (16 November 2026)
+
+- The DAE-1B follows the owner's `DAE1B-30_days.pdf`, pages 1–3: arrivals by country of residence across the days of the month, followed by other indicators and volume per sex. Exclude the Manual-Summary pages. `DAE-1B-reference.pdf` preserves only the actual form.
+- The Enterprise Manager's desktop workspace has the Guest Register on the left (30%) and Tourist Influx Report on the right (70%). Mobile uses separate subpages with the same selected month. Guest Register changes refresh the report.
+- One monthly submission saves DAE-1A and DAE-1B together as an immutable version. The monthly Excel contains those two forms. Date-only corrections require a new version even if monthly totals stay the same.
+- In the Tourism Officer's Tracker, selecting a resort and month opens its submitted DAE-1A and DAE-1B, alongside Zamboanguita's annual Form A. Form A always covers all 12 months and combines all accommodation enterprises. Each reported month remains filled as new reports arrive; only months without reports stay blank. The resort/month selection does not filter the annual Form A.
+- Update Chapter IV workflow descriptions, role use cases and screenshots when authorized. Describe these as current refinements; do not attribute them to the original TAM/ISO evaluation. No research results or manuscript document were changed here.
+
 ## Tourist Influx Report; Form A4 and the 2025 paper totals taken out (16 November 2026)
 
 What changed in the system (the user's decision):
