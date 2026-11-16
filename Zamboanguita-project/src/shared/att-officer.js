@@ -12,27 +12,40 @@
 (function () {
     const A = window.ztimsAcc, T = window.ztimsAtt;
     const { esc, nf, api } = A;
-    const MON = A.MONTHS.map(m => m.slice(0, 3));
-    const SHORT = { finalized: 'Final', submitted: 'Submitted', reopened: 'Reopened', ready: 'Ready', incomplete: 'Missing', open: 'In progress', nostaff: 'No staff', before: '–', future: '' };
+    const trackerLoads = new WeakMap(), monthLoads = new WeakMap();
+    const STATUS = {
+        submitted: ['tone-info acc-status-review', 'Awaiting review', 'Submitted by Support Staff; waiting for Tourism Office finalization'],
+        finalized: ['tone-success', 'Finalized', 'Locked and included in official municipal reports'],
+        reopened: ['tone-warning', 'Open for correction', 'Support Staff can correct and resubmit; the last finalized version stays official'],
+        ready: ['tone-warning', 'Ready to submit', 'Daily counts are complete; Support Staff still needs to submit'],
+        incomplete: ['tone-danger', 'Missing daily counts', 'One or more past dates need a count or a confirmed zero'],
+        open: ['tone-neutral', 'In progress', 'Month is still in progress'],
+        nostaff: ['tone-neutral', 'No assigned staff', 'No active Support Staff is assigned to this attraction'],
+        before: ['tone-neutral', 'Before reporting', 'Before this attraction started reporting'],
+        future: ['tone-neutral', 'Not started', 'Month has not started']
+    };
+    const statusPill = state => {
+        const [tone, label] = STATUS[state] || ['tone-neutral', state];
+        return `<span class="tone-pill rounded-pill acc-pill ${tone}">${state === 'finalized' ? '<span class="material-symbols-outlined" aria-hidden="true">lock</span>' : ''}${esc(label)}</span>`;
+    };
     const thisYear = () => +A.manilaToday().slice(0, 4);
     const years = () => { const y = thisYear(); return [y, y - 1, y - 2]; };
     const yearSelect = (attr, value) => `<label class="block"><span class="field-label">Year</span><select class="field w-32" ${attr}>${years().map(y => `<option ${y === value ? 'selected' : ''}>${y}</option>`).join('')}</select></label>`;
     const modeToggle = mode => `<div class="att-mode" role="group" aria-label="Which figures"><button type="button" data-mode="official" aria-pressed="${mode === 'official'}">Official (finalized)</button><button type="button" data-mode="operational" aria-pressed="${mode === 'operational'}">Operational</button></div>`;
     const opBanner = '<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">visibility</span><span><b>Operational view.</b> It also takes submitted and draft months, each labeled. Send only the official (finalized) figures.</span></div>';
-    const legacyLine = l => (l && l.municipalTotalMonths ? `<p class="acc-note">${esc(l.note)} (${l.municipalTotalMonths} month${l.municipalTotalMonths === 1 ? '' : 's'} in that year.)</p>` : '');
 
     function mount(el) {
-        el.innerHTML = `<div role="tablist" aria-label="Attraction visits" class="flex flex-wrap gap-2 border-b border-outline-variant/30">
-                ${[['tracker', 'fact_check', 'Tracker'], ['monthly', 'calendar_view_month', 'Monthly (DTA2M)'], ['annual', 'calendar_month', 'Annual (VAR 3M)'], ['issued', 'inventory_2', 'Issued']]
+        el.innerHTML = `<div role="tablist" aria-label="Attraction visits" class="att-report-nav flex flex-wrap gap-2 border-b border-outline-variant/30">
+                ${[['tracker', 'fact_check', 'Attractions'], ['monthly', 'calendar_view_month', 'Municipal monthly · DTA2M'], ['annual', 'calendar_month', 'Municipal annual · VAR3M'], ['issued', 'inventory_2', 'Issued reports']]
                     .map(([k, icon, label], i) => `<button role="tab" type="button" class="settings-tab" data-sub="${k}" id="att-sub-${k}" aria-selected="${i === 0}"><span class="material-symbols-outlined !text-base" aria-hidden="true">${icon}</span>${label}</button>`).join('')}
             </div>
-            <p class="acc-note">Visits to office-run attractions, counted daily by each attraction's Support Staff. Kept apart from accommodation arrivals and guest nights; added across attractions they are visits, not unique tourists.</p>
             <div data-subpanel class="space-y-4" role="tabpanel"></div>`;
         const panel = el.querySelector('[data-subpanel]');
         const state = { year: thisYear(), month: null, mode: 'official' };
         const [ly, lm] = A.shiftMonth(thisYear(), +A.manilaToday().slice(5, 7), -1);
         state.month = lm; state.monthYear = ly;
         function show(k) {
+            trackerLoads.delete(panel);
             el.querySelectorAll('[data-sub]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.sub === k)));
             panel.setAttribute('aria-labelledby', 'att-sub-' + k);
             ({ tracker, monthly, annual, issued })[k](panel, state);
@@ -43,37 +56,70 @@
 
     /* ---- Tracker ------------------------------------------------------------ */
     async function tracker(el, state) {
-        el.innerHTML = `<div class="glass-panel p-4 flex flex-wrap items-end gap-3">${yearSelect('data-year', state.year)}</div><div class="glass-panel" data-host>${A.loading()}</div>`;
-        el.querySelector('[data-year]').addEventListener('change', e => { state.year = +e.target.value; tracker(el, state); });
-        const host = el.querySelector('[data-host]');
+        const request = {};
+        trackerLoads.set(el, request);
+        el.innerHTML = A.loading('Loading attraction reports…');
         let d;
         try { d = await api(`/attraction-visits/tracker?year=${state.year}`); }
-        catch (e) { if (e.status !== 401) host.innerHTML = A.failed(e.message); return; }
-        if (!d.attractions.length) { host.innerHTML = '<div class="ztims-empty m-4">No office-run attraction counts visitors in that year.</div>'; return; }
-        const tally = {};
-        const rows = d.attractions.map(a => `<tr class="own-row--office"><td class="px-3 py-2 acc-sticky text-left">
-                <span class="font-bold">${esc(a.name)}</span><span class="acc-sub">${esc(a.barangay || '')}${a.supportStaff ? ` · ${esc(a.supportStaff)}` : ' · <span class="text-error font-bold">No Support Staff</span>'}</span>
-                <button type="button" class="text-xs font-bold underline mt-1" data-settings="${esc(a._id)}" data-name="${esc(a.name)}">Reporting settings</button></td>
-            ${a.months.map(m => {
-                tally[m.state] = (tally[m.state] || 0) + 1;
-                if (m.state === 'future') return '<td></td>';
-                const s = T.MONTH_STATES[m.state] || ['tone-neutral', 'help', m.state];
-                let short = SHORT[m.state] || m.state;
-                if (m.state === 'incomplete') short = `${m.missing} missing`;
-                if ((m.state === 'finalized' || m.state === 'submitted') && m.version) short += ` v${m.version}`;
-                const label = `${a.name} · ${A.monthName(state.year, m.month)}: ${s[2]}${m.version ? ', version ' + m.version : ''}${m.state === 'incomplete' ? `, ${m.missing} dates missing` : ''}`;
-                return `<td class="px-1 py-1.5">${m.state === 'before' ? `<span class="acc-note" title="${esc(label)}">–</span>`
-                    : `<button type="button" class="att-cellbtn" data-spot="${esc(a._id)}" data-month="${m.month}" aria-label="${esc(label)}" title="${esc(label)}"><span class="tone-pill rounded-pill acc-pill ${s[0]}">${esc(short)}</span></button>`}</td>`;
-            }).join('')}</tr>`).join('');
-        const order = ['submitted', 'finalized', 'reopened', 'ready', 'incomplete', 'nostaff'];
-        host.innerHTML = `<div class="flex flex-wrap gap-2 p-4">${order.filter(k => tally[k]).map(k => `<span class="tone-pill rounded-pill acc-pill ${T.MONTH_STATES[k][0]}">${tally[k]} ${esc(T.MONTH_STATES[k][2].toLowerCase())}</span>`).join('') || '<span class="acc-note">Nothing to review yet.</span>'}</div>
-            <p class="px-4 pb-3 acc-note">Submitted months wait for you to finalize them. "Ready" and "missing" months are still with the Support Staff.</p>
-            <div class="acc-scroll"><table class="ztims-table text-sm min-w-[1100px] att-track"><thead><tr><th class="text-left px-3 py-2 acc-sticky">Attraction</th>${MON.map(m => `<th class="px-1 py-2 text-center">${m}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-        host.querySelectorAll('[data-spot]').forEach(b => b.addEventListener('click', () => monthWindow(b.dataset.spot, state.year, +b.dataset.month, () => tracker(el, state))));
-        host.querySelectorAll('[data-settings]').forEach(b => b.addEventListener('click', () => settingsWindow(b.dataset.settings, b.dataset.name)));
+        catch (e) {
+            if (trackerLoads.get(el) === request && e.status !== 401) {
+                el.innerHTML = A.failed(e.message, true);
+                el.querySelector('[data-acc-retry]').addEventListener('click', () => tracker(el, state), { once: true });
+            }
+            return;
+        }
+        if (trackerLoads.get(el) !== request) return;
+        if (!d.attractions.some(a => a._id === state.attractionId)) state.attractionId = '';
+        const selected = d.attractions.find(a => a._id === state.attractionId)?.months.find(m => m.month === state.selectedMonth);
+        if (state.selectionYear !== state.year || !selected || ['before', 'future'].includes(selected.state)) state.selectedMonth = null;
+        state.selectionYear = state.year;
+        const refresh = () => tracker(el, state);
+        function draw() {
+            const attraction = d.attractions.find(a => a._id === state.attractionId);
+            el.innerHTML = `<div class="acc-directory space-y-5">
+                <div class="acc-head"><div class="acc-flow-title">${attraction ? '<button type="button" class="btn btn-secondary btn-sm" data-directory>← All attractions</button>' : ''}<h2 class="acc-part">${attraction ? esc(attraction.name) : 'Office-run attractions'}</h2>${attraction ? `<p class="acc-note">${esc([attraction.barangay, attraction.supportStaff || 'No assigned Support Staff'].filter(Boolean).join(' · '))}</p>` : ''}</div>
+                <div class="acc-head__actions">${yearSelect('data-report-year aria-label="Reporting year"', state.year)}${attraction ? '<button type="button" class="btn btn-secondary" data-settings>Reporting settings</button>' : ''}</div></div>
+                ${A.statusLegend(Object.entries(STATUS).map(([key, value]) => [statusPill(key), value[2]]))}
+                ${attraction ? `<section aria-label="Reporting months"><h3 class="acc-part mb-3">Select a month</h3><div class="acc-month-cards">${attraction.months.map(m => `<button type="button" class="acc-month-card" data-report-month="${m.month}" aria-pressed="${state.selectedMonth === m.month}"${['future', 'before'].includes(m.state) ? ' disabled' : ''}><b>${A.MONTHS[m.month - 1]}</b>${statusPill(m.state)}<span class="acc-note">${m.state === 'incomplete' ? `${nf(m.missing)} dates missing` : esc(STATUS[m.state]?.[2] || '')}${m.version ? ` · v${m.version}` : ''}</span></button>`).join('')}</div></section><section data-month-report class="space-y-4" aria-label="Selected monthly report"></section>` : `
+                <label class="block"><span class="field-label">Find an attraction</span><input type="search" class="field" data-attraction-search placeholder="Search attraction names" value="${esc(state.query || '')}"></label><div data-attraction-list class="acc-enterprise-list"></div>`}
+            </div>`;
+            el.querySelector('[data-report-year]').addEventListener('change', e => { state.year = +e.target.value; state.selectedMonth = null; refresh(); });
+            if (!attraction) {
+                const list = el.querySelector('[data-attraction-list]');
+                function filter() {
+                    const matches = d.attractions.filter(a => a.name.toLocaleLowerCase().includes((state.query || '').toLocaleLowerCase()));
+                    list.innerHTML = matches.length ? matches.map(a => {
+                        const review = a.months.filter(m => m.state === 'submitted').length;
+                        const finalized = a.months.filter(m => m.state === 'finalized').length;
+                        const missing = a.months.filter(m => m.state === 'incomplete').length;
+                        return `<button type="button" class="acc-enterprise-row" data-attraction="${esc(a._id)}"><span><b>${esc(a.name)}</b><span class="acc-note">${finalized} month${finalized === 1 ? '' : 's'} finalized${review ? ` · ${review} awaiting review` : ''}${missing ? ` · ${missing} with missing counts` : ''}${!a.supportStaff ? ' · No assigned staff' : ''}</span></span><span aria-hidden="true">→</span></button>`;
+                    }).join('') : '<div class="ztims-empty">No matching office-run attractions.</div>';
+                    list.querySelectorAll('[data-attraction]').forEach(b => b.addEventListener('click', () => { state.attractionId = b.dataset.attraction; state.selectedMonth = null; draw(); }));
+                }
+                el.querySelector('[data-attraction-search]').addEventListener('input', e => { state.query = e.target.value; filter(); });
+                filter();
+            } else {
+                el.querySelector('[data-directory]').addEventListener('click', () => { state.attractionId = ''; state.selectedMonth = null; draw(); });
+                el.querySelector('[data-settings]').addEventListener('click', () => settingsWindow(attraction._id, attraction.name, refresh));
+                const host = el.querySelector('[data-month-report]');
+                const open = () => {
+                    if (!state.selectedMonth) { host.innerHTML = '<div class="ztims-empty">Select a month to view its visitor summary and daily VAR1 report.</div>'; return; }
+                    return monthWindow(attraction._id, state.year, state.selectedMonth, refresh, host);
+                };
+                el.querySelectorAll('[data-report-month]').forEach(b => b.addEventListener('click', async () => {
+                    state.selectedMonth = +b.dataset.reportMonth;
+                    const selectedMonth = state.selectedMonth;
+                    el.querySelectorAll('[data-report-month]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.reportMonth === state.selectedMonth)));
+                    await open();
+                    if (host.isConnected && state.selectedMonth === selectedMonth) host.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+                }));
+                open();
+            }
+        }
+        draw();
     }
 
-    function settingsWindow(spotId, name) {
+    function settingsWindow(spotId, name, refresh) {
         A.openWindow({
             title: `Reporting settings · ${name}`,
             body: `<label class="block"><span class="field-label">Reporting starts (month)</span><input type="month" class="field" data-from></label>
@@ -87,43 +133,63 @@
                 if (!Object.keys(body).length) throw new Error('Enter the month reporting starts or the attraction code.');
                 const r = await api(`/attraction-visits/${encodeURIComponent(spotId)}/settings`, { method: 'PUT', body });
                 A.toast(`Saved. Reporting starts ${A.monthName(+r.reportingFrom.slice(0, 4), +r.reportingFrom.slice(5, 7))}${r.attractionCode ? `, code ${r.attractionCode}` : ''}.`, 'success');
+                if (refresh) refresh();
             } }]
         });
     }
 
     /* ---- One attraction-month: review, Finalize, Reopen ---------------------- */
-    async function monthWindow(spotId, year, month, refresh) {
+    async function monthWindow(spotId, year, month, refresh, host) {
         const path = `/attraction-visits/${encodeURIComponent(spotId)}/months/${year}/${month}`;
-        const w = A.openWindow({ title: A.monthName(year, month), body: A.loading(), wide: true, actions: [{ label: 'Close', kind: 'secondary' }] });
+        const request = {};
+        if (host) {
+            monthLoads.set(host, request);
+            host.innerHTML = `<div class="acc-head"><h2 class="text-xl font-bold"></h2><div class="acc-head__actions" data-review-actions></div></div><div data-review-error role="alert" hidden></div><div data-review-content class="space-y-4">${A.loading()}</div>`;
+        }
+        const w = host ? {
+            el: host, body: host.querySelector('[data-review-content]'), close() {},
+            error(message) { const error = host.querySelector('[data-review-error]'); error.hidden = false; error.textContent = message; }
+        } : A.openWindow({ title: A.monthName(year, month), body: A.loading(), wide: true, actions: [{ label: 'Close', kind: 'secondary' }] });
+        const active = () => !host || (host.isConnected && monthLoads.get(host) === request);
         let v;
-        try { v = await api(path); } catch (e) { if (e.status !== 401) w.body.innerHTML = A.failed(e.message); return; }
+        try { v = await api(path); } catch (e) { if (active() && e.status !== 401) w.body.innerHTML = A.failed(e.message); return; }
+        if (!active()) return;
         const st = v.state, f = v.figures;
         const latest = v.versions[v.versions.length - 1];
         const shown = latest && st.state !== 'reopened' ? latest.figures : f;
         w.el.querySelector('h2').textContent = `${v.attraction.name} · ${A.monthName(year, month)}`;
         const re = (v.events || []).filter(e => e.action === 'reopened').pop();
-        w.body.innerHTML = `<div class="flex flex-wrap items-center gap-2">${T.monthPill(st.state, st.version, st.missing)}${st.state === 'reopened' && st.finalizedVersion ? `<span class="acc-note">Version ${st.finalizedVersion} stays official until the correction is finalized.</span>` : ''}</div>
+        w.body.innerHTML = `<div class="flex flex-wrap items-center gap-2">${statusPill(st.state)}${st.state === 'reopened' && st.finalizedVersion ? `<span class="acc-note">Version ${st.finalizedVersion} stays official until the correction is finalized.</span>` : ''}</div>
             ${st.state === 'reopened' && re ? `<div class="acc-banner acc-banner--warn"><span>Reopened ${esc(A.fmtWhen(re.at))}: “${esc(re.reason)}”. Waiting for the Support Staff's correction.</span></div>` : ''}
             ${!latest ? `<div class="acc-banner acc-banner--info"><span>Not submitted. The figures below are the daily counts as they stand${f.missing.length + f.scheduled.length ? `, with ${f.missing.length + f.scheduled.length} dates missing` : ''}.</span></div>` : ''}
             ${latest && st.state !== 'reopened' ? `<p class="acc-note">Figures of version ${latest.version}, submitted ${esc(A.fmtWhen(latest.submittedAt))}${latest.submittedByEmail ? ` by ${esc(latest.submittedByEmail)}` : ''}.</p>` : ''}
-            ${T.tilesHtml(Object.assign({}, shown, { days: f.days, missing: latest && st.state !== 'reopened' ? undefined : f.missing, scheduled: f.scheduled }))}
+            <div class="acc-tabs" role="tablist" aria-label="Attraction report"><button type="button" class="settings-tab" role="tab" data-report-form="summary" aria-selected="true">Monthly visitor summary</button><button type="button" class="settings-tab" role="tab" data-report-form="daily" aria-selected="false">Daily visitor report · VAR1</button></div>
+            <div data-form-content role="tabpanel" aria-label="Monthly visitor summary" class="space-y-4"></div>
+            <details><summary class="acc-part">Previous submissions</summary>
+            ${v.versions.length ? `<ul class="divide-y divide-outline-variant/30">${v.versions.slice().reverse().map(x => `<li class="py-2 flex flex-wrap justify-between gap-2"><div><b>Version ${x.version}</b>${st.finalizedVersion === x.version ? ' ' + statusPill('finalized') : ''} · ${nf(x.figures.total)} visits · ${esc(A.fmtWhen(x.submittedAt))}${x.reason ? `<span class="acc-sub">Reason: ${esc(x.reason)}</span>` : ''}${T.changesHtml(x.changes)}</div>
+                <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-vxl="${x.version}">Excel v${x.version}</button></li>`).join('')}</ul>` : '<p class="acc-note">None yet.</p>'}</details>
+            <details><summary class="acc-part">Submission history</summary>${T.historyHtml(v.events)}</details>`;
+        const summaryHtml = `${T.tilesHtml(Object.assign({}, shown, { days: f.days, missing: latest && st.state !== 'reopened' ? undefined : f.missing, scheduled: f.scheduled }))}
             ${shown.residenceUnrecorded || shown.sexUnrecorded ? `<div class="acc-banner acc-banner--warn"><span>${shown.residenceUnrecorded ? `Residence not recorded for ${nf(shown.residenceUnrecorded)} visits. ` : ''}${shown.sexUnrecorded ? `Sex not recorded for ${nf(shown.sexUnrecorded)} visits.` : ''}</span></div>` : ''}
-            ${T.breakdownHtml(shown)}
-            <details><summary class="cursor-pointer font-bold min-h-[44px] flex items-center">Day by day (VAR 1)</summary>${T.var1Html(f.daily)}</details>
-            <h3 class="acc-part">Versions</h3>
-            ${v.versions.length ? `<ul class="divide-y divide-outline-variant/30">${v.versions.slice().reverse().map(x => `<li class="py-2 flex flex-wrap justify-between gap-2"><div><b>Version ${x.version}</b>${st.finalizedVersion === x.version ? ' ' + T.monthPill('finalized') : ''} · ${nf(x.figures.total)} visits · ${esc(A.fmtWhen(x.submittedAt))}${x.reason ? `<span class="acc-sub">Reason: ${esc(x.reason)}</span>` : ''}${T.changesHtml(x.changes)}</div>
-                <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-vxl="${x.version}">Excel v${x.version}</button></li>`).join('')}</ul>` : '<p class="acc-note">None yet.</p>'}
-            <h3 class="acc-part">History</h3>${T.historyHtml(v.events)}`;
+            ${T.breakdownHtml(shown)}`;
+        const form = w.body.querySelector('[data-form-content]');
+        form.innerHTML = summaryHtml;
+        w.body.querySelectorAll('[data-report-form]').forEach(b => b.addEventListener('click', () => {
+            const daily = b.dataset.reportForm === 'daily';
+            w.body.querySelectorAll('[data-report-form]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+            form.setAttribute('aria-label', daily ? 'Daily visitor report · VAR1' : 'Monthly visitor summary');
+            form.innerHTML = daily ? T.var1Html(shown.daily) : summaryHtml;
+        }));
         const xl = which => A.download(`${path}/export.xlsx?version=${which}`, `VAR1_${year}-${A.pad(month)}.xlsx`).catch(e => w.error(e.message));
         w.body.querySelectorAll('[data-vxl]').forEach(b => b.addEventListener('click', () => xl(b.dataset.vxl)));
         // The actions this month allows; the server checks each again.
-        const bar = w.el.querySelector('.acc-window__actions');
+        const bar = w.el.querySelector(host ? '[data-review-actions]' : '.acc-window__actions');
         bar.innerHTML = '';
         const add = (label, kind, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = `btn min-h-[44px] ${kind}`; b.textContent = label; b.addEventListener('click', fn); bar.appendChild(b); return b; };
         add('VAR 1 Excel', 'btn-secondary', () => xl(latest && st.state !== 'reopened' ? 'latest' : 'current'));
-        if (st.state === 'submitted' || st.state === 'finalized') add('Reopen', 'btn-cancel', () => reopenWindow(v, path, () => { w.close(); refresh(); }));
+        if (st.state === 'submitted' || st.state === 'finalized') add('Reopen for correction', 'btn-cancel', () => reopenWindow(v, path, () => { w.close(); refresh(); }));
         if (st.state === 'submitted') add(`Finalize version ${st.version}`, 'btn-primary', () => finalizeWindow(v, path, () => { w.close(); refresh(); }));
-        add('Close', 'btn-secondary', () => w.close());
+        if (!host) add('Close', 'btn-secondary', () => w.close());
     }
 
     function finalizeWindow(v, path, done) {
@@ -213,7 +279,7 @@
         let d;
         try { d = await api(`/attraction-visits/consolidated/annual?${q}`); }
         catch (e) { if (e.status !== 401) host.innerHTML = A.failed(e.message); return; }
-        if (!d.attractions.length) { host.innerHTML = '<div class="ztims-empty">No office-run attraction reports in that year.</div>' + legacyLine(d.legacy); return; }
+        if (!d.attractions.length) { host.innerHTML = '<div class="ztims-empty">No office-run attraction reports in that year.</div>'; return; }
         const c = cell => (cell && cell.included ? cell : null);
         // "–": no usable month; empty: the month is in, but its residence was not recorded.
         const td = (x, k, strong) => `<td class="text-right"${x && x.pending ? ' title="Correction pending"' : ''}>${!x ? '–' : x[k] == null ? '' : strong ? `<b>${nf(x[k])}</b>` : nf(x[k])}</td>`;
@@ -227,7 +293,7 @@
                 <tfoot><tr><th>Total</th>${d.totals.map((t, i) => (anyIn(d.attractions[i]) ? td(t, 'domestic') + td(t, 'foreign') + td(t, 'total') : '<td>–</td><td>–</td><td>–</td>')).join('')}
                     ${d.byMonth.some(Boolean) ? td(d.grand, 'domestic') + td(d.grand, 'foreign') + td(d.grand, 'total') : '<td>–</td><td>–</td><td>–</td>'}</tr>
                 <tr class="att-row--note"><th>Residence not recorded</th>${d.totals.map(t => `<td colspan="3" class="text-right">${nf(t.unrecorded)}</td>`).join('')}<td colspan="3" class="text-right">${nf(d.grand.unrecorded)}</td></tr></tfoot></table></div>
-            <p class="acc-note">${esc(d.note)} "–": no ${state.mode === 'official' ? 'finalized' : 'usable'} figures for that month, never 0. Empty: residence not recorded that month.</p>${legacyLine(d.legacy)}`;
+            <p class="acc-note">${esc(d.note)} "–": no ${state.mode === 'official' ? 'finalized' : 'usable'} figures for that month, never 0. Empty: residence not recorded that month.</p>`;
     }
 
     function issueWindow(kind, year, month, done) {

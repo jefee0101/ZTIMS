@@ -49,8 +49,8 @@
         if (/Q\d$/.test(p.key)) return p.label.replace(' ', ' ');
         return p.label;
     }
-    const periodState = p => (p.future ? 'future' : p.municipalTotal && !p.figures ? 'paper' : !p.figures ? 'none' : p.complete ? 'complete' : 'partial');
-    const STATE_TEXT = { complete: 'Complete', partial: 'Partial: not every place reported', none: 'Not reported', future: 'Not yet', paper: 'Kept only as a 2025 municipal paper total (no figures per place)' };
+    const periodState = p => (p.future ? 'future' : !p.figures ? 'none' : p.complete ? 'complete' : 'partial');
+    const STATE_TEXT = { complete: 'Complete', partial: 'Partial: not every place reported', none: 'Not reported', future: 'Not yet' };
 
     /* A column chart over periods. values[i] null = nothing reported (a gap with a mark, never a 0 bar). */
     function columns(periods, value, opts = {}) {
@@ -70,7 +70,6 @@
             s += `<g class="ax-col" tabindex="0" aria-label="${esc(words)}"><title>${esc(words)}</title>`;
             if (v != null) s += `<rect class="ax-bar${st === 'partial' ? ' ax-bar--partial' : ''}" x="${x}" y="${y(v)}" width="${w}" height="${Math.max(v > 0 ? 1.5 : 0, m.t + ih - y(v))}" ${st === 'partial' ? `fill="url(#${pid})"` : ''}/>`;
             if (v === 0) s += `<line class="ax-zero" x1="${x}" x2="${x + w}" y1="${m.t + ih - 1}" y2="${m.t + ih - 1}"/>`;
-            if (v == null && st === 'paper') s += `<rect class="ax-paper" x="${x}" y="${m.t + ih - 6}" width="${w}" height="6"/>`;
             if (v == null && st === 'none') s += `<rect class="ax-gap" x="${x}" y="${m.t + ih - 14}" width="${w}" height="14"/>`;
             s += `<rect x="${m.l + bw * i}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent"/></g>`;
             if (i % every === 0) s += `<text class="ax-axis" x="${m.l + bw * (i + 0.5)}" y="${H - 12}" text-anchor="middle">${esc(shortLabel(p, multi))}</text>`;
@@ -85,7 +84,6 @@
         const legend = [`<span><i class="ax-key ax-key--solid"></i>${esc(opts.unitLabel || opts.unit)}, complete</span>`];
         if (periods.some(p => periodState(p) === 'partial')) legend.push('<span><i class="ax-key ax-key--hatch"></i>Partial: not every place reported</span>');
         if (periods.some(p => periodState(p) === 'none')) legend.push('<span><i class="ax-key ax-key--gap"></i>Not reported (not 0)</span>');
-        if (periods.some(p => periodState(p) === 'paper')) legend.push('<span><i class="ax-key ax-key--paper"></i>Kept only as a 2025 municipal paper total</span>');
         if (cmp && cmp.some(v => v != null)) legend.push('<span><i class="ax-key ax-key--cmp"></i>A year earlier, comparable periods only</span>');
         return `<figure class="ax-figure">${s}<figcaption class="ax-legend">${legend.join('')}</figcaption></figure>`;
     }
@@ -286,7 +284,7 @@
         async function viewAccommodation() {
             if (officer && placeKind(S.place) === 'att') return empty('The place chosen is an attraction. Choose a place to stay, or All places.');
             const d = await A().api(`/analytics/accommodation?${params()}`);
-            if (!d.places && !d.baseline) return empty(officer ? 'No private place to stay matches these filters.' : 'This enterprise is not a private place to stay.');
+            if (!d.places) return empty(officer ? 'No private place to stay matches these filters.' : 'This enterprise is not a private place to stay.');
             const t = d.total, f = t.figures, measure = ACC_MEASURES.find(x => x[0] === S.accMeasure) || ACC_MEASURES[0];
             const unreported = d.periods.filter(p => !p.future && !p.figures).length;
             const partialNote = t.complete ? 'every place reported' : `${unreported ? plural(unreported, 'period') + ' not reported; ' : ''}not every place reported`;
@@ -309,13 +307,7 @@
             const sex = f ? stacked([{ label: 'Male', value: f.sex.male }, { label: 'Female', value: f.sex.female }], 'arrivals') : empty('Nothing reported in this range.');
             const demo = card('Where guests live', res + (f ? table(['Residence', 'Arrivals'], SECTIONS.map(([k, l]) => [l, nf(f.residence[k] || 0)]), 'Arrivals by residence') : ''), { foot: f && !t.complete ? 'Counts from the reports included above only.' : '' }) +
                 card('Guests by sex', sex + (f ? table(['Sex', 'Arrivals'], [['Male', nf(f.sex.male)], ['Female', nf(f.sex.female)]], 'Arrivals by sex') : ''), { foot: 'Recorded per guest in each stay register.' });
-            let base = '';
-            if (d.baseline) {
-                const bp = d.baseline.periods.filter(p => p.figures);   // only the months the paper totals hold
-                base = card('2025 paper totals (Form A4)', columns(bp.map(p => ({ ...p, coverage: {}, future: false })), p => (p.figures ? p.figures.arrivals : null), { unit: 'arrivals', unitLabel: 'Arrivals, paper totals', label: 'Arrivals in the 2025 paper totals' }) +
-                    table(['Period', 'Arrivals', 'Guest nights', 'Room-nights occupied'], bp.map(p => [esc(p.label), p.figures ? nf(p.figures.arrivals) : '–', p.figures ? nf(p.figures.guestNights) : '–', p.figures ? nf(p.figures.roomNightsOccupied) : '–']), '2025 paper totals'),
-                    { wide: true, badge: pill('tone-neutral', 'Separate source'), foot: 'The municipality’s whole-month totals kept on paper before ZTIMS. They have no place, barangay or sex split, and whether they cover the same places is not confirmed, so they are never added to the reports above.' });
-            }
+            const base = '';
             let breakdown = '';
             if (officer && !S.place) {
                 const b = await A().api(`/analytics/accommodation/places?${params({ granularity: null, compare: null })}`);
@@ -328,7 +320,7 @@
         function compareSummary(cmp) {
             const ok = cmp.periods.filter(c => c.comparable);
             if (!ok.length) return `<p class="ax-note ax-cmp-note">No period can be compared with a year earlier yet: ${esc((cmp.periods.find(c => c.reason) || {}).reason || 'both periods must be complete.')}</p>`;
-            return `<ul class="ax-cmp-list">${ok.map(c => `<li><span>${esc(periodLabel(c.key))}</span><b>${c.difference > 0 ? '+' : ''}${nf(c.difference)}</b><span class="text-support">${nf(c.current)} against ${nf(c.previous)}${c.scopeUnconfirmed ? ' (paper total)' : ''}</span></li>`).join('')}</ul>`;
+            return `<ul class="ax-cmp-list">${ok.map(c => `<li><span>${esc(periodLabel(c.key))}</span><b>${c.difference > 0 ? '+' : ''}${nf(c.difference)}</b><span class="text-support">${nf(c.current)} against ${nf(c.previous)}</span></li>`).join('')}</ul>`;
         }
 
         /* ---- attractions (officer) ------------------------------------------------- */
@@ -420,11 +412,11 @@
                 A().api(`/analytics/attractions?${params({ compare: null, granularity: 'month' })}`)
             ]);
             const cell = (p, extra) => { const c = p.coverage || {}; if (p.future) return 'Not yet'; if (!c.expected) return '–'; const more = extra.reduce((a, k) => a + (c[k] || 0), 0); return `${nf(c.finalized || 0)} of ${nf(c.expected)}${more ? ` (+${more} not finalized)` : ''}${c.missing ? ` · ${c.missing} missing` : ''}`; };
-            const rows = acc.periods.map((p, i) => [esc(p.label), p.municipalTotal ? 'Paper total' : cell(p, ['submitted']), att.periods[i] ? cell(att.periods[i], ['submitted', 'draft']) : '–']);
-            const open = acc.periods.filter(p => !p.future && !p.complete && !p.municipalTotal).length + att.periods.filter(p => !p.future && !p.complete && (p.coverage.expected || 0) > 0).length;
+            const rows = acc.periods.map((p, i) => [esc(p.label), cell(p, ['submitted']), att.periods[i] ? cell(att.periods[i], ['submitted', 'draft']) : '–']);
+            const open = acc.periods.filter(p => !p.future && !p.complete).length + att.periods.filter(p => !p.future && !p.complete && (p.coverage.expected || 0) > 0).length;
             return `<div class="stat-tiles ax-tiles">${gaps.gaps.map(g => tile(esc(g.label), nf(g.count), '', g.count ? 'ax-tile--partial' : '')).join('')}${tile('Incomplete months in this range', nf(open), 'places to stay and attractions together')}</div><div class="ax-grid">` +
                 card('Reports finalized each month', `<div class="ax-scroll"><table class="ztims-table"><caption class="sr-only">Reports finalized each month</caption><thead><tr><th scope="col">Month</th><th scope="col">Places to stay</th><th scope="col">Attractions</th></tr></thead><tbody>${rows.map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>`,
-                    { wide: true, foot: 'Finalized of expected. A missing report is never counted as 0. Open Statistics → Tracker to follow one up.' }) + `</div>`;
+                    { wide: true, foot: 'Finalized of expected. A missing report is never counted as 0. Open Tourist Influx Report → Tracker to follow one up.' }) + `</div>`;
         }
 
         const VIEWS = { accommodation: viewAccommodation, attractions: viewAttractions, requests: viewRequests, coverage: viewCoverage, guests: viewGuests };

@@ -1,9 +1,9 @@
-/* Accommodation reports as Excel files, laid out like the four DOT templates
+/* Accommodation reports as Excel files, laid out like the DOT templates
  * the Tourism Office supplied (PDFs; the original workbooks were not):
  *
  *   DAE-1A   Monthly Recording Format for Accommodation Establishment
- *   DAE-1B   (daily)  the v4a "Daily-Sum-Monthly" sheet: days 1–31 across
- *   DAE-1B / DAE 2 (2019)  the monthly-total sheet
+ *   DAE-1B   the supplied DAE1B-30_days.pdf, pages 1–3: days 1–31 across.
+ *            The Manual-Summary pages are deliberately excluded.
  *   FORM A   (Sum) Annual Report: months across, total, share, previous year
  *
  * Rebuilt from the PDFs: headings, the country rows and their grouping and
@@ -204,7 +204,9 @@ function signature(ws, r, withDate) {
 function a4(ws, landscape, titleRows, onePage) {
     ws.pageSetup = { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: onePage ? 1 : 0,
                      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }, printTitlesRow: titleRows };
-    ws.headerFooter = { oddFooter: 'Page &P of &N' };
+    // Every report ZTIMS prints is a Tourist Influx Report (16 November 2026);
+    // the DOT form's own headings stay as they are below it.
+    ws.headerFooter = { oddHeader: '&C&"Arial,Bold"&10TOURIST INFLUX REPORT', oddFooter: 'Page &P of &N' };
 }
 
 /* ---- DAE-1A -------------------------------------------------------------- */
@@ -326,7 +328,7 @@ function dae1bHead(ws, ctx, daily) {
 }
 
 function addDae1B(wb, ctx, daily) {
-    const ws = wb.addWorksheet(daily ? 'DAE-1B (daily)' : 'DAE-1B DAE 2 (2019)');
+    const ws = wb.addWorksheet(daily ? 'DAE-1B' : 'DAE-1B DAE 2 (2019)');
     const days = ctx.days || 31;
     const cols = daily ? Array.from({ length: 31 }, (_, i) => i) : [0];
     ws.columns = daily ? [{ width: 32 }, ...cols.map(() => ({ width: 3.6 })), { width: 7 }] : [{ width: 46 }, { width: 14 }];
@@ -344,7 +346,7 @@ function addDae1B(wb, ctx, daily) {
     const value = (codes, i) => {
         if (!has) return null;
         if (!daily) return monthTotal(codes);
-        if (i >= days || !dailyAvailable) return null;
+        if (i >= days || (ctx.arrivalDays != null && i >= ctx.arrivalDays) || !dailyAvailable) return null;
         return byDay(codes, i);
     };
     if (daily) for (let i = 1; i < top; i++) ws.getRow(i).height = 8.5;
@@ -376,7 +378,7 @@ function addDae1B(wb, ctx, daily) {
     };
     const titleRow = ws.getRow(r); style(Object.assign(titleRow.getCell(1), { value: 'PART II.  Other Indicators' }), { bold: true, size: 9 }); r += 2;
     put('A. DAE2:', null, undefined, { bold: true, fill: C.YELLOW });
-    const dd = (key) => (has && v.detail && daily ? i => (i < days ? v.detail.daily[i][key] : null) : null);
+    const dd = (key) => (has && v.detail && daily ? i => (i < days && (ctx.countedDays == null || i < ctx.countedDays) ? v.detail.daily[i][key] : null) : null);
     const occRow = put('1. Rooms Occupied', dd('roomsOccupied'), has ? v.roomNightsOccupied : null);
     const avRow = put('2. Rooms available for the month', dd('available'), has ? v.roomNightsAvailable : null);
     const gnRow = put('3. Total Guest nights', dd('guestNights'), has ? v.guestNights : null);
@@ -390,7 +392,7 @@ function addDae1B(wb, ctx, daily) {
     put('2. Average Length of Stay (in Nights)', null, has ? rateCell(`IF(OR(${TL}${grandRow}="",${TL}${grandRow}=0),"n/a",${TL}${gnRow}/${TL}${grandRow})`, alos) : null, { fmt: '0.00' });
     put('B. VOLUME PER SEX', null, undefined, { bold: true, fill: C.YELLOW });
     const sections = ctx.sections;
-    const sexValue = (sec, sex) => (has ? (daily ? (v.detail ? i => (i < days ? Object.keys(v.detail.byDay).filter(c => sections[c] === sec).reduce((a, c) => a + v.detail.byDay[c][sex][i], 0) : null) : null) : null) : null);
+    const sexValue = (sec, sex) => (has ? (daily ? (v.detail ? i => (i < days && (ctx.arrivalDays == null || i < ctx.arrivalDays) ? Object.keys(v.detail.byDay).filter(c => sections[c] === sec).reduce((a, c) => a + v.detail.byDay[c][sex][i], 0) : null) : null) : null) : null);
     const sexTotal = (sec, sex) => (has ? Object.entries(v.counts).filter(([c]) => sections[c] === sec).reduce((a, [, x]) => a + x[sex], 0) : null);
     for (const [n, sex] of [['1. Male', 'male'], ['2. Female', 'female']]) {
         put(n, null, undefined, { bold: true });
@@ -399,7 +401,7 @@ function addDae1B(wb, ctx, daily) {
             const t = sexTotal(sec, sex); sum += t || 0;
             put(label, sexValue(sec, sex), t);
         }
-        put('x. Total', has && daily && v.detail ? i => (i < days ? Object.values(v.detail.byDay).reduce((a, b) => a + b[sex][i], 0) : null) : null, has ? sum : null);
+        put('x. Total', has && daily && v.detail ? i => (i < days && (ctx.arrivalDays == null || i < ctx.arrivalDays) ? Object.values(v.detail.byDay).reduce((a, b) => a + b[sex][i], 0) : null) : null, has ? sum : null);
     }
     headerRows(ws, [[r, 1, FOOTNOTE, { size: 7 }], [r + 1, 1, FOOTNOTE_2, { size: 7 }]]);
     signature(ws, r + 4, !daily);
@@ -500,7 +502,7 @@ function addFormA(wb, ctx) {
 }
 
 async function toBuffer(wb) { return Buffer.from(await wb.xlsx.writeBuffer()); }
-function workbook() { const wb = new ExcelJS.Workbook(); wb.creator = 'ZTIMS'; wb.created = new Date(); return wb; }
+function workbook() { const wb = new ExcelJS.Workbook(); wb.creator = 'ZTIMS'; wb.title = 'Tourist Influx Report'; wb.created = new Date(); return wb; }
 
 /* The DAE-1B / DAE 2 (2019) Part I rows with their totals, for the screen:
    the same TEMPLATE the Excel walks, so the two never differ.
@@ -542,4 +544,18 @@ function dae2Rows(counts) {
     return out;
 }
 
-module.exports = { TEMPLATE, safeText, addDae1A, addDae1B, addFormA, workbook, toBuffer, dae2Rows };
+/* The actual DAE-1B's daily columns use exactly the same residence order and
+   subtotal rules as the workbook. Unknown historical daily detail stays null. */
+function dae1bRows(counts, detail, days, countedDays = days) {
+    const rows = dae2Rows(counts);
+    const perDay = Array.from({ length: days }, (_, i) => {
+        if (!detail || i >= countedDays) return null;
+        const daily = Object.fromEntries(Object.entries(detail.byDay || {}).map(([code, c]) =>
+            [code, { male: c.male[i] || 0, female: c.female[i] || 0 }]));
+        return dae2Rows(daily);
+    });
+    return rows.map((r, index) => ({ ...r, days: Array.from({ length: 31 }, (_, i) =>
+        i < days && perDay[i] ? perDay[i][index].total : null) }));
+}
+
+module.exports = { TEMPLATE, safeText, addDae1A, addDae1B, addFormA, workbook, toBuffer, dae2Rows, dae1bRows };

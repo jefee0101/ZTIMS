@@ -186,7 +186,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         const state = E.periodState({ year, month, today: ctx.today, reportingFrom: ctx.reportingFrom, period, figures, hasStaff: await hasStaff(spot.id, client) });
         const shaped = versions.map((v, i) => {
             const f = E.figuresFromVersion(v);
-            return { ...shapeVersion(v, summary(f)), changes: i ? E.diffDaily(versions[i - 1].daily, v.daily) : [] };
+            return { ...shapeVersion(v, { ...summary(f), daily: f.daily }), changes: i ? E.diffDaily(versions[i - 1].daily, v.daily) : [] };
         });
         const idv = new Map(versions.map(v => [v.id, v.version]));
         return { spot, settings: await settingsOf(spot.id, client), figures, state, period, versions: shaped, versionRows: versions,
@@ -428,15 +428,13 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         const totals = attractions.map(a => a.months.filter(m => m.cell.included).reduce((acc, m) => E.addCells(acc, m.cell), { ...zero }));
         const byMonth = Array.from({ length: 12 }, (_, i) => { const cells = attractions.map(a => a.months[i].cell).filter(c => c.included); return cells.length ? cells.reduce((acc, c) => E.addCells(acc, c), { ...zero }) : null; });
         const grand = totals.reduce((acc, t) => E.addCells(acc, t), { ...zero });
-        const legacy = (await query(`select count(*)::int as n from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year = $1`, [year], client)).rows[0].n;
-        return { year, mode, attractions, totals, byMonth, grand,
-            legacy: { municipalTotalMonths: legacy, note: legacy ? 'Municipal totals from the printed Form A4 are kept as loaded. They are not attraction visits and are not allocated to attractions.' : '' } };
+        return { year, mode, attractions, totals, byMonth, grand };
     }
     const shapeSource = s => ({ kind: s.kind, version: s.version || null, pending: !!s.pending });
     const jsonMonthly = d => ({ success: true, year: d.year, month: d.month, mode: d.mode, coverage: d.coverage, totals: d.totals,
         note: 'Visits to attractions, added across attractions. They are not unique tourists and are never added to accommodation arrivals.',
         attractions: d.rows.map(r => ({ _id: r.spot.id, name: r.spot.title, code: r.code, state: r.state, source: shapeSource(r.source), row: r.dta2m })) });
-    const jsonAnnual = d => ({ success: true, year: d.year, mode: d.mode, totals: d.totals, byMonth: d.byMonth, grand: d.grand, legacy: d.legacy,
+    const jsonAnnual = d => ({ success: true, year: d.year, mode: d.mode, totals: d.totals, byMonth: d.byMonth, grand: d.grand,
         note: 'Domestic and Foreign are the residence that was recorded. Domestic + Foreign is below Total by the visits with no residence recorded (unrecorded).',
         attractions: d.attractions.map(a => ({ _id: a.spot.id, name: a.spot.title, code: a.code, months: a.months.map(m => ({ month: m.month, state: m.state, source: shapeSource(m.source), cell: m.cell })) })) });
 
@@ -486,7 +484,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     const send = async (res, wb, name) => {
         const buffer = await X.toBuffer(wb);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${name.replace(/[^A-Za-z0-9_.-]/g, '_')}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${('Tourist_Influx_Report_' + name).replace(/[^A-Za-z0-9_.-]/g, '_')}"`);
         res.setHeader('Cache-Control', 'no-store');
         return res.send(buffer);
     };
@@ -536,7 +534,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
             const zero = { domestic: null, foreign: null, total: 0, unrecorded: 0 };
             const totals = attractions.map(a => a.months.filter(m => m.cell.included).reduce((acc, m) => E.addCells(acc, m.cell), { ...zero }));
             const byMonth = Array.from({ length: 12 }, (_, i) => { const cs = attractions.map(a => a.months[i].cell).filter(c => c.included); return cs.length ? cs.reduce((acc, c) => E.addCells(acc, c), { ...zero }) : null; });
-            X.addVar3m(wb, { year: o.year, mode: 'official', attractions, totals, byMonth, grand: totals.reduce((acc, t) => E.addCells(acc, t), { ...zero }), legacy: { municipalTotalMonths: 0, note: '' }, issued: { at: o.issued_at, status: o.status, id: o.id } });
+            X.addVar3m(wb, { year: o.year, mode: 'official', attractions, totals, byMonth, grand: totals.reduce((acc, t) => E.addCells(acc, t), { ...zero }), issued: { at: o.issued_at, status: o.status, id: o.id } });
         }
         return send(res, wb, `${o.kind}_${o.year}${o.month ? '-' + E.pad(o.month) : ''}_issued_${String(o.id).slice(0, 8)}.xlsx`);
     }));

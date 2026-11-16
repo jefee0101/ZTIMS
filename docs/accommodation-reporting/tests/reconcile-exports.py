@@ -20,7 +20,7 @@ tr = find(a, 'TOTAL OF THIS MONTH')
 vals = [c.value for c in a[tr] if isinstance(c.value, (int, float))]
 check(vals[-3:] == [v['arrivals'], v['guest_nights'], v['room_nights_occupied']], 'DAE-1A totals (5)(6)(7) = version arrivals, guest-nights, room-nights', (vals[-3:], v['arrivals'], v['guest_nights'], v['room_nights_occupied']))
 check(a.cell(4, [c.column for c in a[4] if c.value == '(4) Total Number of Rooms :'][0] + 2).value == v['rooms'], 'DAE-1A (4) rooms = version rooms')
-for name, col in (('DAE-1B (daily)', 33), ('DAE-1B DAE 2 (2019)', 2)):
+for name, col in (('DAE-1B', 33),):
     ws = wb[name]
     g = find(ws, 'GRAND TOTAL GUEST ARRIVALS')
     check(ws.cell(g, col).value == v['arrivals'], f'{name}: grand total = version arrivals ({v["arrivals"]})', ws.cell(g, col).value)

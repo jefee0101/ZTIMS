@@ -198,8 +198,9 @@ create index if not exists rate_limits_expires_at_idx on public.rate_limits (exp
 
 
 -- ---------------------------------------------------------------------------
--- Tourism statistics: the monthly counts behind Form A4, "Report on the
--- Regional Distribution of Travelers", and visitor counts at attractions.
+-- Tourism statistics: the monthly counts places report, and visitor counts at
+-- attractions. (Form A4 was taken out on 16 November 2026; the municipality's
+-- Tourist Influx Report is FORM A, from the accommodation_* tables below.)
 --
 -- Counts only. There is no column for money (revenue, rates, fees taken) and
 -- none for a guest's name or any detail about one person, and there must never
@@ -208,7 +209,8 @@ create index if not exists rate_limits_expires_at_idx on public.rate_limits (exp
 -- total is added up when it is asked for, never stored.
 --
 -- Reports are kept for good. A report entered by mistake is voided, not
--- deleted, and every change is written to report_changes.
+-- deleted, and every change is written to report_changes. The one exception,
+-- on the user's decision, is the 2025 paper totals (block at the end).
 -- ---------------------------------------------------------------------------
 
 -- The rows of Form A4, in the form's own order. Countries are keyed by their
@@ -306,14 +308,13 @@ on conflict (code) do update set
     region = excluded.region, sort_order = excluded.sort_order;
 
 -- One report per place per month: an accommodation's guests, rooms and nights,
--- or an attraction's visitors. A 'municipal_total' report belongs to no place:
--- it holds a month from before ZTIMS collected per place (the 2025 sheet),
--- already added up for the whole municipality.
+-- or an attraction's visitors. (The 'municipal_total' kind for the 2025 paper
+-- sheet was taken out on 16 November 2026; see the block at the end.)
 create table if not exists public.monthly_reports (
     id                  text primary key default public.ztims_new_id(),
     kind                text not null
                         constraint monthly_reports_kind
-                        check (kind in ('accommodation', 'attraction', 'municipal_total')),
+                        check (kind in ('accommodation', 'attraction')),
     spot_id             text references public.spots (id),
     year                integer not null constraint monthly_reports_year check (year between 2000 and 2100),
     month               integer not null constraint monthly_reports_month check (month between 1 and 12),
@@ -336,7 +337,7 @@ create table if not exists public.monthly_reports (
     locked_by_email     text not null default '',
     created_at          timestamptz not null default now(),
     updated_at          timestamptz not null default now(),
-    constraint monthly_reports_place check ((kind = 'municipal_total') = (spot_id is null)),
+    constraint monthly_reports_place check (spot_id is not null),
     constraint monthly_reports_attraction_counts_only
         check (kind <> 'attraction' or (rooms is null and room_nights_occupied is null and guest_nights is null)),
     -- Room-nights occupied can never be more than rooms × days in the month.
@@ -348,8 +349,6 @@ create table if not exists public.monthly_reports (
 -- A voided report stays, but only one live report per place and month.
 create unique index if not exists monthly_reports_one_per_place
     on public.monthly_reports (spot_id, year, month) where status = 'submitted' and spot_id is not null;
-create unique index if not exists monthly_reports_one_municipal_total
-    on public.monthly_reports (year, month) where status = 'submitted' and kind = 'municipal_total';
 create index if not exists monthly_reports_period_idx on public.monthly_reports (year, month);
 create index if not exists monthly_reports_spot_idx on public.monthly_reports (spot_id);
 
@@ -1856,7 +1855,7 @@ begin
     raise exception 'IMMUTABLE %', tg_table_name using errcode = 'P0001';
 end $$;
 
--- A new version: the month is not finalized and not a municipal-total month;
+-- A new version: the month is not finalized;
 -- its numbers add up (checked at commit, after its counts are in).
 create or replace function public.accommodation_version_guard()
 returns trigger language plpgsql set search_path = '' as $$
@@ -1864,9 +1863,6 @@ begin
     perform public.accommodation_assert_place(new.spot_id);
     if exists (select 1 from public.accommodation_periods p where p.spot_id = new.spot_id and p.year = new.year and p.month = new.month and p.finalized_at is not null) then
         raise exception 'PERIOD_FINALIZED %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
-    end if;
-    if exists (select 1 from public.monthly_reports m where m.kind = 'municipal_total' and m.status = 'submitted' and m.year = new.year and m.month = new.month) then
-        raise exception 'MUNICIPAL_TOTAL_MONTH %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
     end if;
     if new.version > 1 and not exists (select 1 from public.accommodation_report_versions v
             where v.spot_id = new.spot_id and v.year = new.year and v.month = new.month and v.version = new.version - 1) then
@@ -1891,16 +1887,6 @@ begin
     return null;
 end $$;
 
--- A municipal total may not be recorded for a month enterprises reported.
-create or replace function public.accommodation_municipal_guard()
-returns trigger language plpgsql set search_path = '' as $$
-begin
-    if new.kind = 'municipal_total' and new.status = 'submitted'
-       and exists (select 1 from public.accommodation_report_versions v where v.year = new.year and v.month = new.month) then
-        raise exception 'ENTERPRISE_REPORTS_EXIST %-%', new.year, lpad(new.month::text, 2, '0') using errcode = 'P0001';
-    end if;
-    return new;
-end $$;
 
 -- A finalized period can only be reopened (finalized_at back to null), never moved.
 create or replace function public.accommodation_period_guard()
@@ -2011,8 +1997,6 @@ begin
     create constraint trigger accommodation_report_version_counts_reconcile after insert on public.accommodation_report_version_counts
         deferrable initially deferred for each row execute function public.accommodation_version_reconcile();
     drop trigger if exists monthly_reports_accommodation_guard on public.monthly_reports;
-    create trigger monthly_reports_accommodation_guard before insert or update on public.monthly_reports
-        for each row execute function public.accommodation_municipal_guard();
     drop trigger if exists accommodation_periods_guard on public.accommodation_periods;
     create trigger accommodation_periods_guard before insert or update or delete on public.accommodation_periods
         for each row execute function public.accommodation_period_guard();
@@ -2035,7 +2019,7 @@ end $$;
 -- was (provenance 'legacy_manual': no stays stand behind it, nothing is
 -- invented), its counts with it; a finalized one finalizes the period. Runs
 -- once per report (legacy_report_id is unique); a void report is not copied.
--- Office-run places to stay and 2025's municipal totals are left as they are.
+-- Office-run places to stay are left as they are.
 do $$
 declare r record; vid text; n integer;
 begin
@@ -2043,7 +2027,6 @@ begin
               where m.kind = 'accommodation' and m.status = 'submitted' and s.managed_by is not null and s.type = 'accommodation'
                 and not exists (select 1 from public.accommodation_report_versions v where v.legacy_report_id = m.id)
                 and not exists (select 1 from public.accommodation_report_versions v where v.spot_id = m.spot_id and v.year = m.year and v.month = m.month)
-                and not exists (select 1 from public.monthly_reports t where t.kind = 'municipal_total' and t.status = 'submitted' and t.year = m.year and t.month = m.month)
     loop
         select coalesce(sum(coalesce(male + female, total_unsplit)), 0) into n from public.monthly_report_counts where report_id = r.id;
         insert into public.accommodation_report_versions (spot_id, year, month, version, provenance, legacy_report_id, rooms,
@@ -2631,3 +2614,23 @@ end $$;
 create index if not exists staff_invitations_account_idx on public.staff_invitations (account_table, account_id);
 alter table public.staff_invitations enable row level security;
 revoke all on public.staff_invitations from anon, authenticated;
+
+-- ============================================================================
+-- Form A4 and the 2025 paper totals taken out (16 November 2026, the user's
+-- decision). The municipality's report is FORM A, the Tourist Influx Report,
+-- worked out from the enterprises' saved versions. The 2025 months loaded
+-- from the printed Form A4 ('municipal_total' reports, their counts and
+-- their change log) are deleted, and no new one can be recorded. Nothing
+-- else is touched: every place's own report stays. Re-runnable.
+-- ============================================================================
+do $$ begin
+    delete from public.report_changes c using public.monthly_reports m where c.report_id = m.id and m.kind = 'municipal_total';
+    delete from public.monthly_report_counts c using public.monthly_reports m where c.report_id = m.id and m.kind = 'municipal_total';
+    delete from public.monthly_reports where kind = 'municipal_total';
+end $$;
+drop index if exists public.monthly_reports_one_municipal_total;
+drop function if exists public.accommodation_municipal_guard();
+alter table public.monthly_reports drop constraint if exists monthly_reports_kind;
+alter table public.monthly_reports add constraint monthly_reports_kind check (kind in ('accommodation', 'attraction'));
+alter table public.monthly_reports drop constraint if exists monthly_reports_place;
+alter table public.monthly_reports add constraint monthly_reports_place check (spot_id is not null);

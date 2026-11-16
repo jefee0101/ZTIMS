@@ -5,7 +5,93 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
-## Unified officer Feedback workspace (14 November 2026)
+## Pre-development survey and TAM with 132 end users; leftovers cleaned (16 November 2026)
+
+Done in the Google Doc (rev12), from the user's two tally sheets; figures and
+the tally checks are in `docs/manuscript/survey-results-2026-11.md`.
+
+- **Respondents:** 100 tourists, 7 Tourism Officers and 25 Enterprise Managers
+  (132 end users) answered the pre-development survey and the TAM; with the 10
+  IT experts, 142 (Table 1: 70.42, 4.93, 17.61, 7.04, 100.00; "Tourism
+  Enterprises" now "Enterprise Managers"). Every "40 / 23 tourists / 10
+  Enterprise Managers" was replaced (Abstract, Scope, Limitations, Chapter II,
+  Chapter III, Chapter V).
+- **All respondents answered all statements** (the user's decision): the
+  tallies show every respondent rated every area, so Appendix B's
+  "(Answerable by … only)" lines and the Chapter III/table-note sentences on
+  who answered which area were removed.
+- **Tables 5 and 6 filled** (item and area WM, SD, interpretation), notes
+  give N = 132 and the items with fewer valid answers; interpretations
+  written in the SOP's exact terms. Table 7's last sentence now says how
+  Tables 5–6 support each requirement; its Consolidated reporting row says
+  the Tourist Influx Report (FORM A); Part IV suggested features are still
+  not tallied.
+- **Table 9 (TAM)** is now item-level like the reference group's Table 7:
+  Item, Statement, WM, SD, Interpretation, constructs A–D with their WM/SD.
+  PU 4.70, PEOU 4.66, ATU 4.77, BI 4.76, all Strongly Agree. BI1 has only 118
+  valid answers (14 blanks in the sheet).
+- **Updated to the new results:** Executive Summary (SOP 1, 2, 5), Abstract,
+  Chapter I background, RRL synthesis, Chapter V findings 1, 2, 5 and
+  conclusion 2.
+- **Leftovers cleaned:** Form A4 → Tourist Influx Report (FORM A) everywhere
+  outside the System User Interface section (Definition of Terms: Form A4 and
+  E-Ticket removed, Tourist Influx Report added); every remaining ticketing
+  sentence outside that section removed (Abstract, Scope, Limitations, Chapter
+  II environment, Chapter IV architecture, Chapter V); Support Staff now keep
+  the Daily Visitor Record and submit the Tourist Influx Report; the officer's
+  backup entry is gone; Guest Register defined as the stay register of a
+  place to stay; statistics limitation mentions the DOT forms' rates.
+- **Not touched (the user's standing instruction):** the System User
+  Interface section and the List of Figures entries tied to it (Figures 11–27
+  still show tickets, guides, "Establishment", Statistics/Monthly Report).
+  Chapter II refers to Tables 2–4 (interpretation scales), but the List of
+  Tables still names Table 2 "Interpretation Scale for Pre-Development
+  Challenges (Manual System)" and the tables were not found as text in the
+  Doc; check them.
+
+## Attraction report navigation and status legends (16 November 2026)
+
+- The Tourism Officer selects an office-run attraction from a searchable directory, chooses its reporting year and month, then views its monthly visitor summary or daily VAR1 report inline. Municipal monthly DTA2M, annual VAR3M (all 12 months) and issued reports remain separate. Finalization and reasoned reopening refresh the selected month; saved reports use saved daily counts. Officers still cannot enter daily counts.
+- Both accommodation and attraction report views include expandable status legends with full text labels and explanations. Update current-workflow screenshots when authorized; this is a later refinement, not part of the original evaluation.
+
+## Actual DAE-1B and paired monthly submissions (16 November 2026)
+
+- The Tourism Officer's accommodation reports now start with a searchable enterprise directory. Select an enterprise and year, then a labeled month card and the submitted DAE-1A or DAE-1B. Annual municipal Form A is accessed separately. Review statuses use full labels; versions and history are collapsed. Update current-workflow screenshots when authorized, without attributing this refinement to the original evaluation.
+
+- The DAE-1B follows the owner's `DAE1B-30_days.pdf`, pages 1–3: arrivals by country of residence across the days of the month, followed by other indicators and volume per sex. Exclude the Manual-Summary pages. `DAE-1B-reference.pdf` preserves only the actual form.
+- The Enterprise Manager's desktop workspace has the Guest Register on the left (30%) and Tourist Influx Report on the right (70%). Mobile uses separate subpages with the same selected month. Guest Register changes refresh the report.
+- One monthly submission saves DAE-1A and DAE-1B together as an immutable version. The monthly Excel contains those two forms. Date-only corrections require a new version even if monthly totals stay the same.
+- In the Tourism Officer's Tracker, selecting a resort and month opens its submitted DAE-1A and DAE-1B, alongside Zamboanguita's annual Form A. Form A always covers all 12 months and combines all accommodation enterprises. Each reported month remains filled as new reports arrive; only months without reports stay blank. The resort/month selection does not filter the annual Form A.
+- Update Chapter IV workflow descriptions, role use cases and screenshots when authorized. Describe these as current refinements; do not attribute them to the original TAM/ISO evaluation. No research results or manuscript document were changed here.
+
+## Tourist Influx Report; Form A4 and the 2025 paper totals taken out (16 November 2026)
+
+What changed in the system (the user's decision):
+- Every report is called the **Tourist Influx Report**: the officer's menu item and page (was "Statistics"), the Enterprise Manager's and Support Staff's report page (was "Monthly Report"), and every Excel file (name starts "Tourist_Influx_Report_", printed pages headed "TOURIST INFLUX REPORT"). The DOT form codes (DAE-1A, DAE-1B / DAE 2, FORM A, DTA2M, VAR 1/2/3M) stay beside the name.
+- **The municipal report is FORM A**, worked out from the enterprises' saved monthly reports. The officer's accommodation side has only FORM A and its Tracker.
+- **Form A4 ("Report on the Regional Distribution of Travelers") is gone**: no Arrivals Report tab, no Form A4 Excel, no import of a paper year. The Dashboard's report card and "Tourism at a glance" now read FORM A.
+- **The 2025 paper totals are deleted** and can no longer be recorded. FORM A's comparison with the previous year therefore has nothing to compare for 2026 until 2027.
+
+What the manuscript must say:
+- Chapter IV (functions, Tourism Officer use case, reports): replace "Form A4" / "Arrivals Report" with "Tourist Influx Report (FORM A)"; the officer generates FORM A and follows the Tracker; enterprises and Support Staff submit their Tourist Influx Reports (DAE-1B; DTA2M from daily counts).
+- Abstract, Significance, Specific Objective 3e, Scope, Chapter V summary 3 and Recommendations: "Form A4 and tourism summaries" → "the Tourist Influx Report (FORM A)".
+- Remove any mention of loading or comparing the 2025 paper Form A4 totals.
+- System User Interface: the officer's report page is now titled "Tourist Influx Report" with FORM A and Tracker tabs; the Enterprise Manager's and Support Staff's "Monthly Report" pages are now "Tourist Influx Report". Retake those screenshots.
+- Definition of Terms: add "Tourist Influx Report" (the monthly count of guests and visitors a place reports, and the municipality's FORM A built from them); remove or reword "Form A4".
+
+## Reviews belong in the manager portal — owner correction (14 November 2026)
+
+This supersedes the earlier combined officer Feedback design below. Tourism
+Officer Feedback contains office-managed attraction messages and general
+enquiries only. Enterprise Managers have Reviews in their own portal, selected
+separately for each accommodation enterprise they manage. Managers read visible
+reviews, ratings and counts; they cannot read the office inbox, access another
+manager's enterprise, reply to reviews, or moderate/delete visitor reviews.
+Completed-stay eligibility and existing officer moderation APIs/audit data are
+unchanged. No schema/data migration. Correct current-system descriptions when
+authorized, preserving collected results and historical UI material.
+
+## Unified officer Feedback workspace (14 November 2026; superseded above)
 
 The Tourism Officer now has one Feedback menu: a compact private Office-managed
 inbox (individual attractions or general enquiries) and Enterprise reviews,

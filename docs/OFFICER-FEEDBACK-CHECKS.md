@@ -1,5 +1,9 @@
 # Unified officer Feedback — verification, 14 November 2026
 
+Historical verification of `055d9c2`. The owner subsequently clarified that
+enterprise reviews belong in the manager portal. The corrected role layout
+and checks are documented in `MANAGER-REVIEWS-CHECKS.md`.
+
 Approved scope: one compact officer Feedback workspace. Office-run attractions
 and general enquiries share a private inbox. Accommodation enterprises have
 reviews only, selected individually. No manager review-management access.

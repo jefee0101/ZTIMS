@@ -60,7 +60,9 @@ function field(ws, r, labelFrom, labelTo, label, valueFrom, valueTo, value) {
 function printLayout(ws, { landscape = false, colBreaks = [], rowBreak = null, scale = 100 }) {
     ws.pageSetup = { paperSize: 9, orientation: landscape ? 'landscape' : 'portrait', fitToPage: false, scale, pageOrder: 'downThenOver',
         margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
-    ws.headerFooter = { oddFooter: 'Page &P of &N' };
+    // Every report ZTIMS prints is a Tourist Influx Report (16 November 2026);
+    // the DOT form's own headings stay as they are below it.
+    ws.headerFooter = { oddHeader: '&C&"Arial,Bold"&10TOURIST INFLUX REPORT', oddFooter: 'Page &P of &N' };
     if (rowBreak) ws.getRow(rowBreak).addPageBreak();
     ws.ztimsColBreaks = colBreaks;
 }
@@ -267,7 +269,7 @@ function addVar3m(wb, d) {
     ws.getRow(tr + 2).height = 36;
     note(ws, tr + 4, 1, Math.min(7, g0 + 2), '* Domestic and Foreign are the residence that was recorded: Domestic is Zamboanguita, the rest of Negros Oriental and other Philippine provinces. Domestic + Foreign is below Total by the visits with no residence recorded (the ZTIMS note row); they are not added to either column. Empty: residence not recorded that month.');
     note(ws, tr + 5, 1, Math.min(7, g0 + 2), 'An empty month is not submitted or not finalized: it is not zero. The title says "Same Day Visitors"; ZTIMS counts visits to the attraction and cannot tell same-day visitors from overnight guests (decision D4).');
-    note(ws, tr + 6, 1, Math.min(7, g0 + 2), NOT_TOURISTS + (d.legacy && d.legacy.note ? ' ' + d.legacy.note : ''));
+    note(ws, tr + 6, 1, Math.min(7, g0 + 2), NOT_TOURISTS);
     ws.views = [{ state: 'frozen', xSplit: 1, ySplit: top + 1 }];
     // As the PDF: portrait, Month and two attraction groups on the first page, then two groups per page sideways.
     const breaks = [];

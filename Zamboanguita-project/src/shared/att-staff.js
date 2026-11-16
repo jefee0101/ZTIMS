@@ -1,5 +1,5 @@
 /* The Support Staff's attraction pages (src/staff/): the Daily Visitor Record
- * (staff_register.html) and the Monthly Report (staff_statistics.html).
+ * (staff_register.html) and the Tourist Influx Report (staff_statistics.html).
  * API: zamboanguita-backend/attraction-visits.js. Needs acc-common.js and
  * att-common.js loaded first.
  *
@@ -34,7 +34,7 @@
 
     function stateBanner(v, page) {
         const s = v.state, link = page === 'record'
-            ? `<a href="staff_statistics.html?month=${keyOf(v.figures.year, v.figures.month)}">Open the Monthly Report</a>`
+            ? `<a href="staff_statistics.html?month=${keyOf(v.figures.year, v.figures.month)}">Open the Tourist Influx Report</a>`
             : `<a href="staff_register.html?month=${keyOf(v.figures.year, v.figures.month)}">Open the Daily Visitor Record</a>`;
         const sub = lastOf(v.events, 'submitted'), fin = lastOf(v.events, 'finalized'), re = lastReopen(v.events);
         switch (s.state) {
@@ -44,10 +44,10 @@
             case 'future': return '<div class="acc-banner acc-banner--info">This month has not started.</div>';
             case 'open': return `<div class="acc-banner acc-banner--info"><span>The month is in progress. It can be submitted from the 1st of next month.${page === 'report' ? ' ' + link : ''}</span></div>`;
             case 'incomplete': return `<div class="acc-banner acc-banner--bad"><span><b>${nf(s.missing)} date${s.missing === 1 ? ' is' : 's are'} not recorded.</b> Record each date, 0 when nobody came, before submitting. A missing date is never counted as 0. ${page === 'report' ? link : ''}</span></div>`;
-            case 'ready': return `<div class="acc-banner acc-banner--warn"><span><b>Every date is recorded.</b> ${page === 'record' ? `Submit the month on the Monthly Report. ${link}` : 'Check the figures, then submit.'}</span></div>`;
+            case 'ready': return `<div class="acc-banner acc-banner--warn"><span><b>Every date is recorded.</b> ${page === 'record' ? `Submit the month on the Tourist Influx Report. ${link}` : 'Check the figures, then submit.'}</span></div>`;
             case 'submitted': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Submitted, version ${s.version}${sub ? `, ${esc(A.fmtWhen(sub.at))}` : ''}.</b> The counts are locked while the Tourism Office reviews them. ${page === 'record' ? link : ''}</span></div>`;
             case 'finalized': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Finalized, version ${s.finalizedVersion || s.version}${fin ? `, ${esc(A.fmtWhen(fin.at))}` : ''}.</b> Only the Tourism Office can reopen it. ${page === 'record' ? link : ''}</span></div>`;
-            case 'reopened': return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span><b>Reopened by the Tourism Office${re ? `, ${esc(A.fmtWhen(re.at))}` : ''}.</b>${re && re.reason ? ` Reason: “${esc(re.reason)}”.` : ''} Correct the dates, then submit the correction on the Monthly Report.${s.finalizedVersion ? ` Version ${s.finalizedVersion} stays the official figure until a correction is finalized.` : ''} ${page === 'record' ? link : ''}</span></div>`;
+            case 'reopened': return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span><b>Reopened by the Tourism Office${re ? `, ${esc(A.fmtWhen(re.at))}` : ''}.</b>${re && re.reason ? ` Reason: “${esc(re.reason)}”.` : ''} Correct the dates, then submit the correction on the Tourist Influx Report.${s.finalizedVersion ? ` Version ${s.finalizedVersion} stays the official figure until a correction is finalized.` : ''} ${page === 'record' ? link : ''}</span></div>`;
             default: return '';
         }
     }
@@ -352,10 +352,10 @@
     }
 
     /* =================================================================
-       The Monthly Report
+       The Tourist Influx Report
        ================================================================= */
     async function report(host) {
-        const h = await header(host, 'Monthly Report', '<a href="staff_register.html" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">edit_calendar</span>Daily Visitor Record</a>');
+        const h = await header(host, 'Tourist Influx Report', '<a href="staff_register.html" class="btn btn-secondary min-h-[44px]"><span class="material-symbols-outlined !text-base">edit_calendar</span>Daily Visitor Record</a>');
         if (!h) return;
         const spotId = h.me.attraction._id, today = h.me.today;
         const months = monthRange(today, h.me.reportingFrom);

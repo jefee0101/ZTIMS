@@ -6,8 +6,6 @@
  *   accommodation  accommodation_report_versions (+ _counts) chosen per
  *                  enterprise-month: official = the finalized version,
  *                  operational = the latest saved version (as FORM A reads);
- *                  2025 paper totals (monthly_reports municipal_total) as a
- *                  separate baseline, never added to enterprise figures.
  *   attractions    attraction-visits.js's own month sources (yearSources):
  *                  official = finalized, operational = also submitted and
  *                  draft, exactly as DTA2M and VAR 3M choose them.
@@ -131,7 +129,7 @@ async function attractionPlaces(req, p, years) {
 /* One row per month: figures from the chosen versions, coverage, completeness.
    Mirrors FORM A's rules (accommodation.js municipalYear): an enterprise is expected
    unless archived (and not reporting) or closed the whole month; a missing one is
-   never filled in; a month held as a paper municipal total has no enterprise figures. */
+   never filled in. */
 async function accommodationMonths(places, keys, mode) {
     const today = A.manilaToday();
     const ids = places.map(s => s.id);
@@ -143,7 +141,6 @@ async function accommodationMonths(places, keys, mode) {
            left join accommodation_periods p on p.spot_id = v.spot_id and p.year = v.year and p.month = v.month and p.finalized_at is not null
           where v.spot_id = any($1) and v.year * 100 + v.month between $2 and $3`, [ids, lo, hi])).rows : [];
     const closed = ids.length ? (await query(`select spot_id, starts_on, ends_on from accommodation_closed_periods where voided_at is null and spot_id = any($1)`, [ids])).rows : [];
-    const municipal = new Set((await query(`select year * 100 + month as k from monthly_reports where kind = 'municipal_total' and status = 'submitted' and year * 100 + month between $1 and $2`, [lo, hi])).rows.map(r => r.k));
     // The version each enterprise-month contributes: the finalized one (official) or the latest saved (operational).
     const byPm = new Map();
     for (const v of versions) {
@@ -167,7 +164,6 @@ async function accommodationMonths(places, keys, mode) {
     const rows = keys.map(key => {
         const [y, m] = A.parseKey(key), first = A.firstDay(y, m);
         if (first > today) { places.forEach(s => perPlace.get(s.id).push(null)); return { key, future: true, figures: null, coverage: {}, complete: false }; }
-        if (municipal.has(y * 100 + m)) { places.forEach(s => perPlace.get(s.id).push(null)); return { key, municipalTotal: true, figures: null, coverage: { municipalTotal: 1 }, complete: false }; }
         const cov = { expected: 0, finalized: 0, submitted: 0, missing: 0, notOperating: 0, beforeReporting: 0 };
         const used = [];
         for (const s of places) {
@@ -189,32 +185,6 @@ async function accommodationMonths(places, keys, mode) {
         return { key, future: false, figures, coverage: cov, complete, partial: !!figures && !complete };
     });
     return { rows, perPlace, counts: { byVersion: countsBy } };
-}
-/* The paper municipal totals for months in range: their own series, never mixed in. */
-async function municipalBaseline(keys) {
-    const lo = +keys[0].replace('-', ''), hi = +keys[keys.length - 1].replace('-', '');
-    const reps = (await query(`select id, year, month, rooms, room_nights_occupied, guest_nights from monthly_reports
-                                where kind = 'municipal_total' and status = 'submitted' and year * 100 + month between $1 and $2`, [lo, hi])).rows;
-    const cnt = reps.length ? (await query(`select c.report_id, r.section, c.male, c.female, c.total from monthly_report_counts c join residences r on r.code = c.residence_code where c.report_id = any($1)`, [reps.map(r => r.id)])).rows : [];
-    return keys.map(key => {
-        const [y, m] = A.parseKey(key), r = reps.find(x => x.year === y && x.month === m);
-        if (!r) return { key, figures: null };
-        const cs = cnt.filter(c => c.report_id === r.id), residence = A.emptySections();
-        cs.forEach(c => { residence[c.section] = (residence[c.section] || 0) + c.total; });
-        const split = cs.length && cs.every(c => c.male != null);
-        return { key, figures: { arrivals: cs.reduce((a, c) => a + c.total, 0), guestNights: r.guest_nights, roomNightsOccupied: r.room_nights_occupied, rooms: r.rooms,
-                                 roomNightsAvailable: null, residence, sex: split ? { male: cs.reduce((a, c) => a + c.male, 0), female: cs.reduce((a, c) => a + c.female, 0) } : null } };
-    });
-}
-
-/* Paper-total months added into a period: arrivals, guest nights and room-nights occupied only. A period
-   with any month not on paper is incomplete and has no total. No sex split and no room-nights available
-   exist for these months, so none is shown (never 0). */
-function baselineAdder(rows) {
-    const has = rows.filter(r => r.figures);
-    const f = has.length === rows.length && has.length ? has.reduce((a, r) => ({ arrivals: a.arrivals + r.figures.arrivals, guestNights: a.guestNights + r.figures.guestNights,
-        roomNightsOccupied: a.roomNightsOccupied + r.figures.roomNightsOccupied }), { arrivals: 0, guestNights: 0, roomNightsOccupied: 0 }) : null;
-    return { figures: f, complete: !!f, future: false, months: rows.map(r => r.key) };
 }
 
 /* ---- attractions: month rows -------------------------------------------------- */
@@ -252,30 +222,13 @@ async function accommodationSeries(req, p) {
     const keys = A.monthRange(p.from, p.to);
     const cur = await accommodationMonths(places, keys, p.mode);
     const periods = A.toPeriods(cur.rows, p.granularity, A.accPeriod);
-    // The paper totals describe the whole municipality: only for the officer's unfiltered view.
-    const municipalScope = isOfficer(req) && !p.filtered;
-    let baseline = null;
-    if (municipalScope) {
-        const b = await municipalBaseline(keys);
-        if (b.some(x => x.figures)) baseline = A.toPeriods(b.map(x => ({ key: x.key, figures: x.figures, coverage: {}, complete: !!x.figures, future: false })), p.granularity, baselineAdder);
-    }
     let comparison = null;
     if (p.compare) {
         const pk = A.monthRange(A.monthKey(+p.from.slice(0, 4) - 1, +p.from.slice(5, 7)), A.monthKey(+p.to.slice(0, 4) - 1, +p.to.slice(5, 7)));
         const prev = A.toPeriods((await accommodationMonths(places, pk, p.mode)).rows, p.granularity, A.accPeriod);
-        let prevBase = null;
-        if (municipalScope) {
-            const b = await municipalBaseline(pk);
-            prevBase = A.toPeriods(b.map(x => ({ key: x.key, figures: x.figures, coverage: {}, complete: !!x.figures, future: false })), p.granularity, baselineAdder);
-        }
-        comparison = ['arrivals', 'guestNights'].map(measure => ({ measure, periods: A.compare(periods, prev, x => x.figures[measure]).map((c, i) => {
-            // Where the earlier period was kept only as the paper total, compare with it and say its scope is unconfirmed (G3).
-            if (!c.comparable && prevBase && prevBase[i] && prevBase[i].complete && prevBase[i].figures && periods[i].complete && periods[i].figures)
-                return { ...c, comparable: true, previous: prevBase[i].figures[measure], difference: periods[i].figures[measure] - prevBase[i].figures[measure], reason: null, previousSource: 'municipal_total', scopeUnconfirmed: true };
-            return c;
-        }) }));
+        comparison = ['arrivals', 'guestNights'].map(measure => ({ measure, periods: A.compare(periods, prev, x => x.figures[measure]) }));
     }
-    return { places, keys, months: cur, periods, baseline, comparison, municipalScope };
+    return { places, keys, months: cur, periods, comparison };
 }
 async function attractionSeries(req, p) {
     const keys = A.monthRange(p.from, p.to);
@@ -350,10 +303,9 @@ module.exports = function analyticsRouter({ requireReporter: reporterChain, shar
         const s = await accommodationSeries(req, p);
         res.json(meta(p, {
             domain: 'accommodation', measure: 'Guest arrivals at private places to stay (a guest counts once at each place). Not visits, not reservations, not unique tourists.',
-            places: s.places.length, periods: s.periods.map(x => ({ key: x.key, label: x.label, figures: x.figures, rates: x.rates, coverage: x.coverage, complete: x.complete, future: x.future, municipalTotal: s.months.rows.filter(r => x.months.includes(r.key)).some(r => r.municipalTotal) })),
+            places: s.places.length, periods: s.periods.map(x => ({ key: x.key, label: x.label, figures: x.figures, rates: x.rates, coverage: x.coverage, complete: x.complete, future: x.future })),
             total: A.accPeriod(s.months.rows.filter(r => !r.future)),
             peakLow: { arrivals: A.peakLow(s.periods, x => x.figures && x.figures.arrivals), guestNights: A.peakLow(s.periods, x => x.figures && x.figures.guestNights) },
-            baseline: s.baseline ? { label: '2025 paper Form A4 municipal totals: their scope is not confirmed (G3). Never added to enterprise figures.', periods: s.baseline } : null,
             comparison: s.comparison
         }));
     }));

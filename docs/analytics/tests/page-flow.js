@@ -55,8 +55,7 @@ const LAV = '5b623f31b0f74d0bb5630dbe', JUAN = 'af4ceef49b7c4782ba729cae', POOL 
     ok(await p.$eval('#axTab-accommodation', e => e.getAttribute('aria-selected')) === 'true' && (await p.$$('[role=tab]')).length === 4, 'four tabs, the first selected');
     ok(await p.$eval('.ax-svg', e => e.getAttribute('role') === 'img' && !!e.getAttribute('aria-label')), 'the chart is an image with a description');
     ok(await p.$eval('.ax-panel:not([hidden]) .ax-card--wide', c => c.querySelectorAll('.ax-col').length) === 12, 'twelve month columns');
-    ok(await p.isVisible('text=2025 paper totals (Form A4)'), 'December 2025 brings the separate paper-total card');
-    ok(await p.$$eval('.ax-panel:not([hidden]) .ax-svg .ax-paper', e => e.length) >= 1, 'the paper-total month is marked, not drawn as 0 or "not reported"');
+    ok(!(await p.isVisible('text=2025 paper totals')), 'no paper-total card (Form A4 and the 2025 totals were taken out)');
     await shot(p, 'officer-accommodation-desktop-light');
 
     console.log('\nOfficer: August to November 2026, table and chart against the API');

@@ -213,16 +213,20 @@ function sourceDigest(raw, year, month) {
 }
 
 /* Where a place's month stands. */
-function periodState({ year, month, today, reportingFrom, versions, finalized, events, figures, municipal }) {
+function periodState({ year, month, today, reportingFrom, versions, finalized, events, figures, sourceDigest: currentDigest }) {
     const first = firstDay(year, month), last = lastDay(year, month);
     const latest = versions.length ? versions[versions.length - 1] : null;
     const lastEvent = events.length ? events[events.length - 1] : null;
     const base = { latestVersion: latest ? latest.version : 0, deadline: deadlineFor(year, month).toISOString() };
-    if (municipal) return { ...base, state: 'municipal_total' };
     if (first > today) return { ...base, state: 'future' };
     if (finalized) return { ...base, state: 'finalized' };
     let diff = [];
     if (latest && latest.provenance === 'register' && figures) diff = differences(latest.figures, versionFigures(figures));
+    // Daily forms can change even when the month's totals stay identical.
+    // The digest was already saved atomically with both forms at submission.
+    if (latest && latest.provenance === 'register' && currentDigest && latest.sourceDigest && currentDigest !== latest.sourceDigest && !diff.length) {
+        diff.push({ field: 'dailyDetail', saved: 'Submitted daily records', now: 'Updated daily records' });
+    }
     if (lastEvent && lastEvent.action === 'reopened') return { ...base, state: 'reopened', differences: diff };
     if (latest) return { ...base, state: diff.length ? 'changed' : 'submitted', differences: diff };
     if (figures && figures.notOperating) return { ...base, state: 'not_operating' };

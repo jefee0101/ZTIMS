@@ -67,7 +67,7 @@ const ownView = r => r && ({
     createdAt: r.created_at, updatedAt: r.updated_at
 });
 
-function reviewsRouter({ requireAdmin, sharedRateLimit }) {
+function reviewsRouter({ requireAdmin, requireEstablishmentManager, sharedRateLimit }) {
     const router = express.Router();
     const writeLimit = sharedRateLimit('review-write', {
         windowMs: 60 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false,
@@ -188,7 +188,41 @@ function reviewsRouter({ requireAdmin, sharedRateLimit }) {
         } catch (error) { return fail(res, error, '❌ Delete review failure:'); }
     });
 
-    /* ---- the Tourism Officer --------------------------------------- */
+    /* ---- the Enterprise Manager: read-only, own enterprise only ----- */
+    router.get('/reviews/manage/:spotId', requireEstablishmentManager, async (req, res) => {
+        try {
+            if (!isId(req.params.spotId)) throw problem(404, 'That enterprise could not be found.');
+            const owned = await query(`select id from spots
+                where id = $1 and managed_by = $2 and type = 'accommodation'`, [req.params.spotId, req.auth.sub]);
+            if (!owned.rows.length) throw problem(404, 'That enterprise could not be found.');
+            const spotId = owned.rows[0].id;
+            const page = Math.max(1, Math.min(1000, parseInt(req.query.page, 10) || 1));
+            const rating = req.query.rating ? Number(req.query.rating) : null;
+            if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5))
+                throw problem(400, 'Choose a rating from 1 to 5 stars.');
+            const search = String(req.query.search || '').trim().toLowerCase().slice(0, 120);
+            const filter = `r.spot_id = $1 and r.status = 'visible'
+                and ($2::int is null or r.rating = $2)
+                and ($3 = '' or strpos(lower(coalesce(r.body, '')), $3) > 0)`;
+            const params = [spotId, rating, search];
+            const [summary, count, items] = await Promise.all([
+                query(`select avg(rating) as average, count(*) as count from reviews
+                    where spot_id = $1 and status = 'visible'`, [spotId]),
+                query(`select count(*)::int as total from reviews r where ${filter}`, params),
+                query(`select r.id, r.rating, r.body, r.created_at, v.full_name, v.status as visitor_status
+                    from reviews r join visitors v on v.id = r.visitor_id where ${filter}
+                    order by r.created_at desc, r.id limit $4 offset $5`, [...params, PAGE, (page - 1) * PAGE])
+            ]);
+            const total = count.rows[0].total;
+            res.set('Cache-Control', 'no-store');
+            return res.json({ ...summaryOf(summary.rows[0]), total, page,
+                pages: Math.max(1, Math.ceil(total / PAGE)),
+                items: items.rows.map(r => ({ _id: r.id, rating: r.rating, body: r.body,
+                    author: publicName(r.full_name, r.visitor_status), createdAt: r.created_at })) });
+        } catch (error) { return fail(res, error, '❌ Enterprise reviews failure:'); }
+    });
+
+    /* ---- existing officer moderation API (no enterprise inbox UI) ---- */
 
     // Every review, hidden ones too, with its place and the reasons given.
     // The author's name only: never their email, nor any price or money.

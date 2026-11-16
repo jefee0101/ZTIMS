@@ -471,9 +471,9 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">space_dashboard</span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
-            <a title="Statistics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
+            <a title="Tourist Influx Report" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_statistics.html">
                 <span class="material-symbols-outlined text-accent">bar_chart</span>
-                <span class="sidebar-label">Statistics</span>
+                <span class="sidebar-label">Tourist Influx Report</span>
             </a>
             <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl hover:text-accent transition-all duration-300 hover:translate-x-1" href="admin_insights.html">
                 <span class="material-symbols-outlined text-accent">insights</span>
@@ -553,7 +553,7 @@ body { overflow-x: hidden; }
                 <div id="attnGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
             </section>
 
-            <!-- 2. The month's Form A4 reports -->
+            <!-- 2. The month's Tourist Influx Reports (private places to stay, from their stay registers) -->
             <section>
                 <div class="glass-panel p-5 sm:p-6 flex flex-col gap-4">
                     <div class="flex flex-wrap items-baseline justify-between gap-2">
@@ -564,19 +564,19 @@ body { overflow-x: hidden; }
                     <div class="flex-1"></div>
                     <div class="flex flex-wrap gap-2">
                         <a href="admin_statistics.html#tracker" class="btn btn-secondary min-h-[44px]">Open the tracker</a>
-                        <a href="admin_statistics.html#forma4" class="btn btn-ghost min-h-[44px]">Arrivals Report →</a>
+                        <a href="admin_statistics.html#forma" class="btn btn-ghost min-h-[44px]">FORM A →</a>
                     </div>
                 </div>
             </section>
 
-            <!-- 3. Tourism at a glance: Form A4, counts only -->
+            <!-- 3. Tourism at a glance: FORM A, counts only -->
             <section aria-labelledby="glanceHeading" class="space-y-4">
                 <div class="flex flex-wrap items-baseline justify-between gap-3">
                     <h3 id="glanceHeading" class="text-xl font-extrabold text-on-surface">Tourism at a glance</h3>
                     <div class="flex items-center gap-2 text-support">
                         <label for="glanceYear" class="font-bold">Year</label>
                         <select id="glanceYear" class="field !w-auto !py-1.5"></select>
-                        <span>· from Form A4, accommodations only</span>
+                        <span>· from FORM A, private places to stay</span>
                     </div>
                 </div>
 
@@ -598,7 +598,7 @@ body { overflow-x: hidden; }
                             <span class="text-support">Guests from abroad</span>
                         </figcaption>
                         <div id="countriesList" class="space-y-3"></div>
-                        <a href="admin_statistics.html#forma4" class="inline-block text-sm font-bold text-primary">Every country, in the Arrivals Report →</a>
+                        <a href="admin_statistics.html#forma" class="inline-block text-sm font-bold text-primary">Every country, in FORM A →</a>
                     </figure>
                 </div>
             </section>
@@ -861,17 +861,20 @@ body { overflow-x: hidden; }
             return { monthName: period.monthName, toFinalize: states.filter(s => s === 'submitted').length,
                      missing: states.filter(s => ['ready', 'incomplete', 'open', 'reopened', 'nostaff'].includes(s)).length };
         }
+        // Last month's Tourist Influx Reports from the private places to stay
+        // (accommodation.js tracker): sent = saved in ZTIMS; still due = not yet,
+        // including a place that has not set up reporting (FORM A counts it missing too).
+        // A place before its first reporting month or closed the whole month is not counted.
+        const SENT = ['submitted', 'changed', 'finalized', 'reopened'], WAITING = ['open', 'due', 'overdue', 'not_set_up'];
         function summariseReports(tracker, period) {
-            if (!tracker) return null;
-            const entries = tracker.places.map(p => ({ title: p.title, status: p.months[period.month - 1].status }));
-            const municipal = entries.some(e => e.status === 'municipal_total');
-            const counted = entries.filter(e => e.status !== 'municipal_total');
+            if (!tracker || !Array.isArray(tracker.enterprises)) return null;
+            const counted = tracker.enterprises.map(e => ({ title: e.name, state: (e.months[period.month - 1] || {}).state }))
+                .filter(e => SENT.includes(e.state) || WAITING.includes(e.state));
             return {
                 ...period,
-                municipal,
                 total: counted.length,
-                sent: counted.filter(e => e.status === 'submitted' || e.status === 'late').length,
-                missing: municipal ? [] : counted.filter(e => e.status === 'missing' || e.status === 'due').map(e => e.title)
+                sent: counted.filter(e => SENT.includes(e.state)).length,
+                missing: counted.filter(e => WAITING.includes(e.state)).map(e => e.title)
             };
         }
 
@@ -890,12 +893,8 @@ body { overflow-x: hidden; }
             pill.className = `${r.missing.length ? (r.overdue ? 'tone-danger' : 'tone-warning') : 'tone-success'} tone-pill text-[10px] font-extrabold uppercase tracking-wider px-2 py-1`;
             pill.textContent = r.missing.length ? (r.overdue ? `Was due ${r.dueShort}` : `Due ${r.dueLong}`) : 'All in';
 
-            if (r.municipal) {
-                body.innerHTML = `<p class="text-on-surface-variant">${r.monthName} ${r.year} is recorded as the municipality's total from the printed sheet.</p>`;
-                return;
-            }
             if (!r.total) {
-                body.innerHTML = '<div class="ztims-empty">No accommodations are listed yet.</div>';
+                body.innerHTML = '<div class="ztims-empty">No private place to stay reports in ZTIMS for this month.</div>';
                 return;
             }
             const segments = Array.from({ length: r.total }, (_, i) =>
@@ -912,37 +911,35 @@ body { overflow-x: hidden; }
         }
 
         /* ==========================================================
-           3. TOURISM AT A GLANCE — counts only, from Form A4
+           3. TOURISM AT A GLANCE — counts only, from FORM A
            ========================================================== */
-        const formA4Cache = new Map();
-        async function formA4(year) {
-            if (!formA4Cache.has(year)) formA4Cache.set(year, getJson(`/statistics/form-a4?year=${year}`));
-            return formA4Cache.get(year);
+        const formACache = new Map();
+        async function formA(year) {
+            if (!formACache.has(year)) formACache.set(year, getJson(`/accommodation/form-a?year=${year}`));
+            return formACache.get(year);
         }
 
-        function summariseYear(a4) {
-            if (!a4) return null;
+        function summariseYear(fa) {
+            if (!fa || !Array.isArray(fa.rows)) return null;
             const monthly = Array(12).fill(0);
             const bySection = { philippine: 0, foreign: 0 };
             const countries = [];
-            for (const res of a4.residences) {
-                const totals = a4.counts[res.code].total;
-                const sum = totals.reduce((a, b) => a + b, 0);
-                totals.forEach((v, i) => { monthly[i] += v; });
-                if (bySection[res.section] !== undefined) bySection[res.section] += sum;
-                if (res.section === 'foreign' && sum > 0) countries.push({ name: res.name, total: sum });
+            for (const row of fa.rows) {
+                row.months.forEach((v, i) => { monthly[i] += v || 0; });
+                if (bySection[row.section] !== undefined) bySection[row.section] += row.total;
+                if (row.section === 'foreign' && row.total > 0) countries.push({ name: row.name, total: row.total });
             }
             countries.sort((a, b) => b.total - a.total);
             return {
                 monthly, countries,
                 arrivals: monthly.reduce((a, b) => a + b, 0),
                 philippine: bySection.philippine, foreign: bySection.foreign,
-                guestNights: (a4.dae.guestNights || []).reduce((a, b) => a + (b || 0), 0)
+                guestNights: fa.partII && fa.partII.total ? fa.partII.total.guestNights : 0
             };
         }
 
         async function renderGlance(year) {
-            const [a4, prev] = await Promise.all([formA4(year), formA4(year - 1)]);
+            const [a4, prev] = await Promise.all([formA(year), formA(year - 1)]);
             const cur = summariseYear(a4);
             const last = summariseYear(prev);
             const tiles = document.getElementById('glanceTiles');
@@ -952,7 +949,7 @@ body { overflow-x: hidden; }
             document.getElementById('countriesTitle').textContent = `Top countries, ${year}`;
 
             if (!cur) {
-                const failed = '<div class="ztims-empty tone-danger">Form A4 could not be loaded.</div>';
+                const failed = '<div class="ztims-empty tone-danger">FORM A could not be loaded.</div>';
                 tiles.innerHTML = ''; chart.innerHTML = failed; list.innerHTML = failed;
                 document.getElementById('monthsNote').textContent = '';
                 document.getElementById('monthsLegend').innerHTML = '';
@@ -1047,7 +1044,7 @@ body { overflow-x: hidden; }
                 getJson('/spots'),
                 getJson('/establishment-managers'),
                 getJson('/feedback?status=new'),
-                getJson(`/statistics/tracker?year=${period.year}&kind=accommodation`),
+                getJson(`/accommodation/tracker?year=${period.year}`),
                 getJson(`/attraction-visits/tracker?year=${period.year}`)
             ]);
             if (sessionExpired) { handleExpiredSession(); return; }
@@ -1065,12 +1062,12 @@ body { overflow-x: hidden; }
         }
 
         // The year picker: this year and the two before. It opens on the latest
-        // year that has any Form A4 figures, so January does not open on zeros.
+        // year that has any FORM A figures, so January does not open on zeros.
         async function setUpGlance() {
             const { y } = manilaToday();
             const select = document.getElementById('glanceYear');
             select.innerHTML = [y, y - 1, y - 2].map(v => `<option value="${v}">${v}</option>`).join('');
-            const thisYear = summariseYear(await formA4(y));
+            const thisYear = summariseYear(await formA(y));
             select.value = String(thisYear && thisYear.arrivals ? y : y - 1);
             select.addEventListener('change', () => renderGlance(Number(select.value)));
             await renderGlance(Number(select.value));

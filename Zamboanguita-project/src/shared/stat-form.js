@@ -104,9 +104,8 @@
 
         const report = state.report;
         const locked = !!(report && report.lockedAt);
-        const blocked = state.recordedAsMunicipalTotal;
         const viewOnly = !!options.viewOnly;
-        const readOnly = locked || blocked || viewOnly;
+        const readOnly = locked || viewOnly;
         const given = Object.fromEntries(((report && report.counts) || []).map(c => [c.code, c]));
         const days = state.daysInMonth;
         // A new report starts from the rooms the place last reported.
@@ -170,7 +169,6 @@
                 ${locked ? `<span class="tone-pill tone-info text-xs font-bold px-2 py-0.5">Finalized: submitted to the Province</span>` : ''}
                 ${viewOnly ? `<span class="tone-pill tone-neutral text-xs font-bold px-2 py-0.5">View only</span>` : ''}
             </div>
-            ${blocked ? `<div class="ztims-empty tone-warning">${esc(MONTHS[month - 1])} ${year} is recorded as the municipality's total from the printed Form A4, so reports for single places are not taken for it.</div>` : ''}
             ${locked ? `<p class="text-support">This month has been finalized and submitted to the Province. ${options.officer ? 'Reopen it below to correct it; the change is recorded.' : 'Please contact the Tourism Office if a correction is needed.'}</p>` : ''}
 
             ${accommodation ? `

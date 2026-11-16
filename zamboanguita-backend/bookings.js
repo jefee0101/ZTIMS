@@ -349,7 +349,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
 
     /* ---- public ------------------------------------------------------ */
 
-    /* The countries a guest can say they live in: Form A4's rows, which the
+    /* The countries a guest can say they live in: the residence rows, which the
        Guest Register counts by, worded for a visitor. The Philippines first. */
     const VISITOR_COUNTRY = {
         'ph-filipino': 'Philippines (Filipino)',

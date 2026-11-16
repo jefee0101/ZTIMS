@@ -208,7 +208,7 @@ button.dest-issue:hover { background: #B3261E; color: #FFFDFA; border-color: #B3
               border: 1px solid rgb(var(--ztims-outline-variant) / .5); }
 .own-banner--office { box-shadow: inset 4px 0 0 rgb(var(--brand-tangerine)); }
 .own-banner--private { box-shadow: inset 4px 0 0 rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-on-surface) / .025); }
-/* Statistics' number tiles (Arrivals Report). */
+/* Statistics' number tiles. */
 .stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 @media (min-width: 1024px) { .stat-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .stat-tile { border: 1px solid rgb(var(--ztims-outline-variant) / .5); background: rgb(var(--ztims-surface)); padding: .9rem 1rem; }
@@ -682,6 +682,90 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
    a left edge, never colour alone. */
 .acc-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1rem; }
 .acc-head h1 { margin-right: auto; }
+.acc-directory { padding: 1rem; min-width: 0; }
+.acc-status-legend { border: 1px solid rgb(var(--ztims-outline-variant) / .5); border-radius: .75rem; padding: 0 .85rem; }
+.acc-status-legend > summary { cursor: pointer; min-height: 44px; padding: .65rem 0; font-weight: 700; font-size: .875rem; }
+.acc-status-legend dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem 1.5rem; padding: .25rem 0 1rem; }
+.acc-status-legend dl > div { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; min-width: 0; }
+.acc-status-legend dd { font-size: .8125rem; color: rgb(var(--ztims-on-surface-variant)); }
+@media(max-width: 600px) { .acc-status-legend dl { grid-template-columns: minmax(0,1fr); } }
+.acc-flow-title { display: grid; gap: .75rem; margin-right: auto; }
+.acc-flow-title h2 { font-size: 1.35rem; }
+.acc-directory .acc-head__actions { align-items: flex-end; }
+.acc-directory .acc-month-card { border: 1px solid rgb(var(--ztims-outline-variant) / .6); }
+.acc-directory .acc-status-review { color: #1e40af; background: #dbeafe; border-color: #93c5fd; }
+.dark .acc-directory .acc-status-review { color: #bfdbfe; background: #172c48; border-color: #365b8c; }
+.acc-enterprise-list { display: grid; gap: .75rem; }
+.acc-enterprise-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; padding: 1rem; border: 1px solid rgb(var(--ztims-outline-variant) / .6); background: rgb(var(--ztims-surface)); color: rgb(var(--ztims-on-surface)); }
+.acc-enterprise-row .acc-note { display: block; margin-top: .4rem; }
+.acc-enterprise-row:hover, .acc-month-card:hover:not(:disabled) { border-color: rgb(var(--ztims-primary)); }
+.acc-month-cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem; }
+.acc-month-card { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: .85rem; min-width: 0; text-align: left; color: rgb(var(--ztims-on-surface)); background: rgb(var(--ztims-surface)); border: 1px solid rgb(var(--ztims-outline-variant) / .6); }
+.acc-month-card .acc-pill { white-space: normal; text-align: left; }
+.acc-month-card[aria-pressed="true"] { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: -2px; }
+.acc-month-card:disabled { opacity: .6; cursor: default; }
+.acc-enterprise-row:focus-visible, .acc-month-card:focus-visible { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: 2px; }
+[data-month-report] { border-top: 1px solid rgb(var(--ztims-outline-variant) / .5); padding-top: 1.25rem; scroll-margin-top: 6rem; }
+@media(max-width: 600px) { .att-report-nav[role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } .att-report-nav .settings-tab { min-width: 0; white-space: normal; text-align: left; } }
+@media(prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media(max-width: 1000px) { .acc-month-cards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width: 600px) { .acc-month-cards { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; } .acc-directory { padding: .75rem; } .acc-month-card { padding: .65rem; } }
+/* Manager's desktop workspace: 30% register, 70% report. Small screens use
+   the existing separate pages, with the month carried in both links. */
+.acc-workspace { max-width: none !important; min-width: 0; }
+.acc-workspace__panes { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr); gap: 1.5rem; align-items: start; }
+.acc-workspace__panes > section { min-width: 0; }
+.acc-workspace__nav { display: none; }
+.acc-workspace__register h1 { font-size: 1.5rem; line-height: 1.2; }
+.acc-workspace__register .stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.acc-workspace__register .stat-tile { min-width: 0; padding: .65rem; }
+.acc-workspace__register .stat-tile > p:last-child { font-size: 1.35rem; }
+.acc-workspace__register .acc-stay { grid-template-columns: minmax(0, 1fr) auto; padding: .8rem; }
+.acc-workspace__register .acc-stay > div { overflow-wrap: anywhere; }
+.acc-workspace__register .acc-stay__where { grid-column: 1 / -1; }
+.acc-workspace__register .acc-stay__go { grid-row: 1; grid-column: 2; }
+.acc-workspace__register .acc-month { max-width: 100%; gap: .15rem; }
+.acc-workspace__register .acc-month__name { min-width: 0; }
+.acc-workspace__report .stat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1023px) {
+  .acc-workspace__panes { display: block; }
+  .acc-workspace__nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .acc-workspace[data-active="register"] [data-pane="report"], .acc-workspace[data-active="report"] [data-pane="register"] { display: none; }
+  .acc-workspace__nav [aria-current="page"] { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+}
+.acc-paper { min-width: 0; padding: 1rem; }
+.acc-paper__head { padding-bottom: 1rem; color: rgb(var(--ztims-on-surface)); }
+.acc-paper__head h3 { font-weight: 800; margin: .5rem 0; text-transform: uppercase; }
+.acc-paper__code { font-weight: 800; }
+.acc-paper__head dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; margin-top: 1rem; font-size: .8rem; }
+.acc-paper__head dt { color: rgb(var(--ztims-on-surface-variant)); }
+.acc-paper__head dd { font-weight: 700; overflow-wrap: anywhere; }
+.acc-paper-scroll { border: 1px solid rgb(var(--ztims-outline-variant) / .5); }
+.acc-paper-scroll:focus-visible { outline: 2px solid rgb(var(--ztims-primary)); outline-offset: 2px; }
+.acc-dae1b.dae2 { min-width: 1550px; width: 100%; max-width: none; }
+.acc-dae1b th:first-child { min-width: 19rem; max-width: 24rem; }
+.acc-dae1b td, .acc-dae1b thead th:not(:first-child) { min-width: 2.5rem; text-align: right; }
+.acc-dae1b .acc-sticky {
+  --acc-label-tint: transparent;
+  z-index: 2;
+  /* The tint sits on a solid surface so scrolled numbers cannot show through. */
+  background-color: rgb(var(--ztims-surface));
+  background-image: linear-gradient(var(--acc-label-tint), var(--acc-label-tint));
+  box-shadow: 1px 0 0 rgb(var(--ztims-outline) / .35);
+}
+.acc-dae1b thead .acc-sticky { --acc-label-tint: rgb(var(--ztims-gold) / .35); }
+.acc-dae1b .dae2-section .acc-sticky { --acc-label-tint: rgb(var(--ztims-primary)); }
+.acc-dae1b .dae2-region .acc-sticky { --acc-label-tint: rgb(var(--ztims-primary) / .85); }
+.acc-dae1b .dae2-subtotal .acc-sticky { --acc-label-tint: rgb(var(--ztims-primary) / .1); }
+.acc-dae1b .dae2-total .acc-sticky,
+.acc-dae1b .dae2-breakdown .acc-sticky { --acc-label-tint: rgb(var(--ztims-success) / .14); }
+.acc-dae1b .dae2-ofil .acc-sticky { --acc-label-tint: rgb(var(--ztims-primary) / .18); }
+.acc-dae1b .dae2-grand .acc-sticky { --acc-label-tint: rgb(var(--ztims-gold) / .45); }
+.acc-paper__absent { background: repeating-linear-gradient(135deg, rgb(var(--ztims-on-surface) / .1) 0 3px, transparent 3px 6px) !important; color: rgb(var(--ztims-on-surface-variant)); }
+.acc-paper__indicators { padding-top: 1.25rem; }
+.acc-dae1a { min-width: 650px; }
+.acc-dae1a td { text-align: right; }
+@media (max-width: 640px) { .acc-paper__head dl { grid-template-columns: minmax(0, 1fr); } .acc-paper { padding: .75rem; } }
 .acc-head__actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .acc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
 .acc-month { display: inline-flex; align-items: center; gap: .5rem; }
@@ -767,7 +851,7 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .acc-coverage__m { font-size: .75rem; font-weight: 800; color: rgb(var(--ztims-on-surface-variant)); }
 
 /* ---- Attraction visitor reporting (att-*.js) --------------------------------
-   The Support Staff's Daily Visitor Record and Monthly Report, and the
+   The Support Staff's Daily Visitor Record and Tourist Influx Report, and the
    officer's Attraction visits tab. A day's state is in words (aria-label),
    a pattern and a colour, never colour alone: missing is dashed red, a
    confirmed 0 is hatched, a closure is struck through. */
@@ -878,7 +962,6 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .ax-svg .ax-hatch-line { stroke: rgb(var(--ztims-primary-text)); stroke-width: 2.5; }
 .ax-svg .ax-zero { stroke: rgb(var(--ztims-primary-text)); stroke-width: 2.5; }
 .ax-svg .ax-gap { fill: none; stroke: rgb(var(--ztims-on-surface-variant) / .7); stroke-width: 1.25; stroke-dasharray: 3 3; }
-.ax-svg .ax-paper { fill: rgb(var(--ztims-on-surface-variant) / .35); }
 .ax-svg .ax-cmp { fill: none; stroke: rgb(var(--ztims-on-surface-variant)); stroke-width: 2; stroke-dasharray: 6 4; }
 .ax-svg .ax-cmp-pt { fill: rgb(var(--ztims-surface)); stroke: rgb(var(--ztims-on-surface-variant)); stroke-width: 2; }
 .ax-svg .ax-avg { fill: none; stroke: rgb(var(--ztims-on-surface)); stroke-width: 2; }
@@ -892,7 +975,6 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .ax-key--solid { background: rgb(var(--ztims-primary-text)); }
 .ax-key--hatch { background: repeating-linear-gradient(45deg, rgb(var(--ztims-primary-text)) 0 2px, rgb(var(--ztims-primary-text) / .18) 2px 5px); }
 .ax-key--gap { border: 1.25px dashed rgb(var(--ztims-on-surface-variant)); }
-.ax-key--paper { background: rgb(var(--ztims-on-surface-variant) / .35); height: .35rem; }
 .ax-key--cmp { height: 0; border-top: 2px dashed rgb(var(--ztims-on-surface-variant)); width: 1.2rem; }
 .ax-key--avg { height: 0; border-top: 2px solid rgb(var(--ztims-on-surface)); width: 1.2rem; }
 .ax-key--unknown, .ax-hatch.ax-unknown { background: repeating-linear-gradient(45deg, rgb(var(--ztims-on-surface-variant) / .55) 0 2px, rgb(var(--ztims-on-surface-variant) / .12) 2px 5px); }

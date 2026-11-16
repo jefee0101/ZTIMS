@@ -1,4 +1,4 @@
-/* Monthly Report for a private place to stay: Month (DAE-1B) with Submit,
+/* Tourist Influx Report for a private place to stay: paired DAE-1A / DAE-1B with Submit,
  * Versions, and Year (the annual summary). Mounted by resort_statistics.html
  * when the current enterprise is a place to stay
  * (window.ztimsAccReport.mount(el, spot)). Needs acc-common.js.
@@ -6,22 +6,23 @@
  */
 (function () {
     const A = () => window.ztimsAcc;
-    let root, spot, year, month, tab = 'month', view = null, yearData = null;
+    let root, spot, year, month, tab = 'month', view = null, yearData = null, config = {}, requestId = 0;
 
-    function mount(el, current) {
-        root = el; spot = current;
+    function mount(el, current, options = {}) {
+        root = el; spot = current; config = options;
         const t = A().manilaToday();
         const q = new URLSearchParams(location.search).get('month');
         if (q && /^\d{4}-\d{2}$/.test(q)) { year = +q.slice(0, 4); month = +q.slice(5); }
         else { [year, month] = A().shiftMonth(+t.slice(0, 4), +t.slice(5, 7), -1); }
+        if (config.period) [year, month] = config.period;
         tab = ['month', 'versions', 'year'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'month';
         root.innerHTML = `
             <div class="acc-head">
-                <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Monthly Report</h1>
+                <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Tourist Influx Report</h1>
                 <div class="acc-head__actions" data-actions></div>
             </div>
-            <div role="tablist" aria-label="Monthly Report" class="flex gap-2 border-b border-outline-variant/30">
-                <button role="tab" class="settings-tab" data-tab="month"><span class="material-symbols-outlined !text-base" aria-hidden="true">assignment</span>Month (DAE-1B)</button>
+            <div role="tablist" aria-label="Tourist Influx Report" class="flex gap-2 border-b border-outline-variant/30">
+                <button role="tab" class="settings-tab" data-tab="month"><span class="material-symbols-outlined !text-base" aria-hidden="true">assignment</span>Month</button>
                 <button role="tab" class="settings-tab" data-tab="versions"><span class="material-symbols-outlined !text-base" aria-hidden="true">history</span>Versions</button>
                 <button role="tab" class="settings-tab" data-tab="year"><span class="material-symbols-outlined !text-base" aria-hidden="true">calendar_view_month</span>Year</button>
             </div>
@@ -30,6 +31,7 @@
         root.addEventListener('click', onClick);
         window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['month', 'versions', 'year'].includes(h) && h !== tab) { tab = h; load(); } });
         A().loadResidences().then(load);
+        return { setPeriod(y, m) { year = y; month = m; return load(); }, refresh: load };
     }
 
     const picker = () => tab === 'year'
@@ -37,23 +39,26 @@
         : `<div class="acc-month"><button type="button" class="acc-iconbtn" data-step="-1" aria-label="Previous month"><span class="material-symbols-outlined">chevron_left</span></button><span class="acc-month__name" aria-live="polite">${A().monthName(year, month)}</span><button type="button" class="acc-iconbtn" data-step="1" aria-label="Next month"><span class="material-symbols-outlined">chevron_right</span></button></div><span data-state></span>`;
 
     async function load() {
+        const request = ++requestId;
         root.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
         root.querySelector('[data-picker]').innerHTML = picker();
         root.querySelector('[data-actions]').innerHTML = '';
         const body = root.querySelector('.acc-body');
         body.innerHTML = A().loading();
         try {
-            if (tab === 'year') { yearData = await A().api(`/accommodation/${spot._id}/year/${year}`); return drawYear(); }
-            view = await A().api(`/accommodation/${spot._id}/months/${year}/${month}`);
+            if (tab === 'year') { const data = await A().api(`/accommodation/${spot._id}/year/${year}`); if (request !== requestId) return; yearData = data; return drawYear(); }
+            const data = await A().api(`/accommodation/${spot._id}/months/${year}/${month}`);
+            if (request !== requestId) return;
+            view = data;
             root.querySelector('[data-state]').innerHTML = A().statePill(view.state.state, view.state.latestVersion);
             return tab === 'versions' ? drawVersions() : drawMonth();
-        } catch (e) { if (e.message !== 'Signed out') body.innerHTML = A().failed(e.message, true); }
+        } catch (e) { if (request === requestId && e.message !== 'Signed out') body.innerHTML = A().failed(e.message, true); }
     }
 
     function diffTable(list) {
         if (!list || !list.length) return '';
-        const label = d => d.field === 'counts' ? `${A().residenceName(d.residence)} (male, female)` : ({ arrivals: 'Guest arrivals', guestNights: 'Guest-nights', roomNightsOccupied: 'Rooms occupied (room-nights)', roomNightsAvailable: 'Rooms available (room-nights)', rooms: 'Number of rooms' })[d.field] || d.field;
-        const v = x => (x && typeof x === 'object' ? `${x.male}, ${x.female}` : A().nf(x));
+        const label = d => d.field === 'counts' ? `${A().residenceName(d.residence)} (male, female)` : ({ dailyDetail: 'Daily register detail', arrivals: 'Guest arrivals', guestNights: 'Guest-nights', roomNightsOccupied: 'Rooms occupied (room-nights)', roomNightsAvailable: 'Rooms available (room-nights)', rooms: 'Number of rooms' })[d.field] || d.field;
+        const v = x => (x && typeof x === 'object' ? `${x.male}, ${x.female}` : typeof x === 'string' ? A().esc(x) : A().nf(x));
         return `<table class="acc-diff"><thead><tr><th class="text-left">Figure</th><th class="text-right">Submitted</th><th class="text-right">Register now</th></tr></thead><tbody>${list.map(d => `<tr><td>${A().esc(label(d))}</td><td class="text-right">${v(d.saved)}</td><td class="text-right"><b>${v(d.now)}</b></td></tr>`).join('')}</tbody></table>`;
     }
 
@@ -73,15 +78,14 @@
             not_recorded: B('bad', 'report', `<b>No report.</b> Reporting in ZTIMS starts ${view.profile.reportingFrom ? A().monthName(+view.profile.reportingFrom.slice(0, 4), +view.profile.reportingFrom.slice(5, 7)) : 'once it is set'}; no figures are filled in for earlier months.`),
             not_operating: B('info', 'block', `<b>Not operating.</b> Every day of the month is in a closed period; the month is N/A, not zero.`),
             not_set_up: B('info', 'settings', `<b>Set up reporting first:</b> the month reporting starts (Enterprise → Reporting) and the room numbers (Rooms → Room numbers).`),
-            future: B('info', 'hourglass_empty', `<b>Not started.</b>`),
-            municipal_total: B('info', 'inventory_2', `<b>Held as a municipal total</b> from the paper Form A4. Enterprises do not report this month.`)
+            future: B('info', 'hourglass_empty', `<b>Not started.</b>`)
         }[s] || '';
         const canSubmit = ['due', 'overdue', 'changed', 'reopened'].includes(s);
         const actions = root.querySelector('[data-actions]');
         actions.innerHTML = (canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-act="submit"><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>${latest ? 'Submit correction as version ' + (latest.version + 1) : 'Submit ' + A().MONTHS[month - 1]}</button>` : '')
             + (s === 'open' ? `<button type="button" class="btn btn-primary min-h-[44px]" disabled><span class="material-symbols-outlined !text-base" aria-hidden="true">send</span>Submit from ${A().fmtDate(from)}</button>` : '')
             + (['open', 'due', 'overdue', 'submitted', 'changed', 'finalized', 'reopened'].includes(s) ? `<button type="button" class="btn btn-secondary min-h-[44px]" data-act="excel"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel</button>` : '');
-        const showFigures = !['not_recorded', 'not_operating', 'not_set_up', 'future', 'municipal_total'].includes(s);
+        const showFigures = !['not_recorded', 'not_operating', 'not_set_up', 'future'].includes(s);
         body.innerHTML = banner + (showFigures ? `
             <div class="stat-tiles">
                 <div class="stat-tile"><p>Guest arrivals</p><p>${A().nf(f.arrivals)}</p></div>
@@ -89,10 +93,11 @@
                 <div class="stat-tile"><p>Occupancy rate</p><p>${A().pct(f.occupancyRate)}</p></div>
                 <div class="stat-tile"><p>Average length of stay</p><p>${A().dec(f.averageLengthOfStay)}</p></div>
             </div>
-            <section class="glass-panel p-4 sm:p-5 space-y-3"><h2 class="acc-part">Part I. Guest arrivals by nationality / country of residence</h2>${A().partOneHtml(f.counts)}</section>
-            <section class="glass-panel p-4 sm:p-5 space-y-3"><h2 class="acc-part">Part II. Other indicators</h2>${A().partTwoHtml(f)}
+            <div data-monthly-forms class="space-y-4"></div>
+            <section class="glass-panel p-4 sm:p-5 space-y-3">
                 <details class="text-sm"><summary class="cursor-pointer font-bold">How these are worked out</summary>
                 <ul class="list-disc pl-5 mt-2 space-y-1 text-on-surface-variant"><li>Arrivals: each guest once, in the month they arrive.</li><li>Guest-nights: every night a guest sleeps here this month; the night of check-out is not counted.</li><li>Rooms occupied: rooms holding guests, night by night (room-nights).</li><li>Average length of stay: this month's guest-nights ÷ this month's arrivals. A stay across a month end is split, so it is not the average of whole stays.</li><li>Occupancy: room-nights occupied ÷ room-nights available (rooms out of service and closed days are not available).</li></ul></details></section>` : '');
+        if (showFigures) A().mountForms(body.querySelector('[data-monthly-forms]'), { year, month, enterprise: view.enterprise, profile: view.profile, figures: f, detail: f.reportDetail });
     }
 
     function submit() {
@@ -102,7 +107,7 @@
             body: `<div class="stat-tiles"><div class="stat-tile"><p>Arrivals</p><p>${A().nf(f.arrivals)}</p></div><div class="stat-tile"><p>Guest-nights</p><p>${A().nf(f.guestNights)}</p></div><div class="stat-tile"><p>Room-nights</p><p>${A().nf(f.roomNightsOccupied)}</p></div></div>
                 ${latest ? `<div><p class="field-label">Changes from version ${latest.version}</p>${diffTable(view.state.differences) || '<p class="text-support">The figures are the same; the correction records why the month was reopened.</p>'}</div>
                 <label class="block"><span class="field-label">Reason for the correction</span><input id="subWhy" class="field" maxlength="300" required/></label>` : ''}
-                <p class="text-support">Saved as version ${next}. ${latest ? `Version ${latest.version} is kept and never changes.` : 'Later changes to the register never alter it.'}</p>`,
+                <p class="text-support">DAE-1A and DAE-1B are submitted together as version ${next}. ${latest ? `Version ${latest.version} is kept and never changes.` : 'Later changes to the register never alter it.'}</p>`,
             actions: [{ label: 'Cancel', kind: 'cancel' }, { label: latest ? `Submit version ${next}` : 'Submit report', kind: 'primary', run: async w => {
                 const body = { expectedVersion: latest ? latest.version : 0 };
                 if (latest) { body.reason = w.el.querySelector('#subWhy').value.trim(); if (body.reason.length < 3) throw new Error('Give the reason for the correction.'); }
@@ -110,6 +115,7 @@
                 catch (e) { if (e.code === 'STALE') { load(); } throw e; }
                 A().toast(`${A().monthName(year, month)} submitted as version ${next}`);
                 load();
+                if (config.onSubmitted) config.onSubmitted();
             } }]
         });
     }
@@ -130,12 +136,17 @@
             : `<div class="ztims-empty">No version saved for ${A().monthName(year, month)}.</div>`;
     }
 
-    function viewVersion(n) {
-        const v = view.versions.find(x => x.version === n);
+    async function viewVersion(n) {
+        const listed = view.versions.find(x => x.version === n);
+        const selectedYear = year, selectedMonth = month;
+        let v;
+        try { v = (await A().api(`/accommodation/versions/${listed._id}`)).version; }
+        catch (e) { return A().toast(e.message, 'error'); }
+        if (year !== selectedYear || month !== selectedMonth) return;
         A().openWindow({ title: `${A().monthName(year, month)} · version ${v.version}`, wide: true,
             body: `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div>Saved ${A().fmtWhen(v.submittedAt)}. This is exactly what was submitted.</div></div>
-                <section class="space-y-3"><h3 class="acc-part">Part I</h3>${A().partOneHtml(v.figures.counts)}</section>
-                <section class="space-y-3"><h3 class="acc-part">Part II</h3>${A().partTwoHtml(v.figures)}</section>`,
+                <div data-saved-forms class="space-y-4"></div>`,
+            onOpen: w => A().mountForms(w.body.querySelector('[data-saved-forms]'), { year, month, enterprise: view.enterprise, profile: view.profile, figures: v.figures, detail: v.detail, rows: v.dae1b }),
             actions: [{ label: 'Close' }] });
     }
 
@@ -171,7 +182,7 @@
         if (!t || !root.contains(t)) return;
         if (t.dataset.accRetry !== undefined) return load();
         if (t.dataset.tab) { tab = t.dataset.tab; history.replaceState(null, '', '#' + tab); return load(); }
-        if (t.dataset.step) { const d = +t.dataset.step; if (Math.abs(d) === 12) year += d / 12; else [year, month] = A().shiftMonth(year, month, d); return load(); }
+        if (t.dataset.step) { const d = +t.dataset.step; if (Math.abs(d) === 12) year += d / 12; else [year, month] = A().shiftMonth(year, month, d); if (config.onPeriod) config.onPeriod(year, month, 'report'); return load(); }
         if (t.dataset.view) return viewVersion(+t.dataset.view);
         const dl = async (path, name) => { try { await A().download(path, name); A().toast('Excel downloaded'); } catch (err) { A().toast(err.message, 'error'); } };
         if (t.dataset.xl) return dl(`/accommodation/${spot._id}/months/${year}/${month}/export.xlsx?version=${t.dataset.xl}`, 'report.xlsx');

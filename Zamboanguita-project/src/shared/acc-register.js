@@ -1,11 +1,11 @@
 /* The stay register of a private place to stay: Guest Register → Stays,
- * Daily register (DAE-1A) and DAE-1B / DAE 2 (2019). Mounted by resort_register.html when the current
+ * Daily register (DAE-1A) and actual daily DAE-1B. Mounted by resort_register.html when the current
  * enterprise is a place to stay (window.ztimsAccRegister.mount(el, spot)).
  * Needs acc-common.js. Every rule is the server's; this page only asks.
  */
 (function () {
     const A = () => window.ztimsAcc;
-    let root, spot, rooms = [], year, month, view = null, stays = [], voided = [], filter = 'all', tab = 'stays';
+    let root, spot, rooms = [], year, month, view = null, stays = [], voided = [], filter = 'all', tab = 'stays', config = {}, requestId = 0;
 
     const roomNo = id => { const r = rooms.find(x => x._id === id); return r ? r.roomNumber : '?'; };
     const guestsOf = s => s.guests.reduce((a, g) => a + g.male + g.female, 0);
@@ -14,12 +14,13 @@
 
     const tabFromHash = () => (['daily', 'dae1b'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'stays');
 
-    function mount(el, current) {
-        root = el; spot = current;
+    function mount(el, current, options = {}) {
+        root = el; spot = current; config = options;
         const t = A().manilaToday();
         const q = new URLSearchParams(location.search).get('month');
         if (q && /^\d{4}-\d{2}$/.test(q)) { year = +q.slice(0, 4); month = +q.slice(5); } else { year = +t.slice(0, 4); month = +t.slice(5, 7); }
-        tab = tabFromHash();
+        if (config.period) [year, month] = config.period;
+        tab = config.embedded ? 'stays' : tabFromHash();
         root.innerHTML = `
             <div class="acc-head">
                 <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Guest Register</h1>
@@ -37,15 +38,20 @@
             <div role="tablist" aria-label="Guest Register" class="acc-tabs flex gap-2 border-b border-outline-variant/30">
                 <button role="tab" class="settings-tab" data-tab="stays" aria-selected="true"><span class="material-symbols-outlined !text-base" aria-hidden="true">groups</span>Stays</button>
                 <button role="tab" class="settings-tab" data-tab="daily" aria-selected="false"><span class="material-symbols-outlined !text-base" aria-hidden="true">table_view</span>Daily register (DAE-1A)</button>
-                <button role="tab" class="settings-tab" data-tab="dae1b" aria-selected="false"><span class="material-symbols-outlined !text-base" aria-hidden="true">public</span>DAE-1B / DAE 2</button>
+                <button role="tab" class="settings-tab" data-tab="dae1b" aria-selected="false"><span class="material-symbols-outlined !text-base" aria-hidden="true">public</span>DAE-1B</button>
             </div>
             <div class="acc-body"></div>`;
         root.addEventListener('click', onClick);
-        window.addEventListener('hashchange', () => { const t2 = tabFromHash(); if (t2 !== tab) { tab = t2; draw(); } });
+        if (config.embedded) root.querySelector('[role="tablist"]').remove();
+        else window.addEventListener('hashchange', () => { const t2 = tabFromHash(); if (t2 !== tab) { tab = t2; draw(); } });
         load().then(openFromBooking);
+        return { setPeriod, refresh: load };
     }
 
+    function setPeriod(y, m) { year = y; month = m; return load(); }
+
     async function load() {
+        const request = ++requestId;
         const body = root.querySelector('.acc-body');
         root.querySelector('.acc-month__name').textContent = A().monthName(year, month);
         body.innerHTML = A().loading('Loading the register…');
@@ -57,10 +63,11 @@
                 A().api(`/accommodation/${spot._id}/stays?month=${key}`),
                 A().loadResidences()
             ]);
+            if (request !== requestId) return;
             rooms = r.rooms; view = v; stays = s.stays; voided = s.voided || [];
             draw();
         } catch (e) {
-            if (e.message === 'Signed out') return;
+            if (request !== requestId || e.message === 'Signed out') return;
             body.innerHTML = A().failed(e.message, true);
         }
     }
@@ -81,8 +88,8 @@
     function banner() {
         const s = view.state.state;
         if (s === 'finalized') return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div><b>${A().monthName(year, month)} is finalized.</b> Stays with an arrival or a night in it cannot change until the Tourism Office reopens it.</div></div>`;
-        if (s === 'reopened') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><div><b>Reopened by the Tourism Office.</b> Correct the stays, then submit the month again on Monthly Report.</div></div>`;
-        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_statistics.html?month=${A().monthKey(year, month)}">Monthly Report</a>.</div></div>`;
+        if (s === 'reopened') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><div><b>Reopened by the Tourism Office.</b> Correct the stays, then submit the month again on Tourist Influx Report.</div></div>`;
+        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_statistics.html?month=${A().monthKey(year, month)}">Tourist Influx Report</a>.</div></div>`;
         if (view.figures.partial) return `<p class="text-support">Month to date: nights through ${A().fmtDate(view.figures.through)}.</p>`;
         return '';
     }
@@ -147,7 +154,7 @@
         }).join('');
         return `${banner()}
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-support"><b class="text-on-surface">Form DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
+                <p class="text-support"><b class="text-on-surface">Tourist Influx Report · DAE-1A</b> · (4) Total number of rooms: <b class="text-on-surface">${f.rooms}</b></p>
                 <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (register now)</button>
             </div>
             <section class="glass-panel p-3 sm:p-4"><div class="acc-layout">
@@ -173,26 +180,10 @@
             </div>`;
     }
 
-    /* DAE-1B / DAE 2 (2019): Part I as on the form — country of residence and
-       total, every row of the form in its order with its sub-totals, worked out
-       from the stays. The rows come from the server (the Excel's own template). */
+    /* Old #dae1b links now show the actual daily DAE-1B, never Manual-Summary. */
     function dae2Html() {
-        const f = view.figures, rows = f.dae2 || [];
-        const cell = r => (r.total == null ? '' : A().nf(r.total));
-        const body = rows.map(r => {
-            if (r.kind === 'spacer') return '<tr class="dae2-spacer"><td colspan="2"></td></tr>';
-            if (r.kind === 'section' || r.kind === 'region') return `<tr class="dae2-${r.kind}"><th colspan="2" style="padding-left:${.6 + r.indent * .9}rem">${A().esc(r.label)}</th></tr>`;
-            return `<tr class="dae2-${r.kind}${r.kind === 'row' && !r.total ? ' dae2-zero' : ''}"><th scope="row" style="padding-left:${.6 + r.indent * .9}rem">${A().esc(r.label)}</th><td>${cell(r)}</td></tr>`;
-        }).join('');
-        return `${banner()}
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-support"><b class="text-on-surface">DAE-1B / DAE 2 (2019)</b> · Part I. Guest arrivals by nationality / country of residence</p>
-                <button type="button" class="btn btn-secondary btn-sm min-h-[40px]" data-acc="export-dae2"><span class="material-symbols-outlined !text-base" aria-hidden="true">download</span>Excel (DAE 2)</button>
-            </div>
-            <section class="glass-panel p-3 sm:p-4"><div class="acc-scroll"><table class="dae2">
-                <thead><tr><th>Country of residence</th><th>Total</th></tr></thead>
-                <tbody>${body}</tbody></table></div>
-            <p class="text-support mt-3">* Philippine passport holders permanently residing abroad; excludes overseas Filipino workers and former Filipinos.</p></section>`;
+        return `${banner()}<button type="button" class="btn btn-secondary btn-sm" data-acc="export-dae2">Excel (DAE-1B)</button>`
+            + A().dae1bHtml({ year, month, enterprise: view.enterprise, profile: view.profile, figures: view.figures, detail: view.figures.reportDetail });
     }
 
     async function onClick(e) {
@@ -203,10 +194,10 @@
         if (t.dataset.filter) { filter = t.dataset.filter; return draw(); }
         if (t.dataset.open) return openStay(t.dataset.open);
         const a = t.dataset.acc;
-        if (a === 'prev' || a === 'next') { [year, month] = A().shiftMonth(year, month, a === 'prev' ? -1 : 1); return load(); }
+        if (a === 'prev' || a === 'next') { [year, month] = A().shiftMonth(year, month, a === 'prev' ? -1 : 1); if (config.onPeriod) config.onPeriod(year, month, 'register'); return load(); }
         if (a === 'new') return stayForm(null);
         if (a === 'export-dae2') {
-            try { await A().download(`/accommodation/${spot._id}/months/${year}/${month}/export.xlsx?version=current&form=dae2`, 'dae2.xlsx'); A().toast('Excel downloaded'); }
+            try { await A().download(`/accommodation/${spot._id}/months/${year}/${month}/export.xlsx?version=current&form=dae1b`, 'dae1b.xlsx'); A().toast('Excel downloaded'); }
             catch (err) { A().toast(err.message, 'error'); }
             return;
         }
@@ -255,6 +246,7 @@
         const changed = (result.affected || []).filter(a => a.state === 'changed' || a.state === 'reopened');
         A().toast(verb + (changed.length ? ` ${changed.map(a => A().monthName(+a.month.slice(0, 4), +a.month.slice(5))).join(', ')}: submit the correction.` : ''));
         load();
+        if (config.onChange) config.onChange(year, month);
     }
     const payloadOf = s => ({ checkIn: s.checkIn, checkOut: s.checkOut, revision: s.revision,
         rooms: s.rooms.map(r => ({ roomId: r.roomId, from: r.from, until: r.until })),
