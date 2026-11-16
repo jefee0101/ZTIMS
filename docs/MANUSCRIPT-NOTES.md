@@ -5,6 +5,12 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Monthly DTA2M submission flow (17 November 2026)
+
+- Supersedes the attraction-first navigation below: the officer starts with the year and month, views one combined DTA2M, opens supporting attraction records as needed, marks records reviewed and submits the DTA2M. Submission history is inside the selected month. There is no separate Issued reports tab. Saving a submission does not automatically deliver it to another office; the officer downloads Excel for the usual submission channel.
+- Support Staff send daily records for review. Reviewed records are readiness inputs, distinct from the monthly DTA2M submission. DTA2M can be submitted only after the month ends and every reporting attraction is reviewed. Reopening requires a correction and resubmission; prior submitted copies remain available.
+- Annual VAR3M covers all attractions and 12 months using the saved monthly DTA2M submissions. The last submitted figures remain until a replacement DTA2M is submitted. Unsubmitted months remain blank. Update current workflow screenshots when authorized; no original evaluation claims or manuscript document changed here.
+
 ## Pre-development survey and TAM with 132 end users; leftovers cleaned (16 November 2026)
 
 Done in the Google Doc (rev12), from the user's two tally sheets; figures and
@@ -49,7 +55,7 @@ the tally checks are in `docs/manuscript/survey-results-2026-11.md`.
   Challenges (Manual System)" and the tables were not found as text in the
   Doc; check them.
 
-## Attraction report navigation and status legends (16 November 2026)
+## Attraction report navigation and status legends (16 November 2026; superseded above)
 
 - The Tourism Officer selects an office-run attraction from a searchable directory, chooses its reporting year and month, then views its monthly visitor summary or daily VAR1 report inline. Municipal monthly DTA2M, annual VAR3M (all 12 months) and issued reports remain separate. Finalization and reasoned reopening refresh the selected month; saved reports use saved daily counts. Officers still cannot enter daily counts.
 - Both accommodation and attraction report views include expandable status legends with full text labels and explanations. Update current-workflow screenshots when authorized; this is a later refinement, not part of the original evaluation.

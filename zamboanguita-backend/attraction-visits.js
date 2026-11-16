@@ -418,10 +418,17 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         return { year, month, mode, rows, totals: E.sumRows(rows.map(r => r.dta2m)),
             coverage: { attractions: rows.length, finalized: count('final'), submitted: count('submitted') + count('reopened'), draft: count('draft'), notSubmitted: count('none') + count('nostaff') } };
     }
-    async function annualConsolidation(year, mode, client) {
+    async function annualConsolidation(year, mode, client, submittedOnly = false) {
         const attractions = [];
+        const saved = submittedOnly ? (await query(`select composition from attraction_outputs where kind = 'DTA2M' and year = $1 and status <> 'superseded' order by issued_at desc`, [year], client)).rows.flatMap(o => o.composition) : [];
+        const savedVersions = saved.length ? (await query(`select ${VERSION_COLS} from attraction_report_versions where id = any($1)`, [saved.map(c => c.versionId)], client)).rows : [];
         for (const spot of await officeAttractions(year, client)) {
             const ys = await yearSources(spot, year, mode, client);
+            if (submittedOnly) for (const m of ys.months) {
+                const used = saved.find(c => c.spotId === spot.id && c.month === m.month);
+                const v = used && savedVersions.find(v => v.id === used.versionId);
+                m.source = v ? { kind: 'final', version: v.version, figures: E.figuresFromVersion(v), pending: m.state.state === 'reopened' } : { kind: 'none' };
+            }
             attractions.push({ spot, code: ys.settings ? ys.settings.attraction_code : '', months: ys.months.map(m => ({ month: m.month, state: m.state.state, source: m.source, cell: E.var3mCell(m.source) })) });
         }
         const zero = { domestic: null, foreign: null, total: 0, unrecorded: 0 };
@@ -443,7 +450,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         res.json(jsonMonthly(await monthlyConsolidation(year, month, modeParam(req))));
     }));
     router.get('/attraction-visits/consolidated/annual', requireAdmin, handle(async (req, res) => {
-        res.json(jsonAnnual(await annualConsolidation(yearParam(req), modeParam(req))));
+        res.json(jsonAnnual(await annualConsolidation(yearParam(req), modeParam(req), undefined, req.query.basis === 'submitted')));
     }));
     router.get('/attraction-visits/consolidated/attraction/:spotId', requireAdmin, handle(async (req, res) => {
         const year = yearParam(req), mode = modeParam(req);
@@ -464,6 +471,12 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         await transaction(async client => {
             await query(`select pg_advisory_xact_lock(hashtextextended('attraction-outputs', 0))`, [], client);
             const composition = [];
+            if (kind === 'DTA2M') {
+                if (E.lastDay(year, month) >= E.manilaToday()) refuse(409, 'MONTH_NOT_ENDED', 'The month must end before its DTA2M can be submitted.');
+                for (const spot of await officeAttractions(year, client)) await lock(spot.id, client);
+                const report = await monthlyConsolidation(year, month, 'official', client);
+                if (!report.rows.length || report.rows.some(r => r.state !== 'finalized')) refuse(409, 'NOT_READY', 'Every reporting attraction must be reviewed and marked ready before submitting DTA2M.');
+            }
             if (kind === 'DTA2M') for (const r of (await monthlyConsolidation(year, month, 'official', client)).rows) { if (r.source.kind === 'final') composition.push({ spotId: r.spot.id, year, month, versionId: r.source.versionId, version: r.source.version }); }
             else for (const a of (await annualConsolidation(year, 'official', client)).attractions) for (const m of a.months) { if (m.source.kind === 'final') composition.push({ spotId: a.spot.id, year, month: m.month, versionId: m.source.versionId, version: m.source.version }); }
             if (!composition.length) refuse(409, 'NOTHING_FINALIZED', 'No attraction has a finalized month in that period, so there is nothing to issue.');
@@ -477,6 +490,23 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         const year = yearParam(req);
         const { rows } = await query(`select id, kind, year, month, status, jsonb_array_length(composition) as versions, issued_by_email, issued_at, status_changed_at from attraction_outputs where year = $1 order by issued_at desc limit 200`, [year]);
         res.json({ success: true, outputs: rows.map(r => ({ _id: r.id, kind: r.kind, year: r.year, month: r.month, status: r.status, versions: r.versions, issuedBy: r.issued_by_email, issuedAt: r.issued_at, statusChangedAt: r.status_changed_at })) });
+    }));
+
+    // A submitted DTA2M viewed again: its saved composition, never live corrections.
+    router.get('/attraction-visits/outputs/:id', requireAdmin, handle(async (req, res) => {
+        if (!ID.test(String(req.params.id))) refuse(404, 'NOT_FOUND', 'Submission not found.');
+        const o = (await query("select * from attraction_outputs where id = $1 and kind = 'DTA2M'", [req.params.id])).rows[0];
+        if (!o) refuse(404, 'NOT_FOUND', 'Submission not found.');
+        const versions = (await query(`select ${VERSION_COLS} from attraction_report_versions where id = any($1)`, [o.composition.map(c => c.versionId)])).rows;
+        const rows = [];
+        for (const c of o.composition) {
+            const spot = (await query('select * from spots where id = $1', [c.spotId])).rows[0];
+            const settings = await settingsOf(c.spotId);
+            const v = versions.find(v => v.id === c.versionId);
+            const source = { kind: 'final', version: c.version, figures: E.figuresFromVersion(v) };
+            rows.push({ spot, code: settings?.attraction_code || '', state: 'finalized', source, dta2m: E.dta2mRow(source) });
+        }
+        res.json({ ...jsonMonthly({ year: o.year, month: o.month, mode: 'official', rows, totals: E.sumRows(rows.map(r => r.dta2m)), coverage: { attractions: rows.length, finalized: rows.length } }), submission: { id: o.id, at: o.issued_at, by: o.issued_by_email, status: o.status } });
     }));
 
     /* ---- Excel ------------------------------------------------------------ */
@@ -511,7 +541,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
     }));
     router.get('/attraction-visits/consolidated/annual.xlsx', requireAdmin, handle(async (req, res) => {
         const year = yearParam(req), mode = modeParam(req);
-        const d = await annualConsolidation(year, mode);
+        const d = await annualConsolidation(year, mode, undefined, req.query.basis === 'submitted');
         const wb = X.workbook(); X.addVar3m(wb, d); for (const a of d.attractions) if (a.months.some(m => m.cell.included)) X.addVar2(wb, { year, mode, attraction: a });
         return send(res, wb, `VAR3M_${year}_${mode}.xlsx`);
     }));

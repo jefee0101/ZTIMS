@@ -31,9 +31,9 @@
         future: ['tone-neutral', 'hourglass_empty', 'Not yet'],
         open: ['tone-info', 'pending', 'In progress'],
         incomplete: ['tone-danger', 'report', 'Dates missing'],
-        ready: ['tone-warning', 'outbox', 'Ready to submit'],
-        submitted: ['tone-success', 'check_circle', 'Submitted'],
-        finalized: ['tone-neutral acc-pill--lock', 'lock', 'Finalized'],
+        ready: ['tone-warning', 'outbox', 'Ready for staff review'],
+        submitted: ['tone-info', 'pending', 'Awaiting review'],
+        finalized: ['tone-success acc-pill--lock', 'lock', 'Reviewed'],
         reopened: ['tone-warning', 'lock_open', 'Reopened'],
         nostaff: ['tone-neutral', 'person_off', 'No Support Staff']
     };
@@ -122,7 +122,7 @@
             <tbody>${rows}</tbody></table></div>`;
     }
 
-    const ACTIONS = { submitted: 'Submitted', finalized: 'Finalized', reopened: 'Reopened' };
+    const ACTIONS = { submitted: 'Sent for review', finalized: 'Reviewed', reopened: 'Reopened' };
     const roleName = r => (r === 'admin' ? 'Tourism Office' : r === 'support_staff' ? 'Support Staff' : r || '');
     function historyHtml(events) {
         if (!events || !events.length) return '<p class="acc-note">Nothing submitted yet.</p>';

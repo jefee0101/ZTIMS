@@ -42,12 +42,12 @@
                 ? `<div class="acc-banner acc-banner--info">This month is before reporting started (${esc(A.monthName(...ym(v.reportingFrom)))}).</div>`
                 : '<div class="acc-banner acc-banner--info">Reporting starts with the first date you save.</div>';
             case 'future': return '<div class="acc-banner acc-banner--info">This month has not started.</div>';
-            case 'open': return `<div class="acc-banner acc-banner--info"><span>The month is in progress. It can be submitted from the 1st of next month.${page === 'report' ? ' ' + link : ''}</span></div>`;
-            case 'incomplete': return `<div class="acc-banner acc-banner--bad"><span><b>${nf(s.missing)} date${s.missing === 1 ? ' is' : 's are'} not recorded.</b> Record each date, 0 when nobody came, before submitting. A missing date is never counted as 0. ${page === 'report' ? link : ''}</span></div>`;
-            case 'ready': return `<div class="acc-banner acc-banner--warn"><span><b>Every date is recorded.</b> ${page === 'record' ? `Submit the month on the Tourist Influx Report. ${link}` : 'Check the figures, then submit.'}</span></div>`;
-            case 'submitted': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Submitted, version ${s.version}${sub ? `, ${esc(A.fmtWhen(sub.at))}` : ''}.</b> The counts are locked while the Tourism Office reviews them. ${page === 'record' ? link : ''}</span></div>`;
-            case 'finalized': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Finalized, version ${s.finalizedVersion || s.version}${fin ? `, ${esc(A.fmtWhen(fin.at))}` : ''}.</b> Only the Tourism Office can reopen it. ${page === 'record' ? link : ''}</span></div>`;
-            case 'reopened': return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span><b>Reopened by the Tourism Office${re ? `, ${esc(A.fmtWhen(re.at))}` : ''}.</b>${re && re.reason ? ` Reason: “${esc(re.reason)}”.` : ''} Correct the dates, then submit the correction on the Tourist Influx Report.${s.finalizedVersion ? ` Version ${s.finalizedVersion} stays the official figure until a correction is finalized.` : ''} ${page === 'record' ? link : ''}</span></div>`;
+            case 'open': return `<div class="acc-banner acc-banner--info"><span>The month is in progress. Records can be sent for review from the 1st of next month.${page === 'report' ? ' ' + link : ''}</span></div>`;
+            case 'incomplete': return `<div class="acc-banner acc-banner--bad"><span><b>${nf(s.missing)} date${s.missing === 1 ? ' is' : 's are'} not recorded.</b> Record each date, 0 when nobody came, before sending for review. A missing date is never counted as 0. ${page === 'report' ? link : ''}</span></div>`;
+            case 'ready': return `<div class="acc-banner acc-banner--warn"><span><b>Every date is recorded.</b> ${page === 'record' ? `Send the records for review on the Tourist Influx Report. ${link}` : 'Check the figures, then send the records for review.'}</span></div>`;
+            case 'submitted': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Sent for review, version ${s.version}${sub ? `, ${esc(A.fmtWhen(sub.at))}` : ''}.</b> The counts are locked while the Tourism Office reviews them. ${page === 'record' ? link : ''}</span></div>`;
+            case 'finalized': return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><span><b>Reviewed, version ${s.finalizedVersion || s.version}${fin ? `, ${esc(A.fmtWhen(fin.at))}` : ''}.</b> Only the Tourism Office can reopen it. ${page === 'record' ? link : ''}</span></div>`;
+            case 'reopened': return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><span><b>Reopened by the Tourism Office${re ? `, ${esc(A.fmtWhen(re.at))}` : ''}.</b>${re && re.reason ? ` Reason: “${esc(re.reason)}”.` : ''} Correct the dates, then send the corrected records for review.${s.finalizedVersion ? ` The previous submitted DTA2M stays unchanged until the Tourism Officer submits a replacement.` : ''} ${page === 'record' ? link : ''}</span></div>`;
             default: return '';
         }
     }
@@ -390,7 +390,7 @@
             h.body.querySelector('[data-pill]').innerHTML = T.monthPill(st.state, st.version, st.missing);
             const canSubmit = st.state === 'ready' || (st.state === 'reopened' && f.complete && f.days && keyOf(y, m) < today.slice(0, 7));
             const actions = h.body.querySelector('[data-actions]');
-            actions.innerHTML = `${canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-submit><span class="material-symbols-outlined !text-base">send</span>${st.state === 'reopened' ? 'Submit correction' : 'Submit month'}</button>` : ''}
+            actions.innerHTML = `${canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-submit><span class="material-symbols-outlined !text-base">send</span>${st.state === 'reopened' ? 'Send corrected records' : 'Send records for review'}</button>` : ''}
                 <button type="button" class="btn btn-secondary min-h-[44px]" data-xl><span class="material-symbols-outlined !text-base">download</span>VAR 1 Excel</button>`;
             const showLive = !['submitted', 'finalized'].includes(st.state) || !v.versions.length;
             const shown = showLive ? f : (v.versions.find(x => x.version === st.version) || {}).figures || f;
@@ -421,7 +421,7 @@
             if (f.residenceUnrecorded) breakdown.push(`Residence not recorded for ${nf(f.residenceUnrecorded)} visits.`);
             if (f.sexUnrecorded) breakdown.push(`Sex not recorded for ${nf(f.sexUnrecorded)} visits.`);
             A.openWindow({
-                title: correction ? `Submit the correction for ${A.monthName(y, m)}?` : `Submit ${A.monthName(y, m)}?`,
+                title: correction ? `Send corrected records for ${A.monthName(y, m)}?` : `Send ${A.monthName(y, m)} records for review?`,
                 body: `<dl class="att-dl">
                         <dt>Attraction</dt><dd>${esc(v.attraction.name)}</dd>
                         <dt>Period</dt><dd>1–${f.days} ${esc(A.monthName(y, m))}</dd>
@@ -432,7 +432,7 @@
                     <p class="acc-note">Once submitted, the daily counts are locked until the Tourism Office reopens the month.</p>`,
                 actions: [
                     { label: 'Cancel', kind: 'cancel' },
-                    { label: correction ? 'Submit correction' : 'Submit', kind: 'primary', run: async w => {
+                    { label: correction ? 'Send correction' : 'Send for review', kind: 'primary', run: async w => {
                         const body = { expectedVersion: st.version || 0 };
                         if (correction) {
                             body.reason = w.body.querySelector('[data-reason]').value.trim();
@@ -444,7 +444,7 @@
                             if (['STALE', 'ALREADY_SUBMITTED', 'MONTH_INCOMPLETE', 'PERIOD_FINALIZED'].includes(e.code)) { load(); }
                             throw e;
                         }
-                        A.toast(`${A.monthName(y, m)} submitted: ${nf(f.total)} visits.`, 'success');
+                        A.toast(`${A.monthName(y, m)} records sent for review: ${nf(f.total)} visits.`, 'success');
                         load();
                     } }
                 ]
