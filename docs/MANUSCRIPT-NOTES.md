@@ -5,6 +5,50 @@ system. Newest first. Each entry gives the sentences to change, word for word
 where the manuscript already has them, and the answer to give the panel.
 
 
+## Pre-development survey and TAM with 132 end users; leftovers cleaned (16 November 2026)
+
+Done in the Google Doc (rev12), from the user's two tally sheets; figures and
+the tally checks are in `docs/manuscript/survey-results-2026-11.md`.
+
+- **Respondents:** 100 tourists, 7 Tourism Officers and 25 Enterprise Managers
+  (132 end users) answered the pre-development survey and the TAM; with the 10
+  IT experts, 142 (Table 1: 70.42, 4.93, 17.61, 7.04, 100.00; "Tourism
+  Enterprises" now "Enterprise Managers"). Every "40 / 23 tourists / 10
+  Enterprise Managers" was replaced (Abstract, Scope, Limitations, Chapter II,
+  Chapter III, Chapter V).
+- **All respondents answered all statements** (the user's decision): the
+  tallies show every respondent rated every area, so Appendix B's
+  "(Answerable by … only)" lines and the Chapter III/table-note sentences on
+  who answered which area were removed.
+- **Tables 5 and 6 filled** (item and area WM, SD, interpretation), notes
+  give N = 132 and the items with fewer valid answers; interpretations
+  written in the SOP's exact terms. Table 7's last sentence now says how
+  Tables 5–6 support each requirement; its Consolidated reporting row says
+  the Tourist Influx Report (FORM A); Part IV suggested features are still
+  not tallied.
+- **Table 9 (TAM)** is now item-level like the reference group's Table 7:
+  Item, Statement, WM, SD, Interpretation, constructs A–D with their WM/SD.
+  PU 4.70, PEOU 4.66, ATU 4.77, BI 4.76, all Strongly Agree. BI1 has only 118
+  valid answers (14 blanks in the sheet).
+- **Updated to the new results:** Executive Summary (SOP 1, 2, 5), Abstract,
+  Chapter I background, RRL synthesis, Chapter V findings 1, 2, 5 and
+  conclusion 2.
+- **Leftovers cleaned:** Form A4 → Tourist Influx Report (FORM A) everywhere
+  outside the System User Interface section (Definition of Terms: Form A4 and
+  E-Ticket removed, Tourist Influx Report added); every remaining ticketing
+  sentence outside that section removed (Abstract, Scope, Limitations, Chapter
+  II environment, Chapter IV architecture, Chapter V); Support Staff now keep
+  the Daily Visitor Record and submit the Tourist Influx Report; the officer's
+  backup entry is gone; Guest Register defined as the stay register of a
+  place to stay; statistics limitation mentions the DOT forms' rates.
+- **Not touched (the user's standing instruction):** the System User
+  Interface section and the List of Figures entries tied to it (Figures 11–27
+  still show tickets, guides, "Establishment", Statistics/Monthly Report).
+  Chapter II refers to Tables 2–4 (interpretation scales), but the List of
+  Tables still names Table 2 "Interpretation Scale for Pre-Development
+  Challenges (Manual System)" and the tables were not found as text in the
+  Doc; check them.
+
 ## Attraction report navigation and status legends (16 November 2026)
 
 - The Tourism Officer selects an office-run attraction from a searchable directory, chooses its reporting year and month, then views its monthly visitor summary or daily VAR1 report inline. Municipal monthly DTA2M, annual VAR3M (all 12 months) and issued reports remain separate. Finalization and reasoned reopening refresh the selected month; saved reports use saved daily counts. Officers still cannot enter daily counts.
