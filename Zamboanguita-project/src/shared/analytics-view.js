@@ -171,7 +171,7 @@
 
         const TABS = officer
             ? [['accommodation', 'Places to stay', 'hotel'], ['attractions', 'Attractions', 'attractions'], ['requests', 'Room requests', 'bed'], ['coverage', 'Reporting coverage', 'fact_check']]
-            : [['accommodation', 'Arrivals and nights', 'hotel'], ['guests', 'Guests and stays', 'groups'], ['requests', 'Room requests', 'bed']];
+            : [['accommodation', 'Arrivals and nights', 'hotel'], ['guests', 'Guests and stays', 'groups'], ...(opts.bookingActivity === false ? [] : [['requests', 'Room requests', 'bed']])];
         const tabFromHash = () => { const h = location.hash.slice(1); return TABS.some(t => t[0] === h) ? h : TABS[0][0]; };
 
         root.innerHTML = `

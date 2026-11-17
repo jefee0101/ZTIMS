@@ -466,6 +466,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">event_available</span>
                 <span class="sidebar-label">Bookings</span>
             </a>
+            <a title="Payments" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_payments.html">
+                <span class="material-symbols-outlined text-accent">payments</span>
+                <span class="sidebar-label">Payments</span>
+            </a>
             <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl transition-all" href="resort_reviews.html">
                 <span class="material-symbols-outlined" aria-hidden="true">reviews</span><span class="sidebar-label">Reviews</span>
             </a>
@@ -516,6 +520,8 @@ body { overflow-x: hidden; }
                     <span class="material-symbols-outlined !text-base" aria-hidden="true">visibility</span> See it as visitors do
                 </a>
             </div>
+
+            <section id="enterpriseBookingControls" class="glass-panel ent-booking-controls" hidden></section>
 
             <!-- The subpages, as underline tabs under the title (like Statistics and Settings). -->
             <nav id="estTabs" class="est-tabs" aria-label="Enterprise" hidden>
@@ -581,6 +587,7 @@ body { overflow-x: hidden; }
 <!-- The site's own confirm/prompt, in place of the browser's. Used by the
      form above and by this page's delete and duplicate-listing questions. -->
 <script type="module" src="../shared/enterprise-switcher.js"></script>
+<script type="module" src="../shared/enterprise-booking.js"></script>
 <script type="module" src="../shared/ztims-dialog.js"></script>
 <script type="module" src="../shared/password-eye.js"></script>
 <script type="module" src="../shared/acc-common.js"></script>

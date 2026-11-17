@@ -467,6 +467,10 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">event_available</span>
                 <span class="sidebar-label">Bookings</span>
             </a>
+            <a title="Payments" class="flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" href="resort_payments.html">
+                <span class="material-symbols-outlined text-accent">payments</span>
+                <span class="sidebar-label">Payments</span>
+            </a>
             <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl transition-all" href="resort_reviews.html">
                 <span class="material-symbols-outlined" aria-hidden="true">reviews</span><span class="sidebar-label">Reviews</span>
             </a>
@@ -1128,6 +1132,11 @@ body { overflow-x: hidden; }
                 return empty(`Rooms and bookings are for places to stay. ${escapeHtml(ztimsEnterprise.nameOf(spot))} is listed as an attraction.`);
             }
             try {
+                const access = await ztimsEnterprise.bookingAccess();
+                if (!access.settings.acceptsBookings && !access.hasBookings && !new URLSearchParams(location.search).get('code')) return empty('Bookings are off. <a class="font-bold underline" href="resort_spots.html">Open Enterprise</a>');
+                if (!access.settings.acceptsBookings) {
+                    const heading = document.querySelector('main h1'); if (heading) heading.textContent = 'Existing bookings';
+                }
                 [residences] = await Promise.all([api('/statistics/residences').catch(() => []), loadList()]);
             } catch (e) {
                 if (e.message !== 'Signed out') empty(escapeHtml(e.message));

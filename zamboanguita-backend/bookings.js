@@ -485,6 +485,7 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
             await sweepIfDue(origin);
             const created = await transaction(async client => {
                 const free = await holdRooms(client, spot._id, lines, checkIn, checkOut);
+                if (!(await settingsFor(spot._id, client)).open) throw problem(409, 'This place is not taking bookings right now.');
                 const sleeps = lines.reduce((sum, l) => sum + l.units * free.get(l.roomId).max_guests, 0);
                 if (sleeps < adults + children) {
                     throw problem(400, `Those rooms sleep ${sleeps}; you are ${adults + children}. Add a room.`);
@@ -585,6 +586,65 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
     }
 
     inventory.mount({router,requireEstablishmentManager,ownResort,checkPhotoSources,fail});
+
+    /* Per-enterprise navigation. History remains accessible after new requests stop. */
+    router.get('/bookings/manage/:spotId/access', requireEstablishmentManager, async (req, res) => {
+        try {
+            const spot = await ownResort(req, req.params.spotId);
+            const { rows } = await query('select exists(select 1 from bookings where spot_id=$1) as history', [spot.id]);
+            res.set('Cache-Control', 'no-store');
+            return res.json({ settings: await settingsFor(spot.id), hasBookings: rows[0].history });
+        } catch (error) { return fail(res, error, 'Booking access:'); }
+    });
+
+    router.patch('/bookings/manage/:spotId/enabled', requireEstablishmentManager, async (req, res) => {
+        try {
+            const enabled = (req.body || {}).enabled;
+            if (typeof enabled !== 'boolean') throw problem(400, 'Say whether to accept bookings.');
+            const spot = await ownResort(req, req.params.spotId);
+            const by = await managerEmail(req);
+            await transaction(async client => {
+                await inventory.lockPlace(spot.id, client);
+                const settings = await settingsFor(spot.id, client);
+                if (enabled && settings.allowPayAtProperty && !settings.paymentInstructions) throw problem(409, 'Add your pay onsite instructions in Rooms → Settings before accepting bookings.');
+                await query(`insert into enterprise_booking_settings (spot_id,accepts_bookings,updated_by_email)
+                    values ($1,$2,$3) on conflict (spot_id) do update set accepts_bookings=$2,updated_by_email=$3,updated_at=now()`, [spot.id,enabled,by], client);
+            });
+            return res.json({ settings: await settingsFor(spot.id) });
+        } catch (error) { return fail(res, error, 'Booking toggle:'); }
+    });
+
+    /* Manager-only payment register; simulation money is never an onsite receipt. */
+    router.get('/bookings/manage/:spotId/payment-records', requireEstablishmentManager, async (req, res) => {
+        try {
+            const spot = await ownResort(req, req.params.spotId);
+            const month = String(req.query.month || manilaToday().slice(0, 7));
+            if (!/^(20\d{2})-(0[1-9]|1[0-2])$/.test(month)) throw problem(400, 'Choose a month from 2000 to 2099.');
+            const page = Number(req.query.page || 1);
+            if (!Number.isSafeInteger(page) || page < 1 || page > 100000) throw problem(400, 'Choose a valid page.');
+            const first = month + '-01', next = addDays(first, 32).slice(0, 7) + '-01';
+            const { rows } = await query(`with ledger as (
+                select p.id, b.code, b.guest_name, p.amount, p.method, p.received_on, p.reference,
+                       p.channel, p.is_demo, p.refund_amount, p.refunded_at
+                from booking_payments p join bookings b on b.id=p.booking_id
+                where b.spot_id=$1 and p.received_on >= $2::date and p.received_on < $3::date
+            ), balances as (
+                select b.id, b.code, b.guest_name, b.check_in, b.status, b.total_amount,
+                       greatest(0,b.total_amount-coalesce((select sum(p.amount-coalesce(p.refund_amount,0)) from booking_payments p where p.booking_id=b.id),0)) as balance
+                from bookings b where b.spot_id=$1 and b.check_in >= $2::date and b.check_in < $3::date
+                    and b.status in ('confirmed','checked_in','completed')
+            ) select jsonb_build_object(
+                'total',(select count(*) from ledger),
+                'onsiteReceived',(select coalesce(sum(amount-coalesce(refund_amount,0)),0) from ledger where channel='manual' and not is_demo),
+                'demonstrationReceived',(select coalesce(sum(amount-coalesce(refund_amount,0)),0) from ledger where is_demo),
+                'items',coalesce((select jsonb_agg(x) from (select * from ledger order by received_on desc,id desc limit 50 offset $4) x),'[]'::jsonb),
+                'balanceCount',(select count(*) from balances where balance>0),
+                'balances',coalesce((select jsonb_agg(x) from (select * from balances where balance>0 order by check_in,code limit 100) x),'[]'::jsonb)
+            ) as data`, [spot.id, first, next, (page - 1) * 50]);
+            res.set('Cache-Control', 'no-store');
+            return res.json({ month, page, pageSize: 50, ...rows[0].data });
+        } catch (error) { return fail(res, error, 'Booking payment records:'); }
+    });
 
     /* Everything for the manager's Rooms page. */
     router.get('/rooms/manage/:spotId', requireEstablishmentManager, async (req, res) => {
@@ -687,11 +747,11 @@ module.exports = function bookingsRouter({ requireAdmin, requireEstablishmentMan
                     (spot_id, accepts_bookings, response_hours, check_in_time, check_out_time, min_nights, max_nights,
                      advance_days, free_cancel_days, payment_instructions, updated_by_email, allow_pay_at_property, allow_pay_online)
                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                on conflict (spot_id) do update set accepts_bookings = $2, response_hours = $3, check_in_time = $4,
+                on conflict (spot_id) do update set accepts_bookings = case when $14 then $2 else enterprise_booking_settings.accepts_bookings end, response_hours = $3, check_in_time = $4,
                     check_out_time = $5, min_nights = $6, max_nights = $7, advance_days = $8, free_cancel_days = $9,
                     payment_instructions = $10, updated_by_email = $11, allow_pay_at_property = $12, allow_pay_online = $13`,
                 [spot.id, accepts, responseHours, checkInTime, checkOutTime, minNights, maxNights, advanceDays, freeCancelDays, paymentInstructions, by,
-                    allowPayAtProperty, allowPayOnline]);
+                    allowPayAtProperty, allowPayOnline, b.acceptsBookings !== undefined]);
             return res.json({ success: true, message: 'Saved.', settings: await settingsFor(spot.id) });
         } catch (error) { return fail(res, error, '❌ Booking settings failure:'); }
     });

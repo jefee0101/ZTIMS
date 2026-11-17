@@ -926,6 +926,19 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .ax-panel { display: flex; flex-direction: column; gap: 1rem; padding-top: 1rem; animation: axIn var(--dur-standard, 240ms) var(--ease-decelerate, ease-out); }
 @keyframes axIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .ax-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ent-booking-link[hidden] { display:none!important; }
+.ent-booking-controls { display:grid;gap:1rem;padding:1.25rem; }
+#payRoot .glass-panel { padding:1.25rem; }
+.ent-booking-controls[hidden] { display:none; }
+.ent-booking-head { display:flex;align-items:center;justify-content:space-between;gap:1rem; }
+.ent-booking-head h2 { font-size:1rem;font-weight:800; }
+.ent-booking-actions { display:flex;gap:.6rem;flex-wrap:wrap; }
+.ent-payment-totals { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem; }
+.ent-payment-value { font-weight:800;font-size:1.5rem;margin-top:.4rem; }
+.ent-payment-scroll { overflow-x:auto; }
+.ent-payment-scroll table { min-width:460px; }
+.ent-payment-scroll td,.ent-payment-scroll th { padding:.75rem;text-align:left; }
+@media(max-width:639px) { .ent-payment-totals { grid-template-columns:1fr; } .ent-booking-head { align-items:flex-start; } }
 @media (min-width: 1024px) { .ax-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .ax-tile p:nth-child(2) { font-size: 1.6rem; }
 .ax-tile--partial { border-style: dashed; }

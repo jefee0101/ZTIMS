@@ -12,6 +12,38 @@
     const KEY = 'ztimsEnterprise';
     let list = [];
     let loaded = null;
+    const accessCache = new Map();
+    async function bookingAccess(force) {
+        const spot = current();
+        if (!spot || spot.type !== 'accommodation') return null;
+        if (force || !accessCache.has(spot._id)) {
+            const request = fetch('/api/bookings/manage/' + encodeURIComponent(spot._id) + '/access', {
+                headers: { Authorization: 'Bearer ' + (localStorage.getItem('authToken') || '') }
+            }).then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Booking settings could not be loaded.');
+                return data;
+            }).catch(error => { accessCache.delete(spot._id); throw error; });
+            accessCache.set(spot._id, request);
+        }
+        return accessCache.get(spot._id);
+    }
+    async function syncBookingNavigation(force) {
+        const spot = current(), id = spot && spot._id;
+        const data = await bookingAccess(force);
+        if (id !== (current() && current()._id)) return data;
+        const show = !!(data && (data.settings.acceptsBookings || data.hasBookings));
+        document.querySelectorAll('aside a[href="resort_bookings.html"], aside a[href="resort_payments.html"]').forEach(link => {
+            link.hidden = !show;
+            link.classList.add('ent-booking-link');
+            const payments = link.getAttribute('href') === 'resort_payments.html';
+            const label = data && !data.settings.acceptsBookings ? (payments ? 'Booking payments' : 'Existing bookings') : (payments ? 'Payments' : 'Bookings');
+            link.title = label;
+            const text = link.querySelector('.sidebar-label'); if (text) text.textContent = label;
+        });
+        document.dispatchEvent(new CustomEvent('ztims-booking-access', { detail: { spotId: id, access: data } }));
+        return data;
+    }
 
     const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -84,6 +116,7 @@
     /* The header's switcher: the same pill and menu as the portals' other
        buttons and ⋯ menus (.pg-btn, .dest-menu in portal-flat.css). */
     function mount(slot) {
+        syncBookingNavigation().catch(() => { /* Keep history links reachable if settings cannot be read. */ });
         if (!slot) return;
         closeMenu();
         const here = current();
@@ -123,6 +156,6 @@
     window.ztimsEnterprise = {
         load, set, mount, select, current, currentId, nameOf,
         list: () => list.slice(),
-        remember
+        remember, bookingAccess, syncBookingNavigation
     };
 })();

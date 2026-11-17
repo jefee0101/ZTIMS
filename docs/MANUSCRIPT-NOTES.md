@@ -1221,3 +1221,19 @@ Lines to update:
 - Definition of Terms (optional): "Invitation link — a single-use, time-limited email link through which a new
   staff member sets their own password."
 - Do not change the TAM or ISO evaluation results: this was added after the evaluated version.
+
+## Optional accommodation bookings and payment records (17 November 2026)
+
+Update manager Enterprise/Rooms/Bookings screenshots and descriptions: one
+"Accept bookings through ZTIMS" switch on Enterprise. Enterprises can record
+walk-ins/external stays and submit monthly reports without accepting online
+requests. Rooms remain available for inventory and reporting. When off, new
+requests stop; existing bookings and their payment/refund history remain. With no
+history, Bookings and Payments are hidden. Manager reservation analytics appear
+only when booking is enabled or has history; guest/report analytics remain.
+
+Add the manager-only Payments screen: enterprise-scoped payment records, onsite
+receipt entry and outstanding booking balances. Actual recorded onsite receipts
+and simulated online transactions are separate; this does not implement real
+Xendit settlement or enterprise payouts. No officer money access, research data
+change, schema change or new evaluation claim. This is a later refinement.

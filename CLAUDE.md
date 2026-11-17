@@ -1964,6 +1964,31 @@ user noted weak signal at many places makes counting at the entrance hard
 
 Decisions already made on purpose — don't reintroduce what they rule out:
 
+- Optional enterprise bookings (17 November 2026): each accommodation's Enterprise
+  page has one "Accept bookings through ZTIMS" switch using the existing
+  `enterprise_booking_settings.accepts_bookings`. Rooms settings link to it;
+  they do not expose a second switch. Off stops new requests without cancelling,
+  refunding or deleting existing records. Guest Register, Rooms, monthly reporting
+  and visitor analytics remain usable. Hide Bookings/Payments only when off AND
+  there is no booking history; otherwise retain Existing bookings/Booking payments.
+  Do not hide history after the last active reservation ends. Enabling cannot lift
+  the Tourism Office pause and requires onsite payment instructions when applicable.
+  Toggle writes and new booking requests use the inventory advisory lock; requests
+  recheck the flag inside that lock. Rooms settings saves without an explicit
+  `acceptsBookings` preserve the current flag.
+- Manager Payments (`resort/resort_payments.html`) is an enterprise-owned register,
+  not a wallet, payout service or officer revenue report. Show actual recorded
+  onsite receipts separately from simulated online transactions. Totals are net of
+  recorded refunds for receipts in the selected received month; they are not a
+  cash-flow ledger of the month refunds occurred. Balances show confirmed,
+  checked-in and completed stays arriving that month, using all net payments
+  including demonstration payments, explicitly labelled. Existing booking payment,
+  refund and review eligibility rules remain unchanged. No schema update required.
+  `GET /api/bookings/manage/:spotId/access`, `PATCH .../enabled` (boolean enabled),
+  and `GET .../payment-records?month=YYYY-MM&page=1` are manager-only and validate
+  selected-enterprise ownership. The register pages 50 receipts and displays up to
+  100 outstanding balances; further bookings remain reachable in Bookings.
+
 - No API key (ORS, Cloudinary secret, etc.) ever reaches frontend source; all
   third-party calls needing a key are server-side.
 - A visitor's GPS coordinate is used for a directions request and discarded,
