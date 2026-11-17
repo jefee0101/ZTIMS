@@ -716,7 +716,9 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
 .acc-workspace__panes { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr); gap: 1.5rem; align-items: start; }
 .acc-workspace__panes > section { min-width: 0; }
 .acc-workspace__nav { display: none; }
-.acc-workspace__register h1 { font-size: 1.5rem; line-height: 1.2; }
+.acc-workspace__register h2 { font-size: 1.5rem; line-height: 1.2; }
+.manager-records-link .sidebar-label { white-space:normal;line-height:1.25; }
+.manager-records-link .material-symbols-outlined { width:24px;flex:0 0 24px;overflow:hidden; }
 .acc-workspace__register .stat-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .acc-workspace__register .stat-tile { min-width: 0; padding: .65rem; }
 .acc-workspace__register .stat-tile > p:last-child { font-size: 1.35rem; }
@@ -731,7 +733,7 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
   .acc-workspace__panes { display: block; }
   .acc-workspace__nav { display: flex; flex-wrap: wrap; gap: .5rem; }
   .acc-workspace[data-active="register"] [data-pane="report"], .acc-workspace[data-active="report"] [data-pane="register"] { display: none; }
-  .acc-workspace__nav [aria-current="page"] { background: rgb(var(--ztims-primary)); color: rgb(var(--ztims-on-primary)); }
+  .acc-workspace__nav [aria-pressed="true"] { background: rgb(var(--ztims-primary)) !important; color: rgb(var(--ztims-on-primary)) !important; }
 }
 .acc-paper { min-width: 0; padding: 1rem; }
 .acc-paper__head { padding-bottom: 1rem; color: rgb(var(--ztims-on-surface)); }

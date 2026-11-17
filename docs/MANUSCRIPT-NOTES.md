@@ -1222,6 +1222,18 @@ Lines to update:
   staff member sets their own password."
 - Do not change the TAM or ISO evaluation results: this was added after the evaluated version.
 
+## Combined manager Guest Records and Reports (17 November 2026)
+
+Use one manager page/figure named **Guest Records and Reports**, combining the
+stay register and generated monthly Tourist Influx Report. Remove the duplicate
+manager Tourist Influx Report page figure/menu entry. Desktop shows both panes;
+mobile switches Records/Reports inside the page. Official DAE-1A and DAE-1B names,
+month synchronization, submissions, versions and annual summaries remain. The old
+report URL redirects while preserving month and report view. With preceding last
+figure 37, manager figures are 38–45: Enterprises, Enterprise, Rooms, Bookings,
+Payments, Guest Records and Reports (43), Reviews (44), Analytics (45). Update
+captions, references and List of Figures, not study results or manuscript spacing.
+
 ## Required Support Staff visitor breakdowns (17 November 2026)
 
 Daily attraction recording now requires all four residence counts and male/female

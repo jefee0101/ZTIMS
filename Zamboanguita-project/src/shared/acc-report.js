@@ -1,5 +1,5 @@
 /* Tourist Influx Report for a private place to stay: paired DAE-1A / DAE-1B with Submit,
- * Versions, and Year (the annual summary). Mounted by resort_statistics.html
+ * Versions, and Year (the annual summary). Mounted in Guest Records and Reports
  * when the current enterprise is a place to stay
  * (window.ztimsAccReport.mount(el, spot)). Needs acc-common.js.
  * Figures always come from the server; a saved version never changes.

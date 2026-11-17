@@ -579,10 +579,11 @@ Exclude its Manual-Summary pages. The monthly Excel package has exactly two
 sheets, DAE-1A and the actual daily DAE-1B (days 1–31, with non-existent dates
 blank and shaded). The blank DAE-1B template likewise excludes Manual-Summary.
 
-The manager's Guest Register and Tourist Influx Report share a desktop
-workspace (`acc-workspace.js`): 30% register on the left, 70% report on the
-right, synchronized month and refresh after stay changes. Under 1024px the
-existing two URLs are separate subpages, carrying the month in their links.
+The manager's Guest Records and Reports page uses one workspace
+(`acc-workspace.js`): 30% Guest Register on the left, 70% Tourist Influx Report
+on the right, synchronized month and refresh after stay changes. Under 1024px,
+Records/Reports buttons switch panes in place. The old report URL redirects to
+the canonical register URL with the month, hash and report view preserved.
 `acc-forms.js` renders the actual daily forms from the server's template rows.
 The DAE-1B's sticky residence labels and header use a solid theme surface
 under their row tints, so daily numbers never show through during horizontal
@@ -1963,6 +1964,17 @@ user noted weak signal at many places makes counting at the entrance hard
 ## Standing constraints
 
 Decisions already made on purpose — don't reintroduce what they rule out:
+
+- Manager Guest Records and Reports (17 November 2026): one sidebar entry and
+  one page heading at `resort/resort_register.html`. The workspace still contains
+  Guest Register and Tourist Influx Report sections; preserve official DAE-1A /
+  DAE-1B labels and all submission/version/year actions. Desktop shows both panes;
+  mobile Records/Reports buttons switch in place without reloading or discarding
+  edits, with shared enterprise/month. `?view=report` opens the report pane.
+  `resort_statistics.html` is a compatibility redirect preserving query/hash and
+  defaulting to the report view, not another navigation entry. Enterprise's quick
+  actions link once to the combined page. This is manager-only navigation work;
+  officer and Support Staff labels/routes, data, schema and Home are unchanged.
 
 - Support Staff daily visitor records (17 November 2026): residence and sex
   breakdowns are required for every positive total. All four residence counts

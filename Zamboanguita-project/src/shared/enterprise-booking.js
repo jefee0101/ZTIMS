@@ -11,7 +11,7 @@
         const on = data.settings.acceptsBookings;
         host.innerHTML = `<div class="ent-booking-head"><h2>Accept bookings through ZTIMS</h2><label class="sf-switch"><input type="checkbox" role="switch" aria-label="Accept bookings through ZTIMS" ${on ? 'checked' : ''}><span class="sf-switch__track" aria-hidden="true"></span><span>${on ? 'On' : 'Off'}</span></label></div>
             <p class="text-support">${data.settings.pausedByOffice ? 'New requests are paused by the Tourism Office.' : on ? 'Visitors can request rooms from your listing.' : 'New booking requests are off. Visitors can contact your enterprise directly.'}</p>
-            <div class="ent-booking-actions"><a class="btn btn-primary" href="resort_register.html">Guest Register</a><a class="btn btn-secondary" href="resort_statistics.html">Monthly report</a><a class="btn btn-secondary" href="resort_rooms.html">Rooms</a></div>
+            <div class="ent-booking-actions"><a class="btn btn-primary" href="resort_register.html">Guest Records and Reports</a><a class="btn btn-secondary" href="resort_rooms.html">Rooms</a></div>
             ${!on && data.hasBookings ? '<p class="text-support">Existing bookings, payment records and refunds remain available.</p>' : ''}
             <p class="text-error" role="alert" data-error hidden></p>`;
         host.querySelector('input').addEventListener('change', async event => {

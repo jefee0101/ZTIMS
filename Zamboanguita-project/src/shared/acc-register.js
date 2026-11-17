@@ -89,7 +89,7 @@
         const s = view.state.state;
         if (s === 'finalized') return `<div class="acc-banner acc-banner--lock"><span class="material-symbols-outlined" aria-hidden="true">lock</span><div><b>${A().monthName(year, month)} is finalized.</b> Stays with an arrival or a night in it cannot change until the Tourism Office reopens it.</div></div>`;
         if (s === 'reopened') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">lock_open</span><div><b>Reopened by the Tourism Office.</b> Correct the stays, then submit the month again on Tourist Influx Report.</div></div>`;
-        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_statistics.html?month=${A().monthKey(year, month)}">Tourist Influx Report</a>.</div></div>`;
+        if (s === 'changed') return `<div class="acc-banner acc-banner--warn"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><div><b>Changed since version ${view.state.latestVersion}.</b> Submit the correction on <a href="resort_register.html?view=report&month=${A().monthKey(year, month)}">Tourist Influx Report</a>.</div></div>`;
         if (view.figures.partial) return `<p class="text-support">Month to date: nights through ${A().fmtDate(view.figures.through)}.</p>`;
         return '';
     }
