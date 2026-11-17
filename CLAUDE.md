@@ -870,7 +870,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   days (counted, confirmed 0 hatched, missing dashed red, closure struck through;
   each day's state in its `aria-label`), Previous / Next month, the state banner
   (a reopening shows its reason), a form with Date and Total visitors first and
-  "Add a breakdown (optional)" for the four residence classes and male / female,
+  an always-visible required Visitor breakdown for the four residence classes and male / female,
   live "n of N classified", Save (the next missing date is offered), Discard
   changes; leaving unsaved figures always asks; a stale save says so with "Load
   the saved figures"; "Record 0 for several dates" ticks only dates nobody came. With no reporting month set yet, the form stays open and the first date saved starts reporting from its month (the server sets `attraction_settings`); the officer can change it under Reporting settings.
@@ -907,7 +907,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
 - **One source:** `attraction_daily_counts`, unique per attraction and date. No row =
   missing; `total` 0 = a confirmed zero (breakdowns empty); a null breakdown =
   unknown. Residence is four classes that never overlap (Zamboanguita, rest of
-  Negros Oriental, other Philippine provinces, foreign), each optional, with a
+  Negros Oriental, other Philippine provinces, foreign), each required for positive counts, with a
   `residence_complete` flag; sex (male, female) is a separate observation with its
   own flag. **Sex by residence is never stored or estimated.** Authorized
   closures come from `spot_closed_dates`. A save names the `revision` it read and a
@@ -1963,6 +1963,16 @@ user noted weak signal at many places makes counting at the entrance hard
 ## Standing constraints
 
 Decisions already made on purpose — don't reintroduce what they rule out:
+
+- Support Staff daily visitor records (17 November 2026): residence and sex
+  breakdowns are required for every positive total. All four residence counts
+  and both sex counts must be entered explicitly (0 where none); each group must
+  sum exactly to the total. Enforced in the form and `attraction-engine.parseCount`;
+  the server derives completeness flags. Confirmed zero dates need no breakdown,
+  including bulk zero confirmation. New month submissions/resubmissions reject
+  any incomplete positive daily breakdown. Preserve old unknown fields, submitted
+  snapshots and finalized reports; never backfill them with invented zeroes.
+  Corrections retain the existing reopen/version workflow. No schema change.
 
 - Optional enterprise bookings (17 November 2026): each accommodation's Enterprise
   page has one "Accept bookings through ZTIMS" switch using the existing

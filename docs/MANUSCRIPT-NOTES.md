@@ -1222,6 +1222,16 @@ Lines to update:
   staff member sets their own password."
 - Do not change the TAM or ISO evaluation results: this was added after the evaluated version.
 
+## Required Support Staff visitor breakdowns (17 November 2026)
+
+Daily attraction recording now requires all four residence counts and male/female
+counts when total visitors is positive; each breakdown must equal the daily total.
+Zero-visitor dates remain explicitly confirmed without demographic fields. New
+submissions require complete breakdowns. Existing historical records and saved
+versions are unchanged; corrections use reopening and resubmission. Update Support
+Staff recording screenshots and descriptions. This later refinement changes no
+survey or evaluation data and requires no schema update.
+
 ## Optional accommodation bookings and payment records (17 November 2026)
 
 Update manager Enterprise/Rooms/Bookings screenshots and descriptions: one

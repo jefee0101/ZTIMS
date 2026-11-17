@@ -333,6 +333,8 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
             if (st.state === 'before') refuse(409, 'BEFORE_REPORTING', 'That month is before this attraction started reporting.');
             if (['future', 'open'].includes(st.state)) refuse(409, 'MONTH_NOT_ENDED', `${monthName(E.monthKey(year, month))} has not ended. It can be submitted from ${E.addDays(E.lastDay(year, month), 1)}.`);
             if (!v.figures.complete) refuse(409, 'MONTH_INCOMPLETE', 'Every date must be recorded or an authorized closure before the month can be submitted.', { missing: v.figures.missing, scheduled: v.figures.scheduled });
+            const incomplete = v.figures.daily.filter(d => d.count && !E.completeBreakdown(d.count));
+            if (incomplete.length) refuse(409, 'BREAKDOWN_INCOMPLETE', 'Complete the residence and sex breakdowns for every recorded date before submitting.', { dates: incomplete.map(d => d.date) });
             if (Number(b.expectedVersion || 0) !== current) refuse(409, 'STALE', 'A version was submitted meanwhile. Reload and check the figures.', { latestVersion: current });
             const reason = text(b.reason, 300);
             if (current > 0 && reason.length < 3) refuse(400, 'BAD_REASON', 'Give the reason for the correction.');
