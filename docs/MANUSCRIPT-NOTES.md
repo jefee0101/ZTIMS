@@ -282,6 +282,27 @@ visits (Tracker, Monthly DTA2M, Annual VAR 3M, Issued). Nothing else changed.
 Tourism Statistics page, say it is split by a switch into Accommodation and
 Attraction reports; retake its screenshot.
 
+## Figures fixed and Executive Summary print file (17 November 2026)
+
+**The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev15.docx` (from
+rev14's source): Figure 3, "Agile Software Development Life Cycle of the Study",
+added after Chapter II's Research Design (the six phases the chapter names:
+planning, design, development, testing, review, deployment; drawing in the
+session scratchpad, `fig3`), cited in that paragraph. The second "My Account
+Page" and the second "Officer Announcements Page" were the same screenshots as
+the first and were removed; figures renumbered 1 to 43 (the UI screenshots are
+now Figures 9 to 43). Figure 22 (was 23) reads "Tourism Officer Dashboard";
+Figure 10 has its own Destination page text (it repeated Figure 9's); Figure 17
+describes the Security tab it shows; Figures 12 and 13 read "Directions to a
+Destination" and "Visitor Sign In Page". The System User Interface opening names
+Tourist accounts and the three staff roles. Each UI screenshot now starts its
+own page with a page break instead of blank lines. Separate
+`ZTIMS_Executive_Summary_print.docx`: the three landscape pages, numbered v to
+vii as in the manuscript, the college header without its logos.
+
+**Still to decide:** a screenshot of My account's Bookings tab or the officer's
+Calendar of events can be added as a new figure if wanted.
+
 ## Contents, page numbers and Chapter V finalized (17 November 2026)
 
 **The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev14.docx` (Word,
@@ -301,11 +322,8 @@ describe the current system (Tourist accounts, Guest Register, Support Staff and
 the Daily Visitor Record, Finalize / Reopen); Conclusion 5 says the end users
 accepted the evaluated version; no figures changed.
 
-**Still to fix in the manuscript:** no Figure 3 (the Agile SDLC figure; figures
-jump from 2 to 4); Figure 23 is captioned "Establishment Page" but shows the
-Dashboard; Figures 17/18 and 28/29 share captions; the System User Interface
-opening paragraph still says "used without an account", "Establishment Manager"
-and "Tourist Guide"; the Executive Summary was not reviewed in this pass.
+**Still to fix in the manuscript:** the Executive Summary was not reviewed in
+this pass. (The figure issues listed here were fixed in rev15.)
 
 ## Page numbering and contents (13 November 2026)
 
