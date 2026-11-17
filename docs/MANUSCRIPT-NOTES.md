@@ -282,6 +282,31 @@ visits (Tracker, Monthly DTA2M, Annual VAR 3M, Issued). Nothing else changed.
 Tourism Statistics page, say it is split by a switch into Accommodation and
 Attraction reports; retake its screenshot.
 
+## Contents, page numbers and Chapter V finalized (17 November 2026)
+
+**The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev14.docx` (Word,
+from the Google Doc rev12 as downloaded on 17 November): the Contents is Word's
+automatic table from the heading styles (`TOC \o "1-3" \h \z \u`; levels:
+front matter, chapters, References, Appendices / sections and appendices /
+subsections), the Lists of Figures and Tables are built from marked captions;
+dotted leaders, right-aligned numbers; Word updates the fields on opening.
+156 paragraphs that used a heading style for body text, captions or blank lines
+became plain paragraphs with the same look, so they stay out of the Contents.
+Numbering: title page i (not shown), preliminary pages ii to xiv, Chapter I
+restarts at 1 (to 168). Approval Sheet on its own page; Appendix M's photo pages
+take the chapters' header. Tables renumbered 1 to 10 (Tables 3 to 5 had been
+removed and Table 10 was used twice); "Figures 9 to 27" now reads "Figures 9 to
+45". Chapter V: Finding 3, Conclusion 3 and Recommendations 1, 2, 4 and 7
+describe the current system (Tourist accounts, Guest Register, Support Staff and
+the Daily Visitor Record, Finalize / Reopen); Conclusion 5 says the end users
+accepted the evaluated version; no figures changed.
+
+**Still to fix in the manuscript:** no Figure 3 (the Agile SDLC figure; figures
+jump from 2 to 4); Figure 23 is captioned "Establishment Page" but shows the
+Dashboard; Figures 17/18 and 28/29 share captions; the System User Interface
+opening paragraph still says "used without an account", "Establishment Manager"
+and "Tourist Guide"; the Executive Summary was not reviewed in this pass.
+
 ## Page numbering and contents (13 November 2026)
 
 **The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev13.docx` (Word,
