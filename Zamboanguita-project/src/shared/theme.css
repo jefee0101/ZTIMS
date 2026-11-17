@@ -2048,6 +2048,7 @@ html.dark .hm-step--dark { background: #0B0A09; border-color: rgb(var(--ztims-ou
 html.dark .site-footer__feedback { background: #F5F1EA; color: #1C1917; }
 .site-footer__staff { display: inline-block; margin-top: 1rem; font-size: .875rem; line-height: 1.5; color: rgb(var(--ztims-on-surface-variant)); text-decoration: none; }
 .site-footer__staff:hover { color: rgb(var(--ztims-primary-text)); text-decoration: underline; }
+.site-footer__staff[hidden] { display: none; }
 .site-footer__bottom {
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1.5rem; margin-top: 2rem;
     font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--ztims-on-surface-variant));

@@ -1522,6 +1522,12 @@ checkout, and **signing in is required** to book a room.
   account label stay Google-controlled. After
   signing in the visitor returns to `?next=` (an address on this site only;
   kept in `sessionStorage.ztimsNext` across the emailed link).
+  **Signed-in visitor footer (17 November 2026):** the shared footer hides
+  Staff and Enterprise Manager sign in while a visitor token is present.
+  It restores the link after visitor sign-out or a refused session, and stays
+  synchronized after office-detail redraws and cross-tab storage changes.
+  A connection failure keeps the stored visitor session's link hidden.
+  This is presentation only; staff routes and authorization are unchanged.
   `src/shared/visitor-session.js` (every visitor page) keeps the token in
   `localStorage.ztimsVisitorToken` (never the staff `authToken`) and draws the
   header's **Sign in** pill, or the initials and first name with a menu (My

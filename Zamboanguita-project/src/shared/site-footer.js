@@ -27,6 +27,18 @@
 
     const YEAR = new Date().getFullYear();
 
+    function syncStaffSignIn() {
+        let signedIn = false;
+        try { signedIn = !!localStorage.getItem('ztimsVisitorToken'); } catch { /* private browsing */ }
+        document.querySelectorAll('.site-footer__staff').forEach(function (link) {
+            link.hidden = signedIn;
+        });
+    }
+    document.addEventListener('ztims-visitor-session-change', syncStaffSignIn);
+    window.addEventListener('storage', function (event) {
+        if (event.key === 'ztimsVisitorToken' || event.key === null) syncStaffSignIn();
+    });
+
     function link(href, label) {
         return '<li><a href="' + href + '">' + label + '</a></li>';
     }
@@ -167,6 +179,7 @@
         document.querySelectorAll('[data-site-footer]').forEach(function (footer) {
             footer.innerHTML = render(footer.getAttribute('data-root') || './');
         });
+        syncStaffSignIn();
         fillEmergencyBoxes();
         fillOfficeFields();
     }
