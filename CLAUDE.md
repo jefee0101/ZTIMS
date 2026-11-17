@@ -1969,6 +1969,11 @@ user noted weak signal at many places makes counting at the entrance hard
 
 Decisions already made on purpose — don't reintroduce what they rule out:
 
+- Room-date validation wording (18 November 2026): `STAY_ROOM_OUTSIDE` tells the
+  manager "The selected room is not available for all the assigned stay dates.
+  Check the stay dates and the room’s availability period." This is wording only;
+  room availability/stay-date rules and status 400 remain unchanged.
+
 - Attraction group register (18 November 2026, owner chose each arriving group):
   `attraction_visit_groups` is the editable source for new dates. Its trigger
   maintains `attraction_daily_counts` with `group_managed=true`; report readers
