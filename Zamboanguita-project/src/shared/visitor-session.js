@@ -26,8 +26,12 @@
     function save(newToken, visitor) {
         write(TOKEN, newToken);
         if (visitor) write(NAME, visitor.fullName || visitor.email || '');
+        document.dispatchEvent(new Event('ztims-visitor-session-change'));
     }
-    function clear() { write(TOKEN, ''); write(NAME, ''); }
+    function clear() {
+        write(TOKEN, ''); write(NAME, '');
+        document.dispatchEvent(new Event('ztims-visitor-session-change'));
+    }
 
     /* Only an address on this site may be returned to after signing in. */
     function safeNext(next) {
