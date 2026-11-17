@@ -284,19 +284,20 @@ Attraction reports; retake its screenshot.
 
 ## Figures fixed and Executive Summary print file (17 November 2026)
 
-**The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev15.docx` (from
-rev14's source): Figure 3, "Agile Software Development Life Cycle of the Study",
-added after Chapter II's Research Design (the six phases the chapter names:
-planning, design, development, testing, review, deployment; drawing in the
-session scratchpad, `fig3`), cited in that paragraph. The second "My Account
-Page" and the second "Officer Announcements Page" were the same screenshots as
-the first and were removed; figures renumbered 1 to 43 (the UI screenshots are
-now Figures 9 to 43). Figure 22 (was 23) reads "Tourism Officer Dashboard";
-Figure 10 has its own Destination page text (it repeated Figure 9's); Figure 17
-describes the Security tab it shows; Figures 12 and 13 read "Directions to a
-Destination" and "Visitor Sign In Page". The System User Interface opening names
-Tourist accounts and the three staff roles. Each UI screenshot now starts its
-own page with a page break instead of blank lines. Separate
+**The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev16.docx` (rev15
+withdrawn: no Agile SDLC figure or added Agile text, by the user's decision; the
+Agile cycle belongs to the Theoretical Framework). The second "My Account Page"
+and the second "Officer Announcements Page" were the same screenshots as the
+first and were removed; figures renumbered 1 to 42 without a gap (Context Flow
+Diagram is now Figure 3 ... System Architecture Figure 7; the UI screenshots
+Figures 8 to 42), with the in-text references to Figures 3 to 7 renumbered.
+Figure 21 reads "Tourism Officer Dashboard"; Figure 9 has its own Destination
+page text (it repeated the Home page's); Figure 16 describes the Security tab it
+shows; Figures 11 and 12 read "Directions to a Destination" and "Visitor Sign In
+Page". The System User Interface opening names Tourist accounts and the three
+staff roles. The Home page screenshot sits in its own line above its caption (it
+floated on the opening paragraph); each UI screenshot starts its own page with a
+page break instead of blank lines. Separate
 `ZTIMS_Executive_Summary_print.docx`: the three landscape pages, numbered v to
 vii as in the manuscript, the college header without its logos.
 
@@ -323,7 +324,7 @@ the Daily Visitor Record, Finalize / Reopen); Conclusion 5 says the end users
 accepted the evaluated version; no figures changed.
 
 **Still to fix in the manuscript:** the Executive Summary was not reviewed in
-this pass. (The figure issues listed here were fixed in rev15.)
+this pass. (The figure issues listed here were fixed in rev16.)
 
 ## Page numbering and contents (13 November 2026)
 
