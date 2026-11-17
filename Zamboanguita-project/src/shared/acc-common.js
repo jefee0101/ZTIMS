@@ -122,7 +122,7 @@
 
     /* A window in the site's .ztims-modal shell: focus moves in and back,
        Escape and the scrim close it, and only its own buttons act. */
-    function openWindow({ title, body, actions = [], wide = false, onOpen }) {
+    function openWindow({ title, body, actions = [], wide = false, onOpen, beforeClose }) {
         const scrim = document.createElement('div');
         scrim.className = 'fixed inset-0 ztims-scrim flex items-center justify-center z-[200] p-3 sm:p-4 acc-window';
         const titleId = 'accWin' + Math.random().toString(36).slice(2, 8);
@@ -141,7 +141,7 @@
         const api = {
             el: scrim,
             body: scrim.querySelector('.acc-window__body'),
-            close() { scrim.remove(); document.removeEventListener('keydown', onKey, true); if (previous && previous.focus) previous.focus(); },
+            async close() { if (beforeClose && !await beforeClose()) return; scrim.remove(); document.removeEventListener('keydown', onKey, true); if (previous && previous.focus) previous.focus(); },
             error(message) { errorBox.textContent = message || ''; errorBox.hidden = !message; if (message) errorBox.scrollIntoView({ block: 'nearest' }); },
             busy(on) { bar.querySelectorAll('button').forEach(b => { b.disabled = !!on; }); }
         };

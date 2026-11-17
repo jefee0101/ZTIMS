@@ -856,9 +856,10 @@ outputs and basis=submitted endpoints remain compatible. No new schema or
 package-delivery status. Support Staff still send records for review and only
 Support Staff can edit daily attraction counts.
 
-An office-run, counting attraction's visitors are recorded **one count per date**
-by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
-are worked out from those counts, never typed. Proposal, mockup, decisions and
+An office-run, counting attraction's visitors are recorded **one arriving group
+per entry** by its Support Staff. The database maintains one daily aggregate for
+the existing monthly report, saved versions, DTA2M, VAR 3M and VAR 2. Historical
+daily totals stay separate and are never expanded into invented groups. Proposal, mockup, decisions and
 the build: `docs/attraction-reporting/` (01 sources and mapping, 02 workflow and
 model, 03 impact, gaps and security, 04 what was built, reconciliation and
 rollout, 05 the pages, the exports compared with the PDFs and the verification,
@@ -867,14 +868,17 @@ rollout, 05 the pages, the exports compared with the PDFs and the verification,
 old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
 - **Pages (stage 5).** Support Staff (`src/staff/`, menu My attraction, Daily
   Visitor Record, Tourist Influx Report, Account): **Daily Visitor Record**
-  (`staff_register.html`, `att-staff.js` `record`): the month as a calendar of
-  days (counted, confirmed 0 hatched, missing dashed red, closure struck through;
-  each day's state in its `aria-label`), Previous / Next month, the state banner
-  (a reopening shows its reason), a form with Date and Total visitors first and
-  an always-visible required Visitor breakdown for the four residence classes and male / female,
-  live "n of N classified", Save (the next missing date is offered), Discard
-  changes; leaving unsaved figures always asks; a stale save says so with "Load
-  the saved figures"; "Record 0 for several dates" ticks only dates nobody came. With no reporting month set yet, the form stays open and the first date saved starts reporting from its month (the server sets `attraction_settings`); the officer can change it under Reporting settings.
+  (`staff_register.html`, `att-staff.js` / `att-groups.js`): saved group list,
+  Record a group, date/status filters and pagination; calculated visit total,
+  recorded dates and dates to complete; expandable daily totals and zero-date
+  confirmation. The group form calculates size from male/female counts. Choosing
+  one residence assigns the whole group explicitly; Mixed residences requires
+  four counts that equal the group size. Edit and Void require reasons, preserve
+  audit/revisions and update aggregates atomically. Dirty forms ask before closing;
+  lost responses freeze inputs and retain the retry key. Historical daily totals
+  have a separate review link (`?mode=daily&month=…&date=…`) to the earlier recorder.
+  With no reporting start, the first save starts its month. Before the new additive
+  SQL block is installed, the capability check keeps the earlier daily recorder.
   **Tourist Influx Report** (`staff_statistics.html`, `report`): month picker, tiles,
   incomplete breakdowns said plainly, residence and sex tables (unknown stays
   empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
@@ -1965,6 +1969,27 @@ user noted weak signal at many places makes counting at the entrance hard
 
 Decisions already made on purpose — don't reintroduce what they rule out:
 
+- Attraction group register (18 November 2026, owner chose each arriving group):
+  `attraction_visit_groups` is the editable source for new dates. Its trigger
+  maintains `attraction_daily_counts` with `group_managed=true`; report readers
+  continue to use daily counts, not a second sum of groups. Never add groups to
+  a positive historical daily total. Previously confirmed zero can become a
+  positive group date. Voiding the last active group leaves the date MISSING
+  (`group_zero_confirmed=false`); only explicit zero confirmation counts it as 0.
+  Required residence and sex data remain separate observations: do not infer or
+  fill sex-by-residence cells in official templates. No personal names/contacts
+  are collected for group records. Date corrections use Void + a new record.
+  Reasons/revisions, fixed identity/date, immutable audit, daily 100,000 limit,
+  office closures, reporting start, period locks and shared advisory locks apply
+  in API and database. New tables have RLS and no public/anon/authenticated grants;
+  the API owns account/assignment checks. Officer and manager cannot record groups.
+  Additive/re-runnable block is at schema.sql's end; never apply to live ahead of
+  main. `GET /api/attraction-visits/group-recording` advertises readiness; until
+  installed, existing daily recording/reporting remain usable. Group routes are
+  GET/POST `/api/attraction-visits/:spotId/groups`, PUT `…/groups/:id`, and POST
+  `…/groups/:id/void`. Lists accept month, date, status and page (50 entries).
+  Shared dialogs accept optional `beforeClose`; existing callers are unchanged.
+
 - Manager Guest Records and Reports (17 November 2026): one sidebar entry and
   one page heading at `resort/resort_register.html`. The workspace still contains
   Guest Register and Tourist Influx Report sections; preserve official DAE-1A /
@@ -2040,7 +2065,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
-- Attraction visits (stages 4 and 5): one count per attraction and date, kept
+- Attraction visits (stages 4 and 5; group entry added 18 November): group
+  records feed one daily total per attraction and date, kept
   apart from accommodation arrivals everywhere; unknown is never zero; sex by
   residence is never invented; the officer never records. See "Attraction
   visitor reporting".

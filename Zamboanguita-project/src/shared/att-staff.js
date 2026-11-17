@@ -73,7 +73,16 @@
        The Daily Visitor Record
        ================================================================= */
     async function record(host) {
-        const h = await header(host, 'Daily Visitor Record');
+        if (new URLSearchParams(location.search).get('mode') === 'daily') return recordDaily(host);
+        try {
+            const capability = await api('/attraction-visits/group-recording');
+            if (capability.available) return window.ztimsAttGroups.record(host);
+            return recordDaily(host); // Safe rollout: the old recorder works until the additive SQL is applied.
+        } catch (e) { host.innerHTML = A.failed(e.message,true);host.querySelector('[data-acc-retry]')?.addEventListener('click',()=>record(host)); }
+    }
+    async function recordDaily(host) {
+        const legacy = new URLSearchParams(location.search).get('mode') === 'daily';
+        const h = await header(host, legacy ? 'Historical daily totals' : 'Daily Visitor Record',legacy ? '<a class="btn btn-secondary" href="staff_register.html">Group records</a>' : '');
         if (!h) return;
         const spotId = h.me.attraction._id, today = h.me.today;
         const asked = new URLSearchParams(location.search).get('month');
@@ -346,7 +355,7 @@
             });
         });
 
-        await load();
+        await load(new URLSearchParams(location.search).get('date'));
     }
 
     /* =================================================================

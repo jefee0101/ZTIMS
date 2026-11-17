@@ -1222,6 +1222,24 @@ Lines to update:
   staff member sets their own password."
 - Do not change the TAM or ISO evaluation results: this was added after the evaluated version.
 
+## Support Staff attraction group register (18 November 2026)
+
+Replace the date-overwrite recording screenshot/description with a group list and
+Record a group dialog, like the accommodation register's entry flow. Staff record
+date, male/female counts and residence (whole-group class or complete mixed-class
+counts). Group size and daily/report totals are calculated. Groups can be corrected
+or voided with reasons; history remains. No visitor names/contact details are added.
+Sex and residence remain independent observations; do not invent cross-tabulations.
+
+Historical positive daily totals remain separate, counted once and reviewable;
+they are not converted to group entries. Missing dates are not zero, including
+when the last group is voided. Explicit zero confirmations, closures, submission,
+finalization, reopening and immutable saved versions remain. Update data-model
+discussion/ERD for group records and their audit plus daily projection metadata;
+do not redraw diagrams or edit research results automatically. This is a later
+refinement beyond the evaluated version. Apply only the new additive SQL block
+after its code is on main. Until then the old daily recorder remains available.
+
 ## Combined manager Guest Records and Reports (17 November 2026)
 
 Use one manager page/figure named **Guest Records and Reports**, combining the

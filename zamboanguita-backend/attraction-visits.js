@@ -45,6 +45,10 @@ function fromDatabase(error) {
         PERIOD_LOCKED: [409, `${arg.length === 7 ? monthName(arg) : 'That month'} is submitted or finalized, so its daily counts are locked. The Tourism Office must reopen it.`, { month: arg }],
         FUTURE_DATE: [400, 'A date that has not happened yet cannot be recorded.'],
         BEFORE_REPORTING: [409, 'That date is before this attraction started reporting.'],
+        LEGACY_DAILY: [409, 'This date has a historical daily total. Review that daily record instead of adding groups to it.'],
+        GROUP_MANAGED: [409, 'This daily total is calculated from groups. Correct a group record instead.'],
+        GROUP_VOIDED: [409, 'This group was already voided.'],
+        DAY_LIMIT: [400, 'The daily total cannot exceed 100,000 visitors.'],
         CLOSED_DATE: [409, 'That date is an authorized closure, so it takes no count. Ask the Tourism Office if the closure is wrong.'],
         MONTH_NOT_ENDED: [409, 'That month has not ended yet.'],
         MONTH_INCOMPLETE: [409, 'Every date of the month must be recorded or an authorized closure before it can be submitted.'],
@@ -71,7 +75,8 @@ async function settingsOf(spotId, client) {
 }
 async function loadCtx(spot, from, to, client, settings) {
     settings = settings === undefined ? await settingsOf(spot.id, client) : settings;
-    const counts = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date between $2 and $3', [spot.id, from, to], client)).rows.map(E.rowOf);
+    const counts = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date between $2 and $3', [spot.id, from, to], client)).rows
+        .filter(r => !r.group_managed || r.total > 0 || r.group_zero_confirmed).map(E.rowOf);
     const closed = (await query('select closed_date, reason from spot_closed_dates where spot_id = $1 and closed_date between $2 and $3', [spot.id, from, to], client)).rows;
     return { counts: new Map(counts.map(r => [r.date, r])), closed: new Map(closed.map(c => [E.toDate(c.closed_date), c.reason])),
         reportingFrom: settings ? E.toDate(settings.reporting_from) : null, today: E.manilaToday(), scheduledClosed: d => !isOpenOn(spot.working_days, d), rows: counts };
@@ -257,6 +262,8 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
         return s;
     }
 
+    require('./attraction-groups')({router,requireSupportStaff,writeLimit,handle,placeFor,lock,assertDateOpen,ensureSettings,who,refuse});
+
     router.put('/attraction-visits/:spotId/days/:date', requireSupportStaff, writeLimit, handle(async (req, res) => {
         const date = String(req.params.date);
         if (!E.isDate(date) || date < '2000-01-01' || date > '2100-12-31') refuse(400, 'BAD_DATE', 'Give a real calendar date.');
@@ -271,6 +278,7 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
             const cur = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date = $2 for update', [spot.id, date], client)).rows[0];
             const cols = [v.total, v.res.zamboanguita, v.res.negrosOriental, v.res.otherProvince, v.res.foreign, v.residenceComplete, v.male, v.female, v.sexComplete];
             if (cur) {
+                if (cur.group_managed) refuse(409, 'GROUP_MANAGED', 'This daily total is calculated from group records. Correct the group instead.');
                 // The same request again (a retry after a lost answer): the first result, nothing added.
                 if (cur.last_request_key === v.requestKey) return res.json({ success: true, replayed: true, count: shapeCount(cur) });
                 if (v.revision !== cur.revision) refuse(409, 'STALE', 'This date was changed by someone else. Reload it and check the figures.', { server: shapeCount(cur) });
@@ -308,7 +316,14 @@ module.exports = function attractionVisitsRouter({ requireAdmin, requireReporter
                 await assertDateOpen(spot, d, client);
                 await ensureSettings(spot, d, client);
                 const cur = (await query('select * from attraction_daily_counts where spot_id = $1 and count_date = $2', [spot.id, d], client)).rows[0];
-                if (cur) { if (cur.last_request_key === key) continue; refuse(409, 'ALREADY_RECORDED', `${d} already has a count. Change it from its own record.`, { date: d }); }
+                if (cur) {
+                    if (cur.last_request_key === key) continue;
+                    if (cur.group_managed && cur.total === 0 && !cur.group_zero_confirmed) {
+                        const {rows} = await query('update attraction_daily_counts set group_zero_confirmed=true,revision=revision+1,last_request_key=$3,updated_by_email=$4,updated_by_role=$5 where spot_id=$1 and count_date=$2 returning *',[spot.id,d,key,actor.email,actor.role],client);
+                        await logCount(client,spot.id,d,'updated',shapeCount(cur),shapeCount(rows[0]),actor); made.push(d); continue;
+                    }
+                    refuse(409, 'ALREADY_RECORDED', `${d} already has a count. Change it from its own record.`, { date: d });
+                }
                 const { rows } = await query(
                     `insert into attraction_daily_counts (spot_id, count_date, total, last_request_key, created_by_email, updated_by_email, updated_by_role) values ($1, $2, 0, $3, $4, $4, $5) returning *`,
                     [spot.id, d, key, actor.email, actor.role], client);

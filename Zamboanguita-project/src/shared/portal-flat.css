@@ -1107,3 +1107,18 @@ aside > nav::-webkit-scrollbar { display: none; }
 .inv-link { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8125rem; }
 .inv-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
 .inv-actions .btn { min-height: 44px; }
+
+/* Support Staff attraction group register. */
+.att-group-tiles { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem; }
+.att-group-filters,.att-group-fields { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem; }
+.att-group-row { display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 0;border-bottom:1px solid rgb(var(--ztims-outline) / .5); }
+.att-group-row > div { min-width:0;overflow-wrap:anywhere; }
+.att-group-row > div:last-child { flex-shrink:0; }
+.att-group-scroll { overflow-x:auto; }
+.att-group-scroll table { min-width:560px; }
+.att-group-scroll td,.att-group-scroll th { padding:.7rem;text-align:left; }
+.att-group-total { background:rgb(var(--ztims-secondary));color:rgb(var(--ztims-on-secondary));padding:.75rem 1rem;font-weight:800;font-size:1.25rem; }
+@media(max-width:639px) { .att-group-tiles { grid-template-columns:1fr; } .att-group-row { align-items:flex-start;flex-direction:column; } }
+.att-group-window { background:rgb(var(--ztims-on-surface) / .45) !important;backdrop-filter:none !important; }
+.att-group-window .ztims-modal { background:rgb(var(--ztims-surface)) !important;border:1px solid rgb(var(--ztims-outline));border-radius:0 !important;box-shadow:none !important;backdrop-filter:none !important; }
+.att-group-window .field { background:rgb(var(--ztims-surface-high)) !important;color:rgb(var(--ztims-on-surface)) !important; }
