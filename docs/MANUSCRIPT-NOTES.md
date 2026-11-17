@@ -282,6 +282,17 @@ visits (Tracker, Monthly DTA2M, Annual VAR 3M, Issued). Nothing else changed.
 Tourism Statistics page, say it is split by a switch into Accommodation and
 Attraction reports; retake its screenshot.
 
+## Contents locked against Word for the web (17 November 2026)
+
+`FINALIZATION_ZTIMS_rev17.docx` replaces rev16. Word for the web rebuilt rev16's
+Contents on opening with every page number as i or 1, no dotted leaders and bold
+entries (it cannot paginate when it rebuilds a table of contents). In rev17 the
+file no longer asks Word to update fields on opening; the Contents and the Lists
+of Figures and Tables are locked Word TOC fields holding the computed numbers;
+each entry carries its own dotted leader and plain Times New Roman 12; chapter
+entries are one line. To rebuild them later, use desktop Word: select the table,
+unlock (Ctrl+Shift+F11), then Update Field. Never use Update Table in Word for the web.
+
 ## Figures fixed and Executive Summary print file (17 November 2026)
 
 **The change.** Nothing in the system. `FINALIZATION_ZTIMS_rev16.docx` (rev15
