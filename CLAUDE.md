@@ -885,7 +885,10 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   **Tourist Influx Report** (`staff_statistics.html`, `report`): month picker, tiles,
   incomplete breakdowns said plainly, residence and sex tables (unknown stays
   empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
-  total, dates and incomplete breakdowns; a correction needs a reason),
+  total, dates and incomplete breakdowns; a correction needs a reason; the
+  "Send records for review" button shows in every month not yet sent, greyed
+  out with the reason — month not ended, n dates to record, counts incomplete —
+  until it can be sent, 18 November 2026),
   versions with what changed and an Excel each, history. Officer: Tourist Influx Report →
   **Attraction visits** (`att-officer.js`): Tracker (attractions × months by
   state; a cell opens the month: figures, versions, history, VAR 1 Excel,

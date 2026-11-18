@@ -405,7 +405,13 @@
                 Number.isInteger(d.count.male) && Number.isInteger(d.count.female) && d.count.male + d.count.female === d.count.total));
             const canSubmit = breakdownComplete && (st.state === 'ready' || (st.state === 'reopened' && f.complete && f.days && keyOf(y, m) < today.slice(0, 7)));
             const actions = h.body.querySelector('[data-actions]');
-            actions.innerHTML = `${canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-submit><span class="material-symbols-outlined !text-base">send</span>${st.state === 'reopened' ? 'Send corrected records' : 'Send records for review'}</button>` : ''}
+            // The send button stays in view until the month is sent; while it cannot be sent yet it is greyed out with the reason beside it.
+            const showSend = ['open', 'incomplete', 'ready', 'reopened'].includes(st.state);
+            const notYet = canSubmit ? '' :
+                st.state === 'open' ? `You can send this after ${A.monthName(y, m)} ends.` :
+                (st.state === 'incomplete' || (st.state === 'reopened' && !f.complete)) ? `Record or confirm ${nf(st.missing || (f.missing || []).length + (f.scheduled || []).length)} more date${(st.missing || (f.missing || []).length + (f.scheduled || []).length) === 1 ? '' : 's'} first.` :
+                !breakdownComplete ? 'Complete the residence and sex counts first.' : 'Not ready to send yet.';
+            actions.innerHTML = `${showSend ? `<div class="flex flex-col items-end gap-1"><button type="button" class="btn btn-primary min-h-[44px]" data-submit ${canSubmit ? '' : 'disabled aria-disabled="true" style="opacity:.5;cursor:not-allowed"'}><span class="material-symbols-outlined !text-base">send</span>${st.state === 'reopened' ? 'Send corrected records' : 'Send records for review'}</button>${notYet ? `<span class="text-xs text-on-surface-variant">${esc(notYet)}</span>` : ''}</div>` : ''}
                 <button type="button" class="btn btn-secondary min-h-[44px]" data-xl><span class="material-symbols-outlined !text-base">download</span>VAR 1 Excel</button>`;
             const showLive = !['submitted', 'finalized'].includes(st.state) || !v.versions.length;
             const shown = showLive ? f : (v.versions.find(x => x.version === st.version) || {}).figures || f;
@@ -427,7 +433,7 @@
             actions.querySelector('[data-xl]').addEventListener('click', () => xl(v.versions.length && !['reopened'].includes(st.state) ? 'latest' : 'current'));
             out.querySelectorAll('[data-vxl]').forEach(b => b.addEventListener('click', () => xl(b.dataset.vxl)));
             const sb = actions.querySelector('[data-submit]');
-            if (sb) sb.addEventListener('click', () => submitWindow(v, y, m));
+            if (sb && canSubmit) sb.addEventListener('click', () => submitWindow(v, y, m));
         }
 
         function submitWindow(v, y, m) {
