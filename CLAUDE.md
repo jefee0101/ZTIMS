@@ -579,10 +579,11 @@ Exclude its Manual-Summary pages. The monthly Excel package has exactly two
 sheets, DAE-1A and the actual daily DAE-1B (days 1–31, with non-existent dates
 blank and shaded). The blank DAE-1B template likewise excludes Manual-Summary.
 
-The manager's Guest Register and Tourist Influx Report share a desktop
-workspace (`acc-workspace.js`): 30% register on the left, 70% report on the
-right, synchronized month and refresh after stay changes. Under 1024px the
-existing two URLs are separate subpages, carrying the month in their links.
+The manager's Guest Records and Reports page uses one workspace
+(`acc-workspace.js`): 30% Guest Register on the left, 70% Tourist Influx Report
+on the right, synchronized month and refresh after stay changes. Under 1024px,
+Records/Reports buttons switch panes in place. The old report URL redirects to
+the canonical register URL with the month, hash and report view preserved.
 `acc-forms.js` renders the actual daily forms from the server's template rows.
 The DAE-1B's sticky residence labels and header use a solid theme surface
 under their row tints, so daily numbers never show through during horizontal
@@ -855,9 +856,10 @@ outputs and basis=submitted endpoints remain compatible. No new schema or
 package-delivery status. Support Staff still send records for review and only
 Support Staff can edit daily attraction counts.
 
-An office-run, counting attraction's visitors are recorded **one count per date**
-by its Support Staff; the monthly report, saved versions, DTA2M, VAR 3M and VAR 2
-are worked out from those counts, never typed. Proposal, mockup, decisions and
+An office-run, counting attraction's visitors are recorded **one arriving group
+per entry** by its Support Staff. The database maintains one daily aggregate for
+the existing monthly report, saved versions, DTA2M, VAR 3M and VAR 2. Historical
+daily totals stay separate and are never expanded into invented groups. Proposal, mockup, decisions and
 the build: `docs/attraction-reporting/` (01 sources and mapping, 02 workflow and
 model, 03 impact, gaps and security, 04 what was built, reconciliation and
 rollout, 05 the pages, the exports compared with the PDFs and the verification,
@@ -866,14 +868,17 @@ rollout, 05 the pages, the exports compared with the PDFs and the verification,
 old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
 - **Pages (stage 5).** Support Staff (`src/staff/`, menu My attraction, Daily
   Visitor Record, Tourist Influx Report, Account): **Daily Visitor Record**
-  (`staff_register.html`, `att-staff.js` `record`): the month as a calendar of
-  days (counted, confirmed 0 hatched, missing dashed red, closure struck through;
-  each day's state in its `aria-label`), Previous / Next month, the state banner
-  (a reopening shows its reason), a form with Date and Total visitors first and
-  "Add a breakdown (optional)" for the four residence classes and male / female,
-  live "n of N classified", Save (the next missing date is offered), Discard
-  changes; leaving unsaved figures always asks; a stale save says so with "Load
-  the saved figures"; "Record 0 for several dates" ticks only dates nobody came. With no reporting month set yet, the form stays open and the first date saved starts reporting from its month (the server sets `attraction_settings`); the officer can change it under Reporting settings.
+  (`staff_register.html`, `att-staff.js` / `att-groups.js`): saved group list,
+  Record a group, date/status filters and pagination; calculated visit total,
+  recorded dates and dates to complete; expandable daily totals and zero-date
+  confirmation. The group form calculates size from male/female counts. Choosing
+  one residence assigns the whole group explicitly; Mixed residences requires
+  four counts that equal the group size. Edit and Void require reasons, preserve
+  audit/revisions and update aggregates atomically. Dirty forms ask before closing;
+  lost responses freeze inputs and retain the retry key. Historical daily totals
+  have a separate review link (`?mode=daily&month=…&date=…`) to the earlier recorder.
+  With no reporting start, the first save starts its month. Before the new additive
+  SQL block is installed, the capability check keeps the earlier daily recorder.
   **Tourist Influx Report** (`staff_statistics.html`, `report`): month picker, tiles,
   incomplete breakdowns said plainly, residence and sex tables (unknown stays
   empty), Day by day (VAR 1), Submit / Submit correction (a window with period,
@@ -907,7 +912,7 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
 - **One source:** `attraction_daily_counts`, unique per attraction and date. No row =
   missing; `total` 0 = a confirmed zero (breakdowns empty); a null breakdown =
   unknown. Residence is four classes that never overlap (Zamboanguita, rest of
-  Negros Oriental, other Philippine provinces, foreign), each optional, with a
+  Negros Oriental, other Philippine provinces, foreign), each required for positive counts, with a
   `residence_complete` flag; sex (male, female) is a separate observation with its
   own flag. **Sex by residence is never stored or estimated.** Authorized
   closures come from `spot_closed_dates`. A save names the `revision` it read and a
@@ -981,6 +986,9 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   barangay, category, place. Not reported is a dashed outline and "–", never 0;
   partial periods hatched; every chart has "Show as a table"; Excel is the
   server's. No Support Staff analytics page yet.
+  Wording (18 November 2026, the user's request): tiles and cards carry only a
+  short note in plain words, or none; no explanatory notice boxes (the Room
+  requests tab's "A room request is not an arrival…" box was removed).
 - **Tests (local; read-only apart from one temporary visitor):**
   `docs/analytics/tests/api-checks.js` (129) and `page-flow.js` (62, browser,
   built site on :3000), run after the attraction and accommodation suites have
@@ -1964,6 +1972,78 @@ user noted weak signal at many places makes counting at the entrance hard
 
 Decisions already made on purpose — don't reintroduce what they rule out:
 
+- Room-date validation wording (18 November 2026): `STAY_ROOM_OUTSIDE` tells the
+  manager "The selected room is not available for all the assigned stay dates.
+  Check the stay dates and the room’s availability period." This is wording only;
+  room availability/stay-date rules and status 400 remain unchanged.
+
+- Attraction group register (18 November 2026, owner chose each arriving group):
+  `attraction_visit_groups` is the editable source for new dates. Its trigger
+  maintains `attraction_daily_counts` with `group_managed=true`; report readers
+  continue to use daily counts, not a second sum of groups. Never add groups to
+  a positive historical daily total. Previously confirmed zero can become a
+  positive group date. Voiding the last active group leaves the date MISSING
+  (`group_zero_confirmed=false`); only explicit zero confirmation counts it as 0.
+  Required residence and sex data remain separate observations: do not infer or
+  fill sex-by-residence cells in official templates. No personal names/contacts
+  are collected for group records. Date corrections use Void + a new record.
+  Reasons/revisions, fixed identity/date, immutable audit, daily 100,000 limit,
+  office closures, reporting start, period locks and shared advisory locks apply
+  in API and database. New tables have RLS and no public/anon/authenticated grants;
+  the API owns account/assignment checks. Officer and manager cannot record groups.
+  Additive/re-runnable block is at schema.sql's end; never apply to live ahead of
+  main. `GET /api/attraction-visits/group-recording` advertises readiness; until
+  installed, existing daily recording/reporting remain usable. Group routes are
+  GET/POST `/api/attraction-visits/:spotId/groups`, PUT `…/groups/:id`, and POST
+  `…/groups/:id/void`. Lists accept month, date, status and page (50 entries).
+  Shared dialogs accept optional `beforeClose`; existing callers are unchanged.
+
+- Manager Guest Records and Reports (17 November 2026): one sidebar entry and
+  one page heading at `resort/resort_register.html`. The workspace still contains
+  Guest Register and Tourist Influx Report sections; preserve official DAE-1A /
+  DAE-1B labels and all submission/version/year actions. Desktop shows both panes;
+  mobile Records/Reports buttons switch in place without reloading or discarding
+  edits, with shared enterprise/month. `?view=report` opens the report pane.
+  `resort_statistics.html` is a compatibility redirect preserving query/hash and
+  defaulting to the report view, not another navigation entry. Enterprise's quick
+  actions link once to the combined page. This is manager-only navigation work;
+  officer and Support Staff labels/routes, data, schema and Home are unchanged.
+
+- Support Staff daily visitor records (17 November 2026): residence and sex
+  breakdowns are required for every positive total. All four residence counts
+  and both sex counts must be entered explicitly (0 where none); each group must
+  sum exactly to the total. Enforced in the form and `attraction-engine.parseCount`;
+  the server derives completeness flags. Confirmed zero dates need no breakdown,
+  including bulk zero confirmation. New month submissions/resubmissions reject
+  any incomplete positive daily breakdown. Preserve old unknown fields, submitted
+  snapshots and finalized reports; never backfill them with invented zeroes.
+  Corrections retain the existing reopen/version workflow. No schema change.
+
+- Optional enterprise bookings (17 November 2026): each accommodation's Enterprise
+  page has one "Accept bookings through ZTIMS" switch using the existing
+  `enterprise_booking_settings.accepts_bookings`. Rooms settings link to it;
+  they do not expose a second switch. Off stops new requests without cancelling,
+  refunding or deleting existing records. Guest Register, Rooms, monthly reporting
+  and visitor analytics remain usable. Hide Bookings/Payments only when off AND
+  there is no booking history; otherwise retain Existing bookings/Booking payments.
+  Do not hide history after the last active reservation ends. Enabling cannot lift
+  the Tourism Office pause and requires onsite payment instructions when applicable.
+  Toggle writes and new booking requests use the inventory advisory lock; requests
+  recheck the flag inside that lock. Rooms settings saves without an explicit
+  `acceptsBookings` preserve the current flag.
+- Manager Payments (`resort/resort_payments.html`) is an enterprise-owned register,
+  not a wallet, payout service or officer revenue report. Show actual recorded
+  onsite receipts separately from simulated online transactions. Totals are net of
+  recorded refunds for receipts in the selected received month; they are not a
+  cash-flow ledger of the month refunds occurred. Balances show confirmed,
+  checked-in and completed stays arriving that month, using all net payments
+  including demonstration payments, explicitly labelled. Existing booking payment,
+  refund and review eligibility rules remain unchanged. No schema update required.
+  `GET /api/bookings/manage/:spotId/access`, `PATCH .../enabled` (boolean enabled),
+  and `GET .../payment-records?month=YYYY-MM&page=1` are manager-only and validate
+  selected-enterprise ownership. The register pages 50 receipts and displays up to
+  100 outstanding balances; further bookings remain reachable in Bookings.
+
 - No API key (ORS, Cloudinary secret, etc.) ever reaches frontend source; all
   third-party calls needing a key are server-side.
 - A visitor's GPS coordinate is used for a directions request and discarded,
@@ -1993,7 +2073,8 @@ Decisions already made on purpose — don't reintroduce what they rule out:
   no money, closed dates, taking down, Finalize / Reopen, other
   places, accounts, settings, feedback or deletes; created and deactivated by
   the officer with the officer's password, never deleted. See "Support Staff".
-- Attraction visits (stages 4 and 5): one count per attraction and date, kept
+- Attraction visits (stages 4 and 5; group entry added 18 November): group
+  records feed one daily total per attraction and date, kept
   apart from accommodation arrivals everywhere; unknown is never zero; sex by
   residence is never invented; the officer never records. See "Attraction
   visitor reporting".

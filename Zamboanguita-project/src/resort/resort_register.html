@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <script src="../shared/theme.js"></script>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Explore Zamboanguita | Guest Register</title>
+    <title>Enterprise Manager | Guest Records and Reports</title>
     <link rel="icon" href="../../favicon.ico" sizes="32x32"/>
     <link rel="icon" type="image/png" href="../../favicon-192.png" sizes="192x192"/>
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png"/>
@@ -466,16 +466,16 @@ body { overflow-x: hidden; }
                 <span class="material-symbols-outlined text-accent">event_available</span>
                 <span class="sidebar-label">Bookings</span>
             </a>
+            <a title="Payments" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_payments.html">
+                <span class="material-symbols-outlined text-accent">payments</span>
+                <span class="sidebar-label">Payments</span>
+            </a>
             <a title="Reviews" class="flex items-center gap-3 text-on-surface-variant px-5 py-3.5 rounded-xl transition-all" href="resort_reviews.html">
                 <span class="material-symbols-outlined" aria-hidden="true">reviews</span><span class="sidebar-label">Reviews</span>
             </a>
-            <a title="Guest Register" class="is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_register.html">
+            <a title="Guest Records and Reports" class="manager-records-link is-current flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all" aria-current="page" href="resort_register.html">
                 <span class="material-symbols-outlined text-accent">menu_book</span>
-                <span class="sidebar-label">Guest Register</span>
-            </a>
-            <a title="Tourist Influx Report" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_statistics.html">
-                <span class="material-symbols-outlined text-accent">bar_chart</span>
-                <span class="sidebar-label">Tourist Influx Report</span>
+                <span class="sidebar-label">Guest Records and Reports</span>
             </a>
             <a title="Analytics" class="flex items-center gap-3 text-on-surface-variant hover:text-accent duration-300 hover:translate-x-1 px-5 py-3.5 rounded-xl transition-all" href="resort_analytics.html">
                 <span class="material-symbols-outlined text-accent">insights</span>
@@ -510,7 +510,7 @@ body { overflow-x: hidden; }
 
     <main class="page-enter w-full sm:w-[calc(100%-16rem)] sm:ml-64 pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 min-h-screen transition-colors duration-300">
         <div class="p-2 max-w-[1000px] mx-auto space-y-6">
-            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Guest Register</h1>
+            <h1 class="text-3xl sm:text-4xl font-black font-headline tracking-tighter text-on-surface">Guest Records and Reports</h1>
 
             <div class="flex flex-wrap items-end gap-3">
                 <label id="rgPlaceWrap" class="block flex-1 min-w-[14rem]" hidden><span class="field-label">Place</span><select id="rgPlace" class="field"></select></label>
@@ -530,8 +530,7 @@ body { overflow-x: hidden; }
             </section>
 
             <p class="flex flex-wrap items-center gap-3">
-                <a id="rgReportLink" href="resort_statistics.html" class="btn btn-secondary min-h-[44px]">
-                    <span class="material-symbols-outlined !text-base" aria-hidden="true">bar_chart</span>Open the monthly report</a>
+                <a id="rgReportLink" href="resort_register.html?view=report" class="btn btn-secondary min-h-[44px]">View report</a>
             </p>
         </div>
     </main>
@@ -659,7 +658,7 @@ body { overflow-x: hidden; }
             const stay = isStay();
             document.getElementById('rgAddLabel').textContent = stay ? 'Add a stay' : 'Add a group';
             document.getElementById('rgListTitle').textContent = `${stay ? 'Stays' : 'Groups'} in ${MONTHS[month - 1]} ${year}`;
-            document.getElementById('rgReportLink').href = `resort_statistics.html?month=${year}-${month}`;
+            document.getElementById('rgReportLink').href = `resort_register.html?month=${year}-${month}&view=report`;
             const list = document.getElementById('rgList');
             list.innerHTML = '<div class="p-4"><div class="ztims-empty">Loading…</div></div>';
             try {

@@ -2634,3 +2634,122 @@ alter table public.monthly_reports drop constraint if exists monthly_reports_kin
 alter table public.monthly_reports add constraint monthly_reports_kind check (kind in ('accommodation', 'attraction'));
 alter table public.monthly_reports drop constraint if exists monthly_reports_place;
 alter table public.monthly_reports add constraint monthly_reports_place check (spot_id is not null);
+-- Attraction group register (18 November 2026). Additive and re-runnable.
+-- No historical daily counts or saved report versions are converted or deleted.
+begin;
+alter table public.attraction_daily_counts add column if not exists group_managed boolean not null default false;
+alter table public.attraction_daily_counts add column if not exists group_zero_confirmed boolean not null default false;
+create table if not exists public.attraction_visit_groups (
+ id text primary key default public.ztims_new_id(),
+ group_no bigint generated always as identity unique,
+ spot_id text not null references public.spots(id), visit_date date not null,
+ res_zamboanguita integer not null check(res_zamboanguita between 0 and 100000),
+ res_negros_oriental integer not null check(res_negros_oriental between 0 and 100000),
+ res_other_province integer not null check(res_other_province between 0 and 100000),
+ res_foreign integer not null check(res_foreign between 0 and 100000),
+ male integer not null check(male between 0 and 100000), female integer not null check(female between 0 and 100000),
+ total integer generated always as (male+female) stored,
+ status text not null default 'active' check(status in ('active','voided')),
+ revision integer not null default 1 check(revision>=1),
+ create_request_key text not null check(char_length(create_request_key) between 8 and 64),
+ last_request_key text not null check(char_length(last_request_key) between 8 and 64),
+ reason text not null default '' check(char_length(reason)<=300),
+ actor_email text not null default '', actor_role text not null default 'support_staff',
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+ constraint attraction_groups_total check(male+female between 1 and 100000),
+ constraint attraction_groups_residence check(res_zamboanguita+res_negros_oriental+res_other_province+res_foreign=male+female),
+ constraint attraction_groups_date check(visit_date between date '2000-01-01' and date '2100-12-31'),
+ constraint attraction_groups_retry unique(spot_id,create_request_key)
+);
+create index if not exists attraction_groups_date_idx on public.attraction_visit_groups(spot_id,visit_date,id);
+create table if not exists public.attraction_group_changes (
+ id text primary key default public.ztims_new_id(), group_id text not null references public.attraction_visit_groups(id),
+ before jsonb, after jsonb not null, actor_email text not null, reason text not null default '', at timestamptz not null default now()
+);
+create index if not exists attraction_group_changes_group_idx on public.attraction_group_changes(group_id,at);
+alter table public.attraction_visit_groups enable row level security;
+alter table public.attraction_group_changes enable row level security;
+revoke all on public.attraction_visit_groups,public.attraction_group_changes from public;
+do $$ declare role_name text; begin
+ foreach role_name in array array['anon','authenticated'] loop
+  if exists(select 1 from pg_roles where rolname=role_name) then
+   execute format('revoke all on public.attraction_visit_groups,public.attraction_group_changes from %I',role_name);
+  end if;
+ end loop;
+end $$;
+create or replace function public.attraction_group_guard() returns trigger language plpgsql set search_path='' as $$
+declare st text; first_month date;
+begin
+ if tg_op='DELETE' then raise exception 'IMMUTABLE_DELETE group' using errcode='P0001'; end if;
+ perform pg_advisory_xact_lock(hashtextextended('attraction:'||new.spot_id,0));
+ perform public.attraction_assert_place(new.spot_id);
+ if tg_op='UPDATE' then
+  if new.id<>old.id or new.spot_id<>old.spot_id or new.visit_date<>old.visit_date or new.group_no<>old.group_no or new.create_request_key<>old.create_request_key or new.created_at<>old.created_at then raise exception 'KEY_FIXED' using errcode='P0001'; end if;
+  if old.status='voided' then raise exception 'GROUP_VOIDED' using errcode='P0001'; end if;
+  if new.revision<>old.revision+1 then raise exception 'REVISION' using errcode='P0001'; end if;
+  if char_length(btrim(new.reason))<3 then raise exception 'BAD_REASON' using errcode='P0001'; end if;
+ end if;
+ if new.visit_date>(now() at time zone 'Asia/Manila')::date then raise exception 'FUTURE_DATE' using errcode='P0001'; end if;
+ select reporting_from into first_month from public.attraction_settings where spot_id=new.spot_id;
+ if first_month is null or new.visit_date<first_month then raise exception 'BEFORE_REPORTING' using errcode='P0001'; end if;
+ if exists(select 1 from public.spot_closed_dates where spot_id=new.spot_id and closed_date=new.visit_date) then raise exception 'CLOSED_DATE' using errcode='P0001'; end if;
+ select state into st from public.attraction_periods where spot_id=new.spot_id and year=extract(year from new.visit_date)::int and month=extract(month from new.visit_date)::int;
+ if st in ('submitted','finalized') then raise exception 'PERIOD_LOCKED' using errcode='P0001'; end if;
+ if exists(select 1 from public.attraction_daily_counts where spot_id=new.spot_id and count_date=new.visit_date and not group_managed and total>0) then raise exception 'LEGACY_DAILY' using errcode='P0001'; end if;
+ new.updated_at=now(); return new;
+end $$;
+create or replace function public.attraction_group_snapshot(c public.attraction_daily_counts) returns jsonb language sql immutable set search_path='' as $$
+ select case when c.id is null then null else jsonb_build_object('date',c.count_date,'total',c.total,'residence',jsonb_build_object('zamboanguita',c.res_zamboanguita,'negrosOriental',c.res_negros_oriental,'otherProvince',c.res_other_province,'foreign',c.res_foreign),'male',c.male,'female',c.female,'residenceComplete',c.residence_complete,'sexComplete',c.sex_complete,'revision',c.revision) end
+$$;
+create or replace function public.attraction_group_project() returns trigger language plpgsql set search_path='' as $$
+declare sums record; prior public.attraction_daily_counts; saved public.attraction_daily_counts;
+begin
+ select * into prior from public.attraction_daily_counts where spot_id=new.spot_id and count_date=new.visit_date for update;
+ select coalesce(sum(male+female),0)::int n,coalesce(sum(res_zamboanguita),0)::int z,coalesce(sum(res_negros_oriental),0)::int p,coalesce(sum(res_other_province),0)::int o,coalesce(sum(res_foreign),0)::int f,coalesce(sum(male),0)::int m,coalesce(sum(female),0)::int w into sums from public.attraction_visit_groups where spot_id=new.spot_id and visit_date=new.visit_date and status='active';
+ if sums.n>100000 then raise exception 'DAY_LIMIT' using errcode='P0001'; end if;
+ insert into public.attraction_daily_counts(spot_id,count_date,total,res_zamboanguita,res_negros_oriental,res_other_province,res_foreign,residence_complete,male,female,sex_complete,last_request_key,created_by_email,updated_by_email,updated_by_role,group_managed,group_zero_confirmed)
+ values(new.spot_id,new.visit_date,sums.n,case when sums.n>0 then sums.z end,case when sums.n>0 then sums.p end,case when sums.n>0 then sums.o end,case when sums.n>0 then sums.f end,sums.n>0,case when sums.n>0 then sums.m end,case when sums.n>0 then sums.w end,sums.n>0,new.last_request_key,new.actor_email,new.actor_email,new.actor_role,true,false)
+ on conflict(spot_id,count_date) do update set total=excluded.total,res_zamboanguita=excluded.res_zamboanguita,res_negros_oriental=excluded.res_negros_oriental,res_other_province=excluded.res_other_province,res_foreign=excluded.res_foreign,residence_complete=excluded.residence_complete,male=excluded.male,female=excluded.female,sex_complete=excluded.sex_complete,revision=public.attraction_daily_counts.revision+1,last_request_key=excluded.last_request_key,updated_by_email=excluded.updated_by_email,updated_by_role=excluded.updated_by_role,group_managed=true,group_zero_confirmed=false returning * into saved;
+ insert into public.attraction_count_changes(spot_id,count_date,action,before,after,actor_role,actor_email) values(new.spot_id,new.visit_date,case when prior.id is null then 'created' else 'updated' end,public.attraction_group_snapshot(prior),public.attraction_group_snapshot(saved),new.actor_role,new.actor_email);
+ insert into public.attraction_group_changes(group_id,before,after,actor_email,reason) values(new.id,case when tg_op='UPDATE' then to_jsonb(old) end,to_jsonb(new),new.actor_email,new.reason);
+ return new;
+end $$;
+-- A daily projection can only be changed by its group trigger. The one direct
+-- exception confirms zero AFTER the last active group was explicitly voided.
+create or replace function public.attraction_group_daily_guard() returns trigger language plpgsql set search_path='' as $$
+begin
+ perform pg_advisory_xact_lock(hashtextextended('attraction:'||new.spot_id,0));
+ if pg_trigger_depth()>1 then return new; end if;
+ if tg_op='INSERT' then
+  if new.group_managed then raise exception 'GROUP_MANAGED' using errcode='P0001'; end if;
+ elsif old.group_managed or new.group_managed then
+  if not (old.group_managed and new.group_managed and old.total=0 and new.total=0 and new.group_zero_confirmed and not old.group_zero_confirmed and (to_jsonb(new)-array['revision','last_request_key','updated_by_email','updated_by_role','updated_at','group_zero_confirmed'])=(to_jsonb(old)-array['revision','last_request_key','updated_by_email','updated_by_role','updated_at','group_zero_confirmed'])) then raise exception 'GROUP_MANAGED' using errcode='P0001'; end if;
+ end if;
+ return new;
+end $$;
+drop trigger if exists attraction_visit_groups_guard on public.attraction_visit_groups;
+create trigger attraction_visit_groups_guard before insert or update or delete on public.attraction_visit_groups for each row execute function public.attraction_group_guard();
+drop trigger if exists attraction_visit_groups_project on public.attraction_visit_groups;
+create trigger attraction_visit_groups_project after insert or update on public.attraction_visit_groups for each row execute function public.attraction_group_project();
+drop trigger if exists attraction_group_changes_immutable on public.attraction_group_changes;
+create trigger attraction_group_changes_immutable before update or delete on public.attraction_group_changes for each row execute function public.attraction_immutable();
+drop trigger if exists attraction_group_daily_guard on public.attraction_daily_counts;
+create trigger attraction_group_daily_guard before insert or update on public.attraction_daily_counts for each row execute function public.attraction_group_daily_guard();
+-- A voided-out group day is not a confirmed zero, including for SQL guards.
+create or replace function public.attraction_month_missing(p_spot text,p_year integer,p_month integer)
+returns integer language sql stable set search_path='' as $$
+ select count(*)::integer from generate_series(make_date(p_year,p_month,1),(make_date(p_year,p_month,1)+interval '1 month - 1 day')::date,interval '1 day') d
+ where not exists(select 1 from public.attraction_daily_counts c where c.spot_id=p_spot and c.count_date=d::date and (not c.group_managed or c.total>0 or c.group_zero_confirmed))
+ and not exists(select 1 from public.spot_closed_dates x where x.spot_id=p_spot and x.closed_date=d::date)
+$$;
+create or replace function public.attraction_version_reconcile()
+returns trigger language plpgsql set search_path='' as $$
+declare v record; s record;
+begin
+ select * into v from public.attraction_report_versions where id=new.id;
+ select coalesce(sum(total),0) total,count(*) n,coalesce(sum(res_zamboanguita),0) r1,coalesce(sum(res_negros_oriental),0) r2,coalesce(sum(res_other_province),0) r3,coalesce(sum(res_foreign),0) r4,coalesce(sum(male),0) m,coalesce(sum(female),0) f
+ into s from public.attraction_daily_counts c where c.spot_id=v.spot_id and c.count_date between make_date(v.year,v.month,1) and (make_date(v.year,v.month,1)+interval '1 month - 1 day')::date and (not c.group_managed or c.total>0 or c.group_zero_confirmed);
+ if s.total<>v.total or s.n<>v.dates_counted or s.r1<>v.res_zamboanguita or s.r2<>v.res_negros_oriental or s.r3<>v.res_other_province or s.r4<>v.res_foreign or s.m<>v.male or s.f<>v.female then raise exception 'VERSION_DRIFT' using errcode='P0001'; end if;
+ return null;
+end $$;
+commit;

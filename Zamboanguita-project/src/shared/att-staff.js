@@ -73,7 +73,16 @@
        The Daily Visitor Record
        ================================================================= */
     async function record(host) {
-        const h = await header(host, 'Daily Visitor Record');
+        if (new URLSearchParams(location.search).get('mode') === 'daily') return recordDaily(host);
+        try {
+            const capability = await api('/attraction-visits/group-recording');
+            if (capability.available) return window.ztimsAttGroups.record(host);
+            return recordDaily(host); // Safe rollout: the old recorder works until the additive SQL is applied.
+        } catch (e) { host.innerHTML = A.failed(e.message,true);host.querySelector('[data-acc-retry]')?.addEventListener('click',()=>record(host)); }
+    }
+    async function recordDaily(host) {
+        const legacy = new URLSearchParams(location.search).get('mode') === 'daily';
+        const h = await header(host, legacy ? 'Historical daily totals' : 'Daily Visitor Record',legacy ? '<a class="btn btn-secondary" href="staff_register.html">Group records</a>' : '');
         if (!h) return;
         const spotId = h.me.attraction._id, today = h.me.today;
         const asked = new URLSearchParams(location.search).get('month');
@@ -99,8 +108,8 @@
                             <input type="number" class="field att-total" data-total inputmode="numeric" min="0" max="100000" step="1" required aria-describedby="attDayNote"></label>
                     </div>
                     <p id="attDayNote" class="acc-note" data-daynote aria-live="polite"></p>
-                    <details class="att-more" data-more>
-                        <summary>Add a breakdown <span class="acc-note">(optional)</span></summary>
+                    <section class="att-more" aria-labelledby="attBreakdownTitle">
+                        <h3 id="attBreakdownTitle" class="font-bold">Visitor breakdown</h3>
                         <div class="space-y-4 pt-3">
                             <fieldset class="space-y-2"><legend class="font-bold text-sm">Where visitors live</legend>
                                 <div class="att-grid4">${T.CLASSES.map(([k, label, hint]) => `<label class="block"><span class="field-label">${esc(label)}</span>
@@ -110,9 +119,8 @@
                                 <div class="att-grid4"><label class="block"><span class="field-label">Male</span><input type="number" class="field" data-sex="male" inputmode="numeric" min="0" max="100000" step="1"></label>
                                     <label class="block"><span class="field-label">Female</span><input type="number" class="field" data-sex="female" inputmode="numeric" min="0" max="100000" step="1"></label></div>
                                 <p class="acc-note" data-sexsum aria-live="polite"></p></fieldset>
-                            <p class="acc-note">Leave a box empty when it was not recorded. Residence and sex are kept separately.</p>
                         </div>
-                    </details>
+                    </section>
                     <p class="text-sm text-error bg-error/10 border border-error/20 px-4 py-3" role="alert" data-error hidden></p>
                     <div class="flex flex-wrap gap-3">
                         <button type="submit" class="btn btn-primary min-h-[44px]" data-save><span class="material-symbols-outlined !text-base">save</span>Save</button>
@@ -154,7 +162,7 @@
             const known = resIns.reduce((a, el) => a + (num(el) || 0), 0), anyRes = resIns.some(el => num(el) !== null);
             const sexKnown = sexIns.reduce((a, el) => a + (num(el) || 0), 0), anySex = sexIns.some(el => num(el) !== null);
             const zero = total === 0;
-            [...resIns, ...sexIns].forEach(el => { el.disabled = zero || formLocked(); });
+            [...resIns, ...sexIns].forEach(el => { el.disabled = zero || formLocked(); el.required = !zero; });
             $('[data-ressum]').textContent = zero ? 'No visitors: nothing to break down.' : !anyRes ? 'Not recorded.'
                 : total == null ? `${nf(known)} classified.` : known === total ? `All ${nf(total)} visitors classified.` : known > total ? `${nf(known)} classified, more than the total of ${nf(total)}.` : `${nf(known)} of ${nf(total)} classified · ${nf(total - known)} not recorded.`;
             $('[data-sexsum]').textContent = zero ? '' : !anySex ? 'Not recorded.'
@@ -171,8 +179,6 @@
             totalIn.value = c ? c.total : '';
             resIns.forEach(el => { el.value = c && c.residence[el.dataset.res] != null ? c.residence[el.dataset.res] : ''; });
             sexIns.forEach(el => { el.value = c && c[el.dataset.sex] != null ? c[el.dataset.sex] : ''; });
-            const hasBreakdown = c && (resIns.some(el => el.value !== '') || sexIns.some(el => el.value !== ''));
-            $('[data-more]').open = !!hasBreakdown;
             const locked = formLocked();
             allIns.forEach(el => { el.disabled = locked; });
             $('[data-save]').disabled = locked;
@@ -290,11 +296,12 @@
             const s = sums(), problems = [];
             const whole = el => el.value.trim() === '' || /^\d{1,6}$/.test(el.value.trim());
             if (s.total === null) problems.push('Enter the total number of visitors. Enter 0 only when no one came.');
-            if (!allIns.every(whole)) problems.push('Use whole numbers from 0 to 100,000.');
+            if (!allIns.filter(el => !el.disabled).every(whole)) problems.push('Use whole numbers from 0 to 100,000.');
             if (s.total !== null && s.total > 100000) problems.push('The total must be 100,000 or less.');
-            if (s.total !== null && s.known > s.total) problems.push(`Residence adds up to ${nf(s.known)}, more than the total.`);
-            if (s.total !== null && s.sexKnown > s.total) problems.push(`Male + female is ${nf(s.sexKnown)}, more than the total.`);
-            if (problems.length) { showError(esc(problems.join(' '))); totalIn.focus(); return; }
+            if (s.total > 0 && [...resIns, ...sexIns].some(el => num(el) === null)) problems.push('Enter every residence and sex count. Enter 0 for a group with no visitors.');
+            if (s.total > 0 && s.known !== s.total) problems.push(`Residence must add up to ${nf(s.total)}.`);
+            if (s.total > 0 && s.sexKnown !== s.total) problems.push(`Male + female must add up to ${nf(s.total)}.`);
+            if (problems.length) { showError(esc(problems.join(' '))); (s.total > 0 && [...resIns, ...sexIns].find(el => num(el) === null) || totalIn).focus(); return; }
             const row = dayRow(date), c = row && row.count;
             const body = { total: s.total, revision: c ? c.revision : 0, requestKey: pendingKey || (pendingKey = T.requestKey()) };
             if (s.total > 0 && s.anyRes) { body.residence = Object.fromEntries(resIns.map(el => [el.dataset.res, num(el)])); body.residenceComplete = s.known === s.total; }
@@ -348,7 +355,7 @@
             });
         });
 
-        await load();
+        await load(new URLSearchParams(location.search).get('date'));
     }
 
     /* =================================================================
@@ -388,7 +395,11 @@
             catch (e) { if (e.status !== 401) out.innerHTML = A.failed(e.message); return; }
             const st = v.state, f = v.figures;
             h.body.querySelector('[data-pill]').innerHTML = T.monthPill(st.state, st.version, st.missing);
-            const canSubmit = st.state === 'ready' || (st.state === 'reopened' && f.complete && f.days && keyOf(y, m) < today.slice(0, 7));
+            const breakdownComplete = f.daily.every(d => !d.count || d.count.total === 0 || (
+                T.CLASSES.every(([k]) => Number.isInteger(d.count.residence[k])) &&
+                T.CLASSES.reduce((n, [k]) => n + d.count.residence[k], 0) === d.count.total &&
+                Number.isInteger(d.count.male) && Number.isInteger(d.count.female) && d.count.male + d.count.female === d.count.total));
+            const canSubmit = breakdownComplete && (st.state === 'ready' || (st.state === 'reopened' && f.complete && f.days && keyOf(y, m) < today.slice(0, 7)));
             const actions = h.body.querySelector('[data-actions]');
             actions.innerHTML = `${canSubmit ? `<button type="button" class="btn btn-primary min-h-[44px]" data-submit><span class="material-symbols-outlined !text-base">send</span>${st.state === 'reopened' ? 'Send corrected records' : 'Send records for review'}</button>` : ''}
                 <button type="button" class="btn btn-secondary min-h-[44px]" data-xl><span class="material-symbols-outlined !text-base">download</span>VAR 1 Excel</button>`;
@@ -398,6 +409,7 @@
                 ${st.state === 'reopened' && v.officialFigures ? `<p class="acc-note">Official figure while the correction is pending: <b>${nf(v.officialFigures.total)}</b> visits (version ${st.finalizedVersion}). Below: the corrected counts as they stand.</p>` : ''}
                 <section class="glass-panel p-4 sm:p-5 space-y-4"><h2 class="acc-part">${esc(v.attraction.name)} · ${esc(A.monthName(y, m))}</h2>
                     ${T.tilesHtml(showLive ? f : Object.assign({}, shown, { days: f.days }))}
+                    ${!breakdownComplete && showLive ? '<p class="text-error" role="alert">Complete the residence and sex breakdowns for every recorded date before submitting.</p>' : ''}
                     ${completenessHtml(shown)}
                     ${T.breakdownHtml(shown)}</section>
                 <details class="glass-panel p-4 sm:p-5" ${st.state === 'incomplete' ? 'open' : ''}><summary class="cursor-pointer font-bold">Day by day (VAR 1)</summary><div class="mt-3">${T.var1Html(f.daily)}</div></details>

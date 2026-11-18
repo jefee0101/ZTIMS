@@ -47,7 +47,7 @@ function fromDatabase(error) {
         NIGHT_WITHOUT_ROOM: [400, 'Every night of the stay needs a room.'],
         NIGHT_WITHOUT_GUEST: [400, 'Every night of the stay needs at least one guest.'],
         STAY_GUEST_DATES: [400, 'Guests must arrive on or after check-in and leave on or before check-out, with someone arriving at check-in and someone leaving at check-out.'],
-        STAY_ROOM_OUTSIDE: [400, 'A room is given for nights outside the stay, or on nights it is not available.'],
+        STAY_ROOM_OUTSIDE: [400, 'The selected room is not available for all the assigned stay dates. Check the stay dates and the room’s availability period.'],
         STAY_ROOM_TWICE: [400, 'The same room is given twice for the same night.'],
         ROOM_OTHER_PLACE: [400, 'That room belongs to another enterprise.'],
         ROOM_TYPE_OTHER_PLACE: [400, 'That room type belongs to another enterprise.'],

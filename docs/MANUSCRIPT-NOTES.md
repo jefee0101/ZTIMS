@@ -1276,3 +1276,59 @@ Lines to update:
 - Definition of Terms (optional): "Invitation link — a single-use, time-limited email link through which a new
   staff member sets their own password."
 - Do not change the TAM or ISO evaluation results: this was added after the evaluated version.
+
+## Support Staff attraction group register (18 November 2026)
+
+Replace the date-overwrite recording screenshot/description with a group list and
+Record a group dialog, like the accommodation register's entry flow. Staff record
+date, male/female counts and residence (whole-group class or complete mixed-class
+counts). Group size and daily/report totals are calculated. Groups can be corrected
+or voided with reasons; history remains. No visitor names/contact details are added.
+Sex and residence remain independent observations; do not invent cross-tabulations.
+
+Historical positive daily totals remain separate, counted once and reviewable;
+they are not converted to group entries. Missing dates are not zero, including
+when the last group is voided. Explicit zero confirmations, closures, submission,
+finalization, reopening and immutable saved versions remain. Update data-model
+discussion/ERD for group records and their audit plus daily projection metadata;
+do not redraw diagrams or edit research results automatically. This is a later
+refinement beyond the evaluated version. Apply only the new additive SQL block
+after its code is on main. Until then the old daily recorder remains available.
+
+## Combined manager Guest Records and Reports (17 November 2026)
+
+Use one manager page/figure named **Guest Records and Reports**, combining the
+stay register and generated monthly Tourist Influx Report. Remove the duplicate
+manager Tourist Influx Report page figure/menu entry. Desktop shows both panes;
+mobile switches Records/Reports inside the page. Official DAE-1A and DAE-1B names,
+month synchronization, submissions, versions and annual summaries remain. The old
+report URL redirects while preserving month and report view. With preceding last
+figure 37, manager figures are 38–45: Enterprises, Enterprise, Rooms, Bookings,
+Payments, Guest Records and Reports (43), Reviews (44), Analytics (45). Update
+captions, references and List of Figures, not study results or manuscript spacing.
+
+## Required Support Staff visitor breakdowns (17 November 2026)
+
+Daily attraction recording now requires all four residence counts and male/female
+counts when total visitors is positive; each breakdown must equal the daily total.
+Zero-visitor dates remain explicitly confirmed without demographic fields. New
+submissions require complete breakdowns. Existing historical records and saved
+versions are unchanged; corrections use reopening and resubmission. Update Support
+Staff recording screenshots and descriptions. This later refinement changes no
+survey or evaluation data and requires no schema update.
+
+## Optional accommodation bookings and payment records (17 November 2026)
+
+Update manager Enterprise/Rooms/Bookings screenshots and descriptions: one
+"Accept bookings through ZTIMS" switch on Enterprise. Enterprises can record
+walk-ins/external stays and submit monthly reports without accepting online
+requests. Rooms remain available for inventory and reporting. When off, new
+requests stop; existing bookings and their payment/refund history remain. With no
+history, Bookings and Payments are hidden. Manager reservation analytics appear
+only when booking is enabled or has history; guest/report analytics remain.
+
+Add the manager-only Payments screen: enterprise-scoped payment records, onsite
+receipt entry and outstanding booking balances. Actual recorded onsite receipts
+and simulated online transactions are separate; this does not implement real
+Xendit settlement or enterprise payouts. No officer money access, research data
+change, schema change or new evaluation claim. This is a later refinement.

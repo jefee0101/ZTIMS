@@ -88,13 +88,21 @@ function parseCount(body) {
         const known = CLASSES.reduce((a, [k]) => a + (res[k] || 0), 0), sexKnown = (male || 0) + (female || 0);
         if (total === 0 && (resGiven || male !== null || female !== null || residenceComplete || sexComplete)) errors.push('With no visitors, residence and sex must be empty.');
         if (known > total) errors.push(`Known residence adds up to ${known}, more than the total of ${total}.`);
-        else if (residenceComplete && known !== total) errors.push(`Residence is marked complete but adds up to ${known}, not ${total}.`);
+        else if (total > 0 && known !== total) errors.push(`Residence must add up to the total of ${total}.`);
         if (sexKnown > total) errors.push(`Male + female is ${sexKnown}, more than the total of ${total}.`);
-        else if (sexComplete && sexKnown !== total) errors.push(`Sex is marked complete but male + female is ${sexKnown}, not ${total}.`);
+        else if (total > 0 && sexKnown !== total) errors.push(`Male + female must add up to the total of ${total}.`);
+        if (total > 0 && RESIDENCE_KEYS.some(k => res[k] == null)) errors.push('Enter every residence count. Enter 0 for a class with no visitors.');
+        if (total > 0 && (male === null || female === null)) errors.push('Enter both male and female counts. Enter 0 for a group with no visitors.');
     }
     if (errors.length) return { errors };
-    return { value: { total, res, residenceComplete: total > 0 && residenceComplete, male: total === 0 ? null : male, female: total === 0 ? null : female, sexComplete: total > 0 && sexComplete, revision, requestKey } };
+    return { value: { total, res, residenceComplete: total > 0, male: total === 0 ? null : male, female: total === 0 ? null : female, sexComplete: total > 0, revision, requestKey } };
 }
+
+// Saved historical counts may still be partial. Never fill their gaps with zero.
+const completeBreakdown = c => c.total === 0 || (
+    RESIDENCE_KEYS.every(k => Number.isInteger(c.residence[k])) &&
+    RESIDENCE_KEYS.reduce((n, k) => n + c.residence[k], 0) === c.total &&
+    Number.isInteger(c.male) && Number.isInteger(c.female) && c.male + c.female === c.total);
 
 /* ---- one day, one month ---------------------------------------------------- */
 const rowOf = r => ({
@@ -255,5 +263,5 @@ const sumRows = rows => rows.filter(r => r.included).reduce((a, r) => ({
 
 module.exports = {
     MAX_TOTAL, CLASSES, RESIDENCE_KEYS, WRITABLE, pad, dayNum, dayStr, addDays, daysIn, monthKey, firstDay, lastDay, isDate, toDate, weekday, manilaToday, deadlineFor, shiftMonth,
-    parseCount, rowOf, dayState, monthFigures, versionColumns, figuresFromVersion, sourceDigest, diffDaily, periodState, sourceFor, dta2mRow, var3mCell, addCells, addN, sumRows, residenceKnown
+    parseCount, completeBreakdown, rowOf, dayState, monthFigures, versionColumns, figuresFromVersion, sourceDigest, diffDaily, periodState, sourceFor, dta2mRow, var3mCell, addCells, addN, sumRows, residenceKnown
 };
