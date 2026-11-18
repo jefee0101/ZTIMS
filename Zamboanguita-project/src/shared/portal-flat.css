@@ -858,6 +858,8 @@ html.dark .bkm-paypill--paid { color: rgb(123 196 127); }
    a pattern and a colour, never colour alone: missing is dashed red, a
    confirmed 0 is hatched, a closure is struck through. */
 .att-layout { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); }
+.att-layout--full, .att-layout--full.att-layout { grid-template-columns: minmax(0, 1fr) !important; }
+.att-layout--full [data-zero] { display: none !important; }
 @media (min-width: 1100px) { .att-layout { grid-template-columns: minmax(0, 24rem) minmax(0, 1fr); align-items: start; } }
 .att-form__top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
 .att-total { font-size: 1.6rem !important; font-weight: 900; min-height: 3.25rem; font-variant-numeric: tabular-nums; }
