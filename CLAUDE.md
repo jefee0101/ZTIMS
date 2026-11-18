@@ -986,6 +986,9 @@ is what was built). `analytics-engine.js` (arithmetic, no database) and
   barangay, category, place. Not reported is a dashed outline and "–", never 0;
   partial periods hatched; every chart has "Show as a table"; Excel is the
   server's. No Support Staff analytics page yet.
+  Wording (18 November 2026, the user's request): tiles and cards carry only a
+  short note in plain words, or none; no explanatory notice boxes (the Room
+  requests tab's "A room request is not an arrival…" box was removed).
 - **Tests (local; read-only apart from one temporary visitor):**
   `docs/analytics/tests/api-checks.js` (129) and `page-flow.js` (62, browser,
   built site on :3000), run after the attraction and accommodation suites have

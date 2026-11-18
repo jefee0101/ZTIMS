@@ -50,7 +50,7 @@
         return p.label;
     }
     const periodState = p => (p.future ? 'future' : !p.figures ? 'none' : p.complete ? 'complete' : 'partial');
-    const STATE_TEXT = { complete: 'Complete', partial: 'Partial: not every place reported', none: 'Not reported', future: 'Not yet' };
+    const STATE_TEXT = { complete: 'Complete', partial: 'Some reports missing', none: 'Not reported', future: 'Not yet' };
 
     /* A column chart over periods. values[i] null = nothing reported (a gap with a mark, never a 0 bar). */
     function columns(periods, value, opts = {}) {
@@ -81,8 +81,8 @@
             cmp.forEach((v, i) => { if (v != null) s += `<circle class="ax-cmp-pt" cx="${m.l + bw * (i + 0.5)}" cy="${y(v)}" r="3.5"/>`; });
         }
         s += `<line class="ax-base" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/></svg>`;
-        const legend = [`<span><i class="ax-key ax-key--solid"></i>${esc(opts.unitLabel || opts.unit)}, complete</span>`];
-        if (periods.some(p => periodState(p) === 'partial')) legend.push('<span><i class="ax-key ax-key--hatch"></i>Partial: not every place reported</span>');
+        const legend = [`<span><i class="ax-key ax-key--solid"></i>${esc(opts.unitLabel || opts.unit)}</span>`];
+        if (periods.some(p => periodState(p) === 'partial')) legend.push('<span><i class="ax-key ax-key--hatch"></i>Some reports missing</span>');
         if (periods.some(p => periodState(p) === 'none')) legend.push('<span><i class="ax-key ax-key--gap"></i>Not reported (not 0)</span>');
         if (cmp && cmp.some(v => v != null)) legend.push('<span><i class="ax-key ax-key--cmp"></i>A year earlier, comparable periods only</span>');
         return `<figure class="ax-figure">${s}<figcaption class="ax-legend">${legend.join('')}</figcaption></figure>`;
@@ -144,9 +144,9 @@
     }
 
     const peakLine = (pl, unit) => {
-        if (!pl || !pl.peak) return `<p class="ax-peak ax-peak--none"><span class="material-symbols-outlined" aria-hidden="true">info</span>No peak or low yet: no period in this range is complete.${pl && pl.excluded && pl.excluded.length ? ` ${plural(pl.excluded.length, 'period')} left out because not every place reported.` : ''}</p>`;
+        if (!pl || !pl.peak) return `<p class="ax-peak ax-peak--none"><span class="material-symbols-outlined" aria-hidden="true">info</span>No busiest or quietest period yet: no period has all its reports in.</p>`;
         const lbl = k => periodLabel(k);
-        return `<div class="ax-peak"><p><span class="material-symbols-outlined" aria-hidden="true">trending_up</span><span>Peak</span><b>${esc(lbl(pl.peak.key))}</b> ${nf(pl.peak.value)} ${esc(unit)}</p>${pl.low ? `<p><span class="material-symbols-outlined" aria-hidden="true">trending_down</span><span>Low</span><b>${esc(lbl(pl.low.key))}</b> ${nf(pl.low.value)} ${esc(unit)}</p>` : ''}<p class="ax-note">Among ${plural(pl.ranked, 'complete period')}${pl.excluded.length ? `; ${plural(pl.excluded.length, 'partial or unreported period')} left out` : ''}.</p></div>`;
+        return `<div class="ax-peak"><p><span class="material-symbols-outlined" aria-hidden="true">trending_up</span><span>Peak</span><b>${esc(lbl(pl.peak.key))}</b> ${nf(pl.peak.value)} ${esc(unit)}</p>${pl.low ? `<p><span class="material-symbols-outlined" aria-hidden="true">trending_down</span><span>Low</span><b>${esc(lbl(pl.low.key))}</b> ${nf(pl.low.value)} ${esc(unit)}</p>` : ''}<p class="ax-note">Based on ${plural(pl.ranked, 'complete period')}.</p></div>`;
     };
     function periodLabel(key) {
         if (/^\d{4}-\d{2}$/.test(key)) { const [y, m] = key.split('-'); return `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][+m - 1]} ${y}`; }
@@ -203,8 +203,8 @@
         }
         function sourceLine() {
             $('axSource').innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">${S.mode === 'official' ? 'verified' : 'pending'}</span>${S.mode === 'official'
-                ? '<b>Finalized reports only.</b> Months still waiting for the Tourism Office are left out and shown as partial.'
-                : '<b>Includes reports not yet finalized</b> (submitted, and attraction drafts from the daily record). These can still change.'}`;
+                ? '<b>Finalized reports only.</b> Reports not yet finalized are left out.'
+                : '<b>Includes reports not yet finalized.</b> These can still change.'}`;
         }
 
         function selectTab(name, focus) {
@@ -286,34 +286,33 @@
             const d = await A().api(`/analytics/accommodation?${params()}`);
             if (!d.places) return empty(officer ? 'No private place to stay matches these filters.' : 'This enterprise is not a private place to stay.');
             const t = d.total, f = t.figures, measure = ACC_MEASURES.find(x => x[0] === S.accMeasure) || ACC_MEASURES[0];
-            const unreported = d.periods.filter(p => !p.future && !p.figures).length;
-            const partialNote = t.complete ? 'every place reported' : `${unreported ? plural(unreported, 'period') + ' not reported; ' : ''}not every place reported`;
+            const partialNote = 'some places have not reported';
             const tiles = `<div class="stat-tiles ax-tiles">
-                ${tile('Guest arrivals', f ? nf(f.arrivals) : '–', f ? (t.complete ? 'All periods complete' : `Partial: ${partialNote}`) : 'Nothing reported in this range', !f || !t.complete ? 'ax-tile--partial' : '')}
-                ${tile('Guest nights', f ? nf(f.guestNights) : '–', f ? 'every guest × every night' : '')}
-                ${tile('Occupancy rate', f ? pctOf(t.rates.occupancyRate) : '–', f ? `${nf(f.roomNightsOccupied)} of ${nf(f.roomNightsAvailable)} room-nights` : '')}
-                ${tile('Average length of stay', f && t.rates.averageLengthOfStay != null ? `${dec(t.rates.averageLengthOfStay)} nights` : '–', f ? 'guest nights ÷ arrivals' : '')}
+                ${tile('Guest arrivals', f ? nf(f.arrivals) : '–', f ? (t.complete ? 'All reports in' : `Partial: ${partialNote}`) : 'No reports yet', !f || !t.complete ? 'ax-tile--partial' : '')}
+                ${tile('Guest nights', f ? nf(f.guestNights) : '–', f ? 'nights spent by all guests' : '')}
+                ${tile('Occupancy rate', f ? pctOf(t.rates.occupancyRate) : '–', f ? `${nf(f.roomNightsOccupied)} of ${nf(f.roomNightsAvailable)} room-nights used` : '')}
+                ${tile('Average length of stay', f && t.rates.averageLengthOfStay != null ? `${dec(t.rates.averageLengthOfStay)} nights` : '–', '')}
             </div>`;
             const cmp = d.comparison && d.comparison.find(c => c.measure === measure[0]);
             const chart = columns(d.periods, p => (p.figures ? p.figures[measure[0]] : null), { unit: measure[2], unitLabel: measure[1], label: `${measure[1]} per ${S.granularity} at private places to stay`, compare: cmp ? cmp.periods.map(c => (c.comparable ? c.previous : null)) : null });
             const switcher = `<div class="pg-seg ax-measure" role="group" aria-label="Measure">${ACC_MEASURES.map(x => `<button type="button" data-measure="${x[0]}" aria-pressed="${x[0] === measure[0]}">${x[1]}</button>`).join('')}</div>`;
             const rows = d.periods.map(p => [esc(p.label), p.figures ? nf(p.figures.arrivals) : '–', p.figures ? nf(p.figures.guestNights) : '–', p.figures ? nf(p.figures.roomNightsOccupied) : '–', p.figures ? nf(p.figures.roomNightsAvailable) : '–', p.rates ? pctOf(p.rates.occupancyRate) : '–', `${nf(p.coverage.finalized || 0)} of ${nf(p.coverage.expected || 0)}`, STATE_TEXT[periodState(p)]]);
             const trend = card(`${measure[1]} by ${S.granularity}`, switcher + chart + coverageBand(d.periods, 'finalized', 'expected', S.mode === 'operational' ? ['submitted'] : []) +
-                `<p class="ax-note">Under each period: places that finalized, of the places expected to report.</p>` +
+                `<p class="ax-note">Below each bar: reports finalized out of reports expected.</p>` +
                 table(['Period', 'Arrivals', 'Guest nights', 'Room-nights occupied', 'Room-nights available', 'Occupancy', 'Finalized', 'State'], rows, 'Accommodation by period'),
                 { wide: true, badge: exportBtn('accommodation') });
             const peak = card('Peak and low', peakLine(d.peakLow.arrivals, 'arrivals') + (cmp ? compareSummary(cmp) : ''), {});
             const res = f ? stacked(SECTIONS.map(([k, label]) => ({ label, value: f.residence[k] || 0, unknown: k === 'unspecified' })), 'arrivals') : empty('Nothing reported in this range.');
             const sex = f ? stacked([{ label: 'Male', value: f.sex.male }, { label: 'Female', value: f.sex.female }], 'arrivals') : empty('Nothing reported in this range.');
-            const demo = card('Where guests live', res + (f ? table(['Residence', 'Arrivals'], SECTIONS.map(([k, l]) => [l, nf(f.residence[k] || 0)]), 'Arrivals by residence') : ''), { foot: f && !t.complete ? 'Counts from the reports included above only.' : '' }) +
-                card('Guests by sex', sex + (f ? table(['Sex', 'Arrivals'], [['Male', nf(f.sex.male)], ['Female', nf(f.sex.female)]], 'Arrivals by sex') : ''), { foot: 'Recorded per guest in each stay register.' });
+            const demo = card('Where guests live', res + (f ? table(['Residence', 'Arrivals'], SECTIONS.map(([k, l]) => [l, nf(f.residence[k] || 0)]), 'Arrivals by residence') : ''), {}) +
+                card('Guests by sex', sex + (f ? table(['Sex', 'Arrivals'], [['Male', nf(f.sex.male)], ['Female', nf(f.sex.female)]], 'Arrivals by sex') : ''), {});
             const base = '';
             let breakdown = '';
             if (officer && !S.place) {
                 const b = await A().api(`/analytics/accommodation/places?${params({ granularity: null, compare: null })}`);
                 breakdown = card('Arrivals by place', hbars(b.byPlace.map(x => ({ label: x.place.name, sub: x.place.barangay, value: x.value }))
-                    .sort((x, y) => (y.value ?? -1) - (x.value ?? -1)), 'arrivals'), { foot: 'A place with no report in the range shows “Not reported”, not 0.' }) +
-                    card('By barangay', hbars(b.byBarangay.map(x => ({ label: x.key, sub: `${plural(x.placesWithFigures, 'place')} reported of ${x.places}`, value: x.value })), 'arrivals'), { foot: 'The barangay where the place is, not where guests live.' });
+                    .sort((x, y) => (y.value ?? -1) - (x.value ?? -1)), 'arrivals'), { foot: 'Places without a report show “Not reported”.' }) +
+                    card('By barangay', hbars(b.byBarangay.map(x => ({ label: x.key, sub: `${plural(x.placesWithFigures, 'place')} reported of ${x.places}`, value: x.value })), 'arrivals'), { foot: 'Grouped by the barangay where each place is.' });
             }
             return tiles + `<div class="ax-grid">${trend}${peak}${demo}${breakdown}${base}</div>`;
         }
@@ -331,8 +330,8 @@
             const t = d.total, f = t.figures;
             const resKnown = f && f.residence ? CLASSES.reduce((a, [k]) => a + (f.residence[k] || 0), 0) : 0;
             const tiles = `<div class="stat-tiles ax-tiles">
-                ${tile('Visits', f ? nf(f.visits) : '–', f ? (t.complete ? 'All periods complete' : 'Partial: not every attraction reported') : 'Nothing reported in this range', !f || !t.complete ? 'ax-tile--partial' : '')}
-                ${tile('Dates counted', f ? nf(f.datesCounted) : '–', f ? `${plural(f.zeroDays, 'day')} with nobody, ${plural(f.closedDays, 'closed day')}` : '')}
+                ${tile('Visits', f ? nf(f.visits) : '–', f ? (t.complete ? 'All reports in' : 'Partial: some attractions have not reported') : 'No reports yet', !f || !t.complete ? 'ax-tile--partial' : '')}
+                ${tile('Dates counted', f ? nf(f.datesCounted) : '–', f ? `${plural(f.zeroDays, 'day')} with no visitors, ${nf(f.closedDays)} closed` : '')}
                 ${tile('Residence recorded', f ? `${nf(resKnown)}` : '–', f ? `of ${nf(f.visits)} visits; ${nf(f.residenceUnrecorded)} not recorded` : '')}
                 ${tile('Sex recorded', f && f.sex ? nf(f.sex.male + f.sex.female) : '–', f ? `of ${nf(f.visits)} visits; ${nf(f.sexUnrecorded)} not recorded` : '')}
             </div>`;
@@ -340,22 +339,22 @@
             const chart = columns(d.periods, p => (p.figures ? p.figures.visits : null), { unit: 'visits', unitLabel: 'Visits', label: `Visits per ${S.granularity} at office attractions`, compare: cmp ? cmp.periods.map(c => (c.comparable ? c.previous : null)) : null });
             const rows = d.periods.map(p => [esc(p.label), p.figures ? nf(p.figures.visits) : '–', `${nf(p.coverage.finalized || 0)} of ${nf(p.coverage.expected || 0)}`, STATE_TEXT[periodState(p)]]);
             const trend = card(`Visits by ${S.granularity}`, chart + coverageBand(d.periods, 'finalized', 'expected', S.mode === 'operational' ? ['submitted', 'draft'] : []) +
-                `<p class="ax-note">Under each period: attractions that finalized, of the attractions expected to report. Visits are not people: one person visiting two attractions counts twice.</p>` +
+                `<p class="ax-note">Below each bar: reports finalized out of reports expected. A person who visits two attractions is counted twice.</p>` +
                 table(['Period', 'Visits', 'Finalized', 'State'], rows, 'Attraction visits by period'), { wide: true, badge: exportBtn('attractions') });
             const peak = card('Peak and low', peakLine(d.peakLow.visits, 'visits') + (cmp ? compareSummary(cmp) : ''));
             const res = f ? (f.residence ? stacked(CLASSES.map(([k, l]) => ({ label: l, value: f.residence[k] || 0 })).concat([{ label: 'Residence not recorded', value: f.residenceUnrecorded, unknown: true }]), 'visits')
                 : empty('No residence was recorded in these periods.')) : empty('Nothing reported in this range.');
             const sex = f ? (f.sex ? stacked([{ label: 'Male', value: f.sex.male }, { label: 'Female', value: f.sex.female }, { label: 'Sex not recorded', value: f.sexUnrecorded, unknown: true }], 'visits')
                 : empty('Sex was not recorded in these periods.')) : empty('Nothing reported in this range.');
-            const demo = card('Where visitors live', res + (f && f.residence ? table(['Residence', 'Visits'], CLASSES.map(([k, l]) => [l, nf(f.residence[k])]).concat([['Not recorded', nf(f.residenceUnrecorded)]]), 'Visits by residence') : ''), { foot: 'Unrecorded visits stay in the total and are never placed in a class.' }) +
-                card('Visitors by sex', sex, { foot: 'Sex by residence is not recorded, so the two are never combined.' });
+            const demo = card('Where visitors live', res + (f && f.residence ? table(['Residence', 'Visits'], CLASSES.map(([k, l]) => [l, nf(f.residence[k])]).concat([['Not recorded', nf(f.residenceUnrecorded)]]), 'Visits by residence') : ''), {}) +
+                card('Visitors by sex', sex, {});
             let more = '';
             if (S.place) more = await dailyCard(S.place);
             else {
                 const b = await A().api(`/analytics/attractions/places?${params({ granularity: null, compare: null })}`);
                 more = card('Visits by attraction', hbars(b.byPlace.map(x => ({ label: x.place.name, sub: x.place.barangay, value: x.value })).sort((x, y) => (y.value ?? -1) - (x.value ?? -1)), 'visits'), { foot: 'Choose an attraction under Place to see it day by day.' }) +
-                    card('By category', hbars(b.byCategory.map(x => ({ label: catName(x.key), sub: `${plural(x.placesWithFigures, 'attraction')} reported of ${x.places}`, value: x.value })), 'visits'), { foot: 'An attraction with several categories counts under each, so these are never added together.' }) +
-                    card('By barangay', hbars(b.byBarangay.map(x => ({ label: x.key, sub: `${plural(x.placesWithFigures, 'attraction')} reported of ${x.places}`, value: x.value })), 'visits'), { foot: 'The barangay where the attraction is, not where visitors live.' });
+                    card('By category', hbars(b.byCategory.map(x => ({ label: catName(x.key), sub: `${plural(x.placesWithFigures, 'attraction')} reported of ${x.places}`, value: x.value })), 'visits'), { foot: 'An attraction can appear under more than one category.' }) +
+                    card('By barangay', hbars(b.byBarangay.map(x => ({ label: x.key, sub: `${plural(x.placesWithFigures, 'attraction')} reported of ${x.places}`, value: x.value })), 'visits'), { foot: 'Grouped by the barangay where each attraction is.' });
             }
             return tiles + `<div class="ax-grid">${trend}${peak}${demo}${more}</div>`;
         }
@@ -367,8 +366,8 @@
             const s = d.summary;
             const wk = d.weekdays.map(w => ({ label: w.weekday, sub: plural(w.days, 'day'), value: w.mean == null ? null : Math.round(w.mean * 10) / 10, na: 'No day recorded' }));
             return card(`${esc(d.place.name)} day by day`, `<p class="text-support">${esc(periodLabel(start.slice(0, 7)))} ${+start.slice(8)} to ${esc(periodLabel(end.slice(0, 7)))} ${+end.slice(8)} · ${nf(s.visits)} visits on ${plural(s.recordedDays, 'recorded day')} · ${plural(s.missing, 'day')} not recorded · ${plural(s.closed, 'closed day')}</p>` +
-                daily(d.days, d.rolling7, 'Visits') + (d.peakLow.peak ? `<p class="ax-note">Busiest day ${esc(d.peakLow.peak.date)} (${nf(d.peakLow.peak.value)}); quietest ${esc(d.peakLow.low ? d.peakLow.low.date : '–')} (${nf(d.peakLow.low ? d.peakLow.low.value : null)}). Counts as recorded, before or after the month is submitted.</p>` : ''), { wide: true }) +
-                card('Average visits by weekday', hbars(wk, 'visits on average'), { foot: 'Averages over recorded days only; a day not recorded is left out, not counted as 0.' });
+                daily(d.days, d.rolling7, 'Visits') + (d.peakLow.peak ? `<p class="ax-note">Busiest day ${esc(d.peakLow.peak.date)} (${nf(d.peakLow.peak.value)}); quietest ${esc(d.peakLow.low ? d.peakLow.low.date : '–')} (${nf(d.peakLow.low ? d.peakLow.low.value : null)}).</p>` : ''), { wide: true }) +
+                card('Average visits by weekday', hbars(wk, 'visits on average'), {});
         }
 
         /* ---- the manager's guests and stays ---------------------------------------- */
@@ -378,12 +377,12 @@
             if (start > end) return empty('Choose months that have started.');
             const st = await A().api(`/analytics/accommodation/stays?from=${start}&to=${end}&spotId=${encodeURIComponent(spotId())}`);
             const a = st.arrivals, ls = st.lengthOfStay;
-            const tiles = `<div class="stat-tiles ax-tiles">${tile('Guests arrived', nf(a.total), 'from your stay register, as recorded now')}${tile('Stays started', nf(ls.stays), '')}${tile('Typical stay', ls.median == null ? '–' : `${dec(ls.median, ls.median % 1 ? 1 : 0)} nights`, 'median of stays')}${tile('Busiest day', a.peakLow.peak ? nf(a.peakLow.peak.value) : '–', a.peakLow.peak ? esc(a.peakLow.peak.date) : '')}</div>`;
+            const tiles = `<div class="stat-tiles ax-tiles">${tile('Guests arrived', nf(a.total), '')}${tile('Stays started', nf(ls.stays), '')}${tile('Typical stay', ls.median == null ? '–' : `${dec(ls.median, ls.median % 1 ? 1 : 0)} nights`, '')}${tile('Busiest day', a.peakLow.peak ? nf(a.peakLow.peak.value) : '–', a.peakLow.peak ? esc(a.peakLow.peak.date) : '')}</div>`;
             const wk = a.weekdays.map(w => ({ label: w.weekday, sub: plural(w.days, 'day'), value: w.mean == null ? null : Math.round(w.mean * 10) / 10, na: 'No day yet' }));
             return (!st.reportingFrom ? `<div class="ztims-empty tone-warning ax-inline"><span class="material-symbols-outlined" aria-hidden="true">warning</span><span>Your reporting start month is not set (Enterprise → Reporting), so days are not counted yet.</span></div>` : '') + tiles + `<div class="ax-grid">` +
-                card('Arrivals day by day', daily(a.days, a.rolling7, 'Guests arriving'), { wide: true, foot: 'Live from the stay register: it can change until a month is submitted. Days before reporting started are left out.' }) +
-                card('Arrivals by weekday', hbars(wk, 'guests on average'), { foot: 'Average guests arriving on that weekday, over the days in the range.' }) +
-                card('Length of stay', hbars(ls.buckets.map(b => ({ label: `${b.nights} night${b.nights === '1' ? '' : 's'}`, value: b.stays })), 'stays'), { foot: 'Counts stays, not guests.' }) + `</div>`;
+                card('Arrivals day by day', daily(a.days, a.rolling7, 'Guests arriving'), { wide: true }) +
+                card('Arrivals by weekday', hbars(wk, 'guests on average'), {}) +
+                card('Length of stay', hbars(ls.buckets.map(b => ({ label: `${b.nights} night${b.nights === '1' ? '' : 's'}`, value: b.stays })), 'stays'), {}) + `</div>`;
         }
 
         /* ---- room requests --------------------------------------------------------- */
@@ -396,12 +395,12 @@
             const t = d.total, by = t.byStatus || {};
             const kept = ['confirmed', 'checked_in', 'completed', 'no_show'].reduce((a, k) => a + (by[k] || 0), 0);
             const name = code => (countries.find(c => c.code === code) || {}).name || code;
-            const tiles = `<div class="stat-tiles ax-tiles">${tile('Room requests', nf(t.requests), 'made through ZTIMS')}${tile('Accepted', nf(kept), 'confirmed, checked in, stayed or no-show')}${tile('Room-nights reserved', nf(t.roomNightsReserved), 'rooms × nights, accepted requests')}${tile('Answered within', d.answerTimeHours.median == null ? '–' : `${dec(d.answerTimeHours.median)} hours`, `median, ${plural(d.answerTimeHours.requests, 'answered request')}`)}</div>`;
+            const tiles = `<div class="stat-tiles ax-tiles">${tile('Room requests', nf(t.requests), '')}${tile('Accepted', nf(kept), 'requests the place confirmed')}${tile('Room-nights reserved', nf(t.roomNightsReserved), 'from accepted requests')}${tile('Answered within', d.answerTimeHours.median == null ? '–' : `${dec(d.answerTimeHours.median)} hours`, `usual time, ${plural(d.answerTimeHours.requests, 'answered request')}`)}</div>`;
             const months = d.months.map(m => ({ key: m.key, label: periodLabel(m.key), figures: { n: m.requests }, complete: true, future: m.key > manilaToday().slice(0, 7), coverage: {} }));
-            return `<div class="ztims-empty ax-inline"><span class="material-symbols-outlined" aria-hidden="true">info</span><span>A room request is not an arrival. Arrivals come only from the stay register. Requests made by phone or elsewhere are not here.</span></div>` + tiles + `<div class="ax-grid">` +
+            return tiles + `<div class="ax-grid">` +
                 card('Requests by the month they were made', columns(months, p => p.figures.n, { unit: 'requests', unitLabel: 'Requests', label: 'Room requests per month' }) + table(['Month', 'Requests'], d.months.map(m => [esc(periodLabel(m.key)), nf(m.requests)]), 'Requests by month'), { wide: true }) +
                 card('What happened to them', hbars(STATUS.map(([k, l]) => ({ label: l, value: by[k] || 0 })), 'requests')) +
-                card('Where the guests live', d.byCountry.length ? hbars(d.byCountry.slice(0, 10).map(c => ({ label: name(c.code), value: c.requests })), 'requests') : empty('No requests in this range.'), { foot: `Lead time from request to check-in: ${d.leadTimeDays.median == null ? '–' : dec(d.leadTimeDays.median, 0) + ' days (median)'}. No prices are shown: statistics hold counts only.` }) + `</div>`;
+                card('Where the guests live', d.byCountry.length ? hbars(d.byCountry.slice(0, 10).map(c => ({ label: name(c.code), value: c.requests })), 'requests') : empty('No requests in this range.'), { foot: d.leadTimeDays.median == null ? '' : `Guests usually request ${plural(Math.round(d.leadTimeDays.median), 'day')} before check-in.` }) + `</div>`;
         }
 
         /* ---- reporting coverage (officer) ------------------------------------------ */
@@ -414,9 +413,9 @@
             const cell = (p, extra) => { const c = p.coverage || {}; if (p.future) return 'Not yet'; if (!c.expected) return '–'; const more = extra.reduce((a, k) => a + (c[k] || 0), 0); return `${nf(c.finalized || 0)} of ${nf(c.expected)}${more ? ` (+${more} not finalized)` : ''}${c.missing ? ` · ${c.missing} missing` : ''}`; };
             const rows = acc.periods.map((p, i) => [esc(p.label), cell(p, ['submitted']), att.periods[i] ? cell(att.periods[i], ['submitted', 'draft']) : '–']);
             const open = acc.periods.filter(p => !p.future && !p.complete).length + att.periods.filter(p => !p.future && !p.complete && (p.coverage.expected || 0) > 0).length;
-            return `<div class="stat-tiles ax-tiles">${gaps.gaps.map(g => tile(esc(g.label), nf(g.count), '', g.count ? 'ax-tile--partial' : '')).join('')}${tile('Incomplete months in this range', nf(open), 'places to stay and attractions together')}</div><div class="ax-grid">` +
+            return `<div class="stat-tiles ax-tiles">${gaps.gaps.map(g => tile(esc(g.label), nf(g.count), '', g.count ? 'ax-tile--partial' : '')).join('')}${tile('Incomplete months in this range', nf(open), '')}</div><div class="ax-grid">` +
                 card('Reports finalized each month', `<div class="ax-scroll"><table class="ztims-table"><caption class="sr-only">Reports finalized each month</caption><thead><tr><th scope="col">Month</th><th scope="col">Places to stay</th><th scope="col">Attractions</th></tr></thead><tbody>${rows.map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>`,
-                    { wide: true, foot: 'Finalized of expected. A missing report is never counted as 0. Open Tourist Influx Report → Tracker to follow one up.' }) + `</div>`;
+                    { wide: true, foot: 'To follow up a missing report, open Tourist Influx Report → Tracker.' }) + `</div>`;
         }
 
         const VIEWS = { accommodation: viewAccommodation, attractions: viewAttractions, requests: viewRequests, coverage: viewCoverage, guests: viewGuests };
