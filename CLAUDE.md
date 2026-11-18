@@ -876,7 +876,10 @@ old attraction report and Guest Register routes answer 409 `USE_DAILY_RECORD`.
   four counts that equal the group size. Edit and Void require reasons, preserve
   audit/revisions and update aggregates atomically. Dirty forms ask before closing;
   lost responses freeze inputs and retain the retry key. Historical daily totals
-  have a separate review link (`?mode=daily&month=…&date=…`) to the earlier recorder.
+  have a separate review link (`?mode=daily&month=…&date=…`), read-only since
+  18 November 2026 (the user's request: no "Record a date" form, the month
+  calendar takes the full width; groups are recorded only through Record a group).
+  The earlier daily form still appears only when group recording is not installed.
   With no reporting start, the first save starts its month. Before the new additive
   SQL block is installed, the capability check keeps the earlier daily recorder.
   **Tourist Influx Report** (`staff_statistics.html`, `report`): month picker, tiles,

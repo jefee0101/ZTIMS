@@ -134,13 +134,17 @@
                     <div class="att-meter" aria-hidden="true"><span data-meter></span></div>
                     <div data-cal></div>
                     <p class="att-legend" aria-label="What the days mean">
-                        <span><i class="att-sw att-day--counted"></i>Counted</span><span><i class="att-sw att-day--zero"></i>Confirmed 0</span>
-                        <span><i class="att-sw att-day--missing"></i>Missing</span><span><i class="att-sw att-day--closed"></i>Authorized closure</span></p>
+                        <span><i class="att-sw att-day--counted"></i>Counted</span><span><i class="att-sw att-day--zero"></i>No visitors</span>
+                        <span><i class="att-sw att-day--missing"></i>Not recorded</span><span><i class="att-sw att-day--closed"></i>Closed</span></p>
                 </section>
             </div>
             <section class="glass-panel p-4 sm:p-5 space-y-3" aria-label="Month so far"><h2 class="acc-part">So far this month</h2><div data-tiles></div></section>`;
 
         const $ = s => h.body.querySelector(s);
+        if (legacy) {                       // review only: groups are recorded on the Daily Visitor Record, so the month takes the whole width
+            h.body.querySelector('.att-layout').classList.add('att-layout--full');
+            $('[data-form]').hidden = true;
+        }
         const form = $('[data-form]'), dateIn = $('[data-date]'), totalIn = $('[data-total]'), errBox = $('[data-error]');
         const resIns = [...h.body.querySelectorAll('[data-res]')], sexIns = [...h.body.querySelectorAll('[data-sex]')];
         const allIns = [totalIn, ...resIns, ...sexIns];
@@ -210,7 +214,7 @@
             dateIn.min = view.reportingFrom || '';
             const missing = f.missing.length + f.scheduled.length;
             const passed = f.daily.filter(d => !['future', 'before', 'today'].includes(d.state) || d.count).length;
-            $('[data-progress]').innerHTML = `<b>${nf(f.dates)}</b> of ${nf(f.days)} dates recorded · ${nf(f.zero)} confirmed 0 · ${nf(f.closed)} closure${f.closed === 1 ? '' : 's'} · <b class="${missing ? 'text-error' : ''}">${nf(missing)} missing</b>`;
+            $('[data-progress]').innerHTML = `<b>${nf(f.dates)}</b> of ${nf(f.days)} dates recorded · ${nf(f.zero)} with no visitors · ${nf(f.closed)} closed · <b class="${missing ? 'text-error' : ''}">${nf(missing)} not recorded</b>`;
             $('[data-meter]').style.width = `${passed ? Math.round(((f.dates + f.closed) / f.days) * 100) : 0}%`;
             $('[data-zero]').hidden = !missing || isLocked(st);
             // The calendar: one button per day, its state in words for screen readers.
